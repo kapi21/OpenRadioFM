@@ -1,0 +1,491 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_grainy_dark"
+    android:orientation="horizontal"
+    android:padding="8dp"
+    android:weightSum="10">
+
+    <!-- COLUMN 1: MEMORIES (30%) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <!-- P1 -->
+        <LinearLayout
+            android:id="@+id/cardP1"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_card"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <ImageView
+                android:id="@+id/ivP1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="4dp"
+                android:scaleType="fitCenter"/>
+            <TextView
+                android:id="@+id/tvP1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="87.5"
+                android:textColor="@color/brand_orange"
+                android:textStyle="bold"
+                android:textSize="22sp"/>
+        </LinearLayout>
+
+        <!-- P2 -->
+        <LinearLayout
+            android:id="@+id/cardP2"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_card"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <ImageView
+                android:id="@+id/ivP2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="4dp"
+                android:scaleType="fitCenter"/>
+            <TextView
+                android:id="@+id/tvP2"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="90.0"
+                android:textColor="@color/brand_orange"
+                android:textStyle="bold"
+                android:textSize="22sp"/>
+        </LinearLayout>
+
+        <!-- P3 -->
+        <LinearLayout
+            android:id="@+id/cardP3"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_card"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <ImageView
+                android:id="@+id/ivP3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="4dp"
+                android:scaleType="fitCenter"/>
+            <TextView
+                android:id="@+id/tvP3"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="100.0"
+                android:textColor="@color/brand_orange"
+                android:textStyle="bold"
+                android:textSize="22sp"/>
+        </LinearLayout>
+
+        <!-- P4 -->
+        <LinearLayout
+            android:id="@+id/cardP4"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_card"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <ImageView
+                android:id="@+id/ivP4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="4dp"
+                android:scaleType="fitCenter"/>
+            <TextView
+                android:id="@+id/tvP4"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="104.0"
+                android:textColor="@color/brand_orange"
+                android:textStyle="bold"
+                android:textSize="22sp"/>
+        </LinearLayout>
+
+        <!-- P5 -->
+        <LinearLayout
+            android:id="@+id/cardP5"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_card"
+            android:layout_marginBottom="4dp"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <ImageView
+                android:id="@+id/ivP5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="4dp"
+                android:scaleType="fitCenter"/>
+            <TextView
+                android:id="@+id/tvP5"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="106.0"
+                android:textColor="@color/brand_orange"
+                android:textStyle="bold"
+                android:textSize="22sp"/>
+        </LinearLayout>
+
+        <!-- P6 -->
+        <LinearLayout
+            android:id="@+id/cardP6"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_glass_card"
+            android:orientation="horizontal"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?android:attr/selectableItemBackground">
+            <ImageView
+                android:id="@+id/ivP6"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:padding="4dp"
+                android:scaleType="fitCenter"/>
+            <TextView
+                android:id="@+id/tvP6"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:text="108.0"
+                android:textColor="@color/brand_orange"
+                android:textStyle="bold"
+                android:textSize="22sp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- COLUMN 2: MAIN CONTROLS (40%) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="4"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <!-- FREQUENCY BIG BOX -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="4"
+            android:background="@drawable/bg_glass_card"
+            android:gravity="center">
+            <TextView
+                android:id="@+id/tvFrequency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="100.0"
+                android:textColor="@color/white"
+                android:textSize="110sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-condensed"/>
+        </LinearLayout>
+        
+        <Space android:layout_width="match_parent" android:layout_height="8dp"/>
+
+        <!-- SEEK ROW -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:gravity="center"
+            android:orientation="horizontal">
+            
+            <ImageButton
+                android:id="@+id/btnSeekUp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_glass_card"
+                android:src="@drawable/seek_down"
+                android:scaleType="fitCenter"
+                android:padding="12dp"/>
+                
+            <Space android:layout_width="15dp" android:layout_height="wrap_content"/>
+
+            <ImageButton
+                android:id="@+id/btnSeekDown"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/bg_glass_card"
+                android:src="@drawable/seek_up"
+                android:scaleType="fitCenter"
+                android:padding="12dp"/>
+        </LinearLayout>
+
+         <Space android:layout_width="match_parent" android:layout_height="8dp"/>
+
+        <!-- RDS TYPE LABEL -->
+        <!-- RDS NAME BOX (PS) -->
+        <TextView
+            android:id="@+id/tvRdsName"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.5"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/bg_glass_card"
+            android:gravity="center"
+            android:text="STATION"
+            android:textColor="@color/white"
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:ellipsize="end"/>
+            
+         <Space android:layout_width="match_parent" android:layout_height="8dp"/>
+
+        <!-- RDS TEXT BOX -->
+        <TextView
+            android:id="@+id/tvRdsInfo"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1.5"
+            android:background="@drawable/bg_glass_card"
+            android:gravity="center"
+            android:text="RDS TEXT / TITLE SONG"
+            android:textColor="@color/white"
+            android:textSize="32sp"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:scrollHorizontally="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:marqueeRepeatLimit="marquee_forever"/>
+            
+         <Space android:layout_width="match_parent" android:layout_height="8dp"/>
+
+        <!-- BOTTOM CONTROLS (Band / Auto) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="horizontal"
+            android:weightSum="2">
+            
+            <ImageButton
+                android:id="@+id/btnBand"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginRight="4dp"
+                android:background="@drawable/bg_glass_card"
+                android:src="@drawable/radio_fm1"
+                android:scaleType="fitCenter"
+                android:padding="8dp"/>
+                
+            <ImageButton
+                android:id="@+id/btnAutoScan"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_marginLeft="4dp"
+                android:background="@drawable/bg_glass_card"
+                android:src="@drawable/radio_scan_n"
+                android:scaleType="fitCenter"
+                android:padding="8dp"/>
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <!-- COLUMN 3: LOGO & OPTIONS (30%) -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:orientation="vertical"
+        android:padding="4dp">
+
+        <!-- LOGO BOX -->
+        <LinearLayout
+             android:layout_width="match_parent"
+             android:layout_height="0dp"
+             android:layout_weight="3"
+             android:background="@drawable/bg_glass_card"
+             android:gravity="center"
+             android:padding="8dp">
+             <ImageView
+                 android:id="@+id/ivMainLogo" 
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent"
+                 android:src="@mipmap/ic_launcher" 
+                 android:adjustViewBounds="true"
+                 android:scaleType="fitCenter"/>
+        </LinearLayout>
+        
+        <Space android:layout_width="match_parent" android:layout_height="8dp"/>
+
+        <!-- MOVED SWITCHES TO GRID BELOW -->
+        
+        <Space android:layout_width="match_parent" android:layout_height="8dp"/>
+        
+        <!-- TA/AF/TP ROW -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+            
+            <TextView
+                android:id="@+id/tvIndTa"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_glass_card"
+                android:gravity="center"
+                android:text="TA"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"/>
+            <Space android:layout_width="8dp" android:layout_height="0dp"/>
+            <TextView
+                android:id="@+id/tvIndAf"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_glass_card"
+                android:gravity="center"
+                android:text="AF"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"/>
+            <Space android:layout_width="8dp" android:layout_height="0dp"/>
+             <TextView
+                android:id="@+id/tvIndTp"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_glass_card"
+                android:gravity="center"
+                android:text="TP"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+        
+        <Space android:layout_width="match_parent" android:layout_height="8dp"/>
+        
+        <!-- BOTTOM FUNCTION ROW -->
+        <!-- CONTROLS GRID (2x2) -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2"
+            android:orientation="vertical">
+            
+            <!-- ROW A: LOC | MUTE -->
+            <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="0dp"
+                 android:layout_weight="1"
+                 android:orientation="horizontal">
+                 
+                 <ImageButton
+                    android:id="@+id/btnLocDx"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"
+                    android:background="@drawable/bg_glass_card"
+                    android:src="@drawable/radio_loc_n"
+                    android:scaleType="fitCenter"
+                    android:padding="12dp"/>
+                    
+                 <ImageButton
+                    android:id="@+id/btnMute"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"
+                    android:background="@drawable/bg_glass_card"
+                    android:src="@drawable/radio_mute_n"
+                    android:scaleType="fitCenter"
+                    android:padding="12dp"/>
+            </LinearLayout>
+
+            <!-- ROW B: EQ | TEST -->
+            <LinearLayout
+                 android:layout_width="match_parent"
+                 android:layout_height="0dp"
+                 android:layout_weight="1"
+                 android:orientation="horizontal">
+                 
+                 <ImageButton
+                    android:id="@+id/btnSettings"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"
+                    android:background="@drawable/bg_glass_card"
+                    android:src="@drawable/radio_eq_n"
+                    android:scaleType="fitCenter"
+                    android:padding="12dp"/>
+                    
+                 <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btnTest"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:layout_margin="2dp"
+                    android:background="@drawable/bg_glass_card"
+                    android:text="TEST"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/white"/>
+            </LinearLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

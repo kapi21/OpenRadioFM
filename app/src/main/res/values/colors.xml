@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand Colors (Neon Orange) -->
+    <color name="brand_orange">#FF8C00</color>
+    <color name="brand_orange_light">#FFA500</color>
+    <color name="brand_orange_glow">#4DFF8C00</color> <!-- Semi-transparente para brillos -->
+    
+    <!-- Deep Dark Theme (AMOLED) -->
+    <color name="black_background">#000000</color>
+    <color name="dark_surface">#1A1A1A</color>
+    <color name="dark_surface_light">#252525</color>
+    <color name="glass_white">#1AFFFFFF</color> <!-- Glassmorphism effect -->
+    
+    <!-- Text -->
+    <color name="text_primary">#E0E0E0</color>
+    <color name="text_secondary">#9E9E9E</color>
+    <color name="text_muted">#666666</color>
+    
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

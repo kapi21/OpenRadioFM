@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Semi-transparent dark background for glass effect -->
+    <solid android:color="#33000000" />
+    
+    <!-- Neon orange stroke -->
+    <stroke
+        android:width="1.5dp"
+        android:color="#CCFF8C00" />
+    
+    <!-- Rounded corners -->
+    <corners android:radius="12dp" />
+    
+    <!-- Gradient for depth -->
+    <gradient
+        android:startColor="#22FFFFFF"
+        android:centerColor="#05FFFFFF"
+        android:endColor="#00FFFFFF"
+        android:angle="45" />
+</shape>

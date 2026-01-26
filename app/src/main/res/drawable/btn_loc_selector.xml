@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Active state (DX/Pressed?) - assuming _p is the 'active' colored state -->
+    <item android:drawable="@drawable/radio_loc_p" android:state_selected="true" />
+    <item android:drawable="@drawable/radio_loc_p" android:state_checked="true" />
+    <!-- Default state (Local/Off?) -->
+    <item android:drawable="@drawable/radio_loc_n" />
+</selector>
