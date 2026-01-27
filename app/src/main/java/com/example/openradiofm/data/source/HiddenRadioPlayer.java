@@ -23,10 +23,26 @@ public class HiddenRadioPlayer {
         void onRawEvent(int code, Object infoObj, String strArg);
     }
 
+    /**
+     * Capa de abstracción sobre la API oculta android.radio.RadioPlayer.
+     * 
+     * POR QUÉ REFLEXIÓN:
+     * La clase android.radio.RadioPlayer es interna de la ROM del coche y no está en el SDK de Android.
+     * Usamos reflexión (Class.forName) para cargarla dinámicamente solo si existe.
+     * Esto evita que la app crashee en teléfonos móviles normales donde esta clase no existe.
+     */
     public HiddenRadioPlayer(Listener listener) {
         this.mClientListener = listener;
     }
 
+    /**
+     * Intenta obtener una instancia de RadioPlayer y registrar un listener de eventos.
+     *
+     * IMPORTANTE:
+     * - Debe llamarse desde un hilo de fondo o justo después de tener el servicio listo.
+     * - Si el dispositivo no expone android.radio.RadioPlayer, simplemente devuelve false
+     *   y no lanza la app.
+     */
     public boolean init() {
         try {
             Class<?> radioPlayerClass = Class.forName(CLASS_RADIO_PLAYER);
@@ -55,6 +71,9 @@ public class HiddenRadioPlayer {
             Log.d(TAG, "Listener registrado con éxito.");
             return true;
 
+        } catch (ClassNotFoundException e) {
+            Log.e(TAG, "ESTE DISPOSITIVO NO ES COMPATIBLE: No se encontraron las clases de radio del sistema.");
+            return false;
         } catch (Exception e) {
             Log.e(TAG, "Fallo al iniciar HiddenRadioPlayer: " + e.getMessage());
             e.printStackTrace();
@@ -62,6 +81,10 @@ public class HiddenRadioPlayer {
         }
     }
 
+    /**
+     * Procesa cada evento recibido desde la API interna del coche
+     * y lo traduce a callbacks de alto nivel para la Activity.
+     */
     private void handleOnEvent(Object[] args) {
         if (args == null || args.length < 2)
             return;
@@ -100,5 +123,16 @@ public class HiddenRadioPlayer {
         } catch (Exception e) {
             Log.e(TAG, "Error parseando evento: " + e.getMessage());
         }
+    }
+
+    /**
+     * Libera referencias para evitar fugas de memoria.
+     * No tenemos una API oficial para desregistrar el listener interno,
+     * pero al poner a null el listener de la app evitamos que la Activity
+     * quede retenida cuando se destruya.
+     */
+    public void release() {
+        mClientListener = null;
+        mRadioPlayerInstance = null;
     }
 }

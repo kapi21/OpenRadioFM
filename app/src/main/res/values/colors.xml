@@ -18,4 +18,20 @@
     
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    
+    <!-- Classic Gray/White Border (for skins) -->
+    <color name="border_classic_gray">#B0B0B0</color>
+    <color name="border_classic_white">#E0E0E0</color>
+    
+    <!-- Skin System: Accent Colors -->
+    <color name="skin_orange">#FF8C00</color>
+    <color name="skin_blue">#00A8FF</color>
+    <color name="skin_green">#00D68F</color>
+    <color name="skin_purple">#A855F7</color>
+    <color name="skin_classic_gray">#B0B0B0</color>
+    <color name="skin_red">#FF4444</color>
+    <color name="skin_yellow">#FFD700</color>
+    <color name="skin_cyan">#00CED1</color>
+    <color name="skin_pink">#FF69B4</color>
+    <color name="skin_white">#FFFFFF</color>
 </resources>

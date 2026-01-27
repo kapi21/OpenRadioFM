@@ -3,7 +3,7 @@
     <!-- Semi-transparent dark background for glass effect -->
     <solid android:color="#33000000" />
     
-    <!-- Classic gray stroke -->
+    <!-- Classic gray/white stroke -->
     <stroke
         android:width="1.5dp"
         android:color="@color/border_classic_gray" />

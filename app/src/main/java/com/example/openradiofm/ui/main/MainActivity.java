@@ -25,13 +25,42 @@ import com.hcn.autoradio.IRadioCallBack;
 import com.example.openradiofm.data.source.HiddenRadioPlayer;
 import com.example.openradiofm.R;
 
+/**
+ * Pantalla principal de la radio FM.
+ *
+ * Responsabilidades:
+ * - Conectarse al servicio de radio del coche (IRadioServiceAPI).
+ * - Mostrar frecuencia, nombre RDS y texto RDS.
+ * - Gestionar presets, logos locales y botones de control.
+ *
+ * Notas de diseño:
+ * - El sondeo del estado de la radio se hace en un hilo de fondo mediante Timer,
+ *   y solo las actualizaciones de UI pasan por runOnUiThread() para no bloquear
+ *   el hilo principal.
+ * - Los recursos de hardware (servicio, proceso root, listener RDS oculto) se
+ *   liberan explícitamente en onDestroy() para evitar fugas de memoria.
+ */
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "OpenRadioFm";
+
+    /**
+     * Modos de funcionamiento de la app:
+     * - FM_COMPLETO: dispositivo con root + servicio especial del coche disponible.
+     * - FM_BASICO: sin root o sin servicio; solo frecuencia + logos en SD (y, más adelante, nombres manuales).
+     */
+    private enum FmMode {
+        FM_COMPLETO,
+        FM_BASICO
+    }
+
     private IRadioServiceAPI mRadioService;
     private HiddenRadioPlayer mHiddenPlayer;
     private int mLastFreq = 0;
     private String mLastLogoUrl = ""; // V8.4: Caching Logic
     
+    // Modo de funcionamiento actual (se decide en el arranque).
+    private FmMode mMode = FmMode.FM_BASICO;
+
     // Repositorio
     private com.example.openradiofm.data.repository.RadioRepository mRepository;
 
@@ -47,8 +76,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView[] tvPresets = new TextView[6];
     private View[] cardPresets = new View[6]; // Changed from Button[] to View[]
 
-    // Settings Indicators (TextViews now)
-    private TextView tvIndTa, tvIndAf, tvIndTp;
+    // Settings Indicators (TextViews Removed)
+
 
     private android.content.SharedPreferences mPrefs;
     private int mCurrentBand = 0; // Cache for band-specific presets
@@ -61,7 +90,10 @@ public class MainActivity extends AppCompatActivity {
                 mRadioService.registerRadioCallback(mCallback);
                 startStatusPolling();
                 showToast("Conexión Establecida");
-                initHiddenPlayer();
+                // Solo inicializamos el listener oculto de RDS en modo completo.
+                if (mMode == FmMode.FM_COMPLETO) {
+                    initHiddenPlayer();
+                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -97,21 +129,38 @@ public class MainActivity extends AppCompatActivity {
         if (!mHiddenPlayer.init()) Log.e(TAG, "Error RDS Hardware Init");
     }
 
-    private java.util.Timer mTimer;
+    // ScheduledExecutorService para sondear el estado de la radio en segundo plano.
+    // Más robusto que Timer y evita fugas de memoria.
+    private java.util.concurrent.ScheduledExecutorService mPollingExecutor;
+    /**
+     * Inicia el sondeo periódico del estado de la radio.
+     *
+     * IMPORTANTE:
+     * - El trabajo pesado (llamadas AIDL y acceso al repositorio/root) se ejecuta
+     *   en el hilo del ScheduledExecutorService (en segundo plano).
+     * - Solo el pintado de la interfaz se hace dentro de runOnUiThread().
+     */
     private void startStatusPolling() {
         stopStatusPolling();
-        mTimer = new java.util.Timer();
-        mTimer.schedule(new java.util.TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(() -> refreshRadioStatus());
-            }
-        }, 500, 500);
+        mPollingExecutor = java.util.concurrent.Executors.newSingleThreadScheduledExecutor();
+        mPollingExecutor.scheduleAtFixedRate(() -> {
+            // Ejecutamos la lógica de refresco directamente en el hilo del executor.
+            // Dentro de refreshRadioStatus() se usa runOnUiThread() solo para la UI.
+            refreshRadioStatus();
+        }, 500, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
+    /**
+     * Detiene el sondeo de estado si está activo.
+     */
     private void stopStatusPolling() {
-        if (mTimer != null) { mTimer.cancel(); mTimer = null; }
+        if (mPollingExecutor != null) {
+            mPollingExecutor.shutdownNow();
+            mPollingExecutor = null;
+        }
     }
 
+    // Callback mínimo para eventos del servicio de radio. De momento no se usa,
+    // pero es importante desregistrarlo en onDestroy() para no filtrar la Activity.
     private final IRadioCallBack mCallback = new IRadioCallBack.Stub() {
         @Override public void onEvent(int code, String data) {}
     };
@@ -119,6 +168,11 @@ public class MainActivity extends AppCompatActivity {
     private int mTestClickCount = 0;
     private long mTestStartTime = 0;
 
+    /**
+     * Envía una tecla al MCU del coche usando la API interna android.carsource.McuManager.
+     * Todo el acceso va envuelto en try/catch para que en dispositivos sin esta clase
+     * simplemente se muestre un Toast y no se cierre la app.
+     */
     private void sendMcuKey(int key) {
         try {
             Class<?> mcuClass = Class.forName("android.carsource.McuManager");
@@ -143,7 +197,20 @@ public class MainActivity extends AppCompatActivity {
             requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
         }
 
-        mRepository = new com.example.openradiofm.data.repository.RadioRepository();
+        // Determinar modo de funcionamiento (FM completo vs básico) antes de crear el repositorio.
+        mMode = detectMode();
+        Log.d(TAG, "Modo de funcionamiento: " + mMode);
+
+        if (mMode == FmMode.FM_BASICO) {
+            showToast("Modo Básico: Sin Root (Nombres Manuales)");
+        } else {
+            showToast("Modo Completo: Root + Servicio HCN");
+        }
+
+        // Repositorio de datos (nombres RDS por root + logos locales/cloud).
+        // En MODO_FM_BASICO desactivamos por completo el uso de root.
+        mRepository = new com.example.openradiofm.data.repository.RadioRepository(this, mMode == FmMode.FM_COMPLETO);
+        // Preferencias para presets y estados de indicadores (TA/AF/TP, etc.).
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE);
 
         // Bind Views
@@ -154,14 +221,52 @@ public class MainActivity extends AppCompatActivity {
         btnLocDx = findViewById(R.id.btnLocDx);
         btnBand = findViewById(R.id.btnBand);
         
-        // Indicators Binding
-        tvIndTa = findViewById(R.id.tvIndTa);
-        tvIndAf = findViewById(R.id.tvIndAf);
-        tvIndTp = findViewById(R.id.tvIndTp);
+        
+        // Indicators Binding - REMOVED
 
+
+        
+        // Configurar controles (EQ, Mute, Test, AutoScan, LOC/DX)
+        setupControlButtons();
+        
+        // Configurar indicadores de estado (Eliminados)
+        // setupIndicators();
+        
+        // Aplicar Skin guardado
+        com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
+        applySkin(themeManager.getCurrentSkin());
+        
+        // Seeking Logic
+        setupSeekButtons();
+
+        // Presets Binding
+        bindPresetViews();
+        // Initial Refresh (will be updated again when band is fetched)
+        refreshPresetButtons();
+        
+        setupRdsText();
+        applyFonts();
+        
+        // V10: Custom User Names
+        setupCustomNameEditing();
+
+        // Conectamos con el servicio de radio del coche.
+        conectarRadio();
+    }
+    
+    /**
+     * Configura los botones de control (EQ, Mute, Test, AutoScan, LOC/DX).
+     */
+    private void setupControlButtons() {
         // EQ Logic (V8: MCU Injection)
         ImageButton btnEq = findViewById(R.id.btnSettings);
         btnEq.setOnClickListener(v -> sendMcuKey(0x134)); // Keycode 308 for DSP
+        
+        // Long Click para abrir selector de skins
+        btnEq.setOnLongClickListener(v -> {
+            showSkinSelectorDialog();
+            return true;
+        });
 
         // Mute Logic (System Audio)
         ImageButton btnMute = findViewById(R.id.btnMute);
@@ -205,49 +310,179 @@ public class MainActivity extends AppCompatActivity {
         // Auto Scan
         findViewById(R.id.btnAutoScan).setOnClickListener(v -> execRemote(IRadioServiceAPI::onScanEvent));
         
-        
-
-        
-        // Status Indicators logic (Toggle Click)
-        View.OnClickListener toggleListener = v -> {
-            boolean isChecked = !v.isSelected();
-            v.setSelected(isChecked);
-            updateStatusIndicator((TextView)v, isChecked);
-            
-            // Save state
-            if (v.getId() == R.id.tvIndTa) mPrefs.edit().putBoolean("TA_ENABLED", isChecked).apply();
-            if (v.getId() == R.id.tvIndAf) mPrefs.edit().putBoolean("AF_ENABLED", isChecked).apply();
-            if (v.getId() == R.id.tvIndTp) mPrefs.edit().putBoolean("TP_ENABLED", isChecked).apply();
-        };
-
-        tvIndTa.setOnClickListener(toggleListener);
-        tvIndAf.setOnClickListener(toggleListener);
-        tvIndTp.setOnClickListener(toggleListener);
-        
-        // Restore Saved States
-        boolean ta = mPrefs.getBoolean("TA_ENABLED", false);
-        boolean af = mPrefs.getBoolean("AF_ENABLED", false);
-        boolean tp = mPrefs.getBoolean("TP_ENABLED", false);
-        
-        tvIndTa.setSelected(ta); updateStatusIndicator(tvIndTa, ta);
-        tvIndAf.setSelected(af); updateStatusIndicator(tvIndAf, af);
-        tvIndTp.setSelected(tp); updateStatusIndicator(tvIndTp, tp);
-
-        // Switches Logic (LOC/DX)
+        // LOC/DX Switch
         btnLocDx.setOnClickListener(v -> execRemote(IRadioServiceAPI::onLocDxEvent));
-        // Icon update handled in refreshRadioStatus
-        
-        // Seeking Logic
-        setupSeekButtons();
+    }
+    
+    // setupIndicators removed
 
-        // Presets Binding
-        bindPresetViews();
-        // Initial Refresh (will be updated again when band is fetched)
-        refreshPresetButtons();
-        
-        setupRdsText();
-        applyFonts();
-        conectarRadio();
+
+    private void setupCustomNameEditing() {
+        // Permitir editar el nombre al mantener pulsado el texto del nombre RDS
+        tvRdsName.setOnLongClickListener(v -> {
+            showEditNameDialog();
+            return true;
+        });
+
+        // También en el logo principal, por si tvRdsName está vacío
+        findViewById(R.id.ivMainLogo).setOnLongClickListener(v -> {
+            showEditNameDialog();
+            return true;
+        });
+    }
+
+    private void showEditNameDialog() {
+        if (mRadioService == null) return;
+        try {
+            int currentFreq = mRadioService.getCurrentFreq();
+            
+            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+            builder.setTitle("Editar nombre de emisora");
+            builder.setMessage("Frecuencia: " + String.format("%.1f MHz", currentFreq / 1000.0));
+
+            final android.widget.EditText input = new android.widget.EditText(this);
+            input.setSingleLine(true);
+            
+            // Pre-llenar con el nombre actual (si es custom o RDS)
+            com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(currentFreq, null);
+            if (s.getName() != null) {
+                input.setText(s.getName());
+                input.setSelectAllOnFocus(true);
+            }
+            
+            builder.setView(input);
+
+            builder.setPositiveButton("Guardar", (dialog, which) -> {
+                String newName = input.getText().toString();
+                // Guardar en repositorio (SharedPreferences)
+                mRepository.setCustomName(currentFreq, newName);
+                showToast("Nombre guardado");
+                // Forzar refresco inmediato de UI
+                refreshRadioStatus();
+            });
+
+            builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+            
+            // Botón para borrar nombre personalizado y volver al original/RDS
+            builder.setNeutralButton("Restaurar Original", (dialog, which) -> {
+                mRepository.setCustomName(currentFreq, null); // Null borra la entrada custom
+                showToast("Nombre restaurado");
+                refreshRadioStatus();
+            });
+
+            builder.show();
+            input.requestFocus(); // Focus automático
+            
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // --------------------------------------------------------------------------------
+        // LIMPIEZA DE RECURSOS (CRÍTICO PARA EVITAR FUGAS DE MEMORIA)
+        // --------------------------------------------------------------------------------
+
+        // 1) Detener el Timer de sondeo.
+        // Si no lo paramos, el hilo del Timer seguirá ejecutándose en fondo intentando
+        // acceder a esta Activity destruida, causando crashes o fugas.
+        stopStatusPolling();
+
+        // 2) Desconectar del Servicio de Radio del Coche.
+        // Es fundamental desregistrar el callback y hacer unbind para que Android sepa
+        // que ya no necesitamos el servicio y pueda liberar recursos del sistema.
+        try {
+            if (mRadioService != null) {
+                mRadioService.unRegisterRadioCallback(mCallback);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        try {
+            unbindService(mConnection);
+        } catch (Exception e) {
+            // Si ya estaba desregistrado, ignoramos.
+        }
+
+        // 3) Liberar el listener de la API oculta de radio.
+        // HiddenRadioPlayer mantiene una referencia a nuestros callbacks. Al liberarlo,
+        // rompemos esa referencia circular.
+        if (mHiddenPlayer != null) {
+            mHiddenPlayer.release();
+            mHiddenPlayer = null;
+        }
+
+        // 4) Cerrar procesos Root (Shell).
+        // RootRDSSource abre un proceso "su" persistente. Si no lo cerramos con "exit",
+        // ese proceso se quedaría huérfano en el sistema consumiendo RAM y CPU.
+        if (mRepository != null) {
+            mRepository.shutdown();
+            mRepository = null;
+        }
+    }
+
+    /**
+     * Detecta el modo de funcionamiento de la app.
+     * 
+     * MODO_FM_COMPLETO:
+     * - Se activa solo si tenemos ROOT ("su") y el SERVICIO HCN ("com.hcn.autoradio").
+     * - Permite leer nombres RDS avanzados directamente de archivos del sistema.
+     * 
+     * MODO_FM_BASICO:
+     * - Se usa en dispositivos normales o si falta el servicio del coche.
+     * - Desactiva totalmente el código Root para evitar permisos denegados o crashes.
+     */
+    private FmMode detectMode() {
+        boolean hasService = hasCarRadioService();
+        boolean hasRootBinary = hasRootBinary();
+
+        if (hasService && hasRootBinary) {
+            return FmMode.FM_COMPLETO;
+        }
+        return FmMode.FM_BASICO;
+    }
+
+    /**
+     * Comprueba si el sistema anuncia el servicio de radio del coche
+     * con la action com.hcn.autoradio.FM_PLUG_SERVICE.
+     */
+    private boolean hasCarRadioService() {
+        try {
+            android.content.pm.PackageManager pm = getPackageManager();
+            Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
+            intent.setPackage("com.hcn.autoradio");
+            java.util.List<android.content.pm.ResolveInfo> list =
+                    pm.queryIntentServices(intent, 0);
+            return list != null && !list.isEmpty();
+        } catch (Exception e) {
+            Log.e(TAG, "Error comprobando servicio de radio del coche", e);
+            return false;
+        }
+    }
+
+    /**
+     * Comprobación simple de root: verifica si existe un binario su
+     * en rutas típicas del sistema. No ejecuta su, por lo que es segura.
+     */
+    private boolean hasRootBinary() {
+        String[] paths = {
+                "/system/xbin/su",
+                "/system/bin/su",
+                "/system/su",
+                "/sbin/su"
+        };
+        for (String path : paths) {
+            try {
+                java.io.File f = new java.io.File(path);
+                if (f.exists()) {
+                    return true;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return false;
     }
 
     private void applyFonts() {
@@ -275,6 +510,13 @@ public class MainActivity extends AppCompatActivity {
          tvRdsInfo.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
     }
 
+    /**
+     * Configura los botones de búsqueda manual y automática de frecuencias.
+     *
+     * - Los pasos manuales (+/- 0.1 MHz) se hacen mediante llamadas AIDL al servicio,
+     *   que se ejecutan fuera del hilo principal cuando es posible.
+     * - Las búsquedas largas (seek up/down) usan los eventos específicos del servicio.
+     */
     private void setupSeekButtons() {
         ImageButton btnSeekUp = findViewById(R.id.btnSeekUp);     // VISUALLY LEFT (<) -> DOWN (Decrement)
         ImageButton btnSeekDown = findViewById(R.id.btnSeekDown); // VISUALLY RIGHT (>) -> UP (Increment)
@@ -286,7 +528,7 @@ public class MainActivity extends AppCompatActivity {
              if (mRadioService == null) return;
              try {
                  int current = mRadioService.getCurrentFreq();
-                 int newFreq = current - 100; // -0.1 MHz
+                 int newFreq = current - 50; // -0.05 MHz (Was 0.1)
                  if (newFreq < 87500) newFreq = 108000; // Wrap Around
                  mRadioService.gotoFreq(newFreq);
              } catch (RemoteException e) { e.printStackTrace(); }
@@ -303,7 +545,7 @@ public class MainActivity extends AppCompatActivity {
              if (mRadioService == null) return;
              try {
                  int current = mRadioService.getCurrentFreq();
-                 int newFreq = current + 100; // +0.1 MHz
+                 int newFreq = current + 50; // +0.05 MHz (Was 0.1)
                  if (newFreq > 108000) newFreq = 87500; // Wrap Around
                  mRadioService.gotoFreq(newFreq);
              } catch (RemoteException e) { e.printStackTrace(); }
@@ -412,6 +654,13 @@ public class MainActivity extends AppCompatActivity {
         try { bindService(intent, mConnection, Context.BIND_AUTO_CREATE); } catch (Exception e) {}
     }
 
+    /**
+     * Lee el estado actual de la radio desde el servicio remoto y lo refleja en la UI.
+     *
+     * IMPORTANTE:
+     * - Este método puede ser llamado desde el hilo del Timer (segundo plano).
+     * - Cualquier acceso a vistas se encapsula en runOnUiThread().
+     */
     private void refreshRadioStatus() {
         if (mRadioService == null) return;
         execRemote(s -> {
@@ -437,8 +686,8 @@ public class MainActivity extends AppCompatActivity {
             String rdsName = station.getName();
             
             runOnUiThread(() -> {
-                // FIXED LOGIC: Always show Frequency in Big Box
-                tvFrequency.setText(String.format("%.1f", freq / 1000.0));
+                // FIXED LOGIC: Always show Frequency in Big Box con 2 decimales
+                tvFrequency.setText(String.format("%.2f", freq / 1000.0));
                 // tvFrequency.setTextSize(110); // V8.4: Moved to XML
                 
                 if (rdsName != null && !rdsName.isEmpty()) {
@@ -534,6 +783,78 @@ public class MainActivity extends AppCompatActivity {
             startActivity(intent);
         } else {
             showToast("App no instalada: " + packageName);
+        }
+    }
+    
+    /**
+     * Muestra un diálogo para seleccionar el skin (tema de color) de la aplicación.
+     * Permite cambiar entre: Classic Gray, Orange, Blue, Green, Purple.
+     */
+    private void showSkinSelectorDialog() {
+        com.example.openradiofm.ui.theme.ThemeManager themeManager = 
+            new com.example.openradiofm.ui.theme.ThemeManager(this);
+        
+        com.example.openradiofm.ui.theme.ThemeManager.Skin currentSkin = themeManager.getCurrentSkin();
+        
+        // Nombres de los skins para mostrar en el diálogo
+        com.example.openradiofm.ui.theme.ThemeManager.Skin[] skins = 
+            com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
+        String[] skinNames = new String[skins.length];
+        int selectedIndex = 0;
+        
+        for (int i = 0; i < skins.length; i++) {
+            skinNames[i] = skins[i].displayName;
+            if (skins[i] == currentSkin) {
+                selectedIndex = i;
+            }
+        }
+        
+        // Crear y mostrar el diálogo
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("Seleccionar Tema de Color")
+            .setSingleChoiceItems(skinNames, selectedIndex, (dialog, which) -> {
+                // Guardar el skin seleccionado
+                themeManager.setSkin(skins[which]);
+                // Aplicar inmediatamente sin reiniciar
+                applySkin(skins[which]);
+                showToast("Tema aplicado: " + skins[which].displayName);
+                dialog.dismiss();
+            })
+            .setNegativeButton("Cancelar", null)
+            .show();
+    }
+    
+    /**
+     * Aplica el skin seleccionado a todos los elementos de la interfaz.
+     */
+    private void applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
+        int drawableId;
+        switch (skin) {
+            case ORANGE: drawableId = R.drawable.bg_glass_card_orange; break;
+            case BLUE: drawableId = R.drawable.bg_glass_card_blue; break;
+            case GREEN: drawableId = R.drawable.bg_glass_card_green; break;
+            case PURPLE: drawableId = R.drawable.bg_glass_card_purple; break;
+            case RED: drawableId = R.drawable.bg_glass_card_red; break;
+            case YELLOW: drawableId = R.drawable.bg_glass_card_yellow; break;
+            case CYAN: drawableId = R.drawable.bg_glass_card_cyan; break;
+            case PINK: drawableId = R.drawable.bg_glass_card_pink; break;
+            case WHITE: drawableId = R.drawable.bg_glass_card_white; break;
+            default: drawableId = R.drawable.bg_glass_card_classic; break;
+        }
+        
+        int[] viewIds = {
+            R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
+            R.id.tvRdsName, R.id.tvRdsInfo,
+            R.id.btnBand, R.id.btnAutoScan,
+            R.id.boxLogo,
+            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnTest,
+            // Presets
+            R.id.cardP1, R.id.cardP2, R.id.cardP3, R.id.cardP4, R.id.cardP5, R.id.cardP6
+        };
+        
+        for (int id : viewIds) {
+            android.view.View v = findViewById(id);
+            if (v != null) v.setBackgroundResource(drawableId);
         }
     }
 }
