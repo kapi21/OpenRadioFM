@@ -44,4 +44,4 @@
    ```
 
 ---
-**Desarrollado con ❤️ por Jaime para la comunidad Android Head Unit.**
+**Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit.**
