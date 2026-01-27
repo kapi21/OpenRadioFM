@@ -167,6 +167,10 @@ public class MainActivity extends AppCompatActivity {
 
     private int mTestClickCount = 0;
     private long mTestStartTime = 0;
+    
+    // V8.5: Credits Easter Egg Variables
+    private int mCreditsClickCount = 0;
+    private long mCreditsStartTime = 0;
 
     /**
      * Envía una tecla al MCU del coche usando la API interna android.carsource.McuManager.
@@ -248,7 +252,11 @@ public class MainActivity extends AppCompatActivity {
         applyFonts();
         
         // V10: Custom User Names
+        // V10: Custom User Names
         setupCustomNameEditing();
+
+        // V8.5: Easter Egg (Credits)
+        setupCreditsEasterEgg();
 
         // Conectamos con el servicio de radio del coche.
         conectarRadio();
@@ -508,6 +516,36 @@ public class MainActivity extends AppCompatActivity {
          tvRdsInfo.setSelected(true); // Required for Marquee
          tvRdsInfo.setSingleLine(true);
          tvRdsInfo.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
+    }
+    
+    /**
+     * Configura el Easter Egg de créditos al pulsar la frecuencia.
+     */
+    private void setupCreditsEasterEgg() {
+        tvFrequency.setOnClickListener(v -> {
+            long now = System.currentTimeMillis();
+            // Reset si han pasado más de 3 segundos desde el primer clic
+            if (mCreditsClickCount == 0 || (now - mCreditsStartTime) > 3000) {
+                mCreditsClickCount = 1;
+                mCreditsStartTime = now;
+            } else {
+                mCreditsClickCount++;
+            }
+
+            if (mCreditsClickCount >= 5) {
+                mCreditsClickCount = 0;
+                showCreditsDialog();
+            }
+        });
+    }
+
+    private void showCreditsDialog() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("About OpenRadioFM");
+        builder.setMessage("OPENRADIOFM v1b\n\nDesarrollada por Jimmy80\n(Enero 2026)");
+        builder.setIcon(R.mipmap.ic_launcher);
+        builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+        builder.show();
     }
 
     /**
