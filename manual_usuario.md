@@ -1,4 +1,4 @@
-# Manual de Usuario - OpenRadioFM
+# Manual de Usuario - OpenRadioFM v2.0b
 
 Bienvenido a OpenRadioFM, una aplicación de radio FM avanzada diseñada específicamente para unidades principales de Android (Head Units) con soporte para control de hardware y personalización.
 
@@ -11,7 +11,7 @@ Bienvenido a OpenRadioFM, una aplicación de radio FM avanzada diseñada especí
 La interfaz ha sido diseñada para ser clara, legible y fácil de usar mientras se conduce.
 
 ### 1.1 Panel Izquierdo: Memorias (Presets)
-Aquí se muestran tus 6 emisoras favoritas guardadas.
+Aquí se muestran tus 12 emisoras favoritas guardadas (desliza verticalmente para ver todas).
 - **Pulsación Corta:** Sintoniza la emisora guardada.
 - **Pulsación Larga:** Guarda la frecuencia actual en esa memoria.
 - **Iconos:** Muestra el logo de la emisora si está disponible.
@@ -30,8 +30,9 @@ Aquí se muestran tus 6 emisoras favoritas guardadas.
 - **Logo Principal:** Muestra el logo de la emisora actual en gran tamaño.
 - **LOC/DX:** Alterna la sensibilidad de recepción (Local para ciudad, DX para larga distancia).
 - **Mute:** Silencia el audio instantáneamente.
-- **EQ (Ecualizador):** Abre los ajustes de audio del sistema.
-- **TEST:** Botón multifunción para pruebas de desarrollo.
+- **Botón EQ (Configuración):** Ajustes de audio (abre el ecualizador del sistema).
+  - **Pulsación Larga:** Abre el menú de **Selección de Skins** (Temas de color).
+- **Botón TEST:** Menú de pruebas interno. fábrica (5 clicks para activar).
 
 ---
 
@@ -40,9 +41,10 @@ Aquí se muestran tus 6 emisoras favoritas guardadas.
 ¡Haz que la radio combine con el interior de tu coche!
 
 ### Cómo cambiar el color (Skin)
-1. Pulsa el botón **TEST** (o Ajustes si está disponible).
-2. Selecciona "Cambiar Tema" en el menú (si aparece) o espera a futuras actualizaciones para un acceso más directo.
-   *(Nota: En la versión actual v8.5, el selector se activa mediante un mecanismo específico en desarrollo)*
+### Cómo cambiar el color (Skin)
+1. Mantén pulsado el botón **EQ / Ajustes** (icono de ecualizador).
+2. Aparecerá el selector de temas.
+3. Elige tu color favorito y la interfaz se actualizará al instante.
 
 **Colores Disponibles:**
 - 🟠 **Naranja (Original)**
@@ -56,7 +58,13 @@ Aquí se muestran tus 6 emisoras favoritas guardadas.
 - 🌸 **Rosa** (Estilo chic)
 - ⚪ **Blanco** (Estilo minimalista)
 
-Al seleccionar un color, todos los bordes y botones de la aplicación cambiarán instantáneamente.
+Al seleccionar un color, todos los bordes y botones cambiarán. Los botones ahora son **transparentes** para permitir ver el fondo personalizado.
+
+### Fondos Personalizados
+Puedes poner tu propia imagen de fondo:
+1. Copia tu imagen `background.jpg` o `background.png` en la carpeta `/sdcard/RadioLogos/`.
+2. Reinicia la aplicación.
+3. Tu imagen aparecerá como fondo a través de la interfaz transparente.
 
 ---
 
@@ -68,15 +76,33 @@ OpenRadioFM intenta mostrar el logo de cada emisora automáticamente.
 2. **Caché Inteligente:** Una vez descargado un logo, se guarda en memoria y en disco para que aparezca instantáneamente la próxima vez, incluso sin internet.
 
 **Ubicación de Logos:** `/sdcard/RadioLogos/`
+*Nota: La carpeta se crea automáticamente al iniciar la app. Si no existe, puedes crearla manualmente.*
 Puedes añadir tus propios logos manualmente copiando imágenes `.png` en esa carpeta con el nombre de la frecuencia.
 *Ejemplo:* Para 100.0 MHz, guarda la imagen como `10000.png` o `100000.png`.
+
+## 4. Personalización (Skins)
+Mantén pulsado el botón de **Configuración (EQ)** para abrir el selector de temas.
+Puedes elegir entre:
+- Clásico (Gris)
+- Naranja
+- Azul
+- Verde
+- Púrpura
+- Rojo
+- Amarillo
+- Cyan
+- Rosa
+- Blanco
+
+El cambio se aplica instantáneamente a toda la interfaz, incluyendo las memorias.
 
 ### Nombres Personalizados
 Si el nombre RDS no es correcto o quieres poner uno propio:
 1. Mantén pulsado el **Texto del Nombre** (STATION) o el **Logo Principal**.
 2. Aparecerá un cuadro de diálogo.
-3. Escribe el nombre deseado y pulsa "Guardar".
-4. Para volver al nombre original (RDS), pulsa "Restaurar Original".
+3. Escribe el nombre deseado (ej. "ROCK FM") y pulsa "Guardar".
+4. La app buscará automáticamente un logo con ese nombre (ej. `96900_ROCKFM.png`).
+5. Esto permite tener logos diferentes para la misma frecuencia en distintas ciudades (ideal para usuarios sin Root).
 
 ---
 
@@ -108,4 +134,4 @@ La aplicación detecta automáticamente las capacidades de tu dispositivo:
 - Si has actualizado recientemente, prueba a borrar los datos de la aplicación en Ajustes de Android.
 
 ---
-*Desarrollado por el equipo OpenRadioFM - v8.5 (Enero 2026)*
+*Desarrollado por el equipo OpenRadioFM - v2.0 (Enero 2026)*

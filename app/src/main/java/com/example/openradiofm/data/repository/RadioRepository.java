@@ -33,6 +33,23 @@ public class RadioRepository {
         this.webSource = new WebRadioSource();
         // Usamos un archivo de preferencias específico para los nombres de emisoras
         this.mPrefs = context.getSharedPreferences("RadioStationNames", android.content.Context.MODE_PRIVATE);
+        
+        // V2.0: Asegurar que existe la carpeta RadioLogos
+        ensureRadioLogosFolderExists();
+    }
+    
+    /**
+     * V2.0: Asegura que la carpeta /sdcard/RadioLogos/ existe.
+     */
+    private void ensureRadioLogosFolderExists() {
+        try {
+            java.io.File dir = new java.io.File("/sdcard/RadioLogos/");
+            if (!dir.exists()) {
+                dir.mkdirs();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("RadioRepository", "Error creando carpeta RadioLogos: " + e.getMessage());
+        }
     }
 
     public interface LogoCallback {
@@ -92,6 +109,7 @@ public class RadioRepository {
         RadioStation station = new RadioStation(freqKHz, finalName);
         
         // 0. Revisar Caché en Memoria
+        String cacheKey = freqKHz + "_" + finalName; // V2.0: Caché con nombre RDS
         if (logoCache.containsKey(freqKHz)) {
             String cachedPath = logoCache.get(freqKHz);
             station.setLogoUrl(cachedPath);
@@ -99,61 +117,82 @@ public class RadioRepository {
             return station;
         }
 
-        // 2. Logo Local (/sdcard/RadioLogos/96900.png)
-        String localPathFull = "/sdcard/RadioLogos/" + freqKHz + ".png";
+        // V2.0: Búsqueda de logos con prioridad frecuencia+RDS
+        // 1. Logo con frecuencia + nombre RDS: /sdcard/RadioLogos/96900_LOS40.png
+        String logoPath = getLogoPath(freqKHz, finalName);
         
-        // Fix for files without last zero (e.g. 8750.png for 87500KHz)
-        String localPathShort = "/sdcard/RadioLogos/" + (freqKHz / 10) + ".png";
-
-        android.util.Log.d("RadioLogos", "Checking: " + localPathFull);
-        if (new java.io.File(localPathFull).exists()) {
-             android.util.Log.d("RadioLogos", "FOUND: " + localPathFull);
-             station.setLogoUrl(localPathFull);
-             logoCache.put(freqKHz, localPathFull); // Guardo en caché
-             if (callback != null) callback.onLogoFound(localPathFull);
+        if (logoPath != null) {
+            android.util.Log.d("RadioLogos", "FOUND: " + logoPath);
+            station.setLogoUrl(logoPath);
+            logoCache.put(freqKHz, logoPath);
+            if (callback != null) callback.onLogoFound(logoPath);
         } else {
-             android.util.Log.d("RadioLogos", "Checking Short: " + localPathShort);
-             if (new java.io.File(localPathShort).exists()) { // Fallback to short name
-                 android.util.Log.d("RadioLogos", "FOUND SHORT: " + localPathShort);
-                 station.setLogoUrl(localPathShort);
-                 logoCache.put(freqKHz, localPathShort); // Guardo en caché
-                 if (callback != null) callback.onLogoFound(localPathShort);
-             } else {
-                 android.util.Log.d("RadioLogos", "NOT FOUND LOCAL");
-                 // 3. Fallback Cloud + Download
-                 //    Usa ExecutorService en lugar de new Thread() para gestión eficiente.
-                 
-                 // Crear variable final para uso en lambda
-                 final String stationNameForLambda = finalName;
-                 
-                 logoExecutor.submit(() -> {
-                     String cloudUrl = webSource.fetchLogo(freqKHz, stationNameForLambda, "ES");
-                     if (cloudUrl != null) {
-                         // Try to download and save
-                         String savedPath = downloadAndSaveLogo(cloudUrl, freqKHz);
-                         if (savedPath != null) {
-                             station.setLogoUrl(savedPath);
-                             logoCache.put(freqKHz, savedPath); // Guardo en caché
-                             if (callback != null) callback.onLogoFound(savedPath);
-                         } else {
-                             // Fallback to URL if download fails (cache URL para no reintentar descarga inmediatamente)
-                             station.setLogoUrl(cloudUrl);
-                             logoCache.put(freqKHz, cloudUrl);
-                             if (callback != null) callback.onLogoFound(cloudUrl);
-                         }
-                     }
-                 });
-             }
+            android.util.Log.d("RadioLogos", "NOT FOUND LOCAL");
+            // 2. Fallback Cloud + Download
+            final String stationNameForLambda = finalName;
+            
+            logoExecutor.submit(() -> {
+                String cloudUrl = webSource.fetchLogo(freqKHz, stationNameForLambda, "ES");
+                if (cloudUrl != null) {
+                    // Try to download and save with RDS name
+                    String savedPath = downloadAndSaveLogo(cloudUrl, freqKHz, stationNameForLambda);
+                    if (savedPath != null) {
+                        station.setLogoUrl(savedPath);
+                        logoCache.put(freqKHz, savedPath);
+                        if (callback != null) callback.onLogoFound(savedPath);
+                    } else {
+                        // Fallback to URL if download fails
+                        station.setLogoUrl(cloudUrl);
+                        logoCache.put(freqKHz, cloudUrl);
+                        if (callback != null) callback.onLogoFound(cloudUrl);
+                    }
+                }
+            });
         }
 
         return station;
     }
 
     /**
-     * Descarga un logo desde una URL y lo guarda como PNG en /sdcard/RadioLogos.
+     * V2.0: Busca el logo en el orden de prioridad:
+     * 1. /sdcard/RadioLogos/96900_LOS40.png (frecuencia + RDS)
+     * 2. /sdcard/RadioLogos/96900.png (solo frecuencia, compatibilidad)
+     * 3. /sdcard/RadioLogos/9690.png (formato corto)
+     */
+    private String getLogoPath(int freqKHz, String rdsName) {
+        // Sanitizar nombre RDS para nombre de archivo (quitar espacios y caracteres especiales)
+        String sanitizedName = (rdsName != null && !rdsName.isEmpty()) 
+            ? rdsName.replaceAll("[^a-zA-Z0-9]", "").toUpperCase() 
+            : null;
+        
+        // 1. Prioridad: Frecuencia + RDS
+        if (sanitizedName != null && !sanitizedName.isEmpty()) {
+            String pathWithRds = "/sdcard/RadioLogos/" + freqKHz + "_" + sanitizedName + ".png";
+            if (new java.io.File(pathWithRds).exists()) {
+                return pathWithRds;
+            }
+        }
+        
+        // 2. Compatibilidad: Solo frecuencia completa
+        String pathFull = "/sdcard/RadioLogos/" + freqKHz + ".png";
+        if (new java.io.File(pathFull).exists()) {
+            return pathFull;
+        }
+        
+        // 3. Compatibilidad: Frecuencia corta (sin último cero)
+        String pathShort = "/sdcard/RadioLogos/" + (freqKHz / 10) + ".png";
+        if (new java.io.File(pathShort).exists()) {
+            return pathShort;
+        }
+        
+        return null;
+    }
+
+    /**
+     * V2.0: Descarga un logo y lo guarda con formato frecuencia_RDS.png
      * Se debe llamar SIEMPRE desde un hilo de fondo.
      */
-    private String downloadAndSaveLogo(String urlString, int freqKHz) {
+    private String downloadAndSaveLogo(String urlString, int freqKHz, String rdsName) {
         try {
             java.net.URL url = new java.net.URL(urlString);
             java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
@@ -163,10 +202,18 @@ public class RadioRepository {
             java.io.InputStream input = connection.getInputStream();
             android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(input);
             
-            java.io.File destFolder = new java.io.File("/sdcard/RadioLogos/");
-            if (!destFolder.exists()) destFolder.mkdirs();
+            ensureRadioLogosFolderExists();
             
-            java.io.File destFile = new java.io.File(destFolder, freqKHz + ".png");
+            // V2.0: Guardar con nombre RDS si está disponible
+            String fileName;
+            if (rdsName != null && !rdsName.isEmpty()) {
+                String sanitizedName = rdsName.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+                fileName = freqKHz + "_" + sanitizedName + ".png";
+            } else {
+                fileName = freqKHz + ".png";
+            }
+            
+            java.io.File destFile = new java.io.File("/sdcard/RadioLogos/", fileName);
             java.io.FileOutputStream out = new java.io.FileOutputStream(destFile);
             
             bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);

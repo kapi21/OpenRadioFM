@@ -54,33 +54,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private IRadioServiceAPI mRadioService;
-    private HiddenRadioPlayer mHiddenPlayer;
-    private int mLastFreq = 0;
-    private String mLastLogoUrl = ""; // V8.4: Caching Logic
-    
-    // Modo de funcionamiento actual (se decide en el arranque).
-    private FmMode mMode = FmMode.FM_BASICO;
-
-    // Repositorio
     private com.example.openradiofm.data.repository.RadioRepository mRepository;
-
-    // UI Views V4
-    private TextView tvFrequency;
-    private TextView tvRdsName; // V5 New
-    private TextView tvRdsInfo;
-    private ImageButton btnLocDx; 
-    private ImageButton btnBand;  
-    
-    // Smart Cards
-    private ImageView[] ivPresets = new ImageView[6];
-    private TextView[] tvPresets = new TextView[6];
-    private View[] cardPresets = new View[6]; // Changed from Button[] to View[]
-
-    // Settings Indicators (TextViews Removed)
-
-
     private android.content.SharedPreferences mPrefs;
-    private int mCurrentBand = 0; // Cache for band-specific presets
+    private HiddenRadioPlayer mHiddenPlayer;
+    
+    // V2.0: Caché de logos por banda para evitar pérdida al cambiar FM1/FM2/FM3
+    private final java.util.HashMap<String, String> mLogoCachePerBand = new java.util.HashMap<>();
+    private String mLastLogoUrl = "";
+    
+    // V2.0: Background personalizado
+    private android.view.View mRootLayout;
+
+    private TextView tvFrequency, tvRdsName, tvRdsInfo;
+    private ImageButton btnLocDx, btnBand;
+
+    private final android.view.View[] cardPresets = new android.view.View[12];
+    private final TextView[] tvPresets = new TextView[12];
+    private final ImageView[] ivPresets = new ImageView[12];
+
+    private int mCurrentBand = 0;
+    private int mLastFreq = 0;
+
+    private FmMode mMode = FmMode.FM_BASICO;
     
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -168,9 +163,11 @@ public class MainActivity extends AppCompatActivity {
     private int mTestClickCount = 0;
     private long mTestStartTime = 0;
     
-    // V8.5: Credits Easter Egg Variables
+    // V8.5: Credits Easter Egg Variables (Restored)
     private int mCreditsClickCount = 0;
     private long mCreditsStartTime = 0;
+    
+
 
     /**
      * Envía una tecla al MCU del coche usando la API interna android.carsource.McuManager.
@@ -200,6 +197,12 @@ public class MainActivity extends AppCompatActivity {
         if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
         }
+
+        // V2.0: Crear carpeta RadioLogos si no existe
+        createRadioLogosFolder();
+        
+        // V2.0: Cargar fondo personalizado si existe
+        loadCustomBackground();
 
         // Determinar modo de funcionamiento (FM completo vs básico) antes de crear el repositorio.
         mMode = detectMode();
@@ -255,7 +258,7 @@ public class MainActivity extends AppCompatActivity {
         // V10: Custom User Names
         setupCustomNameEditing();
 
-        // V8.5: Easter Egg (Credits)
+        // V8.5: Easter Egg (Credits) - Restored
         setupCreditsEasterEgg();
 
         // Conectamos con el servicio de radio del coche.
@@ -291,7 +294,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Test/Hidden Menu (V8: 5 Clicks logic)
+        // Test/Hidden Menu (V8: 5 Clicks logic) - Restaurado a original
         findViewById(R.id.btnTest).setOnClickListener(v -> {
             long now = System.currentTimeMillis();
             if (mTestClickCount == 0 || (now - mTestStartTime) > 15000) {
@@ -519,7 +522,7 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * Configura el Easter Egg de créditos al pulsar la frecuencia.
+     * Configura el Easter Egg de créditos al pulsar la frecuencia. (Restaurado)
      */
     private void setupCreditsEasterEgg() {
         tvFrequency.setOnClickListener(v -> {
@@ -542,11 +545,76 @@ public class MainActivity extends AppCompatActivity {
     private void showCreditsDialog() {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("About OpenRadioFM");
-        builder.setMessage("OPENRADIOFM v1b\n\nDesarrollada por Jimmy80\n(Enero 2026)");
+        builder.setMessage("OPENRADIOFM v2.0b\\n\\nDesarrollada por Jimmy80\\n(Enero 2026)");
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
         builder.show();
     }
+    
+
+
+    /**
+     * V2.0: Crea la carpeta /sdcard/RadioLogos/ si no existe.
+     * Esto soluciona el bug reportado donde la app no creaba la carpeta automáticamente.
+     */
+    private void createRadioLogosFolder() {
+        try {
+            java.io.File radioLogosDir = new java.io.File("/sdcard/RadioLogos/");
+            if (!radioLogosDir.exists()) {
+                boolean created = radioLogosDir.mkdirs();
+                if (created) {
+                    Log.d(TAG, "Carpeta RadioLogos creada exitosamente");
+                } else {
+                    Log.e(TAG, "Error al crear carpeta RadioLogos");
+                }
+            } else {
+                Log.d(TAG, "Carpeta RadioLogos ya existe");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Excepción al crear carpeta RadioLogos: " + e.getMessage());
+        }
+    }
+
+    /**
+     * V2.0: Carga un fondo personalizado desde /sdcard/RadioLogos/background.jpg o .png
+     * Si no existe, mantiene el fondo por defecto.
+     */
+    private void loadCustomBackground() {
+        try {
+            // Buscar background.jpg primero, luego .png
+            java.io.File bgJpg = new java.io.File("/sdcard/RadioLogos/background.jpg");
+            java.io.File bgPng = new java.io.File("/sdcard/RadioLogos/background.png");
+            
+            java.io.File backgroundFile = null;
+            if (bgJpg.exists()) {
+                backgroundFile = bgJpg;
+            } else if (bgPng.exists()) {
+                backgroundFile = bgPng;
+            }
+            
+            if (backgroundFile != null) {
+                // Cargar imagen y aplicarla como fondo
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(backgroundFile.getAbsolutePath());
+                if (bitmap != null) {
+                    android.graphics.drawable.BitmapDrawable drawable = new android.graphics.drawable.BitmapDrawable(getResources(), bitmap);
+                    // V2.0 FIX: Aplicar al LinearLayout raíz, no a android.R.id.content
+                    android.view.View rootView = getWindow().getDecorView().findViewById(android.R.id.content);
+                    if (rootView instanceof android.view.ViewGroup) {
+                        android.view.View actualRoot = ((android.view.ViewGroup) rootView).getChildAt(0);
+                        if (actualRoot != null) {
+                            actualRoot.setBackground(drawable);
+                            Log.d(TAG, "Fondo personalizado cargado: " + backgroundFile.getName());
+                        }
+                    }
+                }
+            } else {
+                Log.d(TAG, "No se encontró fondo personalizado, usando fondo por defecto");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error al cargar fondo personalizado: " + e.getMessage());
+        }
+    }
+
 
     /**
      * Configura los botones de búsqueda manual y automática de frecuencias.
@@ -602,19 +670,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void bindPresetViews() {
-        int[] cardIds = {R.id.cardP1, R.id.cardP2, R.id.cardP3, R.id.cardP4, R.id.cardP5, R.id.cardP6};
-        int[] tvIds = {R.id.tvP1, R.id.tvP2, R.id.tvP3, R.id.tvP4, R.id.tvP5, R.id.tvP6};
-        int[] ivIds = {R.id.ivP1, R.id.ivP2, R.id.ivP3, R.id.ivP4, R.id.ivP5, R.id.ivP6};
-
-        for(int i=0; i<6; i++) {
-            cardPresets[i] = findViewById(cardIds[i]);
-            tvPresets[i] = findViewById(tvIds[i]);
-            ivPresets[i] = findViewById(ivIds[i]);
+        // V2.1: Dynamic binding for 12 presets (P1-P12)
+        for(int i=0; i<12; i++) {
+            int index = i + 1;
+            int cardId = getResources().getIdentifier("cardP" + index, "id", getPackageName());
+            int tvId = getResources().getIdentifier("tvP" + index, "id", getPackageName());
+            int ivId = getResources().getIdentifier("ivP" + index, "id", getPackageName());
+            
+            cardPresets[i] = findViewById(cardId);
+            tvPresets[i] = findViewById(tvId);
+            ivPresets[i] = findViewById(ivId);
         }
     }
 
     private void refreshPresetButtons() {
-        for(int i=0; i<6; i++) {
+        for(int i=0; i<12; i++) {
             // Key is now P1_B0, P1_B1, etc.
             String key = "P" + (i+1) + "_B" + mCurrentBand;
             setupPresetCard(i, key);
@@ -622,6 +692,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupPresetCard(int index, String key) {
+        if (cardPresets[index] == null) return; // Safety check
         int savedFreq = mPrefs.getInt(key, 0);
         updateCardVisuals(index, savedFreq);
 
@@ -664,12 +735,13 @@ public class MainActivity extends AppCompatActivity {
         mRepository.getStationInfo(freq, logoUrl -> {
             runOnUiThread(() -> {
                 if (logoUrl != null) {
+                    // V2.0: Force reload from disk to detect file changes
                     Glide.with(MainActivity.this)
                          .load(logoUrl)
+                         .skipMemoryCache(true) // Forzar recarga desde disco
+                         .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE) // No cachear
                          .transition(DrawableTransitionOptions.withCrossFade())
                          .into(ivPresets[index]);
-                    // User Request: Logo Left, Name/Freq Right. Both Visible.
-                    // Keep tvPresets VISIBLE but maybe update text to Name?
                 }
             });
         });
@@ -707,12 +779,19 @@ public class MainActivity extends AppCompatActivity {
             boolean isStereo = s.IsStereo();
             boolean isLocal = s.IsDxLocal();
             
+            // V2.0: Crear clave única para caché por banda
+            String bandCacheKey = band + "_" + freq;
+            
             // Check if band changed -> Refresh presets
             if (band != mCurrentBand) {
                 mCurrentBand = band;
                 runOnUiThread(() -> refreshPresetButtons());
             }
 
+            // V2.0: Solo actualizar logo si la frecuencia cambió significativamente (>0.1 MHz = 100 kHz)
+            // Esto evita que el logo desaparezca al mover ±0.05 MHz
+            boolean significantFreqChange = Math.abs(freq - mLastFreq) > 100;
+            
             if (freq != mLastFreq) {
                 mLastFreq = freq;
             }
@@ -726,11 +805,9 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 // FIXED LOGIC: Always show Frequency in Big Box con 2 decimales
                 tvFrequency.setText(String.format("%.2f", freq / 1000.0));
-                // tvFrequency.setTextSize(110); // V8.4: Moved to XML
                 
                 if (rdsName != null && !rdsName.isEmpty()) {
                     tvRdsName.setText(rdsName);
-                    // tvRdsInfo contains scrolling text (RT)
                 } else {
                     tvRdsName.setText(""); 
                 }
@@ -742,35 +819,64 @@ public class MainActivity extends AppCompatActivity {
                      }
                 }
                 
-
                 
-                // CONDITIONAL LOGO VISIBILITY: Only show if RDS Name is present
+                // V2.0: LOGO PERSISTENCE FIX
+                // Solo actualizar logo si:
+                // 1. Cambió significativamente la frecuencia (>0.1 MHz)
+                // 2. O si no tenemos logo cacheado para esta banda+frecuencia
                 ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
+                
                 if (rdsName != null && !rdsName.isEmpty()) {
                     ivMainLogo.setVisibility(View.VISIBLE);
-                    mRepository.getStationInfo(freq, url -> {
-                        runOnUiThread(() -> {
-                            // V8.4: Logo Caching to prevent flickering
-                            if (url != null) {
-                                if (url.equals(mLastLogoUrl)) return; // Skip if same
-                                mLastLogoUrl = url;
-                                Glide.with(MainActivity.this)
-                                     .load(url)
-                                     .transition(DrawableTransitionOptions.withCrossFade())
-                                     .into(ivMainLogo);
-                            } else {
-                                mLastLogoUrl = "";
-                                // V9: Default Logo
-                                ivMainLogo.setImageResource(R.mipmap.ic_launcher);
-                            }
+                    
+                    // Verificar si tenemos logo cacheado para esta banda+frecuencia
+                    String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
+                    
+                    // V2.0 FIX: Siempre usar caché si existe, independientemente del cambio de frecuencia
+                    // Esto evita que el logo desaparezca durante seek
+                    // V2.0 FIX: Siempre usar caché si existe
+                    if (cachedLogo != null) {
+                       if (!cachedLogo.equals(mLastLogoUrl)) {
+                           mLastLogoUrl = cachedLogo;
+                           Glide.with(MainActivity.this)
+                                .load(cachedLogo)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .into(ivMainLogo);
+                       }
+                    } else {
+                        // Si no hay caché, SIEMPRE intentar buscar logo (incluso en cambios pequeños)
+                        // Esto arregla el bug de logos que no aparecen al mover manualmente ±0.05
+                        mRepository.getStationInfo(freq, url -> {
+                            runOnUiThread(() -> {
+                                if (url != null) {
+                                    // SI encontramos logo, lo mostramos y cacheamos
+                                    if (!url.equals(mLastLogoUrl)) {
+                                        mLastLogoUrl = url;
+                                        mLogoCachePerBand.put(bandCacheKey, url);
+                                        Glide.with(MainActivity.this)
+                                             .load(url)
+                                             .transition(DrawableTransitionOptions.withCrossFade())
+                                             .into(ivMainLogo);
+                                    }
+                                } else {
+                                    // NO encontramos logo
+                                    // Solo borrar el anterior si el cambio de frecuencia fue significativo
+                                    // Si nos movimos poquito (±0.05), mantenemos el logo "vecino" visualmente
+                                    if (significantFreqChange) {
+                                        mLastLogoUrl = "";
+                                        mLogoCachePerBand.remove(bandCacheKey);
+                                        ivMainLogo.setImageResource(R.mipmap.ic_launcher);
+                                    }
+                                }
+                            });
                         });
-                    });
+                    }
                 } else {
-                    // V9: Show Default Logo instead of Invisible? Or keep invisible?
-                    // User said: "default if no logo... or until there is". 
-                    // So if NO RDS Name found yet (Sintonizando...), show default?
+                    // No hay RDS, mostrar logo por defecto
                     ivMainLogo.setVisibility(View.VISIBLE);
                     ivMainLogo.setImageResource(R.mipmap.ic_launcher);
+                    mLastLogoUrl = ""; // V2.0 FIX: Resetear estado para permitir recarga al volver
+                    mLogoCachePerBand.remove(bandCacheKey);
                 }
                 
                 updateBandImage(band);
@@ -885,12 +991,18 @@ public class MainActivity extends AppCompatActivity {
             R.id.tvRdsName, R.id.tvRdsInfo,
             R.id.btnBand, R.id.btnAutoScan,
             R.id.boxLogo,
-            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnTest,
-            // Presets
-            R.id.cardP1, R.id.cardP2, R.id.cardP3, R.id.cardP4, R.id.cardP5, R.id.cardP6
+            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnTest
+            // Presets handled dynamically below
         };
         
         for (int id : viewIds) {
+            android.view.View v = findViewById(id);
+            if (v != null) v.setBackgroundResource(drawableId);
+        }
+        
+        // V2.1: Apply to Presets P1-P12
+        for(int i=1; i<=12; i++) {
+            int id = getResources().getIdentifier("cardP" + i, "id", getPackageName());
             android.view.View v = findViewById(id);
             if (v != null) v.setBackgroundResource(drawableId);
         }

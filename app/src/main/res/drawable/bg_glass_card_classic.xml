@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Semi-transparent dark background for glass effect -->
-    <solid android:color="#33000000" />
+    <!-- V2.0: Fully transparent background to show custom background -->
+    <solid android:color="#00000000" />
     
     <!-- Classic gray/white stroke -->
     <stroke
@@ -10,11 +10,4 @@
     
     <!-- Rounded corners -->
     <corners android:radius="12dp" />
-    
-    <!-- Gradient for depth -->
-    <gradient
-        android:startColor="#22FFFFFF"
-        android:centerColor="#05FFFFFF"
-        android:endColor="#00FFFFFF"
-        android:angle="45" />
 </shape>

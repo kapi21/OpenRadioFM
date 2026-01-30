@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <solid android:color="#1AFFFFFF" /> <!-- Glass effect -->
+    <!-- V2.0: Transparent background -->
+    <solid android:color="#00000000" />
     <corners android:radius="12dp" />
     <stroke
         android:width="2dp"

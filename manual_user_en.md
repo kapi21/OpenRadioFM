@@ -1,4 +1,4 @@
-# User Manual - OpenRadioFM
+# User Manual - OpenRadioFM v2.0b
 
 Welcome to OpenRadioFM, an advanced FM radio application designed specifically for Android Head Units, featuring hardware control support and customization options.
 
@@ -9,7 +9,7 @@ Welcome to OpenRadioFM, an advanced FM radio application designed specifically f
 The interface is designed to be clear, legible, and easy to use while driving.
 
 ### 1.1 Left Panel: Presets
-Here your 6 favorite saved stations are displayed.
+Here your 12 favorite saved stations are displayed (scroll down to see more).
 - **Short Press:** Tunes to the saved station.
 - **Long Press:** Saves the current frequency to that memory slot.
 - **Icons:** Displays the station logo if available.
@@ -28,8 +28,9 @@ Here your 6 favorite saved stations are displayed.
 - **Main Logo:** Displays the current station logo in large size.
 - **LOC/DX:** Toggles reception sensitivity (Local for city, DX for long distance).
 - **Mute:** Instantly mutes audio.
-- **EQ (Equalizer):** Opens system audio settings.
-- **TEST:** Multi-function button for development tests.
+- **EQ Button (Settings):** Audio settings (opens system equalizer).
+  - **Long Press:** Opens the **Skin Selector** (Color Themes).
+- **TEST Button:** Internal test menu. (5 clicks to activate).
 
 ---
 
@@ -38,9 +39,10 @@ Here your 6 favorite saved stations are displayed.
 Match the radio with your car's interior!
 
 ### How to change the color (Skin)
-1. Press the **TEST** button (or Settings if available).
-2. Select "Change Theme" in the menu (if it appears) or wait for future updates for direct access.
-   *(Note: In current v8.5 version, the selector is activated via a specific mechanism under development)*
+### How to change the color (Skin)
+1. Long press the **EQ / Settings** button (equalizer icon).
+2. The theme selector dialog will appear.
+3. Choose your favorite color and the interface will update instantly.
 
 **Available Colors:**
 - 🟠 **Orange (Original)**
@@ -54,7 +56,13 @@ Match the radio with your car's interior!
 - 🌸 **Pink** (Chic style)
 - ⚪ **White** (Minimalist style)
 
-Selecting a color instantly changes all application borders and buttons.
+Selecting a color instantly changes borders and buttons. Buttons are now **transparent** to reveal custom backgrounds.
+
+### Custom Backgrounds
+You can set your own background image:
+1. Copy your `background.jpg` or `background.png` image to the `/sdcard/RadioLogos/` folder.
+2. Restart the application.
+3. Your image will appear as the background through the glass interface.
 
 ---
 
@@ -66,6 +74,7 @@ OpenRadioFM attempts to display each station's logo automatically.
 2. **Smart Cache:** Once downloaded, logos are saved in memory and disk to appear instantly next time, even without internet.
 
 **Logo Location:** `/sdcard/RadioLogos/`
+*Note: The folder is created automatically when the app starts. If it doesn't exist, you can create it manually.*
 You can manually add your own logos by copying `.png` images to this folder named with the frequency.
 *Example:* For 100.0 MHz, save image as `10000.png` or `100000.png`.
 
@@ -73,8 +82,9 @@ You can manually add your own logos by copying `.png` images to this folder name
 If the RDS name is incorrect or you want to set your own:
 1. Long press the **Name Text** (STATION) or the **Main Logo**.
 2. A dialog box will appear.
-3. Type the desired name and press "Save".
-4. To revert to the original name (RDS), press "Restore Original".
+3. Type the desired name (e.g., "ROCK FM") and press "Save".
+4. The app will automatically search for a logo with that name (e.g., `96900_ROCKFM.png`).
+5. This allows different logos for the same frequency in different cities (perfect for non-Root users).
 
 ---
 
@@ -106,4 +116,4 @@ The app automatically detects your device capabilities:
 - If you recently updated, try clearing app data in Android Settings.
 
 ---
-*Developed by OpenRadioFM Team - v8.5 (January 2026)*
+*Developed by OpenRadioFM Team - v2.0 (January 2026)*
