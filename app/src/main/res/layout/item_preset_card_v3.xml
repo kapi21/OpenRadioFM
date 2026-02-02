@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="140dp"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_glass_card_classic"
+    android:layout_marginEnd="8dp"
+    android:padding="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center">
+
+    <!-- Preset Image (Logo) -->
+    <ImageView
+        android:id="@+id/ivPreset" 
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:src="@drawable/ic_station_placeholder"
+        android:scaleType="fitCenter"
+        android:padding="8dp"/>
+
+    <!-- Preset Frequency/Name -->
+    <TextView
+        android:id="@+id/tvPreset"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="87.5"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:singleLine="true"/>
+</LinearLayout>

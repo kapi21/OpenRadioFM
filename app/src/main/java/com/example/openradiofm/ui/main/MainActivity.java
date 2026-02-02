@@ -192,7 +192,19 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.Theme_OpenRadioFm);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        
+        // V3.0: Layout Selection
+        mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
+        boolean useV3Layout = mPrefs.getBoolean("pref_layout_v3", false);
+        
+        if (useV3Layout) {
+            getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            // Optional: If we want to ensure it's not translucent
+            // getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
+        }
+        
+        setContentView(useV3Layout ? R.layout.activity_main_v3 : R.layout.activity_main);
 
         if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
@@ -218,7 +230,8 @@ public class MainActivity extends AppCompatActivity {
         // En MODO_FM_BASICO desactivamos por completo el uso de root.
         mRepository = new com.example.openradiofm.data.repository.RadioRepository(this, mMode == FmMode.FM_COMPLETO);
         // Preferencias para presets y estados de indicadores (TA/AF/TP, etc.).
-        mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE);
+        // Movidal arriba para usarlo en setContentView
+        // mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE);
 
         // Bind Views
         tvFrequency = findViewById(R.id.tvFrequency);
@@ -322,7 +335,19 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.btnAutoScan).setOnClickListener(v -> execRemote(IRadioServiceAPI::onScanEvent));
         
         // LOC/DX Switch
-        btnLocDx.setOnClickListener(v -> execRemote(IRadioServiceAPI::onLocDxEvent));
+        // LOC/DX Switch
+        btnLocDx = findViewById(R.id.btnLocDx);
+        if (btnLocDx != null) {
+            btnLocDx.setOnClickListener(v -> execRemote(IRadioServiceAPI::onLocDxEvent));
+            // V3.5: Layout Toggle on Long Press
+            btnLocDx.setOnLongClickListener(v -> {
+                boolean current = mPrefs.getBoolean("pref_layout_v3", false);
+                mPrefs.edit().putBoolean("pref_layout_v3", !current).apply();
+                showToast("Layout: " + (!current ? "V3 (Horizontal)" : "V2 (Vertical)"));
+                recreate();
+                return true;
+            });
+        }
     }
     
     // setupIndicators removed
@@ -548,6 +573,17 @@ public class MainActivity extends AppCompatActivity {
         builder.setMessage("OPENRADIOFM v2.0b\\n\\nDesarrollada por Jimmy80\\n(Enero 2026)");
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
+        
+        // V3.0: Toggle Layout Button REMOVED (Moved to LOC/DX Long Press)
+        /*
+        builder.setNeutralButton("Switch Layout (v3)", (dialog, which) -> {
+            boolean current = mPrefs.getBoolean("pref_layout_v3", false);
+            mPrefs.edit().putBoolean("pref_layout_v3", !current).apply();
+            showToast("Layout cambiado. Reiniciando...");
+            recreate();
+        });
+        */
+        
         builder.show();
     }
     
@@ -986,6 +1022,9 @@ public class MainActivity extends AppCompatActivity {
             default: drawableId = R.drawable.bg_glass_card_classic; break;
         }
         
+        // User Request V3.5: Apply skin borders ONLY to Presets.
+        // Commenting out main controls so they stay clean/transparent.
+        /*
         int[] viewIds = {
             R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
             R.id.tvRdsName, R.id.tvRdsInfo,
@@ -999,6 +1038,7 @@ public class MainActivity extends AppCompatActivity {
             android.view.View v = findViewById(id);
             if (v != null) v.setBackgroundResource(drawableId);
         }
+        */
         
         // V2.1: Apply to Presets P1-P12
         for(int i=1; i<=12; i++) {
