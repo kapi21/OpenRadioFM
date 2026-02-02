@@ -34,12 +34,12 @@ public class RadioRepository {
         // Usamos un archivo de preferencias específico para los nombres de emisoras
         this.mPrefs = context.getSharedPreferences("RadioStationNames", android.content.Context.MODE_PRIVATE);
         
-        // V2.0: Asegurar que existe la carpeta RadioLogos
+        // V3.0: Asegurar que existe la carpeta RadioLogos
         ensureRadioLogosFolderExists();
     }
     
     /**
-     * V2.0: Asegura que la carpeta /sdcard/RadioLogos/ existe.
+     * V3.0: Asegura que la carpeta /sdcard/RadioLogos/ existe.
      */
     private void ensureRadioLogosFolderExists() {
         try {
@@ -109,7 +109,7 @@ public class RadioRepository {
         RadioStation station = new RadioStation(freqKHz, finalName);
         
         // 0. Revisar Caché en Memoria
-        String cacheKey = freqKHz + "_" + finalName; // V2.0: Caché con nombre RDS
+        String cacheKey = freqKHz + "_" + finalName; // V3.0: Caché con nombre RDS
         if (logoCache.containsKey(freqKHz)) {
             String cachedPath = logoCache.get(freqKHz);
             station.setLogoUrl(cachedPath);
@@ -117,7 +117,7 @@ public class RadioRepository {
             return station;
         }
 
-        // V2.0: Búsqueda de logos con prioridad frecuencia+RDS
+        // V3.0: Búsqueda de logos con prioridad frecuencia+RDS
         // 1. Logo con frecuencia + nombre RDS: /sdcard/RadioLogos/96900_LOS40.png
         String logoPath = getLogoPath(freqKHz, finalName);
         
@@ -154,7 +154,7 @@ public class RadioRepository {
     }
 
     /**
-     * V2.0: Busca el logo en el orden de prioridad:
+     * V3.0: Busca el logo en el orden de prioridad:
      * 1. /sdcard/RadioLogos/96900_LOS40.png (frecuencia + RDS)
      * 2. /sdcard/RadioLogos/96900.png (solo frecuencia, compatibilidad)
      * 3. /sdcard/RadioLogos/9690.png (formato corto)
@@ -189,7 +189,7 @@ public class RadioRepository {
     }
 
     /**
-     * V2.0: Descarga un logo y lo guarda con formato frecuencia_RDS.png
+     * V3.0: Descarga un logo y lo guarda con formato frecuencia_RDS.png
      * Se debe llamar SIEMPRE desde un hilo de fondo.
      */
     private String downloadAndSaveLogo(String urlString, int freqKHz, String rdsName) {
@@ -204,7 +204,7 @@ public class RadioRepository {
             
             ensureRadioLogosFolderExists();
             
-            // V2.0: Guardar con nombre RDS si está disponible
+            // V3.0: Guardar con nombre RDS si está disponible
             String fileName;
             if (rdsName != null && !rdsName.isEmpty()) {
                 String sanitizedName = rdsName.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();

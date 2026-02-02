@@ -1,11 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/bg_grainy_dark"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:weightSum="10">
+    android:background="@drawable/bg_grainy_dark">
+
+    <!-- Premium Background Layer (Dynamic Blurred Logo) -->
+    <ImageView
+        android:id="@+id/ivDynamicBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0.25"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:padding="8dp"
+        android:weightSum="10">
 
     <!-- ====================================================================================== -->
     <!-- COLUMN 1: PRESETS (30%) -->
@@ -396,7 +409,15 @@
             android:layout_marginBottom="4dp"
             android:background="@drawable/bg_glass_card_classic"
             android:gravity="center"
-            android:padding="4dp">
+            android:padding="4dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvBandIndicator"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone" />
+
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvFrequency"
                 android:layout_width="match_parent"
@@ -420,7 +441,7 @@
             android:layout_marginBottom="4dp"
             android:orientation="horizontal">
             <ImageButton
-                android:id="@+id/btnSeekUp"
+                android:id="@+id/btnSeekDown"
                 android:layout_width="0dp"
                 android:layout_height="90dp"
                 android:layout_weight="1"
@@ -430,7 +451,7 @@
                 android:scaleType="fitCenter"
                 android:padding="12dp"/>
             <ImageButton
-                android:id="@+id/btnSeekDown"
+                android:id="@+id/btnSeekUp"
                 android:layout_width="0dp"
                 android:layout_height="90dp"
                 android:layout_weight="1"
@@ -538,8 +559,9 @@
         </LinearLayout>
         <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
             <ImageButton android:id="@+id/btnSettings" android:layout_width="0dp" android:layout_height="90dp" android:layout_weight="1" android:layout_marginEnd="4dp" android:background="@drawable/bg_glass_card" android:src="@drawable/radio_eq_n" android:scaleType="fitCenter" android:padding="12dp"/>
-            <androidx.appcompat.widget.AppCompatButton android:id="@+id/btnTest" android:layout_width="0dp" android:layout_height="90dp" android:layout_weight="1" android:background="@drawable/bg_glass_card" android:text="TEST" android:textColor="@color/white" android:textStyle="bold" android:textSize="20sp"/>
+            <ImageButton android:id="@+id/btnGps" android:layout_width="0dp" android:layout_height="90dp" android:layout_weight="1" android:background="@drawable/bg_glass_card" android:src="@drawable/radio_gps" android:scaleType="fitCenter" android:padding="18dp"/>
         </LinearLayout>
     </LinearLayout>
 
-</LinearLayout>
+    </LinearLayout>
+</FrameLayout>

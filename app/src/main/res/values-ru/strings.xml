@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">OpenRadio FM v3.0</string>
+    
+    <!-- Premium Menu Strings -->
+    <string name="premium_customization">Премиум Настройки</string>
+    <string name="theme_colors">Цвета Темы</string>
+    <string name="typography">Типографика</string>
+    <string name="background_mode">Режим Фона</string>
+    <string name="accent_color">Акцентный Цвет</string>
+    <string name="select_typography">Выберите Шрифт</string>
+    <string name="select_bg_mode">Выберите Режим Фона</string>
+    <string name="close">Закрыть</string>
+    <string name="font_applied">Шрифт применен</string>
+    <string name="bg_mode_updated">Режим фона обновлен</string>
+    
+    <!-- Background Modes -->
+    <string name="bg_pure_black">Чистый Черный</string>
+    <string name="bg_fixed_image">Фикс. изображение (background.png)</string>
+    <string name="bg_dynamic_logo">Логотип станции (Динамический)</string>
+
+    <!-- Font Names -->
+    <string name="font_default">По умолчанию (Система)</string>
+    <string name="font_bebas">Роботизированный (Bebas)</string>
+    <string name="font_digital">Цифровой (LED)</string>
+    <string name="font_modern">Современный (Inter)</string>
+    <string name="font_orbitron">Футуристический (Orbitron)</string>
+</resources>

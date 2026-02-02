@@ -1,119 +1,70 @@
-# User Manual - OpenRadioFM v2.0b
+# User Manual - OpenRadioFM v3.0 (The Car Experience)
 
-Welcome to OpenRadioFM, an advanced FM radio application designed specifically for Android Head Units, featuring hardware control support and customization options.
-
----
-
-## 1. Main Interface
-
-The interface is designed to be clear, legible, and easy to use while driving.
-
-### 1.1 Left Panel: Presets
-Here your 12 favorite saved stations are displayed (scroll down to see more).
-- **Short Press:** Tunes to the saved station.
-- **Long Press:** Saves the current frequency to that memory slot.
-- **Icons:** Displays the station logo if available.
-
-### 1.2 Center Panel: Information
-- **Frequency:** Displays current frequency with 2-decimal precision (e.g., `100.00`). Text size auto-adjusts to be as large as possible.
-- **RDS Name:** Displays the station name (e.g., "LOS40") received via radio signal.
-- **RDS Text:** Additional information (song title, news) in marquee format.
-- **Seek Buttons (Arrows):**
-  - **Short Press:** Fine manual frequency adjustment (+/- 0.05 MHz).
-  - **Long Press:** Automatically seeks the next station with good signal.
-- **BAND Button:** Switches between bands (FM1, FM2, FM3, AM1, AM2).
-- **SCAN Button:** Scans and briefly plays all available stations.
-
-### 1.3 Right Panel: Controls & Logos
-- **Main Logo:** Displays the current station logo in large size.
-- **LOC/DX:** Toggles reception sensitivity (Local for city, DX for long distance).
-- **Mute:** Instantly mutes audio.
-- **EQ Button (Settings):** Audio settings (opens system equalizer).
-  - **Long Press:** Opens the **Skin Selector** (Color Themes).
-- **TEST Button:** Internal test menu. (5 clicks to activate).
+Welcome to OpenRadioFM v3.0, the ultimate evolution of FM radio for Android Head Units. This version is optimized for both vertical use and widescreen displays (1024x600) with a brand-new horizontal layout.
 
 ---
 
-## 2. Customization (Skins)
+## 1. Interface & Navigation
 
-Match the radio with your car's interior!
+### 1.1 Screen Layouts
+OpenRadioFM now features two main designs:
+- **V2 (Vertical/Classic):** Optimized for tablet-style or vertical screens. *Now also supports dynamic backgrounds.*
+- **V3 (Horizontal/Premium) [New]:** Widescreen design ideal for car dashboards, featuring larger icons, gallery-style logos, and graphical band indicators.
+- **How to switch:** Long press the **LOC/DX** button to toggle between horizontal and vertical layouts. The app will automatically restart with the new look.
 
-### How to change the color (Skin)
-### How to change the color (Skin)
-1. Long press the **EQ / Settings** button (equalizer icon).
-2. The theme selector dialog will appear.
-3. Choose your favorite color and the interface will update instantly.
+### 1.2 Bottom Control Panel (V3)
+- **Settings (EQ):** Short press for system equalizer. **Long press** for the Premium Customization Menu.
+- **Band:** Switch between FM1, FM2, FM3, AM1, and AM2.
+- **LOC/DX:** Change reception sensitivity (Local/Long Distance). *Long press to change layout.*
+- **Scan:** Automatic station scanning.
+- **Mute:** Instant silence.
+- **GPS [New]:** Short press to open your favorite navigation app (Maps, Waze, etc.).
+  - *Hidden Menu:* Fast-click the GPS icon **5 times** to open the factory technical menu.
 
-**Available Colors:**
-- 🟠 **Orange (Original)**
-- 🔘 **Classic Gray** (Neutral style)
-- 🔵 **Blue** (Modern style)
-- 🟢 **Green** (Retro style)
-- 🟣 **Purple** (Neon style)
-- 🔴 **Red** (Sport style)
-- 🟡 **Yellow** (Warm style)
-- ❄️ **Cyan** (Ice style)
-- 🌸 **Pink** (Chic style)
-- ⚪ **White** (Minimalist style)
+### 1.3 Frequency & RDS Control
+- **Left Arrow (<):** Decrease frequency (-0.05 MHz). Long press for automatic seek down.
+- **Right Arrow (>):** Increase frequency (+0.05 MHz). Long press for automatic seek up.
+- **RDS:** Dynamic display of station name and informative text (RadioText) with smooth scrolling.
 
-Selecting a color instantly changes borders and buttons. Buttons are now **transparent** to reveal custom backgrounds.
+---
 
-### Custom Backgrounds
-You can set your own background image:
-1. Copy your `background.jpg` or `background.png` image to the `/sdcard/RadioLogos/` folder.
-2. Restart the application.
-3. Your image will appear as the background through the glass interface.
+## 2. Premium Customization (Secret Menu)
+
+Long press the **Settings (EQ)** button to access the customization center:
+
+### 2.1 Theme Colors
+Choose from 10 color schemes (Orange, Blue, Red, Cyan, etc.) applied to UI borders and accents.
+
+### 2.2 Typography (Fonts)
+Change the look of all texts. Available options:
+- **System:** Android default.
+- **Bebas:** Industrial/Robotic style.
+- **Digital:** Classic LED style of vintage radios.
+- **Inter:** Modern and minimalist (high readability).
+- **Orbitron:** Futuristic and high-tech style.
+
+### 2.3 Background Mode
+Manage how your radio's background looks:
+1. **Pure Black:** Ideal for OLED/AMOLED screens or night driving.
+2. **background.png Image:** Load your custom image from `/sdcard/RadioLogos/background.png`.
+3. **Dynamic Logo [New]:** The radio background automatically changes to the current station's logo, applied with an elegant blur effect.
 
 ---
 
 ## 3. Logo & Name Management
 
 ### Station Logos
-OpenRadioFM attempts to display each station's logo automatically.
-1. **Auto Load:** Searches for logos in internal database or internet if connected.
-2. **Smart Cache:** Once downloaded, logos are saved in memory and disk to appear instantly next time, even without internet.
-
-**Logo Location:** `/sdcard/RadioLogos/`
-*Note: The folder is created automatically when the app starts. If it doesn't exist, you can create it manually.*
-You can manually add your own logos by copying `.png` images to this folder named with the frequency.
-*Example:* For 100.0 MHz, save image as `10000.png` or `100000.png`.
-
-### Custom Names
-If the RDS name is incorrect or you want to set your own:
-1. Long press the **Name Text** (STATION) or the **Main Logo**.
-2. A dialog box will appear.
-3. Type the desired name (e.g., "ROCK FM") and press "Save".
-4. The app will automatically search for a logo with that name (e.g., `96900_ROCKFM.png`).
-5. This allows different logos for the same frequency in different cities (perfect for non-Root users).
+- **Location:** `/sdcard/RadioLogos/`
+- **Manual:** You can add your own logos in `.png` format named with the frequency (e.g., `96900.png`).
+- **Custom Names:** Long press the station name on screen to rename it. The app will look for logos matching that name.
 
 ---
 
-## 4. Operating Modes
+## 4. Troubleshooting
 
-The app automatically detects your device capabilities:
-
-- **Full Mode (Root + Service):**
-  - Requires rooted device and `com.hcn.autoradio` service.
-  - Full functional RDS, real names, and direct radio chip control.
-  
-- **Basic Mode:**
-  - For standard devices without root.
-  - Basic tuning and logo functions.
-  - Station names must be entered manually.
+- **GPS doesn't open:** Ensure you have a maps app installed and set as default in Android.
+- **Dynamic background not changing:** Check if the current station has an assigned logo. If no logo is found, the background defaults to black.
+- **SEEK buttons inverted:** In this v3.0 version, orientation has been fixed to match most steering wheel controls.
 
 ---
-
-## 5. Troubleshooting
-
-**Frequency doesn't change:**
-- Ensure you are not in "Scan" mode. Press Scan again to stop.
-
-**Logos not showing:**
-- Verify internet connection on first run.
-- Check storage permissions are granted.
-
-**App crashes on start:**
-- If you recently updated, try clearing app data in Android Settings.
-
----
-*Developed by OpenRadioFM Team - v2.0 (January 2026)*
+*Developed by Jimmy80 - v3.0 (February 2026)*

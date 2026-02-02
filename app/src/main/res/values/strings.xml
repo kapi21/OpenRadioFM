@@ -1,3 +1,27 @@
 <resources>
-    <string name="app_name">OpenRadio FM</string>
+    <string name="app_name">OpenRadio FM v3.0</string>
+    
+    <!-- Premium Menu Strings -->
+    <string name="premium_customization">Personalización Premium</string>
+    <string name="theme_colors">Colores del Tema</string>
+    <string name="typography">Tipografía</string>
+    <string name="background_mode">Modo de Fondo</string>
+    <string name="accent_color">Color de Acento</string>
+    <string name="select_typography">Seleccionar Tipografía</string>
+    <string name="select_bg_mode">Modo de Fondo</string>
+    <string name="close">Cerrar</string>
+    <string name="font_applied">Fuente aplicada</string>
+    <string name="bg_mode_updated">Modo de fondo actualizado</string>
+    
+    <!-- Background Modes -->
+    <string name="bg_pure_black">Negro Puro</string>
+    <string name="bg_fixed_image">Imagen background.png</string>
+    <string name="bg_dynamic_logo">Logo Emisora (Dinámico)</string>
+
+    <!-- Font Names -->
+    <string name="font_default">Defecto (System)</string>
+    <string name="font_bebas">Robótica (Bebas)</string>
+    <string name="font_digital">Digital (LED)</string>
+    <string name="font_modern">Moderna (Inter)</string>
+    <string name="font_orbitron">Futurista (Orbitron)</string>
 </resources>

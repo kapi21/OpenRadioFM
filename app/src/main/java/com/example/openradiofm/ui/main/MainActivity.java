@@ -58,14 +58,15 @@ public class MainActivity extends AppCompatActivity {
     private android.content.SharedPreferences mPrefs;
     private HiddenRadioPlayer mHiddenPlayer;
     
-    // V2.0: Caché de logos por banda para evitar pérdida al cambiar FM1/FM2/FM3
+    // V3.0: Caché de logos por banda para evitar pérdida al cambiar FM1/FM2/FM3
     private final java.util.HashMap<String, String> mLogoCachePerBand = new java.util.HashMap<>();
     private String mLastLogoUrl = "";
     
-    // V2.0: Background personalizado
+    // V3.0: Background personalizado
     private android.view.View mRootLayout;
 
-    private TextView tvFrequency, tvRdsName, tvRdsInfo;
+    private TextView tvFrequency, tvRdsName, tvRdsInfo, tvBandIndicator;
+    private ImageView ivBandIndicator;
     private ImageButton btnLocDx, btnBand;
 
     private final android.view.View[] cardPresets = new android.view.View[12];
@@ -188,6 +189,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private ImageView ivDynamicBackground;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.Theme_OpenRadioFm);
@@ -205,6 +208,9 @@ public class MainActivity extends AppCompatActivity {
         }
         
         setContentView(useV3Layout ? R.layout.activity_main_v3 : R.layout.activity_main);
+
+        // V3.8: Premium Background Binding
+        ivDynamicBackground = findViewById(R.id.ivDynamicBackground);
 
         if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
@@ -240,6 +246,9 @@ public class MainActivity extends AppCompatActivity {
         
         btnLocDx = findViewById(R.id.btnLocDx);
         btnBand = findViewById(R.id.btnBand);
+        
+        tvBandIndicator = findViewById(R.id.tvBandIndicator);
+        ivBandIndicator = findViewById(R.id.ivBandIndicator);
         
         
         // Indicators Binding - REMOVED
@@ -307,29 +316,45 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Test/Hidden Menu (V8: 5 Clicks logic) - Restaurado a original
-        findViewById(R.id.btnTest).setOnClickListener(v -> {
-            long now = System.currentTimeMillis();
-            if (mTestClickCount == 0 || (now - mTestStartTime) > 15000) {
-                mTestClickCount = 1;
-                mTestStartTime = now;
-            } else {
-                mTestClickCount++;
-            }
-
-            if (mTestClickCount >= 5) {
-                mTestClickCount = 0; // Reset
-                Intent intent = new Intent();
-                intent.setComponent(new android.content.ComponentName("com.hcn.changedapp", "com.hcn.changedapp.TestActivity"));
-                try {
-                    startActivity(intent);
-                } catch (Exception e) {
-                    showToast("Error al abrir TestActivity");
+        // V3.8: GPS Button with Hidden Test Menu
+        android.view.View btnGps = findViewById(R.id.btnGps);
+        if (btnGps != null) {
+            btnGps.setOnClickListener(v -> {
+                long now = System.currentTimeMillis();
+                
+                // Track clicks for hidden menu
+                if (mTestClickCount == 0 || (now - mTestStartTime) > 3000) {
+                    mTestClickCount = 1;
+                    mTestStartTime = now;
+                } else {
+                    mTestClickCount++;
                 }
-            } else {
-                showToast("Faltan " + (5 - mTestClickCount) + " clics");
-            }
-        });
+
+                if (mTestClickCount >= 5) {
+                    mTestClickCount = 0; // Reset
+                    Intent testIntent = new Intent();
+                    testIntent.setComponent(new android.content.ComponentName("com.hcn.changedapp", "com.hcn.changedapp.TestActivity"));
+                    try {
+                        startActivity(testIntent);
+                    } catch (Exception e) {
+                        showToast("Error al abrir TestActivity");
+                    }
+                } else {
+                    // Single click action: Open GPS
+                    // If it's the first click or still haven't reached 5
+                    if (mTestClickCount == 1) {
+                        try {
+                            // Try to open Google Maps as default, or any maps app
+                            Intent mapIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("geo:0,0?q="));
+                            mapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(mapIntent);
+                        } catch (Exception e) {
+                            showToast("No se encontró aplicación de GPS");
+                        }
+                    }
+                }
+            });
+        }
 
         // Auto Scan
         findViewById(R.id.btnAutoScan).setOnClickListener(v -> execRemote(IRadioServiceAPI::onScanEvent));
@@ -521,20 +546,37 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
+    /**
+     * V3.8: Aplica la tipografía seleccionada a los elementos clave.
+     * Busca los archivos en res/font (ej: bebas.ttf, digital.ttf, inter.ttf)
+     */
     private void applyFonts() {
+        int fontType = mPrefs.getInt("pref_font_type", 0); // 0: Default, 1: Bebas, 2: Digital, 3: Inter
+        
+        android.graphics.Typeface typeface = null;
         try {
-            android.graphics.Typeface orbitron = android.graphics.Typeface.createFromAsset(getAssets(), "fonts/orbitron_bold.ttf");
-            tvFrequency.setTypeface(orbitron);
-            // V8.3: Apply to all main text views
-            tvRdsName.setTypeface(orbitron); 
-            tvRdsInfo.setTypeface(orbitron); 
-            
-            // Apply to preset numbers too
-            for (TextView tv : tvPresets) {
-                if (tv != null) tv.setTypeface(orbitron);
-            }
+            if (fontType == 1) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.bebas);
+            else if (fontType == 2) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.digital);
+            else if (fontType == 3) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.inter);
+            else if (fontType == 4) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.orbitron);
         } catch (Exception e) {
-            Log.w(TAG, "Orbitron font not found in assets/fonts. Skipping.");
+            // Si no existen los archivos en res/font todavía, usamos el por defecto (Orbitron en assets o System)
+            try {
+                typeface = android.graphics.Typeface.createFromAsset(getAssets(), "fonts/orbitron_bold.ttf");
+            } catch (Exception ex) {
+                typeface = android.graphics.Typeface.DEFAULT_BOLD;
+            }
+        }
+
+        if (typeface == null) typeface = android.graphics.Typeface.DEFAULT_BOLD;
+
+        tvFrequency.setTypeface(typeface);
+        tvRdsName.setTypeface(typeface);
+        tvRdsInfo.setTypeface(typeface);
+        
+        // V2.1: Use traditional loop for safety with tvPresets array
+        for (int i = 0; i < tvPresets.length; i++) {
+            if (tvPresets[i] != null) tvPresets[i].setTypeface(typeface);
         }
     }
     
@@ -570,7 +612,7 @@ public class MainActivity extends AppCompatActivity {
     private void showCreditsDialog() {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("About OpenRadioFM");
-        builder.setMessage("OPENRADIOFM v2.0b\\n\\nDesarrollada por Jimmy80\\n(Enero 2026)");
+        builder.setMessage("OpenRadioFM v3.0\\n\\nDesarrollada por Jimmy80\\n(Febrero 2026)");
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
         
@@ -612,42 +654,47 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * V2.0: Carga un fondo personalizado desde /sdcard/RadioLogos/background.jpg o .png
-     * Si no existe, mantiene el fondo por defecto.
+     * V3.8: Carga el fondo según la preferencia del usuario (pref_bg_mode).
+     * 0: Negro Puro, 1: background.png personal, 2: Logo Dinámico.
      */
     private void loadCustomBackground() {
-        try {
-            // Buscar background.jpg primero, luego .png
-            java.io.File bgJpg = new java.io.File("/sdcard/RadioLogos/background.jpg");
-            java.io.File bgPng = new java.io.File("/sdcard/RadioLogos/background.png");
-            
-            java.io.File backgroundFile = null;
-            if (bgJpg.exists()) {
-                backgroundFile = bgJpg;
-            } else if (bgPng.exists()) {
-                backgroundFile = bgPng;
-            }
-            
-            if (backgroundFile != null) {
-                // Cargar imagen y aplicarla como fondo
-                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(backgroundFile.getAbsolutePath());
-                if (bitmap != null) {
-                    android.graphics.drawable.BitmapDrawable drawable = new android.graphics.drawable.BitmapDrawable(getResources(), bitmap);
-                    // V2.0 FIX: Aplicar al LinearLayout raíz, no a android.R.id.content
-                    android.view.View rootView = getWindow().getDecorView().findViewById(android.R.id.content);
-                    if (rootView instanceof android.view.ViewGroup) {
-                        android.view.View actualRoot = ((android.view.ViewGroup) rootView).getChildAt(0);
-                        if (actualRoot != null) {
-                            actualRoot.setBackground(drawable);
-                            Log.d(TAG, "Fondo personalizado cargado: " + backgroundFile.getName());
-                        }
+        int bgMode = mPrefs.getInt("pref_bg_mode", 1); // Por defecto Imagen si existe
+        
+        // Reset backgrounds first
+        if (ivDynamicBackground != null) ivDynamicBackground.setVisibility(View.GONE);
+        View root = findViewById(R.id.rootLayout); // assuming id is set, or find by type
+        if (root == null) {
+             android.view.View decor = getWindow().getDecorView().findViewById(android.R.id.content);
+             if (decor instanceof android.view.ViewGroup) root = ((android.view.ViewGroup) decor).getChildAt(0);
+        }
+
+        if (root == null) return;
+
+        if (bgMode == 0) {
+            // Negro Puro
+            root.setBackgroundColor(android.graphics.Color.BLACK);
+        } else if (bgMode == 1) {
+            // Imagen Fija background.png
+            try {
+                java.io.File bgJpg = new java.io.File("/sdcard/RadioLogos/background.jpg");
+                java.io.File bgPng = new java.io.File("/sdcard/RadioLogos/background.png");
+                java.io.File backgroundFile = bgJpg.exists() ? bgJpg : (bgPng.exists() ? bgPng : null);
+
+                if (backgroundFile != null) {
+                    android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(backgroundFile.getAbsolutePath());
+                    if (bitmap != null) {
+                        root.setBackground(new android.graphics.drawable.BitmapDrawable(getResources(), bitmap));
                     }
+                } else {
+                    root.setBackgroundResource(R.drawable.bg_grainy_dark);
                 }
-            } else {
-                Log.d(TAG, "No se encontró fondo personalizado, usando fondo por defecto");
+            } catch (Exception e) {
+                root.setBackgroundResource(R.drawable.bg_grainy_dark);
             }
-        } catch (Exception e) {
-            Log.e(TAG, "Error al cargar fondo personalizado: " + e.getMessage());
+        } else {
+            // Logo Dinámico (El fondo base es negro, el logo se superpone en ivDynamicBackground)
+            root.setBackgroundColor(android.graphics.Color.BLACK);
+            // El refresco real ocurre en updateDynamicBackground
         }
     }
 
@@ -660,49 +707,51 @@ public class MainActivity extends AppCompatActivity {
      * - Las búsquedas largas (seek up/down) usan los eventos específicos del servicio.
      */
     private void setupSeekButtons() {
-        ImageButton btnSeekUp = findViewById(R.id.btnSeekUp);     // VISUALLY LEFT (<) -> DOWN (Decrement)
-        ImageButton btnSeekDown = findViewById(R.id.btnSeekDown); // VISUALLY RIGHT (>) -> UP (Increment)
+        ImageButton btnSeekDownV3 = findViewById(R.id.btnSeekDown); // LEFT (<)
+        ImageButton btnSeekUpV3 = findViewById(R.id.btnSeekUp);     // RIGHT (>)
         
-        // V8.4: Custom Seek Step (0.1 MHz)
-        // We use gotoFreq(current +/- 100) instead of onManualUp/Down because default step is 0.05
-        
-        btnSeekUp.setOnClickListener(v -> {
-             if (mRadioService == null) return;
-             try {
-                 int current = mRadioService.getCurrentFreq();
-                 int newFreq = current - 50; // -0.05 MHz (Was 0.1)
-                 if (newFreq < 87500) newFreq = 108000; // Wrap Around
-                 mRadioService.gotoFreq(newFreq);
-             } catch (RemoteException e) { e.printStackTrace(); }
-             // Old: execRemote(IRadioServiceAPI::onManualDownEvent);
-        });
-        
-        btnSeekUp.setOnLongClickListener(v -> {
-            execRemote(IRadioServiceAPI::onSeekUpEvent); // V9: Swapped
-            return true;
-        });
+        // Left Button (<) -> Decrement / Seek Down
+        if (btnSeekDownV3 != null) {
+            btnSeekDownV3.setOnClickListener(v -> {
+                if (mRadioService == null) return;
+                try {
+                    int current = mRadioService.getCurrentFreq();
+                    int newFreq = current - 50; // -0.05 MHz
+                    if (newFreq < 87500) newFreq = 108000;
+                    mRadioService.gotoFreq(newFreq);
+                } catch (RemoteException e) { e.printStackTrace(); }
+            });
+            
+            btnSeekDownV3.setOnLongClickListener(v -> {
+                execRemote(IRadioServiceAPI::onSeekUpEvent); // User Request: Swap events
+                return true;
+            });
+        }
 
-        // Right Button (>) -> Increment
-        btnSeekDown.setOnClickListener(v -> {
-             if (mRadioService == null) return;
-             try {
-                 int current = mRadioService.getCurrentFreq();
-                 int newFreq = current + 50; // +0.05 MHz (Was 0.1)
-                 if (newFreq > 108000) newFreq = 87500; // Wrap Around
-                 mRadioService.gotoFreq(newFreq);
-             } catch (RemoteException e) { e.printStackTrace(); }
-             // Old: execRemote(IRadioServiceAPI::onManualUpEvent);
-        });
-        
-        btnSeekDown.setOnLongClickListener(v -> {
-            execRemote(IRadioServiceAPI::onSeekDownEvent); // V9: Swapped
-            return true;
-        });
+        // Right Button (>) -> Increment / Seek Up
+        if (btnSeekUpV3 != null) {
+            btnSeekUpV3.setOnClickListener(v -> {
+                if (mRadioService == null) return;
+                try {
+                    int current = mRadioService.getCurrentFreq();
+                    int newFreq = current + 50; // +0.05 MHz
+                    if (newFreq > 108000) newFreq = 87500;
+                    mRadioService.gotoFreq(newFreq);
+                } catch (RemoteException e) { e.printStackTrace(); }
+            });
+            
+            btnSeekUpV3.setOnLongClickListener(v -> {
+                execRemote(IRadioServiceAPI::onSeekDownEvent); // User Request: Swap events
+                return true;
+            });
+        }
 
         // Loop Band Logic
-        btnBand.setOnClickListener(v -> {
-             execRemote(IRadioServiceAPI::onBandEvent);
-        });
+        if (btnBand != null) {
+            btnBand.setOnClickListener(v -> {
+                execRemote(IRadioServiceAPI::onBandEvent);
+            });
+        }
     }
 
     private void bindPresetViews() {
@@ -893,16 +942,17 @@ public class MainActivity extends AppCompatActivity {
                                              .load(url)
                                              .transition(DrawableTransitionOptions.withCrossFade())
                                              .into(ivMainLogo);
+                                        
+                                        // V3.8: Premium Dynamic Background (Always call to ensure refresh)
+                                        updateDynamicBackground(url);
                                     }
                                 } else {
                                     // NO encontramos logo
-                                    // Solo borrar el anterior si el cambio de frecuencia fue significativo
-                                    // Si nos movimos poquito (±0.05), mantenemos el logo "vecino" visualmente
-                                    if (significantFreqChange) {
-                                        mLastLogoUrl = "";
-                                        mLogoCachePerBand.remove(bandCacheKey);
-                                        ivMainLogo.setImageResource(R.mipmap.ic_launcher);
-                                    }
+                                    // NO encontramos logo -> Resetear siempre para evitar fondo "atascado"
+                                    mLastLogoUrl = "";
+                                    mLogoCachePerBand.remove(bandCacheKey);
+                                    ivMainLogo.setImageResource(R.mipmap.ic_launcher);
+                                    updateDynamicBackground(null);
                                 }
                             });
                         });
@@ -913,6 +963,7 @@ public class MainActivity extends AppCompatActivity {
                     ivMainLogo.setImageResource(R.mipmap.ic_launcher);
                     mLastLogoUrl = ""; // V2.0 FIX: Resetear estado para permitir recarga al volver
                     mLogoCachePerBand.remove(bandCacheKey);
+                    updateDynamicBackground(null); // V3.0 Reset background
                 }
                 
                 updateBandImage(band);
@@ -923,14 +974,26 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateBandImage(int band) {
-        int resId = R.drawable.radio_fm1; // Default
+        int resId = R.drawable.radio_fm1; 
         if (band == 0) resId = R.drawable.radio_fm1;
         else if (band == 1) resId = R.drawable.radio_fm2;
         else if (band == 2) resId = R.drawable.radio_fm3;
-        else if (band == 3) resId = R.drawable.radio_fm1; 
+        else if (band == 3) resId = R.drawable.radio_fm1; // Fallback for AM
         else if (band == 4) resId = R.drawable.radio_fm2;
         
-        btnBand.setImageResource(resId);
+        if (ivBandIndicator != null) {
+            // Layout V3: Indicador gráfico separado + Botón BAND fijo
+            ivBandIndicator.setImageResource(resId);
+            btnBand.setImageResource(R.drawable.radio_band_n);
+        } else {
+            // Layout V2: El botón BAND actúa como indicador
+            btnBand.setImageResource(resId);
+        }
+
+        // También actualizar el TextView si existe (V2 lo tiene oculto o visible según diseño)
+        if (tvBandIndicator != null) {
+            tvBandIndicator.setText(getBandLabel(band));
+        }
     }
 
     private void updateStatusIndicator(TextView tv, boolean active) {
@@ -989,19 +1052,71 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         
-        // Crear y mostrar el diálogo
+        // V3.8: Menu Premium Localizado
+        String[] options = {
+            getString(R.string.theme_colors), 
+            getString(R.string.typography), 
+            getString(R.string.background_mode)
+        };
+        
         new android.app.AlertDialog.Builder(this)
-            .setTitle("Seleccionar Tema de Color")
-            .setSingleChoiceItems(skinNames, selectedIndex, (dialog, which) -> {
-                // Guardar el skin seleccionado
-                themeManager.setSkin(skins[which]);
-                // Aplicar inmediatamente sin reiniciar
-                applySkin(skins[which]);
-                showToast("Tema aplicado: " + skins[which].displayName);
-                dialog.dismiss();
+            .setTitle(R.string.premium_customization)
+            .setItems(options, (dialog, which) -> {
+                if (which == 0) showColorSelector();
+                else if (which == 1) showFontSelector();
+                else if (which == 2) showBackgroundModeSelector();
             })
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(R.string.close, null)
             .show();
+    }
+
+    private void showColorSelector() {
+        com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
+        com.example.openradiofm.ui.theme.ThemeManager.Skin[] skins = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
+        String[] names = new String[skins.length];
+        for (int i = 0; i < skins.length; i++) names[i] = skins[i].displayName;
+
+        new android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.accent_color)
+            .setItems(names, (d, w) -> {
+                themeManager.setSkin(skins[w]);
+                applySkin(skins[w]);
+                showToast(skins[w].displayName);
+            }).show();
+    }
+
+    private void showFontSelector() {
+        String[] fonts = {
+            getString(R.string.font_default), 
+            getString(R.string.font_bebas), 
+            getString(R.string.font_digital), 
+            getString(R.string.font_modern),
+            getString(R.string.font_orbitron)
+        };
+        new android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.select_typography)
+            .setItems(fonts, (d, w) -> {
+                mPrefs.edit().putInt("pref_font_type", w).apply();
+                applyFonts();
+                showToast(getString(R.string.font_applied));
+            }).show();
+    }
+
+    private void showBackgroundModeSelector() {
+        String[] modes = {
+            getString(R.string.bg_pure_black), 
+            getString(R.string.bg_fixed_image), 
+            getString(R.string.bg_dynamic_logo)
+        };
+        new android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.select_bg_mode)
+            .setItems(modes, (d, w) -> {
+                mPrefs.edit().putInt("pref_bg_mode", w).apply();
+                // V3.8: Immediate refresh
+                loadCustomBackground();
+                updateDynamicBackground(mLastLogoUrl);
+                showToast(getString(R.string.bg_mode_updated));
+            }).show();
     }
     
     /**
@@ -1030,7 +1145,7 @@ public class MainActivity extends AppCompatActivity {
             R.id.tvRdsName, R.id.tvRdsInfo,
             R.id.btnBand, R.id.btnAutoScan,
             R.id.boxLogo,
-            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnTest
+            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps
             // Presets handled dynamically below
         };
         
@@ -1045,6 +1160,29 @@ public class MainActivity extends AppCompatActivity {
             int id = getResources().getIdentifier("cardP" + i, "id", getPackageName());
             android.view.View v = findViewById(id);
             if (v != null) v.setBackgroundResource(drawableId);
+        }
+    }
+
+    /**
+     * V3.8: Actualiza el fondo de la aplicación con el logo de la radio (difuminado).
+     */
+    private void updateDynamicBackground(String logoUrl) {
+        if (ivDynamicBackground == null) return;
+        
+        int bgMode = mPrefs.getInt("pref_bg_mode", 1); // 0: Pure, 1: Fixed, 2: Dynamic
+        
+        if (bgMode == 2 && logoUrl != null && !logoUrl.isEmpty()) {
+            ivDynamicBackground.setVisibility(View.VISIBLE);
+            Glide.with(this)
+                 .load(logoUrl)
+                 .centerCrop()
+                 .transition(DrawableTransitionOptions.withCrossFade())
+                 .into(ivDynamicBackground);
+        } else {
+            // Si el modo no es dinámico o no hay logo, ocultamos la capa dinámica
+            ivDynamicBackground.setVisibility(View.GONE);
+            // Si acabamos de cambiar a modo fijo/negro, refrescamos el fondo base
+            loadCustomBackground();
         }
     }
 }

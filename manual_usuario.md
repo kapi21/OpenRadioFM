@@ -1,137 +1,70 @@
-# Manual de Usuario - OpenRadioFM v2.0b
+# Manual de Usuario - OpenRadioFM v3.0 (The Car Experience)
 
-Bienvenido a OpenRadioFM, una aplicación de radio FM avanzada diseñada específicamente para unidades principales de Android (Head Units) con soporte para control de hardware y personalización.
-
-
+Bienvenido a OpenRadioFM v3.0, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión está optimizada tanto para uso vertical como para pantallas panorámicas (1024x600) con un nuevo diseño horizontal.
 
 ---
 
-## 1. Interfaz Principal
+## 1. Interfaz y Navegación
 
-La interfaz ha sido diseñada para ser clara, legible y fácil de usar mientras se conduce.
+### 1.1 Modos de Pantalla (Layouts)
+OpenRadioFM ahora cuenta con dos diseños principales:
+- **V2 (Vertical/Clásico):** Optimizado para pantallas tipo tablet o verticales. *Ahora también soporta fondos dinámicos.*
+- **V3 (Horizontal/Premium) [Novedad]:** Diseño panorámico ideal para el salpicadero, con iconos más grandes, logos en formato galería e indicadores de banda gráficos.
+- **Cómo cambiar:** Mantén pulsado el botón **LOC/DX** para alternar entre el diseño horizontal y el vertical. La app se reiniciará automáticamente con el nuevo aspecto.
 
-### 1.1 Panel Izquierdo: Memorias (Presets)
-Aquí se muestran tus 12 emisoras favoritas guardadas (desliza verticalmente para ver todas).
-- **Pulsación Corta:** Sintoniza la emisora guardada.
-- **Pulsación Larga:** Guarda la frecuencia actual en esa memoria.
-- **Iconos:** Muestra el logo de la emisora si está disponible.
+### 1.2 Panel de Control Inferior (V3)
+- **Settings (EQ):** Pulsación corta para el ecualizador. **Pulsación larga** para el Menú de Personalización Premium.
+- **Band:** Cambia entre FM1, FM2, FM3, AM1 y AM2.
+- **LOC/DX:** Cambia la sensibilidad (Local/Larga Distancia). *Larga pulsación para cambiar de layout.*
+- **Scan:** Escaneo automático de emisoras.
+- **Mute:** Silencio instantáneo.
+- **GPS [Novedad]:** Pulsación corta para abrir tu aplicación de navegación favorita (Maps, Waze, etc.).
+  - *Menú Oculto:* Haz **5 clics rápidos** sobre el icono de GPS para abrir el menú técnico de fábrica.
 
-### 1.2 Panel Central: Información
-- **Frecuencia:** Muestra la frecuencia actual con precisión de 2 decimales (ej. `100.00`). El tamaño del texto se ajusta automáticamente para ser lo más grande posible.
-- **Nombre RDS:** Muestra el nombre de la emisora (ej. "LOS40") recibido por la señal de radio.
-- **Texto RDS:** Información adicional (título de canción, noticias) en formato marquesina.
-- **Botones de Búsqueda (Flechas):**
-  - **Pulsación Corta:** Ajuste fino manual de frecuencia (+/- 0.05 MHz).
-  - **Pulsación Larga:** Busca automáticamente la siguiente emisora con buena señal (Seek).
-- **Botón BAND:** Cambia entre las bandas (FM1, FM2, FM3, AM1, AM2).
-- **Botón SCAN:** Escanea y reproduce brevemente todas las emisoras disponibles.
-
-### 1.3 Panel Derecho: Controles y Logos
-- **Logo Principal:** Muestra el logo de la emisora actual en gran tamaño.
-- **LOC/DX:** Alterna la sensibilidad de recepción (Local para ciudad, DX para larga distancia).
-- **Mute:** Silencia el audio instantáneamente.
-- **Botón EQ (Configuración):** Ajustes de audio (abre el ecualizador del sistema).
-  - **Pulsación Larga:** Abre el menú de **Selección de Skins** (Temas de color).
-- **Botón TEST:** Menú de pruebas interno. fábrica (5 clicks para activar).
+### 1.3 Control de Frecuencia y RDS
+- **Flecha Izquierda (<):** Bajar frecuencia (-0.05 MHz). Pulsación larga para búsqueda automática hacia abajo.
+- **Flecha Derecha (>):** Subir frecuencia (+0.05 MHz). Pulsación larga para búsqueda automática hacia arriba.
+- **RDS:** Visualización dinámica de nombre de emisora y texto informativo (RadioText) con desplazamiento suave.
 
 ---
 
-## 2. Personalización (Skins)
+## 2. Personalización Premium (Menú Secreto)
 
-¡Haz que la radio combine con el interior de tu coche!
+Mantén pulsado el botón de **Configuración (EQ)** para acceder al centro de personalización:
 
-### Cómo cambiar el color (Skin)
-### Cómo cambiar el color (Skin)
-1. Mantén pulsado el botón **EQ / Ajustes** (icono de ecualizador).
-2. Aparecerá el selector de temas.
-3. Elige tu color favorito y la interfaz se actualizará al instante.
+### 2.1 Colores del Tema
+Elige entre 10 esquemas de color (Naranja, Azul, Rojo, Cyan, etc.) que se aplican a los bordes y acentos de la interfaz.
 
-**Colores Disponibles:**
-- 🟠 **Naranja (Original)**
-- 🔘 **Clásico Gris** (Estilo neutro)
-- 🔵 **Azul** (Estilo moderno)
-- 🟢 **Verde** (Estilo retro)
-- 🟣 **Púrpura** (Estilo neón)
-- 🔴 **Rojo** (Estilo deportivo)
-- 🟡 **Amarillo** (Estilo cálido)
-- ❄️ **Cyan** (Estilo hielo)
-- 🌸 **Rosa** (Estilo chic)
-- ⚪ **Blanco** (Estilo minimalista)
+### 2.2 Tipografía (Fuentes)
+Cambia el aspecto de todos los textos. Disponibles:
+- **System:** Por defecto de Android.
+- **Bebas:** Estilo industrial/robótico.
+- **Digital:** Estilo LED clásico de radio antigua.
+- **Inter:** Moderna y minimalista (alta legibilidad).
+- **Orbitron:** Estilo futurista y tecnológico.
 
-Al seleccionar un color, todos los bordes y botones cambiarán. Los botones ahora son **transparentes** para permitir ver el fondo personalizado.
-
-### Fondos Personalizados
-Puedes poner tu propia imagen de fondo:
-1. Copia tu imagen `background.jpg` o `background.png` en la carpeta `/sdcard/RadioLogos/`.
-2. Reinicia la aplicación.
-3. Tu imagen aparecerá como fondo a través de la interfaz transparente.
+### 2.3 Modo de Fondo
+Gestiona cómo se ve el fondo de tu radio:
+1. **Negro Puro:** Ideal para pantallas OLED/AMOLED o conducción nocturna.
+2. **Imagen background.png:** Carga tu imagen desde `/sdcard/RadioLogos/background.png`.
+3. **Logo Dinámico [Novedad]:** El fondo de la radio cambia automáticamente al logo de la emisora sintonizada, aplicado con un elegante efecto de desenfoque (blur).
 
 ---
 
 ## 3. Gestión de Logos y Nombres
 
 ### Logos de Emisoras
-OpenRadioFM intenta mostrar el logo de cada emisora automáticamente.
-1. **Carga Automática:** Busca logos en su base de datos interna o internet si hay conexión.
-2. **Caché Inteligente:** Una vez descargado un logo, se guarda en memoria y en disco para que aparezca instantáneamente la próxima vez, incluso sin internet.
-
-**Ubicación de Logos:** `/sdcard/RadioLogos/`
-*Nota: La carpeta se crea automáticamente al iniciar la app. Si no existe, puedes crearla manualmente.*
-Puedes añadir tus propios logos manualmente copiando imágenes `.png` en esa carpeta con el nombre de la frecuencia.
-*Ejemplo:* Para 100.0 MHz, guarda la imagen como `10000.png` o `100000.png`.
-
-## 4. Personalización (Skins)
-Mantén pulsado el botón de **Configuración (EQ)** para abrir el selector de temas.
-Puedes elegir entre:
-- Clásico (Gris)
-- Naranja
-- Azul
-- Verde
-- Púrpura
-- Rojo
-- Amarillo
-- Cyan
-- Rosa
-- Blanco
-
-El cambio se aplica instantáneamente a toda la interfaz, incluyendo las memorias.
-
-### Nombres Personalizados
-Si el nombre RDS no es correcto o quieres poner uno propio:
-1. Mantén pulsado el **Texto del Nombre** (STATION) o el **Logo Principal**.
-2. Aparecerá un cuadro de diálogo.
-3. Escribe el nombre deseado (ej. "ROCK FM") y pulsa "Guardar".
-4. La app buscará automáticamente un logo con ese nombre (ej. `96900_ROCKFM.png`).
-5. Esto permite tener logos diferentes para la misma frecuencia en distintas ciudades (ideal para usuarios sin Root).
+- **Ubicación:** `/sdcard/RadioLogos/`
+- **Manual:** Puedes añadir tus logos en formato `.png` con el nombre de la frecuencia (ej: `96900.png`).
+- **Nombres Personalizados:** Mantén pulsado el nombre de la emisora en pantalla para renombrarla. La app buscará logos que coincidan con ese nombre.
 
 ---
 
-## 4. Modos de Funcionamiento
+## 4. Solución de Problemas
 
-La aplicación detecta automáticamente las capacidades de tu dispositivo:
-
-- **Modo Completo (Root + Servicio):**
-  - Requiere dispositivo con Root y el servicio `com.hcn.autoradio`.
-  - Funcionalidad completa de RDS, nombres reales y control directo del chip de radio.
-  
-- **Modo Básico:**
-  - Para dispositivos estándar sin root.
-  - Funciones básicas de sintonización y logos.
-  - Los nombres de emisoras deben introducirse manualmente.
+- **El GPS no se abre:** Asegúrate de tener una aplicación de mapas instalada y configurada como predeterminada en Android.
+- **No cambia el fondo dinámico:** Verifica que la emisora sintonizada tenga un logo asignado. Si no hay logo, el fondo volverá a negro.
+- **Botones SEEK invertidos:** En esta versión v3.0 se ha corregido la orientación para que coincida con la mayoría de mandos al volante.
 
 ---
-
-## 5. Solución de Problemas
-
-**La frecuencia no cambia:**
-- Asegúrate de que no estás en modo "Scan". Pulsa Scan de nuevo para detener.
-
-**No se ven los logos:**
-- Verifica que tienes conexión a internet la primera vez.
-- Verifica que tienes permisos de almacenamiento concedidos.
-
-**La app se cierra al abrir:**
-- Si has actualizado recientemente, prueba a borrar los datos de la aplicación en Ajustes de Android.
-
----
-*Desarrollado por el equipo OpenRadioFM - v2.0 (Enero 2026)*
+*Desarrollado por Jimmy80 - v3.0 (Febrero 2026)*
