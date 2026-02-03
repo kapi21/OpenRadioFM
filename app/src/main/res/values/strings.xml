@@ -10,6 +10,8 @@
     <string name="select_typography">Seleccionar Tipografía</string>
     <string name="select_bg_mode">Modo de Fondo</string>
     <string name="close">Cerrar</string>
+    <string name="select_skin">Seleccionar Tema</string>
+    <string name="select_font">Seleccionar Fuente</string>
     <string name="font_applied">Fuente aplicada</string>
     <string name="bg_mode_updated">Modo de fondo actualizado</string>
     

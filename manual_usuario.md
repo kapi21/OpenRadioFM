@@ -14,7 +14,7 @@ OpenRadioFM ahora cuenta con dos diseños principales:
 
 ### 1.2 Panel de Control Inferior (V3)
 - **Settings (EQ):** Pulsación corta para el ecualizador. **Pulsación larga** para el Menú de Personalización Premium.
-- **Band:** Cambia entre FM1, FM2, FM3, AM1 y AM2.
+- **Band:** Cambia entre FM1, FM2 y FM3.
 - **LOC/DX:** Cambia la sensibilidad (Local/Larga Distancia). *Larga pulsación para cambiar de layout.*
 - **Scan:** Escaneo automático de emisoras.
 - **Mute:** Silencio instantáneo.
@@ -53,10 +53,10 @@ Gestiona cómo se ve el fondo de tu radio:
 
 ## 3. Gestión de Logos y Nombres
 
-### Logos de Emisoras
-- **Ubicación:** `/sdcard/RadioLogos/`
-- **Manual:** Puedes añadir tus logos en formato `.png` con el nombre de la frecuencia (ej: `96900.png`).
-- **Nombres Personalizados:** Mantén pulsado el nombre de la emisora en pantalla para renombrarla. La app buscará logos que coincidan con ese nombre.
+### 3.2 Logo de Marca de Coche (Car Logo) [Novedad v3.0]
+En el diseño horizontal (V3), puedes mostrar el logo de tu coche en el lateral derecho:
+- **Ubicación:** `/sdcard/RadioLogos/car_logo.png`
+- **Requisito:** La imagen debe llamarse exactamente `car_logo.png`. Se recomienda un fondo transparente para mejor estética.
 
 ---
 
@@ -64,7 +64,9 @@ Gestiona cómo se ve el fondo de tu radio:
 
 - **El GPS no se abre:** Asegúrate de tener una aplicación de mapas instalada y configurada como predeterminada en Android.
 - **No cambia el fondo dinámico:** Verifica que la emisora sintonizada tenga un logo asignado. Si no hay logo, el fondo volverá a negro.
+- **Los logos desaparecen al reiniciar:** En la v3.0 se ha añadido integración con el escáner de medios de Android para asegurar que los logos persistan siempre.
 - **Botones SEEK invertidos:** En esta versión v3.0 se ha corregido la orientación para que coincida con la mayoría de mandos al volante.
+- **Punto decimal en frecuencia:** Ahora se fuerza el uso de punto (ej. 108.0) para una visualización más limpia en todos los sistemas.
 
 ---
 *Desarrollado por Jimmy80 - v3.0 (Febrero 2026)*

@@ -74,9 +74,14 @@
                     android:marqueeRepeatLimit="marquee_forever"/>
             </LinearLayout>
             <!-- Balancing spacer for centering RDS text -->
-            <View
+            <!-- Balancing spacer for centering RDS text OR Car Logo -->
+            <ImageView
+                android:id="@+id/ivCarLogo"
                 android:layout_width="150dp"
                 android:layout_height="75dp"
+                android:scaleType="fitCenter"
+                android:layout_marginEnd="0dp"
+                android:layout_marginStart="8dp"
                 android:visibility="invisible"/>
         </LinearLayout>
 
@@ -169,64 +174,64 @@
                         <LinearLayout android:id="@+id/cardP1" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center">
                             <ImageView android:id="@+id/ivP1" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/>
                         </LinearLayout>
-                        <TextView android:id="@+id/tvP1" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="87.5 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP1" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="87.5 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P2 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP2" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center">
                             <ImageView android:id="@+id/ivP2" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/>
                         </LinearLayout>
-                        <TextView android:id="@+id/tvP2" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="90.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP2" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="90.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P3 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP3" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP3" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP3" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="92.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP3" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="92.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P4 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP4" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP4" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP4" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="94.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP4" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="94.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P5 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP5" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP5" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP5" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="96.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP5" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="96.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P6 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP6" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP6" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP6" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="98.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP6" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="98.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P7 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP7" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP7" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP7" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="100.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP7" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="100.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P8 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP8" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP8" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP8" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="102.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP8" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="102.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P9 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP9" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP9" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP9" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="104.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP9" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="104.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P10 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP10" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP10" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP10" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="106.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP10" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="106.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P11 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP11" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP11" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP11" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="108.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP11" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="108.0 MHz" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
                     <!-- P12 -->
                     <LinearLayout android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginEnd="16dp" android:gravity="center">
                         <LinearLayout android:id="@+id/cardP12" android:layout_width="140dp" android:layout_height="140dp" android:background="@drawable/bg_glass_card_classic" android:padding="12dp" android:clickable="true" android:focusable="true" android:gravity="center"><ImageView android:id="@+id/ivP12" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/ic_station_placeholder" android:scaleType="fitCenter"/></LinearLayout>
-                        <TextView android:id="@+id/tvP12" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="Empty" android:textColor="@color/white" android:textStyle="bold" android:textSize="15sp" android:layout_marginTop="4dp" android:singleLine="true"/>
+                        <TextView android:id="@+id/tvP12" android:layout_width="140dp" android:layout_height="wrap_content" android:gravity="center" android:text="Empty" android:textColor="@color/white" android:textStyle="bold" android:textSize="19sp" android:layout_marginTop="4dp" android:singleLine="true"/>
                     </LinearLayout>
 
                 </LinearLayout>

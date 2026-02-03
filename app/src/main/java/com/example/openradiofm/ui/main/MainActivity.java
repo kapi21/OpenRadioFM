@@ -221,6 +221,7 @@ public class MainActivity extends AppCompatActivity {
         
         // V2.0: Cargar fondo personalizado si existe
         loadCustomBackground();
+        loadCarLogo(); // V3.9: Cargar logo marca coche
 
         // Determinar modo de funcionamiento (FM completo vs básico) antes de crear el repositorio.
         mMode = detectMode();
@@ -297,7 +298,7 @@ public class MainActivity extends AppCompatActivity {
         
         // Long Click para abrir selector de skins
         btnEq.setOnLongClickListener(v -> {
-            showSkinSelectorDialog();
+            showPremiumSettingsDialog();
             return true;
         });
 
@@ -698,6 +699,29 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * V3.9: Carga el logo de la marca del coche si existe en /sdcard/RadioLogos/car_logo.png
+     * Se coloca en el hueco derecho del layout V3 (ivCarLogo).
+     */
+    private void loadCarLogo() {
+        ImageView ivCarLogo = findViewById(R.id.ivCarLogo);
+        if (ivCarLogo == null) return; // Not in V3 layout
+        
+        java.io.File logoFile = new java.io.File("/sdcard/RadioLogos/car_logo.png");
+        if (logoFile.exists()) {
+            ivCarLogo.setVisibility(View.VISIBLE);
+            Glide.with(this)
+                 .load(logoFile)
+                 .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                 .skipMemoryCache(true)
+                 .transition(DrawableTransitionOptions.withCrossFade())
+                 .into(ivCarLogo);
+        } else {
+            // Mantener invisible pero ocupando espacio
+            ivCarLogo.setVisibility(View.INVISIBLE); 
+        }
+    }
+
 
     /**
      * Configura los botones de búsqueda manual y automática de frecuencias.
@@ -888,8 +912,8 @@ public class MainActivity extends AppCompatActivity {
             String rdsName = station.getName();
             
             runOnUiThread(() -> {
-                // FIXED LOGIC: Always show Frequency in Big Box con 2 decimales
-                tvFrequency.setText(String.format("%.2f", freq / 1000.0));
+                // FIXED LOGIC: Always show Frequency in Big Box con 2 decimales (FORCE DOT SEPARATOR)
+                tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0));
                 
                 if (rdsName != null && !rdsName.isEmpty()) {
                     tvRdsName.setText(rdsName);
@@ -927,6 +951,9 @@ public class MainActivity extends AppCompatActivity {
                                 .load(cachedLogo)
                                 .transition(DrawableTransitionOptions.withCrossFade())
                                 .into(ivMainLogo);
+                           
+                           // V3.0 FIX: Update background even if logo comes from cache
+                           updateDynamicBackground(cachedLogo);
                        }
                     } else {
                         // Si no hay caché, SIEMPRE intentar buscar logo (incluso en cambios pequeños)
@@ -1011,8 +1038,6 @@ public class MainActivity extends AppCompatActivity {
         if (bandCode == 0) return "FM 1";
         if (bandCode == 1) return "FM 2";
         if (bandCode == 2) return "FM 3";
-        if (bandCode == 3) return "AM 1";
-        if (bandCode == 4) return "AM 2";
         return "B" + bandCode;
     }
 
@@ -1029,94 +1054,131 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     
-    /**
-     * Muestra un diálogo para seleccionar el skin (tema de color) de la aplicación.
-     * Permite cambiar entre: Classic Gray, Orange, Blue, Green, Purple.
-     */
-    private void showSkinSelectorDialog() {
-        com.example.openradiofm.ui.theme.ThemeManager themeManager = 
-            new com.example.openradiofm.ui.theme.ThemeManager(this);
+    
+    // V3.0: Premium "Radio Interface" Dialog
+    private void showPremiumSettingsDialog() {
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_premium_settings);
         
-        com.example.openradiofm.ui.theme.ThemeManager.Skin currentSkin = themeManager.getCurrentSkin();
-        
-        // Nombres de los skins para mostrar en el diálogo
-        com.example.openradiofm.ui.theme.ThemeManager.Skin[] skins = 
-            com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
-        String[] skinNames = new String[skins.length];
-        int selectedIndex = 0;
-        
-        for (int i = 0; i < skins.length; i++) {
-            skinNames[i] = skins[i].displayName;
-            if (skins[i] == currentSkin) {
-                selectedIndex = i;
-            }
+        // V3.0: Add semi-transparent background for better visibility
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setDimAmount(0.7f); // 70% dim for better contrast
         }
         
-        // V3.8: Menu Premium Localizado
-        String[] options = {
-            getString(R.string.theme_colors), 
-            getString(R.string.typography), 
-            getString(R.string.background_mode)
-        };
+        // Bind Views
+        android.view.View cardTheme = dialog.findViewById(R.id.cardTheme);
+        android.view.View cardFonts = dialog.findViewById(R.id.cardFonts);
+        android.view.View cardBackground = dialog.findViewById(R.id.cardBackground);
+        android.view.View btnClose = dialog.findViewById(R.id.btnCloseSettings);
         
-        new android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.premium_customization)
-            .setItems(options, (dialog, which) -> {
-                if (which == 0) showColorSelector();
-                else if (which == 1) showFontSelector();
-                else if (which == 2) showBackgroundModeSelector();
+        TextView tvCurrentTheme = dialog.findViewById(R.id.tvCurrentTheme);
+        TextView tvCurrentFont = dialog.findViewById(R.id.tvCurrentFont);
+        TextView tvCurrentBg = dialog.findViewById(R.id.tvCurrentBg);
+        
+        // Update Current States
+        updateSettingsDialogStates(tvCurrentTheme, tvCurrentFont, tvCurrentBg);
+        
+        // Listeners
+        cardTheme.setOnClickListener(v -> {
+            showThemeSelector(dialog, tvCurrentTheme);
+        });
+        
+        cardFonts.setOnClickListener(v -> {
+            showFontSelector(dialog, tvCurrentFont);
+        });
+        
+        cardBackground.setOnClickListener(v -> {
+            showBackgroundSelector(dialog, tvCurrentBg);
+        });
+        
+        btnClose.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
+    }
+    
+    private void updateSettingsDialogStates(TextView tvTheme, TextView tvFont, TextView tvBg) {
+        // Theme
+        tvTheme.setText("Active"); 
+        
+        // Font
+        int fontIdx = mPrefs.getInt("pref_font_type", 0);
+        String[] fonts = {"Default", "Bebas", "Digital", "Inter", "Orbitron"};
+        if (fontIdx >= 0 && fontIdx < fonts.length) tvFont.setText(fonts[fontIdx]);
+        
+        // BG
+        int bgIdx = mPrefs.getInt("pref_bg_mode", 1);
+        String[] modes = {getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image), getString(R.string.bg_dynamic_logo)};
+        if (bgIdx >= 0 && bgIdx < modes.length) tvBg.setText(modes[bgIdx]);
+    }
+
+    private void showThemeSelector(android.app.Dialog parentDialog, TextView tvStatus) {
+        String[] skins = {"Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan", "Pink", "White"};
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.select_skin)
+            .setItems(skins, (d, w) -> {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
+                if (w < skinValues.length) {
+                    com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
+                    themeManager.setSkin(skinValues[w]);
+                    applySkin(skinValues[w]);
+                    tvStatus.setText(skins[w]);
+                    updateSettingsDialogStates(tvStatus, tvStatus, tvStatus);
+                }
             })
-            .setNegativeButton(R.string.close, null)
-            .show();
+            .create();
+        
+        // V3.0: Apply premium styling
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.7f);
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        dialog.show();
     }
 
-    private void showColorSelector() {
-        com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
-        com.example.openradiofm.ui.theme.ThemeManager.Skin[] skins = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
-        String[] names = new String[skins.length];
-        for (int i = 0; i < skins.length; i++) names[i] = skins[i].displayName;
-
-        new android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.accent_color)
-            .setItems(names, (d, w) -> {
-                themeManager.setSkin(skins[w]);
-                applySkin(skins[w]);
-                showToast(skins[w].displayName);
-            }).show();
-    }
-
-    private void showFontSelector() {
-        String[] fonts = {
-            getString(R.string.font_default), 
-            getString(R.string.font_bebas), 
-            getString(R.string.font_digital), 
-            getString(R.string.font_modern),
-            getString(R.string.font_orbitron)
-        };
-        new android.app.AlertDialog.Builder(this)
+    private void showFontSelector(android.app.Dialog parentDialog, TextView tvStatus) {
+        String[] fonts = {"Default", "Bebas", "Digital", "Inter", "Orbitron"};
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
             .setTitle(R.string.select_typography)
             .setItems(fonts, (d, w) -> {
                 mPrefs.edit().putInt("pref_font_type", w).apply();
                 applyFonts();
-                showToast(getString(R.string.font_applied));
-            }).show();
+                tvStatus.setText(fonts[w]);
+            })
+            .create();
+        
+        // V3.0: Apply premium styling
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.7f);
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        dialog.show();
     }
 
-    private void showBackgroundModeSelector() {
-        String[] modes = {
-            getString(R.string.bg_pure_black), 
-            getString(R.string.bg_fixed_image), 
-            getString(R.string.bg_dynamic_logo)
-        };
-        new android.app.AlertDialog.Builder(this)
+    private void showBackgroundSelector(android.app.Dialog parentDialog, TextView tvStatus) {
+        String[] modes = {getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image), getString(R.string.bg_dynamic_logo)};
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
             .setTitle(R.string.select_bg_mode)
             .setItems(modes, (d, w) -> {
                 mPrefs.edit().putInt("pref_bg_mode", w).apply();
-                // V3.8: Immediate refresh
                 loadCustomBackground();
+                loadCarLogo();
                 updateDynamicBackground(mLastLogoUrl);
-                showToast(getString(R.string.bg_mode_updated));
-            }).show();
+                tvStatus.setText(modes[w]);
+            })
+            .create();
+        
+        // V3.0: Apply premium styling
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.7f);
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        dialog.show();
     }
     
     /**
@@ -1137,23 +1199,25 @@ public class MainActivity extends AppCompatActivity {
             default: drawableId = R.drawable.bg_glass_card_classic; break;
         }
         
-        // User Request V3.5: Apply skin borders ONLY to Presets.
-        // Commenting out main controls so they stay clean/transparent.
-        /*
-        int[] viewIds = {
-            R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
-            R.id.tvRdsName, R.id.tvRdsInfo,
-            R.id.btnBand, R.id.btnAutoScan,
-            R.id.boxLogo,
-            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps
-            // Presets handled dynamically below
-        };
         
-        for (int id : viewIds) {
-            android.view.View v = findViewById(id);
-            if (v != null) v.setBackgroundResource(drawableId);
+        // V3.0: Detect current layout
+        boolean isLayoutV3 = mPrefs.getBoolean("pref_layout_v3", false);
+        
+        // Apply skin borders to main controls ONLY in Layout V2
+        if (!isLayoutV3) {
+            int[] viewIds = {
+                R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
+                R.id.tvRdsName, R.id.tvRdsInfo,
+                R.id.btnBand, R.id.btnAutoScan,
+                R.id.boxLogo,
+                R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps
+            };
+            
+            for (int id : viewIds) {
+                android.view.View v = findViewById(id);
+                if (v != null) v.setBackgroundResource(drawableId);
+            }
         }
-        */
         
         // V2.1: Apply to Presets P1-P12
         for(int i=1; i<=12; i++) {

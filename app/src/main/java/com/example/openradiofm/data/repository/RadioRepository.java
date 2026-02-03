@@ -10,6 +10,7 @@ public class RadioRepository {
     private final boolean useRoot;
 
     private final android.content.SharedPreferences mPrefs;
+    private final android.content.Context mContext; // V3.0: Needed for MediaScanner
     
     // ExecutorService para gestionar hilos de descarga de logos de forma eficiente.
     // Limita a 3 hilos concurrentes para evitar crear cientos de hilos.
@@ -29,6 +30,7 @@ public class RadioRepository {
     // estamos en MODO_FM_BASICO (dispositivos sin root o sin servicio especial).
     public RadioRepository(android.content.Context context, boolean enableRoot) {
         this.useRoot = enableRoot;
+        this.mContext = context; // V3.0: Store for MediaScanner
         this.rootSource = enableRoot ? new RootRDSSource() : null;
         this.webSource = new WebRadioSource();
         // Usamos un archivo de preferencias específico para los nombres de emisoras
@@ -224,6 +226,16 @@ public class RadioRepository {
             bitmap.recycle();
             
             android.util.Log.d("RadioLogos", "DOWNLOAD SAVED: " + destFile.getAbsolutePath());
+            
+            // V3.0 FIX: Persistencia forzada mediante MediaScanner
+            // Avisar al sistema que hay un nuevo archivo para que no lo borre ni lo ignore
+            android.media.MediaScannerConnection.scanFile(
+                mContext, 
+                new String[]{destFile.getAbsolutePath()}, 
+                null, 
+                (path, uri) -> android.util.Log.i("RadioLogos", "Scanned " + path + ":-> uri=" + uri)
+            );
+
             return destFile.getAbsolutePath();
         } catch (Exception e) {
             e.printStackTrace();

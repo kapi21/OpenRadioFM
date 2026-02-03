@@ -14,7 +14,7 @@ OpenRadioFM now features two main designs:
 
 ### 1.2 Bottom Control Panel (V3)
 - **Settings (EQ):** Short press for system equalizer. **Long press** for the Premium Customization Menu.
-- **Band:** Switch between FM1, FM2, FM3, AM1, and AM2.
+- **Band:** Switch between FM1, FM2, and FM3.
 - **LOC/DX:** Change reception sensitivity (Local/Long Distance). *Long press to change layout.*
 - **Scan:** Automatic station scanning.
 - **Mute:** Instant silence.
@@ -53,10 +53,10 @@ Manage how your radio's background looks:
 
 ## 3. Logo & Name Management
 
-### Station Logos
-- **Location:** `/sdcard/RadioLogos/`
-- **Manual:** You can add your own logos in `.png` format named with the frequency (e.g., `96900.png`).
-- **Custom Names:** Long press the station name on screen to rename it. The app will look for logos matching that name.
+### 3.2 Car Brand Logo [New v3.0]
+In the horizontal layout (V3), you can display your car's logo on the right side:
+- **Location:** `/sdcard/RadioLogos/car_logo.png`
+- **Requirement:** The image must be named exactly `car_logo.png`. A transparent background is recommended for better aesthetics.
 
 ---
 
@@ -64,7 +64,9 @@ Manage how your radio's background looks:
 
 - **GPS doesn't open:** Ensure you have a maps app installed and set as default in Android.
 - **Dynamic background not changing:** Check if the current station has an assigned logo. If no logo is found, the background defaults to black.
+- **Logos disappear after reboot:** Version 3.0 adds integration with the Android Media Scanner to ensure logos always persist.
 - **SEEK buttons inverted:** In this v3.0 version, orientation has been fixed to match most steering wheel controls.
+- **Decimal point in frequency:** The frequency display now forces a dot separator (e.g., 108.0) for a cleaner look across all systems.
 
 ---
 *Developed by Jimmy80 - v3.0 (February 2026)*
