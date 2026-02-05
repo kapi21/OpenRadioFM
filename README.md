@@ -1,47 +1,46 @@
-# OpenRadioFM 📻
+# OpenRadioFM 📻 - The Car Experience
 
-**OpenRadioFM** es una aplicación de radio personalizada para unidades Android de automoción, diseñada específicamente para hardware basado en **MT8163** (HCN/AutoRadio). Ofrece una interfaz premium "Black & Orange" inspirada en sistemas de infotainment de alta gama, con efectos de Glassmorphism y soporte para logos dinámicos.
+**OpenRadioFM** es una aplicación de radio premium diseñada específicamente para unidades Android automotrices (Head Units), con un enfoque en hardware basado en **MT8163** (HCN/AutoRadio). Ofrece una interfaz extremadamente pulida con efectos de Glassmorphism, personalización avanzada y una experiencia optimizada para la conducción.
 
 <div align="center">
-  <img src="concept_art.png" width="800" alt="Concept Art">
+  <img src="app_icon.png" width="200" alt="OpenRadioFM Logo">
   <br>
-  <img src="preview3.jpeg" width="400" alt="Preview V8">
+  <img src="V3-1.png" width="45%" alt="Preview Horizontal V3">
+  <img src="v3-2.png" width="45%" alt="Preview Personalización">
 </div>
 
-## ✨ Changelog de Versiones
+## ✨ Novedades en v3.0
+- **Layout Panorama (V3):** Nuevo diseño horizontal nativo para pantallas de 1024x600 con iconos maximizados.
+- **Personalización Premium:** Centro de ajustes estéticos (pulsación larga en EQ) con 10 colores de acento.
+- **Gestor de Tipografías:** 5 fuentes integradas, incluyendo la nueva *Orbitron* y *Digital*.
+- **Fondo Dinámico Universal:** Efecto de desenfoque (blur) basado en el logo de la emisora sintonizada.
+- **Integración Vehicular:** Botón de acceso rápido a GPS y soporte para logo de marca de coche personalizado.
 
-### v9 (Current - Seek & Polish)
-- **Seek Logic Fix:** Inversión de botones de búsqueda (Arriba/Abajo) y ajuste a pasos de 0.1 MHz.
-- **RDS Stability:** Solución al "petardeo" del scroll de texto y protección contra resets.
-- **Default Assets:** Icono de aplicación V8 integrado y logos por defecto cuando no hay señal.
+## 🛠️ Funciones Principales
+- **Binding de Hardware:** Integración directa con el servicio `com.hcn.autoradio`.
+- **Hybrid Logos:** Carga inteligente de logos desde API y fallback local.
+- **RDS Estable:** Visualización dinámica de texto informativo sin saltos.
+- **Control Intuitivo:** Lógica de búsqueda (SEEK) corregida y compatible con mandos al volante.
+- **Multilingüe:** Soporte completo en Español, Inglés y Ruso.
 
-### v8 (UI Overhaul)
-- **Design System:** Implementación completa de Glassmorphism y paleta "Brand Orange".
-- **Typography:** Tipografía Orbitron para frecuencias y presets unificados (22sp).
-- **Control:** Botones 2x2 para EQ, Test y Mute. Integración con MCU.
+## 📖 Documentación
+- [Manual de Usuario (Español)](manual_usuario.md)
+- [User Manual (English)](manual_user_en.md)
+- [Руководство пользователя (Русский)](manual_user_ru.md)
 
-### v5-v7 (Core Features)
-- **Hybrid Logos:** Carga de logos desde API (radio-browser.info) con fallback local.
-- **Hardware Integration:** Binding directo con servicio `com.hcn.autoradio`.
+## � Historial de Versiones
 
-## 🛠️ Tecnologías
+### v3.0 "The Car Experience" (Febrero 2026)
+- Salto a versión estable con rediseño completo de la interfaz horizontal.
+- Implementación de menús premium y personalización en tiempo real.
+- Corrección de bugs de persistencia de logos y lógica de búsqueda.
 
-- **Android SDK:** Java & XML / Clean Architecture.
-- **Redes:** Retrofit 2 & Gson.
-- **Imágenes:** Glide (Caching avanzado).
-- **Reflection:** Acceso a APIs ocultas de Android (McuManager, RadioPlayer).
+### v2.0b (Enero 2026)
+- Introducción de la interfaz Glassmorphism.
+- Soporte para fondos personalizados y aumento a 12 presets.
 
-## 🚀 Instalación
-
-1. **Clonar:**
-   ```bash
-   git clone https://github.com/kapi21/OpenRadioFM.git
-   ```
-2. **Instalar (ADB WiFi):**
-   ```bash
-   adb connect <ip-radio>:5555
-   adb install -r app/build/outputs/apk/debug/app-debug.apk
-   ```
+### v1.0b (Diciembre 2025)
+- Versión inicial con soporte básico para sintonización y logos.
 
 ---
 **Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit.**
