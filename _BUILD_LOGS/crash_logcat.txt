@@ -1,0 +1,25 @@
+--------- beginning of crash
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: FATAL EXCEPTION: main
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: Process: com.example.openradiofm, PID: 4617
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.example.openradiofm/com.example.openradiofm.ui.main.MainActivity}: java.lang.ClassCastException: android.widget.FrameLayout cannot be cast to android.widget.LinearLayout
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3675)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3832)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2247)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:106)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:201)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:288)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:7881)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:568)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1045)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: Caused by: java.lang.ClassCastException: android.widget.FrameLayout cannot be cast to android.widget.LinearLayout
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.example.openradiofm.ui.main.MainActivity.setupSeekButtons(MainActivity.java:805)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.example.openradiofm.ui.main.MainActivity.onCreate(MainActivity.java:301)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8050)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8030)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1329)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3648)
+02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	... 12 more

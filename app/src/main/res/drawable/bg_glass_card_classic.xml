@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- V2.0: Fully transparent background to show custom background -->
-    <solid android:color="#00000000" />
+    <!-- V2.0: Semi-opaque background for better readability -->
+    <solid android:color="#E6121212" />
     
     <!-- Classic gray/white stroke -->
     <stroke

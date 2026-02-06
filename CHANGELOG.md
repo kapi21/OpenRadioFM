@@ -1,4 +1,18 @@
 # Changelog - OpenRadioFM
+    
+## v4.2.3 "Orange Waveform" (Febrero 2026)
+
+Actualización visual y de estabilidad centrada en el refinamiento del diseño y la experiencia de usuario.
+
+### 🎨 Visual & UI
+*   **Nuevo Icono V4:** Renovado logo "Orange Waveform" aplicado globalmente (Launcher, Menús, About).
+*   **Layout Vertical (V2) Perfeccionado:** Alineación matemática de botones y simetría total entre columna central y derecha.
+*   **Glassmorphism Oscuro:** Nuevos fondos semistransparentes (70% dim) para todos los diálogos (Save/Load, About, Settings).
+
+### 🌍 Funcionalidad
+*   **Selector de Idioma Manual:** Corregido comportamiento. Ahora permite cambiar idioma independientemente del sistema y reinicia la app automáticamente.
+*   **Correcciones Menores:** Ajustes de padding en botones y textos.
+
 
 ## v4.0 "Global Edition" (Febrero 2026)
 

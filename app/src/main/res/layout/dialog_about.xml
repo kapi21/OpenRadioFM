@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="500dp"
+    android:layout_height="wrap_content"
+    android:scrollbars="none">
+
+    <LinearLayout style="@style/DialogContainerStyle">
+
+        <!-- Header -->
+        <LinearLayout style="@style/DialogTitleLayout"
+            android:gravity="center">
+            <TextView
+                style="@style/DialogTitleText"
+                android:text="Acerca de OpenRadioFM"/>
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:src="@mipmap/ic_launcher"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"/>
+
+        <TextView
+            android:id="@+id/tvAppVersion"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:text="Versión 4.1 Global Edition"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- SUBHEADER -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:text="INFORMACIÓN"/>
+
+        <!-- Dev Info -->
+        <LinearLayout style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="Desarrollado por"/>
+            <TextView
+                style="@style/DialogBoxDesc"
+                android:text="OpenRadio Team (Soporte Multi-Lenguaje)"/>
+        </LinearLayout>
+
+        <!-- Tech Info -->
+        <LinearLayout style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="Detalles Técnicos"/>
+            <TextView
+                style="@style/DialogBoxDesc"
+                android:text="@string/favorites_loaded"/> <!-- Reusing a string temporarily or put hardcoded -->
+            <TextView 
+                 android:layout_width="wrap_content"
+                 android:layout_height="wrap_content"
+                 android:textColor="#AAAAAA"
+                 android:textSize="12sp"
+                 android:text="Target SDK: 33 (Android 13)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos"/>
+        </LinearLayout>
+
+        <!-- Close -->
+        <TextView
+            android:id="@+id/btnClose"
+            style="@style/DialogCloseButton"
+            android:text="@string/close"/>
+
+    </LinearLayout>
+</ScrollView>

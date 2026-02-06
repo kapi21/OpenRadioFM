@@ -1,0 +1,213 @@
+
+  02-05 22:38:36.540 30267 30285 I mh_gesy :  upY=417.47815 differenceY=0.0
+  02-05 22:38:36.540 30267 30285 I mh_bottom: start==== up===================screenHeight =800 screenWidth=1280
+  02-05 22:38:36.548 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.548 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  --------- beginning of system
+> 02-05 22:38:36.553 30267 31506 I ActivityTaskManager: START u0 {act=android.intent.action.MAIN cat=[android.intent.category.LAUNCHER] flg=0x10200000 cmp=com.example.openradiofm/.ui.main.MainActivity bnds=[750,364][970,473]} from uid 10140
+  02-05 22:38:36.554 30267 31506 W ActivityTaskManager: Can't find TaskDisplayArea to determine support for multi window. Task id=254 attached=false
+  02-05 22:38:36.567   562   605 I mtkpower@impl: [setMode] type:5, enabled:1
+  02-05 22:38:36.568   562   648 I libPowerHal: [perfLockAcq] idx:0 hdl:3150 hint:11 pid:562 duration:30000 lock_user:mtkpower@1.0-se => ret_hdl:3150
+  02-05 22:38:36.568   562   648 I libPowerHal: LAUNCH: cpu_ctrl set cpu freq: 2001000 -1 1500000 -1
+  02-05 22:38:36.568   562   648 I libPowerHal: [PE] LAUNCH update cmd:1000000, param:0
+  02-05 22:38:36.568   562   648 I libPowerHal: [PE] LAUNCH update cmd:1408300, param:100
+  02-05 22:38:36.568   562   648 I libPowerHal: [PE] LAUNCH update cmd:1000000 param:0
+  02-05 22:38:36.570 30267 31506 I mh_timeout: mScreenOffTimeoutSetting=60000 nextTimeout=905211516
+> 02-05 22:38:36.571 30267 31506 I PowerHalWrapper: <amsBoostResume> last:com.saggitt.omega, next:com.example.openradiofm 
+  02-05 22:38:36.572   562   648 I libPowerHal: [perfLockRel] hdl:3148, idx:-1
+  02-05 22:38:36.573   562   648 I libPowerHal: [perfLockAcq] idx:1 hdl:3151 hint:22 pid:562 duration:10000 lock_user:mtkpower@1.0-se => ret_hdl:3151
+  02-05 22:38:36.574  2573  2573 I BufferQueueProducer: [com.saggitt.omega/com.saggitt.omega.OmegaLauncher#0](this:0xb4000070364658a8,id:-1,api:0,p:-1,c:2573) queueBuffer: fps=0.03 dur=35844.05 max=35844.05 min=35844.05
+  02-05 22:38:36.575  2573  3350 I SurfaceFlinger: [SF client] NEW(0xb400006f46393d70) for (30444:com.android.systemui)
+  02-05 22:38:36.582  2573  2573 I BufferQueueProducer: [FramebufferSurface](this:0xb400006fe6363410,id:-1,api:1,p:2573,c:2573) queueBuffer: fps=0.08 dur=35838.64 max=35821.87 min=7.27
+  02-05 22:38:36.583   545   687 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:0.083708,dur:35838.67,max:35822.59,min:6.69  
+  02-05 22:38:36.585 31246 11049 I OpenGLRenderer: Davey! duration=96537ms; Flags=0, FrameTimelineVsyncId=6190279, IntendedVsync=905061999627095, Vsync=905061999627095, InputEventId=0, HandleInputStart=905062000934175, AnimationStart=905062000936868, PerformTraversalsStart=905062000938098, DrawStart=905062002671714, FrameDeadline=905062036293762, FrameInterval=905062000927714, FrameStartTime=16666667, SyncQueued=905062005623098, SyncStart=905062005911714, IssueDrawCommandsStart=905062006411945, SwapBuffers=905062015468329, FrameCompleted=905158537410720, DequeueBufferDuration=3760077, QueueBufferDuration=2152231, GpuCompleted=905158537410720, SwapBuffersCompleted=905062019076637, DisplayPresentTime=1465149562, 
+> 02-05 22:38:36.585 30267 31506 I PowerHalWrapper: amsBoostNotify pid:31246,activity:com.saggitt.omega.OmegaLauncher, package:com.saggitt.omega, mProcessCreatePackcom.example.openradiofm 
+  02-05 22:38:36.585 30267 31506 I PowerHalWrapper: state: 0 
+  02-05 22:38:36.585 30267 31506 I PowerHalWrapper: amsBoostNotify AMS_BOOST_PROCESS_CREATE_BOOST:false 
+  02-05 22:38:36.586   562   648 I libPowerHal: [perfNotifyAppState] pack:com.saggitt.omega, act:com.saggitt.omega.OmegaLauncher, state:0, pid:31246, uid:10140, fps:60
+  02-05 22:38:36.587 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.587 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+> 02-05 22:38:36.592 30267 30287 I PowerHalWrapper: amsBoostProcessCreate package:com.example.openradiofm 
+  02-05 22:38:36.593   562   648 I libPowerHal: [perfLockAcq] idx:2 hdl:3152 hint:21 pid:562 duration:10000 lock_user:mtkpower@1.0-se => ret_hdl:3152
+  02-05 22:38:36.594   562   648 I libPowerHal: [PE] MTKPOWER_HINT_PROCESS_CREATE update cmd:2020000, param:15
+  02-05 22:38:36.595   562   648 I libPowerHal: [perfLockRel] hdl:3109, idx:-1
+  02-05 22:38:36.602 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.602 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+> 02-05 22:38:36.610  2573  3350 E BufferQueueDebug: [Splash Screen com.example.openradiofm#0](this:0xb400007036473c78,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'Splash Screen com.example.openradiofm#0'
+> 02-05 22:38:36.610  2573  3350 I BufferQueueDebug: [Splash Screen com.example.openradiofm#0](this:0xb400007036473c78,id:-1,api:0,p:-1,c:-1) BufferQueue core=(2573:/system/bin/surfaceflinger)
+  02-05 22:38:36.615 30267 31506 W WindowManager: Changing focus from Window{23bc1ca u0 com.saggitt.omega/com.saggitt.omega.OmegaLauncher} to null displayId=0 Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:465 com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:5750 com.android.server.wm.WindowManagerService.relayoutWindow:2476 com.android.server.wm.Session.relayout:235 
+  02-05 22:38:36.617 30444 30511 I BufferQueueConsumer: [](id:76ec0000001d,api:0,p:-1,c:30444) connect: controlledByApp=false
+> 02-05 22:38:36.618 30444 30511 I BLASTBufferQueue: [ViewRootImpl[openradiofm]#29] constructor()
+  02-05 22:38:36.618 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.619 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+> 02-05 22:38:36.620 30267 30297 I ActivityManager: Start proc 4617:com.example.openradiofm/u0a153 for pre-top-activity {com.example.openradiofm/com.example.openradiofm.ui.main.MainActivity}
+> 02-05 22:38:36.620 30444 30578 I BufferQueueProducer: [ViewRootImpl[openradiofm]#29(BLAST Consumer)29](id:76ec0000001d,api:1,p:30444,c:30444) connect: api=1 producerControlledByApp=true
+  02-05 22:38:36.638 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.638 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.644  4617  4617 I ple.openradiof: Late-enabling -Xcheck:jni
+  02-05 22:38:36.655 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.656 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:36.698  4301  4306 I adbd    : jdwp connection from 4617
+> 02-05 22:38:36.727 30267  2071 I PowerHalWrapper: amsBoostNotify pid:4617,activity:com.example.openradiofm.ui.main.MainActivity, package:com.example.openradiofm, mProcessCreatePackcom.example.openradiofm 
+  02-05 22:38:36.727 30267  2071 I PowerHalWrapper: state: 1 
+  02-05 22:38:36.728 30267  2071 I PowerHalWrapper: amsBoostNotify AMS_BOOST_PROCESS_CREATE_BOOST:true 
+> 02-05 22:38:36.728   562   648 I libPowerHal: [perfNotifyAppState] pack:com.example.openradiofm, act:com.example.openradiofm.ui.main.MainActivity, state:1, pid:4617, uid:10153, fps:60
+> 02-05 22:38:36.728   562   648 I libPowerHal: [perfNotifyAppState] foreground:com.example.openradiofm, pid:4617, uid:10153
+  02-05 22:38:36.728   562   648 E UxUtility: notifyAppState error = NULL
+  02-05 22:38:36.729   562   648 I TouchUtility: notifyAppState error = NULL
+> 02-05 22:38:36.729   562   604 I mtkpower@impl: [notifyAppState] pc:1, com.saggitt.omega => com.example.openradiofm
+  02-05 22:38:36.852 30436 30436 I WifiHAL : Get link layer stats
+  02-05 22:38:36.852 30436 30436 I WifiHAL : GetLinkStatsCommand::create
+  02-05 22:38:36.852 30436 30436 I android.hardware.wifi@1.0-service-lazy: WifiCommand::requestResponse err=-14
+  02-05 22:38:36.852 30436 30436 I WifiHAL : wifi_get_link_stats: result=-1
+  02-05 22:38:36.853 31246 31594 E OpenGLRenderer: EglManager::makeCurrent mED = 0x1, surface = 0x0, mEC = 0xb400007d0f274160, error = EGL_SUCCESS
+  02-05 22:38:38.249  4617  4617 I mh_info : tempText1 :
+  02-05 22:38:38.250  4617  4617 I mh_info : tempText1 :RDS TEXT INFO
+  02-05 22:38:38.252  4617  4617 I mh_info : tempText1 :RDS TEXT INFO
+  02-05 22:38:38.315 31048 26824 E MediaProvider: Creating a non-default top level directory or deleting an existing one is not allowed!
+  02-05 22:38:38.320 31048 26824 E MediaProvider: Creating a non-default top level directory or deleting an existing one is not allowed!
+> 02-05 22:38:38.320  4617  4617 E OpenRadioFm: Error al crear carpeta RadioLogos
+  02-05 22:38:38.341  4617  4617 I mh_info : tempText1 :Toast Message
+  02-05 22:38:38.344  4617  4617 I mh_info : tempText1 :Toast Message
+  02-05 22:38:38.345  4617  4617 I mh_info : tempText1 :Modo B├ísico: Sin Root (Nombres Manuales)
+  02-05 22:38:38.437  4617  4617 W ple.openradiof: Accessing hidden method Ldalvik/system/CloseGuard;->get()Ldalvik/system/CloseGuard; (unsupported,core-platform-api, reflection, allowed)
+  02-05 22:38:38.437  4617  4617 W ple.openradiof: Accessing hidden method Ldalvik/system/CloseGuard;->open(Ljava/lang/String;)V (unsupported,core-platform-api, reflection, allowed)
+  02-05 22:38:38.437  4617  4617 W ple.openradiof: Accessing hidden method Ldalvik/system/CloseGuard;->warnIfOpen()V (unsupported,core-platform-api, reflection, allowed)
+  02-05 22:38:38.454 31048 31345 E MediaProvider: Creating a non-default top level directory or deleting an existing one is not allowed!
+  02-05 22:38:38.458 31048 31345 E MediaProvider: Creating a non-default top level directory or deleting an existing one is not allowed!
+  --------- beginning of crash
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: FATAL EXCEPTION: main
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: Process: com.example.openradiofm, PID: 4617
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: java.lang.RuntimeException: Unable to start activity ComponentInfo{com.example.openradiofm/com.example.openradiofm.ui.main.MainActivity}: java.lang.ClassCastException: android.widget.FrameLayout cannot be cast to android.widget.LinearLayout
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3675)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3832)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:103)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2247)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.os.Handler.dispatchMessage(Handler.java:106)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.os.Looper.loopOnce(Looper.java:201)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.os.Looper.loop(Looper.java:288)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.main(ActivityThread.java:7881)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at java.lang.reflect.Method.invoke(Native Method)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:568)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:1045)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: Caused by: java.lang.ClassCastException: android.widget.FrameLayout cannot be cast to android.widget.LinearLayout
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.example.openradiofm.ui.main.MainActivity.setupSeekButtons(MainActivity.java:805)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at com.example.openradiofm.ui.main.MainActivity.onCreate(MainActivity.java:301)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8050)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.Activity.performCreate(Activity.java:8030)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1329)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3648)
+> 02-05 22:38:38.484  4617  4617 E AndroidRuntime: 	... 12 more
+> 02-05 22:38:38.489   562   648 I libPowerHal: [perfNotifyAppState] pack:com.example.openradiofm, act:com.example.openradiofm, state:3, pid:4617, uid:10153, fps:60
+> 02-05 22:38:38.489   562   648 I libPowerHal: [perfNotifyAppState] pack:com.example.openradiofm, pid:4617, STATE_DEAD
+  02-05 22:38:38.490 30267  4642 I DropBoxManagerService: add tag=data_app_crash isTagEnabled=true flags=0x2
+> 02-05 22:38:38.491 30267  2071 W ActivityTaskManager:   Force finishing activity com.example.openradiofm/.ui.main.MainActivity
+> 02-05 22:38:38.498  2573  2573 I SurfaceFlinger: operator()(), mtkRenderCntDebug 94, screenshot (Splash Screen com.example.openradiofm#0)
+  02-05 22:38:38.505 30267  2071 I mh_timeout: mScreenOffTimeoutSetting=60000 nextTimeout=905211516
+  02-05 22:38:38.509 30267 30296 W BroadcastQueue: Background execution not allowed: receiving Intent { act=android.intent.action.DROPBOX_ENTRY_ADDED flg=0x10 (has extras) } to com.google.android.gms/.stats.service.DropBoxEntryAddedReceiver
+  02-05 22:38:38.514 30267 23193 I GED     : ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+  02-05 22:38:38.519 30267 30285 I mh_info : tempText1 :
+  02-05 22:38:38.520 30267 30285 I mh_info : tempText1 :
+  02-05 22:38:38.539 30267 30285 I mh_info : tempText1 :Cerrar aplicaci├│n
+  02-05 22:38:38.540 30267 30603 I mh_timeout: mScreenOffTimeoutSetting=60000 nextTimeout=905211516
+  02-05 22:38:38.541 30267 30285 I mh_info : tempText1 :Enviar comentarios
+  02-05 22:38:38.543 30267 30285 I mh_info : tempText1 :Silenciar hasta que se reinicie el dispositivo
+  02-05 22:38:38.546  2573  2578 I SurfaceFlinger: [SF client] NEW(0xb400006f46391fb0) for (30267:system_server)
+> 02-05 22:38:38.558 30267 30285 W WindowManager: Changing focus from null to Window{2a7df9f u0 Application Error: com.example.openradiofm} displayId=0 Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:465 com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:5750 com.android.server.wm.WindowManagerService.addWindow:1855 com.android.server.wm.Session.addToDisplayAsUser:204 
+  02-05 22:38:38.559   562   635 I libPerfCtl: xgfGetFPS pid:30444 fps:54
+> 02-05 22:38:38.568  2573  2578 E BufferQueueDebug: [Application Error: com.example.openradiofm#0](this:0xb400007036432488,id:-1,api:0,p:-1,c:-1) id info cannot be read from 'Application Error: com.example.openradiofm#0'
+> 02-05 22:38:38.569  2573  2578 I BufferQueueDebug: [Application Error: com.example.openradiofm#0](this:0xb400007036432488,id:-1,api:0,p:-1,c:-1) BufferQueue core=(2573:/system/bin/surfaceflinger)
+  02-05 22:38:38.573 30267 30285 I BufferQueueConsumer: [](id:763b0000001c,api:0,p:-1,c:30267) connect: controlledByApp=false
+> 02-05 22:38:38.574 30267 30285 I BLASTBufferQueue: [ViewRootImpl[openradiofm]#18] constructor()
+> 02-05 22:38:38.577 30267 23193 I BufferQueueProducer: [ViewRootImpl[openradiofm]#18(BLAST Consumer)18](id:763b0000001c,api:1,p:30267,c:30267) connect: api=1 producerControlledByApp=true
+  02-05 22:38:38.580 30267 30285 I mh_draw : str :La aplicaci├│n OpenRadio FM v3.0 ha dejado de funcionar
+  02-05 22:38:38.581 30267 30285 I mh_draw : str :Informaci├│n de la aplicaci├│n
+  02-05 22:38:38.582 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:38.582 30267 30285 I mh_draw : str :Informaci├│n de la aplicaci├│n
+  02-05 22:38:38.582 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:38.690 30267 30285 I mh_draw : str :Informaci├│n de la aplicaci├│n
+  02-05 22:38:38.690 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:38.708 30267 30285 I mh_draw : str :Informaci├│n de la aplicaci├│n
+  02-05 22:38:38.708 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:38.728  2573  2573 I SurfaceControl: ~SurfaceControl: layerId=1073750625
+> 02-05 22:38:38.992 30267 30287 W ActivityTaskManager: Activity top resumed state loss timeout for ActivityRecord{bd7ca6 u0 com.example.openradiofm/.ui.main.MainActivity t254 f}}
+> 02-05 22:38:39.004 30267 30287 W ActivityTaskManager: Activity pause timeout for ActivityRecord{bd7ca6 u0 com.example.openradiofm/.ui.main.MainActivity t254 f}}
+> 02-05 22:38:39.006 30267 30287 I PowerHalWrapper: amsBoostNotify pid:31246,activity:com.saggitt.omega.OmegaLauncher, package:com.saggitt.omega, mProcessCreatePackcom.example.openradiofm 
+  02-05 22:38:39.006 30267 30287 I PowerHalWrapper: state: 1 
+  02-05 22:38:39.007 30267 30287 I PowerHalWrapper: amsBoostNotify AMS_BOOST_PROCESS_CREATE_BOOST:true 
+  02-05 22:38:39.007   562   648 I libPowerHal: [perfNotifyAppState] pack:com.saggitt.omega, act:com.saggitt.omega.OmegaLauncher, state:1, pid:31246, uid:10140, fps:60
+  02-05 22:38:39.008   562   648 I libPowerHal: [perfNotifyAppState] foreground:com.saggitt.omega, pid:31246, uid:10140
+  02-05 22:38:39.008   562   648 E UxUtility: notifyAppState error = NULL
+  02-05 22:38:39.008   562   648 I TouchUtility: notifyAppState error = NULL
+> 02-05 22:38:39.008   562   604 I mtkpower@impl: [notifyAppState] pc:1, com.example.openradiofm => com.saggitt.omega
+> 02-05 22:38:39.012 30444 30578 I BufferQueueProducer: [ViewRootImpl[openradiofm]#29(BLAST Consumer)29](id:76ec0000001d,api:1,p:30444,c:30444) disconnect: api 1
+  02-05 22:38:39.024 31246 31246 I mh_info : tempText1 :22:38
+  02-05 22:38:39.025 31246 31246 I mh_info : tempText1 :jue, 5 feb
+> 02-05 22:38:39.028 30444 30511 I BLASTBufferQueue: [ViewRootImpl[openradiofm]#29] destructor()
+> 02-05 22:38:39.028 30444 30511 I BufferQueueConsumer: [ViewRootImpl[openradiofm]#29(BLAST Consumer)29](id:76ec0000001d,api:0,p:-1,c:30444) disconnect
+  02-05 22:38:39.032 30267 31150 I WindowManager: Relayout Window{23bc1ca u0 com.saggitt.omega/com.saggitt.omega.OmegaLauncher}: oldVis=8 newVis=0 focusMayChange = true requestedWidth = 1280 requestedHeight = 800 outFrames = ClientWindowFrames{frame=[0,0][1280,800] display=[0,0][1280,800] backdrop=[0,0][1280,800]} outSurfaceControl = Surface(name=com.saggitt.omega/com.saggitt.omega.OmegaLauncher)/@0x436f59d
+> 02-05 22:38:39.033 30267 30603 W InputManager-JNI: Input channel object 'b9c1294 Splash Screen com.example.openradiofm (client)' was disposed without first being removed with the input manager!
+  02-05 22:38:39.034 31246 31246 I BufferQueueConsumer: [](id:7a0e000000c0,api:0,p:-1,c:31246) connect: controlledByApp=false
+  02-05 22:38:39.034 31246 31246 I BLASTBufferQueue: [ViewRootImpl[OmegaLauncher]#26] constructor()
+  02-05 22:38:39.035 31246 31594 I BufferQueueProducer: [ViewRootImpl[OmegaLauncher]#26(BLAST Consumer)26](id:7a0e000000c0,api:1,p:31246,c:31246) connect: api=1 producerControlledByApp=true
+  02-05 22:38:39.037 31246 31246 I mh_draw : str :22:38
+  02-05 22:38:39.038 31246 31246 I mh_draw : str :jue, 5 feb
+  02-05 22:38:39.039 31246 31246 I mh_draw : str :Smart AudioBook Player
+  02-05 22:38:39.039 31246 31246 I mh_draw : str :Kindle
+  02-05 22:38:39.039 31246 31246 I mh_draw : str :spacedesk
+  02-05 22:38:39.039 31246 31246 I mh_draw : str :Ajustes
+  02-05 22:38:39.039 31246 31246 I mh_draw : str :Play Store
+> 02-05 22:38:39.046  2573  2573 I BufferQueueDebug: [Splash Screen com.example.openradiofm#0](this:0xb400007036473c78,id:-1,api:0,p:-1,c:2573) onDestructor()
+  02-05 22:38:39.046 30444 14168 I BLASTBufferQueue: releaseBufferCallbackThunk bufferId:130755984359725 framenumber:1 blastBufferQueue is dead
+  02-05 22:38:39.051 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:39.051 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:39.060 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:39.060 31246 31246 I mh_draw : str :OpenRadio FM v3.0
+  02-05 22:38:43.169   562   648 I libPowerHal: [PE] MTKPOWER_HINT_APP_TOUCH update cmd:3408600 param:1
+  02-05 22:38:43.169 30267 30361 I mh_timeout: mScreenOffTimeoutSetting=60000 nextTimeout=905218145
+  02-05 22:38:43.175 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:43.190 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:43.206 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+> 02-05 22:38:43.206  2573  2573 I BufferQueueProducer: [Application Error: com.example.openradiofm#0](this:0xb400007036432488,id:-1,api:0,p:-1,c:2573) queueBuffer: fps=1.75 dur=4572.24 max=4461.71 min=5.92
+  02-05 22:38:43.212  2573  2573 I BufferQueueProducer: [FramebufferSurface](this:0xb400006fe6363410,id:-1,api:1,p:2573,c:2573) queueBuffer: fps=0.35 dur=2822.22 max=2822.22 min=2822.22
+  02-05 22:38:43.213   545   687 I hwcomposer: [HWCDisplay] [Display_0 (type:1)] fps:0.354333,dur:2822.20,max:2822.20,min:2822.20  
+  02-05 22:38:43.221 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:43.238 30267 30285 I mh_draw : str :Cerrar aplicaci├│n
+  02-05 22:38:43.281 30267 30361 I mh_timeout: mScreenOffTimeoutSetting=60000 nextTimeout=905218258
+  02-05 22:38:43.317   562   648 I libPowerHal: [perfLockRel] hdl:3156, idx:0
+  02-05 22:38:43.317   562   648 I libPowerHal: [PD] MTKPOWER_HINT_APP_TOUCH update cmd:3408600 param:0
+  02-05 22:38:43.317 30267 30285 I mh_gesx :  upX=211.8345 differenceX=0.0
+  02-05 22:38:43.317 30267 30285 I mh_gesy :  upY=464.4195 differenceY=-4.993744
+  02-05 22:38:43.317 30267 30285 I mh_bottom: start==== up===================screenHeight =800 screenWidth=1280
+> 02-05 22:38:43.319 30267  2071 W WindowManager:   Force finishing activity com.example.openradiofm/.ui.main.MainActivity
+  02-05 22:38:43.322 30267 23193 E OpenGLRenderer: EglManager::makeCurrent mED = 0x1, surface = 0x0, mEC = 0xb400007d0f2c5550, error = EGL_SUCCESS
+> 02-05 22:38:43.323 30267 23193 I BufferQueueProducer: [ViewRootImpl[openradiofm]#18(BLAST Consumer)18](id:763b0000001c,api:1,p:30267,c:30267) disconnect: api 1
+  02-05 22:38:43.327 30267 30288 W ActivityTaskManager: Can't find TaskDisplayArea to determine support for multi window. Task id=254 attached=false
+  02-05 22:38:43.327 30267 30288 W ActivityTaskManager: Can't find TaskDisplayArea to determine support for multi window. Task id=254 attached=false
+> 02-05 22:38:43.331 30267 30285 W InputManager-JNI: Input channel object '2a7df9f Application Error: com.example.openradiofm (client)' was disposed without first being removed with the input manager!
+> 02-05 22:38:43.334 30267 30285 W WindowManager: Changing focus from Window{2a7df9f u0 Application Error: com.example.openradiofm EXITING} to Window{23bc1ca u0 com.saggitt.omega/com.saggitt.omega.OmegaLauncher} displayId=0 Callers=com.android.server.wm.RootWindowContainer.updateFocusedWindowLocked:465 com.android.server.wm.WindowManagerService.updateFocusedWindowLocked:5750 com.android.server.wm.WindowState.setupWindowForRemoveOnExit:2591 com.android.server.wm.WindowState.removeIfPossible:2559 
+  02-05 22:38:43.343 30267 23193 I GED     : ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+> 02-05 22:38:43.344 30267  2071 I ActivityManager: Killing 4617:com.example.openradiofm/u0a153 (adj 900): crash
+  02-05 22:38:43.346 30267 23193 I GED     : ged_boost_gpu_freq, level 100, eOrigin 2, final_idx 2, oppidx_max 2, oppidx_min 0
+> 02-05 22:38:43.346   562   648 I libPowerHal: [perfNotifyAppState] pack:com.example.openradiofm, act:com.example.openradiofm, state:3, pid:4617, uid:10153, fps:90
+> 02-05 22:38:43.346   562   648 I libPowerHal: [perfNotifyAppState] pack:com.example.openradiofm, pid:4617, STATE_DEAD
+  02-05 22:38:43.351 30267 30298 I libprocessgroup: Successfully killed process cgroup uid 10153 pid 4617 in 5ms
+> 02-05 22:38:43.361 30267  2071 I BLASTBufferQueue: [ViewRootImpl[openradiofm]#18] destructor()
+> 02-05 22:38:43.361 30267  2071 I BufferQueueConsumer: [ViewRootImpl[openradiofm]#18(BLAST Consumer)18](id:763b0000001c,api:0,p:-1,c:30267) disconnect
+  02-05 22:38:43.379 12124 12124 I GoogleInputMethodService: GoogleInputMethodService.onFinishInput():2099 
+  02-05 22:38:43.381 12124 12124 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 0, locked = false
+  02-05 22:38:43.382 12124 12124 I GoogleInputMethodService: GoogleInputMethodService.onStartInput():1371 onStartInput(EditorInfo{EditorInfo{packageName=com.saggitt.omega, inputType=0, inputTypeString=NULL, enableLearning=false, autoCorrection=false, autoComplete=false, imeOptions=0, privateImeOptions=null, actionName=UNSPECIFIED, actionLabel=null, initialSelStart=-1, initialSelEnd=-1, initialCapsMode=0, label=null, fieldId=-1, fieldName=null, extras=null, hintText=null, hintLocales=[]}}, false)
+  02-05 22:38:43.384 12124 12124 I Module  : DeviceLockedStatusModuleProvider$Module.updateDeviceLockedStatus():103 repeatCheckTimes = 1, locked = false
+  02-05 22:38:43.404 30100 30100 I Zygote  : Process 4617 exited due to signal 9 (Killed)
+  02-05 22:38:43.464 30267 30288 I SurfaceControl: ~SurfaceControl: layerId=1073750625
+  02-05 22:38:43.472  2573  2573 I SurfaceControl: ~SurfaceControl: layerId=1073750625
+  02-05 22:38:43.473  2573  2573 I Layer   : ~Layer: layerId=1073750625, name=WindowToken{cb9b1f9 android.view.ViewRootImpl$W@30b70c0}#0
+> 02-05 22:38:43.473  2573  2573 I BufferQueueDebug: [Application Error: com.example.openradiofm#0](this:0xb400007036432488,id:-1,api:0,p:-1,c:2573) onDestructor()
+  02-05 22:38:43.473 30267 31150 I BLASTBufferQueue: releaseBufferCallbackThunk bufferId:129995775148160 framenumber:18 blastBufferQueue is dead
+  02-05 22:38:44.025  4373  4373 W ThreadPoolForeg: type=1400 audit(0.0:66438): avc: denied { write } for name="traced_producer" dev="tmpfs" ino=21455 scontext=u:r:gmscore_app:s0:c512,c768 tcontext=u:object_r:traced_producer_socket:s0 tclass=sock_file permissive=0 app=com.google.android.gms
+  02-05 22:38:44.194   562   635 I libPerfCtl: xgfGetFPS pid:30267 fps:64
+  02-05 22:38:44.464 30444 30444 I mh_info : tempText1 :100┬á%
+  02-05 22:38:44.465 30444 30444 I mh_info : tempText1 :100┬á%
+

@@ -46,6 +46,19 @@ import com.example.openradiofm.R;
  *   liberan explícitamente en onDestroy() para evitar fugas de memoria.
  */
 public class MainActivity extends AppCompatActivity {
+    
+    // V4.0: Language Context Wrapper (CORRECTED)
+    @Override
+    protected void attachBaseContext(Context newBase) {
+        String lang = "es"; // Default
+        try {
+            // Use "RadioPresets" to match onCreate
+            android.content.SharedPreferences prefs = newBase.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE);
+            lang = prefs.getString("pref_app_language", "es");
+        } catch (Exception e) {}
+        super.attachBaseContext(MyContextWrapper.wrap(newBase, lang));
+    }
+
     private static final String TAG = "OpenRadioFm";
     private static final int PRESETS_COUNT = 12;
 
@@ -144,6 +157,7 @@ public class MainActivity extends AppCompatActivity {
         });
         if (!mHiddenPlayer.init()) Log.e(TAG, "Error RDS Hardware Init");
     }
+
 
     // ScheduledExecutorService para sondear el estado de la radio en segundo plano.
     // Más robusto que Timer y evita fugas de memoria.
@@ -1187,7 +1201,7 @@ public class MainActivity extends AppCompatActivity {
         
         if (rowLanguage != null) {
             rowLanguage.setOnClickListener(v -> {
-                showLanguageSelector();
+                showNewLanguageSelector();
                 dialog.dismiss();
             });
         }
@@ -1249,6 +1263,19 @@ public class MainActivity extends AppCompatActivity {
         cardFonts.setOnClickListener(v -> showFontSelector(dialog, tvFontPreview));
         cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, null));
         
+        cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, null));
+        
+        // V4.1: Unified About Button Listener
+        android.view.View btnAbout = dialog.findViewById(R.id.btnAbout);
+        if (btnAbout != null) {
+            btnAbout.setOnClickListener(v -> {
+                showAboutDialog();
+                // Optional: keep settings open or close it? usually keep open or close both?
+                // Let's keep settings open for now, or maybe dismiss. 
+                // The standard is usually stacking dialogs is fine.
+            });
+        }
+
         btnClose.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
@@ -1403,6 +1430,30 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
     
+    // V4.2: New Language Selector to ensure correct preference key usage
+    private void showNewLanguageSelector() {
+        String[] languages = {"Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)", "Português (PT)", "Italiano (IT)", "Русский (RU)"};
+        final String[] codes = {"es", "en", "fr", "de", "pt", "it", "ru"};
+        
+        android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.select_language)
+            .setItems(languages, (d, w) -> {
+                if (w < codes.length) {
+                    mPrefs.edit().putString("pref_app_language", codes[w]).apply();
+                    // Recreate activity to apply new context
+                    recreate();
+                }
+            })
+            .create();
+            
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.7f);
+            window.setBackgroundDrawableResource(android.R.color.transparent);
+        }
+        dialog.show();
+    }
+
     /**
      * Aplica el skin seleccionado a todos los elementos de la interfaz.
      */
@@ -1720,24 +1771,83 @@ public class MainActivity extends AppCompatActivity {
     /**
      * V4.0: Muestra diálogo para guardar/cargar favoritos
      */
+    /**
+     * V4.1: Muestra diálogo para guardar/cargar favoritos usando diseño unificado
+     */
     private void showSaveLoadFavoritesDialog() {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.save_load_favorites));
+        if (!checkStoragePermissions()) {
+            requestStoragePermissions();
+            return;
+        }
+
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_save_load);
         
-        String[] options = {getString(R.string.save_favorites), getString(R.string.load_favorites)};
-        
-        builder.setItems(options, (dialog, which) -> {
-            if (which == 0) {
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+        }
+
+        android.view.View btnSave = dialog.findViewById(R.id.btnSave);
+        android.view.View btnLoad = dialog.findViewById(R.id.btnLoad);
+        android.view.View btnClose = dialog.findViewById(R.id.btnClose);
+
+        if (btnSave != null) {
+            btnSave.setOnClickListener(v -> {
                 saveFavoritesToFile();
-            } else {
+                dialog.dismiss();
+            });
+        }
+
+        if (btnLoad != null) {
+            btnLoad.setOnClickListener(v -> {
                 loadFavoritesFromFile();
-            }
-        });
-        
-        builder.setNegativeButton(getString(R.string.cancel), null);
-        builder.show();
+                dialog.dismiss();
+            });
+        }
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        dialog.show();
     }
-    
+
+    /**
+     * V4.1: Muestra diálogo "Acerca de" unificado
+     */
+    private void showAboutDialog() {
+        android.app.Dialog dialog = new android.app.Dialog(this);
+        dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_about);
+        
+        android.view.Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+        }
+        
+        // Update version text dynamically if needed
+        try {
+            TextView tvVersion = dialog.findViewById(R.id.tvAppVersion);
+            if (tvVersion != null) {
+                String versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
+                tvVersion.setText("Versión " + versionName + " Global Edition");
+            }
+        } catch (Exception e) {}
+        
+        android.view.View btnClose = dialog.findViewById(R.id.btnClose);
+        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+        
+        dialog.show();
+    }
+
     /**
      * Guarda los favoritos actuales en un archivo .fav en la carpeta RadioLogos
      */
@@ -1879,15 +1989,11 @@ public class MainActivity extends AppCompatActivity {
     }
     
     /**
-     * V4.0: Aplica el idioma seleccionado por el usuario
+     * V4.0: Aplica el idioma seleccionado por el usuario.
+     * Ya no necesitamos actualizar Resources manualmente aquí, 
+     * MyContextWrapper lo hace en attachBaseContext al recrear.
      */
     private void setLocale(String languageCode) {
-        android.content.res.Configuration config = new android.content.res.Configuration();
-        java.util.Locale locale = new java.util.Locale(languageCode);
-        java.util.Locale.setDefault(locale);
-        config.setLocale(locale);
-        getResources().updateConfiguration(config, getResources().getDisplayMetrics());
-        
         mPrefs.edit().putString("app_language", languageCode).apply();
     }
     
@@ -1950,5 +2056,38 @@ public class MainActivity extends AppCompatActivity {
         }
         
         tvCurrentLanguage.setText(langName);
+    }
+    
+    // PERMISSION HANDLING
+    private boolean checkStoragePermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            int write = checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
+            int read = checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE);
+            return write == android.content.pm.PackageManager.PERMISSION_GRANTED && 
+                   read == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        }
+        return true;
+    }
+
+    private void requestStoragePermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            requestPermissions(new String[]{
+                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            }, 1001);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1001) {
+            if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                showToast("Permisos concedidos. Probando acceso...");
+                showSaveLoadFavoritesDialog();
+            } else {
+                showToast("Se requieren permisos de almacenamiento para guardar favoritos.");
+            }
+        }
     }
 }

@@ -5,65 +5,33 @@
     android:layout_height="wrap_content"
     android:scrollbars="none">
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:background="@drawable/bg_glass_card_classic"
-        android:padding="24dp">
+    <LinearLayout style="@style/DialogContainerStyle">
 
         <!-- Header -->
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:layout_marginBottom="24dp">
+        <LinearLayout style="@style/DialogTitleLayout">
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/radio_eq_n"
                 android:layout_marginEnd="12dp"/>
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Premium Settings"
-                android:textColor="@color/white"
-                android:textSize="24sp"
-                android:textStyle="bold"/>
+                style="@style/DialogTitleText"
+                android:text="Premium Settings"/>
         </LinearLayout>
 
         <!-- SECTION: PERSONALIZACIÓN -->
         <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="PERSONALIZACIÓN"
-            android:textColor="#FFD700"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:letterSpacing="0.1"
-            android:layout_marginBottom="12dp"/>
+            style="@style/DialogSubheaderText"
+            android:text="PERSONALIZACIÓN"/>
 
         <!-- Submenu Box: Seleccionar Tema -->
         <LinearLayout
             android:id="@+id/cardTheme"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_submenu_box"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp"
-            android:clickable="true"
-            android:focusable="true">
+            style="@style/DialogBoxStyle">
             
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🎨 Seleccionar Tema"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
+                style="@style/DialogBoxTitle"
+                android:text="🎨 Seleccionar Tema"/>
             
             <LinearLayout
                 android:layout_width="match_parent"
@@ -79,34 +47,19 @@
                     android:layout_marginEnd="12dp"/>
                 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Toca para cambiar"
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp"/>
+                    style="@style/DialogBoxDesc"
+                    android:text="Toca para cambiar"/>
             </LinearLayout>
         </LinearLayout>
 
         <!-- Submenu Box: Seleccionar Tipografía -->
         <LinearLayout
             android:id="@+id/cardFonts"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_submenu_box"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp"
-            android:clickable="true"
-            android:focusable="true">
+            style="@style/DialogBoxStyle">
             
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🔤 Seleccionar Tipografía"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
+                style="@style/DialogBoxTitle"
+                android:text="🔤 Seleccionar Tipografía"/>
             
             <LinearLayout
                 android:layout_width="match_parent"
@@ -124,34 +77,19 @@
                     android:layout_marginEnd="12dp"/>
                 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Toca para cambiar"
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp"/>
+                    style="@style/DialogBoxDesc"
+                    android:text="Toca para cambiar"/>
             </LinearLayout>
         </LinearLayout>
 
         <!-- Submenu Box: Modo de Fondo -->
         <LinearLayout
             android:id="@+id/cardBackground"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/bg_submenu_box"
-            android:padding="16dp"
-            android:layout_marginBottom="24dp"
-            android:clickable="true"
-            android:focusable="true">
+            style="@style/DialogBoxStyle">
             
             <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="🖼️ Modo de Fondo"
-                android:textColor="@color/white"
-                android:textSize="16sp"
-                android:textStyle="bold"
-                android:layout_marginBottom="8dp"/>
+                style="@style/DialogBoxTitle"
+                android:text="🖼️ Modo de Fondo"/>
             
             <LinearLayout
                 android:layout_width="match_parent"
@@ -166,37 +104,25 @@
                     android:layout_marginEnd="12dp"/>
                 
                 <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Toca para cambiar"
-                    android:textColor="#AAAAAA"
-                    android:textSize="14sp"/>
+                    style="@style/DialogBoxDesc"
+                    android:text="Toca para cambiar"/>
             </LinearLayout>
         </LinearLayout>
 
         <!-- App Options Header -->
         <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="⚙️ Opciones de la App"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="12dp"/>
+            style="@style/DialogSubheaderText"
+            android:text="⚙️ OPCIONES DE LA APP"
+            android:layout_marginTop="16dp"/>
         
         <!-- V4.0: Language Selector Row -->
         <LinearLayout
             android:id="@+id/rowLanguage"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/DialogBoxStyle"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:background="@drawable/bg_submenu_box"
             android:padding="16dp"
-            android:layout_marginBottom="8dp"
-            android:clickable="true"
-            android:focusable="true">
+            android:layout_marginBottom="8dp">
             
             <TextView
                 android:layout_width="0dp"
@@ -279,21 +205,31 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
+        <!-- About Button (NEW for V4.1) -->
+        <LinearLayout
+            android:id="@+id/btnAbout"
+            style="@style/SettingsRowStyle"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="ℹ️ Acerca de OpenRadioFM"
+                android:textColor="@color/white"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
 
         <!-- Close Button -->
         <TextView
             android:id="@+id/btnCloseSettings"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="CERRAR"
-            android:textColor="#FF5555"
-            android:gravity="center"
-            android:padding="16dp"
-            android:layout_marginTop="16dp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"
-            android:textStyle="bold"/>
+            style="@style/DialogCloseButton"
+            android:text="CERRAR"/>
 
     </LinearLayout>
 </ScrollView>

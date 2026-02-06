@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="500dp"
+    android:layout_height="wrap_content"
+    android:scrollbars="none">
+
+    <LinearLayout style="@style/DialogContainerStyle">
+
+        <!-- Header -->
+        <LinearLayout style="@style/DialogTitleLayout">
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_save_load"
+                android:layout_marginEnd="12dp"/>
+            <TextView
+                style="@style/DialogTitleText"
+                android:text="@string/save_load_favorites"/>
+        </LinearLayout>
+
+        <!-- SUBHEADER -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:text="ACCIONES DISPONIBLES"/>
+
+        <!-- Option 1: Save -->
+        <LinearLayout
+            android:id="@+id/btnSave"
+            style="@style/DialogBoxStyle">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_save_load"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    
+                    <TextView
+                        style="@style/DialogBoxTitle"
+                        android:text="@string/save_favorites"
+                        android:layout_marginBottom="2dp"/>
+                    <TextView
+                        style="@style/DialogBoxDesc"
+                        android:text="Crear backup .fav en /RadioLogos"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>        
+
+        <!-- Option 2: Load -->
+        <LinearLayout
+            android:id="@+id/btnLoad"
+            style="@style/DialogBoxStyle">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                
+                <!-- Reuse save_load icon or create a specific load one if available, using same for now -->
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@android:drawable/stat_sys_download" 
+                    app:tint="@color/white"
+                    android:layout_marginEnd="16dp"/>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+                    
+                    <TextView
+                        style="@style/DialogBoxTitle"
+                        android:text="@string/load_favorites"
+                        android:layout_marginBottom="2dp"/>
+                    <TextView
+                        style="@style/DialogBoxDesc"
+                        android:text="Restaurar backup desde .fav"/>
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Close -->
+        <TextView
+            android:id="@+id/btnClose"
+            style="@style/DialogCloseButton"
+            android:text="@string/cancel"/>
+
+    </LinearLayout>
+</ScrollView>
