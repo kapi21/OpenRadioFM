@@ -117,11 +117,16 @@
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
         app:layout_constraintBottom_toTopOf="@+id/btnSeekDown">
 
-        <TextView
-            android:id="@+id/tvBandIndicator"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone" />
+        <ImageView
+            android:id="@+id/ivBandIndicator"
+            android:layout_width="130dp"
+            android:layout_height="45dp"
+            android:layout_gravity="top|start"
+            android:layout_marginEnd="12dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_fm1" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvFrequency"
@@ -227,9 +232,9 @@
         android:layout_marginBottom="4dp"
         android:layout_marginEnd="2dp"
         android:background="@drawable/bg_glass_card_classic"
-        android:src="@drawable/radio_fm1"
+        android:src="@drawable/radio_band_n"
         android:scaleType="fitCenter"
-        android:padding="8dp"
+        android:padding="12dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
         app:layout_constraintEnd_toStartOf="@+id/btnAutoScan"

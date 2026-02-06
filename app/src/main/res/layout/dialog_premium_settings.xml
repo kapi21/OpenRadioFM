@@ -16,13 +16,13 @@
                 android:layout_marginEnd="12dp"/>
             <TextView
                 style="@style/DialogTitleText"
-                android:text="Premium Settings"/>
+                android:text="@string/premium_customization"/>
         </LinearLayout>
 
         <!-- SECTION: PERSONALIZACIÓN -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="PERSONALIZACIÓN"/>
+            android:text="@string/premium_customization"/>
 
         <!-- Submenu Box: Seleccionar Tema -->
         <LinearLayout
@@ -31,7 +31,7 @@
             
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="🎨 Seleccionar Tema"/>
+                android:text="@string/select_skin"/>
             
             <LinearLayout
                 android:layout_width="match_parent"
@@ -48,7 +48,7 @@
                 
                 <TextView
                     style="@style/DialogBoxDesc"
-                    android:text="Toca para cambiar"/>
+                    android:text="@string/touch_to_change"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -59,7 +59,7 @@
             
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="🔤 Seleccionar Tipografía"/>
+                android:text="@string/select_font"/>
             
             <LinearLayout
                 android:layout_width="match_parent"
@@ -78,7 +78,7 @@
                 
                 <TextView
                     style="@style/DialogBoxDesc"
-                    android:text="Toca para cambiar"/>
+                    android:text="@string/touch_to_change"/>
             </LinearLayout>
         </LinearLayout>
 
@@ -89,7 +89,7 @@
             
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="🖼️ Modo de Fondo"/>
+                android:text="@string/background_mode"/>
             
             <LinearLayout
                 android:layout_width="match_parent"
@@ -104,15 +104,16 @@
                     android:layout_marginEnd="12dp"/>
                 
                 <TextView
+                    android:id="@+id/tvBackgroundStatus"
                     style="@style/DialogBoxDesc"
-                    android:text="Toca para cambiar"/>
+                    android:text="@string/touch_to_change"/>
             </LinearLayout>
         </LinearLayout>
 
         <!-- App Options Header -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="⚙️ OPCIONES DE LA APP"
+            android:text="@string/app_options"
             android:layout_marginTop="16dp"/>
         
         <!-- V4.0: Language Selector Row -->
@@ -128,7 +129,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="🌍 Idioma de la App"
+                android:text="@string/app_language"
                 android:textColor="@color/white"
                 android:textSize="16sp"/>
             
@@ -136,7 +137,7 @@
                 android:id="@+id/tvCurrentLanguage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Español"
+                android:text="@string/language_spanish"
                 android:textColor="#AAAAAA"
                 android:textSize="14sp"
                 android:layout_marginEnd="8dp"/>
@@ -155,7 +156,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Descargar Logos Online"
+                android:text="@string/online_logos"
                 android:textColor="@color/white"/>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchLogosOnline"
@@ -169,7 +170,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Modo Noche Automático"
+                android:text="@string/night_mode_auto"
                 android:textColor="@color/white"/>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchNightMode"
@@ -183,7 +184,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Guardar Historial de Emisoras"
+                android:text="@string/save_history"
                 android:textColor="@color/white"/>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchSaveHistory"
@@ -197,7 +198,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Habilitar Gestos (Swipe) (beta)"
+                android:text="@string/enable_gestures_beta"
                 android:textColor="@color/white"/>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchSwipeGestures"
@@ -215,7 +216,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="ℹ️ Acerca de OpenRadioFM"
+                android:text="@string/about_openradio"
                 android:textColor="@color/white"/>
             <TextView
                 android:layout_width="wrap_content"
@@ -229,7 +230,7 @@
         <TextView
             android:id="@+id/btnCloseSettings"
             style="@style/DialogCloseButton"
-            android:text="CERRAR"/>
+            android:text="@string/close"/>
 
     </LinearLayout>
 </ScrollView>

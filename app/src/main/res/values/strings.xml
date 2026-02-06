@@ -10,8 +10,8 @@
     <string name="select_typography">Seleccionar Tipografía</string>
     <string name="select_bg_mode">Modo de Fondo</string>
     <string name="close">Cerrar</string>
-    <string name="select_skin">Seleccionar Tema</string>
-    <string name="select_font">Seleccionar Fuente</string>
+    <string name="select_skin">🎨 Seleccionar Tema</string>
+    <string name="select_font">🔤 Seleccionar Tipografía</string>
     <string name="font_applied">Fuente aplicada</string>
     <string name="bg_mode_updated">Modo de fondo actualizado</string>
     
@@ -72,4 +72,6 @@
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
     <string name="language_changed">✅ Idioma cambiado a %s</string>
+    <string name="about_openradio">ℹ️ Acerca de OpenRadioFM</string>
+    <string name="touch_to_change">Toca para cambiar</string>
 </resources>

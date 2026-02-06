@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Use "RadioPresets" to match onCreate
             android.content.SharedPreferences prefs = newBase.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE);
-            lang = prefs.getString("pref_app_language", "es");
+            lang = prefs.getString("app_language", "es");
         } catch (Exception e) {}
         super.attachBaseContext(MyContextWrapper.wrap(newBase, lang));
     }
@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     // V3.0: Background personalizado
     private android.view.View mRootLayout;
 
-    private TextView tvFrequency, tvRdsName, tvRdsInfo, tvBandIndicator;
+    private TextView tvFrequency, tvRdsName, tvRdsInfo;
     private android.view.View boxFrequency;
     private ImageView ivBandIndicator;
     private ImageButton btnLocDx, btnBand;
@@ -283,7 +283,6 @@ public class MainActivity extends AppCompatActivity {
         btnLocDx = findViewById(R.id.btnLocDx);
         btnBand = findViewById(R.id.btnBand);
         
-        tvBandIndicator = findViewById(R.id.tvBandIndicator);
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
         ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
         
@@ -1101,8 +1100,6 @@ public class MainActivity extends AppCompatActivity {
         if (band == 0) resId = R.drawable.radio_fm1;
         else if (band == 1) resId = R.drawable.radio_fm2;
         else if (band == 2) resId = R.drawable.radio_fm3;
-        else if (band == 3) resId = R.drawable.radio_fm1; // Fallback for AM
-        else if (band == 4) resId = R.drawable.radio_fm2;
         
         if (ivBandIndicator != null) {
             // Layout V3: Indicador gráfico separado + Botón BAND fijo
@@ -1111,11 +1108,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Layout V2: El botón BAND actúa como indicador
             btnBand.setImageResource(resId);
-        }
-
-        // También actualizar el TextView si existe (V2 lo tiene oculto o visible según diseño)
-        if (tvBandIndicator != null) {
-            tvBandIndicator.setText(getBandLabel(band));
         }
     }
 
@@ -1188,6 +1180,7 @@ public class MainActivity extends AppCompatActivity {
         
         android.view.View viewColorPreview = dialog.findViewById(R.id.viewColorPreview);
         TextView tvFontPreview = dialog.findViewById(R.id.tvFontPreview);
+        TextView tvBackgroundStatus = dialog.findViewById(R.id.tvBackgroundStatus);
         
         androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
@@ -1201,7 +1194,7 @@ public class MainActivity extends AppCompatActivity {
         
         if (rowLanguage != null) {
             rowLanguage.setOnClickListener(v -> {
-                showNewLanguageSelector();
+                showLanguageSelector();
                 dialog.dismiss();
             });
         }
@@ -1210,6 +1203,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Previews
         updateSettingsPreviews(viewColorPreview, tvFontPreview);
+        if (tvBackgroundStatus != null) {
+            int bgIdx = mPrefs.getInt("pref_bg_mode", 1);
+            String[] modes = {getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image), getString(R.string.bg_dynamic_logo)};
+            if (bgIdx >= 0 && bgIdx < modes.length) tvBackgroundStatus.setText(modes[bgIdx]);
+        }
 
         // Logos Online Switch
         if (swLogosOnline != null) {
@@ -1261,9 +1259,7 @@ public class MainActivity extends AppCompatActivity {
             showThemeSelector(dialog, viewColorPreview, tvFontPreview);
         });
         cardFonts.setOnClickListener(v -> showFontSelector(dialog, tvFontPreview));
-        cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, null));
-        
-        cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, null));
+        cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, tvBackgroundStatus));
         
         // V4.1: Unified About Button Listener
         android.view.View btnAbout = dialog.findViewById(R.id.btnAbout);
@@ -1417,7 +1413,7 @@ public class MainActivity extends AppCompatActivity {
                 loadCustomBackground();
                 loadCarLogo();
                 updateDynamicBackground(mLastLogoUrl);
-                tvStatus.setText(modes[w]);
+                if (tvStatus != null) tvStatus.setText(modes[w]);
             })
             .create();
         
@@ -1864,21 +1860,25 @@ public class MainActivity extends AppCompatActivity {
             org.json.JSONObject jsonRoot = new org.json.JSONObject();
             org.json.JSONArray presetsArray = new org.json.JSONArray();
             
-            for (int i = 1; i <= 15; i++) {
-                String key = "preset_" + i;
-                int freq = mPrefs.getInt(key, 0);
-                
-                if (freq > 0) {
-                    org.json.JSONObject presetObj = new org.json.JSONObject();
-                    presetObj.put("preset", i);
-                    presetObj.put("frequency", freq);
+            for (int band = 0; band < 3; band++) {
+                for (int i = 1; i <= 12; i++) {
+                    String key = "P" + i + "_B" + band;
+                    int freq = mPrefs.getInt(key, 0);
                     
-                    String customName = mPrefs.getString("custom_name_" + freq, "");
-                    if (!customName.isEmpty()) {
-                        presetObj.put("custom_name", customName);
+                    if (freq > 0) {
+                        org.json.JSONObject presetObj = new org.json.JSONObject();
+                        presetObj.put("preset", i);
+                        presetObj.put("band", band);
+                        presetObj.put("frequency", freq);
+                        
+                        // Obtener nombre custom del repositorio (que usa RadioStationNames prefs)
+                        com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(freq, null);
+                        if (s != null && s.getName() != null && !s.getName().isEmpty()) {
+                            presetObj.put("custom_name", s.getName());
+                        }
+                        
+                        presetsArray.put(presetObj);
                     }
-                    
-                    presetsArray.put(presetObj);
                 }
             }
             
@@ -1957,8 +1957,10 @@ public class MainActivity extends AppCompatActivity {
             org.json.JSONArray presetsArray = jsonRoot.getJSONArray("presets");
             
             android.content.SharedPreferences.Editor editor = mPrefs.edit();
-            for (int i = 1; i <= 15; i++) {
-                editor.remove("preset_" + i);
+            for (int band = 0; band < 3; band++) {
+                for (int i = 1; i <= 12; i++) {
+                    editor.remove("P" + i + "_B" + band);
+                }
             }
             
             int loadedCount = 0;
@@ -1966,12 +1968,13 @@ public class MainActivity extends AppCompatActivity {
                 org.json.JSONObject presetObj = presetsArray.getJSONObject(i);
                 int presetNum = presetObj.getInt("preset");
                 int freq = presetObj.getInt("frequency");
+                int band = presetObj.optInt("band", 0);
                 
-                editor.putInt("preset_" + presetNum, freq);
+                editor.putInt("P" + presetNum + "_B" + band, freq);
                 
                 if (presetObj.has("custom_name")) {
                     String customName = presetObj.getString("custom_name");
-                    editor.putString("custom_name_" + freq, customName);
+                    mRepository.setCustomName(freq, customName);
                 }
                 
                 loadedCount++;
