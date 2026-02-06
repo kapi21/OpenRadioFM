@@ -34,4 +34,10 @@
     <color name="skin_cyan">#00CED1</color>
     <color name="skin_pink">#FF69B4</color>
     <color name="skin_white">#FFFFFF</color>
+    
+    <!-- Night Mode Colors (Android Auto / Google Maps style) -->
+    <color name="night_blue_primary">#4D9FFF</color>      <!-- Azul noche principal para textos -->
+    <color name="night_blue_accent">#6BB6FF</color>       <!-- Azul más claro para acentos -->
+    <color name="night_blue_muted">#3A7BC8</color>        <!-- Azul oscuro para elementos secundarios -->
+    <color name="night_background">#0D1117</color>        <!-- Fondo oscuro profundo -->
 </resources>

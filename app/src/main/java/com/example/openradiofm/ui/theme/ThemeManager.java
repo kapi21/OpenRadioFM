@@ -16,6 +16,7 @@ public class ThemeManager {
     
     // Skins disponibles
     public enum Skin {
+        NIGHT_MODE("Night Mode", "#2A2A2A"),
         CLASSIC_GRAY("Classic Gray", "#B0B0B0"),
         ORANGE("Orange", "#FF8C00"),
         BLUE("Blue", "#00A8FF"),

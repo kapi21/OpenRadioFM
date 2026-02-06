@@ -28,7 +28,13 @@
 - [User Manual (English)](manual_user_en.md)
 - [Руководство пользователя (Русский)](manual_user_ru.md)
 
-## � Historial de Versiones
+## 📜 Historial de Versiones
+
+### v4.0 "Global Edition" (Febrero 2026)
+- **Internacionalización:** Traducción completa a Español, Inglés y Ruso con selector manual.
+- **Gestión de Favoritos:** Sistema de Guardar/Cargar listas de emisoras en archivos `.fav`.
+- **Modo Nocturno Premium:** Tinting inteligente de iconos y bordes en azul nocturno.
+- **Layout V2 Refinado:** Alineación perfecta y nuevos botones de acceso rápido.
 
 ### v3.0 "The Car Experience" (Febrero 2026)
 - Salto a versión estable con rediseño completo de la interfaz horizontal.

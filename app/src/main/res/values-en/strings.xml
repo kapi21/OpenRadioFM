@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadio FM v3.0</string>
+    <string name="app_name">OpenRadio FM v4.0</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium Customization</string>
@@ -10,6 +10,8 @@
     <string name="select_typography">Select Typography</string>
     <string name="select_bg_mode">Select Background Mode</string>
     <string name="close">Close</string>
+    <string name="select_skin">Select Theme</string>
+    <string name="select_font">Select Font</string>
     <string name="font_applied">Font applied</string>
     <string name="bg_mode_updated">Background mode updated</string>
     
@@ -24,4 +26,50 @@
     <string name="font_digital">Digital (LED)</string>
     <string name="font_modern">Modern (Inter)</string>
     <string name="font_orbitron">Futuristic (Orbitron)</string>
+    
+    <!-- V4.0: App Options -->
+    <string name="app_options">App Options</string>
+    <string name="night_mode_auto">Automatic Night Mode</string>
+    <string name="save_history">Save Station History</string>
+    <string name="enable_gestures_beta">Enable Gestures (Swipe) (beta)</string>
+    <string name="online_logos">Online Logos</string>
+    
+    <!-- V4.0: Feedback Messages -->
+    <string name="night_mode_enabled">✅ Automatic Night Mode enabled</string>
+    <string name="night_mode_disabled">❌ Automatic Night Mode disabled</string>
+    <string name="history_enabled">✅ Station history enabled</string>
+    <string name="history_disabled">❌ Station history disabled</string>
+    <string name="gestures_enabled">✅ Swipe gestures enabled</string>
+    <string name="gestures_disabled">❌ Swipe gestures disabled</string>
+    <string name="logos_online_enabled">✅ Online logos enabled</string>
+    <string name="logos_online_disabled">❌ Online logos disabled</string>
+    <string name="night_mode_manual_blocked">Disable Automatic Night Mode to choose skin manually</string>
+    
+    <!-- V4.0: Save/Load Favorites -->
+    <string name="save_load_favorites">💾 Save/Load Favorites</string>
+    <string name="save_favorites">💾 Save Favorites</string>
+    <string name="load_favorites">📂 Load Favorites</string>
+    <string name="select_favorites_file">📂 Select favorites file</string>
+    <string name="cancel">Cancel</string>
+    <string name="favorites_saved">✅ Favorites saved: %s</string>
+    <string name="favorites_loaded" formatted="false">✅ %d favorites loaded from %s</string>
+    <string name="error_saving_favorites">❌ Error saving favorites: %s</string>
+    <string name="error_loading_favorites">❌ Error loading favorites: %s</string>
+    <string name="folder_not_found">❌ RadioLogos folder not found</string>
+    <string name="no_favorites_files">❌ No favorites files found</string>
+    
+    <!-- V4.0: Android Settings -->
+    <string name="error_opening_settings">Could not open Settings</string>
+    
+    <!-- V4.0: History -->
+    <string name="history_empty">History empty</string>
+    <string name="station_history">📜 Station History</string>
+    
+    <!-- V4.0: Language Selector -->
+    <string name="app_language">App Language</string>
+    <string name="select_language">Select Language</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_changed">✅ Language changed to %s</string>
 </resources>

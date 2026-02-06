@@ -1,5 +1,36 @@
 # Changelog - OpenRadioFM
 
+## v4.0 "Global Edition" (Febrero 2026)
+
+Actualización centrada en la internacionalización, gestión de contenidos y refinamiento visual.
+
+### 🌍 Internacionalización
+*   **Soporte Multiidioma:** Traducción completa de la interfaz a Español, Inglés y Ruso.
+*   **Selector Manual:** Nuevo selector de idioma en el menú Premium que permite forzar el idioma independientemente del sistema.
+*   **Reinicio Dinámico:** La aplicación aplica el nuevo idioma instantáneamente reiniciando la actividad.
+
+### 💾 Gestión de Favoritos
+*   **Save/Load System:** Nueva funcionalidad para guardar y cargar tus listas de emisoras favoritas.
+*   **Formato .fav (JSON):** Los archivos se guardan en `/sdcard/RadioLogos` y son fáciles de compartir o respaldar.
+*   **Contenido Guardado:** Frecuencia, número de preset, nombre personalizado y timestamp.
+
+### 🎨 Mejoras Visuales (V2 & V3)
+*   **Layout V2 Refinado:** Corrección total de la alineación en la columna derecha. Nuevos botones de acceso rápido.
+*   **Modo Nocturno Premium:** Los iconos de banda (FM) y etiquetas (MHz) ahora reciben un tinte azul nocturno ("Night Blue") en modo noche, junto con los bordes de los botones.
+*   **Iconos Optimizados:** Reducción de tamaño (padding 18dp) para una estética más limpia.
+
+### 🛠️ Otras Mejoras
+*   **Botones Extra (V2):**
+    *   **Settings:** Acceso directo a los ajustes de Android.
+    *   **Favoritos:** Acceso directo al diálogo de Guardar/Cargar.
+*   **Gestos (Beta):** Marcados como característica experimental en el menú.
+*   **Correcciones:** 
+    *   Solucionado error de compilación con referencias a variables antiguas.
+    *   Corregidos formats strings con múltiples argumentos.
+
+---
+
+
 ## v3.0 "The Car Experience" (Febrero 2026)
 
 Esta es la actualización más ambiciosa hasta la fecha, transformando OpenRadioFM en una experiencia premium diseñada específicamente para el entorno del automóvil.

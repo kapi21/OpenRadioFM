@@ -60,6 +60,38 @@ En el diseño horizontal (V3), puedes mostrar el logo de tu coche en el lateral 
 
 ---
 
+## 4. Gestión de Favoritos (Save/Load) [Novedad v4.0]
+
+Ahora puedes hacer copias de seguridad de tus emisoras favoritas y compartirlas entre dispositivos.
+
+### 4.1 Guardar Favoritos (Backup)
+1. Pulsa el botón **💾 (Floppy Disk)** en la columna derecha (V2) o desde el menú de opciones.
+2. Selecciona **"Guardar Favoritos"**.
+3. Se creará un archivo `.fav` en la carpeta `RadioLogos` con la fecha y hora.
+
+### 4.2 Cargar Favoritos (Restore)
+1. Pulsa el botón **💾**.
+2. Selecciona **"Cargar Favoritos"**.
+3. Elige el archivo de la lista. Las emisoras se actualizarán instantáneamente.
+
+---
+
+## 5. Configuración Avanzada
+
+### 5.1 Selector de Idioma [Novedad v4.0]
+Puedes cambiar el idioma de la aplicación independientemente del sistema:
+1. Mantén pulsado **EQ** para abrir el menú Premium.
+2. Ve a **"Opciones de la App"** > **"🌍 Idioma de la App"**.
+3. Selecciona Español, English o Русский. La app se reiniciará para aplicar los cambios.
+
+### 5.2 Modo Nocturno Premium
+El modo noche ahora no solo atenúa la pantalla, sino que aplica un tema visual "Night Blue" a:
+- Iconos de banda FM y etiquetas MHz.
+- Bordes de los botones de control.
+- Textos de frecuencia e información.
+
+---
+
 ## 4. Solución de Problemas
 
 - **El GPS no se abre:** Asegúrate de tener una aplicación de mapas instalada y configurada como predeterminada en Android.

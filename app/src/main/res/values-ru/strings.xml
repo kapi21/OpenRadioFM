@@ -1,27 +1,75 @@
 <resources>
-    <string name="app_name">OpenRadio FM v3.0</string>
+    <string name="app_name">OpenRadio FM v4.0</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Премиум Настройки</string>
     <string name="theme_colors">Цвета Темы</string>
-    <string name="typography">Типографика</string>
+    <string name="typography">Типография</string>
     <string name="background_mode">Режим Фона</string>
     <string name="accent_color">Акцентный Цвет</string>
-    <string name="select_typography">Выберите Шрифт</string>
-    <string name="select_bg_mode">Выберите Режим Фона</string>
+    <string name="select_typography">Выбрать Типографию</string>
+    <string name="select_bg_mode">Выбрать Режим Фона</string>
     <string name="close">Закрыть</string>
-    <string name="font_applied">Шрифт применен</string>
-    <string name="bg_mode_updated">Режим фона обновлен</string>
+    <string name="select_skin">Выбрать Тему</string>
+    <string name="select_font">Выбрать Шрифт</string>
+    <string name="font_applied">Шрифт применён</string>
+    <string name="bg_mode_updated">Режим фона обновлён</string>
     
     <!-- Background Modes -->
-    <string name="bg_pure_black">Чистый Черный</string>
-    <string name="bg_fixed_image">Фикс. изображение (background.png)</string>
-    <string name="bg_dynamic_logo">Логотип станции (Динамический)</string>
+    <string name="bg_pure_black">Чистый Чёрный</string>
+    <string name="bg_fixed_image">Фиксированное Изображение (background.png)</string>
+    <string name="bg_dynamic_logo">Логотип Станции (Динамический)</string>
 
     <!-- Font Names -->
-    <string name="font_default">По умолчанию (Система)</string>
-    <string name="font_bebas">Роботизированный (Bebas)</string>
+    <string name="font_default">По умолчанию (System)</string>
+    <string name="font_bebas">Роботический (Bebas)</string>
     <string name="font_digital">Цифровой (LED)</string>
     <string name="font_modern">Современный (Inter)</string>
     <string name="font_orbitron">Футуристический (Orbitron)</string>
+    
+    <!-- V4.0: App Options -->
+    <string name="app_options">Настройки Приложения</string>
+    <string name="night_mode_auto">Автоматический Ночной Режим</string>
+    <string name="save_history">Сохранять Историю Станций</string>
+    <string name="enable_gestures_beta">Включить Жесты (Свайп) (бета)</string>
+    <string name="online_logos">Онлайн Логотипы</string>
+    
+    <!-- V4.0: Feedback Messages -->
+    <string name="night_mode_enabled">✅ Автоматический ночной режим включён</string>
+    <string name="night_mode_disabled">❌ Автоматический ночной режим выключен</string>
+    <string name="history_enabled">✅ История станций включена</string>
+    <string name="history_disabled">❌ История станций выключена</string>
+    <string name="gestures_enabled">✅ Жесты свайпа включены</string>
+    <string name="gestures_disabled">❌ Жесты свайпа выключены</string>
+    <string name="logos_online_enabled">✅ Онлайн логотипы включены</string>
+    <string name="logos_online_disabled">❌ Онлайн логотипы выключены</string>
+    <string name="night_mode_manual_blocked">Отключите автоматический ночной режим для выбора темы вручную</string>
+    
+    <!-- V4.0: Save/Load Favorites -->
+    <string name="save_load_favorites">💾 Сохранить/Загрузить Избранное</string>
+    <string name="save_favorites">💾 Сохранить Избранное</string>
+    <string name="load_favorites">📂 Загрузить Избранное</string>
+    <string name="select_favorites_file">📂 Выбрать файл избранного</string>
+    <string name="cancel">Отмена</string>
+    <string name="favorites_saved">✅ Избранное сохранено: %s</string>
+    <string name="favorites_loaded" formatted="false">✅ %d избранных загружено из %s</string>
+    <string name="error_saving_favorites">❌ Ошибка сохранения избранного: %s</string>
+    <string name="error_loading_favorites">❌ Ошибка загрузки избранного: %s</string>
+    <string name="folder_not_found">❌ Папка RadioLogos не найдена</string>
+    <string name="no_favorites_files">❌ Файлы избранного не найдены</string>
+    
+    <!-- V4.0: Android Settings -->
+    <string name="error_opening_settings">Не удалось открыть Настройки</string>
+    
+    <!-- V4.0: History -->
+    <string name="history_empty">История пуста</string>
+    <string name="station_history">📜 История Станций</string>
+    
+    <!-- V4.0: Language Selector -->
+    <string name="app_language">Язык Приложения</string>
+    <string name="select_language">Выбрать Язык</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_changed">✅ Язык изменён на %s</string>
 </resources>

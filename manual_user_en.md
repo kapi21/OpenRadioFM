@@ -60,6 +60,38 @@ In the horizontal layout (V3), you can display your car's logo on the right side
 
 ---
 
+## 4. Favorites Management (Save/Load) [New v4.0]
+
+You can now backup your favorite stations and share them between devices.
+
+### 4.1 Save Favorites (Backup)
+1. Press the **💾 (Floppy Disk)** button in the right column (V2) or from the options menu.
+2. Select **"Save Favorites"**.
+3. A `.fav` file will be created in the `RadioLogos` folder with the current date and time.
+
+### 4.2 Load Favorites (Restore)
+1. Press the **💾** button.
+2. Select **"Load Favorites"**.
+3. Choose the file from the list. Stations will update instantly.
+
+---
+
+## 5. Advanced Configuration
+
+### 5.1 Language Selector [New v4.0]
+You can change the app language independently of the system:
+1. Long press **EQ** to open the Premium Menu.
+2. Go to **"App Options"** > **"🌍 App Language"**.
+3. Select Español, English, or Русский. The app will restart to apply changes.
+
+### 5.2 Premium Night Mode
+Night mode now not only dims the screen but applies a "Night Blue" visual theme to:
+- FM band icons and MHz labels.
+- Control button borders.
+- Frequency and info texts.
+
+---
+
 ## 4. Troubleshooting
 
 - **GPS doesn't open:** Ensure you have a maps app installed and set as default in Android.
