@@ -3,10 +3,10 @@
 **OpenRadioFM** es una aplicación de radio premium diseñada específicamente para unidades Android automotrices (Head Units), con un enfoque en hardware basado en **MT8163** (HCN/AutoRadio). Ofrece una interfaz extremadamente pulida con efectos de Glassmorphism, personalización avanzada y una experiencia optimizada para la conducción.
 
 <div align="center">
-  <img src="app_icon.png" width="200" alt="OpenRadioFM Logo">
+  <img src="docs/img/app_icon.png" width="200" alt="OpenRadioFM Logo">
   <br>
-  <img src="V3-1.png" width="45%" alt="Preview Horizontal V3">
-  <img src="v3-2.png" width="45%" alt="Preview Personalización">
+  <img src="docs/img/screenshot1.png" width="45%" alt="OpenRadioFM Interface 1">
+  <img src="docs/img/screenshot2.png" width="45%" alt="OpenRadioFM Interface 2">
 </div>
 
 ## ✨ Novedades en v3.0
