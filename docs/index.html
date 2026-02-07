@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRadioFM | Automotive Open Source</title>
+    <meta name="description"
+        content="OpenRadioFM V.4: El firmware definitivo para entusiastas del hardware hacking y la radio en Android.">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body class="carbon-bg">
+    <!-- Language Selector Mockup for future phases -->
+    <div class="lang-selector">
+        <span class="active">ES</span> | <span>EN</span> | <span>RU</span>
+    </div>
+
+    <header class="container">
+        <nav>
+            <div class="logo-container">
+                <img src="img/app_icon.png" alt="OpenRadioFM V.4 Logo" class="main-logo">
+                <span class="orbitron-text logo-text">OPENRADIOFM <span class="v4">V.4</span></span>
+            </div>
+            <div class="nav-links">
+                <a href="https://github.com/kapi21/OpenRadioFM" class="nav-link bebas-text">GitHub Repo</a>
+                <a href="#hardware" class="nav-link bebas-text">Hardware Specs</a>
+                <a href="#donar" class="btn btn-primary bebas-text">Apoyar Proyecto</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-text">
+                <h1 class="orbitron-text">Tu Radio, Tus Reglas</h1>
+                <p class="app-desc">
+                    Personaliza la instrumentación de tu vehículo con potencia de bajo nivel. Extrae firmware, audita
+                    RDS y toma el control total.
+                </p>
+                <div class="hero-actions">
+                    <a href="https://github.com/kapi21/OpenRadioFM/releases" class="btn btn-primary">Descargar
+                        Release</a>
+                    <a href="https://github.com/kapi21/OpenRadioFM/wiki" class="btn btn-outline">Wiki Técnica</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="app-widget">
+                    <div class="status-bar digital-text">
+                        <span>BT</span>
+                        <span>GPS</span>
+                        <span>17:50</span>
+                    </div>
+                    <div class="dial-container">
+                        <div class="digital-text dial-number">93.50</div>
+                        <div class="orbitron-text dial-unit">MHz</div>
+                        <div id="waveform"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Screenshots Gallery Section -->
+        <section class="gallery">
+            <h2 class="orbitron-text section-title">Interfaz de la App</h2>
+            <div class="screenshot-grid">
+                <div class="ui-panel screenshot-card">
+                    <img src="img/screenshot1.png" alt="OpenRadioFM Screenshot 1">
+                </div>
+                <div class="ui-panel screenshot-card">
+                    <img src="img/screenshot2.png" alt="OpenRadioFM Screenshot 2">
+                </div>
+            </div>
+        </section>
+
+        <!-- Hardware Specs Section -->
+        <section id="hardware" class="hardware-specs ui-panel">
+            <h2 class="orbitron-text">Hardware Necesario</h2>
+            <ul class="specs-list">
+                <li><span class="bebas-text">SoC:</span> Compatible con unidades Android Chinas
+                    (Rockchip/Allwinner/MTK).</li>
+                <li><span class="bebas-text">Pantalla:</span> Soporte para dashboards 2DIN con resolución estándar.</li>
+                <li><span class="bebas-text">Sintonizador:</span> Requiere chip de radio compatible (ej. TEF6686 o
+                    similar).</li>
+                <li><span class="bebas-text">Conectividad:</span> Puerto USB para depuración y carga de firmware.</li>
+            </ul>
+        </section>
+
+        <!-- Support Section -->
+        <section id="donar" class="support">
+            <h3 class="orbitron-text">PRO & SUPPORTER</h3>
+            <p>Tu contribución ayuda a mantener el desarrollo del hardware libre para automoción.</p>
+            <a href="https://paypal.me/[TU_PAYPAL]" class="btn btn-primary donate-btn">Donar con PayPal</a>
+        </section>
+    </main>
+
+    <footer class="container">
+        <p class="orbitron-text footer-text">OPENRADIOFM PROJECT // 2026 // MADE FOR AUTOMOTIVE HACKING</p>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>
