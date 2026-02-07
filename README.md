@@ -30,19 +30,16 @@
 
 ## 📜 Historial de Versiones
 
-### v5.0 "Hardware Precision" (Febrero 2026)
+### v4.0 "Global Edition" (Febrero 2026)
 - **MT8163 Consys Optimization:** Forzado de modo estéreo por reflexión para mayor sensibilidad.
 - **Indicador de Calidad Compuesto:** Nuevo algoritmo que estima la señal basado en RDS Lock y Stereo.
 - **RDS Real-Time:** Paso de sondeo (polling) a eventos en tiempo real para nombres RDS instantáneos.
-- **V3 Expanded:** Barra inferior ampliada a 8 botones con accesos a Ajustes Android y Favoritos.
-- **Modo Noche Avanzado:** Tintado azul noche para favoritos y frecuencia dinámica.
-- **Historial de Emisoras:** Corrección de la persistencia de las últimas 15 emisoras.
-
-### v4.0 "Global Edition" (Febrero 2026)
 - **Internacionalización:** Traducción completa a Español, Inglés y Ruso con selector manual.
 - **Gestión de Favoritos:** Sistema de Guardar/Cargar listas de emisoras en archivos `.fav`.
-- **Modo Nocturno Premium:** Tinting inteligente de iconos y bordes en azul nocturno.
-- **Layout V2 Refinado:** Alineación perfecta y nuevos botones de acceso rápido.
+- **Modo Nocturno Avanzado:** Tintado azul noche para favoritos y frecuencia dinámica.
+- **V3 Expanded:** Barra inferior ampliada a 8 botones con accesos a Ajustes Android y Favoritos.
+- **Layout V2 Refinado:** Alineación perfecta, scroll oculto y mejores márgenes.
+- **Historial de Emisoras:** Corrección de la persistencia de las últimas 15 emisoras.
 
 ### v3.0 "The Car Experience" (Febrero 2026)
 - Salto a versión estable con rediseño completo de la interfaz horizontal.
