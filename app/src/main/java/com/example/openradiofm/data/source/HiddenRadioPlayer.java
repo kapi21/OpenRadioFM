@@ -12,6 +12,11 @@ public class HiddenRadioPlayer {
     private static final String CLASS_RADIO_PLAYER = "android.radio.RadioPlayer";
     private static final String CLASS_LISTENER = "android.radio.RadioPlayer$OnEventListener";
 
+    // RDS Event Codes identified in technical documentation
+    public static final int EVENT_PS_DONE = 0x8;
+    public static final int EVENT_PS_MESSAGE = 0x26;
+    public static final int EVENT_RT_MESSAGE = 0x29;
+
     private Object mRadioPlayerInstance;
     private Listener mClientListener;
 
@@ -69,6 +74,10 @@ public class HiddenRadioPlayer {
             registerMethod.invoke(mRadioPlayerInstance, proxyListener);
 
             Log.d(TAG, "Listener registrado con éxito.");
+            
+            // Recomendación PROBLEMA_STEREO.md: Forzar modo estéreo para habilitar auto-detección
+            setStereo(true);
+            
             return true;
 
         } catch (ClassNotFoundException e) {
@@ -78,6 +87,35 @@ public class HiddenRadioPlayer {
             Log.e(TAG, "Fallo al iniciar HiddenRadioPlayer: " + e.getMessage());
             e.printStackTrace();
             return false;
+        }
+    }
+
+    /**
+     * Fuerza o habilita el modo estéreo.
+     * Según la documentación, llamar esto con true habilita la auto-detección del tono piloto.
+     */
+    public void setStereo(boolean enable) {
+        if (mRadioPlayerInstance == null) return;
+        try {
+            Method stereoMethod = mRadioPlayerInstance.getClass().getMethod("stereo", boolean.class);
+            stereoMethod.invoke(mRadioPlayerInstance, enable);
+            Log.d(TAG, "setStereo(" + enable + ") ejecutado.");
+        } catch (Exception e) {
+            Log.e(TAG, "Error llamando a stereo(): " + e.getMessage());
+        }
+    }
+
+    /**
+     * Control de silencio mediante la API directa del chip.
+     */
+    public void setMute(boolean mute) {
+        if (mRadioPlayerInstance == null) return;
+        try {
+            Method muteMethod = mRadioPlayerInstance.getClass().getMethod("setMute", boolean.class);
+            muteMethod.invoke(mRadioPlayerInstance, mute);
+            Log.d(TAG, "setMute(" + mute + ") ejecutado.");
+        } catch (Exception e) {
+            Log.e(TAG, "Error llamando a setMute(): " + e.getMessage());
         }
     }
 
@@ -100,7 +138,8 @@ public class HiddenRadioPlayer {
                 mClientListener.onRawEvent(code, arg2, strDebug);
             }
 
-            if (code == 41) { // RT
+            // Mapeo basado en technical_docs (CHIP_RADIO_FM_FUNCIONES.md)
+            if (code == EVENT_RT_MESSAGE || code == 41) { // 41 era el código anterior
                 if (arg2 instanceof String) {
                     if (mClientListener != null)
                         mClientListener.onRdsText((String) arg2);
@@ -110,7 +149,7 @@ public class HiddenRadioPlayer {
                 }
             }
 
-            if (code == 38) { // PS
+            if (code == EVENT_PS_MESSAGE || code == 38) { // 38 era el código anterior
                 if (arg2 instanceof String) {
                     if (mClientListener != null)
                         mClientListener.onRdsName((String) arg2);
@@ -120,6 +159,11 @@ public class HiddenRadioPlayer {
                 }
             }
 
+            // PS_DONE también puede indicar que el nombre está listo
+            if (code == EVENT_PS_DONE) {
+                 Log.d(TAG, "RDS PS_DONE received");
+            }
+
         } catch (Exception e) {
             Log.e(TAG, "Error parseando evento: " + e.getMessage());
         }
@@ -127,11 +171,16 @@ public class HiddenRadioPlayer {
 
     /**
      * Libera referencias para evitar fugas de memoria.
-     * No tenemos una API oficial para desregistrar el listener interno,
-     * pero al poner a null el listener de la app evitamos que la Activity
-     * quede retenida cuando se destruya.
      */
     public void release() {
+        // Intentar desregistrar el listener si es posible (Opcional, no garantizado por API interna)
+        try {
+            if (mRadioPlayerInstance != null) {
+                Method registerMethod = mRadioPlayerInstance.getClass().getMethod("setOnEventListener", Class.forName(CLASS_LISTENER));
+                registerMethod.invoke(mRadioPlayerInstance, new Object[]{null});
+            }
+        } catch (Exception ignored) {}
+        
         mClientListener = null;
         mRadioPlayerInstance = null;
     }

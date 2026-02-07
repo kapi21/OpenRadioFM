@@ -77,9 +77,32 @@ public class MainActivity extends AppCompatActivity {
     private android.content.SharedPreferences mPrefs;
     private HiddenRadioPlayer mHiddenPlayer;
     
-    // V3.0: Caché de logos por banda para evitar pérdida al cambiar FM1/FM2/FM3
-    private final java.util.HashMap<String, String> mLogoCachePerBand = new java.util.HashMap<>();
+    // V3.0: Caché de logos por banda
+    private int mLastFreq = -1;
     private String mLastLogoUrl = "";
+    private java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
+
+    // V5.0: Signal Quality Logic
+    public enum SignalQuality {
+        EXCELLENT("Excellent", "#00FF00", 4),
+        GOOD("Good", "#ADFF2F", 3),
+        FAIR("Fair", "#FFFF00", 2),
+        POOR("Poor", "#FF4500", 1),
+        NO_SIGNAL("No Signal", "#FF0000", 0);
+
+        public final String label;
+        public final String color;
+        public final int bars;
+
+        SignalQuality(String label, String color, int bars) {
+            this.label = label;
+            this.color = color;
+            this.bars = bars;
+        }
+    }
+    
+    private SignalQuality mCurrentQuality = SignalQuality.NO_SIGNAL;
+    private boolean mHasRdsLock = false;
     
     // V3.0: Background personalizado
     private android.view.View mRootLayout;
@@ -94,7 +117,6 @@ public class MainActivity extends AppCompatActivity {
     private final ImageView[] ivPresets = new ImageView[12];
 
     private int mCurrentBand = 0;
-    private int mLastFreq = 0;
 
     private FmMode mMode = FmMode.FM_BASICO;
     
@@ -144,18 +166,36 @@ public class MainActivity extends AppCompatActivity {
                         String current = tvRdsInfo.getText().toString();
                         if (!current.equals(text)) {
                             tvRdsInfo.setText(text);
+                            mHasRdsLock = (text != null && !text.isEmpty());
                         }
                     }
                 });
             }
+
             @Override
             public void onRdsName(String name) {
-                // UI update via polling
+                runOnUiThread(() -> {
+                    if (tvRdsName != null && name != null && !name.isEmpty()) {
+                        tvRdsName.setText(name);
+                        mHasRdsLock = true;
+                    }
+                });
             }
+
             @Override
-            public void onRawEvent(int code, Object info, String str) {}
+            public void onRawEvent(int code, Object info, String str) {
+                // Posibilidad de loguear eventos desconocidos para depuración
+                if (code == HiddenRadioPlayer.EVENT_PS_DONE) {
+                    mHasRdsLock = true;
+                }
+            }
         });
-        if (!mHiddenPlayer.init()) Log.e(TAG, "Error RDS Hardware Init");
+        if (!mHiddenPlayer.init()) {
+            Log.e(TAG, "Error RDS Hardware Init");
+        } else {
+            // V5.0: Forzar estéreo nada más iniciar para mejorar sensibilidad
+            mHiddenPlayer.setStereo(true);
+        }
     }
 
 
@@ -967,37 +1007,23 @@ public class MainActivity extends AppCompatActivity {
      * - Este método puede ser llamado desde el hilo del Timer (segundo plano).
      * - Cualquier acceso a vistas se encapsula en runOnUiThread().
      */
-    private void refreshRadioStatus() {
+   private void refreshRadioStatus() {
         if (mRadioService == null) return;
         execRemote(s -> {
             int freq = s.getCurrentFreq();
-            
-            if (freq != mLastFreq) {
-                mLastFreq = freq;
-                runOnUiThread(() -> updateFrequencyDisplay(freq));
-            }
             int band = s.getCurrentBand();
             boolean isStereo = s.IsStereo();
             boolean isLocal = s.IsDxLocal();
             
-            // V2.0: Crear clave única para caché por banda
-            String bandCacheKey = band + "_" + freq;
-            
-            // Check if band changed -> Refresh presets
-            if (band != mCurrentBand) {
-                mCurrentBand = band;
-                runOnUiThread(() -> refreshPresetButtons());
-            }
+            // V5.0: Composite Signal Quality Logic
+            // Raw SNR/RSSI is not available in SDK, so we infer quality
+            mCurrentQuality = calculateSignalQuality(isStereo, isLocal, mHasRdsLock);
 
-            // V2.0: Solo actualizar logo si la frecuencia cambió significativamente (>0.1 MHz = 100 kHz)
-            // Esto evita que el logo desaparezca al mover ±0.05 MHz
-            boolean significantFreqChange = Math.abs(freq - mLastFreq) > 100;
-            
-            // SMART MAIN DISPLAY LOGIC
-            mRepository.getStationInfo(freq, logoUrl -> {}); // Prefetch
-            
+            String bandCacheKey = band + "_" + freq;
+
             if (freq != mLastFreq) {
                 mLastFreq = freq;
+                mHasRdsLock = false; // Reset lock on manual change
                 if (mPrefs.getBoolean("pref_save_history", true)) {
                     addToHistory(freq);
                 }
@@ -1010,35 +1036,22 @@ public class MainActivity extends AppCompatActivity {
                 // FIXED LOGIC: Always show Frequency in Big Box con 2 decimales (FORCE DOT SEPARATOR)
                 tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0));
                 
+                // Update Quality Indicator (Placeholder for UI ID)
+                updateQualityUI(mCurrentQuality);
+                
                 if (rdsName != null && !rdsName.isEmpty()) {
                     tvRdsName.setText(rdsName);
                 } else {
-                    tvRdsName.setText(""); 
+                    // tvRdsName remains as updated by HiddenRadioPlayer if present
                 }
-                
-                // Ensure Sintonizando isn't blocking RDS Name if we have one
-                if (rdsName != null && !rdsName.isEmpty()) {
-                     if (!tvRdsName.getText().toString().equals(rdsName)) {
-                         tvRdsName.setText(rdsName);
-                     }
-                }
-                
                 
                 // V2.0: LOGO PERSISTENCE FIX
-                // Solo actualizar logo si:
-                // 1. Cambió significativamente la frecuencia (>0.1 MHz)
-                // 2. O si no tenemos logo cacheado para esta banda+frecuencia
                 ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
                 
                 if (rdsName != null && !rdsName.isEmpty()) {
                     ivMainLogo.setVisibility(View.VISIBLE);
-                    
-                    // Verificar si tenemos logo cacheado para esta banda+frecuencia
                     String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
                     
-                    // V2.0 FIX: Siempre usar caché si existe, independientemente del cambio de frecuencia
-                    // Esto evita que el logo desaparezca durante seek
-                    // V2.0 FIX: Siempre usar caché si existe
                     if (cachedLogo != null) {
                        if (!cachedLogo.equals(mLastLogoUrl)) {
                            mLastLogoUrl = cachedLogo;
@@ -1046,17 +1059,12 @@ public class MainActivity extends AppCompatActivity {
                                 .load(cachedLogo)
                                 .transition(DrawableTransitionOptions.withCrossFade())
                                 .into(ivMainLogo);
-                           
-                           // V3.0 FIX: Update background even if logo comes from cache
                            updateDynamicBackground(cachedLogo);
                        }
                     } else {
-                        // Si no hay caché, SIEMPRE intentar buscar logo (incluso en cambios pequeños)
-                        // Esto arregla el bug de logos que no aparecen al mover manualmente ±0.05
                         mRepository.getStationInfo(freq, url -> {
                             runOnUiThread(() -> {
                                 if (url != null) {
-                                    // SI encontramos logo, lo mostramos y cacheamos
                                     if (!url.equals(mLastLogoUrl)) {
                                         mLastLogoUrl = url;
                                         mLogoCachePerBand.put(bandCacheKey, url);
@@ -1064,13 +1072,9 @@ public class MainActivity extends AppCompatActivity {
                                              .load(url)
                                              .transition(DrawableTransitionOptions.withCrossFade())
                                              .into(ivMainLogo);
-                                        
-                                        // V3.8: Premium Dynamic Background (Always call to ensure refresh)
                                         updateDynamicBackground(url);
                                     }
                                 } else {
-                                    // NO encontramos logo
-                                    // NO encontramos logo -> Resetear siempre para evitar fondo "atascado"
                                     mLastLogoUrl = "";
                                     mLogoCachePerBand.remove(bandCacheKey);
                                     ivMainLogo.setImageResource(R.mipmap.ic_launcher);
@@ -1080,12 +1084,11 @@ public class MainActivity extends AppCompatActivity {
                         });
                     }
                 } else {
-                    // No hay RDS, mostrar logo por defecto
                     ivMainLogo.setVisibility(View.VISIBLE);
                     ivMainLogo.setImageResource(R.mipmap.ic_launcher);
-                    mLastLogoUrl = ""; // V2.0 FIX: Resetear estado para permitir recarga al volver
+                    mLastLogoUrl = "";
                     mLogoCachePerBand.remove(bandCacheKey);
-                    updateDynamicBackground(null); // V3.0 Reset background
+                    updateDynamicBackground(null);
                 }
                 
                 updateBandImage(band);
@@ -1093,6 +1096,28 @@ public class MainActivity extends AppCompatActivity {
                 btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
             });
         });
+    }
+
+    /**
+     * Calcula una calidad de señal estimada basándose en flags disponibles.
+     * Algoritmo basado en CHIP_RADIO_SNR_RSSI.md
+     */
+    private SignalQuality calculateSignalQuality(boolean isStereo, boolean isLocal, boolean hasRds) {
+        if (hasRds && isStereo) return SignalQuality.EXCELLENT;
+        if (hasRds) return SignalQuality.GOOD;
+        if (isStereo) return SignalQuality.GOOD;
+        if (!isLocal) return SignalQuality.FAIR; // DX mode and no stereo/rds = medium signal
+        if (isLocal) return SignalQuality.POOR;  // Local mode and no rds/stereo = weak signal
+        return SignalQuality.NO_SIGNAL;
+    }
+
+    private void updateQualityUI(SignalQuality q) {
+        TextView tvQuality = findViewById(R.id.tvSignalStatus); // We need to add this to layout
+        if (tvQuality != null) {
+            tvQuality.setText(q.label);
+            tvQuality.setTextColor(Color.parseColor(q.color));
+            // Opcional: Cambiar icono de barras si existe
+        }
     }
 
     private void updateBandImage(int band) {
@@ -1322,10 +1347,17 @@ public class MainActivity extends AppCompatActivity {
     // V4: Saved Preset Indicator
     private void updateFrequencyDisplay(int freq) {
          if (tvFrequency != null) {
-             tvFrequency.setText(String.format("%.2f", freq / 1000.0f));
+             tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0f));
              
              // Favorite Indicator logic
              int presetIndex = getPresetIndexForFreq(freq);
+             boolean isNight = mPrefs.getBoolean("pref_night_mode_auto", false) && isNightTime();
+             // Overrule fixed boolean if manual skin is set to night
+             if (!isNight) {
+                 com.example.openradiofm.ui.theme.ThemeManager tm = new com.example.openradiofm.ui.theme.ThemeManager(this);
+                 isNight = (tm.getCurrentSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+             }
+
              if (presetIndex > 0) {
                  tvFrequency.setTextColor(Color.parseColor("#FFD700")); // Gold
                  if (ivFavoriteIndicator != null) {
@@ -1333,12 +1365,25 @@ public class MainActivity extends AppCompatActivity {
                      if (resId != 0) {
                          ivFavoriteIndicator.setImageResource(resId);
                          ivFavoriteIndicator.setVisibility(View.VISIBLE);
+                         
+                         // V5.1: Tint favorite in night mode
+                         if (isNight) {
+                             int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+                             ivFavoriteIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                         } else {
+                             ivFavoriteIndicator.clearColorFilter();
+                         }
                      } else {
                          ivFavoriteIndicator.setVisibility(View.GONE);
                      }
                  }
              } else {
-                 tvFrequency.setTextColor(Color.WHITE);
+                 // V5.1: Use night blue if in night mode and not favorite
+                 if (isNight) {
+                     tvFrequency.setTextColor(getResources().getColor(R.color.night_blue_accent, null));
+                 } else {
+                     tvFrequency.setTextColor(Color.WHITE);
+                 }
                  if (ivFavoriteIndicator != null) ivFavoriteIndicator.setVisibility(View.GONE);
              }
          }
@@ -1517,7 +1562,11 @@ public class MainActivity extends AppCompatActivity {
         TextView tvRdsName = findViewById(R.id.tvRdsName);
         TextView tvRdsInfo = findViewById(R.id.tvRdsInfo);
         
-        if (tvFrequency != null) tvFrequency.setTextColor(nightBlueAccent);
+        // V5.1: Logic moved to updateFrequencyDisplay for freq color to respect favorites
+        // But we refresh it here to be immediate
+        int currentFreq = mLastFreq;
+        if (currentFreq != -1) updateFrequencyDisplay(currentFreq);
+
         if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
         if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
         
@@ -1525,6 +1574,12 @@ public class MainActivity extends AppCompatActivity {
         ImageView ivBandIndicator = findViewById(R.id.ivBandIndicator);
         if (ivBandIndicator != null) {
             ivBandIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+        }
+
+        // V5.1: Indicador de favorito
+        ImageView ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
+        if (ivFavoriteIndicator != null) {
+            ivFavoriteIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
         }
         
         // Texto MHz (Layout V3)
@@ -1566,7 +1621,10 @@ public class MainActivity extends AppCompatActivity {
         TextView tvRdsName = findViewById(R.id.tvRdsName);
         TextView tvRdsInfo = findViewById(R.id.tvRdsInfo);
         
-        if (tvFrequency != null) tvFrequency.setTextColor(white);
+        // V5.1 refresh freq color
+        int currentFreq = mLastFreq;
+        if (currentFreq != -1) updateFrequencyDisplay(currentFreq);
+
         if (tvRdsName != null) tvRdsName.setTextColor(white);
         if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
         
@@ -1574,6 +1632,12 @@ public class MainActivity extends AppCompatActivity {
         ImageView ivBandIndicator = findViewById(R.id.ivBandIndicator);
         if (ivBandIndicator != null) {
             ivBandIndicator.clearColorFilter();
+        }
+
+        // V5.1: Restaurar icono favorito
+        ImageView ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
+        if (ivFavoriteIndicator != null) {
+            ivFavoriteIndicator.clearColorFilter();
         }
         
         TextView tvMhzLabel = findViewById(R.id.tvMhzLabel);
@@ -1684,31 +1748,33 @@ public class MainActivity extends AppCompatActivity {
         boolean autoNight = mPrefs.getBoolean("pref_night_mode_auto", false);
         if (!autoNight) return;
 
-        boolean isNight = false;
-        // 1. Check System UI Mode
-        int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
-        if (nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
-            isNight = true;
-        } else {
-            // 2. Fallback: Time Based (7 PM - 7 AM)
-            int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
-            if (hour >= 19 || hour < 7) {
-                isNight = true;
-            }
-        }
-
-        if (isNight) {
+        if (isNightTime()) {
             com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
             themeManager.setSkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
             applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
         }
     }
 
+    private boolean isNightTime() {
+        // 1. Check System UI Mode
+        int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        if (nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
+            return true;
+        } else {
+            // 2. Fallback: Time Based (7 PM - 7 AM)
+            int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+            return (hour >= 19 || hour < 7);
+        }
+    }
+
     private void addToHistory(int freq) {
         if (freq <= 0) return;
         String historyStr = mPrefs.getString("pref_station_history", "");
-        java.util.List<String> history = new java.util.ArrayList<>(java.util.Arrays.asList(historyStr.split(",")));
-        if (history.get(0).isEmpty()) history.remove(0);
+        java.util.List<String> history = new java.util.ArrayList<>();
+        
+        if (!historyStr.isEmpty()) {
+            history.addAll(java.util.Arrays.asList(historyStr.split(",")));
+        }
 
         String freqStr = String.valueOf(freq);
         if (history.contains(freqStr)) {
@@ -1727,6 +1793,7 @@ public class MainActivity extends AppCompatActivity {
             if (i < history.size() - 1) sb.append(",");
         }
         mPrefs.edit().putString("pref_station_history", sb.toString()).apply();
+        Log.d(TAG, "History updated: " + sb.toString());
     }
 
     private void showHistoryDialog() {

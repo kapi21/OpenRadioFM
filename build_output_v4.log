@@ -1,0 +1,457 @@
+Initialized native services in: C:\Users\jaime\.gradle\native
+Initialized jansi services in: C:\Users\jaime\.gradle\native
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Received JVM installation metadata from 'C:\Program Files\Android\Android Studio\jbr': {JAVA_HOME=C:\Program Files\Android\Android Studio\jbr, JAVA_VERSION=21.0.8, JAVA_VENDOR=JetBrains s.r.o., RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.8+-14196175-b1038.72, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.8+-14196175-b1038.72, VM_VENDOR=JetBrains s.r.o., OS_ARCH=amd64}
+Starting process 'Gradle build daemon'. Working directory: C:\Users\jaime\.gradle\daemon\9.1.0 Command: C:\Program Files\Android\Android Studio\jbr\bin\java.exe --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.lang.invoke=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.prefs/java.util.prefs=ALL-UNNAMED --add-opens=java.base/java.nio.charset=ALL-UNNAMED --add-opens=java.base/java.net=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.util.concurrent.atomic=ALL-UNNAMED --add-opens=java.xml/javax.xml.namespace=ALL-UNNAMED --add-opens=java.base/java.time=ALL-UNNAMED -Xmx2048m -Dfile.encoding=UTF-8 -Duser.country=ES -Duser.language=es -Duser.variant -cp C:\Users\jaime\.gradle\wrapper\dists\gradle-9.1.0-bin\9agqghryom9wkf8r80qlhnts3\gradle-9.1.0\lib\gradle-daemon-main-9.1.0.jar -javaagent:C:\Users\jaime\.gradle\wrapper\dists\gradle-9.1.0-bin\9agqghryom9wkf8r80qlhnts3\gradle-9.1.0\lib\agents\gradle-instrumentation-agent-9.1.0.jar org.gradle.launcher.daemon.bootstrap.GradleDaemon 9.1.0
+Successfully started process 'Gradle build daemon'
+An attempt to start the daemon took 1.421 secs.
+The client will now receive all logging from the daemon (pid: 1956). The daemon log file: C:\Users\jaime\.gradle\daemon\9.1.0\daemon-1956.out.log
+Daemon will be stopped at the end of the build 
+Using 12 worker leases.
+Received JVM installation metadata from 'C:\Program Files\Android\Android Studio\jbr': {JAVA_HOME=C:\Program Files\Android\Android Studio\jbr, JAVA_VERSION=21.0.8, JAVA_VENDOR=JetBrains s.r.o., RUNTIME_NAME=OpenJDK Runtime Environment, RUNTIME_VERSION=21.0.8+-14196175-b1038.72, VM_NAME=OpenJDK 64-Bit Server VM, VM_VERSION=21.0.8+-14196175-b1038.72, VM_VENDOR=JetBrains s.r.o., OS_ARCH=amd64}
+Watching the file system is configured to be enabled if available
+Now considering [D:\@MIS PROYECTOS\OpenRadioFM] as hierarchies to watch
+File system watching is active
+Starting Build
+Settings evaluated using settings file 'D:\@MIS PROYECTOS\OpenRadioFM\settings.gradle.kts'.
+Projects loaded. Root project using build file 'D:\@MIS PROYECTOS\OpenRadioFM\build.gradle.kts'.
+Included projects: [root project 'RadioPoC', project ':app']
+
+> Configure project :
+Evaluating root project 'RadioPoC' using build file 'D:\@MIS PROYECTOS\OpenRadioFM\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '9.0.0', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.2.10', apply: false]
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.2.10', apply: false]
+
+> Configure project :app
+Evaluating project ':app' using build file 'D:\@MIS PROYECTOS\OpenRadioFM\app\build.gradle.kts'.
+Resolved plugin [id: 'com.android.application', version: '9.0.0']
+Resolved plugin [id: 'org.jetbrains.kotlin.android', version: '2.2.10']
+Resolved plugin [id: 'org.jetbrains.kotlin.plugin.compose', version: '2.2.10']
+WARNING: The option setting 'android.usesSdkInManifest.disallowed=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.sdk.defaultTargetSdkToCompileSdkIfUnset=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.enableAppCompileTimeRClass=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.builtInKotlin=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.newDsl=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.r8.optimizedResourceShrinking=false' is deprecated.
+The current default is 'true'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+WARNING: The option setting 'android.defaults.buildfeatures.resvalues=true' is deprecated.
+The current default is 'false'.
+It will be removed in version 10.0 of the Android Gradle plugin.
+Using default execution profile
+Build 9765854f-c384-4be1-9630-39e044ef0597 is started
+Using Kotlin Gradle Plugin gradle813 variant
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+WARNING: The property android.dependency.excludeLibraryComponentsFromConstraints improves project import performance for very large projects. It should be enabled to improve performance.
+To suppress this warning, add android.generateSyncIssueWhenLibraryConstraintsAreEnabled=false to gradle.properties
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+Detected Android Gradle Plugin compose compiler configuration
+All projects evaluated.
+Task name matched 'assembleDebug'
+Selected primary task 'assembleDebug' from project :
+Adding -Xuse-inline-scopes-numbers Kotlin compiler flag for task :app:compileDebugKotlin
+Tasks to be executed: [task ':app:preBuild', task ':app:preDebugBuild', task ':app:mergeDebugNativeDebugMetadata', task ':app:compileDebugAidl', task ':app:checkKotlinGradlePluginConfigurationErrors', task ':app:checkDebugAarMetadata', task ':app:processDebugNavigationResources', task ':app:compileDebugNavigationResources', task ':app:generateDebugResValues', task ':app:mapDebugSourceSetPaths', task ':app:generateDebugResources', task ':app:mergeDebugResources', task ':app:packageDebugResources', task ':app:parseDebugLocalResources', task ':app:createDebugCompatibleScreenManifests', task ':app:extractDeepLinksDebug', task ':app:processDebugMainManifest', task ':app:processDebugManifest', task ':app:processDebugManifestForPackage', task ':app:processDebugResources', task ':app:compileDebugKotlin', task ':app:javaPreCompileDebug', task ':app:compileDebugJavaWithJavac', task ':app:generateDebugAssets', task ':app:mergeDebugAssets', task ':app:compressDebugAssets', task ':app:desugarDebugFileDependencies', task ':app:dexBuilderDebug', task ':app:mergeDebugGlobalSynthetics', task ':app:processDebugJavaRes', task ':app:mergeDebugJavaResource', task ':app:checkDebugDuplicateClasses', task ':app:mergeExtDexDebug', task ':app:mergeLibDexDebug', task ':app:mergeProjectDexDebug', task ':app:mergeDebugJniLibFolders', task ':app:mergeDebugNativeLibs', task ':app:stripDebugDebugSymbols', task ':app:validateSigningDebug', task ':app:writeDebugAppMetadata', task ':app:writeDebugSigningConfigVersions', task ':app:packageDebug', task ':app:createDebugApkListingFileRedirect', task ':app:assembleDebug']
+Tasks that were excluded: []
+Resolve mutations for :app:preBuild (Thread[#92,Execution worker,5,main]) started.
+:app:preBuild (Thread[#91,included builds,5,main]) started.
+
+> Task :app:preBuild UP-TO-DATE
+Skipping task ':app:preBuild' as it has no actions.
+Resolve mutations for :app:preDebugBuild (Thread[#91,included builds,5,main]) started.
+:app:preDebugBuild (Thread[#91,included builds,5,main]) started.
+
+> Task :app:preDebugBuild UP-TO-DATE
+Skipping task ':app:preDebugBuild' as it has no actions.
+Resolve mutations for :app:mergeDebugNativeDebugMetadata (Thread[#91,included builds,5,main]) started.
+:app:mergeDebugNativeDebugMetadata (Thread[#91,included builds,5,main]) started.
+
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+Skipping task ':app:mergeDebugNativeDebugMetadata' as it has no source files and no previous output files.
+Resolve mutations for :app:compileDebugAidl (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:compileDebugAidl (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:compileDebugAidl UP-TO-DATE
+Caching disabled for task ':app:compileDebugAidl' because:
+  Build cache is disabled
+Skipping task ':app:compileDebugAidl' as it is up-to-date.
+Resolve mutations for :app:checkKotlinGradlePluginConfigurationErrors (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:checkKotlinGradlePluginConfigurationErrors (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+Skipping task ':app:checkKotlinGradlePluginConfigurationErrors' as task onlyIf 'errorDiagnostics are present' is false.
+Resolve mutations for :app:checkDebugAarMetadata (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:checkDebugAarMetadata (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+Caching disabled for task ':app:checkDebugAarMetadata' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:checkDebugAarMetadata' as it is up-to-date.
+Resolve mutations for :app:processDebugNavigationResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:processDebugNavigationResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:processDebugNavigationResources
+Caching disabled for task ':app:processDebugNavigationResources' because:
+  Build cache is disabled
+Task ':app:processDebugNavigationResources' is not up-to-date because:
+  Input property 'resources.$0.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values-en\strings.xml has changed.
+  Input property 'resources.$0.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values\strings.xml has changed.
+Resolve mutations for :app:compileDebugNavigationResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:compileDebugNavigationResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+Caching disabled for task ':app:compileDebugNavigationResources' because:
+  Build cache is disabled
+Skipping task ':app:compileDebugNavigationResources' as it is up-to-date.
+Resolve mutations for :app:generateDebugResValues (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:generateDebugResValues (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:generateDebugResValues UP-TO-DATE
+Caching disabled for task ':app:generateDebugResValues' because:
+  Build cache is disabled
+Skipping task ':app:generateDebugResValues' as it is up-to-date.
+Resolve mutations for :app:mapDebugSourceSetPaths (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:mapDebugSourceSetPaths (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:mapDebugSourceSetPaths
+Caching disabled for task ':app:mapDebugSourceSetPaths' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Task ':app:mapDebugSourceSetPaths' is not up-to-date because:
+  Input property 'localResources' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values-en\strings.xml has changed.
+  Input property 'localResources' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values\strings.xml has changed.
+Resolve mutations for :app:generateDebugResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:generateDebugResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+
+> Task :app:generateDebugResources
+Caching disabled for task ':app:generateDebugResources' because:
+  Build cache is disabled
+Task ':app:generateDebugResources' is not up-to-date because:
+  Input property 'resources.$0.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values-en\strings.xml has changed.
+  Input property 'resources.$0.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values\strings.xml has changed.
+Resolve mutations for :app:mergeDebugResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+:app:mergeDebugResources (Thread[#102,Execution worker Thread 11,5,main]) started.
+Resolve mutations for :app:packageDebugResources (Thread[#98,Execution worker Thread 7,5,main]) started.
+:app:packageDebugResources (Thread[#98,Execution worker Thread 7,5,main]) started.
+
+> Task :app:packageDebugResources
+Caching disabled for task ':app:packageDebugResources' because:
+  Build cache is disabled
+Task ':app:packageDebugResources' is not up-to-date because:
+  Input property 'resourcesComputer.resources.main.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values-en\strings.xml has changed.
+  Input property 'resourcesComputer.resources.main.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values\strings.xml has changed.
+Resolve mutations for :app:parseDebugLocalResources (Thread[#98,Execution worker Thread 7,5,main]) started.
+:app:parseDebugLocalResources (Thread[#98,Execution worker Thread 7,5,main]) started.
+Resolve mutations for :app:createDebugCompatibleScreenManifests (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:createDebugCompatibleScreenManifests (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+Caching disabled for task ':app:createDebugCompatibleScreenManifests' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:createDebugCompatibleScreenManifests' as it is up-to-date.
+Resolve mutations for :app:extractDeepLinksDebug (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:extractDeepLinksDebug (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+Caching disabled for task ':app:extractDeepLinksDebug' because:
+  Build cache is disabled
+Skipping task ':app:extractDeepLinksDebug' as it is up-to-date.
+Resolve mutations for :app:processDebugMainManifest (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:processDebugMainManifest (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:processDebugMainManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugMainManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugMainManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifest (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:processDebugManifest (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:processDebugManifest UP-TO-DATE
+Caching disabled for task ':app:processDebugManifest' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifest' as it is up-to-date.
+Resolve mutations for :app:processDebugManifestForPackage (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:processDebugManifestForPackage (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+Custom actions are attached to task ':app:processDebugManifestForPackage'.
+Caching disabled for task ':app:processDebugManifestForPackage' because:
+  Build cache is disabled
+Skipping task ':app:processDebugManifestForPackage' as it is up-to-date.
+Resolve mutations for :app:javaPreCompileDebug (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:javaPreCompileDebug (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:javaPreCompileDebug UP-TO-DATE
+Caching disabled for task ':app:javaPreCompileDebug' because:
+  Build cache is disabled
+Skipping task ':app:javaPreCompileDebug' as it is up-to-date.
+Resolve mutations for :app:generateDebugAssets (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:generateDebugAssets (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:generateDebugAssets UP-TO-DATE
+Skipping task ':app:generateDebugAssets' as it has no actions.
+Resolve mutations for :app:mergeDebugAssets (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:mergeDebugAssets (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:parseDebugLocalResources
+Caching disabled for task ':app:parseDebugLocalResources' because:
+  Build cache is disabled
+Task ':app:parseDebugLocalResources' is not up-to-date because:
+  Input property 'inputResourcesDir' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\packaged_res\debug\packageDebugResources\values-en\values-en.xml has changed.
+  Input property 'inputResourcesDir' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\packaged_res\debug\packageDebugResources\values\values.xml has changed.
+
+> Task :app:mergeDebugAssets UP-TO-DATE
+Caching disabled for task ':app:mergeDebugAssets' because:
+  Build cache is disabled
+  Simple merging task
+Skipping task ':app:mergeDebugAssets' as it is up-to-date.
+Resolve mutations for :app:compressDebugAssets (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:compressDebugAssets (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:compressDebugAssets UP-TO-DATE
+Caching disabled for task ':app:compressDebugAssets' because:
+  Build cache is disabled
+Skipping task ':app:compressDebugAssets' as it is up-to-date.
+Resolve mutations for :app:desugarDebugFileDependencies (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:desugarDebugFileDependencies (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+Caching disabled for task ':app:desugarDebugFileDependencies' because:
+  Build cache is disabled
+Skipping task ':app:desugarDebugFileDependencies' as it is up-to-date.
+Resolve mutations for :app:checkDebugDuplicateClasses (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:checkDebugDuplicateClasses (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:mergeDebugResources
+Caching disabled for task ':app:mergeDebugResources' because:
+  Build cache is disabled
+Task ':app:mergeDebugResources' is not up-to-date because:
+  Input property 'resourcesComputer.resources.main.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values-en\strings.xml has changed.
+  Input property 'resourcesComputer.resources.main.sourceDirectories' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\res\values\strings.xml has changed.
+Compiling XML table D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\incremental\debug\mergeDebugResources\merged.dir\values\values.xml to D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\merged_res\debug\mergeDebugResources\values_values.arsc.flat
+Compiling XML table D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\incremental\debug\mergeDebugResources\merged.dir\values-en\values-en.xml to D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\merged_res\debug\mergeDebugResources\values-en_values-en.arsc.flat
+
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+Caching disabled for task ':app:checkDebugDuplicateClasses' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:checkDebugDuplicateClasses' as it is up-to-date.
+Resolve mutations for :app:processDebugResources (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:processDebugResources (Thread[#101,Execution worker Thread 10,5,main]) started.
+Resolve mutations for :app:mergeExtDexDebug (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:mergeExtDexDebug (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:mergeExtDexDebug UP-TO-DATE
+Caching disabled for task ':app:mergeExtDexDebug' because:
+  Build cache is disabled
+Skipping task ':app:mergeExtDexDebug' as it is up-to-date.
+Resolve mutations for :app:mergeLibDexDebug (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:mergeLibDexDebug (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:mergeLibDexDebug UP-TO-DATE
+Caching disabled for task ':app:mergeLibDexDebug' because:
+  Build cache is disabled
+Skipping task ':app:mergeLibDexDebug' as it is up-to-date.
+Resolve mutations for :app:mergeDebugJniLibFolders (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:mergeDebugJniLibFolders (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+Caching disabled for task ':app:mergeDebugJniLibFolders' because:
+  Build cache is disabled
+  Simple merging task
+Skipping task ':app:mergeDebugJniLibFolders' as it is up-to-date.
+Resolve mutations for :app:mergeDebugNativeLibs (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:mergeDebugNativeLibs (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+Caching disabled for task ':app:mergeDebugNativeLibs' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:mergeDebugNativeLibs' as it is up-to-date.
+Resolve mutations for :app:stripDebugDebugSymbols (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:stripDebugDebugSymbols (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+Caching disabled for task ':app:stripDebugDebugSymbols' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:stripDebugDebugSymbols' as it is up-to-date.
+Resolve mutations for :app:validateSigningDebug (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:validateSigningDebug (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:validateSigningDebug UP-TO-DATE
+Caching disabled for task ':app:validateSigningDebug' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:validateSigningDebug' as it is up-to-date.
+Resolve mutations for :app:writeDebugAppMetadata (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:writeDebugAppMetadata (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+Caching disabled for task ':app:writeDebugAppMetadata' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:writeDebugAppMetadata' as it is up-to-date.
+Resolve mutations for :app:writeDebugSigningConfigVersions (Thread[#99,Execution worker Thread 8,5,main]) started.
+:app:writeDebugSigningConfigVersions (Thread[#99,Execution worker Thread 8,5,main]) started.
+
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+Caching disabled for task ':app:writeDebugSigningConfigVersions' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:writeDebugSigningConfigVersions' as it is up-to-date.
+
+> Task :app:processDebugResources
+Caching disabled for task ':app:processDebugResources' because:
+  Build cache is disabled
+Task ':app:processDebugResources' is not up-to-date because:
+  Task has failed previously.
+The input changes require a full rebuild for incremental task ':app:processDebugResources'.
+AAPT2 aapt2-9.0.0-14304508-windows Daemon #0: starting
+Aapt output file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\linked_resources_binary_format\debug\processDebugResources\linked-resources-binary-format-debug.ap_
+Resolve mutations for :app:compileDebugKotlin (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:compileDebugKotlin (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:compileDebugKotlin NO-SOURCE
+Skipping task ':app:compileDebugKotlin' as it has no source files and no previous output files.
+Resolve mutations for :app:compileDebugJavaWithJavac (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:compileDebugJavaWithJavac (Thread[#101,Execution worker Thread 10,5,main]) started.
+
+> Task :app:compileDebugJavaWithJavac
+Custom actions are attached to task ':app:compileDebugJavaWithJavac'.
+Caching disabled for task ':app:compileDebugJavaWithJavac' because:
+  Build cache is disabled
+Task ':app:compileDebugJavaWithJavac' is not up-to-date because:
+  Input property 'classpath' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar has changed.
+  Input property 'stableSources' file D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\java\com\example\openradiofm\ui\main\MainActivity.java has changed.
+Compilation mode: in-process compilation
+Created classpath snapshot for incremental compilation in 0.138 secs.
+file or directory 'D:\@MIS PROYECTOS\OpenRadioFM\app\src\debug\java', not found
+Compiling with toolchain 'C:\Program Files\Android\Android Studio\jbr'.
+file or directory 'D:\@MIS PROYECTOS\OpenRadioFM\app\src\debug\java', not found
+Compiling with JDK Java compiler API.
+Note: D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\java\com\example\openradiofm\ui\main\MainActivity.java uses or overrides a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Incremental compilation of 10 classes completed in 1.843 secs.
+Class dependency analysis for incremental compilation took 0.016 secs.
+Resolve mutations for :app:dexBuilderDebug (Thread[#101,Execution worker Thread 10,5,main]) started.
+:app:dexBuilderDebug (Thread[#95,Execution worker Thread 4,5,main]) started.
+
+> Task :app:dexBuilderDebug
+Caching disabled for task ':app:dexBuilderDebug' because:
+  Build cache is disabled
+Task ':app:dexBuilderDebug' is not up-to-date because:
+  Input property 'projectClasses' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar has changed.
+  Input property 'projectClasses' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes\com\example\openradiofm\ui\main\MainActivity.class has changed.
+Dex builder is incremental : true 
+Processing input D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes
+Dexing D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes
+Processing input D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar
+Dexing D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_4.jar'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_1.jar'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_3.jar'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_2.jar'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_0.jar'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\compile_and_runtime_r_class_jar\debug\processDebugResources\R.jar' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_5.jar'
+Dexing 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\javac\debug\compileDebugJavaWithJavac\classes' to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out'
+Done with all dex archive conversions
+Resolve mutations for :app:mergeDebugGlobalSynthetics (Thread[#95,Execution worker Thread 4,5,main]) started.
+:app:mergeDebugGlobalSynthetics (Thread[#95,Execution worker Thread 4,5,main]) started.
+
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+Caching disabled for task ':app:mergeDebugGlobalSynthetics' because:
+  Build cache is disabled
+Skipping task ':app:mergeDebugGlobalSynthetics' as it is up-to-date.
+Resolve mutations for :app:processDebugJavaRes (Thread[#95,Execution worker Thread 4,5,main]) started.
+:app:processDebugJavaRes (Thread[#95,Execution worker Thread 4,5,main]) started.
+
+> Task :app:processDebugJavaRes NO-SOURCE
+file or directory 'D:\@MIS PROYECTOS\OpenRadioFM\app\src\main\resources', not found
+file or directory 'D:\@MIS PROYECTOS\OpenRadioFM\app\src\debug\resources', not found
+Skipping task ':app:processDebugJavaRes' as it has no source files and no previous output files.
+Resolve mutations for :app:mergeDebugJavaResource (Thread[#95,Execution worker Thread 4,5,main]) started.
+:app:mergeDebugJavaResource (Thread[#95,Execution worker Thread 4,5,main]) started.
+
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+Caching disabled for task ':app:mergeDebugJavaResource' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:mergeDebugJavaResource' as it is up-to-date.
+Resolve mutations for :app:mergeProjectDexDebug (Thread[#95,Execution worker Thread 4,5,main]) started.
+:app:mergeProjectDexDebug (Thread[#95,Execution worker Thread 4,5,main]) started.
+
+> Task :app:mergeProjectDexDebug
+Caching disabled for task ':app:mergeProjectDexDebug' because:
+  Build cache is disabled
+Task ':app:mergeProjectDexDebug' is not up-to-date because:
+  Input property 'dexDirs' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\40d7344f3641456ff4c01a0106eeea7a6880075d515bdf9b2cc37616485f27ac_0.jar has been removed.
+  Input property 'dexDirs' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\40d7344f3641456ff4c01a0106eeea7a6880075d515bdf9b2cc37616485f27ac_1.jar has been removed.
+  Input property 'dexDirs' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\40d7344f3641456ff4c01a0106eeea7a6880075d515bdf9b2cc37616485f27ac_2.jar has been removed.
+  and more...
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\4' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, and from all global synthetics files in 
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\0' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_0.jar, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_1.jar, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_2.jar, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_3.jar, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_4.jar, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out\09db072b29b55c8eda36e0f52559860159dfd210097bc8575869b0a0b8b856c0_5.jar, and from all global synthetics files in 
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\14' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, and from all global synthetics files in 
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\9' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, and from all global synthetics files in 
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\6' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, and from all global synthetics files in 
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\13' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, and from all global synthetics files in 
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\5' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, and from all global synthetics files in 
+Merging to 'D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\7' with D8 from all or a subset of dex files in D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\project_dex_archive\debug\dexBuilderDebug\out, and from all global synthetics files in 
+Resolve mutations for :app:packageDebug (Thread[#100,Execution worker Thread 9,5,main]) started.
+:app:packageDebug (Thread[#100,Execution worker Thread 9,5,main]) started.
+
+> Task :app:packageDebug
+Custom actions are attached to task ':app:packageDebug'.
+Caching disabled for task ':app:packageDebug' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Task ':app:packageDebug' is not up-to-date because:
+  Input property 'dexFolders' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\0\classes.dex has changed.
+  Input property 'dexFolders' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\dex\debug\mergeProjectDexDebug\9\classes.dex has changed.
+  Input property 'resourceFiles' file D:\@MIS PROYECTOS\OpenRadioFM\app\build\intermediates\linked_resources_binary_format\debug\processDebugResources\linked-resources-binary-format-debug.ap_ has changed.
+Resolve mutations for :app:createDebugApkListingFileRedirect (Thread[#100,Execution worker Thread 9,5,main]) started.
+:app:createDebugApkListingFileRedirect (Thread[#100,Execution worker Thread 9,5,main]) started.
+
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+Caching disabled for task ':app:createDebugApkListingFileRedirect' because:
+  Build cache is disabled
+  Caching has been disabled for the task
+Skipping task ':app:createDebugApkListingFileRedirect' as it is up-to-date.
+Resolve mutations for :app:assembleDebug (Thread[#100,Execution worker Thread 9,5,main]) started.
+:app:assembleDebug (Thread[#100,Execution worker Thread 9,5,main]) started.
+
+> Task :app:assembleDebug
+Skipping task ':app:assembleDebug' as it has no actions.
+AAPT2 aapt2-9.0.0-14304508-windows Daemon #0: shutdown
+Build 9765854f-c384-4be1-9630-39e044ef0597 is closed
+
+[Incubating] Problems report is available at: file:///D:/@MIS%20PROYECTOS/OpenRadioFM/build/reports/problems/problems-report.html
+
+BUILD SUCCESSFUL in 19s
+36 actionable tasks: 11 executed, 25 up-to-date
+Watched directory hierarchies: [D:\@MIS PROYECTOS\OpenRadioFM]
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.1.0/userguide/configuration_cache_enabling.html

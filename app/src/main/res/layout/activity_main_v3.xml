@@ -104,6 +104,18 @@
             android:text="RDS Info Text"
             android:textColor="#AAAAAA"
             android:textSize="16sp" />
+
+        <!-- V5.0: Signal Status Indicator -->
+        <TextView
+            android:id="@+id/tvSignalStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="SIGNAL"
+            android:textColor="#ADFF2F"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:textAllCaps="true" />
     </LinearLayout>
 
     <ImageView
@@ -327,6 +339,29 @@
             android:padding="8dp"
             android:scaleType="fitCenter"
             android:src="@drawable/radio_gps" />
+
+        <!-- V5.1: Extra 1 (Android Settings) -->
+        <ImageButton
+            android:id="@+id/btnExtra1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_android_settings" />
+
+        <!-- V5.1: Extra 2 (Save/Load Favorites) -->
+        <ImageButton
+            android:id="@+id/btnExtra2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_save_load" />
+
     </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

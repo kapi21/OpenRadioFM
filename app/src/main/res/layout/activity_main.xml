@@ -42,20 +42,20 @@
         android:id="@+id/scrollViewPresets"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:layout_marginStart="16dp"
         android:paddingEnd="4dp"
-        android:scrollbars="vertical"
-        android:fadeScrollbars="false"
+        android:scrollbars="none"
         android:fillViewport="true"
-        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_col1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/guideline_col1">
+        app:layout_constraintTop_toTopOf="parent">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="4dp">
+            android:padding="8dp">
 
             <!-- Preset Cards Generator -->
             <!-- Inline presets used below to maintain ID compatibility -->
@@ -127,6 +127,19 @@
             android:layout_marginStart="4dp"
             android:scaleType="fitCenter"
             android:src="@drawable/radio_fm1" />
+
+        <TextView
+            android:id="@+id/tvSignalStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:text="SIGNAL"
+            android:textColor="#ADFF2F"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:textAllCaps="true" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvFrequency"
