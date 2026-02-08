@@ -180,15 +180,14 @@
                 android:textSize="@dimen/text_size_frequency_base_v3"
                 android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/tvMhzLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+            <ImageView
+                android:id="@+id/ivUnitLabel"
+                android:layout_width="45dp"
+                android:layout_height="25dp"
                 android:layout_marginStart="@dimen/margin_standard"
                 android:layout_marginTop="30dp"
-                android:text="MHz"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size_mhz" />
+                android:scaleType="fitCenter"
+                android:src="@drawable/radio_mhz" />
         </LinearLayout>
 
         <ImageView
@@ -347,7 +346,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="0dp"
+            android:padding="8dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_android_settings" />
 
@@ -358,7 +357,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="0dp"
+            android:padding="8dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_save_load" />
 

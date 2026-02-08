@@ -9,26 +9,31 @@
   <img src="docs/img/screenshot2.png" width="45%" alt="OpenRadioFM Interface 2">
 </div>
 
-## ✨ Novedades en v3.0
-- **Layout Panorama (V3):** Nuevo diseño horizontal nativo para pantallas de 1024x600 con iconos maximizados.
-- **Personalización Premium:** Centro de ajustes estéticos (pulsación larga en EQ) con 10 colores de acento.
-- **Gestor de Tipografías:** 5 fuentes integradas, incluyendo la nueva *Orbitron* y *Digital*.
-- **Fondo Dinámico Universal:** Efecto de desenfoque (blur) basado en el logo de la emisora sintonizada.
-- **Integración Vehicular:** Botón de acceso rápido a GPS y soporte para logo de marca de coche personalizado.
+## ✨ Novedades en v4.3
+- **Compatibilidad de Hardware:** Soporte para motores de radio MTK, TS, HCN y Standard (Universal).
+- **Gestión de Banda AM:** Soporte completo para kHz y pasos de 9kHz con opción de desactivar la banda.
+- **Sintonización Fluida:** Nuevo gesto de arrastre (Drag) en frecuencia para ajuste manual preciso.
+- **Alineación Premium (V3):** Padding y simetría total en la barra de controles inferior.
 
 ## 🛠️ Funciones Principales
-- **Binding de Hardware:** Integración directa con el servicio `com.hcn.autoradio`.
+- **Binding de Hardware:** Integración directa con el servicio de radio del sistema.
 - **Hybrid Logos:** Carga inteligente de logos desde API y fallback local.
 - **RDS Estable:** Visualización dinámica de texto informativo sin saltos.
-- **Control Intuitivo:** Lógica de búsqueda (SEEK) corregida y compatible con mandos al volante.
+- **Control Multifuncional:** Toque corto para pasos manuales, pulsación larga para búsqueda automática.
 - **Multilingüe:** Soporte completo en Español, Inglés y Ruso.
 
 ## 📖 Documentación
-- [Manual de Usuario (Español)](manual_usuario.md)
-- [User Manual (English)](manual_user_en.md)
-- [Руководство пользователя (Русский)](manual_user_ru.md)
+- [Manual de Usuario (Español)](_DOCS/manual_usuario.md)
+- [User Manual (English)](_DOCS/manual_user_en.md)
+- [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 
 ## 📜 Historial de Versiones
+
+### v4.3.0 "Hardware & Gestures" (Febrero 2026)
+- **Universal Radio Engine:** Selector manual para forzar el motor de radio (HCN, MTK, TS, Standard).
+- **Soporte AM:** Visualización en kHz y lógica de pasos de 9kHz para emisoras de onda media.
+- **Smooth Tuning:** Implementación de gestos de deslizamiento lateral para sintonización manual.
+- **Premium Icons:** Etiquetas MHz/kHz gráficas y presets expandidos a 15 con iconos específicos.
 
 ### v4.0 "Global Edition" (Febrero 2026)
 - **MT8163 Consys Optimization:** Forzado de modo estéreo por reflexión para mayor sensibilidad.

@@ -60,7 +60,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static final String TAG = "OpenRadioFm";
-    private static final int PRESETS_COUNT = 12;
+    private static final int PRESETS_COUNT = 15; // Updated to match V4 max presets
+    
+    // Band Constants
+    private static final int BAND_FM1 = 0;
+    private static final int BAND_FM2 = 1;
+    private static final int BAND_FM3 = 2;
+    private static final int BAND_AM1 = 3;
+    private static final int BAND_AM2 = 4;
 
     /**
      * Modos de funcionamiento de la app:
@@ -109,12 +116,12 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvFrequency, tvRdsName, tvRdsInfo;
     private android.view.View boxFrequency;
-    private ImageView ivBandIndicator;
+    private ImageView ivBandIndicator, ivUnitLabel, ivFavoriteIndicator;
     private ImageButton btnLocDx, btnBand;
 
-    private final android.view.View[] cardPresets = new android.view.View[12];
-    private final TextView[] tvPresets = new TextView[12];
-    private final ImageView[] ivPresets = new ImageView[12];
+    private final android.view.View[] cardPresets = new android.view.View[PRESETS_COUNT];
+    private final TextView[] tvPresets = new TextView[PRESETS_COUNT];
+    private final ImageView[] ivPresets = new ImageView[PRESETS_COUNT];
 
     private int mCurrentBand = 0;
 
@@ -264,7 +271,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private ImageView ivDynamicBackground;
-    private ImageView ivFavoriteIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -324,6 +330,7 @@ public class MainActivity extends AppCompatActivity {
         btnBand = findViewById(R.id.btnBand);
         
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
+        ivUnitLabel = findViewById(R.id.ivUnitLabel);
         ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
         
         android.view.View boxLogo = findViewById(R.id.boxLogo);
@@ -629,21 +636,49 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * Comprueba si el sistema anuncia el servicio de radio del coche
-     * con la action com.hcn.autoradio.FM_PLUG_SERVICE.
+     * Comprueba si el sistema anuncia algún servicio de radio compatible.
+     * Soporta varios fabricantes (HCN, MTK, TopWay, Generic).
      */
     private boolean hasCarRadioService() {
-        try {
-            android.content.pm.PackageManager pm = getPackageManager();
-            Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
-            intent.setPackage("com.hcn.autoradio");
-            java.util.List<android.content.pm.ResolveInfo> list =
-                    pm.queryIntentServices(intent, 0);
-            return list != null && !list.isEmpty();
-        } catch (Exception e) {
-            Log.e(TAG, "Error comprobando servicio de radio del coche", e);
-            return false;
+        int engineIdx = mPrefs.getInt("pref_radio_engine", 0); // 0: Auto, 1: HCN, 2: MTK, 3: TS, 4: Standard
+        
+        String[][] allProviders = {
+            {"com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE"},
+            {"com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService"},
+            {"com.android.fmradio", "com.android.fmradio.IFmRadioService"},
+            {"com.ts.mainui", "com.ts.mainui.radio.IRadioService"},
+            {"com.syu.radio", "com.syu.radio.IRadioService"}
+        };
+
+        android.content.pm.PackageManager pm = getPackageManager();
+
+        // If not Auto, pick only the specific one
+        if (engineIdx > 0) {
+            int target = engineIdx - 1;
+            if (target < allProviders.length) {
+                String[] provider = allProviders[target];
+                return checkProvider(pm, provider);
+            }
         }
+
+        // Auto mode: scan all
+        for (String[] provider : allProviders) {
+            if (checkProvider(pm, provider)) return true;
+        }
+        return false;
+    }
+
+    private boolean checkProvider(android.content.pm.PackageManager pm, String[] provider) {
+        try {
+            Intent intent = new Intent(provider[1]);
+            intent.setPackage(provider[0]);
+            java.util.List<android.content.pm.ResolveInfo> list = pm.queryIntentServices(intent, 0);
+            if (list != null && !list.isEmpty()) {
+                Log.d(TAG, "Detector: Encontrado servicio en " + provider[0]);
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 
     /**
@@ -860,37 +895,53 @@ public class MainActivity extends AppCompatActivity {
         ImageButton btnSeekDownV3 = findViewById(R.id.btnSeekDown); // LEFT (<)
         ImageButton btnSeekUpV3 = findViewById(R.id.btnSeekUp);     // RIGHT (>)
         
-        // Left Button (<) -> Decrement / Seek Down
+        // Left Button (<) -> Step Down / Seek Down (Long Press)
         if (btnSeekDownV3 != null) {
-            btnSeekDownV3.setOnClickListener(v -> seekDown());
-            
+            btnSeekDownV3.setOnClickListener(v -> stepFreqDown());
             btnSeekDownV3.setOnLongClickListener(v -> {
-                execRemote(IRadioServiceAPI::onSeekUpEvent); // User Request: Swap events
+                execRemote(IRadioServiceAPI::onSeekDownEvent);
                 return true;
             });
         }
 
-        // Right Button (>) -> Increment / Seek Up
+        // Right Button (>) -> Step Up / Seek Up (Long Press)
         if (btnSeekUpV3 != null) {
-            btnSeekUpV3.setOnClickListener(v -> seekUp());
-            
+            btnSeekUpV3.setOnClickListener(v -> stepFreqUp());
             btnSeekUpV3.setOnLongClickListener(v -> {
-                execRemote(IRadioServiceAPI::onSeekDownEvent); // User Request: Swap events
+                execRemote(IRadioServiceAPI::onSeekUpEvent);
                 return true;
             });
         }
 
-        // V4: Bind Frequency Box for gestures
+        // V4: Bind Frequency Box for gestures (Fluid Drag)
         boxFrequency = findViewById(R.id.boxFrequency);
         if (boxFrequency != null) {
             boxFrequency.setOnTouchListener(new OnSwipeTouchListener(this) {
+                private float scrollAccumulator = 0;
+                private static final int SCROLL_SENSITIVITY = 30; // Pixels per step
+
                 @Override
                 public void onSwipeLeft() {
-                    seekDown();
+                    stepFreqDown();
                 }
                 @Override
                 public void onSwipeRight() {
-                    seekUp();
+                    stepFreqUp();
+                }
+                
+                @Override
+                public void onScrollEvent(float deltaX) {
+                    if (!mPrefs.getBoolean("pref_swipe_gestures", true)) return;
+                    
+                    scrollAccumulator += deltaX;
+                    if (Math.abs(scrollAccumulator) > SCROLL_SENSITIVITY) {
+                        if (scrollAccumulator > 0) {
+                            stepFreqUp();
+                        } else {
+                            stepFreqDown();
+                        }
+                        scrollAccumulator = 0;
+                    }
                 }
             });
         }
@@ -904,22 +955,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void bindPresetViews() {
-        // V2.1: Dynamic binding for 12 presets (P1-P12)
-        for(int i=0; i<12; i++) {
+        // V4: Dynamic binding for 15 presets (P1-P15)
+        for(int i=0; i<PRESETS_COUNT; i++) {
             int index = i + 1;
             int cardId = getResources().getIdentifier("cardP" + index, "id", getPackageName());
             int tvId = getResources().getIdentifier("tvP" + index, "id", getPackageName());
             int ivId = getResources().getIdentifier("ivP" + index, "id", getPackageName());
             
-            cardPresets[i] = findViewById(cardId);
-            tvPresets[i] = findViewById(tvId);
-            ivPresets[i] = findViewById(ivId);
+            if (cardId != 0) cardPresets[i] = findViewById(cardId);
+            if (tvId != 0) tvPresets[i] = findViewById(tvId);
+            if (ivId != 0) ivPresets[i] = findViewById(ivId);
         }
     }
 
     private void refreshPresetButtons() {
-        for(int i=0; i<12; i++) {
-            // Key is now P1_B0, P1_B1, etc.
+        for(int i=0; i<PRESETS_COUNT; i++) {
             String key = "P" + (i+1) + "_B" + mCurrentBand;
             setupPresetCard(i, key);
         }
@@ -956,26 +1006,34 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateCardVisuals(int index, int freq) {
         if (freq == 0) {
-            tvPresets[index].setText("Empty");
-            ivPresets[index].setImageDrawable(null);
-            tvPresets[index].setVisibility(View.VISIBLE);
+            if (tvPresets[index] != null) {
+                tvPresets[index].setText("Empty");
+                tvPresets[index].setVisibility(View.VISIBLE);
+            }
+            if (ivPresets[index] != null) ivPresets[index].setImageDrawable(null);
             return;
         }
 
-        // Default: Show Freq
-        tvPresets[index].setText(String.format("%.1f", freq / 1000.0));
-        ivPresets[index].setImageDrawable(null);
-        tvPresets[index].setVisibility(View.VISIBLE);
+        // V4: Default to the premium number icon
+        int iconResId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", index + 1), "drawable", getPackageName());
+        if (ivPresets[index] != null) {
+            ivPresets[index].setImageResource(iconResId != 0 ? iconResId : R.drawable.ic_station_placeholder);
+        }
+        
+        // By default, hide frequency text if we use icons
+        if (tvPresets[index] != null) {
+            tvPresets[index].setVisibility(View.GONE);
+            tvPresets[index].setText(String.format("%.1f", freq / 1000.0));
+        }
 
-        // Async Fetch Logo
+        // Async Fetch Logo / Custom Info
         mRepository.getStationInfo(freq, logoUrl -> {
             runOnUiThread(() -> {
-                if (logoUrl != null) {
-                    // V2.0: Force reload from disk to detect file changes
+                if (logoUrl != null && ivPresets[index] != null) {
                     Glide.with(MainActivity.this)
                          .load(logoUrl)
-                         .skipMemoryCache(true) // Forzar recarga desde disco
-                         .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE) // No cachear
+                         .skipMemoryCache(true)
+                         .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
                          .transition(DrawableTransitionOptions.withCrossFade())
                          .into(ivPresets[index]);
                 }
@@ -983,8 +1041,9 @@ public class MainActivity extends AppCompatActivity {
         });
         
         com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(freq, null);
-        if (s.getName() != null && !s.getName().isEmpty()) {
+        if (s.getName() != null && !s.getName().isEmpty() && tvPresets[index] != null) {
              tvPresets[index].setText(s.getName());
+             tvPresets[index].setVisibility(View.VISIBLE);
         }
     }
 
@@ -995,9 +1054,40 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void conectarRadio() {
-        Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
-        intent.setPackage("com.hcn.autoradio");
-        try { bindService(intent, mConnection, Context.BIND_AUTO_CREATE); } catch (Exception e) {}
+        int engineIdx = mPrefs.getInt("pref_radio_engine", 0);
+        
+        String[][] allProviders = {
+            {"com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE"},
+            {"com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService"},
+            {"com.android.fmradio", "com.android.fmradio.IFmRadioService"},
+            {"com.ts.mainui", "com.ts.mainui.radio.IRadioService"}
+        };
+
+        // If already connected, maybe unbind? (Optional, let's keep it simple for now)
+
+        if (engineIdx > 0) {
+            int target = engineIdx - 1;
+            if (target < allProviders.length) {
+                bindToProvider(allProviders[target]);
+                return;
+            }
+        }
+
+        for (String[] provider : allProviders) {
+            if (bindToProvider(provider)) return;
+        }
+    }
+
+    private boolean bindToProvider(String[] provider) {
+        Intent intent = new Intent(provider[1]);
+        intent.setPackage(provider[0]);
+        try {
+            if (bindService(intent, mConnection, Context.BIND_AUTO_CREATE)) {
+                Log.d(TAG, "Conector: Vinculando a " + provider[0]);
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
     }
 
     /**
@@ -1007,13 +1097,22 @@ public class MainActivity extends AppCompatActivity {
      * - Este método puede ser llamado desde el hilo del Timer (segundo plano).
      * - Cualquier acceso a vistas se encapsula en runOnUiThread().
      */
-   private void refreshRadioStatus() {
+    private void refreshRadioStatus() {
         if (mRadioService == null) return;
         execRemote(s -> {
             int freq = s.getCurrentFreq();
             int band = s.getCurrentBand();
             boolean isStereo = s.IsStereo();
             boolean isLocal = s.IsDxLocal();
+
+            // V4.3: Hardware Toggle for AM
+            boolean amEnabled = mPrefs.getBoolean("pref_enable_am", true);
+            boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
+            if (isAm && !amEnabled) {
+                // Auto skip to next band
+                execRemote(IRadioServiceAPI::onBandEvent);
+                return;
+            }
             
             // V5.0: Composite Signal Quality Logic
             // Raw SNR/RSSI is not available in SDK, so we infer quality
@@ -1033,11 +1132,17 @@ public class MainActivity extends AppCompatActivity {
             String rdsName = station.getName();
             
             runOnUiThread(() -> {
-                // FIXED LOGIC: Always show Frequency in Big Box con 2 decimales (FORCE DOT SEPARATOR)
-                tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0));
-                
-                // Update Quality Indicator (Placeholder for UI ID)
+                // Quality Indicator
                 updateQualityUI(mCurrentQuality);
+
+                // FIXED LOGIC: Freq formatting (MHz for FM, kHz for AM)
+                if (isAm) {
+                    tvFrequency.setText(String.valueOf(freq));
+                    if (ivUnitLabel != null) ivUnitLabel.setImageResource(R.drawable.radio_khz);
+                } else {
+                    tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0));
+                    if (ivUnitLabel != null) ivUnitLabel.setImageResource(R.drawable.radio_mhz);
+                }
                 
                 if (rdsName != null && !rdsName.isEmpty()) {
                     tvRdsName.setText(rdsName);
@@ -1122,16 +1227,23 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateBandImage(int band) {
         int resId = R.drawable.radio_fm1; 
-        if (band == 0) resId = R.drawable.radio_fm1;
-        else if (band == 1) resId = R.drawable.radio_fm2;
-        else if (band == 2) resId = R.drawable.radio_fm3;
+        if (band == BAND_FM1) resId = R.drawable.radio_fm1;
+        else if (band == BAND_FM2) resId = R.drawable.radio_fm2;
+        else if (band == BAND_FM3) resId = R.drawable.radio_fm3;
+        else if (band == BAND_AM1) {
+            // Placeholder until assets are provided, fallback to FM1 or a generic icon
+            resId = getResources().getIdentifier("radio_am1", "drawable", getPackageName());
+            if (resId == 0) resId = R.drawable.radio_fm1;
+        }
+        else if (band == BAND_AM2) {
+            resId = getResources().getIdentifier("radio_am2", "drawable", getPackageName());
+            if (resId == 0) resId = R.drawable.radio_fm2;
+        }
         
         if (ivBandIndicator != null) {
-            // Layout V3: Indicador gráfico separado + Botón BAND fijo
             ivBandIndicator.setImageResource(resId);
-            btnBand.setImageResource(R.drawable.radio_band_n);
-        } else {
-            // Layout V2: El botón BAND actúa como indicador
+            if (btnBand != null) btnBand.setImageResource(R.drawable.radio_band_n);
+        } else if (btnBand != null) {
             btnBand.setImageResource(resId);
         }
     }
@@ -1275,6 +1387,29 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        // V4.3: Hardware Settings - AM Toggle
+        androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm);
+        if (swAm != null) {
+            swAm.setChecked(mPrefs.getBoolean("pref_enable_am", true));
+            swAm.setOnCheckedChangeListener((bv, checked) -> {
+                mPrefs.edit().putBoolean("pref_enable_am", checked).apply();
+                showToast(checked ? getString(R.string.am_band_enabled) : getString(R.string.am_band_disabled));
+            });
+        }
+
+        // V4.3: Hardware Settings - Engine
+        android.view.View rowEngine = dialog.findViewById(R.id.rowEngine);
+        TextView tvCurrentEngine = dialog.findViewById(R.id.tvCurrentEngine);
+        if (tvCurrentEngine != null) {
+            updateCurrentEngineText(tvCurrentEngine);
+        }
+        if (rowEngine != null) {
+            rowEngine.setOnClickListener(v -> {
+                showEngineSelector();
+                dialog.dismiss();
+            });
+        }
+
         cardTheme.setOnClickListener(v -> {
             // Check if auto night mode is enabled
             if (mPrefs.getBoolean("pref_night_mode_auto", false)) {
@@ -1336,12 +1471,37 @@ public class MainActivity extends AppCompatActivity {
         // Font
         int fontIdx = mPrefs.getInt("pref_font_type", 0);
         String[] fonts = {"Default", "Bebas", "Digital", "Inter", "Orbitron"};
-        if (fontIdx >= 0 && fontIdx < fonts.length) tvFont.setText(fonts[fontIdx]);
+                if (fontIdx >= 0 && fontIdx < fonts.length) tvFont.setText(fonts[fontIdx]);
         
         // BG
         int bgIdx = mPrefs.getInt("pref_bg_mode", 1);
         String[] modes = {getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image), getString(R.string.bg_dynamic_logo)};
         if (bgIdx >= 0 && bgIdx < modes.length) tvBg.setText(modes[bgIdx]);
+    }
+
+    private void updateCurrentEngineText(TextView tv) {
+        int idx = mPrefs.getInt("pref_radio_engine", 0);
+        String[] engines = {getString(R.string.engine_auto), "HCN", "MTK", "Standard", "TS"};
+        if (idx >= 0 && idx < engines.length) tv.setText(engines[idx]);
+    }
+
+    private void showEngineSelector() {
+        String[] options = {
+            getString(R.string.engine_auto),
+            getString(R.string.engine_hcn),
+            getString(R.string.engine_mtk),
+            getString(R.string.engine_ts),
+            getString(R.string.engine_standard)
+        };
+
+        new android.app.AlertDialog.Builder(this)
+            .setTitle(R.string.radio_engine)
+            .setItems(options, (dialog, which) -> {
+                mPrefs.edit().putInt("pref_radio_engine", which).apply();
+                showToast(String.format(getString(R.string.engine_changed), options[which]));
+                conectarRadio();
+            })
+            .show();
     }
 
     // V4: Saved Preset Indicator
@@ -1582,10 +1742,9 @@ public class MainActivity extends AppCompatActivity {
             ivFavoriteIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
         }
         
-        // Texto MHz (Layout V3)
-        TextView tvMhzLabel = findViewById(R.id.tvMhzLabel);
-        if (tvMhzLabel != null) {
-            tvMhzLabel.setTextColor(nightBlue);
+        // Unidad MHz/kHz (Layout V3)
+        if (ivUnitLabel != null) {
+            ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
         }
         
         // Iconos en azul noche (tint)
@@ -1640,9 +1799,8 @@ public class MainActivity extends AppCompatActivity {
             ivFavoriteIndicator.clearColorFilter();
         }
         
-        TextView tvMhzLabel = findViewById(R.id.tvMhzLabel);
-        if (tvMhzLabel != null) {
-            tvMhzLabel.setTextColor(white);
+        if (ivUnitLabel != null) {
+            ivUnitLabel.clearColorFilter();
         }
         
         // Quitar tint de iconos
@@ -1690,23 +1848,41 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // V4: Seek Helpers
-    private void seekUp() {
+    // V4: Frequency Step Helpers (Manual Tuning)
+    private void stepFreqUp() {
         if (mRadioService == null) return;
         try {
             int current = mRadioService.getCurrentFreq();
-            int newFreq = current + 50; 
-            if (newFreq > 108000) newFreq = 87500;
+            int band = mRadioService.getCurrentBand();
+            boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
+            
+            int newFreq;
+            if (isAm) {
+                newFreq = current + 9;
+                if (newFreq > 1620) newFreq = 522; // AM Europe range
+            } else {
+                newFreq = current + 50; 
+                if (newFreq > 108000) newFreq = 87500;
+            }
             mRadioService.gotoFreq(newFreq);
         } catch (RemoteException e) { e.printStackTrace(); }
     }
 
-    private void seekDown() {
+    private void stepFreqDown() {
         if (mRadioService == null) return;
         try {
             int current = mRadioService.getCurrentFreq();
-            int newFreq = current - 50;
-            if (newFreq < 87500) newFreq = 108000;
+            int band = mRadioService.getCurrentBand();
+            boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
+
+            int newFreq;
+            if (isAm) {
+                newFreq = current - 9;
+                if (newFreq < 522) newFreq = 1620;
+            } else {
+                newFreq = current - 50;
+                if (newFreq < 87500) newFreq = 108000;
+            }
             mRadioService.gotoFreq(newFreq);
         } catch (RemoteException e) { e.printStackTrace(); }
     }
@@ -1726,6 +1902,7 @@ public class MainActivity extends AppCompatActivity {
             private static final int SWIPE_VELOCITY_THRESHOLD = 80;
             @Override
             public boolean onDown(MotionEvent e) { return true; }
+            
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
                 try {
@@ -1738,9 +1915,16 @@ public class MainActivity extends AppCompatActivity {
                 } catch (Exception e) { e.printStackTrace(); }
                 return false;
             }
+
+            @Override
+            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+                onScrollEvent(-distanceX); // Negative because swipe left is positive distanceX
+                return true;
+            }
         }
         public void onSwipeRight() {}
         public void onSwipeLeft() {}
+        public void onScrollEvent(float distanceX) {}
     }
 
     // V4: Automatic Night Mode

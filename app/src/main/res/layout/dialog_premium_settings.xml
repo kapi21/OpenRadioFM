@@ -192,6 +192,60 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
         
+        <!-- SECTION: HARDWARE -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:text="@string/hardware_settings"
+            android:layout_marginTop="16dp"/>
+
+        <!-- Option: Enable AM Band -->
+        <LinearLayout style="@style/SettingsRowStyle">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/enable_am_band"
+                android:textColor="@color/white"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchEnableAm"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Submenu Box: Radio Engine -->
+        <LinearLayout
+            android:id="@+id/rowEngine"
+            style="@style/DialogBoxStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/radio_engine"
+                android:textColor="@color/white"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/tvCurrentEngine"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/engine_auto"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
         <!-- Option: Swipe Gestures -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView

@@ -74,4 +74,17 @@
     <string name="language_changed">✅ Idioma cambiado a %s</string>
     <string name="about_openradio">ℹ️ Acerca de OpenRadioFM</string>
     <string name="touch_to_change">Toca para cambiar</string>
+
+    <!-- V4.3: Hardware Settings -->
+    <string name="hardware_settings">⚙️ Ajustes de Hardware</string>
+    <string name="enable_am_band">Habilitar Banda AM</string>
+    <string name="radio_engine">Motor de Radio</string>
+    <string name="engine_auto">Automático (Recomendado)</string>
+    <string name="engine_hcn">HCN (Eonon/Xtrons)</string>
+    <string name="engine_mtk">Mediatek (MtkRadio)</string>
+    <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_standard">Android Estándar</string>
+    <string name="am_band_enabled">✅ Banda AM habilitada</string>
+    <string name="am_band_disabled">❌ Banda AM deshabilitada</string>
+    <string name="engine_changed">✅ Motor de radio cambiado a %s</string>
 </resources>

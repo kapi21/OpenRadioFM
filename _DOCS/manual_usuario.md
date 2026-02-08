@@ -1,4 +1,4 @@
-# Manual de Usuario - OpenRadioFM v4.2 (Orange Waveform)
+# Manual de Usuario - OpenRadioFM v4.3 (Hardware & Gestures)
 
 Bienvenido a OpenRadioFM v3.0, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión está optimizada tanto para uso vertical como para pantallas panorámicas (1024x600) con un nuevo diseño horizontal.
 
@@ -22,8 +22,9 @@ OpenRadioFM ahora cuenta con dos diseños principales:
   - *Menú Oculto:* Haz **5 clics rápidos** sobre el icono de GPS para abrir el menú técnico de fábrica.
 
 ### 1.3 Control de Frecuencia y RDS
-- **Flecha Izquierda (<):** Bajar frecuencia (-0.05 MHz). Pulsación larga para búsqueda automática hacia abajo.
-- **Flecha Derecha (>):** Subir frecuencia (+0.05 MHz). Pulsación larga para búsqueda automática hacia arriba.
+- **Flecha Izquierda (<):** Bajar frecuencia. **Click corto:** Paso manual (-0.05 MHz). **Pulsación larga:** Búsqueda automática (Seek) hacia abajo.
+- **Flecha Derecha (>):** Subir frecuencia. **Click corto:** Paso manual (+0.05 MHz). **Pulsación larga:** Búsqueda automática (Seek) hacia arriba.
+- **Sintonización Fluida (Arrastre) [Novedad v4.3]:** Puedes arrastrar el dedo lateralmente sobre el cuadro de frecuencia para un ajuste manual ultra-preciso. Cada ~30 píxeles de movimiento equivale a un paso de frecuencia.
 - **RDS:** Visualización dinámica de nombre de emisora y texto informativo (RadioText) con desplazamiento suave.
 
 ---
@@ -101,4 +102,4 @@ El modo noche ahora no solo atenúa la pantalla, sino que aplica un tema visual 
 - **Punto decimal en frecuencia:** Ahora se fuerza el uso de punto (ej. 108.0) para una visualización más limpia en todos los sistemas.
 
 ---
-*Desarrollado por Jimmy80 - v3.0 (Febrero 2026)*
+*Desarrollado por Jimmy80 - v4.3 (Febrero 2026)*

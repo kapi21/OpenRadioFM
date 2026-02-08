@@ -1,6 +1,32 @@
 # Changelog - OpenRadioFM
     
-## v4.2.3 "Orange Waveform" (Febrero 2026)
+## v4.3.0 "Hardware & Gestures" (Febrero 2026)
+
+Actualización técnica centrada en la compatibilidad universal de hardware y la optimización de la experiencia táctil.
+
+### ⚙️ Hardware & Compatibilidad
+*   **Compatibilidad Universal:** Nuevo sistema de detección de servicios que soporta chips HCN, MTK (Mediatek), TS (TopWay) y Android Estándar.
+*   **Selector de Motor de Radio:** Nueva opción en el menú Premium para forzar el motor de radio manualmente si el autodetector falla.
+*   **Gestión de Banda AM:** Opción para habilitar/deshabilitar la banda AM. Si se desactiva, la app salta automáticamente las bandas AM al ciclar con el botón BAND.
+*   **Frecuencias AM:** Soporte completo para visualización en kHz y pasos de 9kHz (Región Europa).
+
+### 👆 Interacción & Gestos
+*   **Sintonización Fluida (Drag):** Arrastre lateral en el cuadro de frecuencia para un ajuste manual preciso.
+*   **Nueva Lógica de Botones:** 
+    *   Click corto: Paso manual (0.05MHz / 9kHz).
+    *   Pulsación larga: Búsqueda automática (Seek).
+*   **Sensibilidad Mejorada:** Ajuste de los umbrales de swipe para una respuesta más natural en pantallas resistivas y capacitivas de coche.
+
+### 🎨 Visual & UI (V3)
+*   **Etiquetas Gráficas:** Sustitución de texto MHz/kHz por iconos de alta resolución.
+*   **Alineación Premium:** Corregido el padding en los botones de "Ajustes Android" y "Guardar/Cargar" para una simetría total en la barra de control.
+*   **Galería de Favoritos:** Ahora soporta hasta 15 presets con iconos premium numerados (`radio_icon_p01` a `p15`).
+
+### 🛠️ Mejoras Técnicas
+*   **Depuración de Código:** Eliminación de variables duplicadas y resolución de errores de compilación en lambdas.
+*   **Build System:** Migración a Java 21 para el proceso de compilación.
+*   **Git Hygiene:** Exclusión de la carpeta de recursos del repositorio para agilizar la sincronización.
+
 
 Actualización visual y de estabilidad centrada en el refinamiento del diseño y la experiencia de usuario.
 
