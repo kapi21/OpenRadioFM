@@ -16,6 +16,7 @@ public class HiddenRadioPlayer {
     public static final int EVENT_PS_DONE = 0x8;
     public static final int EVENT_PS_MESSAGE = 0x26;
     public static final int EVENT_RT_MESSAGE = 0x29;
+    public static final int EVENT_PTY_TYPE = 0x22;
 
     private Object mRadioPlayerInstance;
     private Listener mClientListener;
@@ -24,7 +25,7 @@ public class HiddenRadioPlayer {
         void onRdsText(String text);
 
         void onRdsName(String name);
-
+        void onRdsPty(String pty);
         void onRawEvent(int code, Object infoObj, String strArg);
     }
 
@@ -156,6 +157,16 @@ public class HiddenRadioPlayer {
                 } else if (arg2 == null) {
                     if (mClientListener != null)
                         mClientListener.onRdsName("");
+                }
+            }
+
+            if (code == EVENT_PTY_TYPE || code == 34) { // 0x22 = 34
+                if (arg2 instanceof String) {
+                    if (mClientListener != null)
+                        mClientListener.onRdsPty((String) arg2);
+                } else if (arg2 == null) {
+                    if (mClientListener != null)
+                        mClientListener.onRdsPty("");
                 }
             }
 

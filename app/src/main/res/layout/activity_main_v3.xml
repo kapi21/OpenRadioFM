@@ -103,19 +103,8 @@
             android:singleLine="true"
             android:text="RDS Info Text"
             android:textColor="#AAAAAA"
-            android:textSize="16sp" />
+            android:textSize="20sp" />
 
-        <!-- V5.0: Signal Status Indicator -->
-        <TextView
-            android:id="@+id/tvSignalStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="SIGNAL"
-            android:textColor="#ADFF2F"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:textAllCaps="true" />
     </LinearLayout>
 
     <ImageView
@@ -166,9 +155,21 @@
             
             <ImageView
                 android:id="@+id/ivMainLogo"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:scaleType="fitCenter"
                 android:visibility="gone" />
+
+            <ImageView
+                android:id="@+id/ivSignalLevel"
+                android:layout_width="100dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="@dimen/margin_standard"
+                android:layout_marginTop="30dp"
+                android:scaleType="fitEnd"
+                android:src="@drawable/level_signal"
+                android:visibility="visible" />
 
             <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/tvFrequency"
@@ -182,13 +183,26 @@
 
             <ImageView
                 android:id="@+id/ivUnitLabel"
-                android:layout_width="45dp"
-                android:layout_height="25dp"
+                android:layout_width="65dp"
+                android:layout_height="35dp"
                 android:layout_marginStart="@dimen/margin_standard"
                 android:layout_marginTop="30dp"
-                android:scaleType="fitCenter"
+                android:scaleType="fitStart"
                 android:src="@drawable/radio_mhz" />
         </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvPty"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:text="PTY NONE"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:visibility="gone" />
 
         <ImageView
             android:id="@+id/ivFavoriteIndicator"
@@ -317,7 +331,7 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:padding="0dp"
             android:scaleType="fitCenter"
-            android:src="@drawable/radio_scan_n" />
+            android:src="@drawable/radio_scan_icon_f" />
 
         <ImageButton
             android:id="@+id/btnMute"

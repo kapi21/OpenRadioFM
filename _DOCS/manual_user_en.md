@@ -1,4 +1,4 @@
-# User Manual - OpenRadioFM v4.3 (Hardware & Gestures)
+# User Manual - OpenRadioFM v6.0 (Stability & UI Tuning)
 
 Welcome to OpenRadioFM v3.0, the ultimate evolution of FM radio for Android Head Units. This version is optimized for both vertical use and widescreen displays (1024x600) with a brand-new horizontal layout.
 
@@ -102,4 +102,4 @@ Night mode now not only dims the screen but applies a "Night Blue" visual theme 
 - **Decimal point in frequency:** The frequency display now forces a dot separator (e.g., 108.0) for a cleaner look across all systems.
 
 ---
-*Developed by Jimmy80 - v4.3 (February 2026)*
+*Developed by Jimmy80 - v6.0 (February 2026)*

@@ -1,11 +1,68 @@
-# Changelog - OpenRadioFM
-    
+# Changelog
+
+## [6.0] - 2026-02-08
+### Fixed
+- Refined Layout 3: Improved icon alignment and eliminated internal padding to group elements more cohesively around the frequency display using `fitEnd` and `fitStart`.
+
+## [5.9] - 2026-02-08
+### Fixed
+- Fixed alignment between band indicator and signal level icon in Layout 2 by using `fitStart` scale type to counteract internal drawable padding.
+
+## [5.8] - 2026-02-08
+### Changed
+- Refined Layout 2: Enlarged band indicator icon (FM1/2/3) and aligned it to the left (4dp margin) with the signal level icon for improved UI balance.
+
+## [5.7] - 2026-02-08
+### Fixed
+- Favorite icon disappearance on layout change by implementing activity state persistence (`onSaveInstanceState`) and immediate UI refresh on recreation.
+
+## [5.6] - 2026-02-08
+### Changed
+- Simplified frequency text color logic to strictly follow theme: Night Blue for Night Mode, White for Normal Mode (regardless of favorite status).
+
+## [5.5] - 2026-02-08
+### Changed
+- Enlarged signal level icon (`ivSignalLevel`) to 100x60dp in all layouts for better visibility.
+
+## [5.4] - 2026-02-08
+### Removed
+- Frequency logo from Layout 3 (`activity_main_v3.xml`).
+- Adjusted logic in `MainActivity.java` to prevent logo visibility in Layout 3.
+
+## [5.3] - 2026-02-08
+### Removed
+- PTY display from all layouts (deferred for later implementation).
+- Disabled PTY UI update logic in `MainActivity.java`.
+
+## [5.2] - 2026-02-08
+### Added
+- Real-time PTY updates via RDS event listener (`EVENT_PTY_TYPE` 0x22).
+- Expanded hardware detection for `com.android.fmradio.FmRadioService` (Generic MTK).
+- PTY reset on frequency tuning to prevent stale data.
+
+### Fixed
+- PTY data loss during periodic UI status refreshes.
+- Syntax error in Loc/Dx icon logic.
+
+## [5.1] - 2026-02-08
+
+## v5.1 "Estabilidad y Refinamiento" (Marzo 2026)
+
+Actualización enfocada en la estabilidad, corrección de errores y mejoras visuales menores.
+
+### 🛠️ Mejoras y Correcciones
+*   **Rendimiento:** Solucionado el congelamiento del Layout 3 (Horizontal) al corregir el hilo de la interfaz de usuario.
+*   **Iconografía:** Corregidos los iconos del botón de Silencio (ahora usando assets raíz: Altavoz y Altavoz+X).
+*   **Visibilidad:** Aumentado el tamaño del icono de Señal para una mejor visibilidad.
+*   **Interfaz:** Eliminadas las etiquetas superpuestas de MHz/kHz en el Layout 2.
+*   **Compatibilidad:** Añadido soporte para chips SYU (Joying/FYT) en la detección.
+
 ## v4.3.0 "Hardware & Gestures" (Febrero 2026)
 
 Actualización técnica centrada en la compatibilidad universal de hardware y la optimización de la experiencia táctil.
 
 ### ⚙️ Hardware & Compatibilidad
-*   **Compatibilidad Universal:** Nuevo sistema de detección de servicios que soporta chips HCN, MTK (Mediatek), TS (TopWay) y Android Estándar.
+*   **Compatibilidad Universal:** Nuevo sistema de detección de servicios que soporta chips HCN, MTK (Mediatek), TS (TopWay), SYU (Joying/FYT) y Android Estándar.
 *   **Selector de Motor de Radio:** Nueva opción en el menú Premium para forzar el motor de radio manualmente si el autodetector falla.
 *   **Gestión de Banda AM:** Opción para habilitar/deshabilitar la banda AM. Si se desactiva, la app salta automáticamente las bandas AM al ciclar con el botón BAND.
 *   **Frecuencias AM:** Soporte completo para visualización en kHz y pasos de 9kHz (Región Europa).

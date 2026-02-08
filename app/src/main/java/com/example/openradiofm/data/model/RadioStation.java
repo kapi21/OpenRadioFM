@@ -5,12 +5,14 @@ public class RadioStation {
     private String name; // e.g. "LOS40"
     private String logoUrl; // e.g. "http://.../los40.png"
     private boolean isFavorite;
+    private String pty; // e.g. "POP MUSIC"
 
     public RadioStation(int freqKHz, String name) {
         this.freqKHz = freqKHz;
         this.name = name;
         this.logoUrl = null;
         this.isFavorite = false;
+        this.pty = null;
     }
 
     public int getFreqKHz() {
@@ -39,6 +41,14 @@ public class RadioStation {
 
     public void setFavorite(boolean favorite) {
         isFavorite = favorite;
+    }
+
+    public String getPty() {
+        return pty;
+    }
+
+    public void setPty(String pty) {
+        this.pty = pty;
     }
 
     public String getFreqLabel() {

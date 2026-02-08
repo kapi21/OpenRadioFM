@@ -44,6 +44,7 @@ El chip soporta **RDS completo** con las siguientes funcionalidades:
 - **Campo**: `mPTYtype` (String)
 - **Evento**: `EVENT_PTY_TYPE` (0x22)
 - **Método**: `setPTY(int type)`
+- **Estado (v5.3)**: Lógica implementada pero oculto en Layout (Diferido).
 - **Descripción**: Categoría del programa (Noticias, Música, Deportes, etc.)
 
 ### 4. TA (Traffic Announcement)
@@ -387,7 +388,7 @@ Tipos de scan:
 #### RDS Completo
 - ✅ PS (Programme Service)
 - ✅ RT (Radio Text)
-- ✅ PTY (Programme Type)
+- ✅ PTY (Programme Type) - **Actualizado v5.2**: Actualización reactiva activada.
 - ✅ TA (Traffic Announcement)
 - ✅ AF (Alternative Frequencies)
 - ✅ EON (Enhanced Other Networks)
@@ -521,8 +522,8 @@ El chip de radio FM del MT8163 es **sorprendentemente completo** y ofrece:
 5. ✅ **API bien estructurada** con eventos asíncronos
 6. ✅ **Integración con el sistema** mediante servicio Android
 
-### Funcionalidad Destacada
-El soporte de **RDS es completo y profesional**, incluyendo funciones avanzadas como AF (cambio automático de frecuencia), TA (anuncios de tráfico) y EON (información de otras redes).
+### Funcionalidad PTY
+El soporte de **PTY ha sido optimizado en v5.2** para actualizarse en tiempo real sin perderse durante los ciclos de refresco de la UI.
 
-### Potencial de Mejora
-Existe potencial para **exponer funciones adicionales** del chip que actualmente no están disponibles en la API pública, como RSSI, SNR y controles de audio más finos.
+### Hardware Genérico
+Se ha ampliado la detección de servicios para incluir `com.android.fmradio.FmRadioService`, mejorando la compatibilidad con dispositivos MTK genéricos.

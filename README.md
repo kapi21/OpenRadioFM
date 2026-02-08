@@ -9,11 +9,11 @@
   <img src="docs/img/screenshot2.png" width="45%" alt="OpenRadioFM Interface 2">
 </div>
 
-## ✨ Novedades en v4.3
-- **Compatibilidad de Hardware:** Soporte para motores de radio MTK, TS, HCN y Standard (Universal).
-- **Gestión de Banda AM:** Soporte completo para kHz y pasos de 9kHz con opción de desactivar la banda.
-- **Sintonización Fluida:** Nuevo gesto de arrastre (Drag) en frecuencia para ajuste manual preciso.
-- **Alineación Premium (V3):** Padding y simetría total en la barra de controles inferior.
+## ✨ Novedades en v6.0
+- **Persistencia de Estado:** Las emisoras favoritas y el layout seleccionado ahora se mantienen tras cambios de diseño o reinicios de actividad.
+- **Refinado de Alineación:** Iconos de banda y señal alineados geométricamente en Layout 2 y 3.
+- **Consistencia Visual:** El color de la frecuencia ahora respeta estrictamente el tema (Azul Noche / Blanco).
+- **Estabilidad RDS:** Mejoras en el filtrado de PTY y datos RDS para evitar redundancia.
 
 ## 🛠️ Funciones Principales
 - **Binding de Hardware:** Integración directa con el servicio de radio del sistema.
@@ -28,6 +28,12 @@
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 
 ## 📜 Historial de Versiones
+
+### v6.0 "Stability & UI Tuning" (Febrero 2026)
+- **Activity State Persistence:** Implementación de `onSaveInstanceState` para evitar pérdida de favoritos al cambiar de layout.
+- **Layout Alignment Fixes:** Alineación visual perfecta entre iconos de banda y señal usando `fitStart`/`fitEnd`.
+- **Theme Color Strictness:** Unificación del color de frecuencia basado en el skin actual (Night Mode vs Classic).
+- **RDS & PTY Cleanup:** Eliminación de ruido visual en metadatos y optimización del polling de servicio.
 
 ### v4.3.0 "Hardware & Gestures" (Febrero 2026)
 - **Universal Radio Engine:** Selector manual para forzar el motor de radio (HCN, MTK, TS, Standard).
