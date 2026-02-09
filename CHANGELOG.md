@@ -1,5 +1,17 @@
 # Changelog
 
+## [5.0.0-Beta] - In Progress
+### Added
+- **Engineering Mode Dashboard**: Hidden diagnostic menu (GPS button x5) features:
+    - **RF Telemetry**: Signal Quality (SQI), Stereo/Mono, LOC/DX, Estimated RSSI.
+    - **RDS Inspector**: PI, PTY, PS, AF List, Sync Status.
+    - **Asset Diagnostics**: Real-time checks for `RadioLogos` folder, custom backgrounds, and car logos.
+    - **System Info**: Device Model, Board ID, and **Root Access** verification (SU Check).
+    - **Interactive Tuner**: Manual stepping controls (`<` / `>`) with real-time signal feedback.
+    - **Live Terminal Log**: "Matrix Style" scrolling console showing kernel events (TUNED, RDS_UPDATE, STEREO_LOCK).
+    - **Data Management**: Tools to Factory Reset favorites and clear station history.
+- **Categorical PTY Icons**: Visual indicators for station categories (Music, News, Sport, Talk, Jazz, Classical, etc.) based on RDS PTY codes.
+
 ## [4.0.0] - 2026-02-09
 ### Added
 - **Dynamic Backgrounds (Global Edition)**: Entirely refactored the dynamic blur engine for Layout 3. Background now updates even when central logo is hidden, providing a premium translucent glass effect.

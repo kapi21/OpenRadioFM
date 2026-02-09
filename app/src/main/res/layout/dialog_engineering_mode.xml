@@ -1,0 +1,424 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#D9000000"
+    android:padding="16dp">
+
+    <!-- Header: TERMINAL STYLE -->
+    <TextView
+        android:id="@+id/tvHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:text="> ENGINEERING_MODE_V5.0"
+        android:textColor="#00FF00"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvSubHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:text="> ACCESS_GRANTED: ROOT_LEVEL_METRICS"
+        android:textColor="#00FF00"
+        android:textSize="12sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvHeader" />
+
+    <!-- Close Button (X) -->
+    <ImageButton
+        android:id="@+id/btnCloseEng"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="#00FF00"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- ====================================================================================== -->
+    <!-- MAIN CONTENT SCROLL VIEW (Metrics & Controls) -->
+    <!-- ====================================================================================== -->
+    <ScrollView
+        android:id="@+id/scrollMainContent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tvSubHeader"
+        app:layout_constraintBottom_toTopOf="@id/tvLogHeader"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <!-- GuideLine for 2 Columns -->
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline_vertical_50"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintGuide_percent="0.5" />
+
+            <!-- SECTION 1: RF & SIGNAL (Top Left) -->
+            <TextView
+                android:id="@+id/tvSectionRf"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="monospace"
+                android:text="[ RF_TELEMETRY ]"
+                android:textColor="#FF8E00"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/containerRf"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toStartOf="@+id/guideline_vertical_50"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvSectionRf">
+
+                <TextView
+                    android:id="@+id/tvSignalQualityIndex"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="SQI_INDEX.....: 100%"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvStereoPilot"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="STEREO_PILOT..: LOCKED (19kHz)"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvTunerMode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="TUNER_MODE....: DX (DISTANT)"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvRssiBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="monospace"
+                    android:text="RSSI: [████████░░] -54dBm"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <!-- Tuner Controls -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/btnTuneDown"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:text="&lt; TUNE"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#000000"
+                        android:backgroundTint="#00FF00" />
+
+                    <Button
+                        android:id="@+id/btnTuneUp"
+                        android:layout_width="0dp"
+                        android:layout_height="40dp"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="TUNE &gt;"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:textColor="#000000"
+                        android:backgroundTint="#00FF00" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- SECTION 2: RDS DEBUG (Top Right) -->
+            <TextView
+                android:id="@+id/tvSectionRds"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:fontFamily="monospace"
+                android:text="[ RDS_DECODER_RAW ]"
+                android:textColor="#FF8E00"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="@+id/guideline_vertical_50"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <LinearLayout
+                android:id="@+id/containerRds"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="@+id/guideline_vertical_50"
+                app:layout_constraintTop_toBottomOf="@id/tvSectionRds">
+
+                <TextView
+                    android:id="@+id/tvPiCode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="PI_CODE.......: E230 (HEX)"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvPtyRaw"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="PTY_RAW.......: 10 (POP_MUSIC)"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvRdsSync"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="RDS_SYNC......: STABLE"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvAfList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="AF_LIST.......: [104.5, 98.2]"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <!-- SECTION 3: SYSTEM HEALTH (Bottom Full Width) -->
+            <TextView
+                android:id="@+id/tvSectionSys"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="monospace"
+                android:text="[ KAPI_SYSTEM_DIAGNOSTICS ]"
+                android:textColor="#FF8E00"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/containerRf" />
+
+            <LinearLayout
+                android:id="@+id/containerSys"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:background="#1A00FF00"
+                android:padding="8dp"
+                app:layout_constraintTop_toBottomOf="@id/tvSectionSys">
+
+                <TextView
+                    android:id="@+id/tvServiceLatency"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="SERVICE_LATENCY...: 12ms (OPTIMAL)"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvMemoryUsage"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="HEAP_MEMORY.......: 14MB / 256MB"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvChipset"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="DETECTED_CHIPSET..: MTK8163_CONSYS_V2"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvDeviceInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="DEVICE_INFO.......: ..."
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/tvRootStatus"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="ROOT_ACCESS.......: CHECKING..."
+                    android:textColor="#00FF00"
+                    android:textSize="12sp" />
+
+                <!-- FILE SYSTEM & ASSETS -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="--- ASSETS &amp; FILES ---"
+                    android:textColor="#33B5E5"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+                <TextView
+                    android:id="@+id/tvAssetsInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="8dp"
+                    android:text="DIR: ...\nBG: ...\nLOGO: ...\nFAVS: ..."
+                    android:textColor="#99CC00"
+                    android:textSize="12sp"
+                    android:typeface="monospace" />
+
+                <!-- DATA MANAGEMENT -->
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="--- DATA MANAGEMENT ---"
+                    android:textColor="#FF4444"
+                    android:textStyle="bold"
+                    android:typeface="monospace" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+
+                    <Button
+                        android:id="@+id/btnResetFavs"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="4dp"
+                        android:text="RESET FAVS"
+                        android:textSize="11sp"
+                        android:textColor="@android:color/black"
+                        android:backgroundTint="#FF8800" />
+
+                    <Button
+                        android:id="@+id/btnResetHistory"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="4dp"
+                        android:text="RESET HIST"
+                        android:textSize="11sp"
+                        android:textColor="@android:color/black"
+                        android:backgroundTint="#CC0000" />
+
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+    
+
+    <TextView
+        android:id="@+id/tvLogHeader"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:fontFamily="monospace"
+        android:text="> KERNEL_LOG / LIVE_EVENTS"
+        android:textColor="#00FF00"
+        android:textSize="12sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/scrollLog" />
+
+    <ScrollView
+        android:id="@+id/scrollLog"
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="#33000000"
+        android:padding="4dp"
+        app:layout_constraintBottom_toTopOf="@id/btnExitSystem"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/tvTerminalLog"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="monospace"
+            android:text="[INIT] TERMINAL READY..."
+            android:textColor="#00FF00"
+            android:textSize="11sp" />
+    </ScrollView>
+
+    <!-- EXIT BUTTON -->
+    <Button
+        android:id="@+id/btnExitSystem"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="[ EXIT SYSTEM ]"
+        android:fontFamily="monospace"
+        android:textStyle="bold"
+        android:textColor="#FF0000"
+        android:backgroundTint="#220000" 
+        app:layout_constraintBottom_toTopOf="@+id/tvFooter"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Footer -->
+    <TextView
+        android:id="@+id/tvFooter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:fontFamily="monospace"
+        android:text="> END_OF_LINE_"
+        android:textColor="#00FF00"
+        android:textSize="10sp"
+        android:alpha="0.5"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" 
+        app:layout_constraintStart_toStartOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

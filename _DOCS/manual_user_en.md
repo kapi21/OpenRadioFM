@@ -38,7 +38,8 @@ Choose from 10 color schemes applied to borders and accents. In **Night Mode**, 
 
 ### 3.1 Station Logos (Hybrid Logic)
 The app looks for logos in three ways:
-1. **Local:** In `/sdcard/RadioLogos/frequency.png` (e.g., `94.1.png`).
+1. **Local:** In `/sdcard/RadioLogos/frequency_khz.png`.
+   - Example: For 94.1 MHz => **94100.png** or **9410.png**.
 2. **Online API:** If enabled in settings, downloads logos automatically.
 3. **Priority:** Local logos always take priority over online ones.
 

@@ -14,6 +14,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+import com.example.openradiofm.utils.PtyManager; // V5.0
 import android.widget.Toast;
 import android.widget.LinearLayout;
 import android.graphics.Color;
@@ -79,21 +80,22 @@ public class MainActivity extends AppCompatActivity {
         FM_BASICO
     }
 
-    private IRadioServiceAPI mRadioService;
-    private com.example.openradiofm.data.repository.RadioRepository mRepository;
-    private android.content.SharedPreferences mPrefs;
-    private HiddenRadioPlayer mHiddenPlayer;
+    IRadioServiceAPI mRadioService;
+    com.example.openradiofm.data.repository.RadioRepository mRepository;
+    android.content.SharedPreferences mPrefs;
+    HiddenRadioPlayer mHiddenPlayer;
     
     // V3.0: Caché de logos por banda
-    private int mLastFreq = -1;
-    private boolean mHasRdsLock = false;
-    private String mCurrentPty = null; // V5.2: Live PTY persistence
+    int mLastFreq = -1;
+    boolean mHasRdsLock = false;
+    String mCurrentPty = null; // V5.2: Live PTY persistence
     private String mLastLogoUrl = "";
     private java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
     
     // V5.0: UI Elements (Fixing Compilation Errors)
     private TextView tvPty;
     private ImageView ivSignalLevel;
+    private ImageView ivPtyIcon; // V5.0: Categorical Icon
     
     // V5.0: State & Presets
     private boolean mMuteState = false;
@@ -192,7 +194,8 @@ public class MainActivity extends AppCompatActivity {
                         if (!current.equals(text)) {
                             tvRdsInfo.setText(text);
                             if (text == null || text.trim().isEmpty()) {
-                                tvRdsInfo.setVisibility(View.GONE);
+                                // V5.0: Keep visible in V2 to prevent shifts
+                                tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                             } else {
                                 tvRdsInfo.setVisibility(View.VISIBLE);
                             }
@@ -217,12 +220,7 @@ public class MainActivity extends AppCompatActivity {
             public void onRdsPty(String pty) {
                 runOnUiThread(() -> {
                     mCurrentPty = pty;
-                    // V5.3: PTY UI updates disabled (Hidden in layout)
-                    /*
-                    if (tvPty != null && pty != null && !pty.isEmpty()) {
-                        tvPty.setText(pty);
-                    }
-                    */
+                    updatePtyUI(pty); // V5.0: Update Icon & Text
                 });
             }
 
@@ -281,11 +279,7 @@ public class MainActivity extends AppCompatActivity {
             // V5.2: Catch PTY event from service if available (0x22 = 34)
             if (code == 34 || code == 0x22) {
                 mCurrentPty = data;
-                /* V5.3: Hidden in layout
-                runOnUiThread(() -> {
-                    if (tvPty != null) tvPty.setText(data);
-                });
-                */
+                runOnUiThread(() -> updatePtyUI(data));
             }
         }
     };
@@ -390,6 +384,7 @@ public class MainActivity extends AppCompatActivity {
         // V4.3: New UI Elements
         tvPty = findViewById(R.id.tvPty);
         ivSignalLevel = findViewById(R.id.ivSignalLevel);
+        ivPtyIcon = findViewById(R.id.ivPtyIcon); // V5.0
         
         btnLocDx = findViewById(R.id.btnLocDx);
         btnBand = findViewById(R.id.btnBand);
@@ -488,13 +483,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (mTestClickCount >= 5) {
                     mTestClickCount = 0; // Reset
-                    Intent testIntent = new Intent();
-                    testIntent.setComponent(new android.content.ComponentName("com.hcn.changedapp", "com.hcn.changedapp.TestActivity"));
-                    try {
-                        startActivity(testIntent);
-                    } catch (Exception e) {
-                        showToast("Error al abrir TestActivity");
-                    }
+                    // V5.0: Launch Engineering Mode Dashboard
+                    new EngineeringModeDialog(MainActivity.this).show();
                 } else {
                     // Single click action: Open GPS
                     // If it's the first click or still haven't reached 5
@@ -1062,7 +1052,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void refreshPresetButtons() {
+    public void refreshPresetButtons() {
         for(int i=0; i<PRESETS_COUNT; i++) {
             String key = "P" + (i+1) + "_B" + mCurrentBand;
             setupPresetCard(i, key);
@@ -1372,6 +1362,32 @@ public class MainActivity extends AppCompatActivity {
         } else {
             tv.setTextColor(Color.parseColor("#FFFFFF"));
             tv.setAlpha(0.3f);
+        }
+    }
+
+    /**
+     * V5.0: Updates PTY Label and Icon based on RDS data.
+     */
+    private void updatePtyUI(String pty) {
+        if (pty == null || pty.isEmpty()) {
+            if (tvPty != null) tvPty.setVisibility(View.GONE);
+            if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
+            return;
+        }
+
+        if (tvPty != null) {
+            tvPty.setText(pty);
+            tvPty.setVisibility(View.VISIBLE);
+        }
+
+        if (ivPtyIcon != null) {
+            int iconRes = PtyManager.getPtyIconResource(pty);
+            if (iconRes != 0) {
+                ivPtyIcon.setImageResource(iconRes);
+                ivPtyIcon.setVisibility(View.VISIBLE);
+            } else {
+                ivPtyIcon.setVisibility(View.GONE);
+            }
         }
     }
 

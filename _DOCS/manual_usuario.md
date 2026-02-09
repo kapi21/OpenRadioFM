@@ -38,7 +38,8 @@ Elige entre 10 esquemas de color que se aplican a los bordes y acentos. En **Mod
 
 ### 3.1 Logos de Emisoras (Hybrid Logic)
 La app busca logos de tres formas:
-1. **Local:** En `/sdcard/RadioLogos/frecuencia.png` (ej. `94.1.png`).
+1. **Local:** En `/sdcard/RadioLogos/frecuencia_khz.png`.
+   - Ejemplo: Para 94.1 MHz => **94100.png** o **9410.png**.
 2. **API Online:** Si está activado en ajustes, descarga logos automáticamente.
 3. **Prioridad:** El logo local siempre tiene prioridad sobre el online.
 

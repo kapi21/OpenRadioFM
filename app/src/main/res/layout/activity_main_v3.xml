@@ -216,6 +216,19 @@
             android:textStyle="bold"
             android:visibility="gone" />
 
+        <!-- V5.0: PTY Icon -->
+        <ImageView
+            android:id="@+id/ivPtyIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="90dp"
+            android:layout_marginBottom="8dp"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            tools:src="@drawable/ic_pty_music"
+            android:tint="@color/white" />
+
         <ImageView
             android:id="@+id/ivFavoriteIndicator"
             android:layout_width="64dp"
