@@ -1,0 +1,582 @@
+[
+    {
+        "id": "189",
+        "name": "Los Megaexitos",
+        "genre": "Pop, Rock",
+        "slogan": "La música de tu vida",
+        "logo_url": "http://116.203.217.114/radio/uploads/f4e567405185d2ea26231b7304b99eaf.png",
+        "stream_url": "https://losmegaexitos.radioca.st/lms",
+        "frequency": "0.1",
+        "active": true
+    },
+    {
+        "id": "99",
+        "name": "Onda Latina",
+        "genre": "Classic, Culture",
+        "slogan": "La radio diferente",
+        "logo_url": "http://116.203.217.114/radio/uploads/eba08a92c6d8c42dfb739e1db99378da.png",
+        "stream_url": "https://cervera.eldialdigital.com:21131/stream",
+        "frequency": "87.6",
+        "active": true
+    },
+    {
+        "id": "2152",
+        "name": "Rac1",
+        "genre": "News, Talk",
+        "slogan": "Últimes noticies, ràdio en directe i podcasts a la carta",
+        "logo_url": "http://116.203.217.114/radio/uploads/ebf669f7fdbb5f7e98debce4b051b4c4.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RAC_1.mp3",
+        "frequency": "87.7",
+        "active": true
+    },
+    {
+        "id": "2145",
+        "name": "Nervión",
+        "genre": "Adult Contemporary",
+        "slogan": "La Radio de la Gran Familia",
+        "logo_url": "http://116.203.217.114/radio/uploads/3c7b32f5eba4204e1f21a906e3f03bcd.png",
+        "stream_url": "https://gruponervion.streaming-pro.com:6131/radionervion.mp3",
+        "frequency": "88",
+        "active": true
+    },
+    {
+        "id": "1068",
+        "name": "RNE",
+        "genre": "News, Talk",
+        "slogan": "La fuerza de Radio Nacional",
+        "logo_url": "http://116.203.217.114/radio/uploads/3ef6cbd0c910d7b8451abbfc78c550f8.png",
+        "stream_url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r1_main.m3u8",
+        "frequency": "88.2",
+        "active": true
+    },
+    {
+        "id": "640",
+        "name": "Los 40 Classic",
+        "genre": "Classic Hits",
+        "slogan": "La emisora con todos los nº1 de tu vida",
+        "logo_url": "http://116.203.217.114/radio/uploads/84ea55f6079db3c46f4c282ba0f25e7e.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_CLASSICAAC.aac",
+        "frequency": "89",
+        "active": true
+    },
+    {
+        "id": "951",
+        "name": "Pepe",
+        "genre": "Pop, Rock",
+        "slogan": "La Popyrock de Madrid, Valladolid, Zaragoza, Bilbao y Quintana de la Serena (Badajoz)",
+        "logo_url": "http://116.203.217.114/radio/uploads/bfcfa6db67fae078d36a45f34f05a77e.png",
+        "stream_url": "https://server10.emitironline.com:8032/",
+        "frequency": "89.3",
+        "active": true
+    },
+    {
+        "id": "188",
+        "name": "Hit FM",
+        "genre": "Pop, Rock",
+        "slogan": "HITS y soló HITS",
+        "logo_url": "http://116.203.217.114/radio/uploads/a5f94589760225fdfaf57432c13f595d.png",
+        "stream_url": "http://hitfm.kissfmradio.cires21.com/hitfm.mp3",
+        "frequency": "89.9",
+        "active": true
+    },
+    {
+        "id": "1069",
+        "name": "RNE 5",
+        "genre": "News, Talk",
+        "slogan": "Información y servicio público",
+        "logo_url": "http://116.203.217.114/radio/uploads/bb0b2af68031d18e6c479bf2b4d18966.png",
+        "stream_url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r5_madrid_main.m3u8",
+        "frequency": "90.3",
+        "active": true
+    },
+    {
+        "id": "187",
+        "name": "Europa FM",
+        "genre": "Pop, Rock",
+        "slogan": "El mejor pop-rock del 2000 hasta hoy",
+        "logo_url": "http://116.203.217.114/radio/uploads/772ed32582a3625c73d96e173c09285b.png",
+        "stream_url": "https://livefastly-webs.europafm.com/europafm/audio/master.m3u8",
+        "frequency": "91",
+        "active": true
+    },
+    {
+        "id": "103",
+        "name": "Cadena Dial",
+        "genre": "Pop, Rock",
+        "slogan": "Lo mejor de nuestra música",
+        "logo_url": "http://116.203.217.114/radio/uploads/35ce630daf5d7b712ec9b155f66a4dc8.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENADIAL_SC",
+        "frequency": "91.7",
+        "active": true
+    },
+    {
+        "id": "972",
+        "name": "Radiolé",
+        "genre": "Pop, Rock",
+        "slogan": "La alegría de la música en español",
+        "logo_url": "http://116.203.217.114/radio/uploads/7347392923e35157dbf38cdc0a251981.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOLEAAC.aac",
+        "frequency": "92.4",
+        "active": true
+    },
+    {
+        "id": "98",
+        "name": "Es Radio",
+        "genre": "News, Talk",
+        "slogan": "Radio en español",
+        "logo_url": "http://116.203.217.114/radio/uploads/955931cf17e679b7ac29fa635ed42c41.png",
+        "stream_url": "https://libertaddigital-radio-live1.flumotion.com/libertaddigital/ld-live1-med.aac",
+        "frequency": "92.5",
+        "active": true
+    },
+    {
+        "id": "2230",
+        "name": "Gozadera FM",
+        "genre": "Reggae, Latino",
+        "slogan": "La Radio del Reggaeton",
+        "logo_url": "http://116.203.217.114/radio/uploads/aa82ceb33cfcdc1fa3bc15f4a9d40332.png",
+        "stream_url": "https://azura.abcorp.es/radio/8030/live",
+        "frequency": "92.7",
+        "active": true
+    },
+    {
+        "id": "1105",
+        "name": "Radio Algeciras",
+        "genre": "News, Talk",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/7fa82c4b4055559ed183a52cebb94a30.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_ALGECIRAS_SC",
+        "frequency": "93",
+        "active": true
+    },
+    {
+        "id": "2209",
+        "name": "Gorbea",
+        "genre": "Pop",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/cfad68d089cd3e5ec97f59afdcd0eaab.png",
+        "stream_url": "https://gruponervion.streaming-pro.com:6135/radiogorbea.mp3",
+        "frequency": "93.1",
+        "active": true
+    },
+    {
+        "id": "641",
+        "name": "RNE 3",
+        "genre": "Pop, News",
+        "slogan": "Eres lo que escuchas",
+        "logo_url": "http://116.203.217.114/radio/uploads/dbdcd99eeabd0abcb88b0d1ef58f8212.png",
+        "stream_url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r3_main.m3u8",
+        "frequency": "93.2",
+        "active": true
+    },
+    {
+        "id": "2248",
+        "name": "Radio Bilbao",
+        "genre": "News, Talk",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/2558e8526b24a939dc21ccb154280110.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_BILBAOAAC.aac",
+        "frequency": "93.2",
+        "active": true
+    },
+    {
+        "id": "1389",
+        "name": "Cope Valencia",
+        "genre": "News, Talk",
+        "slogan": "Cope, estar informado",
+        "logo_url": "http://116.203.217.114/radio/uploads/231d0687aa794f6af2275fc24a5980d9.png",
+        "stream_url": "https://wecast-b03-01.flumotion.com/copesedes/valencia.mp3",
+        "frequency": "93.4",
+        "active": true
+    },
+    {
+        "id": "1084",
+        "name": "Cartagena",
+        "genre": "News, Talk",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/918c33308bd7ca27d08098a097da1b58.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/SER_CARTAGENA_SC",
+        "frequency": "93.5",
+        "active": true
+    },
+    {
+        "id": "1902",
+        "name": "Master FM",
+        "genre": "Pop, Rock",
+        "slogan": "Tu dial musical",
+        "logo_url": "http://116.203.217.114/radio/uploads/1fa7fbd8d8471ebb539089213dc0c036.png",
+        "stream_url": "http://82.223.102.59:8002/;",
+        "frequency": "93.7",
+        "active": true
+    },
+    {
+        "id": "100",
+        "name": "Los 40",
+        "genre": "Pop, Rock",
+        "slogan": "Todos Los Éxitos",
+        "logo_url": "http://116.203.217.114/radio/uploads/0184ca474fd7dab9d701a11b4d7ae075.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40AAC.aac",
+        "frequency": "93.9",
+        "active": true
+    },
+    {
+        "id": "984",
+        "name": "Carrusel FM",
+        "genre": "Pop, Rock",
+        "slogan": "Radio española",
+        "logo_url": "http://116.203.217.114/radio/uploads/9727a1843819651927348000e53020c6.png",
+        "stream_url": "https://server10.emitironline.com:8921/radio",
+        "frequency": "94.1",
+        "active": true
+    },
+    {
+        "id": "1831",
+        "name": "Das Inselradio Mallorca",
+        "genre": "Adult Contemporary",
+        "slogan": "Sonnenoptimierter Mix für Mallorca",
+        "logo_url": "http://116.203.217.114/radio/uploads/1ebf70225d49fe738d7e98efce1a0348.png",
+        "stream_url": "https://stream2.inselradio.com/high.inselradio.mp3",
+        "frequency": "95.8",
+        "active": true
+    },
+    {
+        "id": "96",
+        "name": "Loca FM",
+        "genre": "Pop, Rock",
+        "slogan": "Electrónica Música Radio",
+        "logo_url": "http://116.203.217.114/radio/uploads/0b0aadd529376fb123cc0f5ddaf494db.png",
+        "stream_url": "http://s3.we4stream.com:8045/liv",
+        "frequency": "96",
+        "active": true
+    },
+    {
+        "id": "644",
+        "name": "RNE Clásica",
+        "genre": "Classic, Culture",
+        "slogan": "La fuerza de la música",
+        "logo_url": "http://116.203.217.114/radio/uploads/9684bdcf4098f5bd5db26443224991fe.png",
+        "stream_url": "https://rtvelivestream.akamaized.net/rtvesec/rne/rne_r2_main.m3u8",
+        "frequency": "96.5",
+        "active": true
+    },
+    {
+        "id": "1194",
+        "name": "Los 40 Urban",
+        "genre": "Dance, Pop",
+        "slogan": "El ritmo de la calle",
+        "logo_url": "http://116.203.217.114/radio/uploads/db8c2e22b73c2593edaa912f67cac7a8.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_URBANAAC.aac",
+        "frequency": "97.1",
+        "active": true
+    },
+    {
+        "id": "2247",
+        "name": "Cope Bilbao",
+        "genre": "News, Talk",
+        "slogan": "Cope, estar informado",
+        "logo_url": "http://116.203.217.114/radio/uploads/abfc8ba19463ca417dc7331e5c82892b.png",
+        "stream_url": "https://wecast-b03-03.flumotion.com/copesedes/bilbao.mp3",
+        "frequency": "97.8",
+        "active": true
+    },
+    {
+        "id": "639",
+        "name": "Onda Cero",
+        "genre": "News, Talk",
+        "slogan": "Tu radio",
+        "logo_url": "http://116.203.217.114/radio/uploads/1997d8d9ba82b4516e86f0c98293da15.png",
+        "stream_url": "https://atres-live.ondacero.es/live/ondacero/master.m3u8",
+        "frequency": "98",
+        "active": true
+    },
+    {
+        "id": "103",
+        "name": "Gum FM",
+        "genre": "Pop, Rock",
+        "slogan": "La Chewing Gum De Catalunya",
+        "logo_url": "http://116.203.217.114/radio/uploads/c95765b636aeba9e9989f10c106fbab9.png",
+        "stream_url": "https://s4.radio.co/sc1cb45a9f/listen",
+        "frequency": "98.8",
+        "active": true
+    },
+    {
+        "id": "93",
+        "name": "Latino FM",
+        "genre": "Pop, Rock",
+        "slogan": "¡Te gusta LATINO FM!",
+        "logo_url": "http://116.203.217.114/radio/uploads/9da47ffe10c9db16e02bda8ed1367ea8.png",
+        "stream_url": "http://185.23.192.118:8000/;stream.mp3",
+        "frequency": "99.5",
+        "active": true
+    },
+    {
+        "id": "2050",
+        "name": "Cope Sevilla",
+        "genre": "News, Talk",
+        "slogan": "Cope, estar informado",
+        "logo_url": "http://116.203.217.114/radio/uploads/cc19177baf69a36ce60038d628a9fdbc.png",
+        "stream_url": " https://sevilla-copesedes-rrcast.flumotion.com/copesedes/sevilla.mp3",
+        "frequency": "99.6",
+        "active": true
+    },
+    {
+        "id": "185",
+        "name": "Cadena 100",
+        "genre": "Pop, Rock",
+        "slogan": "La mejor variedad musical",
+        "logo_url": "http://116.203.217.114/radio/uploads/8ae4ea41630d61f28506130c92e83bdf.png",
+        "stream_url": "https://cadena100-cope-rrcast.flumotion.com/cope/cadena100-low.mp3",
+        "frequency": "100",
+        "active": true
+    },
+    {
+        "id": "101",
+        "name": "MegaStar FM",
+        "genre": "Pop, Rock",
+        "slogan": "Solo temazos",
+        "logo_url": "http://116.203.217.114/radio/uploads/51746289c0568492bbab9811161cb366.png",
+        "stream_url": "https://megastar-cope.flumotion.com/playlist.m3u8",
+        "frequency": "100.7",
+        "active": true
+    },
+    {
+        "id": "719",
+        "name": "Melodía FM",
+        "genre": "Pop, Rock",
+        "slogan": "Siente la buena música",
+        "logo_url": "http://116.203.217.114/radio/uploads/372f803371f09a00ba28711ad49c95c8.png",
+        "stream_url": "https://livefastly-webs.melodia-fm.com/melodiafm/audio/master.m3u8",
+        "frequency": "101",
+        "active": true
+    },
+    {
+        "id": "2189",
+        "name": "Cope Pamplona",
+        "genre": "News, Talk",
+        "slogan": "Cope, estar informado",
+        "logo_url": "http://116.203.217.114/radio/uploads/3cb6c6d1c3228c494e464f02b83bb718.png",
+        "stream_url": "https://wecast-m01-02.flumotion.com/copesedes/pamplona.mp3",
+        "frequency": "101.2",
+        "active": true
+    },
+    {
+        "id": "642",
+        "name": "Rock FM",
+        "genre": "Rock",
+        "slogan": "Radio en Español",
+        "logo_url": "http://116.203.217.114/radio/uploads/66812c09c67bc96a3206e7f60ee595c3.png",
+        "stream_url": "https://rockfm-cope.flumotion.com/playlist.m3u8",
+        "frequency": "101.6",
+        "active": true
+    },
+    {
+        "id": "186",
+        "name": "Kiss FM",
+        "genre": "Pop, Rock",
+        "slogan": "La mejor de los 80 y los 90 hasta hoy",
+        "logo_url": "http://116.203.217.114/radio/uploads/f6ff235d0b4609bbc656513413b8f85c.png",
+        "stream_url": "http://kissfm.kissfmradio.cires21.com/kissfm.mp3",
+        "frequency": "101.7",
+        "active": true
+    },
+    {
+        "id": "970",
+        "name": "Cope Barcelona",
+        "genre": "News, Talk",
+        "slogan": "Cope, estar informado",
+        "logo_url": "http://116.203.217.114/radio/uploads/7d7dbeaa1d874a2dddfdaefbd586e2da.png",
+        "stream_url": "https://wecast-m02-04.flumotion.com/copesedes/barcelona.mp3",
+        "frequency": "102",
+        "active": true
+    },
+    {
+        "id": "97",
+        "name": "Chanquete FM",
+        "genre": "Pop, Rock",
+        "slogan": "Más malagueña imposible",
+        "logo_url": "http://116.203.217.114/radio/uploads/a3851b99f2edab9d02118c2776723060.png",
+        "stream_url": "http://185.23.192.118:8008/;stream.mp3",
+        "frequency": "102.5",
+        "active": true
+    },
+    {
+        "id": "1610",
+        "name": "Catalunya",
+        "genre": "Adult Contemporary",
+        "slogan": "La radio nacional de Catalunya / Viu amb tu",
+        "logo_url": "http://116.203.217.114/radio/uploads/1c444d3235f7e8f6b9e7fd81b5a9214a.png",
+        "stream_url": "http://directes-radio-int.ccma.cat/live-content/catalunya-radio-hls/master.m3u8",
+        "frequency": "102.8",
+        "active": true
+    },
+    {
+        "id": "2110",
+        "name": "Unika FM",
+        "genre": "Dance",
+        "slogan": "Mucho más que Dance!",
+        "logo_url": "http://116.203.217.114/radio/uploads/2d9174aa22934a1e3c19737a55966042.png",
+        "stream_url": "https://stream.radiojar.com/7qyvpnex9vzuv",
+        "frequency": "103",
+        "active": true
+    },
+    {
+        "id": "1016",
+        "name": "Marca Nacional",
+        "genre": "Sport, Talk",
+        "slogan": "La ràdio dels esports",
+        "logo_url": "http://116.203.217.114/radio/uploads/6ca59a8f89b926a22458c16d4ce2e33a.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/RADIOMARCA_NACIONAL",
+        "frequency": "103.5",
+        "active": true
+    },
+    {
+        "id": "2107",
+        "name": "Kyoto FM",
+        "genre": "Pop",
+        "slogan": "La variedad que te gusta",
+        "logo_url": "http://116.203.217.114/radio/uploads/2f5c08e8c5a902148df7d702e8756e50.png",
+        "stream_url": "https://sonic.mediatelekom.net/8148/stream",
+        "frequency": "103.7",
+        "active": true
+    },
+    {
+        "id": "971",
+        "name": "Canal Fiesta",
+        "genre": "Pop, Rock",
+        "slogan": "La radio musical de Andalucía",
+        "logo_url": "http://116.203.217.114/radio/uploads/3253a92e657818da01f207166942e7fe.png",
+        "stream_url": "https://cdnlive.shooowit.net/rtvalive/smil:channel5.smil/playlist.m3u8",
+        "frequency": "103.9",
+        "active": true
+    },
+    {
+        "id": "2301",
+        "name": "Galega",
+        "genre": "News, Talk",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/6911f4b499070a82e2c1a6fcea31bc9a.png",
+        "stream_url": "https://wecast03-h-cloud.flumotion.com/radiogalega/live.mp3",
+        "frequency": "104.2",
+        "active": true
+    },
+    {
+        "id": "190",
+        "name": "Los 40 Dance",
+        "genre": "Electronic Dance",
+        "slogan": "Puro Dance Radio",
+        "logo_url": "http://116.203.217.114/radio/uploads/236ce2313e626e21d635ca7dbd84cd19.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/LOS40_DANCEAAC.aac",
+        "frequency": "104.3",
+        "active": true
+    },
+    {
+        "id": "1674",
+        "name": "Activa FM",
+        "genre": "Pop, Rock",
+        "slogan": "La mejor combinación de éxitos",
+        "logo_url": "http://116.203.217.114/radio/uploads/0ca3c4e45c6a7f7f92f49dbdf1ae21cf.png",
+        "stream_url": "https://stream.mediasector.es/radio/8000/activafm.mp3",
+        "frequency": "104.6",
+        "active": true
+    },
+    {
+        "id": "95",
+        "name": "Rac105",
+        "genre": "Pop, Rock",
+        "slogan": "Be yourself!",
+        "logo_url": "http://116.203.217.114/radio/uploads/d514c32c491a2e2f5c3998a69c975b87.png",
+        "stream_url": "https://streaming.rac105.cat/;9450883472805471stream.nsv",
+        "frequency": "105",
+        "active": true
+    },
+    {
+        "id": "1807",
+        "name": "Canal Sur",
+        "genre": "Pop, Rock",
+        "slogan": "Lo mejor de ti",
+        "logo_url": "http://116.203.217.114/radio/uploads/5e9966c14affaff5e2243b6de7089e5c.png",
+        "stream_url": "https://cdnlive.shooowit.net/rtvalive/smil:channel4.smil/playlist.m3u8",
+        "frequency": "105.1",
+        "active": true
+    },
+    {
+        "id": "2101",
+        "name": "La Fresca",
+        "genre": "Pop",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/10d9ad7b4ca8874cd610522db3173d67.png",
+        "stream_url": "https://stream.produccionesdale.com:8900/moviles",
+        "frequency": "105.3",
+        "active": true
+    },
+    {
+        "id": "643",
+        "name": "Cadena SER",
+        "genre": "News, Talk",
+        "slogan": "El poder de la voz",
+        "logo_url": "http://116.203.217.114/radio/uploads/e646768aa0c5894a9df0810d0d40fa2a.png",
+        "stream_url": "https://playerservices.streamtheworld.com/api/livestream-redirect/CADENASERAAC.aac",
+        "frequency": "105.4",
+        "active": true
+    },
+    {
+        "id": "102",
+        "name": "Flaix FM",
+        "genre": "House, Dance",
+        "slogan": "Radio en español",
+        "logo_url": "http://116.203.217.114/radio/uploads/d6b6ac2e0c7ad992712c1d09c4cf9977.png",
+        "stream_url": "http://flaixfmweb.streaming-pro.com:8000/;",
+        "frequency": "105.7",
+        "active": true
+    },
+    {
+        "id": "718",
+        "name": "Flaixbac",
+        "genre": "Pop, Latin",
+        "slogan": "Només èxits",
+        "logo_url": "http://116.203.217.114/radio/uploads/414210a51fc8ac34c2596c2044ed2f69.png",
+        "stream_url": "https://flaixbac.streaming-pro.com:8007/flaixbac.aacp",
+        "frequency": "106.1",
+        "active": true
+    },
+    {
+        "id": "973",
+        "name": "Cope Madrid",
+        "genre": "News, Talk",
+        "slogan": "Cope, estar informado",
+        "logo_url": "http://116.203.217.114/radio/uploads/1f30050783351be699ecad8eacae61d2.png",
+        "stream_url": "https://madrid-cope-flucast.flumotion.com/cope/madrid.mp3.m3u",
+        "frequency": "106.3",
+        "active": true
+    },
+    {
+        "id": "2221",
+        "name": "Espinosa Merindades",
+        "genre": "Adult Contemporary",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/7512a8a8620a5b52fe8f09f6bb48ae8e.png",
+        "stream_url": "https://srv7021.dns-lcinternet.com/8072/stream",
+        "frequency": "107.5",
+        "active": true
+    },
+    {
+        "id": "2258",
+        "name": "Radio Chiclana",
+        "genre": "Adult Contemporary",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/ecfca5c1b6cc696398812a8829977fa6.png",
+        "stream_url": "http://srv0435.lcinternet.com:8000/stream",
+        "frequency": "107.7",
+        "active": true
+    },
+    {
+        "id": "2369",
+        "name": "Campillos",
+        "genre": "Adult Contemporary",
+        "slogan": "Radio Española",
+        "logo_url": "http://116.203.217.114/radio/uploads/d60e89fc7fbaadb140f3ec051dc33c84.png",
+        "stream_url": "https://srv7031.dns-lcinternet.com/8074/stream",
+        "frequency": "107.9",
+        "active": true
+    }
+]

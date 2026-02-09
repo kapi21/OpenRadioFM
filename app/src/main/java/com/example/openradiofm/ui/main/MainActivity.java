@@ -15,6 +15,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.example.openradiofm.utils.PtyManager; // V5.0
+import com.example.openradiofm.utils.MetadataUtils;
 import android.widget.Toast;
 import android.widget.LinearLayout;
 import android.graphics.Color;
@@ -40,29 +41,32 @@ import com.example.openradiofm.R;
  * - Gestionar presets, logos locales y botones de control.
  *
  * Notas de diseño:
- * - El sondeo del estado de la radio se hace en un hilo de fondo mediante Timer,
- *   y solo las actualizaciones de UI pasan por runOnUiThread() para no bloquear
- *   el hilo principal.
+ * - El sondeo del estado de la radio se hace en un hilo de fondo mediante
+ * Timer,
+ * y solo las actualizaciones de UI pasan por runOnUiThread() para no bloquear
+ * el hilo principal.
  * - Los recursos de hardware (servicio, proceso root, listener RDS oculto) se
- *   liberan explícitamente en onDestroy() para evitar fugas de memoria.
+ * liberan explícitamente en onDestroy() para evitar fugas de memoria.
  */
 public class MainActivity extends AppCompatActivity {
-    
+
     // V4.0: Language Context Wrapper (CORRECTED)
     @Override
     protected void attachBaseContext(Context newBase) {
         String lang = "es"; // Default
         try {
             // Use "RadioPresets" to match onCreate
-            android.content.SharedPreferences prefs = newBase.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE);
+            android.content.SharedPreferences prefs = newBase.getSharedPreferences("RadioPresets",
+                    Context.MODE_PRIVATE);
             lang = prefs.getString("app_language", "es");
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
         super.attachBaseContext(MyContextWrapper.wrap(newBase, lang));
     }
 
     private static final String TAG = "OpenRadioFm";
     private static final int PRESETS_COUNT = 15; // Updated to match V4 max presets
-    
+
     // Band Constants
     private static final int BAND_FM1 = 0;
     private static final int BAND_FM2 = 1;
@@ -73,7 +77,8 @@ public class MainActivity extends AppCompatActivity {
     /**
      * Modos de funcionamiento de la app:
      * - FM_COMPLETO: dispositivo con root + servicio especial del coche disponible.
-     * - FM_BASICO: sin root o sin servicio; solo frecuencia + logos en SD (y, más adelante, nombres manuales).
+     * - FM_BASICO: sin root o sin servicio; solo frecuencia + logos en SD (y, más
+     * adelante, nombres manuales).
      */
     private enum FmMode {
         FM_COMPLETO,
@@ -84,19 +89,19 @@ public class MainActivity extends AppCompatActivity {
     com.example.openradiofm.data.repository.RadioRepository mRepository;
     android.content.SharedPreferences mPrefs;
     HiddenRadioPlayer mHiddenPlayer;
-    
+
     // V3.0: Caché de logos por banda
     int mLastFreq = -1;
     boolean mHasRdsLock = false;
     String mCurrentPty = null; // V5.2: Live PTY persistence
     private String mLastLogoUrl = "";
     private java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
-    
+
     // V5.0: UI Elements (Fixing Compilation Errors)
     private TextView tvPty;
     private ImageView ivSignalLevel;
     private ImageView ivPtyIcon; // V5.0: Categorical Icon
-    
+
     // V5.0: State & Presets
     private boolean mMuteState = false;
     private com.example.openradiofm.ui.theme.ThemeManager.Skin mCurrentSkin = com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC_GRAY;
@@ -120,9 +125,9 @@ public class MainActivity extends AppCompatActivity {
             this.bars = bars;
         }
     }
-    
+
     private SignalQuality mCurrentQuality = SignalQuality.NO_SIGNAL;
-    
+
     // V3.0: Background personalizado
     private android.view.View mRootLayout;
 
@@ -139,9 +144,7 @@ public class MainActivity extends AppCompatActivity {
 
     private FmMode mMode = FmMode.FM_BASICO;
     private boolean mIsV3 = false; // V5.4: Track Layout 3 active
-    
 
-    
     private void animateButton(View v) {
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(v, "scaleX", 1.0f, 0.9f, 1.0f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(v, "scaleY", 1.0f, 0.9f, 1.0f);
@@ -188,19 +191,20 @@ public class MainActivity extends AppCompatActivity {
         mHiddenPlayer = new HiddenRadioPlayer(new HiddenRadioPlayer.Listener() {
             @Override
             public void onRdsText(String text) {
+                String cleanedText = MetadataUtils.cleanRdsText(text);
                 runOnUiThread(() -> {
                     if (tvRdsInfo != null) {
                         String current = tvRdsInfo.getText().toString();
-                        if (!current.equals(text)) {
-                            tvRdsInfo.setText(text);
-                            if (text == null || text.trim().isEmpty()) {
+                        if (!current.equals(cleanedText)) {
+                            tvRdsInfo.setText(cleanedText);
+                            if (cleanedText == null || cleanedText.trim().isEmpty()) {
                                 // V5.0: Keep visible in V2 to prevent shifts
                                 tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                             } else {
                                 tvRdsInfo.setVisibility(View.VISIBLE);
                             }
                         }
-                        mHasRdsLock = (text != null && !text.isEmpty());
+                        mHasRdsLock = (cleanedText != null && !cleanedText.isEmpty());
                     }
                 });
             }
@@ -240,16 +244,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     // ScheduledExecutorService para sondear el estado de la radio en segundo plano.
     // Más robusto que Timer y evita fugas de memoria.
     private java.util.concurrent.ScheduledExecutorService mPollingExecutor;
+
     /**
      * Inicia el sondeo periódico del estado de la radio.
      *
      * IMPORTANTE:
      * - El trabajo pesado (llamadas AIDL y acceso al repositorio/root) se ejecuta
-     *   en el hilo del ScheduledExecutorService (en segundo plano).
+     * en el hilo del ScheduledExecutorService (en segundo plano).
      * - Solo el pintado de la interfaz se hace dentro de runOnUiThread().
      */
     private void startStatusPolling() {
@@ -261,6 +265,7 @@ public class MainActivity extends AppCompatActivity {
             refreshRadioStatus();
         }, 500, 500, java.util.concurrent.TimeUnit.MILLISECONDS);
     }
+
     /**
      * Detiene el sondeo de estado si está activo.
      */
@@ -275,7 +280,8 @@ public class MainActivity extends AppCompatActivity {
     // pero es importante desregistrarlo en onDestroy() para no filtrar la Activity.
     // Callback mínimo para eventos del servicio de radio.
     private final IRadioCallBack mCallback = new IRadioCallBack.Stub() {
-        @Override public void onEvent(int code, String data) {
+        @Override
+        public void onEvent(int code, String data) {
             // V5.2: Catch PTY event from service if available (0x22 = 34)
             if (code == 34 || code == 0x22) {
                 mCurrentPty = data;
@@ -286,16 +292,16 @@ public class MainActivity extends AppCompatActivity {
 
     private int mTestClickCount = 0;
     private long mTestStartTime = 0;
-    
+
     // V8.5: Credits Easter Egg Variables (Restored)
     private int mCreditsClickCount = 0;
     private long mCreditsStartTime = 0;
-    
-
 
     /**
-     * Envía una tecla al MCU del coche usando la API interna android.carsource.McuManager.
-     * Todo el acceso va envuelto en try/catch para que en dispositivos sin esta clase
+     * Envía una tecla al MCU del coche usando la API interna
+     * android.carsource.McuManager.
+     * Todo el acceso va envuelto en try/catch para que en dispositivos sin esta
+     * clase
      * simplemente se muestre un Toast y no se cierre la app.
      */
     private void sendMcuKey(int key) {
@@ -333,34 +339,35 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "State Restored: Freq=" + mLastFreq);
         }
 
-        
         // V3.0: Layout Selection
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
         mIsV3 = mPrefs.getBoolean("pref_layout_v3", false);
-        
+
         if (mIsV3) {
             getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
             // Optional: If we want to ensure it's not translucent
             // getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FORCE_NOT_FULLSCREEN);
         }
-        
+
         setContentView(mIsV3 ? R.layout.activity_main_v3 : R.layout.activity_main);
 
         // V3.8: Premium Background Binding
         ivDynamicBackground = findViewById(R.id.ivDynamicBackground);
 
-        if (checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(
+                android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
         }
 
         // V2.0: Crear carpeta RadioLogos si no existe
         createRadioLogosFolder();
-        
+
         // V2.0: Cargar fondo personalizado si existe
         loadCustomBackground();
         loadCarLogo(); // V3.9: Cargar logo marca coche
 
-        // Determinar modo de funcionamiento (FM completo vs básico) antes de crear el repositorio.
+        // Determinar modo de funcionamiento (FM completo vs básico) antes de crear el
+        // repositorio.
         mMode = detectMode();
         Log.d(TAG, "Modo de funcionamiento: " + mMode);
 
@@ -380,43 +387,56 @@ public class MainActivity extends AppCompatActivity {
         tvFrequency = findViewById(R.id.tvFrequency);
         tvRdsName = findViewById(R.id.tvRdsName); // V5
         tvRdsInfo = findViewById(R.id.tvRdsInfo);
-        
+
         // V4.3: New UI Elements
         tvPty = findViewById(R.id.tvPty);
         ivSignalLevel = findViewById(R.id.ivSignalLevel);
         ivPtyIcon = findViewById(R.id.ivPtyIcon); // V5.0
-        
+
         btnLocDx = findViewById(R.id.btnLocDx);
         btnBand = findViewById(R.id.btnBand);
-        
+
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
         ivUnitLabel = findViewById(R.id.ivUnitLabel);
         ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
-        
+
         android.view.View boxLogo = findViewById(R.id.boxLogo);
+
         if (boxLogo != null) {
-            boxLogo.setOnClickListener(v -> showHistoryDialog());
+            boxLogo.setOnClickListener(v -> {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin next = new com.example.openradiofm.ui.theme.ThemeManager(
+                        this).cycleSkin();
+                applySkin(next);
+                showToast("Skin: " + next.displayName);
+            });
+            boxLogo.setOnLongClickListener(v -> {
+                showHistoryDialog();
+                return true;
+            });
         }
         if (tvRdsName != null) {
-            tvRdsName.setOnClickListener(v -> showHistoryDialog());
+            tvRdsName.setOnClickListener(v -> {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin next = new com.example.openradiofm.ui.theme.ThemeManager(
+                        this).cycleSkin();
+                applySkin(next);
+                showToast("Skin: " + next.displayName);
+            });
         }
-        
-        
+
         // Indicators Binding - REMOVED
 
-
-        
         // Configurar controles (EQ, Mute, Test, AutoScan, LOC/DX)
         setupControlButtons();
-        
+
         // Configurar indicadores de estado (Eliminados)
         // setupIndicators();
-        
+
         // Aplicar Skin guardado
-        com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
+        com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(
+                this);
         applySkin(themeManager.getCurrentSkin());
         checkAndApplyNightMode(); // V4: Automatic Night Mode
-        
+
         // Seeking Logic
         setupSeekButtons();
 
@@ -424,10 +444,10 @@ public class MainActivity extends AppCompatActivity {
         bindPresetViews();
         // Initial Refresh (will be updated again when band is fetched)
         refreshPresetButtons();
-        
+
         setupRdsText();
         applyFonts();
-        
+
         // V10: Custom User Names
         // V10: Custom User Names
         setupCustomNameEditing();
@@ -438,7 +458,7 @@ public class MainActivity extends AppCompatActivity {
         // Conectamos con el servicio de radio del coche.
         conectarRadio();
     }
-    
+
     /**
      * Configura los botones de control (EQ, Mute, Test, AutoScan, LOC/DX).
      */
@@ -447,7 +467,7 @@ public class MainActivity extends AppCompatActivity {
         ImageButton btnEq = findViewById(R.id.btnSettings);
         if (btnEq != null) {
             btnEq.setOnClickListener(v -> sendMcuKey(0x134)); // Keycode 308 for DSP
-            
+
             // Long Click para abrir selector de skins
             btnEq.setOnLongClickListener(v -> {
                 showPremiumSettingsDialog();
@@ -462,7 +482,7 @@ public class MainActivity extends AppCompatActivity {
                 boolean newState = !mMuteState;
                 setMute(newState);
                 // V4.3: Mute Icon Logic (Selected = Mute On = Speaker+X)
-                btnMute.setSelected(newState); 
+                btnMute.setSelected(newState);
                 btnMute.setImageResource(newState ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
             });
         }
@@ -472,7 +492,7 @@ public class MainActivity extends AppCompatActivity {
         if (btnGps != null) {
             btnGps.setOnClickListener(v -> {
                 long now = System.currentTimeMillis();
-                
+
                 // Track clicks for hidden menu
                 if (mTestClickCount == 0 || (now - mTestStartTime) > 3000) {
                     mTestClickCount = 1;
@@ -508,7 +528,7 @@ public class MainActivity extends AppCompatActivity {
             btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f); // V4.3 Corrected to _f
             btnAutoScan.setOnClickListener(v -> promptAutoScan());
         }
-        
+
         // LOC/DX Switch
         btnLocDx = findViewById(R.id.btnLocDx);
         if (btnLocDx != null) {
@@ -522,7 +542,7 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             });
         }
-        
+
         // V4.0: Extra Button 1 - Android Settings
         ImageButton btnExtra1 = findViewById(R.id.btnExtra1);
         if (btnExtra1 != null) {
@@ -536,7 +556,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-        
+
         // V4.0: Extra Button 2 - Save/Load Favorites
         ImageButton btnExtra2 = findViewById(R.id.btnExtra2);
         if (btnExtra2 != null) {
@@ -551,7 +571,7 @@ public class MainActivity extends AppCompatActivity {
         if (tvRdsName != null) {
             // Click normal: Mostrar historial
             tvRdsName.setOnClickListener(v -> showHistoryDialog());
-            
+
             // Long click: Editar nombre
             tvRdsName.setOnLongClickListener(v -> {
                 showEditNameDialog();
@@ -562,36 +582,42 @@ public class MainActivity extends AppCompatActivity {
         // También en el logo principal, por si tvRdsName está vacío
         android.view.View ivMainLogo = findViewById(R.id.ivMainLogo);
         if (ivMainLogo != null) {
-            // Click normal: Mostrar historial
-            ivMainLogo.setOnClickListener(v -> showHistoryDialog());
-            
-            // Long click: Editar nombre
+            // Click normal: Cambiar Color (Ciclar Skin)
+            ivMainLogo.setOnClickListener(v -> {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin next = new com.example.openradiofm.ui.theme.ThemeManager(
+                        this).cycleSkin();
+                applySkin(next);
+                showToast("Skin: " + next.displayName);
+            });
+
+            // Long click: Historial
             ivMainLogo.setOnLongClickListener(v -> {
-                showEditNameDialog();
+                showHistoryDialog();
                 return true;
             });
         }
     }
 
     private void showEditNameDialog() {
-        if (mRadioService == null) return;
+        if (mRadioService == null)
+            return;
         try {
             int currentFreq = mRadioService.getCurrentFreq();
-            
+
             android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
             builder.setTitle("Editar nombre de emisora");
             builder.setMessage("Frecuencia: " + String.format("%.1f MHz", currentFreq / 1000.0));
 
             final android.widget.EditText input = new android.widget.EditText(this);
             input.setSingleLine(true);
-            
+
             // Pre-llenar con el nombre actual (si es custom o RDS)
             com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(currentFreq, null);
             if (s.getName() != null) {
                 input.setText(s.getName());
                 input.setSelectAllOnFocus(true);
             }
-            
+
             builder.setView(input);
 
             builder.setPositiveButton("Guardar", (dialog, which) -> {
@@ -604,7 +630,7 @@ public class MainActivity extends AppCompatActivity {
             });
 
             builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
-            
+
             // Botón para borrar nombre personalizado y volver al original/RDS
             builder.setNeutralButton("Restaurar Original", (dialog, which) -> {
                 mRepository.setCustomName(currentFreq, null); // Null borra la entrada custom
@@ -614,7 +640,7 @@ public class MainActivity extends AppCompatActivity {
 
             builder.show();
             input.requestFocus(); // Focus automático
-            
+
         } catch (RemoteException e) {
             e.printStackTrace();
         }
@@ -669,12 +695,14 @@ public class MainActivity extends AppCompatActivity {
      * Detecta el modo de funcionamiento de la app.
      * 
      * MODO_FM_COMPLETO:
-     * - Se activa solo si tenemos ROOT ("su") y el SERVICIO HCN ("com.hcn.autoradio").
+     * - Se activa solo si tenemos ROOT ("su") y el SERVICIO HCN
+     * ("com.hcn.autoradio").
      * - Permite leer nombres RDS avanzados directamente de archivos del sistema.
      * 
      * MODO_FM_BASICO:
      * - Se usa en dispositivos normales o si falta el servicio del coche.
-     * - Desactiva totalmente el código Root para evitar permisos denegados o crashes.
+     * - Desactiva totalmente el código Root para evitar permisos denegados o
+     * crashes.
      */
     private FmMode detectMode() {
         boolean hasService = hasCarRadioService();
@@ -692,14 +720,14 @@ public class MainActivity extends AppCompatActivity {
      */
     private boolean hasCarRadioService() {
         int engineIdx = mPrefs.getInt("pref_radio_engine", 0); // 0: Auto, 1: HCN, 2: MTK, 3: TS, 4: Standard
-        
+
         String[][] allProviders = {
-            {"com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE"},
-            {"com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService"},
-            {"com.android.fmradio", "com.android.fmradio.IFmRadioService"},
-            {"com.android.fmradio", "com.android.fmradio.FmRadioService"},
-            {"com.ts.mainui", "com.ts.mainui.radio.IRadioService"},
-            {"com.syu.radio", "com.syu.radio.IRadioService"}
+                { "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE" },
+                { "com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService" },
+                { "com.android.fmradio", "com.android.fmradio.IFmRadioService" },
+                { "com.android.fmradio", "com.android.fmradio.FmRadioService" },
+                { "com.ts.mainui", "com.ts.mainui.radio.IRadioService" },
+                { "com.syu.radio", "com.syu.radio.IRadioService" }
         };
 
         android.content.pm.PackageManager pm = getPackageManager();
@@ -715,7 +743,8 @@ public class MainActivity extends AppCompatActivity {
 
         // Auto mode: scan all
         for (String[] provider : allProviders) {
-            if (checkProvider(pm, provider)) return true;
+            if (checkProvider(pm, provider))
+                return true;
         }
         return false;
     }
@@ -729,7 +758,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Detector: Encontrado servicio en " + provider[0]);
                 return true;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return false;
     }
 
@@ -762,15 +792,20 @@ public class MainActivity extends AppCompatActivity {
      */
     private void applyFonts() {
         int fontType = mPrefs.getInt("pref_font_type", 0); // 0: Default, 1: Bebas, 2: Digital, 3: Inter
-        
+
         android.graphics.Typeface typeface = null;
         try {
-            if (fontType == 1) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.bebas);
-            else if (fontType == 2) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.digital);
-            else if (fontType == 3) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.inter);
-            else if (fontType == 4) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.orbitron);
+            if (fontType == 1)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.bebas);
+            else if (fontType == 2)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.digital);
+            else if (fontType == 3)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.inter);
+            else if (fontType == 4)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.orbitron);
         } catch (Exception e) {
-            // Si no existen los archivos en res/font todavía, usamos el por defecto (Orbitron en assets o System)
+            // Si no existen los archivos en res/font todavía, usamos el por defecto
+            // (Orbitron en assets o System)
             try {
                 typeface = android.graphics.Typeface.createFromAsset(getAssets(), "fonts/orbitron_bold.ttf");
             } catch (Exception ex) {
@@ -778,28 +813,33 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        if (typeface == null) typeface = android.graphics.Typeface.DEFAULT_BOLD;
+        if (typeface == null)
+            typeface = android.graphics.Typeface.DEFAULT_BOLD;
 
-        if (tvFrequency != null) tvFrequency.setTypeface(typeface);
-        if (tvRdsName != null) tvRdsName.setTypeface(typeface);
-        if (tvRdsInfo != null) tvRdsInfo.setTypeface(typeface);
-        
+        if (tvFrequency != null)
+            tvFrequency.setTypeface(typeface);
+        if (tvRdsName != null)
+            tvRdsName.setTypeface(typeface);
+        if (tvRdsInfo != null)
+            tvRdsInfo.setTypeface(typeface);
+
         // V2.1: Use traditional loop for safety with tvPresets array
         for (int i = 0; i < tvPresets.length; i++) {
-            if (tvPresets[i] != null) tvPresets[i].setTypeface(typeface);
+            if (tvPresets[i] != null)
+                tvPresets[i].setTypeface(typeface);
         }
     }
-    
+
     private void setupRdsText() {
-         // V8.3: Enable Marquee on RDS Info
-         if (tvRdsInfo != null) {
-             tvRdsInfo.setText(""); // Start Empty
-             tvRdsInfo.setSelected(true); // Required for Marquee
-             tvRdsInfo.setSingleLine(true);
-             tvRdsInfo.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
-         }
+        // V8.3: Enable Marquee on RDS Info
+        if (tvRdsInfo != null) {
+            tvRdsInfo.setText(""); // Start Empty
+            tvRdsInfo.setSelected(true); // Required for Marquee
+            tvRdsInfo.setSingleLine(true);
+            tvRdsInfo.setEllipsize(android.text.TextUtils.TruncateAt.MARQUEE);
+        }
     }
-    
+
     /**
      * Configura el Easter Egg de créditos al pulsar la frecuencia. (Restaurado)
      */
@@ -829,19 +869,19 @@ public class MainActivity extends AppCompatActivity {
         builder.setMessage("OpenRadioFM v4.0\\n\\nDesarrollada por Jimmy80\\n(Febrero 2026)");
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
-        
+
         // V3.0: Toggle Layout Button REMOVED (Moved to LOC/DX Long Press)
         /*
-        builder.setNeutralButton("Switch Layout (v3)", (dialog, which) -> {
-            boolean current = mPrefs.getBoolean("pref_layout_v3", false);
-            mPrefs.edit().putBoolean("pref_layout_v3", !current).apply();
-            showToast("Layout cambiado. Reiniciando...");
-            recreate();
-        });
-        */
-        
+         * builder.setNeutralButton("Switch Layout (v3)", (dialog, which) -> {
+         * boolean current = mPrefs.getBoolean("pref_layout_v3", false);
+         * mPrefs.edit().putBoolean("pref_layout_v3", !current).apply();
+         * showToast("Layout cambiado. Reiniciando...");
+         * recreate();
+         * });
+         */
+
         android.app.AlertDialog dialog = builder.create();
-        
+
         // V5.0: Apply premium styling
         android.view.Window window = dialog.getWindow();
         if (window != null) {
@@ -850,12 +890,11 @@ public class MainActivity extends AppCompatActivity {
         }
         dialog.show();
     }
-    
-
 
     /**
      * V2.0: Crea la carpeta /sdcard/RadioLogos/ si no existe.
-     * Esto soluciona el bug reportado donde la app no creaba la carpeta automáticamente.
+     * Esto soluciona el bug reportado donde la app no creaba la carpeta
+     * automáticamente.
      */
     private void createRadioLogosFolder() {
         try {
@@ -881,16 +920,19 @@ public class MainActivity extends AppCompatActivity {
      */
     private void loadCustomBackground() {
         int bgMode = mPrefs.getInt("pref_bg_mode", 1); // Por defecto Imagen si existe
-        
+
         // Reset backgrounds first
-        if (ivDynamicBackground != null) ivDynamicBackground.setVisibility(View.GONE);
+        if (ivDynamicBackground != null)
+            ivDynamicBackground.setVisibility(View.GONE);
         View root = findViewById(R.id.rootLayout); // assuming id is set, or find by type
         if (root == null) {
-             android.view.View decor = getWindow().getDecorView().findViewById(android.R.id.content);
-             if (decor instanceof android.view.ViewGroup) root = ((android.view.ViewGroup) decor).getChildAt(0);
+            android.view.View decor = getWindow().getDecorView().findViewById(android.R.id.content);
+            if (decor instanceof android.view.ViewGroup)
+                root = ((android.view.ViewGroup) decor).getChildAt(0);
         }
 
-        if (root == null) return;
+        if (root == null)
+            return;
 
         if (bgMode == 0) {
             // Negro Puro
@@ -903,7 +945,8 @@ public class MainActivity extends AppCompatActivity {
                 java.io.File backgroundFile = bgJpg.exists() ? bgJpg : (bgPng.exists() ? bgPng : null);
 
                 if (backgroundFile != null) {
-                    android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(backgroundFile.getAbsolutePath());
+                    android.graphics.Bitmap bitmap = android.graphics.BitmapFactory
+                            .decodeFile(backgroundFile.getAbsolutePath());
                     if (bitmap != null) {
                         root.setBackground(new android.graphics.drawable.BitmapDrawable(getResources(), bitmap));
                     }
@@ -914,50 +957,53 @@ public class MainActivity extends AppCompatActivity {
                 root.setBackgroundResource(R.drawable.bg_grainy_dark);
             }
         } else {
-            // Logo Dinámico (El fondo base es negro, el logo se superpone en ivDynamicBackground)
+            // Logo Dinámico (El fondo base es negro, el logo se superpone en
+            // ivDynamicBackground)
             root.setBackgroundColor(android.graphics.Color.BLACK);
             // El refresco real ocurre en updateDynamicBackground
         }
     }
 
     /**
-     * V3.9: Carga el logo de la marca del coche si existe en /sdcard/RadioLogos/car_logo.png
-     * Se coloca en el hueco derecho del layout V3 (ivCarLogo) y en el central del V2 (ivMainLogo).
+     * V3.9: Carga el logo de la marca del coche si existe en
+     * /sdcard/RadioLogos/car_logo.png
+     * Se coloca en el hueco derecho del layout V3 (ivCarLogo) y en el central del
+     * V2 (ivMainLogo).
      */
     private void loadCarLogo() {
         // Layout V3
         ImageView ivCarLogo = findViewById(R.id.ivCarLogo);
         // Layout V2
-        ImageView ivMainLogo = findViewById(R.id.ivMainLogo); 
-        
+        ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
+
         java.io.File logoFile = new java.io.File("/sdcard/RadioLogos/car_logo.png");
         boolean logoExists = logoFile.exists();
-        
+
         // Logic for Layout V3
         if (ivCarLogo != null) {
             if (logoExists) {
                 ivCarLogo.setVisibility(View.VISIBLE);
                 Glide.with(this)
-                     .load(logoFile)
-                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
-                     .skipMemoryCache(true)
-                     .transition(DrawableTransitionOptions.withCrossFade())
-                     .into(ivCarLogo);
+                        .load(logoFile)
+                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(ivCarLogo);
             } else {
                 ivCarLogo.setVisibility(View.INVISIBLE);
             }
         }
-        
+
         // Logic for Layout V2 (Standardization)
         if (ivMainLogo != null) {
             if (logoExists) {
                 // If custom car logo exists, use it
                 Glide.with(this)
-                     .load(logoFile)
-                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
-                     .skipMemoryCache(true)
-                     .transition(DrawableTransitionOptions.withCrossFade())
-                     .into(ivMainLogo);
+                        .load(logoFile)
+                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(ivMainLogo);
             } else {
                 // If no custom logo, revert to app icon
                 ivMainLogo.setImageResource(R.mipmap.ic_launcher);
@@ -965,24 +1011,25 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     /**
      * Configura los botones de búsqueda manual y automática de frecuencias.
      *
-     * - Los pasos manuales (+/- 0.1 MHz) se hacen mediante llamadas AIDL al servicio,
-     *   que se ejecutan fuera del hilo principal cuando es posible.
-     * - Las búsquedas largas (seek up/down) usan los eventos específicos del servicio.
+     * - Los pasos manuales (+/- 0.1 MHz) se hacen mediante llamadas AIDL al
+     * servicio,
+     * que se ejecutan fuera del hilo principal cuando es posible.
+     * - Las búsquedas largas (seek up/down) usan los eventos específicos del
+     * servicio.
      */
     private void setupSeekButtons() {
         ImageButton btnSeekDownV3 = findViewById(R.id.btnSeekDown); // LEFT (<)
-        ImageButton btnSeekUpV3 = findViewById(R.id.btnSeekUp);     // RIGHT (>)
-        
+        ImageButton btnSeekUpV3 = findViewById(R.id.btnSeekUp); // RIGHT (>)
+
         // Left Button (<) -> Step Down / Seek Down (Long Press)
         if (btnSeekDownV3 != null) {
             btnSeekDownV3.setOnClickListener(v -> stepFreqDown());
             // V4.3: User requested swap for Long Press (Left = Search UP)
             btnSeekDownV3.setOnLongClickListener(v -> {
-                onSeekUpEvent(); 
+                onSeekUpEvent();
                 return true;
             });
         }
@@ -1008,15 +1055,17 @@ public class MainActivity extends AppCompatActivity {
                 public void onSwipeLeft() {
                     stepFreqDown();
                 }
+
                 @Override
                 public void onSwipeRight() {
                     stepFreqUp();
                 }
-                
+
                 @Override
                 public void onScrollEvent(float deltaX) {
-                    if (!mPrefs.getBoolean("pref_swipe_gestures", true)) return;
-                    
+                    if (!mPrefs.getBoolean("pref_swipe_gestures", true))
+                        return;
+
                     scrollAccumulator += deltaX;
                     if (Math.abs(scrollAccumulator) > SCROLL_SENSITIVITY) {
                         if (scrollAccumulator > 0) {
@@ -1040,27 +1089,31 @@ public class MainActivity extends AppCompatActivity {
 
     private void bindPresetViews() {
         // V4: Dynamic binding for 15 presets (P1-P15)
-        for(int i=0; i<PRESETS_COUNT; i++) {
+        for (int i = 0; i < PRESETS_COUNT; i++) {
             int index = i + 1;
             int cardId = getResources().getIdentifier("cardP" + index, "id", getPackageName());
             int tvId = getResources().getIdentifier("tvP" + index, "id", getPackageName());
             int ivId = getResources().getIdentifier("ivP" + index, "id", getPackageName());
-            
-            if (cardId != 0) cardPresets[i] = findViewById(cardId);
-            if (tvId != 0) tvPresets[i] = findViewById(tvId);
-            if (ivId != 0) ivPresets[i] = findViewById(ivId);
+
+            if (cardId != 0)
+                cardPresets[i] = findViewById(cardId);
+            if (tvId != 0)
+                tvPresets[i] = findViewById(tvId);
+            if (ivId != 0)
+                ivPresets[i] = findViewById(ivId);
         }
     }
 
     public void refreshPresetButtons() {
-        for(int i=0; i<PRESETS_COUNT; i++) {
-            String key = "P" + (i+1) + "_B" + mCurrentBand;
+        for (int i = 0; i < PRESETS_COUNT; i++) {
+            String key = "P" + (i + 1) + "_B" + mCurrentBand;
             setupPresetCard(i, key);
         }
     }
 
     private void setupPresetCard(int index, String key) {
-        if (cardPresets[index] == null) return; // Safety check
+        if (cardPresets[index] == null)
+            return; // Safety check
         int savedFreq = mPrefs.getInt(key, 0);
         updateCardVisuals(index, savedFreq);
 
@@ -1082,7 +1135,8 @@ public class MainActivity extends AppCompatActivity {
                     mPrefs.edit().putInt(key, current).apply();
                     updateCardVisuals(index, current);
                     // showToast("Guardado en B" + (mCurrentBand + 1)); // V8.4: Disabled toast
-                } catch (RemoteException e) {}
+                } catch (RemoteException e) {
+                }
             }
             return true;
         });
@@ -1094,16 +1148,18 @@ public class MainActivity extends AppCompatActivity {
                 tvPresets[index].setText("Empty");
                 tvPresets[index].setVisibility(View.VISIBLE);
             }
-            if (ivPresets[index] != null) ivPresets[index].setImageDrawable(null);
+            if (ivPresets[index] != null)
+                ivPresets[index].setImageDrawable(null);
             return;
         }
 
         // V4: Default to the premium number icon
-        int iconResId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", index + 1), "drawable", getPackageName());
+        int iconResId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", index + 1), "drawable",
+                getPackageName());
         if (ivPresets[index] != null) {
             ivPresets[index].setImageResource(iconResId != 0 ? iconResId : R.drawable.ic_station_placeholder);
         }
-        
+
         // By default, hide frequency text if we use icons
         if (tvPresets[index] != null) {
             tvPresets[index].setVisibility(View.GONE);
@@ -1115,38 +1171,46 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> {
                 if (logoUrl != null && ivPresets[index] != null) {
                     Glide.with(MainActivity.this)
-                         .load(logoUrl)
-                         .skipMemoryCache(true)
-                         .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
-                         .transition(DrawableTransitionOptions.withCrossFade())
-                         .into(ivPresets[index]);
+                            .load(logoUrl)
+                            .skipMemoryCache(true)
+                            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .into(ivPresets[index]);
                 }
             });
         });
-        
+
         com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(freq, null);
         if (s.getName() != null && !s.getName().isEmpty() && tvPresets[index] != null) {
-             tvPresets[index].setText(s.getName());
-             tvPresets[index].setVisibility(View.VISIBLE);
+            tvPresets[index].setText(s.getName());
+            tvPresets[index].setVisibility(View.VISIBLE);
         }
     }
 
-    private interface RemoteAction { void run(IRadioServiceAPI s) throws RemoteException; }
+    private interface RemoteAction {
+        void run(IRadioServiceAPI s) throws RemoteException;
+    }
+
     private void execRemote(RemoteAction action) {
-        if (mRadioService == null) return;
-        try { action.run(mRadioService); } catch (RemoteException e) { e.printStackTrace(); }
+        if (mRadioService == null)
+            return;
+        try {
+            action.run(mRadioService);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     private void conectarRadio() {
         int engineIdx = mPrefs.getInt("pref_radio_engine", 0);
-        
+
         String[][] allProviders = {
-            {"com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE"},
-            {"com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService"},
-            {"com.android.fmradio", "com.android.fmradio.IFmRadioService"},
-            {"com.android.fmradio", "com.android.fmradio.FmRadioService"},
-            {"com.ts.mainui", "com.ts.mainui.radio.IRadioService"},
-            {"com.syu.radio", "com.syu.radio.IRadioService"}
+                { "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE" },
+                { "com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService" },
+                { "com.android.fmradio", "com.android.fmradio.IFmRadioService" },
+                { "com.android.fmradio", "com.android.fmradio.FmRadioService" },
+                { "com.ts.mainui", "com.ts.mainui.radio.IRadioService" },
+                { "com.syu.radio", "com.syu.radio.IRadioService" }
         };
 
         // If already connected, maybe unbind? (Optional, let's keep it simple for now)
@@ -1160,7 +1224,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         for (String[] provider : allProviders) {
-            if (bindToProvider(provider)) return;
+            if (bindToProvider(provider))
+                return;
         }
     }
 
@@ -1172,12 +1237,14 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "Conector: Vinculando a " + provider[0]);
                 return true;
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return false;
     }
 
     /**
-     * Lee el estado actual de la radio desde el servicio remoto y lo refleja en la UI.
+     * Lee el estado actual de la radio desde el servicio remoto y lo refleja en la
+     * UI.
      *
      * IMPORTANTE:
      * - Este método puede ser llamado desde el hilo del Timer (segundo plano).
@@ -1188,8 +1255,9 @@ public class MainActivity extends AppCompatActivity {
         if (mLastFreq != -1) {
             runOnUiThread(() -> updateFrequencyDisplay(mLastFreq));
         }
-        
-        if (mRadioService == null) return;
+
+        if (mRadioService == null)
+            return;
         execRemote(s -> {
             int freq = s.getCurrentFreq();
             int band = s.getCurrentBand();
@@ -1204,17 +1272,18 @@ public class MainActivity extends AppCompatActivity {
                 execRemote(IRadioServiceAPI::onBandEvent);
                 return;
             }
-            
+
             // V5.0: Composite Signal Quality Logic
             // Raw SNR/RSSI is not available in SDK, so we infer quality
-            // mCurrentQuality = calculateSignalQuality(isStereo, isLocal, mHasRdsLock); // Legacy removed
+            // mCurrentQuality = calculateSignalQuality(isStereo, isLocal, mHasRdsLock); //
+            // Legacy removed
 
             String bandCacheKey = band + "_" + freq;
 
             if (freq != mLastFreq) {
                 mLastFreq = freq;
                 mHasRdsLock = false; // Reset lock on manual change
-                
+
                 // V4.0: Clear RDS UI on Tune
                 runOnUiThread(() -> {
                     if (tvRdsName != null) {
@@ -1236,7 +1305,7 @@ public class MainActivity extends AppCompatActivity {
 
             com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
             String rdsName = station.getName();
-            
+
             runOnUiThread(() -> {
                 // Quality Indicator
                 // updateQualityUI(mCurrentQuality); // Legacy removed
@@ -1247,7 +1316,8 @@ public class MainActivity extends AppCompatActivity {
                     if (ivUnitLabel != null) {
                         ivUnitLabel.setImageResource(R.drawable.radio_khz);
                         if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null), android.graphics.PorterDuff.Mode.SRC_IN);
+                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null),
+                                    android.graphics.PorterDuff.Mode.SRC_IN);
                         } else {
                             ivUnitLabel.clearColorFilter();
                         }
@@ -1257,13 +1327,14 @@ public class MainActivity extends AppCompatActivity {
                     if (ivUnitLabel != null) {
                         ivUnitLabel.setImageResource(R.drawable.radio_mhz);
                         if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null), android.graphics.PorterDuff.Mode.SRC_IN);
+                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null),
+                                    android.graphics.PorterDuff.Mode.SRC_IN);
                         } else {
                             ivUnitLabel.clearColorFilter();
                         }
                     }
                 }
-                
+
                 // RDS Display logic moved to updateFrequencyDisplay
                 updateFrequencyDisplay(freq);
 
@@ -1277,9 +1348,9 @@ public class MainActivity extends AppCompatActivity {
                         if (ivMainLogo != null && !mIsV3) {
                             ivMainLogo.setVisibility(View.VISIBLE);
                             Glide.with(MainActivity.this)
-                                 .load(cachedLogo)
-                                 .transition(DrawableTransitionOptions.withCrossFade())
-                                 .into(ivMainLogo);
+                                    .load(cachedLogo)
+                                    .transition(DrawableTransitionOptions.withCrossFade())
+                                    .into(ivMainLogo);
                         }
                         updateDynamicBackground(cachedLogo);
                     }
@@ -1293,9 +1364,9 @@ public class MainActivity extends AppCompatActivity {
                                     if (ivMainLogo != null && !mIsV3) {
                                         ivMainLogo.setVisibility(View.VISIBLE);
                                         Glide.with(MainActivity.this)
-                                             .load(url)
-                                             .transition(DrawableTransitionOptions.withCrossFade())
-                                             .into(ivMainLogo);
+                                                .load(url)
+                                                .transition(DrawableTransitionOptions.withCrossFade())
+                                                .into(ivMainLogo);
                                     }
                                     updateDynamicBackground(url);
                                 }
@@ -1311,12 +1382,12 @@ public class MainActivity extends AppCompatActivity {
                         });
                     });
                 }
-                
+
                 // Hide logo always in V3 if it somehow exists
                 if (mIsV3 && ivMainLogo != null) {
                     ivMainLogo.setVisibility(View.GONE);
                 }
-                
+
                 updateBandImage(band);
                 if (btnLocDx != null) {
                     btnLocDx.setSelected(isLocal);
@@ -1332,30 +1403,36 @@ public class MainActivity extends AppCompatActivity {
      */
 
     private void updateBandImage(int band) {
-        int resId = R.drawable.radio_fm1; 
-        if (band == BAND_FM1) resId = R.drawable.radio_fm1;
-        else if (band == BAND_FM2) resId = R.drawable.radio_fm2;
-        else if (band == BAND_FM3) resId = R.drawable.radio_fm3;
+        int resId = R.drawable.radio_fm1;
+        if (band == BAND_FM1)
+            resId = R.drawable.radio_fm1;
+        else if (band == BAND_FM2)
+            resId = R.drawable.radio_fm2;
+        else if (band == BAND_FM3)
+            resId = R.drawable.radio_fm3;
         else if (band == BAND_AM1) {
             // Placeholder until assets are provided, fallback to FM1 or a generic icon
             resId = getResources().getIdentifier("radio_am1", "drawable", getPackageName());
-            if (resId == 0) resId = R.drawable.radio_fm1;
-        }
-        else if (band == BAND_AM2) {
+            if (resId == 0)
+                resId = R.drawable.radio_fm1;
+        } else if (band == BAND_AM2) {
             resId = getResources().getIdentifier("radio_am2", "drawable", getPackageName());
-            if (resId == 0) resId = R.drawable.radio_fm2;
+            if (resId == 0)
+                resId = R.drawable.radio_fm2;
         }
-        
+
         if (ivBandIndicator != null) {
             ivBandIndicator.setImageResource(resId);
-            if (btnBand != null) btnBand.setImageResource(R.drawable.radio_band_n);
+            if (btnBand != null)
+                btnBand.setImageResource(R.drawable.radio_band_n);
         } else if (btnBand != null) {
             btnBand.setImageResource(resId);
         }
     }
 
     private void updateStatusIndicator(TextView tv, boolean active) {
-        if (tv == null) return;
+        if (tv == null)
+            return;
         if (active) {
             tv.setTextColor(Color.parseColor("#FF8C00")); // Orange for Active
             tv.setAlpha(1.0f);
@@ -1370,8 +1447,10 @@ public class MainActivity extends AppCompatActivity {
      */
     private void updatePtyUI(String pty) {
         if (pty == null || pty.isEmpty()) {
-            if (tvPty != null) tvPty.setVisibility(View.GONE);
-            if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
+            if (tvPty != null)
+                tvPty.setVisibility(View.GONE);
+            if (ivPtyIcon != null)
+                ivPtyIcon.setVisibility(View.GONE);
             return;
         }
 
@@ -1392,9 +1471,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private String getBandLabel(int bandCode) {
-        if (bandCode == 0) return "FM 1";
-        if (bandCode == 1) return "FM 2";
-        if (bandCode == 2) return "FM 3";
+        if (bandCode == 0)
+            return "FM 1";
+        if (bandCode == 1)
+            return "FM 2";
+        if (bandCode == 2)
+            return "FM 3";
         return "B" + bandCode;
     }
 
@@ -1405,7 +1487,7 @@ public class MainActivity extends AppCompatActivity {
                 android.view.View layout = getLayoutInflater().inflate(R.layout.toast_custom, null);
                 TextView text = layout.findViewById(R.id.toastText);
                 text.setText(msg);
-                
+
                 Toast toast = new Toast(getApplicationContext());
                 toast.setDuration(Toast.LENGTH_SHORT);
                 toast.setView(layout);
@@ -1429,53 +1511,58 @@ public class MainActivity extends AppCompatActivity {
             showToast("App no instalada: " + packageName);
         }
     }
-    
-    
+
     // V3.0: Premium "Radio Interface" Dialog
     private void showPremiumSettingsDialog() {
         android.app.Dialog dialog = new android.app.Dialog(this);
         dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_premium_settings);
-        
+
         android.view.Window window = dialog.getWindow();
         if (window != null) {
-            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             window.setDimAmount(0.7f);
         }
-        
+
         android.view.View cardTheme = dialog.findViewById(R.id.cardTheme);
         android.view.View cardFonts = dialog.findViewById(R.id.cardFonts);
         android.view.View cardBackground = dialog.findViewById(R.id.cardBackground);
-        
+
         android.view.View viewColorPreview = dialog.findViewById(R.id.viewColorPreview);
         TextView tvFontPreview = dialog.findViewById(R.id.tvFontPreview);
         TextView tvBackgroundStatus = dialog.findViewById(R.id.tvBackgroundStatus);
-        
+
         androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
-        androidx.appcompat.widget.SwitchCompat swGestures = dialog.findViewById(R.id.switchSwipeGestures); // Changed from swSwipe to swGestures
-        
+        androidx.appcompat.widget.SwitchCompat swGestures = dialog.findViewById(R.id.switchSwipeGestures); // Changed
+                                                                                                           // from
+                                                                                                           // swSwipe to
+                                                                                                           // swGestures
+
         // V4.0: Language Selector
         android.widget.LinearLayout rowLanguage = dialog.findViewById(R.id.rowLanguage);
         TextView tvCurrentLanguage = dialog.findViewById(R.id.tvCurrentLanguage);
         updateCurrentLanguageText(tvCurrentLanguage);
-        
+
         if (rowLanguage != null) {
             rowLanguage.setOnClickListener(v -> {
                 showLanguageSelector();
                 dialog.dismiss();
             });
         }
-        
+
         android.view.View btnClose = dialog.findViewById(R.id.btnCloseSettings);
 
         // Previews
         updateSettingsPreviews(viewColorPreview, tvFontPreview);
         if (tvBackgroundStatus != null) {
             int bgIdx = mPrefs.getInt("pref_bg_mode", 1);
-            String[] modes = {getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image), getString(R.string.bg_dynamic_logo)};
-            if (bgIdx >= 0 && bgIdx < modes.length) tvBackgroundStatus.setText(modes[bgIdx]);
+            String[] modes = { getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image),
+                    getString(R.string.bg_dynamic_logo) };
+            if (bgIdx >= 0 && bgIdx < modes.length)
+                tvBackgroundStatus.setText(modes[bgIdx]);
         }
 
         // Logos Online Switch
@@ -1500,7 +1587,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
-        
+
         // History Switch
         if (swHistory != null) {
             swHistory.setChecked(mPrefs.getBoolean("pref_save_history", true));
@@ -1509,7 +1596,7 @@ public class MainActivity extends AppCompatActivity {
                 showToast(checked ? "Historial: Activado" : "Historial: Desactivado");
             });
         }
-        
+
         // Swipe Gestures Switch
         if (swGestures != null) {
             swGestures.setChecked(mPrefs.getBoolean("pref_swipe_gestures", true));
@@ -1552,14 +1639,14 @@ public class MainActivity extends AppCompatActivity {
         });
         cardFonts.setOnClickListener(v -> showFontSelector(dialog, tvFontPreview));
         cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, tvBackgroundStatus));
-        
+
         // V4.1: Unified About Button Listener
         android.view.View btnAbout = dialog.findViewById(R.id.btnAbout);
         if (btnAbout != null) {
             btnAbout.setOnClickListener(v -> {
                 showAboutDialog();
                 // Optional: keep settings open or close it? usually keep open or close both?
-                // Let's keep settings open for now, or maybe dismiss. 
+                // Let's keep settings open for now, or maybe dismiss.
                 // The standard is usually stacking dialogs is fine.
             });
         }
@@ -1586,201 +1673,235 @@ public class MainActivity extends AppCompatActivity {
     private void applyFontToView(TextView tv, int fontType) {
         android.graphics.Typeface typeface = android.graphics.Typeface.DEFAULT_BOLD;
         try {
-            if (fontType == 1) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.id.tvFrequency); // Dummy but we need res
+            if (fontType == 1)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.id.tvFrequency); // Dummy but we
+                                                                                                      // need res
             // Actually better use the same logic as applyFonts
-            if (fontType == 1) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.bebas);
-            else if (fontType == 2) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.digital);
-            else if (fontType == 3) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.inter);
-            else if (fontType == 4) typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.orbitron);
-        } catch (Exception e) {}
+            if (fontType == 1)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.bebas);
+            else if (fontType == 2)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.digital);
+            else if (fontType == 3)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.inter);
+            else if (fontType == 4)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.orbitron);
+        } catch (Exception e) {
+        }
         tv.setTypeface(typeface);
     }
-    
+
     private void updateSettingsDialogStates(TextView tvTheme, TextView tvFont, TextView tvBg) {
         // Theme
-        tvTheme.setText("Active"); 
-        
+        tvTheme.setText("Active");
+
         // Font
         int fontIdx = mPrefs.getInt("pref_font_type", 0);
-        String[] fonts = {"Default", "Bebas", "Digital", "Inter", "Orbitron"};
-                if (fontIdx >= 0 && fontIdx < fonts.length) tvFont.setText(fonts[fontIdx]);
-        
+        String[] fonts = { "Default", "Bebas", "Digital", "Inter", "Orbitron" };
+        if (fontIdx >= 0 && fontIdx < fonts.length)
+            tvFont.setText(fonts[fontIdx]);
+
         // BG
         int bgIdx = mPrefs.getInt("pref_bg_mode", 1);
-        String[] modes = {getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image), getString(R.string.bg_dynamic_logo)};
-        if (bgIdx >= 0 && bgIdx < modes.length) tvBg.setText(modes[bgIdx]);
+        String[] modes = { getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image),
+                getString(R.string.bg_dynamic_logo) };
+        if (bgIdx >= 0 && bgIdx < modes.length)
+            tvBg.setText(modes[bgIdx]);
     }
 
     private void updateCurrentEngineText(TextView tv) {
         int idx = mPrefs.getInt("pref_radio_engine", 0);
-        String[] engines = {getString(R.string.engine_auto), "HCN", "MTK", "Standard", "TS"};
-        if (idx >= 0 && idx < engines.length) tv.setText(engines[idx]);
+        String[] engines = { getString(R.string.engine_auto), "HCN", "MTK", "Standard", "TS" };
+        if (idx >= 0 && idx < engines.length)
+            tv.setText(engines[idx]);
     }
 
     private void showEngineSelector() {
         String[] options = {
-            getString(R.string.engine_auto),
-            getString(R.string.engine_hcn),
-            getString(R.string.engine_mtk),
-            getString(R.string.engine_ts),
-            getString(R.string.engine_standard)
+                getString(R.string.engine_auto),
+                getString(R.string.engine_hcn),
+                getString(R.string.engine_mtk),
+                getString(R.string.engine_ts),
+                getString(R.string.engine_standard)
         };
 
         new android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.radio_engine)
-            .setItems(options, (dialog, which) -> {
-                mPrefs.edit().putInt("pref_radio_engine", which).apply();
-                showToast(String.format(getString(R.string.engine_changed), options[which]));
-                conectarRadio();
-            })
-            .show();
+                .setTitle(R.string.radio_engine)
+                .setItems(options, (dialog, which) -> {
+                    mPrefs.edit().putInt("pref_radio_engine", which).apply();
+                    showToast(String.format(getString(R.string.engine_changed), options[which]));
+                    conectarRadio();
+                })
+                .show();
     }
 
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
     private void updateFrequencyDisplay(int freq) {
-         if (tvFrequency != null) {
-              if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
-                   tvFrequency.setText(String.valueOf(freq));
-              } else {
-                   tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0f));
-              }
-              
-              // Get State
-              boolean isNight = (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-              boolean isFavorite = isStationMemorized(freq);
-              int idx = getPresetIndex(freq);
+        if (tvFrequency != null) {
+            if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
+                tvFrequency.setText(String.valueOf(freq));
+            } else {
+                tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0f));
+            }
 
-              // Colors
-              int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-              int gold = android.graphics.Color.parseColor("#FFD700");
-              int white = android.graphics.Color.WHITE;
+            // Get State
+            boolean isNight = (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+            boolean isFavorite = isStationMemorized(freq);
+            int idx = getPresetIndex(freq);
 
-              // 1. Dial Color & Unit Label
-              if (isNight) {
-                  // V5.6: Always Night Blue in Night Mode as requested
-                  tvFrequency.setTextColor(nightBlue);
-                  if (ivUnitLabel != null) ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                  if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
-                  if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
-                  if (tvPty != null) tvPty.setTextColor(nightBlue);
-              } else {
-                  // Normal Mode -> Always White
-                  tvFrequency.setTextColor(white);
-                  if (ivUnitLabel != null) ivUnitLabel.clearColorFilter();
-                  if (tvRdsName != null) tvRdsName.setTextColor(white);
-                  if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
-                  if (tvPty != null) tvPty.setTextColor(white);
-              }
+            // Colors
+            int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+            int gold = android.graphics.Color.parseColor("#FFD700");
+            int white = android.graphics.Color.WHITE;
 
-              // 2. Favorite Icon
-              if (ivFavoriteIndicator != null) {
-                  if (isFavorite && idx > 0) {
-                      ivFavoriteIndicator.setVisibility(View.VISIBLE);
-                      int resId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", idx), "drawable", getPackageName());
-                      ivFavoriteIndicator.setImageResource(resId != 0 ? resId : R.drawable.radio_icon_p01);
-                      
-                      // Tint logic
-                      if (isNight) {
-                          ivFavoriteIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                      } else {
-                         // Normal Mode: White
-                         ivFavoriteIndicator.setColorFilter(white, android.graphics.PorterDuff.Mode.SRC_IN);
-                      }
-                  } else {
-                      ivFavoriteIndicator.setVisibility(View.GONE);
-                  }
-              }
-              
-                // RDS Visibility Logic (V4.0 Finalization)
-                com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
-                String rdsNameValue = (station != null) ? station.getName() : null;
-                
-                if (rdsNameValue != null && !rdsNameValue.isEmpty() && !rdsNameValue.equals("STATION") && !rdsNameValue.equals("STATION NAME")) {
-                    tvRdsName.setText(rdsNameValue);
-                    tvRdsName.setVisibility(View.VISIBLE);
+            // 1. Dial Color & Unit Label
+            if (isNight) {
+                // V5.6: Always Night Blue in Night Mode as requested
+                tvFrequency.setTextColor(nightBlue);
+                if (ivUnitLabel != null)
+                    ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                if (tvRdsName != null)
+                    tvRdsName.setTextColor(nightBlue);
+                if (tvRdsInfo != null)
+                    tvRdsInfo.setTextColor(nightBlue);
+                if (tvPty != null)
+                    tvPty.setTextColor(nightBlue);
+            } else {
+                // Normal Mode -> Always White
+                tvFrequency.setTextColor(white);
+                if (ivUnitLabel != null)
+                    ivUnitLabel.clearColorFilter();
+                if (tvRdsName != null)
+                    tvRdsName.setTextColor(white);
+                if (tvRdsInfo != null)
+                    tvRdsInfo.setTextColor(white);
+                if (tvPty != null)
+                    tvPty.setTextColor(white);
+            }
+
+            // 2. Favorite Icon
+            if (ivFavoriteIndicator != null) {
+                if (isFavorite && idx > 0) {
+                    ivFavoriteIndicator.setVisibility(View.VISIBLE);
+                    int resId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", idx), "drawable",
+                            getPackageName());
+                    ivFavoriteIndicator.setImageResource(resId != 0 ? resId : R.drawable.radio_icon_p01);
+
+                    // Tint logic
+                    if (isNight) {
+                        ivFavoriteIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    } else {
+                        // Normal Mode: White
+                        ivFavoriteIndicator.setColorFilter(white, android.graphics.PorterDuff.Mode.SRC_IN);
+                    }
                 } else {
-                    String current = tvRdsName.getText().toString();
-                    if (current.isEmpty() || current.equals("STATION") || current.equals("STATION NAME") || current.equals("STATION ") || current.equals(" NAME")) {
-                        // V4.0: Keep visible in V2 to prevent shifts
-                        tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
-                        if (!mIsV3) tvRdsName.setText("");
+                    ivFavoriteIndicator.setVisibility(View.GONE);
+                }
+            }
+
+            // RDS Visibility Logic (V4.0 Finalization)
+            com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+            String rdsNameValue = (station != null) ? station.getName() : null;
+
+            if (rdsNameValue != null && !rdsNameValue.isEmpty() && !rdsNameValue.equals("STATION")
+                    && !rdsNameValue.equals("STATION NAME")) {
+                tvRdsName.setText(rdsNameValue);
+                tvRdsName.setVisibility(View.VISIBLE);
+            } else {
+                String current = tvRdsName.getText().toString();
+                if (current.isEmpty() || current.equals("STATION") || current.equals("STATION NAME")
+                        || current.equals("STATION ") || current.equals(" NAME")) {
+                    // V4.0: Keep visible in V2 to prevent shifts
+                    tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                    if (!mIsV3)
+                        tvRdsName.setText("");
+                } else {
+                    tvRdsName.setVisibility(View.VISIBLE);
+                }
+            }
+
+            if (tvRdsInfo != null) {
+                String rdsText = tvRdsInfo.getText().toString();
+                if (rdsText.isEmpty() || rdsText.equals("RDS TEXT INFO") || rdsText.equals("RDS Info Text")) {
+                    // V4.0: Keep visible in V2 to prevent shifts
+                    tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                    if (!mIsV3)
+                        tvRdsInfo.setText("");
+                } else {
+                    tvRdsInfo.setVisibility(View.VISIBLE);
+                    if (isNight) {
+                        tvRdsInfo.setTextColor(nightBlue);
                     } else {
-                        tvRdsName.setVisibility(View.VISIBLE);
+                        tvRdsInfo.setTextColor(white);
                     }
                 }
+            }
 
-                if (tvRdsInfo != null) {
-                    String rdsText = tvRdsInfo.getText().toString();
-                    if (rdsText.isEmpty() || rdsText.equals("RDS TEXT INFO") || rdsText.equals("RDS Info Text")) {
-                        // V4.0: Keep visible in V2 to prevent shifts
-                        tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
-                        if (!mIsV3) tvRdsInfo.setText("");
-                    } else {
-                        tvRdsInfo.setVisibility(View.VISIBLE);
-                        if (isNight) {
-                            tvRdsInfo.setTextColor(nightBlue);
-                        } else {
-                            tvRdsInfo.setTextColor(white);
-                        }
-                    }
+            // 3. PTY Color
+            if (tvPty != null) {
+                tvPty.setTextColor(isNight ? nightBlue : white);
+            }
+
+            // 4. Signal Level Coloring (V4.2 Refinement)
+            if (ivSignalLevel != null) {
+                int signalColor;
+                boolean hasStereo = false;
+                try {
+                    if (mRadioService != null)
+                        hasStereo = mRadioService.IsStereo();
+                } catch (Exception ignored) {
                 }
-              
-              // 3. PTY Color
-              if (tvPty != null) {
-                  tvPty.setTextColor(isNight ? nightBlue : white);
-              }
 
-              // 4. Signal Level Coloring (V4.2 Refinement)
-              if (ivSignalLevel != null) {
-                  int signalColor;
-                  boolean hasStereo = false;
-                  try { if (mRadioService != null) hasStereo = mRadioService.IsStereo(); } catch (Exception ignored) {}
-                  
-                  if (mHasRdsLock && hasStereo) {
-                      signalColor = android.graphics.Color.parseColor("#00E676"); // Green
-                  } else if (mHasRdsLock || hasStereo) {
-                      signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow
-                  } else {
-                      signalColor = android.graphics.Color.parseColor("#FF5252"); // Red
-                  }
-                  ivSignalLevel.setColorFilter(signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
-              }
-         }
+                if (mHasRdsLock && hasStereo) {
+                    signalColor = android.graphics.Color.parseColor("#00E676"); // Green
+                } else if (mHasRdsLock || hasStereo) {
+                    signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow
+                } else {
+                    signalColor = android.graphics.Color.parseColor("#FF5252"); // Red
+                }
+                ivSignalLevel.setColorFilter(signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            }
+        }
     }
 
     private int getPresetIndexForFreq(int freq) {
-        for(int i=1; i<=15; i++) {
-             String key = "P" + i + "_B" + mCurrentBand;
-             if (mPrefs.getInt(key, 0) == freq) return i;
+        for (int i = 1; i <= 15; i++) {
+            String key = "P" + i + "_B" + mCurrentBand;
+            if (mPrefs.getInt(key, 0) == freq)
+                return i;
         }
         return -1;
     }
 
     private boolean isFrequencySaved(int freq) {
         // Check current band presets
-        for(int i=1; i<=12; i++) {
-             String key = "P" + i + "_B" + mCurrentBand;
-             if (mPrefs.getInt(key, 0) == freq) return true;
+        for (int i = 1; i <= 12; i++) {
+            String key = "P" + i + "_B" + mCurrentBand;
+            if (mPrefs.getInt(key, 0) == freq)
+                return true;
         }
         return false;
     }
 
-    private void showThemeSelector(android.app.Dialog parentDialog, android.view.View colorPreview, TextView fontPreview) {
+    private void showThemeSelector(android.app.Dialog parentDialog, android.view.View colorPreview,
+            TextView fontPreview) {
         // IMPORTANT: This array MUST match the order of Skin enum in ThemeManager.java
-        String[] skins = {"Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan", "Pink", "White"};
+        String[] skins = { "Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan",
+                "Pink", "White" };
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.select_skin)
-            .setItems(skins, (d, w) -> {
-                com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
-                if (w < skinValues.length) {
-                    com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
-                    themeManager.setSkin(skinValues[w]);
-                    applySkin(skinValues[w]);
-                    updateSettingsPreviews(colorPreview, fontPreview);
-                }
-            })
-            .create();
-        
+                .setTitle(R.string.select_skin)
+                .setItems(skins, (d, w) -> {
+                    com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin
+                            .values();
+                    if (w < skinValues.length) {
+                        com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(
+                                this);
+                        themeManager.setSkin(skinValues[w]);
+                        applySkin(skinValues[w]);
+                        updateSettingsPreviews(colorPreview, fontPreview);
+                    }
+                })
+                .create();
+
         android.view.Window window = dialog.getWindow();
         if (window != null) {
             window.setDimAmount(0.7f);
@@ -1790,16 +1911,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showFontSelector(android.app.Dialog parentDialog, TextView fontPreview) {
-        String[] fonts = {"Default", "Bebas", "Digital", "Inter", "Orbitron"};
+        String[] fonts = { "Default", "Bebas", "Digital", "Inter", "Orbitron" };
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.select_typography)
-            .setItems(fonts, (d, w) -> {
-                mPrefs.edit().putInt("pref_font_type", w).apply();
-                applyFonts();
-                updateSettingsPreviews(null, fontPreview);
-            })
-            .create();
-        
+                .setTitle(R.string.select_typography)
+                .setItems(fonts, (d, w) -> {
+                    mPrefs.edit().putInt("pref_font_type", w).apply();
+                    applyFonts();
+                    updateSettingsPreviews(null, fontPreview);
+                })
+                .create();
+
         android.view.Window window = dialog.getWindow();
         if (window != null) {
             window.setDimAmount(0.7f);
@@ -1809,18 +1930,20 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showBackgroundSelector(android.app.Dialog parentDialog, TextView tvStatus) {
-        String[] modes = {getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image), getString(R.string.bg_dynamic_logo)};
+        String[] modes = { getString(R.string.bg_pure_black), getString(R.string.bg_fixed_image),
+                getString(R.string.bg_dynamic_logo) };
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.select_bg_mode)
-            .setItems(modes, (d, w) -> {
-                mPrefs.edit().putInt("pref_bg_mode", w).apply();
-                loadCustomBackground();
-                loadCarLogo();
-                updateDynamicBackground(mLastLogoUrl);
-                if (tvStatus != null) tvStatus.setText(modes[w]);
-            })
-            .create();
-        
+                .setTitle(R.string.select_bg_mode)
+                .setItems(modes, (d, w) -> {
+                    mPrefs.edit().putInt("pref_bg_mode", w).apply();
+                    loadCustomBackground();
+                    loadCarLogo();
+                    updateDynamicBackground(mLastLogoUrl);
+                    if (tvStatus != null)
+                        tvStatus.setText(modes[w]);
+                })
+                .create();
+
         // V3.0: Apply premium styling
         android.view.Window window = dialog.getWindow();
         if (window != null) {
@@ -1829,23 +1952,24 @@ public class MainActivity extends AppCompatActivity {
         }
         dialog.show();
     }
-    
+
     // V4.2: New Language Selector to ensure correct preference key usage
     private void showNewLanguageSelector() {
-        String[] languages = {"Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)", "Português (PT)", "Italiano (IT)", "Русский (RU)"};
-        final String[] codes = {"es", "en", "fr", "de", "pt", "it", "ru"};
-        
+        String[] languages = { "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)", "Português (PT)",
+                "Italiano (IT)", "Русский (RU)" };
+        final String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru" };
+
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
-            .setTitle(R.string.select_language)
-            .setItems(languages, (d, w) -> {
-                if (w < codes.length) {
-                    mPrefs.edit().putString("pref_app_language", codes[w]).apply();
-                    // Recreate activity to apply new context
-                    recreate();
-                }
-            })
-            .create();
-            
+                .setTitle(R.string.select_language)
+                .setItems(languages, (d, w) -> {
+                    if (w < codes.length) {
+                        mPrefs.edit().putString("pref_app_language", codes[w]).apply();
+                        // Recreate activity to apply new context
+                        recreate();
+                    }
+                })
+                .create();
+
         android.view.Window window = dialog.getWindow();
         if (window != null) {
             window.setDimAmount(0.7f);
@@ -1861,34 +1985,55 @@ public class MainActivity extends AppCompatActivity {
         this.mCurrentSkin = skin; // Update global state
         int drawableId;
         switch (skin) {
-            case NIGHT_MODE: drawableId = R.drawable.bg_glass_card_night; break;
-            case ORANGE: drawableId = R.drawable.bg_glass_card_orange; break;
-            case BLUE: drawableId = R.drawable.bg_glass_card_blue; break;
-            case GREEN: drawableId = R.drawable.bg_glass_card_green; break;
-            case PURPLE: drawableId = R.drawable.bg_glass_card_purple; break;
-            case RED: drawableId = R.drawable.bg_glass_card_red; break;
-            case YELLOW: drawableId = R.drawable.bg_glass_card_yellow; break;
-            case CYAN: drawableId = R.drawable.bg_glass_card_cyan; break;
-            case PINK: drawableId = R.drawable.bg_glass_card_pink; break;
-            case WHITE: drawableId = R.drawable.bg_glass_card_white; break;
-            default: drawableId = R.drawable.bg_glass_card_classic; break;
+            case NIGHT_MODE:
+                drawableId = R.drawable.bg_glass_card_night;
+                break;
+            case ORANGE:
+                drawableId = R.drawable.bg_glass_card_orange;
+                break;
+            case BLUE:
+                drawableId = R.drawable.bg_glass_card_blue;
+                break;
+            case GREEN:
+                drawableId = R.drawable.bg_glass_card_green;
+                break;
+            case PURPLE:
+                drawableId = R.drawable.bg_glass_card_purple;
+                break;
+            case RED:
+                drawableId = R.drawable.bg_glass_card_red;
+                break;
+            case YELLOW:
+                drawableId = R.drawable.bg_glass_card_yellow;
+                break;
+            case CYAN:
+                drawableId = R.drawable.bg_glass_card_cyan;
+                break;
+            case PINK:
+                drawableId = R.drawable.bg_glass_card_pink;
+                break;
+            case WHITE:
+                drawableId = R.drawable.bg_glass_card_white;
+                break;
+            default:
+                drawableId = R.drawable.bg_glass_card_classic;
+                break;
         }
-        
-        
+
         // V3.0: Detect current layout
         boolean isLayoutV3 = mPrefs.getBoolean("pref_layout_v3", false);
-        
+
         // Apply skin borders to main controls ONLY in Layout V2
         if (!isLayoutV3) {
             int[] viewIds = {
-                R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
-                R.id.tvRdsName, R.id.tvRdsInfo,
-                R.id.btnBand, R.id.btnAutoScan,
-                R.id.boxLogo,
-                R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
-                R.id.btnExtra1, R.id.btnExtra2  // V4.0: New extra buttons
+                    R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
+                    R.id.tvRdsName, R.id.tvRdsInfo,
+                    R.id.btnBand, R.id.btnAutoScan,
+                    R.id.boxLogo,
+                    R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
+                    R.id.btnExtra1, R.id.btnExtra2 // V4.0: New extra buttons
             };
-            
+
             for (int id : viewIds) {
                 android.view.View v = findViewById(id);
                 if (v != null) {
@@ -1897,9 +2042,9 @@ public class MainActivity extends AppCompatActivity {
                     int pT = v.getPaddingTop();
                     int pR = v.getPaddingRight();
                     int pB = v.getPaddingBottom();
-                    
+
                     v.setBackgroundResource(drawableId);
-                    
+
                     // Restore padding (setBackgroundResource resets it)
                     v.setPadding(pL, pT, pR, pB);
                 }
@@ -1920,14 +2065,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }
-        
+
         // V2.1: Apply to Presets P1-P12
-        for(int i=1; i<=12; i++) {
+        for (int i = 1; i <= 12; i++) {
             int id = getResources().getIdentifier("cardP" + i, "id", getPackageName());
             android.view.View v = findViewById(id);
-            if (v != null) v.setBackgroundResource(drawableId);
+            if (v != null)
+                v.setBackgroundResource(drawableId);
         }
-        
+
         // V4.0: Apply Night Mode Colors (Android Auto style)
         if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
             applyNightModeColors();
@@ -1935,77 +2081,89 @@ public class MainActivity extends AppCompatActivity {
             resetNightModeColors();
         }
     }
-    
+
     /**
-     * Aplica colores azul noche a textos e iconos (estilo Android Auto / Google Maps)
+     * Aplica colores azul noche a textos e iconos (estilo Android Auto / Google
+     * Maps)
      */
     private void applyNightModeColors() {
         int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
         int nightBlueAccent = getResources().getColor(R.color.night_blue_accent, null);
-        
+
         // Textos principales en azul noche
         TextView tvFrequency = findViewById(R.id.tvFrequency);
         TextView tvRdsName = findViewById(R.id.tvRdsName);
         TextView tvRdsInfo = findViewById(R.id.tvRdsInfo);
-        
-        // V5.1: Logic moved to updateFrequencyDisplay for freq color to respect favorites
+
+        // V5.1: Logic moved to updateFrequencyDisplay for freq color to respect
+        // favorites
         // But we refresh it here to be immediate
         int currentFreq = mLastFreq;
-        if (currentFreq != -1) updateFrequencyDisplay(currentFreq);
+        if (currentFreq != -1)
+            updateFrequencyDisplay(currentFreq);
 
-        if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
-        if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
-        if (tvPty != null) tvPty.setTextColor(nightBlue);
-        
+        if (tvRdsName != null)
+            tvRdsName.setTextColor(nightBlue);
+        if (tvRdsInfo != null)
+            tvRdsInfo.setTextColor(nightBlue);
+        if (tvPty != null)
+            tvPty.setTextColor(nightBlue);
+
         // V4.0: Icono de banda FM (Layout V3) y texto MHz
         ImageView ivBandIndicator = findViewById(R.id.ivBandIndicator);
         if (ivBandIndicator != null) {
             ivBandIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
         }
 
-        // Logic for UnitLabel, FavoriteIndicator, SignalLevel moved to updateFrequencyDisplay/refreshRadioStatus
-        
+        // Logic for UnitLabel, FavoriteIndicator, SignalLevel moved to
+        // updateFrequencyDisplay/refreshRadioStatus
+
         // Iconos en azul noche (tint)
         int[] buttonIds = {
-            R.id.btnSeekUp, R.id.btnSeekDown, R.id.btnBand, R.id.btnAutoScan,
-            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
-            R.id.btnExtra1, R.id.btnExtra2
+                R.id.btnSeekUp, R.id.btnSeekDown, R.id.btnBand, R.id.btnAutoScan,
+                R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
+                R.id.btnExtra1, R.id.btnExtra2
         };
-        
+
         for (int id : buttonIds) {
             ImageButton btn = findViewById(id);
             if (btn != null) {
                 btn.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
             }
         }
-        
+
         // Presets en azul noche
-        for(int i=1; i<=12; i++) {
+        for (int i = 1; i <= 12; i++) {
             int tvId = getResources().getIdentifier("tvP" + i, "id", getPackageName());
             TextView tv = findViewById(tvId);
-            if (tv != null) tv.setTextColor(nightBlue);
+            if (tv != null)
+                tv.setTextColor(nightBlue);
         }
     }
-    
+
     /**
      * Restaura colores originales cuando se sale del modo nocturno
      */
     private void resetNightModeColors() {
         int white = getResources().getColor(R.color.white, null);
-        
+
         // Restaurar textos a blanco
         TextView tvFrequency = findViewById(R.id.tvFrequency);
         TextView tvRdsName = findViewById(R.id.tvRdsName);
         TextView tvRdsInfo = findViewById(R.id.tvRdsInfo);
-        
+
         // V5.1 refresh freq color
         int currentFreq = mLastFreq;
-        if (currentFreq != -1) updateFrequencyDisplay(currentFreq);
+        if (currentFreq != -1)
+            updateFrequencyDisplay(currentFreq);
 
-        if (tvRdsName != null) tvRdsName.setTextColor(white);
-        if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
-        if (tvPty != null) tvPty.setTextColor(white);
-        
+        if (tvRdsName != null)
+            tvRdsName.setTextColor(white);
+        if (tvRdsInfo != null)
+            tvRdsInfo.setTextColor(white);
+        if (tvPty != null)
+            tvPty.setTextColor(white);
+
         // V4.0: Restaurar icono de banda FM y texto MHz
         ImageView ivBandIndicator = findViewById(R.id.ivBandIndicator);
         if (ivBandIndicator != null) {
@@ -2017,50 +2175,53 @@ public class MainActivity extends AppCompatActivity {
         if (ivFavoriteIndicator != null) {
             ivFavoriteIndicator.clearColorFilter();
         }
-        
+
         if (ivUnitLabel != null) {
             ivUnitLabel.clearColorFilter();
         }
-        
+
         // Quitar tint de iconos
         int[] buttonIds = {
-            R.id.btnSeekUp, R.id.btnSeekDown, R.id.btnBand, R.id.btnAutoScan,
-            R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
-            R.id.btnExtra1, R.id.btnExtra2
+                R.id.btnSeekUp, R.id.btnSeekDown, R.id.btnBand, R.id.btnAutoScan,
+                R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
+                R.id.btnExtra1, R.id.btnExtra2
         };
-        
+
         for (int id : buttonIds) {
             ImageButton btn = findViewById(id);
             if (btn != null) {
                 btn.clearColorFilter();
             }
         }
-        
+
         // Restaurar presets a blanco
-        for(int i=1; i<=12; i++) {
+        for (int i = 1; i <= 12; i++) {
             int tvId = getResources().getIdentifier("tvP" + i, "id", getPackageName());
             TextView tv = findViewById(tvId);
-            if (tv != null) tv.setTextColor(white);
+            if (tv != null)
+                tv.setTextColor(white);
         }
     }
 
     /**
-     * V3.8: Actualiza el fondo de la aplicación con el logo de la radio (difuminado).
+     * V3.8: Actualiza el fondo de la aplicación con el logo de la radio
+     * (difuminado).
      */
     private void updateDynamicBackground(String logoUrl) {
-        if (ivDynamicBackground == null) return;
-        
+        if (ivDynamicBackground == null)
+            return;
+
         // V4.0: Layout 3 always allows dynamic background if enabled in prefs
         int bgMode = mPrefs.getInt("pref_bg_mode", 1); // 1: Classic, 2: Dynamic
-        
+
         if (bgMode == 2) {
             ivDynamicBackground.setVisibility(View.VISIBLE);
             if (logoUrl != null && !logoUrl.isEmpty()) {
                 Glide.with(this)
-                     .load(logoUrl)
-                     .centerCrop()
-                     .transition(DrawableTransitionOptions.withCrossFade())
-                     .into(ivDynamicBackground);
+                        .load(logoUrl)
+                        .centerCrop()
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(ivDynamicBackground);
             } else {
                 // If no logo but dynamic enabled, we could show a default or keep last
                 // For now, let's keep it visible with the overlay
@@ -2074,27 +2235,33 @@ public class MainActivity extends AppCompatActivity {
     // V4: Frequency Step Helpers (Manual Tuning)
     private void stepFreqUp() {
         mCurrentPty = null; // V5.2: Reset PTY on tune
-        if (mRadioService == null) return;
+        if (mRadioService == null)
+            return;
         try {
             int current = mRadioService.getCurrentFreq();
             int band = mRadioService.getCurrentBand();
             boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
-            
+
             int newFreq;
             if (isAm) {
                 newFreq = current + 9;
-                if (newFreq > 1620) newFreq = 522; // AM Europe range
+                if (newFreq > 1620)
+                    newFreq = 522; // AM Europe range
             } else {
-                newFreq = current + 50; 
-                if (newFreq > 108000) newFreq = 87500;
+                newFreq = current + 50;
+                if (newFreq > 108000)
+                    newFreq = 87500;
             }
             mRadioService.gotoFreq(newFreq);
-        } catch (RemoteException e) { e.printStackTrace(); }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     private void stepFreqDown() {
         mCurrentPty = null; // V5.2: Reset PTY on tune
-        if (mRadioService == null) return;
+        if (mRadioService == null)
+            return;
         try {
             int current = mRadioService.getCurrentFreq();
             int band = mRadioService.getCurrentBand();
@@ -2103,41 +2270,55 @@ public class MainActivity extends AppCompatActivity {
             int newFreq;
             if (isAm) {
                 newFreq = current - 9;
-                if (newFreq < 522) newFreq = 1620;
+                if (newFreq < 522)
+                    newFreq = 1620;
             } else {
                 newFreq = current - 50;
-                if (newFreq < 87500) newFreq = 108000;
+                if (newFreq < 87500)
+                    newFreq = 108000;
             }
             mRadioService.gotoFreq(newFreq);
-        } catch (RemoteException e) { e.printStackTrace(); }
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
     }
 
     // V4: Swipe Listener Class
     private static class OnSwipeTouchListener implements View.OnTouchListener {
         private final GestureDetector gestureDetector;
+
         public OnSwipeTouchListener(Context ctx) {
             gestureDetector = new GestureDetector(ctx, new GestureListener());
         }
+
         @Override
         public boolean onTouch(View v, MotionEvent event) {
             return gestureDetector.onTouchEvent(event);
         }
+
         private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
             private static final int SWIPE_THRESHOLD = 80;
             private static final int SWIPE_VELOCITY_THRESHOLD = 80;
+
             @Override
-            public boolean onDown(MotionEvent e) { return true; }
-            
+            public boolean onDown(MotionEvent e) {
+                return true;
+            }
+
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
                 try {
                     float diffX = e2.getX() - e1.getX();
                     if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffX > 0) onSwipeRight();
-                        else onSwipeLeft();
+                        if (diffX > 0)
+                            onSwipeRight();
+                        else
+                            onSwipeLeft();
                         return true;
                     }
-                } catch (Exception e) { e.printStackTrace(); }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
                 return false;
             }
 
@@ -2147,18 +2328,26 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             }
         }
-        public void onSwipeRight() {}
-        public void onSwipeLeft() {}
-        public void onScrollEvent(float distanceX) {}
+
+        public void onSwipeRight() {
+        }
+
+        public void onSwipeLeft() {
+        }
+
+        public void onScrollEvent(float distanceX) {
+        }
     }
 
     // V4: Automatic Night Mode
     private void checkAndApplyNightMode() {
         boolean autoNight = mPrefs.getBoolean("pref_night_mode_auto", false);
-        if (!autoNight) return;
+        if (!autoNight)
+            return;
 
         if (isNightTime()) {
-            com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
+            com.example.openradiofm.ui.theme.ThemeManager themeManager = new com.example.openradiofm.ui.theme.ThemeManager(
+                    this);
             themeManager.setSkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
             applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
         }
@@ -2166,7 +2355,8 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isNightTime() {
         // 1. Check System UI Mode
-        int nightModeFlags = getResources().getConfiguration().uiMode & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
+        int nightModeFlags = getResources().getConfiguration().uiMode
+                & android.content.res.Configuration.UI_MODE_NIGHT_MASK;
         if (nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
             return true;
         } else {
@@ -2177,10 +2367,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addToHistory(int freq) {
-        if (freq <= 0) return;
+        if (freq <= 0)
+            return;
         String historyStr = mPrefs.getString("pref_station_history", "");
         java.util.List<String> history = new java.util.ArrayList<>();
-        
+
         if (!historyStr.isEmpty()) {
             history.addAll(java.util.Arrays.asList(historyStr.split(",")));
         }
@@ -2190,16 +2381,17 @@ public class MainActivity extends AppCompatActivity {
             history.remove(freqStr);
         }
         history.add(0, freqStr);
-        
+
         // Limit to 15
         if (history.size() > 15) {
             history = history.subList(0, 15);
         }
-        
+
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < history.size(); i++) {
             sb.append(history.get(i));
-            if (i < history.size() - 1) sb.append(",");
+            if (i < history.size() - 1)
+                sb.append(",");
         }
         mPrefs.edit().putString("pref_station_history", sb.toString()).apply();
         Log.d(TAG, "History updated: " + sb.toString());
@@ -2214,7 +2406,7 @@ public class MainActivity extends AppCompatActivity {
 
         String[] freqs = historyStr.split(",");
         String[] displayNames = new String[freqs.length];
-        
+
         for (int i = 0; i < freqs.length; i++) {
             int f = Integer.parseInt(freqs[i]);
             displayNames[i] = String.format("%.2f MHz", f / 1000.0f);
@@ -2222,15 +2414,17 @@ public class MainActivity extends AppCompatActivity {
         }
 
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
-            .setTitle(getString(R.string.station_history))
-            .setItems(displayNames, (d, w) -> {
-                if (mRadioService != null) {
-                    try {
-                        mRadioService.gotoFreq(Integer.parseInt(freqs[w]));
-                    } catch (RemoteException e) { e.printStackTrace(); }
-                }
-            })
-            .create();
+                .setTitle(getString(R.string.station_history))
+                .setItems(displayNames, (d, w) -> {
+                    if (mRadioService != null) {
+                        try {
+                            mRadioService.gotoFreq(Integer.parseInt(freqs[w]));
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                })
+                .create();
 
         android.view.Window window = dialog.getWindow();
         if (window != null) {
@@ -2239,7 +2433,7 @@ public class MainActivity extends AppCompatActivity {
         }
         dialog.show();
     }
-    
+
     /**
      * V4.0: Muestra diálogo para guardar/cargar favoritos
      */
@@ -2255,10 +2449,11 @@ public class MainActivity extends AppCompatActivity {
         android.app.Dialog dialog = new android.app.Dialog(this);
         dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_save_load);
-        
+
         android.view.Window window = dialog.getWindow();
         if (window != null) {
-            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             window.setDimAmount(0.7f);
         }
 
@@ -2298,13 +2493,14 @@ public class MainActivity extends AppCompatActivity {
         android.app.Dialog dialog = new android.app.Dialog(this);
         dialog.requestWindowFeature(android.view.Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.dialog_about);
-        
+
         android.view.Window window = dialog.getWindow();
         if (window != null) {
-            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
+            window.setBackgroundDrawable(
+                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
             window.setDimAmount(0.7f);
         }
-        
+
         // Update version text dynamically if needed
         try {
             TextView tvVersion = dialog.findViewById(R.id.tvAppVersion);
@@ -2312,11 +2508,13 @@ public class MainActivity extends AppCompatActivity {
                 String versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
                 tvVersion.setText("Versión " + versionName + " Global Edition");
             }
-        } catch (Exception e) {}
-        
+        } catch (Exception e) {
+        }
+
         android.view.View btnClose = dialog.findViewById(R.id.btnClose);
-        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
-        
+        if (btnClose != null)
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+
         dialog.show();
     }
 
@@ -2325,97 +2523,100 @@ public class MainActivity extends AppCompatActivity {
      */
     private void saveFavoritesToFile() {
         try {
-            java.io.File radioLogosDir = new java.io.File(android.os.Environment.getExternalStorageDirectory(), "RadioLogos");
+            java.io.File radioLogosDir = new java.io.File(android.os.Environment.getExternalStorageDirectory(),
+                    "RadioLogos");
             if (!radioLogosDir.exists()) {
                 radioLogosDir.mkdirs();
             }
-            
-            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault()).format(new java.util.Date());
+
+            String timestamp = new java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.getDefault())
+                    .format(new java.util.Date());
             java.io.File favFile = new java.io.File(radioLogosDir, "favoritos_" + timestamp + ".fav");
-            
+
             org.json.JSONObject jsonRoot = new org.json.JSONObject();
             org.json.JSONArray presetsArray = new org.json.JSONArray();
-            
+
             for (int band = 0; band < 3; band++) {
                 for (int i = 1; i <= 12; i++) {
                     String key = "P" + i + "_B" + band;
                     int freq = mPrefs.getInt(key, 0);
-                    
+
                     if (freq > 0) {
                         org.json.JSONObject presetObj = new org.json.JSONObject();
                         presetObj.put("preset", i);
                         presetObj.put("band", band);
                         presetObj.put("frequency", freq);
-                        
+
                         // Obtener nombre custom del repositorio (que usa RadioStationNames prefs)
                         com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(freq, null);
                         if (s != null && s.getName() != null && !s.getName().isEmpty()) {
                             presetObj.put("custom_name", s.getName());
                         }
-                        
+
                         presetsArray.put(presetObj);
                     }
                 }
             }
-            
+
             jsonRoot.put("presets", presetsArray);
             jsonRoot.put("version", "1.0");
             jsonRoot.put("timestamp", timestamp);
-            
+
             java.io.FileWriter writer = new java.io.FileWriter(favFile);
             writer.write(jsonRoot.toString(2));
             writer.close();
-            
+
             showStyledToast(String.format(getString(R.string.favorites_saved), favFile.getName()));
-            
+
         } catch (Exception e) {
             showStyledToast(String.format(getString(R.string.error_saving_favorites), e.getMessage()));
             android.util.Log.e("SaveFavorites", "Error", e);
         }
     }
-    
+
     /**
      * Carga favoritos desde un archivo .fav en la carpeta RadioLogos
      */
     private void loadFavoritesFromFile() {
         try {
-            java.io.File radioLogosDir = new java.io.File(android.os.Environment.getExternalStorageDirectory(), "RadioLogos");
+            java.io.File radioLogosDir = new java.io.File(android.os.Environment.getExternalStorageDirectory(),
+                    "RadioLogos");
             if (!radioLogosDir.exists() || !radioLogosDir.isDirectory()) {
                 showStyledToast(getString(R.string.folder_not_found));
                 return;
             }
-            
+
             java.io.File[] favFiles = radioLogosDir.listFiles((dir, name) -> name.endsWith(".fav"));
-            
+
             if (favFiles == null || favFiles.length == 0) {
                 showStyledToast(getString(R.string.no_favorites_files));
                 return;
             }
-            
+
             java.util.Arrays.sort(favFiles, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
-            
+
             String[] fileNames = new String[favFiles.length];
             for (int i = 0; i < favFiles.length; i++) {
                 fileNames[i] = favFiles[i].getName();
             }
-            
+
             android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
             builder.setTitle(getString(R.string.select_favorites_file));
-            
+
             final java.io.File[] finalFavFiles = favFiles;
             builder.setItems(fileNames, (dialog, which) -> {
                 loadFavoritesFromSpecificFile(finalFavFiles[which]);
             });
-            
+
             builder.setNegativeButton(getString(R.string.cancel), null);
             builder.show();
-            
+
         } catch (Exception e) {
             showStyledToast(String.format(getString(R.string.error_loading_favorites), e.getMessage()));
             android.util.Log.e("LoadFavorites", "Error", e);
         }
     }
-    
+
     /**
      * Carga favoritos desde un archivo específico
      */
@@ -2428,67 +2629,67 @@ public class MainActivity extends AppCompatActivity {
                 jsonString.append(line);
             }
             reader.close();
-            
+
             org.json.JSONObject jsonRoot = new org.json.JSONObject(jsonString.toString());
             org.json.JSONArray presetsArray = jsonRoot.getJSONArray("presets");
-            
+
             android.content.SharedPreferences.Editor editor = mPrefs.edit();
             for (int band = 0; band < 3; band++) {
                 for (int i = 1; i <= 12; i++) {
                     editor.remove("P" + i + "_B" + band);
                 }
             }
-            
+
             int loadedCount = 0;
             for (int i = 0; i < presetsArray.length(); i++) {
                 org.json.JSONObject presetObj = presetsArray.getJSONObject(i);
                 int presetNum = presetObj.getInt("preset");
                 int freq = presetObj.getInt("frequency");
                 int band = presetObj.optInt("band", 0);
-                
+
                 editor.putInt("P" + presetNum + "_B" + band, freq);
-                
+
                 if (presetObj.has("custom_name")) {
                     String customName = presetObj.getString("custom_name");
                     mRepository.setCustomName(freq, customName);
                 }
-                
+
                 loadedCount++;
             }
-            
+
             editor.apply();
             refreshPresetButtons();
-            
+
             showStyledToast(String.format(getString(R.string.favorites_loaded), loadedCount, favFile.getName()));
-            
+
         } catch (Exception e) {
             showStyledToast(String.format(getString(R.string.error_loading_favorites), e.getMessage()));
             android.util.Log.e("LoadFavorites", "Error", e);
         }
     }
-    
+
     /**
      * V4.0: Aplica el idioma seleccionado por el usuario.
-     * Ya no necesitamos actualizar Resources manualmente aquí, 
+     * Ya no necesitamos actualizar Resources manualmente aquí,
      * MyContextWrapper lo hace en attachBaseContext al recrear.
      */
     private void setLocale(String languageCode) {
         mPrefs.edit().putString("app_language", languageCode).apply();
     }
-    
+
     /**
      * V4.0: Muestra diálogo para seleccionar idioma
      */
     private void showLanguageSelector() {
         String[] languages = {
-            getString(R.string.language_spanish),
-            getString(R.string.language_english),
-            getString(R.string.language_russian)
+                getString(R.string.language_spanish),
+                getString(R.string.language_english),
+                getString(R.string.language_russian)
         };
-        
-        String[] languageCodes = {"es", "en", "ru"};
+
+        String[] languageCodes = { "es", "en", "ru" };
         String currentLang = mPrefs.getString("app_language", "es");
-        
+
         int selectedIndex = 0;
         for (int i = 0; i < languageCodes.length; i++) {
             if (languageCodes[i].equals(currentLang)) {
@@ -2496,32 +2697,33 @@ public class MainActivity extends AppCompatActivity {
                 break;
             }
         }
-        
+
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle(getString(R.string.select_language));
         builder.setSingleChoiceItems(languages, selectedIndex, (dialog, which) -> {
             String selectedLang = languageCodes[which];
             String selectedLangName = languages[which];
-            
+
             setLocale(selectedLang);
             showStyledToast(String.format(getString(R.string.language_changed), selectedLangName));
-            
+
             dialog.dismiss();
             recreate();
         });
         builder.setNegativeButton(getString(R.string.cancel), null);
         builder.show();
     }
-    
+
     /**
      * V4.0: Actualiza el texto del idioma actual en el menú Premium
      */
     private void updateCurrentLanguageText(TextView tvCurrentLanguage) {
-        if (tvCurrentLanguage == null) return;
-        
+        if (tvCurrentLanguage == null)
+            return;
+
         String currentLang = mPrefs.getString("app_language", "es");
         String langName;
-        
+
         switch (currentLang) {
             case "en":
                 langName = getString(R.string.language_english);
@@ -2533,26 +2735,26 @@ public class MainActivity extends AppCompatActivity {
                 langName = getString(R.string.language_spanish);
                 break;
         }
-        
+
         tvCurrentLanguage.setText(langName);
     }
-    
+
     // PERMISSION HANDLING
     private boolean checkStoragePermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             int write = checkSelfPermission(android.Manifest.permission.WRITE_EXTERNAL_STORAGE);
             int read = checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE);
-            return write == android.content.pm.PackageManager.PERMISSION_GRANTED && 
-                   read == android.content.pm.PackageManager.PERMISSION_GRANTED;
+            return write == android.content.pm.PackageManager.PERMISSION_GRANTED &&
+                    read == android.content.pm.PackageManager.PERMISSION_GRANTED;
         }
         return true;
     }
 
     private void requestStoragePermissions() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{
-                android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                android.Manifest.permission.READ_EXTERNAL_STORAGE
+            requestPermissions(new String[] {
+                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                    android.Manifest.permission.READ_EXTERNAL_STORAGE
             }, 1001);
         }
     }
@@ -2568,16 +2770,19 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     // V5.0: Helper Methods to fix compilation
     private void setMute(boolean mute) {
         mMuteState = mute;
         android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
-            // Using setStreamMute (deprecated but effective for simple needs) or adjustStreamVolume
+            // Using setStreamMute (deprecated but effective for simple needs) or
+            // adjustStreamVolume
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                 am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
+                am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC,
+                        mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
             } else {
-                 am.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
+                am.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
             }
         }
     }
@@ -2592,12 +2797,14 @@ public class MainActivity extends AppCompatActivity {
 
     private void gotoFreq(int freq) {
         mCurrentPty = null; // V5.2: Reset PTY on tune
-        if (mRadioService == null) return;
+        if (mRadioService == null)
+            return;
         execRemote(s -> s.gotoFreq(freq));
     }
 
     private void refreshPresetsCache() {
-        if (mRadioService == null) return;
+        if (mRadioService == null)
+            return;
         try {
             int band = mRadioService.getCurrentBand();
             for (int i = 0; i < PRESETS_COUNT; i++) {
@@ -2613,9 +2820,11 @@ public class MainActivity extends AppCompatActivity {
      * V4.3: Helper to check if a frequency is stored in presets
      */
     private boolean isStationMemorized(int freq) {
-        if (mPresets == null) return false;
+        if (mPresets == null)
+            return false;
         for (int p : mPresets) {
-            if (p == freq) return true;
+            if (p == freq)
+                return true;
         }
         return false;
     }
@@ -2624,9 +2833,11 @@ public class MainActivity extends AppCompatActivity {
      * V4.3: Helper to get the 1-based index of a preset frequency
      */
     private int getPresetIndex(int freq) {
-        if (mPresets == null) return 0;
+        if (mPresets == null)
+            return 0;
         for (int i = 0; i < mPresets.length; i++) {
-            if (mPresets[i] == freq) return i + 1;
+            if (mPresets[i] == freq)
+                return i + 1;
         }
         return 0;
     }
