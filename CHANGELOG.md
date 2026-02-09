@@ -2,7 +2,7 @@
 
 ## [4.0.0] - 2026-02-09
 ### Added
-- **Dynamic Backgrounds (Premium)**: Entirely refactored the dynamic blur engine for Layout 3. Background now updates even when central logo is hidden, providing a premium translucent glass effect.
+- **Dynamic Backgrounds (Global Edition)**: Entirely refactored the dynamic blur engine for Layout 3. Background now updates even when central logo is hidden, providing a premium translucent glass effect.
 - **Signal Level Quality Tinting**: Implemented dynamic coloring for the signal icon (`ivSignalLevel`) based on reception quality:
     - **Green**: Excellent (Stereo + RDS Lock).
     - **Yellow**: Medium (Stereo or RDS).

@@ -1,6 +1,6 @@
-# User Manual - OpenRadioFM v4.0 (Professional Edition)
+# User Manual - OpenRadioFM v4.0 (Global Edition)
 
-Welcome to **OpenRadioFM v4.0**, the ultimate evolution of FM radio for Android Head Units. This "Professional Edition" is optimized for maximum stability, impeccable visual quality, and seamless vehicle hardware integration.
+Welcome to **OpenRadioFM v4.0**, the ultimate evolution of FM radio for Android Head Units. This "Global Edition" is optimized for maximum stability, impeccable visual quality, and seamless vehicle hardware integration.
 
 ---
 

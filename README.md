@@ -9,7 +9,7 @@
   <img src="docs/img/screenshot2.png" width="45%" alt="OpenRadioFM Interface 2">
 </div>
 
-## ✨ Novedades en v4.0 "Professional Edition"
+## ✨ Novedades en v4.0 "Global Edition"
 - **Indicador de Señal Dinámico:** El icono de cobertura ahora cambia de color (Verde/Amarillo/Rojo) según la calidad real de la sintonización (Estéreo + RDS).
 - **Layout 3 (Horizontal) Refinado:** Fondo dinámico "Glass Mode" que se adapta al logo de la emisora incluso con el logo central oculto.
 - **Estabilidad Total:** Eliminados los saltos de interfaz en Layout 2 mediante el uso de placeholders fijos para el texto RDS.
@@ -30,7 +30,7 @@
 
 ## 📜 Historial de Versiones
 
-### v4.0.0 "Professional Edition" (Febrero 2026)
+### v4.0.0 "Global Edition" (Febrero 2026)
 - **Signal Quality Tinting:** Nuevo algoritmo visual para el estado de recepción.
 - **Layout 2 Stability:** Fijación de elementos RDS para evitar desplazamientos visuales.
 - **Layout 3 Premium Blur:** Fondos dinámicos independientes de la visibilidad del logo central.
