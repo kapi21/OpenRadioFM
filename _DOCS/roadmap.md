@@ -116,3 +116,20 @@ Este documento recoge las tareas pendientes para mejorar la app de radio FM, pen
   - [ ] Para qué sirve.
   - [ ] Si trabaja en hilo de interfaz (UI) o en hilos de fondo.
   - [ ] Qué recursos abre (servicios, procesos root, listeners) y dónde se cierran.
+
+---
+
+## 8. Próximos Pasos - v5.0 "Engineering & Performance"
+
+- [ ] **Tablero Técnico (Engineering Mode)**:
+  - [ ] Implementar visualización de métricas de calidad (SNR/RSSI inferidos).
+  - [ ] Acceso mediante 5 clics en icono GPS (rebuild del menú técnico).
+- [ ] **RDS PTY 2.0**:
+  - [ ] Mapeo completo de tipos de programa (Music, News, Sports).
+  - [ ] Implementar iconos categóricos dinámicos para el PTY.
+- [ ] **Optimización de Ciclo de Vida**:
+  - [ ] Refinar `unbindService` y sondeo RDS para reducir consumo en viajes largos.
+  - [ ] Mejora de persistencia de logos remotos en caché.
+
+---
+*Roadmap actualizado: Febrero 2026 – Enfocado en v5.0*
