@@ -9,16 +9,17 @@
   <img src="docs/img/screenshot2.png" width="45%" alt="OpenRadioFM Interface 2">
 </div>
 
-## ✨ Novedades en v6.0
-- **Persistencia de Estado:** Las emisoras favoritas y el layout seleccionado ahora se mantienen tras cambios de diseño o reinicios de actividad.
-- **Refinado de Alineación:** Iconos de banda y señal alineados geométricamente en Layout 2 y 3.
-- **Consistencia Visual:** El color de la frecuencia ahora respeta estrictamente el tema (Azul Noche / Blanco).
-- **Estabilidad RDS:** Mejoras en el filtrado de PTY y datos RDS para evitar redundancia.
+## ✨ Novedades en v4.0 "Professional Edition"
+- **Indicador de Señal Dinámico:** El icono de cobertura ahora cambia de color (Verde/Amarillo/Rojo) según la calidad real de la sintonización (Estéreo + RDS).
+- **Layout 3 (Horizontal) Refinado:** Fondo dinámico "Glass Mode" que se adapta al logo de la emisora incluso con el logo central oculto.
+- **Estabilidad Total:** Eliminados los saltos de interfaz en Layout 2 mediante el uso de placeholders fijos para el texto RDS.
+- **Persistencia Inteligente:** La app ahora recuerda tus favoritos, el tema seleccionado y el estado de la señal tras cualquier cambio de vista.
+- **Modo Noche Unificado:** Aplicación estricta del color "Night Blue" en todos los elementos digitales durante la conducción nocturna.
 
 ## 🛠️ Funciones Principales
-- **Binding de Hardware:** Integración directa con el servicio de radio del sistema.
-- **Hybrid Logos:** Carga inteligente de logos desde API y fallback local.
-- **RDS Estable:** Visualización dinámica de texto informativo sin saltos.
+- **Binding de Hardware:** Integración directa con el servicio de radio del sistema (HCN, MTK, SYU, TS).
+- **Hybrid Logos:** Carga inteligente de logos desde API y fallback local en `/sdcard/RadioLogos`.
+- **RDS Estable:** Visualización dinámica de texto informativo sin saltos ni parpadeos.
 - **Control Multifuncional:** Toque corto para pasos manuales, pulsación larga para búsqueda automática.
 - **Multilingüe:** Soporte completo en Español, Inglés y Ruso.
 
@@ -29,37 +30,21 @@
 
 ## 📜 Historial de Versiones
 
-### v6.0 "Stability & UI Tuning" (Febrero 2026)
-- **Activity State Persistence:** Implementación de `onSaveInstanceState` para evitar pérdida de favoritos al cambiar de layout.
-- **Layout Alignment Fixes:** Alineación visual perfecta entre iconos de banda y señal usando `fitStart`/`fitEnd`.
-- **Theme Color Strictness:** Unificación del color de frecuencia basado en el skin actual (Night Mode vs Classic).
-- **RDS & PTY Cleanup:** Eliminación de ruido visual en metadatos y optimización del polling de servicio.
-
-### v4.3.0 "Hardware & Gestures" (Febrero 2026)
-- **Universal Radio Engine:** Selector manual para forzar el motor de radio (HCN, MTK, TS, Standard).
-- **Soporte AM:** Visualización en kHz y lógica de pasos de 9kHz para emisoras de onda media.
-- **Smooth Tuning:** Implementación de gestos de deslizamiento lateral para sintonización manual.
-- **Premium Icons:** Etiquetas MHz/kHz gráficas y presets expandidos a 15 con iconos específicos.
-
-### v4.0 "Global Edition" (Febrero 2026)
-- **MT8163 Consys Optimization:** Forzado de modo estéreo por reflexión para mayor sensibilidad.
-- **Indicador de Calidad Compuesto:** Nuevo algoritmo que estima la señal basado en RDS Lock y Stereo.
-- **RDS Real-Time:** Paso de sondeo (polling) a eventos en tiempo real para nombres RDS instantáneos.
-- **Internacionalización:** Traducción completa a Español, Inglés y Ruso con selector manual.
-- **Gestión de Favoritos:** Sistema de Guardar/Cargar listas de emisoras en archivos `.fav`.
-- **Modo Nocturno Avanzado:** Tintado azul noche para favoritos y frecuencia dinámica.
-- **V3 Expanded:** Barra inferior ampliada a 8 botones con accesos a Ajustes Android y Favoritos.
-- **Layout V2 Refinado:** Alineación perfecta, scroll oculto y mejores márgenes.
-- **Historial de Emisoras:** Corrección de la persistencia de las últimas 15 emisoras.
+### v4.0.0 "Professional Edition" (Febrero 2026)
+- **Signal Quality Tinting:** Nuevo algoritmo visual para el estado de recepción.
+- **Layout 2 Stability:** Fijación de elementos RDS para evitar desplazamientos visuales.
+- **Layout 3 Premium Blur:** Fondos dinámicos independientes de la visibilidad del logo central.
+- **Night Mode persistence:** Tintado azul noche garantizado en todos los diales y etiquetas.
+- **Multi-Hardware Engine:** Selector manual de motor de radio (HCN, MTK, TS, SYU).
+- **Activity State Fixes:** Persistencia total de favoritos y configuración visual.
 
 ### v3.0 "The Car Experience" (Febrero 2026)
-- Salto a versión estable con rediseño completo de la interfaz horizontal.
+- Salto a versión estable con rediseño completo de la interfaz horizontal (V3).
 - Implementación de menús premium y personalización en tiempo real.
-- Corrección de bugs de persistencia de logos y lógica de búsqueda.
+- Soporte para Car Brand Logo personalizado.
 
 ### v2.0b (Enero 2026)
-- Introducción de la interfaz Glassmorphism.
-- Soporte para fondos personalizados y aumento a 12 presets.
+- Introducción de la interfaz Glassmorphism y fondos personalizados.
 
 ### v1.0b (Diciembre 2025)
 - Versión inicial con soporte básico para sintonización y logos.

@@ -84,26 +84,35 @@
 
         <TextView
             android:id="@+id/tvRdsName"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_card_borderless"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="4dp"
+            android:layout_marginBottom="2dp"
+            android:gravity="center"
             android:ellipsize="end"
             android:singleLine="true"
-            android:text="STATION"
+            android:text=""
             android:textColor="@color/white"
             android:textSize="@dimen/text_size_rds_name"
             android:textStyle="bold" />
 
         <TextView
             android:id="@+id/tvRdsInfo"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:ellipsize="marquee"
+            android:background="@drawable/bg_glass_card_borderless"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="4dp"
+            android:layout_marginTop="2dp"
             android:gravity="center"
+            android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
             android:singleLine="true"
             android:text="RDS Info Text"
-            android:textColor="#AAAAAA"
-            android:textSize="20sp" />
+            android:textColor="@color/white"
+            android:textSize="18sp" />
 
     </LinearLayout>
 
@@ -166,8 +175,10 @@
                 android:layout_width="100dp"
                 android:layout_height="60dp"
                 android:layout_marginEnd="@dimen/margin_standard"
-                android:layout_marginTop="30dp"
+                android:layout_gravity="bottom"
+                android:layout_marginBottom="26dp"
                 android:scaleType="fitEnd"
+                android:padding="12dp"
                 android:src="@drawable/level_signal"
                 android:visibility="visible" />
 
@@ -183,11 +194,12 @@
 
             <ImageView
                 android:id="@+id/ivUnitLabel"
-                android:layout_width="65dp"
-                android:layout_height="35dp"
+                android:layout_width="80dp"
+                android:layout_height="40dp"
                 android:layout_marginStart="@dimen/margin_standard"
-                android:layout_marginTop="30dp"
-                android:scaleType="fitStart"
+                android:layout_gravity="bottom"
+                android:layout_marginBottom="26dp"
+                android:scaleType="fitCenter"
                 android:src="@drawable/radio_mhz" />
         </LinearLayout>
 

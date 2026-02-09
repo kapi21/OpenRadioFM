@@ -1,103 +1,32 @@
 # Changelog
 
-## [6.0] - 2026-02-08
-### Fixed
-- Refined Layout 3: Improved icon alignment and eliminated internal padding to group elements more cohesively around the frequency display using `fitEnd` and `fitStart`.
-
-## [5.9] - 2026-02-08
-### Fixed
-- Fixed alignment between band indicator and signal level icon in Layout 2 by using `fitStart` scale type to counteract internal drawable padding.
-
-## [5.8] - 2026-02-08
-### Changed
-- Refined Layout 2: Enlarged band indicator icon (FM1/2/3) and aligned it to the left (4dp margin) with the signal level icon for improved UI balance.
-
-## [5.7] - 2026-02-08
-### Fixed
-- Favorite icon disappearance on layout change by implementing activity state persistence (`onSaveInstanceState`) and immediate UI refresh on recreation.
-
-## [5.6] - 2026-02-08
-### Changed
-- Simplified frequency text color logic to strictly follow theme: Night Blue for Night Mode, White for Normal Mode (regardless of favorite status).
-
-## [5.5] - 2026-02-08
-### Changed
-- Enlarged signal level icon (`ivSignalLevel`) to 100x60dp in all layouts for better visibility.
-
-## [5.4] - 2026-02-08
-### Removed
-- Frequency logo from Layout 3 (`activity_main_v3.xml`).
-- Adjusted logic in `MainActivity.java` to prevent logo visibility in Layout 3.
-
-## [5.3] - 2026-02-08
-### Removed
-- PTY display from all layouts (deferred for later implementation).
-- Disabled PTY UI update logic in `MainActivity.java`.
-
-## [5.2] - 2026-02-08
+## [4.0.0] - 2026-02-09
 ### Added
-- Real-time PTY updates via RDS event listener (`EVENT_PTY_TYPE` 0x22).
-- Expanded hardware detection for `com.android.fmradio.FmRadioService` (Generic MTK).
-- PTY reset on frequency tuning to prevent stale data.
+- **Dynamic Backgrounds (Premium)**: Entirely refactored the dynamic blur engine for Layout 3. Background now updates even when central logo is hidden, providing a premium translucent glass effect.
+- **Signal Level Quality Tinting**: Implemented dynamic coloring for the signal icon (`ivSignalLevel`) based on reception quality:
+    - **Green**: Excellent (Stereo + RDS Lock).
+    - **Yellow**: Medium (Stereo or RDS).
+    - **Red**: Poor (No Lock).
+- **Expanded Layout 3 (Horizontal)**: Control bar expanded to 8 buttons, integrated Android settings, and improved sidebar for panoriamic displays.
+- **Save/Load Favorites**: Advanced backup system using `.fav` files in `RadioLogos` folder.
 
 ### Fixed
-- PTY data loss during periodic UI status refreshes.
-- Syntax error in Loc/Dx icon logic.
+- **Layout 2 Stability**: Prevented layout shifting by ensuring RDS boxes (`tvRdsName`, `tvRdsInfo`) stay visible as transparent placeholders when empty.
+- **Night Mode Consistency**: Consolidated all color-tinting logic. Now Frequency, Band, Signal, and RDS consistently use **Night Blue** in Night Mode.
+- **Activity State Persistence**: Implemented `onSaveInstanceState` to preserve favorites and signal status across layout switches.
+- **Icon Alignment**: Standardized `fitStart` and `fitEnd` across all layouts to eliminate internal drawable padding issues.
+- **Language Selector**: Fixed automatic restart when switching between Spanish, English, and Russian.
 
-## [5.1] - 2026-02-08
+### Changed
+- **Icon Sizing**: Increased padding for secondary control buttons (GPS, Settings) to 28dp for better visual weight in Layout 2.
+- **PTY Refinement**: Temporarily simplified PTY display logic to prioritize stability in low-signal environments.
 
-## v5.1 "Estabilidad y Refinamiento" (Marzo 2026)
+---
 
-Actualización enfocada en la estabilidad, corrección de errores y mejoras visuales menores.
-
-### 🛠️ Mejoras y Correcciones
-*   **Rendimiento:** Solucionado el congelamiento del Layout 3 (Horizontal) al corregir el hilo de la interfaz de usuario.
-*   **Iconografía:** Corregidos los iconos del botón de Silencio (ahora usando assets raíz: Altavoz y Altavoz+X).
-*   **Visibilidad:** Aumentado el tamaño del icono de Señal para una mejor visibilidad.
-*   **Interfaz:** Eliminadas las etiquetas superpuestas de MHz/kHz en el Layout 2.
-*   **Compatibilidad:** Añadido soporte para chips SYU (Joying/FYT) en la detección.
-
-## v4.3.0 "Hardware & Gestures" (Febrero 2026)
-
-Actualización técnica centrada en la compatibilidad universal de hardware y la optimización de la experiencia táctil.
-
-### ⚙️ Hardware & Compatibilidad
-*   **Compatibilidad Universal:** Nuevo sistema de detección de servicios que soporta chips HCN, MTK (Mediatek), TS (TopWay), SYU (Joying/FYT) y Android Estándar.
-*   **Selector de Motor de Radio:** Nueva opción en el menú Premium para forzar el motor de radio manualmente si el autodetector falla.
-*   **Gestión de Banda AM:** Opción para habilitar/deshabilitar la banda AM. Si se desactiva, la app salta automáticamente las bandas AM al ciclar con el botón BAND.
-*   **Frecuencias AM:** Soporte completo para visualización en kHz y pasos de 9kHz (Región Europa).
-
-### 👆 Interacción & Gestos
-*   **Sintonización Fluida (Drag):** Arrastre lateral en el cuadro de frecuencia para un ajuste manual preciso.
-*   **Nueva Lógica de Botones:** 
-    *   Click corto: Paso manual (0.05MHz / 9kHz).
-    *   Pulsación larga: Búsqueda automática (Seek).
-*   **Sensibilidad Mejorada:** Ajuste de los umbrales de swipe para una respuesta más natural en pantallas resistivas y capacitivas de coche.
-
-### 🎨 Visual & UI (V3)
-*   **Etiquetas Gráficas:** Sustitución de texto MHz/kHz por iconos de alta resolución.
-*   **Alineación Premium:** Corregido el padding en los botones de "Ajustes Android" y "Guardar/Cargar" para una simetría total en la barra de control.
-*   **Galería de Favoritos:** Ahora soporta hasta 15 presets con iconos premium numerados (`radio_icon_p01` a `p15`).
-
-### 🛠️ Mejoras Técnicas
-*   **Depuración de Código:** Eliminación de variables duplicadas y resolución de errores de compilación en lambdas.
-*   **Build System:** Migración a Java 21 para el proceso de compilación.
-*   **Git Hygiene:** Exclusión de la carpeta de recursos del repositorio para agilizar la sincronización.
-
-
-Actualización visual y de estabilidad centrada en el refinamiento del diseño y la experiencia de usuario.
-
-### 🎨 Visual & UI
-*   **Nuevo Icono V4:** Renovado logo "Orange Waveform" aplicado globalmente (Launcher, Menús, About).
-*   **Layout Vertical (V2) Perfeccionado:** Alineación matemática de botones y simetría total entre columna central y derecha.
-*   **Glassmorphism Oscuro:** Nuevos fondos semistransparentes (70% dim) para todos los diálogos (Save/Load, About, Settings).
-
-### 🌍 Funcionalidad
-*   **Selector de Idioma Manual:** Corregido comportamiento. Ahora permite cambiar idioma independientemente del sistema y reinicia la app automáticamente.
-*   **Correcciones Menores:** Ajustes de padding en botones y textos.
-
-
-## v4.0 "Global Edition" (Febrero 2026)
+## [3.0] - 2026-02-08
+### Added
+- Initial implementation of Layout 3 (Premium Horizontal).
+- Support for Car Brand Logo customization.
 
 Actualización centrada en la internacionalización, gestión de contenidos y refinamiento visual.
 

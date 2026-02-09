@@ -191,8 +191,13 @@ public class MainActivity extends AppCompatActivity {
                         String current = tvRdsInfo.getText().toString();
                         if (!current.equals(text)) {
                             tvRdsInfo.setText(text);
-                            mHasRdsLock = (text != null && !text.isEmpty());
+                            if (text == null || text.trim().isEmpty()) {
+                                tvRdsInfo.setVisibility(View.GONE);
+                            } else {
+                                tvRdsInfo.setVisibility(View.VISIBLE);
+                            }
                         }
+                        mHasRdsLock = (text != null && !text.isEmpty());
                     }
                 });
             }
@@ -202,6 +207,7 @@ public class MainActivity extends AppCompatActivity {
                 runOnUiThread(() -> {
                     if (tvRdsName != null && name != null && !name.isEmpty()) {
                         tvRdsName.setText(name);
+                        tvRdsName.setVisibility(View.VISIBLE);
                         mHasRdsLock = true;
                     }
                 });
@@ -830,7 +836,7 @@ public class MainActivity extends AppCompatActivity {
     private void showCreditsDialog() {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("About OpenRadioFM");
-        builder.setMessage("OpenRadioFM v3.0\\n\\nDesarrollada por Jimmy80\\n(Febrero 2026)");
+        builder.setMessage("OpenRadioFM v4.0\\n\\nDesarrollada por Jimmy80\\n(Febrero 2026)");
         builder.setIcon(R.mipmap.ic_launcher);
         builder.setPositiveButton("OK", (dialog, which) -> dialog.dismiss());
         
@@ -1218,6 +1224,21 @@ public class MainActivity extends AppCompatActivity {
             if (freq != mLastFreq) {
                 mLastFreq = freq;
                 mHasRdsLock = false; // Reset lock on manual change
+                
+                // V4.0: Clear RDS UI on Tune
+                runOnUiThread(() -> {
+                    if (tvRdsName != null) {
+                        tvRdsName.setText("");
+                        // V4.0: Keep visible in Layout 2 to prevent shift, GONE in V3
+                        tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                    }
+                    if (tvRdsInfo != null) {
+                        tvRdsInfo.setText("");
+                        // V4.0: Keep visible in Layout 2 to prevent shift, GONE in V3
+                        tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                    }
+                });
+
                 if (mPrefs.getBoolean("pref_save_history", true)) {
                     addToHistory(freq);
                 }
@@ -1233,90 +1254,77 @@ public class MainActivity extends AppCompatActivity {
                 // FIXED LOGIC: Freq formatting (MHz for FM, kHz for AM)
                 if (isAm) {
                     tvFrequency.setText(String.valueOf(freq));
-                    if (ivUnitLabel != null) ivUnitLabel.setImageResource(R.drawable.radio_khz);
+                    if (ivUnitLabel != null) {
+                        ivUnitLabel.setImageResource(R.drawable.radio_khz);
+                        if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null), android.graphics.PorterDuff.Mode.SRC_IN);
+                        } else {
+                            ivUnitLabel.clearColorFilter();
+                        }
+                    }
                 } else {
                     tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0));
-                    if (ivUnitLabel != null) ivUnitLabel.setImageResource(R.drawable.radio_mhz);
-                }
-                
-                if (rdsName != null && !rdsName.isEmpty()) {
-                    tvRdsName.setText(rdsName);
-                } else {
-                    // tvRdsName remains as updated by HiddenRadioPlayer if present
-                }
-
-                // V4.3: Signal Level & PTY
-                if (ivSignalLevel != null) {
-                     // Simulate Signal Level (Green if Stereo, Yellow if Mono/Local)
-                     if (isStereo) {
-                         ivSignalLevel.setColorFilter(android.graphics.Color.GREEN);
-                     } else {
-                         ivSignalLevel.setColorFilter(android.graphics.Color.YELLOW);
-                     }
-                }
-                
-                /* V5.3: Hidden in layout
-                if (tvPty != null) {
-                    if (mCurrentPty != null && !mCurrentPty.isEmpty()) {
-                        tvPty.setText(mCurrentPty);
-                    } else {
-                        tvPty.setText(station.getPty() != null ? station.getPty() : "RDS NONE");
+                    if (ivUnitLabel != null) {
+                        ivUnitLabel.setImageResource(R.drawable.radio_mhz);
+                        if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null), android.graphics.PorterDuff.Mode.SRC_IN);
+                        } else {
+                            ivUnitLabel.clearColorFilter();
+                        }
                     }
-                    // Color logic handled in Night Mode update, but default check here
-                    int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                    boolean isNight = (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-                    tvPty.setTextColor(isNight ? nightBlue : android.graphics.Color.WHITE);
                 }
-                */
-
-                // V4.3: Favorites Logic (Icon & Color) - Delegated to updateFrequencyDisplay
+                
+                // RDS Display logic moved to updateFrequencyDisplay
                 updateFrequencyDisplay(freq);
-                
-                // V2.0: LOGO PERSISTENCE FIX
+
+                // V4.0: Logo & Background Logic (Independent for V3 support)
+                String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
                 ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
-                
-                if (rdsName != null && !rdsName.isEmpty()) {
-                    // V5.4: Hide logo in V3 layout
-                    ivMainLogo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
-                    String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
-                    
-                    if (cachedLogo != null) {
-                       if (!cachedLogo.equals(mLastLogoUrl)) {
-                           mLastLogoUrl = cachedLogo;
-                           Glide.with(MainActivity.this)
-                                .load(cachedLogo)
-                                .transition(DrawableTransitionOptions.withCrossFade())
-                                .into(ivMainLogo);
-                           updateDynamicBackground(cachedLogo);
-                       }
-                    } else {
-                        mRepository.getStationInfo(freq, url -> {
-                            runOnUiThread(() -> {
-                                if (url != null) {
-                                    if (!url.equals(mLastLogoUrl)) {
-                                        mLastLogoUrl = url;
-                                        mLogoCachePerBand.put(bandCacheKey, url);
+
+                if (cachedLogo != null) {
+                    if (!cachedLogo.equals(mLastLogoUrl)) {
+                        mLastLogoUrl = cachedLogo;
+                        if (ivMainLogo != null && !mIsV3) {
+                            ivMainLogo.setVisibility(View.VISIBLE);
+                            Glide.with(MainActivity.this)
+                                 .load(cachedLogo)
+                                 .transition(DrawableTransitionOptions.withCrossFade())
+                                 .into(ivMainLogo);
+                        }
+                        updateDynamicBackground(cachedLogo);
+                    }
+                } else {
+                    mRepository.getStationInfo(freq, url -> {
+                        runOnUiThread(() -> {
+                            if (url != null) {
+                                if (!url.equals(mLastLogoUrl)) {
+                                    mLastLogoUrl = url;
+                                    mLogoCachePerBand.put(bandCacheKey, url);
+                                    if (ivMainLogo != null && !mIsV3) {
+                                        ivMainLogo.setVisibility(View.VISIBLE);
                                         Glide.with(MainActivity.this)
                                              .load(url)
                                              .transition(DrawableTransitionOptions.withCrossFade())
                                              .into(ivMainLogo);
-                                        updateDynamicBackground(url);
                                     }
-                                } else {
-                                    mLastLogoUrl = "";
-                                    mLogoCachePerBand.remove(bandCacheKey);
-                                    ivMainLogo.setImageResource(R.mipmap.ic_launcher);
-                                    updateDynamicBackground(null);
+                                    updateDynamicBackground(url);
                                 }
-                            });
+                            } else {
+                                mLastLogoUrl = "";
+                                mLogoCachePerBand.remove(bandCacheKey);
+                                if (ivMainLogo != null && !mIsV3) {
+                                    ivMainLogo.setImageResource(R.mipmap.ic_launcher);
+                                    ivMainLogo.setVisibility(View.VISIBLE);
+                                }
+                                updateDynamicBackground(null);
+                            }
                         });
-                    }
-                } else {
-                    ivMainLogo.setVisibility(View.VISIBLE);
-                    ivMainLogo.setImageResource(R.mipmap.ic_launcher);
-                    mLastLogoUrl = "";
-                    mLogoCachePerBand.remove(bandCacheKey);
-                    updateDynamicBackground(null);
+                    });
+                }
+                
+                // Hide logo always in V3 if it somehow exists
+                if (mIsV3 && ivMainLogo != null) {
+                    ivMainLogo.setVisibility(View.GONE);
                 }
                 
                 updateBandImage(band);
@@ -1636,10 +1644,16 @@ public class MainActivity extends AppCompatActivity {
                   // V5.6: Always Night Blue in Night Mode as requested
                   tvFrequency.setTextColor(nightBlue);
                   if (ivUnitLabel != null) ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                  if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
+                  if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
+                  if (tvPty != null) tvPty.setTextColor(nightBlue);
               } else {
                   // Normal Mode -> Always White
                   tvFrequency.setTextColor(white);
                   if (ivUnitLabel != null) ivUnitLabel.clearColorFilter();
+                  if (tvRdsName != null) tvRdsName.setTextColor(white);
+                  if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
+                  if (tvPty != null) tvPty.setTextColor(white);
               }
 
               // 2. Favorite Icon
@@ -1661,9 +1675,59 @@ public class MainActivity extends AppCompatActivity {
                   }
               }
               
+                // RDS Visibility Logic (V4.0 Finalization)
+                com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+                String rdsNameValue = (station != null) ? station.getName() : null;
+                
+                if (rdsNameValue != null && !rdsNameValue.isEmpty() && !rdsNameValue.equals("STATION") && !rdsNameValue.equals("STATION NAME")) {
+                    tvRdsName.setText(rdsNameValue);
+                    tvRdsName.setVisibility(View.VISIBLE);
+                } else {
+                    String current = tvRdsName.getText().toString();
+                    if (current.isEmpty() || current.equals("STATION") || current.equals("STATION NAME") || current.equals("STATION ") || current.equals(" NAME")) {
+                        // V4.0: Keep visible in V2 to prevent shifts
+                        tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                        if (!mIsV3) tvRdsName.setText("");
+                    } else {
+                        tvRdsName.setVisibility(View.VISIBLE);
+                    }
+                }
+
+                if (tvRdsInfo != null) {
+                    String rdsText = tvRdsInfo.getText().toString();
+                    if (rdsText.isEmpty() || rdsText.equals("RDS TEXT INFO") || rdsText.equals("RDS Info Text")) {
+                        // V4.0: Keep visible in V2 to prevent shifts
+                        tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                        if (!mIsV3) tvRdsInfo.setText("");
+                    } else {
+                        tvRdsInfo.setVisibility(View.VISIBLE);
+                        if (isNight) {
+                            tvRdsInfo.setTextColor(nightBlue);
+                        } else {
+                            tvRdsInfo.setTextColor(white);
+                        }
+                    }
+                }
+              
               // 3. PTY Color
               if (tvPty != null) {
                   tvPty.setTextColor(isNight ? nightBlue : white);
+              }
+
+              // 4. Signal Level Coloring (V4.2 Refinement)
+              if (ivSignalLevel != null) {
+                  int signalColor;
+                  boolean hasStereo = false;
+                  try { if (mRadioService != null) hasStereo = mRadioService.IsStereo(); } catch (Exception ignored) {}
+                  
+                  if (mHasRdsLock && hasStereo) {
+                      signalColor = android.graphics.Color.parseColor("#00E676"); // Green
+                  } else if (mHasRdsLock || hasStereo) {
+                      signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow
+                  } else {
+                      signalColor = android.graphics.Color.parseColor("#FF5252"); // Red
+                  }
+                  ivSignalLevel.setColorFilter(signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
               }
          }
     }
@@ -1778,6 +1842,7 @@ public class MainActivity extends AppCompatActivity {
      * Aplica el skin seleccionado a todos los elementos de la interfaz.
      */
     private void applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
+        this.mCurrentSkin = skin; // Update global state
         int drawableId;
         switch (skin) {
             case NIGHT_MODE: drawableId = R.drawable.bg_glass_card_night; break;
@@ -1810,7 +1875,33 @@ public class MainActivity extends AppCompatActivity {
             
             for (int id : viewIds) {
                 android.view.View v = findViewById(id);
-                if (v != null) v.setBackgroundResource(drawableId);
+                if (v != null) {
+                    // Save current padding
+                    int pL = v.getPaddingLeft();
+                    int pT = v.getPaddingTop();
+                    int pR = v.getPaddingRight();
+                    int pB = v.getPaddingBottom();
+                    
+                    v.setBackgroundResource(drawableId);
+                    
+                    // Restore padding (setBackgroundResource resets it)
+                    v.setPadding(pL, pT, pR, pB);
+                }
+            }
+        } else {
+            // V4.0: Layout V3 specific skinning for the new RDS boxes (BORDERLESS)
+            int borderlessId = R.drawable.bg_glass_card_borderless;
+            int[] v3BoxIds = { R.id.tvRdsName, R.id.tvRdsInfo };
+            for (int id : v3BoxIds) {
+                android.view.View v = findViewById(id);
+                if (v != null) {
+                    int pL = v.getPaddingLeft();
+                    int pT = v.getPaddingTop();
+                    int pR = v.getPaddingRight();
+                    int pB = v.getPaddingBottom();
+                    v.setBackgroundResource(borderlessId);
+                    v.setPadding(pL, pT, pR, pB);
+                }
             }
         }
         
@@ -1943,19 +2034,23 @@ public class MainActivity extends AppCompatActivity {
     private void updateDynamicBackground(String logoUrl) {
         if (ivDynamicBackground == null) return;
         
-        int bgMode = mPrefs.getInt("pref_bg_mode", 1); // 0: Pure, 1: Fixed, 2: Dynamic
+        // V4.0: Layout 3 always allows dynamic background if enabled in prefs
+        int bgMode = mPrefs.getInt("pref_bg_mode", 1); // 1: Classic, 2: Dynamic
         
-        if (bgMode == 2 && logoUrl != null && !logoUrl.isEmpty()) {
+        if (bgMode == 2) {
             ivDynamicBackground.setVisibility(View.VISIBLE);
-            Glide.with(this)
-                 .load(logoUrl)
-                 .centerCrop()
-                 .transition(DrawableTransitionOptions.withCrossFade())
-                 .into(ivDynamicBackground);
+            if (logoUrl != null && !logoUrl.isEmpty()) {
+                Glide.with(this)
+                     .load(logoUrl)
+                     .centerCrop()
+                     .transition(DrawableTransitionOptions.withCrossFade())
+                     .into(ivDynamicBackground);
+            } else {
+                // If no logo but dynamic enabled, we could show a default or keep last
+                // For now, let's keep it visible with the overlay
+            }
         } else {
-            // Si el modo no es dinámico o no hay logo, ocultamos la capa dinámica
             ivDynamicBackground.setVisibility(View.GONE);
-            // Si acabamos de cambiar a modo fijo/negro, refrescamos el fondo base
             loadCustomBackground();
         }
     }
