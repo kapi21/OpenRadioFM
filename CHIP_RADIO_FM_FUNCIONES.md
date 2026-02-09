@@ -425,19 +425,24 @@ Basado en chips FM típicos de MediaTek, podrían existir funciones adicionales 
 
 ### Potencialmente Disponibles en el Driver (Confirmado vía strings `fmradio_drv.ko`)
 - ✅ **FM_IOCTL_GETRSSI**: Obtener nivel de señal absoluto (RSSI).
-- ✅ **FM_IOCTL_SCAN_GETRSSI**: RSSI durante el escaneo.
-- ✅ **FM_IOCTL_GETBLERRATIO**: Tasa de error de bloques (calidad digital).
+- `FM_IOCTL_SCAN_GETRSSI`: Obtención de RSSI durante escaneo.
+- `FM_IOCTL_GETBLERRATIO`: Probable tasa de error de bloques (calidad).
+- `FM_IOCTL_SETMONOSTERO`: Cambio forzado entre mono y estéreo.
+
+### Hallazgos en Capa JNI y Framework (Fase 6)
+- **Biblioteca JNI**: `libfmjni.so` (ubicada en `/system/lib/`)
+  - Funciones detectadas: `readRssi`, `stereoMono`, `setStereoMono`, `FMR_get_rssi`, `FMR_get_stereomono`.
+- **Servicio de Sistema**: El servicio binder se registra como `fmradio`.
+  - Clase principal Java (probada): `android.radio.RadioService`.
+  - Persistencia Framework: El método `readRssi` está presente en `boot-framework.vdex`, indicando una implementación profunda a nivel de sistema MediaTek, no solo una app aislada.
+  - El control de estéreo llama directamente a `nativeSetStereo` y notifica al `McuService` vía `requestRadioMsg(0x11, ...)`.
 - ✅ **FM_IOCTL_GETBADBNT**: Conteo de bloques erróneos (calidad de señal).
 - ✅ **FM_IOCTL_IS_FM_POWERED_UP**: Estado de energía del chip.
-- ✅ **FM_IOCTL_SETMONOSTERO**: Control forzado de modo de audio.
-- 🔹 RSSI (Indicador de intensidad de señal)
-- 🔹 SNR (Relación señal/ruido)
-- 🔹 Control de ganancia de antena
-- 🔹 Deemphasis (50µs/75µs)
-- 🔹 Pilot tone detection
-- 🔹 Multipath detection
-- 🔹 Soft mute threshold
-- 🔹 Blend threshold (stereo/mono)
+- **Lógica de Detección de Estéreo (Mapeo MCU)**:
+  - El estado estéreo se recibe vía mensaje MCU `0x11`.
+  - El bit **0x40** (Bit 6) del primer byte de parámetros del paquete indica si hay señal estéreo detectada.
+  - El bit **0x04** (Bit 2) indica si el modo estéreo está habilitado (`mStereoEn`).
+- **Soporte AM**: El firmware es genérico para el SoC MT8163. Aunque el hardware físico carezca de componentes para AM, el `RadioService` mantiene activos los perfiles de banda AM1/AM2 (4 bancos cada uno) por compatibilidad de software.
 
 ### Para Investigar
 > [!NOTE]
