@@ -423,7 +423,13 @@ Tipos de scan:
 
 Basado en chips FM típicos de MediaTek, podrían existir funciones adicionales no expuestas en la API:
 
-### Potencialmente Disponibles en el Driver
+### Potencialmente Disponibles en el Driver (Confirmado vía strings `fmradio_drv.ko`)
+- ✅ **FM_IOCTL_GETRSSI**: Obtener nivel de señal absoluto (RSSI).
+- ✅ **FM_IOCTL_SCAN_GETRSSI**: RSSI durante el escaneo.
+- ✅ **FM_IOCTL_GETBLERRATIO**: Tasa de error de bloques (calidad digital).
+- ✅ **FM_IOCTL_GETBADBNT**: Conteo de bloques erróneos (calidad de señal).
+- ✅ **FM_IOCTL_IS_FM_POWERED_UP**: Estado de energía del chip.
+- ✅ **FM_IOCTL_SETMONOSTERO**: Control forzado de modo de audio.
 - 🔹 RSSI (Indicador de intensidad de señal)
 - 🔹 SNR (Relación señal/ruido)
 - 🔹 Control de ganancia de antena
