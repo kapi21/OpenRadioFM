@@ -1915,7 +1915,7 @@ public class MainActivity extends AppCompatActivity {
                     int pT = v.getPaddingTop();
                     int pR = v.getPaddingRight();
                     int pB = v.getPaddingBottom();
-                    v.setBackgroundResource(borderlessId);
+                    v.setBackground(null);
                     v.setPadding(pL, pT, pR, pB);
                 }
             }
