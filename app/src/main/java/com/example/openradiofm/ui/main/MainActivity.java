@@ -1196,6 +1196,14 @@ public class MainActivity extends AppCompatActivity {
             boolean isStereo = s.IsStereo();
             boolean isLocal = s.IsDxLocal();
 
+            // Fix v4.0.1: Actualizar mCurrentBand al detectar cambio de banda
+            // Sin esto, los presets y favoritos siempre operaban sobre FM1
+            if (band != mCurrentBand) {
+                mCurrentBand = band;
+                refreshPresetsCache();
+                runOnUiThread(() -> refreshPresetButtons());
+            }
+
             // V4.3: Hardware Toggle for AM
             boolean amEnabled = mPrefs.getBoolean("pref_enable_am", true);
             boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
@@ -2597,15 +2605,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshPresetsCache() {
-        if (mRadioService == null) return;
-        try {
-            int band = mRadioService.getCurrentBand();
-            for (int i = 0; i < PRESETS_COUNT; i++) {
-                String key = "P" + (i + 1) + "_B" + band;
-                mPresets[i] = mPrefs.getInt(key, 0);
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        // Fix v4.0.1: Usar mCurrentBand directamente (ya actualizado en refreshRadioStatus)
+        // Esto garantiza consistencia con refreshPresetButtons/isFrequencySaved/getPresetIndexForFreq
+        int band = mCurrentBand;
+        if (mRadioService != null) {
+            try {
+                band = mRadioService.getCurrentBand();
+                mCurrentBand = band; // Sincronizar siempre
+            } catch (RemoteException ignored) {}
+        }
+        for (int i = 0; i < PRESETS_COUNT; i++) {
+            String key = "P" + (i + 1) + "_B" + band;
+            mPresets[i] = mPrefs.getInt(key, 0);
         }
     }
 
