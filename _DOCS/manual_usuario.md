@@ -1,4 +1,4 @@
-# Manual de Usuario - OpenRadioFM v4.0 (Global Edition)
+# Manual de Usuario - OpenRadioFM v4.5.1 Server Test
 
 Bienvenido a **OpenRadioFM v4.0**, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión "Global Edition" está optimizada para ofrecer la máxima estabilidad, una calidad visual impecable y una integración total con el hardware del vehículo.
 
@@ -32,6 +32,11 @@ Elige entre 10 esquemas de color que se aplican a los bordes y acentos. En **Mod
 2. **Imagen background.png:** Carga tu imagen desde `/sdcard/RadioLogos/background.png`.
 3. **Logo Dinámico (Glass Mode):** El fondo se genera automáticamente a partir del logo de la emisora, creando un efecto de cristal esmerilado muy elegante. En V3, este efecto funciona incluso si decides ocultar el logo central.
 
+### 2.3 Horario Modo Noche [Novedad v4.5.1]
+Ahora puedes automatizar el cambio de tema oscuro:
+1. Activa **"Modo Noche Automático"** en Ajustes Premium.
+2. Pulsa en las horas de **Inicio** y **Fin** para definir tu horario preferido (ej: 20:00 a 07:00).
+
 ---
 
 ## 3. Gestión de Logos y Nombres
@@ -49,7 +54,10 @@ En Layout V3, puedes mostrar tu marca en el lateral derecho:
 
 ---
 
-## 4. Gestión de Favoritos (Save/Load)
+## 4. Gestión de Favoritos
+
+### 4.0 Memoria por Banda [Novedad v4.5.1]
+Cada banda (FM1, FM2, FM3) tiene sus propios 6 espacios de memoria independientes. Al cambiar de banda, se cargan automáticamente tus emisoras guardadas para esa frecuencia.
 
 ### 4.1 Guardar y Cargar
 Usa el botón del **Disquete (💾)** para abrir el gestor de archivos `.fav`. Esto te permite mover tus emisoras favoritas entre diferentes radios o hacer copias de seguridad antes de resetear el equipo.

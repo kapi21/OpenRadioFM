@@ -1,0 +1,72 @@
+{
+  "presets": [
+    {
+      "preset": 1,
+      "band": 0,
+      "frequency": 87600,
+      "custom_name": "ROCK FM"
+    },
+    {
+      "preset": 2,
+      "band": 0,
+      "frequency": 89100,
+      "custom_name": "CAD-100"
+    },
+    {
+      "preset": 3,
+      "band": 0,
+      "frequency": 91300,
+      "custom_name": "COPE"
+    },
+    {
+      "preset": 4,
+      "band": 0,
+      "frequency": 93500,
+      "custom_name": "DIAL"
+    },
+    {
+      "preset": 5,
+      "band": 0,
+      "frequency": 96900,
+      "custom_name": "LOS40"
+    },
+    {
+      "preset": 6,
+      "band": 0,
+      "frequency": 92700,
+      "custom_name": "EUROPAFM"
+    },
+    {
+      "preset": 7,
+      "band": 0,
+      "frequency": 100800,
+      "custom_name": "CanalEX"
+    },
+    {
+      "preset": 8,
+      "band": 0,
+      "frequency": 104800,
+      "custom_name": "ONDACERO"
+    },
+    {
+      "preset": 9,
+      "band": 0,
+      "frequency": 105500,
+      "custom_name": "KISS FM"
+    },
+    {
+      "preset": 10,
+      "band": 0,
+      "frequency": 103800,
+      "custom_name": "ANTENA 1"
+    },
+    {
+      "preset": 1,
+      "band": 2,
+      "frequency": 87600,
+      "custom_name": "ROCK FM"
+    }
+  ],
+  "version": "1.0",
+  "timestamp": "20260209_163430"
+}

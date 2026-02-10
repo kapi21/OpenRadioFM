@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadio FM v4.0</string>
+    <string name="app_name">OpenRadioFM v4.5.1 Server Test</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalización Premium</string>
@@ -87,4 +87,44 @@
     <string name="am_band_enabled">✅ Banda AM habilitada</string>
     <string name="am_band_disabled">❌ Banda AM deshabilitada</string>
     <string name="engine_changed">✅ Motor de radio cambiado a %s</string>
+
+    <!-- V4.5: Night Mode Schedule -->
+    <string name="night_schedule">Horario Modo Noche</string>
+    <string name="night_start">Inicio</string>
+    <string name="night_end">Fin</string>
+    <string name="night_schedule_updated">✅ Horario actualizado: %1$s - %2$s</string>
+
+    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    <string name="pty_none">Sin PTY</string>
+    <string name="pty_news">Noticias</string>
+    <string name="pty_current_affairs">Actualidad</string>
+    <string name="pty_information">Información</string>
+    <string name="pty_sport">Deportes</string>
+    <string name="pty_education">Educación</string>
+    <string name="pty_drama">Drama</string>
+    <string name="pty_culture">Cultura</string>
+    <string name="pty_science">Ciencia</string>
+    <string name="pty_varied">Variado</string>
+    <string name="pty_pop">Música Pop</string>
+    <string name="pty_rock">Música Rock</string>
+    <string name="pty_easy_listening">Fácil Escucha</string>
+    <string name="pty_light_classical">Clásica Ligera</string>
+    <string name="pty_serious_classical">Clásica Seria</string>
+    <string name="pty_other_music">Otra Música</string>
+    <string name="pty_weather">Tiempo</string>
+    <string name="pty_finance">Finanzas</string>
+    <string name="pty_children">Infantil</string>
+    <string name="pty_social">Social</string>
+    <string name="pty_religion">Religión</string>
+    <string name="pty_phone_in">Llamadas</string>
+    <string name="pty_travel">Viajes</string>
+    <string name="pty_leisure">Ocio</string>
+    <string name="pty_jazz">Jazz</string>
+    <string name="pty_country">Country</string>
+    <string name="pty_national">Nacional</string>
+    <string name="pty_oldies">Oldies</string>
+    <string name="pty_folk">Folk</string>
+    <string name="pty_documentary">Documental</string>
+    <string name="pty_alarm_test">Test Alarma</string>
+    <string name="pty_alarm">Alarma</string>
 </resources>

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadio FM v4.0</string>
+    <string name="app_name">OpenRadioFM v4.5.1 Server Test</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Премиум Настройки</string>
@@ -74,4 +74,57 @@
     <string name="language_changed">✅ Язык изменён на %s</string>
     <string name="about_openradio">ℹ️ О приложении OpenRadioFM</string>
     <string name="touch_to_change">Нажмите для изменения</string>
+
+    <!-- V4.3: Hardware Settings -->
+    <string name="hardware_settings">⚙️ Настройки Оборудования</string>
+    <string name="enable_am_band">Включить AM Диапазон</string>
+    <string name="radio_engine">Радио Движок</string>
+    <string name="engine_auto">Автоматический (Рекомендуется)</string>
+    <string name="engine_hcn">HCN (Eonon/Xtrons)</string>
+    <string name="engine_mtk">Mediatek (MtkRadio)</string>
+    <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_standard">Android Стандарт</string>
+    <string name="am_band_enabled">✅ AM Диапазон включён</string>
+    <string name="am_band_disabled">❌ AM Диапазон выключен</string>
+    <string name="engine_changed">✅ Радио движок изменён на %s</string>
+
+    <!-- V4.5: Night Mode Schedule -->
+    <string name="night_schedule">Расписание Ночного Режима</string>
+    <string name="night_start">Начало</string>
+    <string name="night_end">Конец</string>
+    <string name="night_schedule_updated">✅ Расписание обновлено: %1$s - %2$s</string>
+
+    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    <string name="pty_none">Без PTY</string>
+    <string name="pty_news">Новости</string>
+    <string name="pty_current_affairs">Текущие События</string>
+    <string name="pty_information">Информация</string>
+    <string name="pty_sport">Спорт</string>
+    <string name="pty_education">Образование</string>
+    <string name="pty_drama">Драма</string>
+    <string name="pty_culture">Культура</string>
+    <string name="pty_science">Наука</string>
+    <string name="pty_varied">Разное</string>
+    <string name="pty_pop">Поп Музыка</string>
+    <string name="pty_rock">Рок Музыка</string>
+    <string name="pty_easy_listening">Лёгкая Музыка</string>
+    <string name="pty_light_classical">Лёгкая Классика</string>
+    <string name="pty_serious_classical">Серьёзная Классика</string>
+    <string name="pty_other_music">Другая Музыка</string>
+    <string name="pty_weather">Погода</string>
+    <string name="pty_finance">Финансы</string>
+    <string name="pty_children">Детское</string>
+    <string name="pty_social">Социальное</string>
+    <string name="pty_religion">Религия</string>
+    <string name="pty_phone_in">Звонки</string>
+    <string name="pty_travel">Путешествия</string>
+    <string name="pty_leisure">Досуг</string>
+    <string name="pty_jazz">Джаз</string>
+    <string name="pty_country">Кантри</string>
+    <string name="pty_national">Национальное</string>
+    <string name="pty_oldies">Ретро</string>
+    <string name="pty_folk">Фолк</string>
+    <string name="pty_documentary">Документальное</string>
+    <string name="pty_alarm_test">Тест Тревоги</string>
+    <string name="pty_alarm">Тревога</string>
 </resources>

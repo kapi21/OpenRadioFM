@@ -117,6 +117,7 @@
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
         app:layout_constraintBottom_toTopOf="@+id/btnSeekDown">
 
+        <!-- Band indicator arriba-izquierda -->
         <ImageView
             android:id="@+id/ivBandIndicator"
             android:layout_width="160dp"
@@ -128,19 +129,7 @@
             android:scaleType="fitStart"
             android:src="@drawable/radio_fm1" />
 
-
-        <ImageView
-            android:id="@+id/ivSignalLevel"
-            android:layout_width="100dp"
-            android:layout_height="60dp"
-            android:layout_gravity="bottom|start"
-            android:layout_marginStart="4dp"
-            android:layout_marginBottom="8dp"
-            android:scaleType="fitStart"
-            android:padding="16dp"
-            android:src="@drawable/level_signal"
-            android:visibility="visible" />
-
+        <!-- Frecuencia centrada (ocupa todo el espacio) -->
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvFrequency"
             android:layout_width="match_parent"
@@ -149,44 +138,55 @@
             android:text="100.00"
             android:textColor="@color/white"
             android:textStyle="bold"
+            android:paddingStart="40dp"
+            android:paddingEnd="40dp"
             app:autoSizeTextType="uniform"
             app:autoSizeMinTextSize="@dimen/text_size_frequency_min"
             app:autoSizeMaxTextSize="@dimen/text_size_frequency_large"
             app:autoSizeStepGranularity="2sp"
             android:maxLines="1" />
 
+        <!-- Signal: esquina inferior-izquierda -->
+        <ImageView
+            android:id="@+id/ivSignalLevel"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="bottom|start"
+            android:layout_margin="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/level_signal"
+            android:visibility="visible" />
+
+        <!-- MHz: esquina inferior-derecha -->
         <ImageView
             android:id="@+id/ivUnitLabel"
-            android:layout_width="80dp"
-            android:layout_height="40dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="12dp"
-            android:layout_marginBottom="8dp"
+            android:layout_margin="8dp"
             android:scaleType="fitCenter"
             android:src="@drawable/radio_mhz" />
 
-
+        <!-- Overlays fijos en las esquinas -->
         <TextView
             android:id="@+id/tvPty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="12dp"
+            android:layout_gravity="bottom|center_horizontal"
             android:layout_marginBottom="8dp"
             android:text="PTY NONE"
             android:textColor="@color/white"
-            android:textSize="14sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             android:visibility="gone" />
 
         <!-- V5.0: PTY Icon -->
         <ImageView
             android:id="@+id/ivPtyIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="90dp"
-            android:layout_marginBottom="8dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_gravity="bottom|center_horizontal"
+            android:layout_marginBottom="32dp"
             android:scaleType="fitCenter"
             android:visibility="gone"
             tools:src="@drawable/ic_pty_music"

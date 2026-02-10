@@ -1,4 +1,4 @@
-# OpenRadioFM 📻 - The Car Experience
+# OpenRadioFM 📻 v4.5.1 Server Test - The Car Experience
 
 **OpenRadioFM** es una aplicación de radio premium diseñada específicamente para unidades Android automotrices (Head Units), con un enfoque en hardware basado en **MT8163** (HCN/AutoRadio). Ofrece una interfaz extremadamente pulida con efectos de Glassmorphism, personalización avanzada y una experiencia optimizada para la conducción.
 
@@ -9,12 +9,14 @@
   <img src="docs/img/screenshot2.png" width="45%" alt="OpenRadioFM Interface 2">
 </div>
 
-## ✨ Novedades en v4.0 "Global Edition"
+## ✨ Novedades en v4.5.1 "Server Test"
 - **Indicador de Señal Dinámico:** El icono de cobertura ahora cambia de color (Verde/Amarillo/Rojo) según la calidad real de la sintonización (Estéreo + RDS).
 - **Layout 3 (Horizontal) Refinado:** Fondo dinámico "Glass Mode" que se adapta al logo de la emisora incluso con el logo central oculto.
 - **Estabilidad Total:** Eliminados los saltos de interfaz en Layout 2 mediante el uso de placeholders fijos para el texto RDS.
 - **Persistencia Inteligente:** La app ahora recuerda tus favoritos, el tema seleccionado y el estado de la señal tras cualquier cambio de vista.
-- **Modo Noche Unificado:** Aplicación estricta del color "Night Blue" en todos los elementos digitales durante la conducción nocturna.
+- **Modo Noche Configurable:** Programación horaria automática para el cambio de tema, ajustable desde la configuración premium.
+- **PTY Multilingüe:** Indicadores de tipo de programa (Noticias, Pop, Rock...) totalmente localizados en ES/EN/RU.
+- **Gestión de Bandas:** Favoritos independientes para FM1, FM2 y FM3.
 
 ## 🛠️ Funciones Principales
 - **Binding de Hardware:** Integración directa con el servicio de radio del sistema (HCN, MTK, SYU, TS).
@@ -29,6 +31,12 @@
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 
 ## 📜 Historial de Versiones
+
+### v4.5.1 "Server Test" (Febrero 2026)
+- **Localización Completa:** PTY traducido a 3 idiomas y textos ajustados.
+- **UI Refinada:** Iconos de MHz y PTY aumentados para legibilidad extrema.
+- **Night Schedule:** Horario de modo noche personalizable en ajustes.
+- **Band Isolation:** Corrección crítica para favoritos independientes por banda.
 
 ### v4.0.0 "Global Edition" (Febrero 2026)
 - **Signal Quality Tinting:** Nuevo algoritmo visual para el estado de recepción.

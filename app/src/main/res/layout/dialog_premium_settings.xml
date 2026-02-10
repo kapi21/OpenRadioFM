@@ -178,6 +178,43 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
+        <!-- V4.5: Night Mode Schedule -->
+        <LinearLayout
+            android:id="@+id/rowNightSchedule"
+            style="@style/SettingsRowStyle"
+            android:visibility="gone">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/night_schedule"
+                android:textColor="@color/white"/>
+            <TextView
+                android:id="@+id/tvNightStart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="19:00"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:padding="8dp"
+                android:background="?android:attr/selectableItemBackground"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=" — "
+                android:textColor="#666666"
+                android:textSize="14sp"/>
+            <TextView
+                android:id="@+id/tvNightEnd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="07:00"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:padding="8dp"
+                android:background="?android:attr/selectableItemBackground"/>
+        </LinearLayout>
+
         <!-- Option: History -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView

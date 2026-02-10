@@ -1,4 +1,4 @@
-# User Manual - OpenRadioFM v4.0 (Global Edition)
+# User Manual - OpenRadioFM v4.5.1 Server Test
 
 Welcome to **OpenRadioFM v4.0**, the ultimate evolution of FM radio for Android Head Units. This "Global Edition" is optimized for maximum stability, impeccable visual quality, and seamless vehicle hardware integration.
 
@@ -32,7 +32,10 @@ Choose from 10 color schemes applied to borders and accents. In **Night Mode**, 
 2. **background.png Image:** Load your custom image from `/sdcard/RadioLogos/background.png`.
 3. **Dynamic Logo (Glass Mode):** The background is automatically generated from the station logo, creating an elegant frosted glass effect. In V3, this effect works even if you choose to hide the central logo.
 
----
+### 2.3 Night Mode Schedule [New in v4.5.1]
+You can now automate the dark theme switch:
+1. Enable **"Auto Night Mode"** in Premium Settings.
+2. Tap on **Start** and **End** times to define your schedule (e.g., 20:00 to 07:00).
 
 ## 3. Logo & Name Management
 
@@ -49,7 +52,10 @@ In Layout V3, you can display your brand on the right side:
 
 ---
 
-## 4. Favorites Management (Save/Load)
+## 4. Favorites Management
+
+### 4.0 Independent Band Memory [New in v4.5.1]
+Each band (FM1, FM2, FM3) has its own independent 6 memory slots. Switching bands automatically loads the saved stations for that specific band.
 
 ### 4.1 Save and Load
 Use the **Floppy Disk (💾)** button to open the `.fav` file manager. This allows you to move your favorite stations between different radios or perform backups before resetting the device.

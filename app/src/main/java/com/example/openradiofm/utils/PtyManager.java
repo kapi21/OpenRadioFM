@@ -1,5 +1,6 @@
 package com.example.openradiofm.utils;
 
+import android.content.Context;
 import com.example.openradiofm.R;
 
 public class PtyManager {
@@ -129,13 +130,66 @@ public class PtyManager {
 
         return 0; // Default / Unknown
     }
-    
+
     /**
-     * Helper to get PTY Label (Multilingual support would be here normally, 
-     * but we are focusing on Icons as per V5.0 requirements).
+     * Returns the string resource ID for a PTY code (0-31).
+     * Use with context.getString() for localized labels.
      */
-     public static String getPtyLabel(int pty) {
-         // Placeholder for future expansion
-         return "PTY " + pty;
-     }
+    public static int getPtyLabelResId(int pty) {
+        switch (pty) {
+            case 1: return R.string.pty_news;
+            case 2: return R.string.pty_current_affairs;
+            case 3: return R.string.pty_information;
+            case 4: return R.string.pty_sport;
+            case 5: return R.string.pty_education;
+            case 6: return R.string.pty_drama;
+            case 7: return R.string.pty_culture;
+            case 8: return R.string.pty_science;
+            case 9: return R.string.pty_varied;
+            case 10: return R.string.pty_pop;
+            case 11: return R.string.pty_rock;
+            case 12: return R.string.pty_easy_listening;
+            case 13: return R.string.pty_light_classical;
+            case 14: return R.string.pty_serious_classical;
+            case 15: return R.string.pty_other_music;
+            case 16: return R.string.pty_weather;
+            case 17: return R.string.pty_finance;
+            case 18: return R.string.pty_children;
+            case 19: return R.string.pty_social;
+            case 20: return R.string.pty_religion;
+            case 21: return R.string.pty_phone_in;
+            case 22: return R.string.pty_travel;
+            case 23: return R.string.pty_leisure;
+            case 24: return R.string.pty_jazz;
+            case 25: return R.string.pty_country;
+            case 26: return R.string.pty_national;
+            case 27: return R.string.pty_oldies;
+            case 28: return R.string.pty_folk;
+            case 29: return R.string.pty_documentary;
+            case 30: return R.string.pty_alarm_test;
+            case 31: return R.string.pty_alarm;
+            case 0:
+            default: return R.string.pty_none;
+        }
+    }
+
+    /**
+     * Returns localized PTY label for display.
+     * @param context Android context for string resources
+     * @param pty PTY code (0-31)
+     */
+    public static String getPtyLabel(Context context, int pty) {
+        int resId = getPtyLabelResId(pty);
+        return context.getString(resId);
+    }
+
+    /**
+     * Legacy method - returns non-localized label.
+     * @deprecated Use getPtyLabel(Context, int) instead.
+     */
+    @Deprecated
+    public static String getPtyLabel(int pty) {
+        return "PTY " + pty;
+    }
 }
+

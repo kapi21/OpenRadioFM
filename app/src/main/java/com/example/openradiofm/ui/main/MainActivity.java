@@ -162,14 +162,24 @@ public class MainActivity extends AppCompatActivity {
             mRadioService = IRadioServiceAPI.Stub.asInterface(service);
             try {
                 mRadioService.registerRadioCallback(mCallback);
+
+                // Fix v4.5.1: Obtener banda real INMEDIATAMENTE antes de cargar presets
+                try {
+                    mCurrentBand = mRadioService.getCurrentBand();
+                } catch (Exception ignored) {
+                }
+
                 startStatusPolling();
                 showToast("Conexión Establecida");
 
                 // V5.7: Immediate UI refresh after recreation if we have a stored frequency
-                if (mLastFreq != -1) {
-                    refreshPresetsCache();
-                    runOnUiThread(() -> updateFrequencyDisplay(mLastFreq));
-                }
+                refreshPresetsCache();
+                runOnUiThread(() -> {
+                    refreshPresetButtons();
+                    if (mLastFreq != -1) {
+                        updateFrequencyDisplay(mLastFreq);
+                    }
+                });
 
                 // Solo inicializamos el listener oculto de RDS en modo completo.
                 if (mMode == FmMode.FM_COMPLETO) {
@@ -1251,7 +1261,6 @@ public class MainActivity extends AppCompatActivity {
      * - Cualquier acceso a vistas se encapsula en runOnUiThread().
      */
     private void refreshRadioStatus() {
-        refreshPresetsCache(); // V5.0: Update cache
         if (mLastFreq != -1) {
             runOnUiThread(() -> updateFrequencyDisplay(mLastFreq));
         }
@@ -1263,6 +1272,13 @@ public class MainActivity extends AppCompatActivity {
             int band = s.getCurrentBand();
             boolean isStereo = s.IsStereo();
             boolean isLocal = s.IsDxLocal();
+
+            // Fix v4.5.1: SIEMPRE sincronizar mCurrentBand y refrescar presets
+            if (band != mCurrentBand) {
+                mCurrentBand = band;
+                refreshPresetsCache();
+                runOnUiThread(() -> refreshPresetButtons());
+            }
 
             // V4.3: Hardware Toggle for AM
             boolean amEnabled = mPrefs.getBoolean("pref_enable_am", true);
@@ -1444,6 +1460,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * V5.0: Updates PTY Label and Icon based on RDS data.
+     * V4.5.1: Shows localized category name instead of raw PTY number.
      */
     private void updatePtyUI(String pty) {
         if (pty == null || pty.isEmpty()) {
@@ -1454,13 +1471,25 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
+        // V4.5.1: Try to parse as number and show localized label
+        String displayLabel = pty;
+        int ptyCode = -1;
+        try {
+            ptyCode = Integer.parseInt(pty.trim());
+            if (ptyCode >= 0 && ptyCode <= 31) {
+                displayLabel = PtyManager.getPtyLabel(this, ptyCode);
+            }
+        } catch (NumberFormatException ignored) {
+            // Not a number, use as-is
+        }
+
         if (tvPty != null) {
-            tvPty.setText(pty);
+            tvPty.setText(displayLabel);
             tvPty.setVisibility(View.VISIBLE);
         }
 
         if (ivPtyIcon != null) {
-            int iconRes = PtyManager.getPtyIconResource(pty);
+            int iconRes = (ptyCode >= 0) ? PtyManager.getPtyIconResource(ptyCode) : PtyManager.getPtyIconResource(pty);
             if (iconRes != 0) {
                 ivPtyIcon.setImageResource(iconRes);
                 ivPtyIcon.setVisibility(View.VISIBLE);
@@ -1575,16 +1604,58 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // Night Mode Switch
+        android.view.View rowNightSchedule = dialog.findViewById(R.id.rowNightSchedule);
+        TextView tvNightStart = dialog.findViewById(R.id.tvNightStart);
+        TextView tvNightEnd = dialog.findViewById(R.id.tvNightEnd);
+
+        // V4.5: Initialize schedule display
+        int nightStart = mPrefs.getInt("pref_night_start", 19);
+        int nightEnd = mPrefs.getInt("pref_night_end", 7);
+        if (tvNightStart != null) tvNightStart.setText(String.format(java.util.Locale.US, "%02d:00", nightStart));
+        if (tvNightEnd != null) tvNightEnd.setText(String.format(java.util.Locale.US, "%02d:00", nightEnd));
+
         if (swNight != null) {
-            swNight.setChecked(mPrefs.getBoolean("pref_night_mode_auto", false));
+            boolean nightEnabled = mPrefs.getBoolean("pref_night_mode_auto", false);
+            swNight.setChecked(nightEnabled);
+            if (rowNightSchedule != null) rowNightSchedule.setVisibility(nightEnabled ? View.VISIBLE : View.GONE);
+
             swNight.setOnCheckedChangeListener((bv, checked) -> {
                 mPrefs.edit().putBoolean("pref_night_mode_auto", checked).apply();
+                if (rowNightSchedule != null) rowNightSchedule.setVisibility(checked ? View.VISIBLE : View.GONE);
                 if (checked) {
                     checkAndApplyNightMode();
                     showToast("Modo Noche Automático: Activado");
                 } else {
                     showToast("Modo Noche Automático: Desactivado - Puedes elegir skin manualmente");
                 }
+            });
+        }
+
+        // V4.5: Night Schedule TimePickers
+        if (tvNightStart != null) {
+            tvNightStart.setOnClickListener(v -> {
+                int curStart = mPrefs.getInt("pref_night_start", 19);
+                new android.app.TimePickerDialog(this, (view, h, m) -> {
+                    mPrefs.edit().putInt("pref_night_start", h).apply();
+                    tvNightStart.setText(String.format(java.util.Locale.US, "%02d:00", h));
+                    checkAndApplyNightMode();
+                    String startStr = String.format(java.util.Locale.US, "%02d:00", h);
+                    String endStr = tvNightEnd != null ? tvNightEnd.getText().toString() : "07:00";
+                    showToast(getString(R.string.night_schedule_updated, startStr, endStr));
+                }, curStart, 0, true).show();
+            });
+        }
+        if (tvNightEnd != null) {
+            tvNightEnd.setOnClickListener(v -> {
+                int curEnd = mPrefs.getInt("pref_night_end", 7);
+                new android.app.TimePickerDialog(this, (view, h, m) -> {
+                    mPrefs.edit().putInt("pref_night_end", h).apply();
+                    tvNightEnd.setText(String.format(java.util.Locale.US, "%02d:00", h));
+                    checkAndApplyNightMode();
+                    String startStr = tvNightStart != null ? tvNightStart.getText().toString() : "19:00";
+                    String endStr = String.format(java.util.Locale.US, "%02d:00", h);
+                    showToast(getString(R.string.night_schedule_updated, startStr, endStr));
+                }, curEnd, 0, true).show();
             });
         }
 
@@ -2360,9 +2431,17 @@ public class MainActivity extends AppCompatActivity {
         if (nightModeFlags == android.content.res.Configuration.UI_MODE_NIGHT_YES) {
             return true;
         } else {
-            // 2. Fallback: Time Based (7 PM - 7 AM)
+            // 2. Fallback: Time Based (configurable, default 19h-7h)
+            int startHour = mPrefs.getInt("pref_night_start", 19);
+            int endHour = mPrefs.getInt("pref_night_end", 7);
             int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
-            return (hour >= 19 || hour < 7);
+            if (startHour > endHour) {
+                // Overnight range (e.g. 19-7)
+                return (hour >= startHour || hour < endHour);
+            } else {
+                // Same-day range (e.g. 22-23)
+                return (hour >= startHour && hour < endHour);
+            }
         }
     }
 
@@ -2506,7 +2585,7 @@ public class MainActivity extends AppCompatActivity {
             TextView tvVersion = dialog.findViewById(R.id.tvAppVersion);
             if (tvVersion != null) {
                 String versionName = getPackageManager().getPackageInfo(getPackageName(), 0).versionName;
-                tvVersion.setText("Versión " + versionName + " Global Edition");
+                tvVersion.setText("Versión " + versionName);
             }
         } catch (Exception e) {
         }
@@ -2803,16 +2882,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void refreshPresetsCache() {
-        if (mRadioService == null)
-            return;
-        try {
-            int band = mRadioService.getCurrentBand();
-            for (int i = 0; i < PRESETS_COUNT; i++) {
-                String key = "P" + (i + 1) + "_B" + band;
-                mPresets[i] = mPrefs.getInt(key, 0);
-            }
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        // Fix v4.5.1: Usar mCurrentBand directamente (ya actualizado en refreshRadioStatus)
+        int band = mCurrentBand;
+        if (mRadioService != null) {
+            try {
+                band = mRadioService.getCurrentBand();
+                mCurrentBand = band; // Sincronizar siempre
+            } catch (RemoteException ignored) {}
+        }
+        for (int i = 0; i < PRESETS_COUNT; i++) {
+            String key = "P" + (i + 1) + "_B" + band;
+            mPresets[i] = mPrefs.getInt(key, 0);
         }
     }
 

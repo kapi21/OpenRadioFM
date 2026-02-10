@@ -29,7 +29,7 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:text="Versión 4.1 Global Edition"
+            android:text="Versión 4.5.1 Server Test"
             android:layout_marginBottom="24dp"/>
 
         <!-- SUBHEADER -->
@@ -60,7 +60,7 @@
                  android:layout_height="wrap_content"
                  android:textColor="#AAAAAA"
                  android:textSize="12sp"
-                 android:text="Target SDK: 33 (Android 13)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos"/>
+                 android:text="Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos"/>
         </LinearLayout>
 
         <!-- Close -->

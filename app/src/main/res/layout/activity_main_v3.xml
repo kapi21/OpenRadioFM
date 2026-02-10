@@ -156,78 +156,96 @@
         app:layout_constraintStart_toEndOf="@+id/btnSeekDown"
         app:layout_constraintTop_toBottomOf="@id/guideline_row1">
 
+        <!-- Layout vertical: Frecuencia arriba, info abajo -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="horizontal">
-            
-            <ImageView
-                android:id="@+id/ivMainLogo"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="8dp"
-                android:scaleType="fitCenter"
-                android:visibility="gone" />
+            android:orientation="vertical"
+            android:gravity="center">
 
-            <ImageView
-                android:id="@+id/ivSignalLevel"
-                android:layout_width="100dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="@dimen/margin_standard"
-                android:layout_gravity="bottom"
-                android:layout_marginBottom="45dp"
-                android:scaleType="fitEnd"
-                android:padding="12dp"
-                android:src="@drawable/level_signal"
-                android:visibility="visible" />
+            <!-- Fila superior: Logo + Frecuencia -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.70"
+                android:gravity="center"
+                android:orientation="horizontal">
 
-            <androidx.appcompat.widget.AppCompatTextView
-                android:id="@+id/tvFrequency"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:includeFontPadding="false"
-                android:text="92.30"
-                android:textColor="@color/white"
-                android:textSize="@dimen/text_size_frequency_base_v3"
-                android:textStyle="bold" />
+                <ImageView
+                    android:id="@+id/ivMainLogo"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginEnd="8dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone" />
 
-            <ImageView
-                android:id="@+id/ivUnitLabel"
-                android:layout_width="80dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="@dimen/margin_standard"
-                android:layout_gravity="bottom"
-                android:layout_marginBottom="50dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/radio_mhz" />
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/tvFrequency"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:text="92.30"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/text_size_frequency_base_v3"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Fila inferior: Signal + PTY + Unit -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.30"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp">
+
+                <ImageView
+                    android:id="@+id/ivSignalLevel"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/level_signal"
+                    android:visibility="visible" />
+
+                <!-- PTY Icon + Text centrados -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/ivPtyIcon"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_marginEnd="8dp"
+                        android:scaleType="fitCenter"
+                        android:visibility="gone"
+                        tools:src="@drawable/ic_pty_music"
+                        android:tint="@color/white" />
+
+                    <TextView
+                        android:id="@+id/tvPty"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="PTY NONE"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivUnitLabel"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/radio_mhz" />
+            </LinearLayout>
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvPty"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="8dp"
-            android:text="PTY NONE"
-            android:textColor="@color/white"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
-
-        <!-- V5.0: PTY Icon -->
-        <ImageView
-            android:id="@+id/ivPtyIcon"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
-            android:layout_gravity="bottom|end"
-            android:layout_marginEnd="90dp"
-            android:layout_marginBottom="8dp"
-            android:scaleType="fitCenter"
-            android:visibility="gone"
-            tools:src="@drawable/ic_pty_music"
-            android:tint="@color/white" />
 
         <ImageView
             android:id="@+id/ivFavoriteIndicator"

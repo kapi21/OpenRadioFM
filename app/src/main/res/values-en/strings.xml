@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadio FM v4.0</string>
+    <string name="app_name">OpenRadioFM v4.5.1 Server Test</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium Customization</string>
@@ -74,4 +74,57 @@
     <string name="language_changed">✅ Language changed to %s</string>
     <string name="about_openradio">ℹ️ About OpenRadioFM</string>
     <string name="touch_to_change">Touch to change</string>
+
+    <!-- V4.3: Hardware Settings -->
+    <string name="hardware_settings">⚙️ Hardware Settings</string>
+    <string name="enable_am_band">Enable AM Band</string>
+    <string name="radio_engine">Radio Engine</string>
+    <string name="engine_auto">Automatic (Recommended)</string>
+    <string name="engine_hcn">HCN (Eonon/Xtrons)</string>
+    <string name="engine_mtk">Mediatek (MtkRadio)</string>
+    <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_standard">Android Standard</string>
+    <string name="am_band_enabled">✅ AM Band enabled</string>
+    <string name="am_band_disabled">❌ AM Band disabled</string>
+    <string name="engine_changed">✅ Radio engine changed to %s</string>
+
+    <!-- V4.5: Night Mode Schedule -->
+    <string name="night_schedule">Night Mode Schedule</string>
+    <string name="night_start">Start</string>
+    <string name="night_end">End</string>
+    <string name="night_schedule_updated">✅ Report updated: %1$s - %2$s</string>
+
+    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    <string name="pty_none">No PTY</string>
+    <string name="pty_news">News</string>
+    <string name="pty_current_affairs">Current Affairs</string>
+    <string name="pty_information">Information</string>
+    <string name="pty_sport">Sports</string>
+    <string name="pty_education">Education</string>
+    <string name="pty_drama">Drama</string>
+    <string name="pty_culture">Culture</string>
+    <string name="pty_science">Science</string>
+    <string name="pty_varied">Varied</string>
+    <string name="pty_pop">Pop Music</string>
+    <string name="pty_rock">Rock Music</string>
+    <string name="pty_easy_listening">Easy Listening</string>
+    <string name="pty_light_classical">Light Classical</string>
+    <string name="pty_serious_classical">Serious Classical</string>
+    <string name="pty_other_music">Other Music</string>
+    <string name="pty_weather">Weather</string>
+    <string name="pty_finance">Finance</string>
+    <string name="pty_children">Children</string>
+    <string name="pty_social">Social</string>
+    <string name="pty_religion">Religion</string>
+    <string name="pty_phone_in">Phone In</string>
+    <string name="pty_travel">Travel</string>
+    <string name="pty_leisure">Leisure</string>
+    <string name="pty_jazz">Jazz</string>
+    <string name="pty_country">Country</string>
+    <string name="pty_national">National</string>
+    <string name="pty_oldies">Oldies</string>
+    <string name="pty_folk">Folk</string>
+    <string name="pty_documentary">Documentary</string>
+    <string name="pty_alarm_test">Alarm Test</string>
+    <string name="pty_alarm">Alarm</string>
 </resources>
