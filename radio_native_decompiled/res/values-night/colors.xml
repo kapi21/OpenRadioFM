@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="app_bg_color">#ff0f0f13</color>
+    <color name="btn_normal_center_color">#4067696d</color>
+    <color name="btn_normal_color">#ff3e3f42</color>
+    <color name="btn_press_center_color">#a61985ff</color>
+    <color name="btn_press_start_color">#401985ff</color>
+    <color name="channel_prompt_center_text_color">#ffb5b9c5</color>
+    <color name="channel_prompt_text_color">#ff909aa5</color>
+    <color name="dark_gray">#ffa0a0a0</color>
+    <color name="fragment_all_station_info_list_item_press_color">#33ffffff</color>
+    <color name="light_gray">#ffdfdfdf</color>
+    <color name="op_btn_normal_center_color">#403e3f42</color>
+    <color name="op_btn_normal_color">#ff3e3f42</color>
+    <color name="preset_item_index_bg_color">#26f9f6f4</color>
+    <color name="preset_item_text_color">#ff969ba8</color>
+    <color name="pty_item_normal_color">#ff3e3f42</color>
+    <color name="rds_background_tint_color">#00000000</color>
+    <color name="rds_btn_bg_color">#00000000</color>
+    <color name="rds_rt_text_color">#ff90939b</color>
+    <color name="rds_rt_text_selector_color">#ffdcdcdc</color>
+    <color name="slider_background_tint_color">#00000000</color>
+    <color name="slider_scale_line_color">#ffffffff</color>
+</resources>

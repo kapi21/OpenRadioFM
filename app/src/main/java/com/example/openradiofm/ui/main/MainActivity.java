@@ -82,7 +82,8 @@ public class MainActivity extends AppCompatActivity {
      */
     private enum FmMode {
         FM_COMPLETO,
-        FM_BASICO
+        FM_BASICO,
+        FM_K706 // Nuevo modo para K706 (MT8163)
     }
 
     IRadioServiceAPI mRadioService;
@@ -143,6 +144,7 @@ public class MainActivity extends AppCompatActivity {
     private int mCurrentBand = 0;
 
     private FmMode mMode = FmMode.FM_BASICO;
+    private boolean mIsScanning = false; // V9.5: Estado de AutoScan toggle
     private boolean mIsV3 = false; // V5.4: Track Layout 3 active
 
     private void animateButton(View v) {
@@ -207,7 +209,8 @@ public class MainActivity extends AppCompatActivity {
                         String current = tvRdsInfo.getText().toString();
                         if (!current.equals(cleanedText)) {
                             tvRdsInfo.setText(cleanedText);
-                            if (cleanedText == null || cleanedText.trim().isEmpty()) {
+            tvRdsInfo.setSelected(true); // V9: Enable marquee
+            if (cleanedText == null || cleanedText.trim().isEmpty()) {
                                 // V5.0: Keep visible in V2 to prevent shifts
                                 tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                             } else {
@@ -292,11 +295,87 @@ public class MainActivity extends AppCompatActivity {
     private final IRadioCallBack mCallback = new IRadioCallBack.Stub() {
         @Override
         public void onEvent(int code, String data) {
-            // V5.2: Catch PTY event from service if available (0x22 = 34)
-            if (code == 34 || code == 0x22) {
-                mCurrentPty = data;
-                runOnUiThread(() -> updatePtyUI(data));
-            }
+            runOnUiThread(() -> {
+                switch(code) {
+                    case 34: // Legacy PTY (0x22)
+                    case 102: // New PTY from K706Manager
+                        mCurrentPty = data;
+                        updatePtyUI(data);
+                        // V9.9: Persist PTY in repository
+                        if (mRepository != null && mLastFreq > 0) {
+                            mRepository.saveRdsPty(mLastFreq, data);
+                        }
+                        break;
+                    case 100: // RDS PS Name
+                        if (tvRdsName != null) {
+                            String rdsName = data.trim();
+                            tvRdsName.setText(rdsName);
+                            tvRdsName.setVisibility(View.VISIBLE);
+                            mHasRdsLock = true;
+                            
+                            // V9: Persist RDS name for presets and refresh if needed
+                            try {
+                                if (mRadioService != null && mRepository != null) {
+                                    int freq = mRadioService.getCurrentFreq();
+                                    mRepository.saveRdsName(freq, rdsName);
+                                    // If this frequency is in presets, refresh visuals
+                                    for (int i = 0; i < PRESETS_COUNT; i++) {
+                                        String key = "P" + (i + 1) + "_B" + mCurrentBand;
+                                        if (mPrefs.getInt(key, 0) == freq) {
+                                            updateCardVisuals(i, freq);
+                                        }
+                                    }
+                                }
+                            } catch (Exception e) {}
+                        }
+                        break;
+                    case 101: // RDS RT
+                        if (tvRdsInfo != null) {
+                    String cleaned = MetadataUtils.cleanRdsText(data);
+                    tvRdsInfo.setText(cleaned);
+                    tvRdsInfo.setSelected(true); // V9: Enable marquee
+                    tvRdsInfo.setVisibility(View.VISIBLE);
+                }
+                        break;
+                    case 103: // Stereo Debug
+                        if (ivSignalLevel != null) {
+                            // Update signal color based on stereo flag ("1" or "0")
+                            boolean isStereo = "1".equals(data);
+                            int color = isStereo ? Color.parseColor("#00E676") : Color.parseColor("#FFD600");
+                            ivSignalLevel.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
+                        }
+                        break;
+                    case 104: // Band ID from MCU
+                        try {
+                            int mcuBand = Integer.parseInt(data);
+                            if (mcuBand != mCurrentBand) {
+                                mCurrentBand = mcuBand;
+                                refreshPresetsCache();
+                                refreshPresetButtons();
+                            }
+                        } catch (NumberFormatException ignored) {}
+                        break;
+                    case 105: // V7.2: Frecuencia instantánea desde MCU callback (ya normalizada ×1000)
+                        try {
+                            int mcuFreq = Integer.parseInt(data);
+                            // V7.2: Valor ya viene en formato ×1000 desde K706RadioManager
+                            if (mcuFreq != mLastFreq) {
+                                mLastFreq = mcuFreq;
+                                updateFrequencyDisplay(mcuFreq);
+                                Log.d(TAG, "MCU Freq Update: " + mcuFreq + " (" + String.format("%.2f", mcuFreq / 1000.0) + " MHz)");
+                            }
+                        } catch (NumberFormatException ignored) {}
+                        break;
+                    case 106: // V7.1: DX/Local toggle desde MCU
+                        if (btnLocDx != null) {
+                    boolean isLocal = "1".equals(data);
+                    btnLocDx.setSelected(isLocal);
+                    // V9: LOCAL=radio_loc_p (active/filled), DX=radio_loc_n (normal/outline)
+                    btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                }
+                        break;
+                }
+            });
         }
     };
 
@@ -383,6 +462,8 @@ public class MainActivity extends AppCompatActivity {
 
         if (mMode == FmMode.FM_BASICO) {
             showToast("Modo Básico: Sin Root (Nombres Manuales)");
+        } else if (mMode == FmMode.FM_K706) {
+             showToast("Modo K706: Hardware Nativo Detectado");
         } else {
             showToast("Modo Completo: Root + Servicio HCN");
         }
@@ -473,10 +554,27 @@ public class MainActivity extends AppCompatActivity {
      * Configura los botones de control (EQ, Mute, Test, AutoScan, LOC/DX).
      */
     private void setupControlButtons() {
-        // EQ Logic (V8: MCU Injection)
+        // EQ Logic (V9.3: Direct DSP Intent)
         ImageButton btnEq = findViewById(R.id.btnSettings);
         if (btnEq != null) {
-            btnEq.setOnClickListener(v -> sendMcuKey(0x134)); // Keycode 308 for DSP
+            btnEq.setOnClickListener(v -> {
+                try {
+                    // V9.4d: Abrir QF Sound Effect del K706 directamente
+                    Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.qf.soundeffect");
+                    if (launchIntent != null) {
+                        launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(launchIntent);
+                    } else {
+                        // Fallback: abrir ajustes de sonido de Android
+                        Intent intent = new Intent("android.intent.action.MAIN");
+                        intent.setClassName("com.android.settings", "com.android.settings.Settings$SoundSettingsActivity");
+                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                    }
+                } catch (Exception e) {
+                    showToast("No se pudo abrir el DSP");
+                }
+            });
 
             // Long Click para abrir selector de skins
             btnEq.setOnLongClickListener(v -> {
@@ -513,8 +611,12 @@ public class MainActivity extends AppCompatActivity {
 
                 if (mTestClickCount >= 5) {
                     mTestClickCount = 0; // Reset
-                    // V5.0: Launch Engineering Mode Dashboard
-                    new EngineeringModeDialog(MainActivity.this).show();
+                    // V9.5: Abrir menú de desarrollo correcto según hardware
+                    if (mMode == FmMode.FM_K706) {
+                        new K706EngineeringDialog(MainActivity.this).show();
+                    } else {
+                        new EngineeringModeDialog(MainActivity.this).show();
+                    }
                 } else {
                     // Single click action: Open GPS
                     // If it's the first click or still haven't reached 5
@@ -532,17 +634,19 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // AutoScan Logic
         ImageButton btnAutoScan = findViewById(R.id.btnAutoScan);
         if (btnAutoScan != null) {
             btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f); // V4.3 Corrected to _f
-            btnAutoScan.setOnClickListener(v -> promptAutoScan());
+            btnAutoScan.setOnClickListener(v -> toggleAutoScan(btnAutoScan));
         }
 
         // LOC/DX Switch
         btnLocDx = findViewById(R.id.btnLocDx);
         if (btnLocDx != null) {
-            btnLocDx.setOnClickListener(v -> execRemote(IRadioServiceAPI::onLocDxEvent));
+            btnLocDx.setOnClickListener(v -> {
+                // V9.8: Función LOC/DX desactivada temporalmente (Standby)
+                showToast("LOC / DX (Standby - En investigación)");
+            });
             // V3.5: Layout Toggle on Long Press
             btnLocDx.setOnLongClickListener(v -> {
                 boolean current = mPrefs.getBoolean("pref_layout_v3", false);
@@ -664,13 +768,20 @@ public class MainActivity extends AppCompatActivity {
         // --------------------------------------------------------------------------------
 
         // 1) Detener el Timer de sondeo.
-        // Si no lo paramos, el hilo del Timer seguirá ejecutándose en fondo intentando
-        // acceder a esta Activity destruida, causando crashes o fugas.
         stopStatusPolling();
 
-        // 2) Desconectar del Servicio de Radio del Coche.
-        // Es fundamental desregistrar el callback y hacer unbind para que Android sepa
-        // que ya no necesitamos el servicio y pueda liberar recursos del sistema.
+        // 2) Apagar el subsistema de hardware de radio (evitar que siga sonando de fondo)
+        if (mRadioService != null) {
+            if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+                try {
+                    ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).closeDevice();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        // 3) Desconectar del Servicio de Radio del Coche.
         try {
             if (mRadioService != null) {
                 mRadioService.unRegisterRadioCallback(mCallback);
@@ -721,6 +832,12 @@ public class MainActivity extends AppCompatActivity {
         if (hasService && hasRootBinary) {
             return FmMode.FM_COMPLETO;
         }
+        
+        // V6.0: Detectar K706 (mcu_service)
+        if (isK706()) {
+            return FmMode.FM_K706;
+        }
+        
         return FmMode.FM_BASICO;
     }
 
@@ -793,6 +910,26 @@ public class MainActivity extends AppCompatActivity {
             } catch (Exception ignored) {
             }
         }
+        return false;
+    }
+
+    /**
+     * V6.0: Detecta si existe el servicio MCU específico del K706.
+     */
+    private boolean isK706() {
+        try {
+            // Check if mcu_service exists
+            Object service = getSystemService("mcu_service");
+            if (service != null && service.getClass().getName().contains("McuManager")) {
+                Log.d(TAG, "K706 Detectado: mcu_service encontrado.");
+                return true;
+            }
+            // Fallback: Check system property usually present on these units
+            /*
+            String platform = android.os.SystemProperties.get("ro.board.platform", "");
+            if (platform.contains("mt8163")) return true;
+            */
+        } catch (Exception e) {}
         return false;
     }
 
@@ -1037,9 +1174,9 @@ public class MainActivity extends AppCompatActivity {
         // Left Button (<) -> Step Down / Seek Down (Long Press)
         if (btnSeekDownV3 != null) {
             btnSeekDownV3.setOnClickListener(v -> stepFreqDown());
-            // V4.3: User requested swap for Long Press (Left = Search UP)
+            // Standard: Long Left = Seek Down
             btnSeekDownV3.setOnLongClickListener(v -> {
-                onSeekUpEvent();
+                onSeekDownEvent();
                 return true;
             });
         }
@@ -1047,9 +1184,9 @@ public class MainActivity extends AppCompatActivity {
         // Right Button (>) -> Step Up / Seek Up (Long Press)
         if (btnSeekUpV3 != null) {
             btnSeekUpV3.setOnClickListener(v -> stepFreqUp());
-            // V4.3: User requested swap for Long Press (Right = Search DOWN)
+            // Standard: Long Right = Seek Up
             btnSeekUpV3.setOnLongClickListener(v -> {
-                onSeekDownEvent();
+                onSeekUpEvent();
                 return true;
             });
         }
@@ -1152,28 +1289,59 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private int getSkinDrawableId() {
+        if (mCurrentSkin == null) return R.drawable.bg_glass_card_classic;
+        switch (mCurrentSkin) {
+            case NIGHT_MODE: return R.drawable.bg_glass_card_night;
+            case ORANGE:     return R.drawable.bg_glass_card_orange;
+            case BLUE:       return R.drawable.bg_glass_card_blue;
+            case GREEN:      return R.drawable.bg_glass_card_green;
+            case PURPLE:     return R.drawable.bg_glass_card_purple;
+            case RED:        return R.drawable.bg_glass_card_red;
+            case YELLOW:     return R.drawable.bg_glass_card_yellow;
+            case CYAN:       return R.drawable.bg_glass_card_cyan;
+            case PINK:       return R.drawable.bg_glass_card_pink;
+            case WHITE:      return R.drawable.bg_glass_card_white;
+            default:         return R.drawable.bg_glass_card_classic;
+        }
+    }
+
     private void updateCardVisuals(int index, int freq) {
         if (freq == 0) {
             if (tvPresets[index] != null) {
                 tvPresets[index].setText("Empty");
                 tvPresets[index].setVisibility(View.VISIBLE);
             }
-            if (ivPresets[index] != null)
+            if (ivPresets[index] != null) {
                 ivPresets[index].setImageDrawable(null);
+                ivPresets[index].setBackground(null); 
+            }
+            // Restore borders/background for the container (Preserving skin)
+            if (cardPresets[index] != null) cardPresets[index].setBackgroundResource(getSkinDrawableId());
             return;
         }
 
-        // V4: Default to the premium number icon
-        int iconResId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", index + 1), "drawable",
-                getPackageName());
+        // V9: No placeholder/background behind logos
         if (ivPresets[index] != null) {
-            ivPresets[index].setImageResource(iconResId != 0 ? iconResId : R.drawable.ic_station_placeholder);
+            ivPresets[index].setImageDrawable(null); // Truly empty if no logo
+            ivPresets[index].setBackground(null); 
         }
+        // Restore borders/background for the container (Preserving skin)
+        if (cardPresets[index] != null) cardPresets[index].setBackgroundResource(getSkinDrawableId());
 
-        // By default, hide frequency text if we use icons
+        // V9: Logic for Name/Freq display
         if (tvPresets[index] != null) {
-            tvPresets[index].setVisibility(View.GONE);
-            tvPresets[index].setText(String.format("%.1f", freq / 1000.0));
+            tvPresets[index].setVisibility(View.VISIBLE);
+            
+            // Priority: getStationInfo handles Custom > RDS PS > RDS Root
+            com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(freq, null);
+            String displayName = s.getName();
+            
+            if (displayName != null && !displayName.isEmpty()) {
+                tvPresets[index].setText(displayName);
+            } else {
+                tvPresets[index].setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
+            }
         }
 
         // Async Fetch Logo / Custom Info
@@ -1189,12 +1357,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         });
-
-        com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(freq, null);
-        if (s.getName() != null && !s.getName().isEmpty() && tvPresets[index] != null) {
-            tvPresets[index].setText(s.getName());
-            tvPresets[index].setVisibility(View.VISIBLE);
-        }
     }
 
     private interface RemoteAction {
@@ -1212,6 +1374,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void conectarRadio() {
+        // V6.0: K706 Direct Connection
+        if (mMode == FmMode.FM_K706) {
+            try {
+                mRadioService = new com.example.openradiofm.data.source.K706RadioManager(this);
+                mRadioService.registerRadioCallback(mCallback);
+                mCurrentBand = mRadioService.getCurrentBand();
+                startStatusPolling();
+                showToast("Modo K706 Activado (Directo)");
+                
+                // V6.1: Restore state to avoid reset to 87.5 on rotation/layout change
+                if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+                     int safeFreq = (mLastFreq > 0) ? mLastFreq : 87500; // Default if first run
+                     // If band is unknown or 0 (FM1), keep it.
+                     ((com.example.openradiofm.data.source.K706RadioManager)mRadioService).syncState(safeFreq, mCurrentBand);
+                }
+
+                // Init UI immediatelly
+                refreshPresetsCache();
+                refreshPresetButtons();
+                refreshRadioStatus();
+            } catch (Exception e) {
+                showToast("Error iniciando K706: " + e.getMessage());
+            }
+            return;
+        }
+
         int engineIdx = mPrefs.getInt("pref_radio_engine", 0);
 
         String[][] allProviders = {
@@ -1407,6 +1595,7 @@ public class MainActivity extends AppCompatActivity {
                 updateBandImage(band);
                 if (btnLocDx != null) {
                     btnLocDx.setSelected(isLocal);
+                    // V9: LOCAL=radio_loc_p, DX=radio_loc_n
                     btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
                 }
             });
@@ -1463,37 +1652,44 @@ public class MainActivity extends AppCompatActivity {
      * V4.5.1: Shows localized category name instead of raw PTY number.
      */
     private void updatePtyUI(String pty) {
-        if (pty == null || pty.isEmpty()) {
-            if (tvPty != null)
-                tvPty.setVisibility(View.GONE);
-            if (ivPtyIcon != null)
-                ivPtyIcon.setVisibility(View.GONE);
-            return;
-        }
-
-        // V4.5.1: Try to parse as number and show localized label
         String displayLabel = pty;
         int ptyCode = -1;
-        try {
-            ptyCode = Integer.parseInt(pty.trim());
-            if (ptyCode >= 0 && ptyCode <= 31) {
-                displayLabel = PtyManager.getPtyLabel(this, ptyCode);
+        
+        if (pty == null || pty.trim().isEmpty()) {
+            ptyCode = 0;
+            displayLabel = "Sin PTY";
+        } else {
+            // V4.5.1: Try to parse as number and show localized label
+            try {
+                ptyCode = Integer.parseInt(pty.trim());
+                if (ptyCode > 0 && ptyCode <= 31) {
+                    displayLabel = PtyManager.getPtyLabel(this, ptyCode);
+                } else {
+                    ptyCode = 0;
+                    displayLabel = "Sin PTY";
+                }
+            } catch (NumberFormatException ignored) {
+                // Not a number, use as-is
+                if ("0".equals(pty.trim())) {
+                    ptyCode = 0;
+                    displayLabel = "Sin PTY";
+                }
             }
-        } catch (NumberFormatException ignored) {
-            // Not a number, use as-is
         }
 
+        // V9.6: Siempre mantenemos el texto visible para no descolocar el layout central. Si no hay valor, mostramos "Sin PTY"
         if (tvPty != null) {
             tvPty.setText(displayLabel);
             tvPty.setVisibility(View.VISIBLE);
         }
 
         if (ivPtyIcon != null) {
-            int iconRes = (ptyCode >= 0) ? PtyManager.getPtyIconResource(ptyCode) : PtyManager.getPtyIconResource(pty);
+            int iconRes = (ptyCode > 0) ? PtyManager.getPtyIconResource(ptyCode) : 0;
             if (iconRes != 0) {
                 ivPtyIcon.setImageResource(iconRes);
                 ivPtyIcon.setVisibility(View.VISIBLE);
             } else {
+                // Ocultamos el icono para no desperdiciar espacio, pero la TV_PTY mantendrá su zona
                 ivPtyIcon.setVisibility(View.GONE);
             }
         }
@@ -1907,8 +2103,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            // 3. PTY Color
+            // 3. PTY UI (Priorizando vivo sobre la persistencia)
             if (tvPty != null) {
+                String storedPty = (station != null) ? station.getPty() : null;
+                // Si tenemos PTY en vivo (mCurrentPty), prevalece
+                String ptyToDisplay = (mCurrentPty != null) ? mCurrentPty : storedPty;
+                
+                updatePtyUI(ptyToDisplay);
                 tvPty.setTextColor(isNight ? nightBlue : white);
             }
 
@@ -2054,42 +2255,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
         this.mCurrentSkin = skin; // Update global state
-        int drawableId;
-        switch (skin) {
-            case NIGHT_MODE:
-                drawableId = R.drawable.bg_glass_card_night;
-                break;
-            case ORANGE:
-                drawableId = R.drawable.bg_glass_card_orange;
-                break;
-            case BLUE:
-                drawableId = R.drawable.bg_glass_card_blue;
-                break;
-            case GREEN:
-                drawableId = R.drawable.bg_glass_card_green;
-                break;
-            case PURPLE:
-                drawableId = R.drawable.bg_glass_card_purple;
-                break;
-            case RED:
-                drawableId = R.drawable.bg_glass_card_red;
-                break;
-            case YELLOW:
-                drawableId = R.drawable.bg_glass_card_yellow;
-                break;
-            case CYAN:
-                drawableId = R.drawable.bg_glass_card_cyan;
-                break;
-            case PINK:
-                drawableId = R.drawable.bg_glass_card_pink;
-                break;
-            case WHITE:
-                drawableId = R.drawable.bg_glass_card_white;
-                break;
-            default:
-                drawableId = R.drawable.bg_glass_card_classic;
-                break;
-        }
+        int drawableId = getSkinDrawableId();
 
         // V3.0: Detect current layout
         boolean isLayoutV3 = mPrefs.getBoolean("pref_layout_v3", false);
@@ -2853,6 +3019,16 @@ public class MainActivity extends AppCompatActivity {
     // V5.0: Helper Methods to fix compilation
     private void setMute(boolean mute) {
         mMuteState = mute;
+        
+        // V6.2: Support for K706 Native Mute
+        if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+            try {
+                ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).setMute(mute);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
         android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
             // Using setStreamMute (deprecated but effective for simple needs) or
@@ -2923,7 +3099,31 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * V4.3: Auto Scan Wrapper
+     * V9.5: AutoScan Toggle — click 1 inicia, click 2 detiene.
+     */
+    private void toggleAutoScan(ImageButton btn) {
+        if (!mIsScanning) {
+            // Iniciar AutoScan (0x08)
+            execRemote(IRadioServiceAPI::onScanEvent);
+            mIsScanning = true;
+            if (btn != null) {
+                btn.setColorFilter(android.graphics.Color.parseColor("#00E676"),
+                    android.graphics.PorterDuff.Mode.SRC_IN); // Verde = escaneando
+            }
+            showToast("AutoScan iniciado...");
+        } else {
+            // Detener AutoScan (0x09 = onPSEvent/stopScan)
+            execRemote(IRadioServiceAPI::onPSEvent);
+            mIsScanning = false;
+            if (btn != null) {
+                btn.clearColorFilter(); // Restaurar color original
+            }
+            showToast("AutoScan detenido");
+        }
+    }
+
+    /**
+     * V4.3: Auto Scan Wrapper (legacy, ahora usa toggleAutoScan)
      */
     private void promptAutoScan() {
         execRemote(IRadioServiceAPI::onScanEvent);

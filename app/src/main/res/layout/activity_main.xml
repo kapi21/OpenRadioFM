@@ -42,9 +42,10 @@
         android:id="@+id/scrollViewPresets"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="16dp"
-        android:paddingEnd="4dp"
-        android:scrollbars="none"
+        android:layout_margin="4dp"
+        android:paddingEnd="0dp"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
         android:fillViewport="true"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/guideline_col1"
@@ -55,7 +56,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="8dp">
+            android:padding="0dp">
 
             <!-- Preset Cards Generator -->
             <!-- Inline presets used below to maintain ID compatibility -->
@@ -314,8 +315,9 @@
         android:id="@+id/boxLogo"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:background="@drawable/bg_glass_card"
         android:layout_margin="4dp"
-        android:padding="8dp"
+        android:orientation="vertical"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/btnSeekDown"
         app:layout_constraintStart_toEndOf="@id/guideline_col2"
@@ -412,7 +414,7 @@
         android:layout_height="0dp" 
         android:layout_marginTop="0dp"
         android:layout_marginEnd="2dp"
-        android:layout_marginBottom="4dp" 
+        android:layout_marginBottom="12dp" 
         android:background="@drawable/bg_glass_card" 
         android:src="@drawable/radio_eq_n" 
         android:scaleType="fitCenter" 
@@ -430,7 +432,7 @@
         android:layout_height="0dp" 
         android:layout_marginTop="0dp"
         android:layout_marginStart="2dp"
-        android:layout_marginBottom="4dp" 
+        android:layout_marginBottom="12dp" 
         android:background="@drawable/bg_glass_card" 
         android:src="@drawable/radio_gps" 
         android:scaleType="fitCenter" 

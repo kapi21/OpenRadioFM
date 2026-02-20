@@ -1,0 +1,1190 @@
+package com.example.openradiofm.data.source;
+
+import android.content.ComponentName;
+import android.content.Context;
+import android.os.IBinder;
+import android.os.Bundle;
+import android.os.Parcel;
+import android.os.RemoteException;
+import android.util.Log;
+import com.hcn.autoradio.IRadioCallBack;
+import com.hcn.autoradio.IRadioServiceAPI;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
+import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
+
+/**
+ * V7.1: Implementación de la interfaz de radio para K706 (MT8163).
+ * 
+ * Correcciones:
+ * - Sub-comandos MCU corregidos según TunerCmdFactory.smali
+ * - DX/Local toggle con estado real
+ * - Frecuencia se actualiza vía callback MCU (no solo RPC_GetChannel)
+ * - AutoScan usa sub-comando correcto (0x08)
+ * - Logging detallado para diagnóstico
+ */
+public class K706RadioManager extends IRadioServiceAPI.Stub {
+
+    private static final String TAG = "K706RadioManager";
+    private static final String SERVICE_NAME = "mcu_service";
+    
+    // === Sub-comandos MCU (V9.6: Oficiales extraídos de TunerCmdFactory.smali) ===
+    private static final int CMD_TUNER = 0xA0; // Comando base tuner
+    private static final byte SUB_TUNE_FREQUENCY = 0x00;
+    private static final byte SUB_SEEK_UP        = 0x01;
+    private static final byte SUB_SEEK_DOWN      = 0x02;
+    private static final byte SUB_FINE_UP        = 0x03;
+    private static final byte SUB_FINE_DOWN      = 0x04;
+    private static final byte SUB_AUTO_SCAN_BGN  = 0x05;
+    private static final byte SUB_SWITCH_BAND    = 0x06;
+    private static final byte SUB_SWITCH_LOC     = 0x07;
+    private static final byte SUB_TUNE_AS        = 0x08;
+    private static final byte SUB_TUNE_PS        = 0x09;
+    private static final byte SUB_TUNE_AREA      = 0x0A;
+    private static final byte SUB_PRESET_SAVE    = 0x0B;
+    private static final byte SUB_AUTO_SCAN_STOP = 0x0C; // Stop Scan
+    private static final byte SUB_PRESET_SELECT  = 0x0D;
+    private static final byte SUB_TUNE_NEXT      = 0x0E;
+    private static final byte SUB_TUNE_PREV      = 0x0F;
+    private static final byte SUB_TUNE_ST        = 0x10;
+    private static final byte SUB_RDS_AF         = 0x11;
+    private static final byte SUB_RDS_TA         = 0x12;
+    private static final byte SUB_RDS_REG        = 0x13;
+    private static final byte SUB_RDS_EON        = 0x14;
+    private static final byte SUB_RDS_PTY        = 0x15;
+
+    // Bandas K706
+    private static final byte BAND_FM1 = 0;
+    private static final byte BAND_FM2 = 1;
+    private static final byte BAND_FM3 = 2;
+    private static final byte BAND_AM1 = 3;
+    private static final byte BAND_AM2 = 4;
+
+    private Context mContext;
+    private Object mMcuManager;
+    private Method mSendMcuMsgData;
+    private Method mSendMcuCmdData; // V9.7: Canal de comandos (prefijo 0x40)
+    private Method mSetMute; // RPC_SetVolumeMute
+    private Method mGetChannel; // RPC_GetChannel (audio channel, NOT frequency)
+    private Method mSetChannel; // RPC_SetChannel (Audio routing MCU)
+
+    // V9.6: QFTunerManager - Canal de alto nivel para seek/scan/RDS
+    // sendCmd (MCU directo) solo funciona fiable para tune/band/fine.
+    // Para seek, scan y RDS la app nativa usa QFTunerManager.
+    private Object mTunerManager; // QFTunerManager singleton
+    private Method mTunerOnSeek;   // onSeek(boolean up)
+    private Method mTunerAutoScan;  // autoScan()
+    private Method mTunerStopScan;  // stopScan()
+    private Method mTunerOnBand;    // onBand(int band)
+    private Method mTunerOnLoc;     // onLoc(int mode)
+    private Method mTunerSetRdsSwitch;   // setRdsSwitch(int state)
+    private Method mTunerSetRdsAF;       // setRdsAFSwitch()
+    private Method mTunerSetRdsTA;       // setRdsTASwitch()
+    private Method mTunerSetRdsPtyType;  // setRdsPtyType(int type)
+
+    private IRadioCallBack mCallback;
+    private int mCurrentFreq = 8750; // Cache (en unidades x10, ej: 8750 = 87.50 MHz)
+    private int mCurrentBand = BAND_FM1;
+    private boolean mIsDxLocal = false; // V7.1: Estado DX/Local real
+    private boolean mIsScanning = false; // V7.1: Estado de scan
+    private boolean mIsSeeking = false; // V7.1: Estado de seek
+    private AudioManager mAudioManager;
+    private OnAudioFocusChangeListener mAudioFocusChangeListener;
+    private boolean mIsAudioFocusHeld = false;
+
+    public K706RadioManager(Context context) {
+        this.mContext = context;
+        mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        mAudioFocusChangeListener = new OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int focusChange) {
+                Log.d(TAG, "onAudioFocusChange: " + focusChange);
+            }
+        };
+        initMcuConnection();
+    }
+
+    private void initMcuConnection() {
+        try {
+            // 1. Get ServiceManager -> mcu_service
+            Class<?> serviceManagerClass = Class.forName("android.os.ServiceManager");
+            Method getService = serviceManagerClass.getMethod("getService", String.class);
+            IBinder binder = (IBinder) getService.invoke(null, SERVICE_NAME);
+
+            if (binder == null) {
+                Log.e(TAG, "Failed to get mcu_service binder");
+                return;
+            }
+            // 2. Get IMcuManager Interface
+            Class<?> stubClass = Class.forName("android.qf.mcu.IMcuManager$Stub");
+            Method asInterface = stubClass.getMethod("asInterface", IBinder.class);
+            mMcuManager = asInterface.invoke(null, binder);
+            
+            Log.d(TAG, "Got IMcuManager instance: " + mMcuManager);
+
+            // 3. Send "Request Permission" Transaction (1001) - Critical for receiving events
+            Parcel data = Parcel.obtain();
+            Parcel reply = Parcel.obtain();
+            try {
+                data.writeInterfaceToken("android.qf.mcu.IMcuManager");
+                data.writeString(mContext.getPackageName());
+                binder.transact(1001, data, reply, 0);
+                reply.readException();
+                Log.d(TAG, "Permissions requested successfully (Transact 1001)");
+            } catch (Exception e) {
+                Log.e(TAG, "Error requesting permissions", e);
+            } finally {
+                data.recycle();
+                reply.recycle();
+            }
+
+            // 4. Register McuListener via Proxy to receive callbacks
+            registerMcuListener();
+
+            // 5. Reflect RPC methods for control
+            Class<?> mcuManagerClass = mMcuManager.getClass();
+            try {
+                mSendMcuMsgData = mcuManagerClass.getMethod("RPC_SendMcuMsgData", byte.class, byte[].class, int.class);
+                Log.d(TAG, "RPC_SendMcuMsgData: OK");
+            } catch (NoSuchMethodException e) {
+                Log.e(TAG, "RPC_SendMcuMsgData not found");
+            }
+
+            try {
+                mSendMcuCmdData = mcuManagerClass.getMethod("RPC_SendMcuCmdData", byte.class, byte[].class, int.class);
+                Log.d(TAG, "RPC_SendMcuCmdData: OK");
+            } catch (NoSuchMethodException e) {
+                Log.e(TAG, "RPC_SendMcuCmdData not found");
+            }
+
+            try {
+                mSetMute = mcuManagerClass.getMethod("RPC_SetVolumeMute", int.class);
+                Log.d(TAG, "RPC_SetVolumeMute(int): OK");
+            } catch (NoSuchMethodException e) {
+                 try {
+                     mSetMute = mcuManagerClass.getMethod("RPC_SetVolumeMute", boolean.class);
+                     Log.d(TAG, "RPC_SetVolumeMute(boolean): OK");
+                 } catch (Exception ex) {
+                     Log.w(TAG, "RPC_SetVolumeMute not found");
+                 }
+            }
+
+            try {
+                mGetChannel = mcuManagerClass.getMethod("RPC_GetChannel"); 
+                Log.d(TAG, "RPC_GetChannel: OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "RPC_GetChannel not found, will rely on listener events");
+            }
+
+            // V7.0: Reflect RPC_SetChannel (critical for audio routing)
+            // V7.2: CONFIRMADO por logcat: la firma real es RPC_SetChannel(byte), NO int
+            try {
+                mSetChannel = mcuManagerClass.getMethod("RPC_SetChannel", byte.class);
+                Log.d(TAG, "RPC_SetChannel(byte): OK");
+            } catch (NoSuchMethodException e) {
+                // Fallback a int si byte no funciona
+                try {
+                    mSetChannel = mcuManagerClass.getMethod("RPC_SetChannel", int.class);
+                    Log.d(TAG, "RPC_SetChannel(int): OK (fallback)");
+                } catch (NoSuchMethodException e2) {
+                    Log.e(TAG, "RPC_SetChannel not found!");
+                }
+            }
+
+            // V9.6: Reflect QFTunerManager (canal de alto nivel para seek/scan/RDS)
+            initQFTunerManager();
+
+            // V7.1: Log ALL available methods for debugging
+            Log.d(TAG, "=== Métodos disponibles en IMcuManager ===");
+            for (Method m : mcuManagerClass.getMethods()) {
+                if (m.getName().startsWith("RPC_")) {
+                    StringBuilder params = new StringBuilder();
+                    for (Class<?> p : m.getParameterTypes()) {
+                        if (params.length() > 0) params.append(", ");
+                        params.append(p.getSimpleName());
+                    }
+                    Log.d(TAG, "  " + m.getName() + "(" + params + ") -> " + m.getReturnType().getSimpleName());
+                }
+            }
+
+            // === SECUENCIA DE INICIO DE AUDIO FM ===
+            startFmAudioSequence();
+
+            Log.d(TAG, "K706RadioManager initialized and connected.");
+
+        } catch (Exception e) {
+            Log.e(TAG, "Error initializing McuManager", e);
+        }
+    }
+
+    private void registerMcuListener() {
+        // V7.2c: SOLUCIÓN DEFINITIVA
+        // El Proxy.newProxyInstance NO funciona con AIDL porque no genera un IBinder válido.
+        // IMcuListener es una interfaz AIDL, así que necesitamos un IMcuListener.Stub real.
+        // Error anterior: "need eiter listener" = el servicio rechaza el proxy porque
+        // no es un Binder válido.
+        
+        // Estrategia: Crear instancia de IMcuListener.Stub (clase abstracta) via bytecode proxy
+        // usando android.os.Binder directamente.
+        
+        try {
+            // Paso 1: Obtener la clase IMcuListener.Stub
+            Class<?> stubClass = Class.forName("android.qf.mcu.IMcuListener$Stub");
+            Log.d(TAG, "IMcuListener.Stub class found: " + stubClass.getName());
+            
+            // Paso 2: Listar métodos abstractos para debug
+            for (Method m : stubClass.getDeclaredMethods()) {
+                Log.d(TAG, "  Stub method: " + m.getName() + " modifiers=" + m.getModifiers());
+            }
+            
+            // Paso 3: Crear una subclase dinámica no es posible en Android sin dex-gen.
+            // Alternativa: Usar Binder directamente con el descriptor AIDL correcto.
+            // Creamos un Binder que responda a la transacción onMcuInfoChanged.
+            
+            // El descriptor AIDL de IMcuListener
+            String descriptor = "android.qf.mcu.IMcuListener";
+            
+            android.os.Binder listenerBinder = new android.os.Binder() {
+                @Override
+                protected boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws RemoteException {
+                    Log.d(TAG, "IMcuListener.onTransact: code=" + code + " flags=" + flags);
+                    
+                    switch (code) {
+                        case android.os.IBinder.INTERFACE_TRANSACTION:
+                            reply.writeString(descriptor);
+                            return true;
+                        case 1: // TRANSACTION_onMcuInfoChanged (primer método AIDL = code 1)
+                            data.enforceInterface(descriptor);
+                            byte[] mcuData = data.createByteArray();
+                            Log.d(TAG, ">>> IMcuListener.onMcuInfoChanged received! data=" + 
+                                (mcuData != null ? bytesToHex(mcuData) : "null"));
+                            if (mcuData != null) {
+                                handleMcuData(mcuData);
+                            }
+                            if (reply != null) {
+                                reply.writeNoException();
+                            }
+                            return true;
+                        default:
+                            Log.d(TAG, "IMcuListener.onTransact: unhandled code=" + code);
+                            return super.onTransact(code, data, reply, flags);
+                    }
+                }
+            };
+            listenerBinder.attachInterface(null, descriptor);
+            
+            // Paso 4: Registrar el Binder. El stub proxy del otro lado hará
+            // IMcuListener.Stub.asInterface(binder) que aceptará nuestro Binder real.
+            Class<?> listenerInterface = Class.forName("android.qf.mcu.IMcuListener");
+            Method requestListener = mMcuManager.getClass().getMethod(
+                "RPC_RequestMcuInfoChangedListener", listenerInterface, String.class);
+            
+            // Necesitamos pasar un objeto que implemente IMcuListener.
+            // Usamos IMcuListener.Stub.asInterface(listenerBinder) para envolver nuestro Binder.
+            Method asInterface = stubClass.getMethod("asInterface", android.os.IBinder.class);
+            Object listenerObj = asInterface.invoke(null, listenerBinder);
+            Log.d(TAG, "IMcuListener proxy created via Stub.asInterface: " + listenerObj.getClass().getName());
+            
+            requestListener.invoke(mMcuManager, listenerObj, "com.example.openradiofm");
+            Log.d(TAG, "✓ Registered IMcuListener (AIDL Binder) successfully!");
+            
+        } catch (Exception e) {
+            Log.e(TAG, "Error registering IMcuListener (Binder approach)", e);
+            // Último recurso: intentar con Binder directo sin asInterface
+            try {
+                registerMcuListenerDirect();
+            } catch (Exception e2) {
+                Log.e(TAG, "Direct Binder approach also failed", e2);
+            }
+        }
+    }
+    
+    private void registerMcuListenerDirect() throws Exception {
+        // Enfoque alternativo: pasar el Binder directamente sin Stub.asInterface
+        String descriptor = "android.qf.mcu.IMcuListener";
+        
+        android.os.Binder listenerBinder = new android.os.Binder() {
+            @Override
+            protected boolean onTransact(int code, android.os.Parcel data, android.os.Parcel reply, int flags) throws RemoteException {
+                Log.d(TAG, "IMcuListener(direct).onTransact: code=" + code);
+                if (code == 1) { // onMcuInfoChanged
+                    data.enforceInterface(descriptor);
+                    byte[] mcuData = data.createByteArray();
+                    if (mcuData != null) {
+                        Log.d(TAG, ">>> Direct: onMcuInfoChanged data=" + bytesToHex(mcuData));
+                        handleMcuData(mcuData);
+                    }
+                    if (reply != null) reply.writeNoException();
+                    return true;
+                }
+                return super.onTransact(code, data, reply, flags);
+            }
+        };
+        listenerBinder.attachInterface(null, descriptor);
+        
+        // Intentar envolver en IMcuListener via Stub.asInterface
+        Class<?> stubClass = Class.forName("android.qf.mcu.IMcuListener$Stub");
+        Method asInterface = stubClass.getMethod("asInterface", android.os.IBinder.class);
+        Object listenerObj = asInterface.invoke(null, listenerBinder);
+        
+        Class<?> listenerInterface = Class.forName("android.qf.mcu.IMcuListener");
+        Method requestListener = mMcuManager.getClass().getMethod(
+            "RPC_RequestMcuInfoChangedListener", listenerInterface, String.class);
+        requestListener.invoke(mMcuManager, listenerObj, "com.example.openradiofm");
+        Log.d(TAG, "✓ Registered IMcuListener (direct Binder) successfully!");
+    }
+
+    // ==========================================
+    // MCU DATA HANDLING (0xB0, 0xB1, 0xB6, etc.)
+    // ==========================================
+
+    private void handleMcuData(byte[] data) {
+        if (data == null || data.length == 0) return;
+        
+        int packetType = data[0] & 0xFF;
+        
+        // V7.1: Log TODOS los paquetes MCU para diagnóstico
+        StringBuilder hexDump = new StringBuilder();
+        for (byte b : data) hexDump.append(String.format("%02X ", b));
+        Log.d(TAG, "MCU[0x" + String.format("%02X", packetType) + "] len=" + data.length + " : " + hexDump.toString());
+
+        try {
+            switch (packetType) {
+                case 0xB0: // Tuner Info (Flags + Frequency)
+                    handleTunerInfo(data);
+                    break;
+                case 0xB1: // Preset List / Current Station
+                    handlePresetList(data);
+                    break;
+                case 0xB3: // RDS AF/TA Status Flags
+                    if (data.length > 1) {
+                        Log.d(TAG, "RDS B3 Flags: 0x" + String.format("%02X", data[1]));
+                    }
+                    break;
+                case 0xB4: // RDS Indicate Info
+                    if (data.length > 1) {
+                        Log.d(TAG, "RDS B4 Flags: 0x" + String.format("%02X", data[1]));
+                    }
+                    break;
+                case 0xB5: // RDS PTY Type
+                    if (data.length > 1) {
+                        // V9.4: Corregido offset al byte 1. 0xB5 [TYPE, PTY, STATUS]
+                        int pty = data[1] & 0xFF;
+                        Log.d(TAG, "RDS PTY (0xB5): " + pty + " (raw=" + bytesToHex(data) + ")");
+                        fireEvent(102, String.valueOf(pty));
+                    }
+                    break;
+                case 0xB6: // RDS PS
+                    handleRdsPs(data);
+                    break;
+                case 0xB7: // RDS RT Info
+                    Log.d(TAG, "MCU[0xB7] RT RAW: " + bytesToHex(data));
+                    handleRdsRt(data);
+                    break;
+                case 0xB8: // RDS PS Preset List (Research)
+                    Log.d(TAG, "MCU[0xB8] PS Preset List RAW: " + bytesToHex(data));
+                    break;
+                default:
+                    // Log unknown packets for research
+                    Log.d(TAG, "Unknown MCU packet type: 0x" + String.format("%02X", packetType));
+                    break;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing MCU data", e);
+        }
+    }
+
+    private void handleTunerInfo(byte[] data) {
+        // V7.2: CONFIRMADO por logcat de la app nativa:
+        // Paquete 0xB0 tiene SOLO 2 bytes: [B0, flags]
+        // NO contiene frecuencia. La frecuencia viene en B1.
+        // 
+        // Flags (byte[1]) decodificación según TunerManagerForExt.smali:
+        //   bit0: saveFlag
+        //   bit1-2: reserved  
+        //   bit3: asFlag (AutoScan)
+        //   bit4: finishTag
+        //   bit5: validTag  
+        //   bit6: playingTag / stFlag (stereo)
+        //   bit7: locFlag (DX/Local)
+        //
+        // Ejemplo del log nativo: flag=0x70=01110000
+        //   -> asFlag=0, scanFlag=0, seekFlag=0, stFlag=1, locFlag=1
+        if (data.length < 2) return;
+        
+        int flags = data[1] & 0xFF;
+        
+        // Decodificación basada en TunerManagerForExt.onTunerInfoChanged:
+        boolean saveFlag   = (flags & 0x01) != 0; // bit 0
+        boolean asFlag     = (flags & 0x08) != 0; // bit 3 (AutoScan)
+        boolean finishTag  = (flags & 0x10) != 0; // bit 4
+        boolean validTag   = (flags & 0x20) != 0; // bit 5
+        boolean stFlag     = (flags & 0x40) != 0; // bit 6 (stereo)
+        boolean locFlag    = (flags & 0x80) != 0; // bit 7 (DX/Local: 1=local)
+        
+        // Extraer seekFlag de otro bit — en el log nativo, seekFlag aparece separado
+        // Probablemente bit 2 o 3
+        boolean seekFlag   = (flags & 0x04) != 0; // bit 2
+        boolean scanFlag   = (flags & 0x02) != 0; // bit 1
+        
+        mIsScanning = asFlag || scanFlag;
+        mIsSeeking = seekFlag;
+        mIsDxLocal = locFlag;
+        
+        Log.d(TAG, "TunerInfo: flags=0x" + String.format("%02X", flags) + 
+                    " save=" + saveFlag + " AS=" + asFlag + " finish=" + finishTag + 
+                    " valid=" + validTag + " ST=" + stFlag + " LOC=" + locFlag +
+                    " seek=" + seekFlag + " scan=" + scanFlag);
+        
+        // Notificar UI
+        fireEvent(103, String.valueOf(stFlag ? 1 : 0)); // Stereo
+        fireEvent(106, String.valueOf(locFlag ? 1 : 0)); // DX/Local
+    }
+
+    private void handlePresetList(byte[] data) {
+        // V7.2: CONFIRMADO por logcat:
+        // Formato 0xB1: [B1, band, presetIdx, freq1_hi, freq1_lo, freq2_hi, freq2_lo, ...]
+        // Ejemplo real: [B1 00 05 24 04 22 38 22 CE 23 32 23 AA 24 04 24 68]
+        //   band=0 (FM1), presetIdx=5 (actual)
+        //   Presets: 0x2404=9220(92.2), 0x2238=8760(87.6), 0x22CE=8910(89.1), etc.
+        // Frecuencias en Big-Endian, formato ×100 (9220 = 92.20 MHz)
+        if (data.length < 5) return;
+        
+        int band = data[1] & 0xFF;
+        int presetIdx = data[2] & 0xFF;
+        
+        // La frecuencia ACTUAL es la que está en la posición presetIdx
+        // Cada frecuencia ocupa 2 bytes a partir de byte[3]
+        // freq[0] = bytes[3..4], freq[1] = bytes[5..6], ...
+        // freq[presetIdx] = bytes[3 + presetIdx*2 .. 4 + presetIdx*2]
+        
+        // Extraer frecuencia actual
+        int freqOffset = 3 + presetIdx * 2;
+        int currentFreq = -1;
+        if (freqOffset + 1 < data.length) {
+            int hi = data[freqOffset] & 0xFF;
+            int lo = data[freqOffset + 1] & 0xFF;
+            currentFreq = (hi << 8) | lo; // Big-Endian ×100
+        }
+        
+        // También extraer la primera frecuencia como backup
+        int firstFreqHi = data[3] & 0xFF;
+        int firstFreqLo = data[4] & 0xFF;
+        int firstFreq = (firstFreqHi << 8) | firstFreqLo;
+        
+        Log.d(TAG, "PresetList: band=" + band + " presetIdx=" + presetIdx + 
+                    " currentFreq=" + currentFreq + " firstFreq=" + firstFreq +
+                    " (offset=" + freqOffset + ")");
+        
+        // V9.4d: NO actualizar mCurrentBand desde 0xB1.
+        // La MCU siempre reporta band=0 (FM1) en el preset list,
+        // lo que causaba el reset a FM1 al hacer Seek.
+        // La banda solo debe cambiar por acción explícita del usuario (onBandEvent).
+        Log.d(TAG, "PresetList: band reportada=" + band + " (ignorada, mCurrentBand=" + mCurrentBand + ")");
+        
+        // Actualizar frecuencia (normalizar de ×100 a ×1000 para OpenRadioFM)
+        if (currentFreq > 0 && isValidFreqMcu(currentFreq)) {
+            updateFrequency(currentFreq);
+        } else if (isValidFreqMcu(firstFreq)) {
+            updateFrequency(firstFreq);
+        }
+    }
+
+    private void handleRdsPs(byte[] data) {
+        if (data.length < 3) return;
+        try {
+            // El offset del nombre PS varía. Probar desde byte 1.
+            int startOffset = 1;
+            int maxLen = Math.min(8, data.length - startOffset);
+            if (maxLen <= 0) return;
+            
+            String psName = new String(data, startOffset, maxLen, "UTF-8").trim(); 
+            psName = psName.replaceAll("[^\\x20-\\x7E]", "");
+            
+            if (!psName.isEmpty()) {
+                Log.d(TAG, "RDS PS: '" + psName + "'");
+                fireEvent(100, psName);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing RDS PS", e);
+        }
+    }
+
+    private void handleRdsRt(byte[] data) {
+        if (data.length <= 1) return;
+        try {
+            // V9.1: Logging extendido para depurar Radio Text
+            // Probamos varios offsets por si el texto empieza más adelante
+            String rt1 = new String(data, 1, data.length - 1, "UTF-8").trim();
+            Log.d(TAG, "RDS RT Try(1): '" + rt1 + "'");
+            
+            int startOffset = 1;
+            int len = data.length - startOffset;
+            if (len > 0) {
+                String rtText = new String(data, startOffset, len, "UTF-8").trim();
+                rtText = rtText.replaceAll("[^\\x20-\\x7E]", "");
+                if (!rtText.isEmpty()) {
+                    fireEvent(101, rtText);
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error parsing RDS RT", e);
+        }
+    }
+
+    // V7.1: Helper para enviar eventos al callback de forma segura
+    private void fireEvent(int code, String data) {
+        if (mCallback != null) {
+            try {
+                mCallback.onEvent(code, data);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error firing event " + code, e);
+            }
+        }
+    }
+
+    /**
+     * Valida frecuencia en formato MCU (×100).
+     * Ejemplo: 8750 = 87.50 MHz, 9220 = 92.20 MHz
+     */
+    private boolean isValidFreqMcu(int freq) {
+        // FM: 8750-10800 (87.5 - 108.0 MHz en ×100)
+        // AM: 522-1710 kHz
+        return (freq >= 8750 && freq <= 10800) || // FM
+               (freq >= 522 && freq <= 1710);     // AM kHz
+    }
+
+    /**
+     * V7.2: Recibe frecuencia en formato MCU (×100, ej: 9220=92.20MHz)
+     * y la convierte al formato OpenRadioFM (×1000, ej: 92200)
+     * para que la UI la muestre correctamente como 92.20
+     */
+    private void updateFrequency(int mcuFreq) {
+        // Convertir de MCU×100 a OpenRadioFM×1000 
+        // 9220 → 92200 (que luego la UI formatea como 92200/1000.0 = 92.20)
+        int freqForUI;
+        if (mcuFreq >= 8750 && mcuFreq <= 10800) {
+            // FM: multiplicar por 10 para pasar de ×100 a ×1000
+            freqForUI = mcuFreq * 10;
+        } else if (mcuFreq >= 522 && mcuFreq <= 1710) {
+            // AM: ya está en kHz, usar directamente
+            freqForUI = mcuFreq;
+        } else {
+            Log.w(TAG, "Frecuencia MCU inválida: " + mcuFreq);
+            return;
+        }
+        
+        if (freqForUI == mCurrentFreq) return;
+        
+        int oldFreq = mCurrentFreq;
+        mCurrentFreq = freqForUI;
+        Log.d(TAG, ">>> FREQ: " + oldFreq + " -> " + freqForUI + " (MCU=" + mcuFreq + ", " + String.format("%.2f", mcuFreq / 100.0) + " MHz)");
+        
+        // Notificar a la UI 
+        fireEvent(105, String.valueOf(freqForUI));
+    }
+    
+    private void sendMcuCmd(byte cmdId, byte[] data) {
+        if (mMcuManager == null || mSendMcuCmdData == null) return;
+        try {
+            mSendMcuCmdData.invoke(mMcuManager, cmdId, data, data.length);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in sendMcuCmd", e);
+        }
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString();
+    }
+
+    // ==========================================
+    // V9.6: QFTunerManager INIT (Alto nivel)
+    // ==========================================
+
+    /**
+     * V9.6: Conecta con QFTunerManager del QF SDK via reflection.
+     * Este es el canal que la app nativa usa para seek, scan y RDS.
+     * sendCmd() vía RPC_SendMcuMsgData solo funciona fiable para tune/band/fine.
+     */
+    private void initQFTunerManager() {
+        try {
+            Class<?> clazz = Class.forName("com.qf.clientsdk.QFTunerManager");
+            Method getInstance = clazz.getMethod("getInstance");
+            mTunerManager = getInstance.invoke(null);
+            Log.d(TAG, "QFTunerManager: CONNECTED (" + mTunerManager + ")");
+
+            // Seek: onSeek(boolean up) — true=up, false=down
+            try {
+                mTunerOnSeek = clazz.getMethod("onSeek", boolean.class);
+                Log.d(TAG, "  → onSeek(boolean): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → onSeek not found, trying alternatives");
+                // Fallback: quizás use int (1=up, 0=down)
+                try {
+                    mTunerOnSeek = clazz.getMethod("onSeek", int.class);
+                    Log.d(TAG, "  → onSeek(int): OK (fallback)");
+                } catch (NoSuchMethodException e2) {
+                    Log.w(TAG, "  → onSeek NOT AVAILABLE");
+                }
+            }
+
+            // AutoScan & Stop
+            try {
+                mTunerAutoScan = clazz.getMethod("autoScan");
+                Log.d(TAG, "  → autoScan(): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → autoScan NOT AVAILABLE");
+            }
+
+            try {
+                mTunerStopScan = clazz.getMethod("stopScan");
+                Log.d(TAG, "  → stopScan(): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → stopScan NOT AVAILABLE");
+            }
+
+            // Band
+            try {
+                mTunerOnBand = clazz.getMethod("onBand", int.class);
+                Log.d(TAG, "  → onBand(int): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → onBand NOT AVAILABLE");
+            }
+
+            // LOC mode
+            try {
+                mTunerOnLoc = clazz.getMethod("onLoc", int.class);
+                Log.d(TAG, "  → onLoc(int): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → onLoc NOT AVAILABLE");
+            }
+
+            // RDS Switch
+            try {
+                mTunerSetRdsSwitch = clazz.getMethod("setRdsSwitch", int.class);
+                Log.d(TAG, "  → setRdsSwitch(int): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → setRdsSwitch NOT AVAILABLE");
+            }
+
+            // RDS AF Switch
+            try {
+                mTunerSetRdsAF = clazz.getMethod("setRdsAFSwitch");
+                Log.d(TAG, "  → setRdsAFSwitch(): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → setRdsAFSwitch NOT AVAILABLE");
+            }
+
+            // RDS TA Switch
+            try {
+                mTunerSetRdsTA = clazz.getMethod("setRdsTASwitch");
+                Log.d(TAG, "  → setRdsTASwitch(): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → setRdsTASwitch NOT AVAILABLE");
+            }
+
+            // RDS PTY Type
+            try {
+                mTunerSetRdsPtyType = clazz.getMethod("setRdsPtyType", int.class);
+                Log.d(TAG, "  → setRdsPtyType(int): OK");
+            } catch (NoSuchMethodException e) {
+                Log.w(TAG, "  → setRdsPtyType NOT AVAILABLE");
+            }
+
+            // Log TODOS los métodos del TunerManager para exploración
+            Log.d(TAG, "=== Métodos QFTunerManager ===");
+            for (Method m : clazz.getMethods()) {
+                if (!m.getDeclaringClass().equals(Object.class)) {
+                    StringBuilder params = new StringBuilder();
+                    for (Class<?> p : m.getParameterTypes()) {
+                        if (params.length() > 0) params.append(", ");
+                        params.append(p.getSimpleName());
+                    }
+                    Log.d(TAG, "  " + m.getReturnType().getSimpleName() + " " + m.getName() + "(" + params + ")");
+                }
+            }
+
+        } catch (ClassNotFoundException e) {
+            Log.w(TAG, "QFTunerManager class not found - sendCmd MCU directo será el único canal");
+        } catch (Exception e) {
+            Log.e(TAG, "Error connecting to QFTunerManager", e);
+        }
+    }
+
+    // ==========================================
+    // COMMAND SENDING
+    // ==========================================
+
+    private void sendCmd(byte subCmd, byte param1, byte param2) {
+        if (mMcuManager == null || mSendMcuMsgData == null) {
+            Log.e(TAG, "sendCmd FAILED: mMcuManager=" + (mMcuManager != null) + " mSendMcuMsgData=" + (mSendMcuMsgData != null));
+            return;
+        }
+        try {
+            byte[] payload = new byte[] { subCmd, param1, param2 };
+            mSendMcuMsgData.invoke(mMcuManager, (byte) CMD_TUNER, payload, 3);
+            Log.d(TAG, "CMD Enviado: sub=0x" + String.format("%02X", subCmd) + 
+                        " p1=0x" + String.format("%02X", param1) + 
+                        " p2=0x" + String.format("%02X", param2));
+        } catch (Exception e) {
+            Log.e(TAG, "Error enviando comando 0x" + String.format("%02X", subCmd), e);
+        }
+    }
+
+    // ==========================================
+    // AIDL INTERFACE IMPLEMENTATION
+    // ==========================================
+
+    @Override
+    public void registerRadioClientBinder(IBinder binder) throws RemoteException {}
+
+    @Override
+    public void unRegisterRadioClientBinder() throws RemoteException {}
+
+    @Override
+    public void registerRadioCallback(IRadioCallBack cb) throws RemoteException {
+        this.mCallback = cb;
+        Log.d(TAG, "Callback registrado");
+    }
+
+    @Override
+    public void unRegisterRadioCallback(IRadioCallBack cb) throws RemoteException {
+        this.mCallback = null;
+        Log.d(TAG, "Callback desregistrado");
+    }
+
+    @Override
+    public void onBandEvent() throws RemoteException {
+        mCurrentBand++;
+        if (mCurrentBand > BAND_AM2) mCurrentBand = BAND_FM1;
+        // V9.6 (Fix AM band): El comando real para cambiar la banda en MCU es 0x06 (SWITCH_BAND)
+        sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
+        Log.d(TAG, "Band -> " + mCurrentBand + " (sent [0xA0 06 " + String.format("%02X", mCurrentBand) + " 00])");
+    }
+
+    public void closeDevice() throws RemoteException {
+        Log.d(TAG, "Cerrando radio FM y restaurando contexto de audio");
+        
+        // V9.5: Emula secuencia estricta de salida de la app nativa 
+        stopFmAudioSequence();
+        
+        abandonAudioFocus();
+        if (mAudioManager != null && mContext != null) {
+            mAudioManager.unregisterMediaButtonEventReceiver(
+                    new ComponentName(mContext.getPackageName(), "MediaButtonReceiver"));
+        }
+    }
+
+    private void requestAudioFocus() {
+        if (mAudioManager != null && !mIsAudioFocusHeld) {
+            int result = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, 
+                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                mIsAudioFocusHeld = true;
+                Log.d(TAG, "Audio Focus Granted");
+            } else {
+                Log.w(TAG, "Audio Focus Failed");
+            }
+        }
+    }
+
+    private void abandonAudioFocus() {
+        if (mAudioManager != null && mIsAudioFocusHeld) {
+            mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
+            mIsAudioFocusHeld = false;
+            Log.d(TAG, "Audio Focus Abandoned");
+        }
+    }
+
+        /**
+     * V7.2d: Secuencia de inicio de audio FM.
+     * CORREGIDA basándose en el análisis del log de la app nativa (TunerManagerForExt/FmService).
+     * 
+     * Descubrimiento clave: NO debemos llamar RPC_SetChannel(2) directamente.
+     * PID 4140 (framework) lo sobreescribe con SetChannel(4) inmediatamente.
+     * 
+     * La app nativa hace:
+     * 1. Envía comando MCU 0xA0 sub=0x0A params=0x01,0x00 (onRadioArea: radioArea: 1)
+     * 2. Pide AudioFocus (FmService.requestAudioFocus)
+     * 3. PID 4140 RESPONDE con RPC_SetChannel(2) -> radio_type activado
+     * 
+     * Nuestro error anterior: llamar SetChannel(2) ANTES de AudioFocus,
+     * causando que PID 4140 lo sobreescriba con SetChannel(4).
+     */
+    private void startFmAudioSequence() {
+        Log.d(TAG, "=== INICIO SECUENCIA AUDIO FM V7.2d ===");
+
+        // 1. Silenciar primero
+        try {
+            setMute(true);
+            Log.d(TAG, "[1/7] setMute(true) OK");
+        } catch (Exception e) {
+            Log.w(TAG, "[1/7] setMute(true) failed", e);
+        }
+
+        // 2. CLAVE: Enviar comando "Radio Area" al MCU
+        // V9.6: Usar QFTunerManager.onLoc() si disponible
+        if (mTunerOnLoc != null && mTunerManager != null) {
+            try {
+                mTunerOnLoc.invoke(mTunerManager, 1); // mode=1 (Local)
+                Log.d(TAG, "[2/9] LOC(1) via QFTunerManager.onLoc()");
+            } catch (Exception e) {
+                sendCmd(SUB_TUNE_AREA, (byte) 0x01, (byte) 0x00);
+                Log.d(TAG, "[2/9] LOC(1) fallback sendCmd");
+            }
+        } else {
+            sendCmd(SUB_TUNE_AREA, (byte) 0x01, (byte) 0x00);
+            Log.d(TAG, "[2/9] Radio Area/LOC notification sent (sendCmd)");
+        }
+
+        // 3. Pedir foco de audio ANTES de SetChannel
+        // Esto es CRÍTICO: el framework (PID 4140) responde al AudioFocus
+        // llamando RPC_SetChannel(2) automáticamente si la radio area está activa
+        requestAudioFocus();
+        Log.d(TAG, "[3/7] requestAudioFocus - PID 4140 debería responder con SetChannel(2)");
+
+        // 4. Esperar un poco para que PID 4140 procese el AudioFocus
+        // y llame SetChannel(2) por nosotros
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            // ignore
+        }
+
+        // 5. Verificar si PID 4140 ya activó el canal FM
+        // Si no, hacerlo nosotros como fallback
+        if (mMcuManager != null && mSetChannel != null) {
+            try {
+                Method getChannel = mMcuManager.getClass().getMethod("RPC_GetChannel");
+                byte currentChannel = (byte) getChannel.invoke(mMcuManager);
+                Log.d(TAG, "[5/7] Canal actual: " + currentChannel);
+                if (currentChannel != 2) {
+                    Log.d(TAG, "[5/7] Canal NO es FM, forzando SetChannel(2)...");
+                    mSetChannel.invoke(mMcuManager, (byte) 2);
+                    Log.d(TAG, "[5/7] RPC_SetChannel(2) forzado OK");
+                } else {
+                    Log.d(TAG, "[5/7] Canal ya es FM (2), OK!");
+                }
+            } catch (Exception e) {
+                // Fallback: forzar SetChannel(2) si falla GetChannel
+                try {
+                    mSetChannel.invoke(mMcuManager, (byte) 2);
+                    Log.d(TAG, "[5/7] RPC_SetChannel(2) fallback OK");
+                } catch (Exception e2) {
+                    Log.e(TAG, "[5/7] SetChannel(2) FAILED", e2);
+                }
+            }
+        }
+
+        // 6. Parámetros de audio FM
+        setAudioParams(true);
+        Log.d(TAG, "[6/7] setAudioParams(on)");
+
+        // 7. Desmutear
+        try {
+            setMute(false);
+            Log.d(TAG, "[7/7] setMute(false) OK");
+        } catch (Exception e) {
+            Log.w(TAG, "[7/7] setMute(false) failed", e);
+        }
+
+        // 8. RDS - COMENTADO en V9.7: causa autoscan en este firmware
+        /*
+        if (mTunerSetRdsSwitch != null && mTunerManager != null) {
+            try {
+                mTunerSetRdsSwitch.invoke(mTunerManager, 1);
+                Log.d(TAG, "[8/9] RDS ON via QFTunerManager.setRdsSwitch(1)");
+            } catch (Exception e) {
+                sendCmd(SUB_RDS_SWITCH, (byte) 0x01, (byte) 0x00);
+                Log.d(TAG, "[8/9] RDS ON fallback sendCmd");
+            }
+        } else {
+            sendCmd(SUB_RDS_SWITCH, (byte) 0x01, (byte) 0x00);
+            Log.d(TAG, "[8/9] Activando RDS (sendCmd)");
+        }
+        */
+
+        // 9. V9.8: RESET FILTRO PTY (Comentado)
+        // Se ha descubierto que usar sendRdsCmd con 0x15 (RDS Switch) a 0x00 estaba apagando
+        // la emisión de los paquetes de PTY desde la MCU. 
+        /*
+        Log.d(TAG, "[9/9] Resetting PTY filter...");
+        sendRdsCmd((byte) 0x00); 
+        try { Thread.sleep(50); } catch (Exception e) {}
+        sendRdsCmd((byte) 0xFF); // V9.8: Intentar con FF para "limpiar"
+        Log.d(TAG, "[9/9] PTY filter reset commands sent (0x00, 0xFF)");
+        */
+
+        Log.d(TAG, "=== FIN SECUENCIA AUDIO FM V7.2d ===");
+    }
+
+    private void stopFmAudioSequence() {
+        Log.d(TAG, "=== FIN SECUENCIA AUDIO FM (Teardown V9.5) ===");
+        try {
+            // 1. Silenciar (Mute true)
+            setMute(true);
+            Log.d(TAG, "[1/3] setMute(true)");
+        } catch (Exception e) {}
+
+        try {
+            // 2. Devolver canal a MPU (Media = 4)
+            if (mSetChannel != null && mMcuManager != null) {
+                mSetChannel.invoke(mMcuManager, (byte) 4);
+                Log.d(TAG, "[2/2] RPC_SetChannel(4) - Contexto devuelto a Android MPU");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "[2/2] Failed to set channel 4", e);
+        }
+    }
+
+    private void setAudioParams(boolean on) {
+        if (mAudioManager != null) {
+            String params = on ? "fm_radio_on=1;fm_mute=0" : "fm_radio_on=0;fm_mute=1";
+            try {
+                mAudioManager.setParameters(params);
+                Log.d(TAG, "Set Audio Params: " + params);
+            } catch (Exception e) {
+                Log.e(TAG, "Error setting audio params", e);
+            }
+        }
+    }
+
+    private void setForceUse(boolean useSpeaker) {
+        try {
+            Class<?> audioSystemClass = Class.forName("android.media.AudioSystem");
+            Method setForceUseMethod = audioSystemClass.getMethod("setForceUse", int.class, int.class);
+            int usage = 1; // FOR_MEDIA
+            int mode = useSpeaker ? 1 : 0; // FORCE_SPEAKER or FORCE_NONE
+            setForceUseMethod.invoke(null, usage, mode);
+            Log.d(TAG, "AudioSystem.setForceUse(" + usage + ", " + mode + ")");
+        } catch (Exception e) {
+            Log.e(TAG, "Error calling AudioSystem.setForceUse", e);
+        }
+    }
+
+    // ==========================================
+    // RADIO CONTROL COMMANDS
+    // ==========================================
+
+    @Override
+    public void onASEvent() throws RemoteException {
+        // V9.6: Auto Store via QFTunerManager
+        if (mTunerAutoScan != null && mTunerManager != null) {
+            try {
+                mTunerAutoScan.invoke(mTunerManager);
+                mIsScanning = true;
+                Log.d(TAG, "AutoStore via QFTunerManager.autoScan()");
+                return;
+            } catch (Exception e) {
+                Log.w(TAG, "QFTunerManager.autoScan fallback", e);
+            }
+        }
+        sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
+        mIsScanning = true;
+        Log.d(TAG, "AutoStore fallback sendCmd (0x08)");
+    }
+
+    @Override
+    public void onPSEvent() throws RemoteException {
+        // V9.6: Stop scan via QFTunerManager
+        if (mTunerStopScan != null && mTunerManager != null) {
+            try {
+                mTunerStopScan.invoke(mTunerManager);
+                mIsScanning = false;
+                Log.d(TAG, "StopScan via QFTunerManager.stopScan()");
+                return;
+            } catch (Exception e) {
+                Log.w(TAG, "QFTunerManager.stopScan fallback", e);
+            }
+        }
+        sendCmd(SUB_AUTO_SCAN_STOP, (byte) 0, (byte) 0);
+        mIsScanning = false;
+        Log.d(TAG, "StopScan fallback sendCmd (0x0C)");
+    }
+
+    @Override
+    public void onLocDxEvent() throws RemoteException {
+        // V9.6: Usar QFTunerManager.onLoc() para LOC/DX
+        mIsDxLocal = !mIsDxLocal;
+        int mode = mIsDxLocal ? 1 : 0;
+        
+        // V9.6: LOC/DX es el comando 0x07 (SWITCH_LOC) según TunerCmdFactory
+        sendCmd(SUB_SWITCH_LOC, (byte) (mIsDxLocal ? 1 : 0), (byte) 0x00);
+        Log.d(TAG, "DX/Local toggle -> " + (mIsDxLocal ? "LOCAL" : "DX") + " (sent [0xA0 07 " + (mIsDxLocal ? "01" : "00") + " 00])");
+        fireEvent(106, String.valueOf(mIsDxLocal ? 1 : 0));
+    }
+
+    @Override
+    public void onSeekDownEvent() throws RemoteException {
+        // V9.6: Seek down real
+        sendCmd(SUB_SEEK_DOWN, (byte) 0x02, (byte) 0);
+        mIsSeeking = true;
+        Log.d(TAG, "Seek Down (0x02) command sent");
+    }
+
+    @Override
+    public void onSeekUpEvent() throws RemoteException {
+        // V9.6: Seek up real (true=0x01/0x02 según param)
+        sendCmd(SUB_SEEK_UP, (byte) 0x01, (byte) 0);
+        mIsSeeking = true;
+        Log.d(TAG, "Seek Up (0x01) command sent");
+    }
+
+    @Override
+    public void onManualUpEvent() throws RemoteException {
+        // V9.6: Fine = 0x03 (Up)
+        sendCmd(SUB_FINE_UP, (byte) 0, (byte) 0);
+    }
+
+    @Override
+    public void onManualDownEvent() throws RemoteException {
+        // V9.6: Fine = 0x04 (Down)
+        sendCmd(SUB_FINE_DOWN, (byte) 0, (byte) 0);
+    }
+
+    @Override
+    public void onScanEvent() throws RemoteException {
+        // V9.6: Usar QFTunerManager
+        if (mTunerAutoScan != null && mTunerManager != null) {
+            try {
+                mTunerAutoScan.invoke(mTunerManager);
+                mIsScanning = true;
+                Log.d(TAG, "AutoScan via QFTunerManager.autoScan()");
+                return;
+            } catch (Exception e) {
+                Log.w(TAG, "QFTunerManager.autoScan fallback to sendCmd", e);
+            }
+        }
+        sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
+        mIsScanning = true;
+        Log.d(TAG, "AutoScan fallback sendCmd (0x08)");
+    }
+
+    @Override
+    public void gotoFreq(int freq) throws RemoteException {
+        // La freq de OpenRadioFM viene en formato x1000 (ej. 96900 = 96.9 MHz)
+        // La MCU internamente espera el numero en deca-kiloherzios o formato base 100/10 freq, o directo si es AM
+        // TunerCmdFactory usa int2Bytes para la freq (multiplicada en su capa).
+        int freqKhz = freq / 1000;
+        int freqMcu = (freqKhz >= 522 && freqKhz <= 1710) ? freqKhz : (freq/10); 
+        mCurrentFreq = freq;
+        sendCmd(SUB_TUNE_FREQUENCY, (byte) ((freqMcu >> 8) & 0xFF), (byte) (freqMcu & 0xFF));
+        Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ")");
+    }
+
+    @Override
+    public void gotoFreq2(String freq) throws RemoteException {
+        try {
+            float f = Float.parseFloat(freq);
+            // f = 92.2 → gotoFreq espera ×1000 → 92200
+            gotoFreq((int)(f * 1000));
+        } catch (NumberFormatException e) {
+            Log.e(TAG, "gotoFreq2: invalid freq string: " + freq);
+        }
+    }
+
+    @Override
+    public void gotoFreqIndex(int index) throws RemoteException {
+        // El index (0-5) corresponde al preset. Extraído: SUB_PRESET_SELECT = 0x0D
+        sendCmd(SUB_PRESET_SELECT, (byte) index, (byte) 0);
+        Log.d(TAG, "Select Preset Index -> " + index);
+    }
+
+    @Override
+    public int getCurrentBand() throws RemoteException {
+        return mCurrentBand;
+    }
+
+    @Override
+    public int getCurrentFreq() throws RemoteException {
+        // V7.2: La frecuencia se actualiza vía callback MCU (handlePresetList).
+        // RPC_GetChannel retorna el CANAL DE AUDIO (2=FM, 4=Android), NO la frecuencia.
+        // mCurrentFreq ya está en formato OpenRadioFM (×1000) gracias a updateFrequency().
+        return mCurrentFreq; 
+    }
+
+    @Override
+    public boolean IsAS() throws RemoteException { return false; }
+
+    @Override
+    public boolean IsPS() throws RemoteException { return false; }
+
+    @Override
+    public boolean IsScan() throws RemoteException { return mIsScanning; }
+
+    @Override
+    public boolean IsSeek() throws RemoteException { return mIsSeeking; }
+
+    @Override
+    public boolean IsStereo() throws RemoteException { return true; }
+
+    @Override
+    public boolean IsDxLocal() throws RemoteException { 
+        return mIsDxLocal; // V7.1: Retorna estado real en vez de siempre false
+    }
+
+    @Override
+    public boolean requestPlayAudio() throws RemoteException { return true; }
+
+    public void setMute(boolean mute) throws RemoteException {
+        if (mSetMute == null) {
+            Log.w(TAG, "setMute: mSetMute is null");
+            return;
+        }
+        try {
+            if (mSetMute.getParameterTypes()[0] == int.class) {
+                mSetMute.invoke(mMcuManager, mute ? 1 : 0);
+            } else {
+                mSetMute.invoke(mMcuManager, mute);
+            }
+            Log.d(TAG, "Mute set to: " + mute);
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting mute", e);
+        }
+    }
+    
+    /**
+     * Sincroniza el estado interno sin enviar comandos al hardware.
+     */
+    public void syncState(int freq, int band) {
+        this.mCurrentFreq = freq;
+        this.mCurrentBand = band;
+        Log.d(TAG, "Estado sincronizado manual: " + freq + " / B" + band);
+    }
+
+    /**
+     * V9.5: Getter público para estado de scanning.
+     */
+    public boolean isScanning() {
+        return mIsScanning;
+    }
+
+    /**
+     * V9.5: Envía comando RDS (prefijo 0xA2) al MCU.
+     * Usado para setRdsPtyType y otros controles RDS.
+     */
+    private void sendRdsCmd(byte ptyType) {
+        if (mMcuManager == null || mSendMcuMsgData == null) {
+            Log.e(TAG, "sendRdsCmd FAILED: MCU no disponible");
+            return;
+        }
+        try {
+            byte[] payload = new byte[] { ptyType };
+            mSendMcuMsgData.invoke(mMcuManager, (byte) 0xA2, payload, 1);
+            Log.d(TAG, "RDS CMD Enviado: 0xA2 ptyType=" + (ptyType & 0xFF));
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending RDS PTY cmd", e);
+        }
+    }
+
+    private void notifyFreqUpdate() {
+        // La UI actualiza por polling a getCurrentFreq()
+        // y también por el evento 105
+    }
+}

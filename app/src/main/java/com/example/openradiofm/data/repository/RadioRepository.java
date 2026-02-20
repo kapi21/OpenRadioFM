@@ -68,9 +68,33 @@ public class RadioRepository {
      */
     public void setCustomName(int freqKHz, String name) {
         if (name == null || name.trim().isEmpty()) {
-            mPrefs.edit().remove("NAME_" + freqKHz).apply();
+            mPrefs.edit().remove("CUSTOM_" + freqKHz).apply();
         } else {
-            mPrefs.edit().putString("NAME_" + freqKHz, name.trim()).apply();
+            mPrefs.edit().putString("CUSTOM_" + freqKHz, name.trim()).apply();
+        }
+    }
+
+    /**
+     * V9: Guarda el nombre RDS PS recibido dinámicamente.
+     */
+    public void saveRdsName(int freqKHz, String name) {
+        if (name != null && !name.trim().isEmpty() && name.length() >= 2) {
+            String existing = mPrefs.getString("RDS_" + freqKHz, "");
+            if (!name.equals(existing)) {
+                mPrefs.edit().putString("RDS_" + freqKHz, name.trim()).apply();
+            }
+        }
+    }
+
+    /**
+     * V9.9: Guarda el PTY (índice o nombre) recibido para una frecuencia.
+     */
+    public void saveRdsPty(int freqKHz, String pty) {
+        if (pty != null && !pty.trim().isEmpty()) {
+            String existing = mPrefs.getString("PTY_" + freqKHz, "");
+            if (!pty.equals(existing)) {
+                mPrefs.edit().putString("PTY_" + freqKHz, pty.trim()).apply();
+            }
         }
     }
 
@@ -97,27 +121,38 @@ public class RadioRepository {
                             "Esto puede causar lag en la interfaz. " +
                             "Considera ejecutarlo en un hilo de fondo.");
         }
-        // 1. Verificar nombre personalizado (Prioridad Máxima)
-        String customName = mPrefs.getString("NAME_" + freqKHz, null);
+        // V9: Prioridad de nombre
+        // 1. Custom (Usuario)
+        // 2. RDS PS (Capturado en vivo)
+        // 3. RDS Root (Sistema)
+        
+        String customName = mPrefs.getString("CUSTOM_" + freqKHz, null);
+        String rdsPsName = mPrefs.getString("RDS_" + freqKHz, null);
+        String ptyStored = mPrefs.getString("PTY_" + freqKHz, null);
+        
+        String rootName = null;
+        if (useRoot && rootSource != null) {
+            rootName = rootSource.getRdsName(freqKHz);
+        }
 
         String finalName = "";
-
         if (customName != null && !customName.isEmpty()) {
             finalName = customName;
-        } else {
-            // 2. Nombre oficial del sistema (Root). Si no hay root, devolverá null sin
-            // excepciones.
-            String rootName = null;
-            if (useRoot && rootSource != null) {
-                rootName = rootSource.getRdsName(freqKHz);
-            }
-            finalName = (rootName != null) ? rootName : "";
+        } else if (rdsPsName != null && !rdsPsName.isEmpty()) {
+            finalName = rdsPsName;
+        } else if (rootName != null && !rootName.isEmpty()) {
+            finalName = rootName;
         }
 
         RadioStation station = new RadioStation(freqKHz, finalName);
+        if (ptyStored != null) {
+            station.setPty(ptyStored);
+        }
 
         // 2.5. Si no hay nombre aún, intentar desde el catálogo predefinido
         // (España/Gala API)
+        // V6.1: Desactivado por petición de usuario (confuso con RDS)
+        /*
         RadioStation predefined = predefinedSource.findStation(freqKHz);
         if ((finalName == null || finalName.isEmpty()) && predefined != null) {
             finalName = predefined.getName();
@@ -125,6 +160,8 @@ public class RadioRepository {
             if (station.getPty() == null)
                 station.setPty(predefined.getPty());
         }
+        */
+        RadioStation predefined = null; // Force null
 
         // 0. Revisar Caché en Memoria
         String cacheKey = freqKHz + "_" + finalName; // V3.0: Caché con nombre RDS

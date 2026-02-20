@@ -1,0 +1,3 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView android:textSize="@dimen/dp_h24" android:textColor="@color/light_gray" android:gravity="center" android:id="@id/tv_pty_item" android:background="@drawable/pty_item_bg" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" />

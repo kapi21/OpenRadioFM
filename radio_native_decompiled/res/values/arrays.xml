@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="colors">
+        <item>orange</item>
+        <item>green</item>
+        <item>purple</item>
+    </string-array>
+    <array name="presetstationfreq" />
+    <array name="presetstationname" />
+</resources>

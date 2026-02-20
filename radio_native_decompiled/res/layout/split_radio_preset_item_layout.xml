@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:gravity="center" android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="@dimen/preset_index_textsize" android:textColor="@color/light_gray" android:gravity="center" android:id="@id/tv_preset_index" android:background="@drawable/preset_item_index_bg" android:visibility="gone" android:layout_width="@dimen/preset_item_index_width" android:layout_height="@dimen/preset_item_index_height" android:layout_marginTop="@dimen/dp_h15" />
+    <TextView android:textSize="@dimen/preset_freq_textsize" android:textColor="@color/light_gray" android:id="@id/tv_preset_station" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" />
+    <TextView android:textSize="@dimen/preset_index_textsize" android:textColor="@color/light_gray" android:gravity="center" android:id="@id/tv_preset_name" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_h5" android:singleLine="true" android:paddingStart="@dimen/dp_w5" android:paddingEnd="@dimen/dp_w5" />
+</LinearLayout>

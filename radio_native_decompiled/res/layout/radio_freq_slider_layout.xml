@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:layout_width="fill_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <FrameLayout android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginTop="@dimen/slider_scale_margin_top">
+        <com.android.fmradio.views.NoCancelActionRelativeLayout android:layout_gravity="center_horizontal" android:id="@id/layout_scale" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <ImageView android:id="@id/iv_scale" android:background="@drawable/ic_scale" android:layout_width="@dimen/slider_view_width" android:layout_height="@dimen/slider_view_height" android:scaleType="fitCenter" android:contentDescription="@string/app_name" />
+        </com.android.fmradio.views.NoCancelActionRelativeLayout>
+        <RelativeLayout android:gravity="center_horizontal" android:layout_gravity="center_horizontal" android:layout_width="@dimen/slider_view_width" android:layout_height="wrap_content" android:layout_marginTop="@dimen/dp_h6" android:layout_marginStart="@dimen/slider_view_margin_start">
+            <ImageView android:id="@id/iv_slider" android:background="@drawable/ic_slider" android:layout_width="@dimen/dp_h72" android:layout_height="@dimen/dp_h72" android:scaleType="fitCenter" android:layout_centerHorizontal="true" android:contentDescription="@string/app_name" />
+        </RelativeLayout>
+        <com.android.fmradio.views.NoCancelActionLinearLayout android:gravity="bottom|center" android:layout_gravity="center_horizontal" android:orientation="horizontal" android:id="@id/layout_freq_title" android:paddingTop="@dimen/dp_h70" android:paddingBottom="@dimen/dp_h20" android:layout_width="@dimen/slider_freq_title_width" android:layout_height="@dimen/slider_view_height" android:layout_marginStart="@dimen/slider_freq_title_margin_left">
+            <TextView android:textSize="@dimen/channel_prompt_textsize" android:textColor="@color/channel_prompt_text_color" android:gravity="center" android:id="@id/tv_freq_title1" android:layout_width="@dimen/slider_freq_item_title_width" android:layout_height="wrap_content" />
+            <Space android:layout_width="@dimen/slider_freq_item_title_gap" android:layout_height="wrap_content" />
+            <TextView android:textSize="@dimen/channel_prompt_textsize" android:textColor="@color/channel_prompt_text_color" android:gravity="center" android:id="@id/tv_freq_title2" android:layout_width="@dimen/slider_freq_item_title_width" android:layout_height="wrap_content" />
+            <Space android:layout_width="@dimen/slider_freq_item_title_gap" android:layout_height="wrap_content" />
+            <TextView android:textSize="@dimen/channel_prompt_center_textsize" android:textColor="@color/channel_prompt_center_text_color" android:gravity="center" android:id="@id/tv_freq_title3" android:layout_width="@dimen/slider_freq_item_title_width" android:layout_height="wrap_content" />
+            <Space android:layout_width="@dimen/slider_freq_item_title_gap" android:layout_height="wrap_content" />
+            <TextView android:textSize="@dimen/channel_prompt_textsize" android:textColor="@color/channel_prompt_text_color" android:gravity="center" android:id="@id/tv_freq_title4" android:layout_width="@dimen/slider_freq_item_title_width" android:layout_height="wrap_content" />
+            <Space android:layout_width="@dimen/slider_freq_item_title_gap" android:layout_height="wrap_content" />
+            <TextView android:textSize="@dimen/channel_prompt_textsize" android:textColor="@color/channel_prompt_text_color" android:gravity="center" android:id="@id/tv_freq_title5" android:layout_width="@dimen/slider_freq_item_title_width" android:layout_height="wrap_content" />
+        </com.android.fmradio.views.NoCancelActionLinearLayout>
+    </FrameLayout>
+</LinearLayout>

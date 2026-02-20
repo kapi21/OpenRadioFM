@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/layout_main" android:background="@color/app_bg_color" android:focusable="true" android:focusableInTouchMode="true" android:fitsSystemWindows="true" android:descendantFocusability="afterDescendants" android:layout_width="fill_parent" android:layout_height="fill_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <GridView android:id="@id/gv_radio_pty" android:background="@color/app_bg_color" android:visibility="gone" android:scrollbars="none" android:layout_width="fill_parent" android:layout_height="fill_parent" android:listSelector="@null" android:horizontalSpacing="1.0dip" android:verticalSpacing="1.0dip" android:stretchMode="columnWidth" android:numColumns="4" />
+    <Space android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="0.4" />
+    <com.android.fmradio.views.RadioFreqSliderView android:id="@id/layout_radio_freq_slider" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/layout_padding_start" android:layout_marginEnd="@dimen/layout_padding_end" />
+    <Space android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="0.4" />
+    <com.android.fmradio.views.RadioStatusView android:id="@id/layout_radio_status" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/layout_padding_start" android:layout_marginEnd="@dimen/layout_padding_end" />
+    <Space android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="1.4" />
+    <com.android.fmradio.views.RadioFreqInfoView android:id="@id/layout_radio_freq_info" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/layout_padding_start" android:layout_marginEnd="@dimen/layout_padding_end" />
+    <Space android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="1.4" />
+    <com.android.fmradio.views.RadioPresetListView android:layout_gravity="center_vertical" android:id="@id/radio_preset_list_view" android:layout_width="fill_parent" android:layout_height="wrap_content" android:layout_marginStart="@dimen/layout_padding_start" android:layout_marginEnd="@dimen/layout_padding_end" />
+    <Space android:layout_width="fill_parent" android:layout_height="0.0dip" android:layout_weight="0.4" />
+    <com.android.fmradio.views.RadioOperationView android:id="@id/radio_op_view" android:layout_width="fill_parent" android:layout_height="wrap_content" />
+</LinearLayout>

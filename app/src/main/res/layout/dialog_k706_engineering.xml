@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#DD000000"
+    android:padding="8dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- HEADER -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="K706 MCU DEV"
+                android:textColor="#00E676"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace" />
+
+            <TextView
+                android:id="@+id/tvK706Version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="V9.5"
+                android:textColor="#80FFFFFF"
+                android:textSize="11sp"
+                android:fontFamily="monospace"
+                android:layout_marginEnd="12dp" />
+
+            <Button
+                android:id="@+id/btnCloseK706"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:text="✕"
+                android:textColor="#FF5252"
+                android:textSize="14sp"
+                android:background="?android:attr/selectableItemBackground" />
+        </LinearLayout>
+
+        <!-- MONITOR EN TIEMPO REAL -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── MONITOR ──"
+            android:textColor="#FFD600"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:id="@+id/tvK706Monitor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="FREQ: ---\nBAND: ---\nFLAGS: ---\nPTY: ---\nPS: ---\nRT: ---"
+            android:textColor="#B0BEC5"
+            android:textSize="10sp"
+            android:fontFamily="monospace"
+            android:lineSpacingExtra="2dp"
+            android:background="#1A1A1A"
+            android:padding="6dp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- TUNER COMMANDS -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── TUNER MCU ──"
+            android:textColor="#FFD600"
+            android:textSize="11sp"
+            android:fontFamily="monospace" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <Button android:id="@+id/btnK706FineDown"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="◀ FINE"
+                android:textSize="10sp" android:textColor="#FFFFFF"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706FineUp"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="FINE ▶"
+                android:textSize="10sp" android:textColor="#FFFFFF"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706SeekDown"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="◀◀ SEEK"
+                android:textSize="10sp" android:textColor="#00E676"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706SeekUp"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="SEEK ▶▶"
+                android:textSize="10sp" android:textColor="#00E676"
+                android:background="#333333" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <Button android:id="@+id/btnK706AutoScan"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="AUTOSCAN"
+                android:textSize="10sp" android:textColor="#FFD600"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706StopScan"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="STOP SCAN"
+                android:textSize="10sp" android:textColor="#FF5252"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706SavePreset"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="SAVE PRESET"
+                android:textSize="10sp" android:textColor="#FFFFFF"
+                android:background="#333333" />
+        </LinearLayout>
+
+        <!-- BAND SELECT -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── BAND / LOC ──"
+            android:textColor="#FFD600"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:layout_marginTop="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <Button android:id="@+id/btnK706Band"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="BAND ▶"
+                android:textSize="10sp" android:textColor="#FFFFFF"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706LocDx"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="LOC / DX"
+                android:textSize="10sp" android:textColor="#29B6F6"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706Area0"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="AREA:0"
+                android:textSize="10sp" android:textColor="#80FFFFFF"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706Area1"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="AREA:1"
+                android:textSize="10sp" android:textColor="#80FFFFFF"
+                android:background="#333333" />
+        </LinearLayout>
+
+        <!-- RDS CONTROL -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── RDS CONTROL ──"
+            android:textColor="#FFD600"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:layout_marginTop="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <Button android:id="@+id/btnK706RdsOn"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="RDS ON"
+                android:textSize="10sp" android:textColor="#00E676"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706RdsOff"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="RDS OFF"
+                android:textSize="10sp" android:textColor="#FF5252"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706AfOn"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="AF ON"
+                android:textSize="10sp" android:textColor="#00E676"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706AfOff"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="AF OFF"
+                android:textSize="10sp" android:textColor="#FF5252"
+                android:background="#333333" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="2dp">
+
+            <Button android:id="@+id/btnK706TaOn"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="TA ON"
+                android:textSize="10sp" android:textColor="#00E676"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706TaOff"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="TA OFF"
+                android:textSize="10sp" android:textColor="#FF5252"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706PtyReset"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="PTY RESET"
+                android:textSize="10sp" android:textColor="#FFD600"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706PtyNews"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="PTY:NEWS"
+                android:textSize="10sp" android:textColor="#80FFFFFF"
+                android:background="#333333" />
+        </LinearLayout>
+
+        <!-- AUDIO CHANNEL -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── AUDIO CHANNEL ──"
+            android:textColor="#FFD600"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:layout_marginTop="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
+
+            <Button android:id="@+id/btnK706Ch1"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="CH1:BT"
+                android:textSize="10sp" android:textColor="#FFFFFF"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706Ch2"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="CH2:FM"
+                android:textSize="10sp" android:textColor="#00E676"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706Ch3"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="CH3:AUX"
+                android:textSize="10sp" android:textColor="#FFFFFF"
+                android:background="#333333" android:layout_marginEnd="2dp" />
+
+            <Button android:id="@+id/btnK706Ch4"
+                android:layout_width="0dp" android:layout_height="36dp"
+                android:layout_weight="1" android:text="CH4:AND"
+                android:textSize="10sp" android:textColor="#FFFFFF"
+                android:background="#333333" />
+        </LinearLayout>
+
+        <!-- MCU RAW LOG -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="── MCU LOG ──"
+            android:textColor="#FFD600"
+            android:textSize="11sp"
+            android:fontFamily="monospace"
+            android:layout_marginTop="8dp" />
+
+        <ScrollView
+            android:id="@+id/scrollK706Log"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:background="#0D0D0D"
+            android:padding="4dp"
+            android:layout_marginTop="4dp">
+
+            <TextView
+                android:id="@+id/tvK706Log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textColor="#00E676"
+                android:textSize="9sp"
+                android:fontFamily="monospace"
+                android:lineSpacingExtra="1dp" />
+        </ScrollView>
+
+        <!-- EXIT -->
+        <Button
+            android:id="@+id/btnK706Exit"
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="CERRAR"
+            android:textColor="#FF5252"
+            android:textSize="12sp"
+            android:background="#1A1A1A"
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,931 @@
+--------- beginning of system
+02-19 17:36:47.753 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+--------- beginning of main
+02-19 17:36:49.742 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:36:51.731 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:36:53.721 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:36:55.709 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:36:56.254 D/K706RadioManager(31228): Got IMcuManager instance: android.qf.mcu.IMcuManager$Stub$Proxy@3908f3c
+02-19 17:36:56.255 D/K706RadioManager(31228): Permissions requested successfully (Transact 1001)
+02-19 17:36:56.256 E/K706RadioManager(31228): Error registering McuListener
+02-19 17:36:56.256 E/K706RadioManager(31228): java.lang.NoSuchMethodException: android.qf.mcu.IMcuManager$Stub$Proxy.RPC_RequestMcuInfoChangedListener [interface android.qf.mcu.McuListener]
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at java.lang.Class.getMethod(Class.java:2072)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at java.lang.Class.getMethod(Class.java:1693)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at com.example.openradiofm.data.source.K706RadioManager.registerMcuListener(K706RadioManager.java:206)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at com.example.openradiofm.data.source.K706RadioManager.initMcuConnection(K706RadioManager.java:127)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at com.example.openradiofm.data.source.K706RadioManager.<init>(K706RadioManager.java:89)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at com.example.openradiofm.ui.main.MainActivity.conectarRadio(MainActivity.java:1309)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at com.example.openradiofm.ui.main.MainActivity.onCreate(MainActivity.java:526)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.Activity.performCreate(Activity.java:8037)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.Activity.performCreate(Activity.java:8025)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1315)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3312)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3493)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.servertransaction.LaunchActivityItem.execute(LaunchActivityItem.java:83)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2057)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.os.Handler.dispatchMessage(Handler.java:107)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.os.Looper.loop(Looper.java:214)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at android.app.ActivityThread.main(ActivityThread.java:7660)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:503)
+02-19 17:36:56.256 E/K706RadioManager(31228): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+02-19 17:36:56.256 D/K706RadioManager(31228): RPC_SendMcuMsgData: OK
+02-19 17:36:56.256 D/K706RadioManager(31228): RPC_SetVolumeMute(boolean): OK
+02-19 17:36:56.256 D/K706RadioManager(31228): RPC_GetChannel: OK
+02-19 17:36:56.257 E/K706RadioManager(31228): RPC_SetChannel not found!
+02-19 17:36:56.257 D/K706RadioManager(31228): === Métodos disponibles en IMcuManager ===
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_GetAmpSwitch() -> boolean
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_GetChannel() -> byte
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_GetEQData() -> byte[]
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_GetGisVoiceState() -> byte
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_GetMcuVer() -> byte[]
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_GetVolume() -> byte
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_GetVolumeMute() -> boolean
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_KeyCommand(byte, byte[]) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_McuCallbackFinished(IMcuListener) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_RemoveMcuInfoChangedListener(IMcuListener, String) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_RequestMcuInfoChangedListener(IMcuListener, String) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_SendAndroidStatus(int) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_SendCANInfo(byte[], int) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_SendHeadLightState(boolean) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_SendMCUData(byte[], int) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_SendMcuCmdData(byte, byte[], int) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_SendMcuMsgData(byte, byte[], int) -> void
+02-19 17:36:56.258 D/K706RadioManager(31228):   RPC_SendSetQicaideng(byte[], int) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetAmpSwitch(boolean) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetChannel(byte) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetChannelGain(byte) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetCodecStatus(boolean) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetEQData(byte[]) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetGisVoice(byte) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetVolume(byte) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetVolumeMute(boolean) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetVolumeMuteEx(boolean, byte) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_SetVolumeMuteNoBroadcast(boolean) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_UpdateMCU(byte) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228):   RPC_UsbUpgrade(byte) -> void
+02-19 17:36:56.259 D/K706RadioManager(31228): === INICIO SECUENCIA AUDIO FM ===
+02-19 17:36:56.259 E/mcu_services( 5512): RPC_SetVolumeMute - isMute: true
+02-19 17:36:56.259 E/mcu_services( 5512): requestMute - isMute: true - time: 0 fromWhatPid=31228
+02-19 17:36:56.260 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 04 01 82 01 00 82 ff ]
+02-19 17:36:56.260 D/K706RadioManager(31228): Mute set to: true
+02-19 17:36:56.260 D/K706RadioManager(31228): [1/6] setMute(true) OK
+02-19 17:36:56.260 E/K706RadioManager(31228): [2/6] RPC_SetChannel no disponible
+02-19 17:36:56.266 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 82 01 81 ff ]
+02-19 17:36:56.271 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 07 01 40 2e c4 01 8f ab 8e ff ]
+02-19 17:36:56.274 E/McuManager( 4140): call RPC_SetChannel(4) from 4140
+02-19 17:36:56.274 E/mcu_services( 5512): RPC_SetChannel - mode: 4 fromWhatpid=4140
+02-19 17:36:56.274 E/mcu_services( 5512): audio channel change to MPU, current_audio_source=com.example.openradiofm
+02-19 17:36:56.274 E/mcu_services( 5512): setVolType - oldVolType: media_type - newVolType: media_type - mode: 4 isCallStart=false
+02-19 17:36:56.274 E/mcu_services( 5512): RPC_SetChannel - type: media_type - volume: 17
+02-19 17:36:56.275 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 04 01 84 04 11 90 ff ]
+02-19 17:36:56.276 D/K706RadioManager(31228): Audio Focus Granted
+02-19 17:36:56.277 D/K706RadioManager(31228): [3/6] requestAudioFocus
+02-19 17:36:56.277 D/K706RadioManager(31228): AudioSystem.setForceUse(1, 1)
+02-19 17:36:56.277 D/K706RadioManager(31228): [4/6] setForceUse(true)
+02-19 17:36:56.279 D/K706RadioManager(31228): Set Audio Params: fm_radio_on=1;fm_mute=0
+02-19 17:36:56.279 D/K706RadioManager(31228): [5/6] setAudioParams(on)
+02-19 17:36:56.279 E/mcu_services( 5512): RPC_SetVolumeMute - isMute: false
+02-19 17:36:56.279 E/mcu_services( 5512): requestMute - isMute: false - time: 0 fromWhatPid=31228
+02-19 17:36:56.280 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 04 01 82 00 00 83 ff ]
+02-19 17:36:56.280 D/K706RadioManager(31228): Mute set to: false
+02-19 17:36:56.280 D/K706RadioManager(31228): [6/6] setMute(false) OK
+02-19 17:36:56.280 D/K706RadioManager(31228): === FIN SECUENCIA AUDIO FM ===
+02-19 17:36:56.280 D/K706RadioManager(31228): K706RadioManager initialized and connected.
+02-19 17:36:56.280 D/K706RadioManager(31228): Callback registrado
+02-19 17:36:56.287 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 84 04 82 ff ]
+02-19 17:36:56.287 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 82 00 80 ff ]
+02-19 17:36:56.289 D/K706RadioManager(31228): Estado sincronizado manual: 87500 / B0
+02-19 17:36:56.302 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 07 01 40 2e c4 01 8f ab 8e ff ]
+02-19 17:36:56.333 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 07 01 40 2e c4 01 0f 2b 8e ff ]
+02-19 17:36:57.699 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:36:58.673 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 22 33 b0 ff ]
+02-19 17:36:58.675 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x22 p2=0x33
+02-19 17:36:58.675 D/K706RadioManager(31228): gotoFreq: input=87550 mcuFreq=8755 (h=0x22 l=0x33)
+02-19 17:36:58.684 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:36:58.688 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:36:58.688 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:36:58.689 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:36:58.694 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 33 22 ce 23 32 23 aa 00 00 00 00 00 00 d5 ff ]
+02-19 17:36:58.698 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 33 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:36:58.699 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8755 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:36:59.687 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:36:59.976 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 22 38 bb ff ]
+02-19 17:36:59.978 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x22 p2=0x38
+02-19 17:36:59.979 D/K706RadioManager(31228): gotoFreq: input=87600 mcuFreq=8760 (h=0x22 l=0x38)
+02-19 17:36:59.989 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:36:59.989 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 38 22 ce 23 32 23 aa 00 00 00 00 00 00 de ff ]
+02-19 17:36:59.992 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:36:59.992 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:36:59.992 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:36:59.994 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 38 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:36:59.994 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8760 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:01.677 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:02.766 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 23 aa 28 ff ]
+02-19 17:37:02.768 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x23 p2=0xAA
+02-19 17:37:02.768 D/K706RadioManager(31228): gotoFreq: input=91300 mcuFreq=9130 (h=0x23 l=0xAA)
+02-19 17:37:02.774 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:02.774 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 03 23 aa 22 ce 23 32 23 aa 00 00 00 00 00 00 4e ff ]
+02-19 17:37:02.777 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:02.777 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:02.778 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:02.780 D/TunerPresenter(15794): handleTunerRawData: b1 0 3 23 aa 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:02.780 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 3 - mFrequency: 9130 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:03.666 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:04.496 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 22 38 bb ff ]
+02-19 17:37:04.497 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x22 p2=0x38
+02-19 17:37:04.497 D/K706RadioManager(31228): gotoFreq: input=87600 mcuFreq=8760 (h=0x22 l=0x38)
+02-19 17:37:04.502 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:04.506 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:04.506 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:04.507 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:04.562 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 38 22 ce 23 32 23 aa 00 00 00 00 00 00 de ff ]
+02-19 17:37:04.565 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 38 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:04.565 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8760 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:05.655 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:06.995 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 01 00 00 a0 ff ]
+02-19 17:37:06.996 D/K706RadioManager(31228): CMD Enviado: sub=0x01 p1=0x00 p2=0x00
+02-19 17:37:06.996 D/K706RadioManager(31228): Seek UP iniciado
+02-19 17:37:07.021 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 3d 22 ce 23 32 23 aa 00 00 00 00 00 00 db ff ]
+02-19 17:37:07.021 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 58 e9 ff ]
+02-19 17:37:07.026 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 3d 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.026 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8765 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.044 D/TunerPresenter(15794): handleTunerRawData: b0 58 
+02-19 17:37:07.044 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 88 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 1 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:07.044 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: true - mTempSearching: false - asFlag: 0 - seekFlag: 1
+02-19 17:37:07.069 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 42 22 ce 23 32 23 aa 00 00 00 00 00 00 a4 ff ]
+02-19 17:37:07.073 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 42 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.076 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8770 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.119 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 47 22 ce 23 32 23 aa 00 00 00 00 00 00 a1 ff ]
+02-19 17:37:07.123 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 47 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.127 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8775 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.169 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 4c 22 ce 23 32 23 aa 00 00 00 00 00 00 aa ff ]
+02-19 17:37:07.172 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 4c 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.175 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8780 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.218 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 51 22 ce 23 32 23 aa 00 00 00 00 00 00 b7 ff ]
+02-19 17:37:07.221 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 51 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.223 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8785 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.268 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 56 22 ce 23 32 23 aa 00 00 00 00 00 00 b0 ff ]
+02-19 17:37:07.272 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 56 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.276 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8790 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.318 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 5b 22 ce 23 32 23 aa 00 00 00 00 00 00 bd ff ]
+02-19 17:37:07.322 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 5b 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.325 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8795 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.368 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 60 22 ce 23 32 23 aa 00 00 00 00 00 00 86 ff ]
+02-19 17:37:07.371 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 60 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.375 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8800 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.418 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 65 22 ce 23 32 23 aa 00 00 00 00 00 00 83 ff ]
+02-19 17:37:07.422 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 65 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.425 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8805 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.467 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 6a 22 ce 23 32 23 aa 00 00 00 00 00 00 8c ff ]
+02-19 17:37:07.471 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 6a 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.474 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8810 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.517 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 6f 22 ce 23 32 23 aa 00 00 00 00 00 00 89 ff ]
+02-19 17:37:07.521 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 6f 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.524 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8815 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.567 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 74 22 ce 23 32 23 aa 00 00 00 00 00 00 92 ff ]
+02-19 17:37:07.571 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 74 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.574 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8820 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.616 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 79 22 ce 23 32 23 aa 00 00 00 00 00 00 9f ff ]
+02-19 17:37:07.620 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 79 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.624 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8825 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.644 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:07.666 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 7e 22 ce 23 32 23 aa 00 00 00 00 00 00 98 ff ]
+02-19 17:37:07.670 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 7e 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.673 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8830 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.716 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 83 22 ce 23 32 23 aa 00 00 00 00 00 00 65 ff ]
+02-19 17:37:07.720 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 83 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.723 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8835 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.766 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 88 22 ce 23 32 23 aa 00 00 00 00 00 00 6e ff ]
+02-19 17:37:07.770 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 88 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.773 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8840 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.815 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 8d 22 ce 23 32 23 aa 00 00 00 00 00 00 6b ff ]
+02-19 17:37:07.819 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 8d 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.822 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8845 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.865 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 92 22 ce 23 32 23 aa 00 00 00 00 00 00 74 ff ]
+02-19 17:37:07.868 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 92 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.870 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8850 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.915 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 97 22 ce 23 32 23 aa 00 00 00 00 00 00 71 ff ]
+02-19 17:37:07.918 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 97 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.920 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8855 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:07.964 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 9c 22 ce 23 32 23 aa 00 00 00 00 00 00 7a ff ]
+02-19 17:37:07.967 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 9c 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:07.970 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8860 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.014 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 a1 22 ce 23 32 23 aa 00 00 00 00 00 00 47 ff ]
+02-19 17:37:08.018 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 a1 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.020 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8865 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.064 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 a6 22 ce 23 32 23 aa 00 00 00 00 00 00 40 ff ]
+02-19 17:37:08.067 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 a6 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.069 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8870 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.114 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 ab 22 ce 23 32 23 aa 00 00 00 00 00 00 4d ff ]
+02-19 17:37:08.118 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 ab 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.121 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8875 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.163 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 b0 22 ce 23 32 23 aa 00 00 00 00 00 00 56 ff ]
+02-19 17:37:08.168 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 b0 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.171 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8880 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.213 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 b5 22 ce 23 32 23 aa 00 00 00 00 00 00 53 ff ]
+02-19 17:37:08.217 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 b5 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.220 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8885 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.263 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 ba 22 ce 23 32 23 aa 00 00 00 00 00 00 5c ff ]
+02-19 17:37:08.267 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 ba 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.269 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8890 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.313 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 bf 22 ce 23 32 23 aa 00 00 00 00 00 00 59 ff ]
+02-19 17:37:08.316 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 bf 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.319 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8895 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.362 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 c4 22 ce 23 32 23 aa 00 00 00 00 00 00 22 ff ]
+02-19 17:37:08.365 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 c4 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.367 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8900 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.412 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 c9 22 ce 23 32 23 aa 00 00 00 00 00 00 2f ff ]
+02-19 17:37:08.416 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 c9 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.420 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8905 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.462 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 28 ff ]
+02-19 17:37:08.466 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.468 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.507 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 29 ff ]
+02-19 17:37:08.507 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 29 ff ]
+02-19 17:37:08.511 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.515 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.515 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.516 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.541 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 29 ff ]
+02-19 17:37:08.542 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:08.546 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:08.546 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:08.557 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:08.557 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: true - mTempSearching: false
+02-19 17:37:08.557 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:09.633 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:11.111 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 07 01 00 a7 ff ]
+02-19 17:37:11.112 D/K706RadioManager(31228): CMD Enviado: sub=0x07 p1=0x01 p2=0x00
+02-19 17:37:11.112 D/K706RadioManager(31228): DX/Local toggle -> LOCAL
+02-19 17:37:11.125 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 70 c1 ff ]
+02-19 17:37:11.128 D/TunerPresenter(15794): handleTunerRawData: b0 70 
+02-19 17:37:11.129 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 112 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 1 - mIsSearching: false - mTempSearching: false
+02-19 17:37:11.129 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:11.622 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:11.772 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 07 00 00 a6 ff ]
+02-19 17:37:11.773 D/K706RadioManager(31228): CMD Enviado: sub=0x07 p1=0x00 p2=0x00
+02-19 17:37:11.773 D/K706RadioManager(31228): DX/Local toggle -> DX
+02-19 17:37:11.821 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:11.826 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:11.826 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:11.826 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:12.835 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 01 00 00 a0 ff ]
+02-19 17:37:12.836 D/K706RadioManager(31228): CMD Enviado: sub=0x01 p1=0x00 p2=0x00
+02-19 17:37:12.836 D/K706RadioManager(31228): Seek UP iniciado
+02-19 17:37:12.858 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 d3 22 ce 23 32 23 aa 00 00 00 00 00 00 35 ff ]
+02-19 17:37:12.859 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 58 e9 ff ]
+02-19 17:37:12.863 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 d3 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:12.864 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8915 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:12.882 D/TunerPresenter(15794): handleTunerRawData: b0 58 
+02-19 17:37:12.883 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 88 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 1 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:12.883 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: true - mTempSearching: false - asFlag: 0 - seekFlag: 1
+02-19 17:37:12.907 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 d8 22 ce 23 32 23 aa 00 00 00 00 00 00 3e ff ]
+02-19 17:37:12.911 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 d8 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:12.914 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8920 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:12.957 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 dd 22 ce 23 32 23 aa 00 00 00 00 00 00 3b ff ]
+02-19 17:37:12.961 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 dd 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:12.964 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8925 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.007 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 e2 22 ce 23 32 23 aa 00 00 00 00 00 00 04 ff ]
+02-19 17:37:13.011 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 e2 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.014 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8930 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.056 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 e7 22 ce 23 32 23 aa 00 00 00 00 00 00 01 ff ]
+02-19 17:37:13.061 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 e7 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.064 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8935 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.106 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 ec 22 ce 23 32 23 aa 00 00 00 00 00 00 0a ff ]
+02-19 17:37:13.110 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 ec 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.114 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8940 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.156 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 f1 22 ce 23 32 23 aa 00 00 00 00 00 00 17 ff ]
+02-19 17:37:13.160 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 f1 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.163 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8945 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.206 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 f6 22 ce 23 32 23 aa 00 00 00 00 00 00 10 ff ]
+02-19 17:37:13.209 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 f6 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.213 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8950 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.255 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 fb 22 ce 23 32 23 aa 00 00 00 00 00 00 1d ff ]
+02-19 17:37:13.260 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 fb 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.263 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8955 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.305 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 00 22 ce 23 32 23 aa 00 00 00 00 00 00 e7 ff ]
+02-19 17:37:13.310 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 0 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.316 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8960 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.355 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 05 22 ce 23 32 23 aa 00 00 00 00 00 00 e2 ff ]
+02-19 17:37:13.359 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 5 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.362 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8965 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.404 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 0a 22 ce 23 32 23 aa 00 00 00 00 00 00 ed ff ]
+02-19 17:37:13.407 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 a 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.409 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8970 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.454 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 0f 22 ce 23 32 23 aa 00 00 00 00 00 00 e8 ff ]
+02-19 17:37:13.460 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 f 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.463 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8975 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.504 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 14 22 ce 23 32 23 aa 00 00 00 00 00 00 f3 ff ]
+02-19 17:37:13.509 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 14 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.511 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8980 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.554 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 19 22 ce 23 32 23 aa 00 00 00 00 00 00 fe ff ]
+02-19 17:37:13.558 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 19 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.561 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8985 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.603 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 1e 22 ce 23 32 23 aa 00 00 00 00 00 00 f9 ff ]
+02-19 17:37:13.608 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 1e 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.611 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:13.611 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8990 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.653 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 23 22 ce 23 32 23 aa 00 00 00 00 00 00 c4 ff ]
+02-19 17:37:13.657 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 23 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.660 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8995 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.703 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 28 22 ce 23 32 23 aa 00 00 00 00 00 00 cf ff ]
+02-19 17:37:13.707 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 28 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.710 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9000 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.752 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 2d 22 ce 23 32 23 aa 00 00 00 00 00 00 ca ff ]
+02-19 17:37:13.755 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 2d 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.758 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9005 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.802 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 32 22 ce 23 32 23 aa 00 00 00 00 00 00 d5 ff ]
+02-19 17:37:13.804 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 32 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.808 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9010 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.847 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 02 23 32 22 ce 23 32 23 aa 00 00 00 00 00 00 d7 ff ]
+02-19 17:37:13.848 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 02 23 32 22 ce 23 32 23 aa 00 00 00 00 00 00 d7 ff ]
+02-19 17:37:13.851 D/TunerPresenter(15794): handleTunerRawData: b1 0 2 23 32 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.855 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 2 - mFrequency: 9010 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.855 D/TunerPresenter(15794): handleTunerRawData: b1 0 2 23 32 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.856 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 2 - mFrequency: 9010 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.912 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 02 23 32 22 ce 23 32 23 aa 00 00 00 00 00 00 d7 ff ]
+02-19 17:37:13.912 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:13.916 D/TunerPresenter(15794): handleTunerRawData: b1 0 2 23 32 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:13.917 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 2 - mFrequency: 9010 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:13.926 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:13.926 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: true - mTempSearching: false
+02-19 17:37:13.926 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:14.657 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 07 01 00 a7 ff ]
+02-19 17:37:14.658 D/K706RadioManager(31228): CMD Enviado: sub=0x07 p1=0x01 p2=0x00
+02-19 17:37:14.658 D/K706RadioManager(31228): DX/Local toggle -> LOCAL
+02-19 17:37:14.705 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 70 c1 ff ]
+02-19 17:37:14.709 D/TunerPresenter(15794): handleTunerRawData: b0 70 
+02-19 17:37:14.709 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 112 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 1 - mIsSearching: false - mTempSearching: false
+02-19 17:37:14.710 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:15.263 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 07 00 00 a6 ff ]
+02-19 17:37:15.264 D/K706RadioManager(31228): CMD Enviado: sub=0x07 p1=0x00 p2=0x00
+02-19 17:37:15.264 D/K706RadioManager(31228): DX/Local toggle -> DX
+02-19 17:37:15.302 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:15.304 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:15.304 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:15.305 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:15.600 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:17.589 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:19.579 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:20.078 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 23 aa 28 ff ]
+02-19 17:37:20.079 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x23 p2=0xAA
+02-19 17:37:20.079 D/K706RadioManager(31228): gotoFreq: input=91300 mcuFreq=9130 (h=0x23 l=0xAA)
+02-19 17:37:20.087 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:20.091 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:20.091 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:20.091 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:20.177 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 03 23 aa 22 ce 23 32 23 aa 00 00 00 00 00 00 4e ff ]
+02-19 17:37:20.181 D/TunerPresenter(15794): handleTunerRawData: b1 0 3 23 aa 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:20.182 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 3 - mFrequency: 9130 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:21.568 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:23.557 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:25.546 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:25.751 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 22 38 bb ff ]
+02-19 17:37:25.752 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x22 p2=0x38
+02-19 17:37:25.752 D/K706RadioManager(31228): gotoFreq: input=87600 mcuFreq=8760 (h=0x22 l=0x38)
+02-19 17:37:25.765 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:25.769 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:25.769 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:25.769 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:25.846 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 38 22 ce 23 32 23 aa 00 00 00 00 00 00 de ff ]
+02-19 17:37:25.851 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 38 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:25.851 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8760 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:27.535 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:29.524 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:31.513 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:32.003 D/K706RadioManager(31228): Callback desregistrado
+02-19 17:37:32.252 D/K706RadioManager(31228): Got IMcuManager instance: android.qf.mcu.IMcuManager$Stub$Proxy@423eeb9
+02-19 17:37:32.252 D/K706RadioManager(31228): Permissions requested successfully (Transact 1001)
+02-19 17:37:32.254 E/K706RadioManager(31228): Error registering McuListener
+02-19 17:37:32.254 E/K706RadioManager(31228): java.lang.NoSuchMethodException: android.qf.mcu.IMcuManager$Stub$Proxy.RPC_RequestMcuInfoChangedListener [interface android.qf.mcu.McuListener]
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at java.lang.Class.getMethod(Class.java:2072)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at java.lang.Class.getMethod(Class.java:1693)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at com.example.openradiofm.data.source.K706RadioManager.registerMcuListener(K706RadioManager.java:206)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at com.example.openradiofm.data.source.K706RadioManager.initMcuConnection(K706RadioManager.java:127)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at com.example.openradiofm.data.source.K706RadioManager.<init>(K706RadioManager.java:89)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at com.example.openradiofm.ui.main.MainActivity.conectarRadio(MainActivity.java:1309)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at com.example.openradiofm.ui.main.MainActivity.onCreate(MainActivity.java:526)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.Activity.performCreate(Activity.java:8037)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.Activity.performCreate(Activity.java:8025)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.Instrumentation.callActivityOnCreate(Instrumentation.java:1315)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread.performLaunchActivity(ActivityThread.java:3312)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread.handleLaunchActivity(ActivityThread.java:3493)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread.handleRelaunchActivityInner(ActivityThread.java:5460)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread.handleRelaunchActivity(ActivityThread.java:5325)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.servertransaction.ActivityRelaunchItem.execute(ActivityRelaunchItem.java:69)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.servertransaction.TransactionExecutor.executeCallbacks(TransactionExecutor.java:135)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.servertransaction.TransactionExecutor.execute(TransactionExecutor.java:95)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ClientTransactionHandler.executeTransaction(ClientTransactionHandler.java:57)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread.handleRelaunchActivityLocally(ActivityThread.java:5377)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread.access$3400(ActivityThread.java:241)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread$H.handleMessage(ActivityThread.java:2067)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.os.Handler.dispatchMessage(Handler.java:107)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.os.Looper.loop(Looper.java:214)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at android.app.ActivityThread.main(ActivityThread.java:7660)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at java.lang.reflect.Method.invoke(Native Method)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:503)
+02-19 17:37:32.254 E/K706RadioManager(31228): 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:936)
+02-19 17:37:32.254 D/K706RadioManager(31228): RPC_SendMcuMsgData: OK
+02-19 17:37:32.254 D/K706RadioManager(31228): RPC_SetVolumeMute(boolean): OK
+02-19 17:37:32.254 D/K706RadioManager(31228): RPC_GetChannel: OK
+02-19 17:37:32.254 E/K706RadioManager(31228): RPC_SetChannel not found!
+02-19 17:37:32.254 D/K706RadioManager(31228): === Métodos disponibles en IMcuManager ===
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_GetAmpSwitch() -> boolean
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_GetChannel() -> byte
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_GetEQData() -> byte[]
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_GetGisVoiceState() -> byte
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_GetMcuVer() -> byte[]
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_GetVolume() -> byte
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_GetVolumeMute() -> boolean
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_KeyCommand(byte, byte[]) -> void
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_McuCallbackFinished(IMcuListener) -> void
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_RemoveMcuInfoChangedListener(IMcuListener, String) -> void
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_RequestMcuInfoChangedListener(IMcuListener, String) -> void
+02-19 17:37:32.255 D/K706RadioManager(31228):   RPC_SendAndroidStatus(int) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SendCANInfo(byte[], int) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SendHeadLightState(boolean) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SendMCUData(byte[], int) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SendMcuCmdData(byte, byte[], int) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SendMcuMsgData(byte, byte[], int) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SendSetQicaideng(byte[], int) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetAmpSwitch(boolean) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetChannel(byte) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetChannelGain(byte) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetCodecStatus(boolean) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetEQData(byte[]) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetGisVoice(byte) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetVolume(byte) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetVolumeMute(boolean) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetVolumeMuteEx(boolean, byte) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_SetVolumeMuteNoBroadcast(boolean) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_UpdateMCU(byte) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228):   RPC_UsbUpgrade(byte) -> void
+02-19 17:37:32.256 D/K706RadioManager(31228): === INICIO SECUENCIA AUDIO FM ===
+02-19 17:37:32.257 E/mcu_services( 5512): RPC_SetVolumeMute - isMute: true
+02-19 17:37:32.257 E/mcu_services( 5512): requestMute - isMute: true - time: 0 fromWhatPid=31228
+02-19 17:37:32.258 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 04 01 82 01 00 82 ff ]
+02-19 17:37:32.258 D/K706RadioManager(31228): Mute set to: true
+02-19 17:37:32.258 D/K706RadioManager(31228): [1/6] setMute(true) OK
+02-19 17:37:32.258 E/K706RadioManager(31228): [2/6] RPC_SetChannel no disponible
+02-19 17:37:32.265 E/McuManager( 4140): call RPC_SetChannel(4) from 4140
+02-19 17:37:32.265 E/mcu_services( 5512): RPC_SetChannel - mode: 4 fromWhatpid=4140
+02-19 17:37:32.265 E/mcu_services( 5512): audio channel change to MPU, current_audio_source=com.example.openradiofm
+02-19 17:37:32.265 E/mcu_services( 5512): setVolType - oldVolType: media_type - newVolType: media_type - mode: 4 isCallStart=false
+02-19 17:37:32.266 E/mcu_services( 5512): RPC_SetChannel - type: media_type - volume: 17
+02-19 17:37:32.266 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 04 01 84 04 11 90 ff ]
+02-19 17:37:32.268 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 82 01 81 ff ]
+02-19 17:37:32.270 D/K706RadioManager(31228): Audio Focus Granted
+02-19 17:37:32.270 D/K706RadioManager(31228): [3/6] requestAudioFocus
+02-19 17:37:32.271 D/K706RadioManager(31228): AudioSystem.setForceUse(1, 1)
+02-19 17:37:32.271 D/K706RadioManager(31228): [4/6] setForceUse(true)
+02-19 17:37:32.274 D/K706RadioManager(31228): Set Audio Params: fm_radio_on=1;fm_mute=0
+02-19 17:37:32.274 D/K706RadioManager(31228): [5/6] setAudioParams(on)
+02-19 17:37:32.274 E/mcu_services( 5512): RPC_SetVolumeMute - isMute: false
+02-19 17:37:32.274 E/mcu_services( 5512): requestMute - isMute: false - time: 0 fromWhatPid=31228
+02-19 17:37:32.274 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 04 01 82 00 00 83 ff ]
+02-19 17:37:32.275 D/K706RadioManager(31228): Mute set to: false
+02-19 17:37:32.275 D/K706RadioManager(31228): [6/6] setMute(false) OK
+02-19 17:37:32.275 D/K706RadioManager(31228): === FIN SECUENCIA AUDIO FM ===
+02-19 17:37:32.275 D/K706RadioManager(31228): K706RadioManager initialized and connected.
+02-19 17:37:32.275 D/K706RadioManager(31228): Callback registrado
+02-19 17:37:32.279 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 84 04 82 ff ]
+02-19 17:37:32.285 D/K706RadioManager(31228): Estado sincronizado manual: 87600 / B0
+02-19 17:37:32.288 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 82 00 80 ff ]
+02-19 17:37:32.289 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 07 01 40 2e c4 01 8f ab 8e ff ]
+02-19 17:37:32.320 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 07 01 40 2e c4 01 8f ab 8e ff ]
+02-19 17:37:32.351 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 07 01 40 2e c4 01 0f 2b 8e ff ]
+02-19 17:37:32.480 D/K706RadioManager(31228): onAudioFocusChange: -1
+02-19 17:37:33.502 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:35.491 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:37.480 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:39.469 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:40.679 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 01 00 00 a0 ff ]
+02-19 17:37:40.681 D/K706RadioManager(31228): CMD Enviado: sub=0x01 p1=0x00 p2=0x00
+02-19 17:37:40.681 D/K706RadioManager(31228): Seek UP iniciado
+02-19 17:37:40.706 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 3d 22 ce 23 32 23 aa 00 00 00 00 00 00 db ff ]
+02-19 17:37:40.706 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 58 e9 ff ]
+02-19 17:37:40.709 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 3d 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:40.710 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8765 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:40.736 D/TunerPresenter(15794): handleTunerRawData: b0 58 
+02-19 17:37:40.737 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 88 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 1 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:40.737 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: true - mTempSearching: false - asFlag: 0 - seekFlag: 1
+02-19 17:37:40.754 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 42 22 ce 23 32 23 aa 00 00 00 00 00 00 a4 ff ]
+02-19 17:37:40.758 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 42 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:40.761 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8770 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:40.804 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 47 22 ce 23 32 23 aa 00 00 00 00 00 00 a1 ff ]
+02-19 17:37:40.809 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 47 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:40.811 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8775 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:40.854 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 4c 22 ce 23 32 23 aa 00 00 00 00 00 00 aa ff ]
+02-19 17:37:40.858 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 4c 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:40.861 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8780 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:40.903 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 51 22 ce 23 32 23 aa 00 00 00 00 00 00 b7 ff ]
+02-19 17:37:40.905 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 51 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:40.908 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8785 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:40.953 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 56 22 ce 23 32 23 aa 00 00 00 00 00 00 b0 ff ]
+02-19 17:37:40.955 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 56 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:40.958 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8790 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.003 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 5b 22 ce 23 32 23 aa 00 00 00 00 00 00 bd ff ]
+02-19 17:37:41.007 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 5b 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.010 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8795 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.053 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 60 22 ce 23 32 23 aa 00 00 00 00 00 00 86 ff ]
+02-19 17:37:41.057 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 60 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.060 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8800 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.102 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 65 22 ce 23 32 23 aa 00 00 00 00 00 00 83 ff ]
+02-19 17:37:41.107 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 65 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.109 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8805 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.152 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 6a 22 ce 23 32 23 aa 00 00 00 00 00 00 8c ff ]
+02-19 17:37:41.155 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 6a 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.157 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8810 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.202 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 6f 22 ce 23 32 23 aa 00 00 00 00 00 00 89 ff ]
+02-19 17:37:41.205 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 6f 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.207 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8815 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.251 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 74 22 ce 23 32 23 aa 00 00 00 00 00 00 92 ff ]
+02-19 17:37:41.255 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 74 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.258 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8820 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.301 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 79 22 ce 23 32 23 aa 00 00 00 00 00 00 9f ff ]
+02-19 17:37:41.305 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 79 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.308 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8825 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.351 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 7e 22 ce 23 32 23 aa 00 00 00 00 00 00 98 ff ]
+02-19 17:37:41.355 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 7e 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.357 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8830 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.401 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 83 22 ce 23 32 23 aa 00 00 00 00 00 00 65 ff ]
+02-19 17:37:41.404 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 83 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.407 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8835 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.450 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 88 22 ce 23 32 23 aa 00 00 00 00 00 00 6e ff ]
+02-19 17:37:41.452 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 88 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.455 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8840 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.458 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:41.500 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 8d 22 ce 23 32 23 aa 00 00 00 00 00 00 6b ff ]
+02-19 17:37:41.503 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 8d 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.506 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8845 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.550 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 92 22 ce 23 32 23 aa 00 00 00 00 00 00 74 ff ]
+02-19 17:37:41.554 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 92 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.557 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8850 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.599 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 97 22 ce 23 32 23 aa 00 00 00 00 00 00 71 ff ]
+02-19 17:37:41.604 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 97 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.607 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8855 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.649 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 9c 22 ce 23 32 23 aa 00 00 00 00 00 00 7a ff ]
+02-19 17:37:41.653 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 9c 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.656 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8860 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.699 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 a1 22 ce 23 32 23 aa 00 00 00 00 00 00 47 ff ]
+02-19 17:37:41.703 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 a1 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.706 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8865 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.749 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 a6 22 ce 23 32 23 aa 00 00 00 00 00 00 40 ff ]
+02-19 17:37:41.752 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 a6 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.755 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8870 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.799 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 ab 22 ce 23 32 23 aa 00 00 00 00 00 00 4d ff ]
+02-19 17:37:41.802 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 ab 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.805 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8875 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.848 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 b0 22 ce 23 32 23 aa 00 00 00 00 00 00 56 ff ]
+02-19 17:37:41.852 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 b0 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.855 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8880 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.898 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 b5 22 ce 23 32 23 aa 00 00 00 00 00 00 53 ff ]
+02-19 17:37:41.902 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 b5 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.905 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8885 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.948 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 ba 22 ce 23 32 23 aa 00 00 00 00 00 00 5c ff ]
+02-19 17:37:41.951 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 ba 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:41.954 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8890 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:41.997 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 bf 22 ce 23 32 23 aa 00 00 00 00 00 00 59 ff ]
+02-19 17:37:42.000 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 bf 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:42.003 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8895 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:42.047 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 c4 22 ce 23 32 23 aa 00 00 00 00 00 00 22 ff ]
+02-19 17:37:42.049 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 c4 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:42.052 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8900 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:42.097 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 c9 22 ce 23 32 23 aa 00 00 00 00 00 00 2f ff ]
+02-19 17:37:42.101 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 c9 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:42.104 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8905 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:42.147 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 28 ff ]
+02-19 17:37:42.151 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:42.155 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:42.191 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 29 ff ]
+02-19 17:37:42.192 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 29 ff ]
+02-19 17:37:42.196 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:42.199 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:42.200 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:42.200 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:42.256 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 00 00 00 00 00 00 29 ff ]
+02-19 17:37:42.257 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:42.260 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 0 0 0 0 0 0 
+02-19 17:37:42.261 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 0 - index: 4 - preset: 0 - index: 5 - preset: 0
+02-19 17:37:42.270 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:42.270 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: true - mTempSearching: false
+02-19 17:37:42.270 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:43.447 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:45.436 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:46.817 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:367) onRadioArea: radioArea: 1
+02-19 17:37:46.817 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 0a 01 00 aa ff ]
+02-19 17:37:46.825 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 30 01 a1 00 22 ce 22 2e 22 2e 01 00 00 22 ce 23 32 23 aa 23 aa 24 04 24 68 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 dc ff ]
+02-19 17:37:46.831 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 30 01 a1 08 02 0a 02 0a 00 00 01 01 00 02 0a 02 5b 03 e7 05 7c 06 54 02 0a 02 0a 02 5b 03 e7 05 7c 06 54 02 0a 00 00 00 00 00 00 00 00 00 00 00 00 a8 ff ]
+02-19 17:37:46.838 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 a1 00 a3 ff ]
+02-19 17:37:46.848 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:367) onRadioArea: radioArea: 1
+02-19 17:37:46.848 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 a1 08 ab ff ]
+02-19 17:37:46.849 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 0a 01 00 aa ff ]
+02-19 17:37:46.856 D/FmService(15794): FMRadio main (FmService.java:777) onCreate: ---->>onCreate() 
+02-19 17:37:46.857 D/FmService(15794): FMRadio main (FmService.java:842) onStartCommand: ---->>onStartCommand() action: fmradio.enter
+02-19 17:37:46.858 D/FmService(15794): FMRadio main (FmService.java:225) setForceUse: --->>setForceUseSpeaker() isSpeaker: false
+02-19 17:37:46.890 D/FmService(15794): FMRadio main (FmService.java:303) powerUpAsync: ---->>powerUpAsync() frequency: 89.1
+02-19 17:37:46.890 D/FmService(15794): FMRadio main (FmService.java:1049) requestAudioFocus: ---->>requestAudioFocus() mIsAudioFocusHeld: false
+02-19 17:37:46.891 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:1711) handlePowerUp: ----->>handlePowerUp() 
+02-19 17:37:46.891 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:317) powerUp: ---->>powerUp() frequency: 89.1 mPowerStatus: 2
+02-19 17:37:46.891 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:612) setMute: --->>setMute() mute: true
+02-19 17:37:46.892 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:1813) setVolume: setVolume(0), new volume=0, max_fm_volume=9, mIsDeviceOpen=true
+02-19 17:37:46.892 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:1766) firstPlaying: ---->>firstPlaying()  firstPlaying: 89.1
+02-19 17:37:46.892 D/TunerManagerForExt(15794): FMRadio FmRadioServiceThread (TunerManagerForExt.java:385) onTune: mBand: 0 - freq: 8910
+02-19 17:37:46.893 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 22 ce 4d ff ]
+02-19 17:37:46.893 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:344) playFrequency: ---->>playFrequency() frequency: 89.1
+02-19 17:37:46.893 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:901) enableFmAudio: --->>enableFmAudio() enable: true mAudioPatch: null
+02-19 17:37:46.893 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:904) enableFmAudio: enableFmAudio, current not available return.mIsAudioFocusHeld:false
+02-19 17:37:46.894 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:612) setMute: --->>setMute() mute: false
+02-19 17:37:46.894 E/McuManager( 4140): call RPC_SetChannel(2) from 4140
+02-19 17:37:46.894 E/mcu_services( 5512): RPC_SetChannel - mode: 2 fromWhatpid=4140
+02-19 17:37:46.894 E/mcu_services( 5512): audio channel change to MPU, current_audio_source=com.example.openradiofm
+02-19 17:37:46.894 E/mcu_services( 5512): setVolType - oldVolType: media_type - newVolType: radio_type - mode: 2 isCallStart=false
+02-19 17:37:46.894 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:617) setMute: ---->>setMute()  volume: 9
+02-19 17:37:46.894 D/FmService(15794): FMRadio FmRadioServiceThread (FmService.java:1813) setVolume: setVolume(9), new volume=9, max_fm_volume=9, mIsDeviceOpen=true
+02-19 17:37:46.895 E/mcu_services( 5512): RPC_SetChannel - type: radio_type - volume: 6
+02-19 17:37:46.896 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 04 01 84 02 06 81 ff ]
+02-19 17:37:46.897 D/K706RadioManager(31228): onAudioFocusChange: -1
+02-19 17:37:46.900 D/FmService(15794): FMRadio main (FmService.java:1067) requestAudioFocus: ---->>requestAudioFocus() audioFocus: 1
+02-19 17:37:46.900 D/FmService(15794): FMRadio main (FmService.java:1015) headSetActive: ---->>onMediaButtonEvent()
+02-19 17:37:46.902 D/FmService(15794): FMRadio main (FmService.java:978) headSetImplApi23: ---->>onMediaButtonEvent()  headSetImplApi23 - mMediaSession: android.media.session.MediaSession@87ffc48
+02-19 17:37:46.903 D/FmService(15794): FMRadio main (FmService.java:971) setMediaButtonListener: headsetListen: com.android.fmradio.FmMainActivity$6@3ade006
+02-19 17:37:46.911 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 23 aa 24 04 24 68 cc ff ]
+02-19 17:37:46.911 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:46.911 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b3 0c be ff ]
+02-19 17:37:46.911 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b3 b1 ff ]
+02-19 17:37:46.911 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 02 84 02 84 ff ]
+02-19 17:37:46.911 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b3 b1 ff ]
+02-19 17:37:46.914 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:37:46.915 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:37:46.915 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:46.915 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:46.915 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:46.916 D/TunerPresenter(15794): handleTunerRawData: b3 c 
+02-19 17:37:46.918 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 07 01 40 2e c4 01 05 35 9a ff ]
+02-19 17:37:46.925 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:174) onTuneRdsInfo: onTuneRdsInfo - flag: 12 - mRdsAFSwitch: 0 - mRdsTASwitch: 0
+02-19 17:37:47.119 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 23 aa 24 04 24 68 cc ff ]
+02-19 17:37:47.119 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:47.119 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b3 0c be ff ]
+02-19 17:37:47.119 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b3 b1 ff ]
+02-19 17:37:47.119 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b3 b1 ff ]
+02-19 17:37:47.121 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:37:47.121 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:37:47.142 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:47.142 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:47.142 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:47.143 D/TunerPresenter(15794): handleTunerRawData: b3 c 
+02-19 17:37:47.148 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:174) onTuneRdsInfo: onTuneRdsInfo - flag: 12 - mRdsAFSwitch: 0 - mRdsTASwitch: 0
+02-19 17:37:47.238 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 01 22 ce 22 ce 23 32 23 aa 23 aa 24 04 24 68 cc ff ]
+02-19 17:37:47.238 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:47.240 D/TunerPresenter(15794): handleTunerRawData: b1 0 1 22 ce 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:37:47.241 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 1 - mFrequency: 8910 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:37:47.247 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:47.247 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:47.247 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:47.311 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 08 01 40 2e c0 02 01 01 3b 96 ff ]
+02-19 17:37:47.348 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 04 b1 ff ]
+02-19 17:37:47.348 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:47.348 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:47.348 E/mcu_services( 5512): MCU2APP : [ff fe fd 04 01 b5 00 0a be ff ]
+02-19 17:37:47.348 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:37:47.348 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:37:47.351 D/TunerPresenter(15794): handleTunerRawData: b4 4 
+02-19 17:37:47.351 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 4 - mRdsSwitch: 1
+02-19 17:37:47.351 D/TunerPresenter(15794): handleTunerRawData: b5 0 a 
+02-19 17:37:47.351 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:220) onTuneRdsPtyTypeInfo: onTuneRdsPtyTypeInfo - mRdsPtyType: 0
+02-19 17:37:47.733 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:47.763 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 0a 01 40 2e c2 04 01 ce 22 01 47 02 ff ]
+02-19 17:37:49.338 E/mcu_services( 5512): MCU2APP : [ff fe fd 0a 01 b6 43 41 44 2d 31 30 30 20 cd ff ]
+02-19 17:37:49.338 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b6 b4 ff ]
+02-19 17:37:49.338 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b6 b4 ff ]
+02-19 17:37:49.342 D/TunerPresenter(15794): handleTunerRawData: b6 43 41 44 2d 31 30 30 20 
+02-19 17:37:49.342 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:234) onTuneRdsPSInfo: onTuneRdsPSInfo - len: 9 - data: b6 43 41 44 2d 31 30 30 20 
+02-19 17:37:49.342 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:258) onTuneRdsPSInfo: onTuneRdsPSInfo - mRdsPsInfo: CAD-100 
+02-19 17:37:49.723 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:50.145 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 0a 01 40 2e c2 04 01 ce 22 01 47 02 ff ]
+02-19 17:37:51.712 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:53.480 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 22 38 bb ff ]
+02-19 17:37:53.480 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x22 p2=0x38
+02-19 17:37:53.481 D/K706RadioManager(31228): gotoFreq: input=87600 mcuFreq=8760 (h=0x22 l=0x38)
+02-19 17:37:53.548 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:53.550 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:53.550 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:53.550 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:53.617 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 00 b5 ff ]
+02-19 17:37:53.617 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 22 38 22 ce 23 32 23 aa 23 aa 24 04 24 68 3b ff ]
+02-19 17:37:53.617 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:53.617 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:53.618 D/TunerPresenter(15794): handleTunerRawData: b4 0 
+02-19 17:37:53.619 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 0 - mRdsSwitch: 0
+02-19 17:37:53.632 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 22 38 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:37:53.632 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 8760 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:37:53.811 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:53.814 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 05 b0 ff ]
+02-19 17:37:53.815 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:53.815 E/mcu_services( 5512): MCU2APP : [ff fe fd 04 01 b5 00 0b bf ff ]
+02-19 17:37:53.815 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:53.815 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:37:53.815 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:37:53.818 D/TunerPresenter(15794): handleTunerRawData: b4 5 
+02-19 17:37:53.818 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 5 - mRdsSwitch: 1
+02-19 17:37:53.819 D/TunerPresenter(15794): handleTunerRawData: b5 0 b 
+02-19 17:37:53.820 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:220) onTuneRdsPtyTypeInfo: onTuneRdsPtyTypeInfo - mRdsPtyType: 0
+02-19 17:37:54.183 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 0a 01 40 2e c2 04 01 38 22 00 de 6c ff ]
+02-19 17:37:55.800 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:56.084 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 00 23 aa 28 ff ]
+02-19 17:37:56.085 D/K706RadioManager(31228): CMD Enviado: sub=0x00 p1=0x23 p2=0xAA
+02-19 17:37:56.086 D/K706RadioManager(31228): gotoFreq: input=91300 mcuFreq=9130 (h=0x23 l=0xAA)
+02-19 17:37:56.154 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:37:56.157 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:37:56.158 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:56.158 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:56.221 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 03 23 aa 22 ce 23 32 23 aa 23 aa 24 04 24 68 ab ff ]
+02-19 17:37:56.222 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 00 b5 ff ]
+02-19 17:37:56.222 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:56.222 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:56.225 D/TunerPresenter(15794): handleTunerRawData: b1 0 3 23 aa 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:37:56.226 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 3 - mFrequency: 9130 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:37:56.246 D/TunerPresenter(15794): handleTunerRawData: b4 0 
+02-19 17:37:56.247 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 0 - mRdsSwitch: 0
+02-19 17:37:56.500 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 04 b1 ff ]
+02-19 17:37:56.500 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:56.500 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:37:56.500 E/mcu_services( 5512): MCU2APP : [ff fe fd 04 01 b5 00 01 b5 ff ]
+02-19 17:37:56.500 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:37:56.500 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:37:56.504 D/TunerPresenter(15794): handleTunerRawData: b4 4 
+02-19 17:37:56.505 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 4 - mRdsSwitch: 1
+02-19 17:37:56.506 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 40 f1 ff ]
+02-19 17:37:56.507 D/TunerPresenter(15794): handleTunerRawData: b5 0 1 
+02-19 17:37:56.508 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:220) onTuneRdsPtyTypeInfo: onTuneRdsPtyTypeInfo - mRdsPtyType: 0
+02-19 17:37:56.509 D/TunerPresenter(15794): handleTunerRawData: b0 40 
+02-19 17:37:56.509 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 64 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 0 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:37:56.510 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:37:56.779 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 0a 01 40 2e c2 04 01 aa 23 03 68 4a ff ]
+02-19 17:37:57.898 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:37:58.090 E/mcu_services( 5512): MCU2APP : [ff fe fd 0a 01 b6 43 4f 50 45 20 20 20 20 ae ff ]
+02-19 17:37:58.091 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b6 b4 ff ]
+02-19 17:37:58.091 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b6 b4 ff ]
+02-19 17:37:58.095 D/TunerPresenter(15794): handleTunerRawData: b6 43 4f 50 45 20 20 20 20 
+02-19 17:37:58.095 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:234) onTuneRdsPSInfo: onTuneRdsPSInfo - len: 9 - data: b6 43 4f 50 45 20 20 20 20 
+02-19 17:37:58.095 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:258) onTuneRdsPSInfo: onTuneRdsPSInfo - mRdsPsInfo: COPE    
+02-19 17:37:58.620 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 0a 01 40 2e c2 04 01 aa 23 03 68 4a ff ]
+02-19 17:37:59.887 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:00.499 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 01 00 00 a0 ff ]
+02-19 17:38:00.501 D/K706RadioManager(31228): CMD Enviado: sub=0x01 p1=0x00 p2=0x00
+02-19 17:38:00.501 D/K706RadioManager(31228): Seek UP iniciado
+02-19 17:38:00.574 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 af 22 ce 23 32 23 aa 23 aa 24 04 24 68 ad ff ]
+02-19 17:38:00.575 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 48 f9 ff ]
+02-19 17:38:00.578 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 af 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.580 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9135 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.580 D/TunerPresenter(15794): handleTunerRawData: b0 48 
+02-19 17:38:00.580 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 72 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 1 - mStFlag: 0 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:38:00.581 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: true - mTempSearching: false - asFlag: 0 - seekFlag: 1
+02-19 17:38:00.615 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 b4 22 ce 23 32 23 aa 23 aa 24 04 24 68 b6 ff ]
+02-19 17:38:00.619 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 b4 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.622 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9140 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.665 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 b9 22 ce 23 32 23 aa 23 aa 24 04 24 68 bb ff ]
+02-19 17:38:00.669 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 b9 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.672 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9145 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.715 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 be 22 ce 23 32 23 aa 23 aa 24 04 24 68 bc ff ]
+02-19 17:38:00.719 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 be 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.722 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9150 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.764 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 c3 22 ce 23 32 23 aa 23 aa 24 04 24 68 c1 ff ]
+02-19 17:38:00.769 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 c3 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.772 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9155 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.814 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 c8 22 ce 23 32 23 aa 23 aa 24 04 24 68 ca ff ]
+02-19 17:38:00.818 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 c8 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.821 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9160 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.864 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 cd 22 ce 23 32 23 aa 23 aa 24 04 24 68 cf ff ]
+02-19 17:38:00.868 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 cd 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.871 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9165 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.913 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 d2 22 ce 23 32 23 aa 23 aa 24 04 24 68 d0 ff ]
+02-19 17:38:00.918 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 d2 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.920 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9170 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:00.963 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 d7 22 ce 23 32 23 aa 23 aa 24 04 24 68 d5 ff ]
+02-19 17:38:00.966 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 d7 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:00.969 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9175 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.013 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 dc 22 ce 23 32 23 aa 23 aa 24 04 24 68 de ff ]
+02-19 17:38:01.015 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 dc 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.019 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9180 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.063 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 e1 22 ce 23 32 23 aa 23 aa 24 04 24 68 e3 ff ]
+02-19 17:38:01.065 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 e1 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.068 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9185 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.112 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 e6 22 ce 23 32 23 aa 23 aa 24 04 24 68 e4 ff ]
+02-19 17:38:01.117 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 e6 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.120 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9190 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.162 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 eb 22 ce 23 32 23 aa 23 aa 24 04 24 68 e9 ff ]
+02-19 17:38:01.166 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 eb 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.169 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9195 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.212 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 f0 22 ce 23 32 23 aa 23 aa 24 04 24 68 f2 ff ]
+02-19 17:38:01.216 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 f0 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.219 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9200 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.261 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 f5 22 ce 23 32 23 aa 23 aa 24 04 24 68 f7 ff ]
+02-19 17:38:01.266 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 f5 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.269 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9205 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.311 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 fa 22 ce 23 32 23 aa 23 aa 24 04 24 68 f8 ff ]
+02-19 17:38:01.316 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 fa 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.319 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9210 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.361 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 23 ff 22 ce 23 32 23 aa 23 aa 24 04 24 68 fd ff ]
+02-19 17:38:01.365 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 23 ff 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.368 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9215 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.410 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 04 22 ce 23 32 23 aa 23 aa 24 04 24 68 01 ff ]
+02-19 17:38:01.414 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 4 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.417 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9220 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.453 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 05 24 04 22 ce 23 32 23 aa 23 aa 24 04 24 68 04 ff ]
+02-19 17:38:01.458 D/TunerPresenter(15794): handleTunerRawData: b1 0 5 24 4 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.460 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 5 - mFrequency: 9220 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.520 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 05 24 04 22 ce 23 32 23 aa 23 aa 24 04 24 68 04 ff ]
+02-19 17:38:01.521 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 00 b5 ff ]
+02-19 17:38:01.521 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:38:01.521 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:38:01.524 D/TunerPresenter(15794): handleTunerRawData: b1 0 5 24 4 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.525 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 5 - mFrequency: 9220 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.536 D/TunerPresenter(15794): handleTunerRawData: b4 0 
+02-19 17:38:01.536 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 0 - mRdsSwitch: 0
+02-19 17:38:01.580 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 05 24 04 22 ce 23 32 23 aa 23 aa 24 04 24 68 04 ff ]
+02-19 17:38:01.580 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 40 f1 ff ]
+02-19 17:38:01.584 D/TunerPresenter(15794): handleTunerRawData: b1 0 5 24 4 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:01.585 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 5 - mFrequency: 9220 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:01.597 D/TunerPresenter(15794): handleTunerRawData: b0 40 
+02-19 17:38:01.597 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 64 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 0 - mLocFlag: 0 - mIsSearching: true - mTempSearching: false
+02-19 17:38:01.597 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:38:01.975 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:02.075 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:38:02.079 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:38:02.079 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:38:02.080 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:38:02.120 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 0a 01 40 2e c2 04 01 04 24 05 0b 86 ff ]
+02-19 17:38:03.311 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 05 b0 ff ]
+02-19 17:38:03.311 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:38:03.311 E/mcu_services( 5512): MCU2APP : [ff fe fd 04 01 b5 00 0a be ff ]
+02-19 17:38:03.311 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:38:03.312 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:38:03.312 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b5 b7 ff ]
+02-19 17:38:03.315 D/TunerPresenter(15794): handleTunerRawData: b4 5 
+02-19 17:38:03.315 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 5 - mRdsSwitch: 1
+02-19 17:38:03.319 D/TunerPresenter(15794): handleTunerRawData: b5 0 a 
+02-19 17:38:03.320 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:220) onTuneRdsPtyTypeInfo: onTuneRdsPtyTypeInfo - mRdsPtyType: 0
+02-19 17:38:03.625 E/mcu_services( 5512): APP2MCU - writeToUartNormal : [ff fd fe 05 01 a0 01 00 00 a0 ff ]
+02-19 17:38:03.626 D/K706RadioManager(31228): CMD Enviado: sub=0x01 p1=0x00 p2=0x00
+02-19 17:38:03.626 D/K706RadioManager(31228): Seek UP iniciado
+02-19 17:38:03.696 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 09 22 ce 23 32 23 aa 23 aa 24 04 24 68 0c ff ]
+02-19 17:38:03.697 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 58 e9 ff ]
+02-19 17:38:03.701 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 9 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:03.701 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9225 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:03.723 D/TunerPresenter(15794): handleTunerRawData: b0 58 
+02-19 17:38:03.723 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 88 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 1 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: false - mTempSearching: false
+02-19 17:38:03.723 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: true - mTempSearching: false - asFlag: 0 - seekFlag: 1
+02-19 17:38:03.737 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 0e 22 ce 23 32 23 aa 23 aa 24 04 24 68 0b ff ]
+02-19 17:38:03.739 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 e 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:03.741 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9230 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:03.787 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 13 22 ce 23 32 23 aa 23 aa 24 04 24 68 16 ff ]
+02-19 17:38:03.792 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 13 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:03.794 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9235 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:03.837 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 18 22 ce 23 32 23 aa 23 aa 24 04 24 68 1d ff ]
+02-19 17:38:03.839 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 18 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:03.842 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9240 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:03.887 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 1d 22 ce 23 32 23 aa 23 aa 24 04 24 68 18 ff ]
+02-19 17:38:03.889 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 1d 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:03.892 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9245 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:03.937 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 22 22 ce 23 32 23 aa 23 aa 24 04 24 68 27 ff ]
+02-19 17:38:03.939 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 22 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:03.943 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9250 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:03.986 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 27 22 ce 23 32 23 aa 23 aa 24 04 24 68 22 ff ]
+02-19 17:38:03.990 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 27 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:03.992 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9255 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:04.004 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:04.036 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 2c 22 ce 23 32 23 aa 23 aa 24 04 24 68 29 ff ]
+02-19 17:38:04.040 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 2c 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:04.044 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9260 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:04.086 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 31 22 ce 23 32 23 aa 23 aa 24 04 24 68 34 ff ]
+02-19 17:38:04.090 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 31 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:04.094 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9265 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:04.135 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 36 22 ce 23 32 23 aa 23 aa 24 04 24 68 33 ff ]
+02-19 17:38:04.139 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 36 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:04.142 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9270 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:04.178 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 36 22 ce 23 32 23 aa 23 aa 24 04 24 68 33 ff ]
+02-19 17:38:04.182 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 36 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:04.185 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9270 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:04.244 E/mcu_services( 5512): MCU2APP : [ff fe fd 12 01 b1 00 00 24 36 22 ce 23 32 23 aa 23 aa 24 04 24 68 33 ff ]
+02-19 17:38:04.245 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b4 00 b5 ff ]
+02-19 17:38:04.245 E/mcu_services( 5512): sendAckSuccess : [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:38:04.245 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 02 02 b4 b6 ff ]
+02-19 17:38:04.248 D/TunerPresenter(15794): handleTunerRawData: b1 0 0 24 36 22 ce 23 32 23 aa 23 aa 24 4 24 68 
+02-19 17:38:04.249 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:147) onTunerPresetListChanged:  - mBand: 0 - mPresetIndex: 0 - mFrequency: 9270 - index: 0 - preset: 8910 - index: 1 - preset: 9010 - index: 2 - preset: 9130 - index: 3 - preset: 9130 - index: 4 - preset: 9220 - index: 5 - preset: 9320
+02-19 17:38:04.258 D/TunerPresenter(15794): handleTunerRawData: b4 0 
+02-19 17:38:04.258 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:195) onTuneRdsIndicateInfo: onTuneRdsIndicateInfo - flag: 0 - mRdsSwitch: 0
+02-19 17:38:04.262 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 b0 50 e1 ff ]
+02-19 17:38:04.266 D/TunerPresenter(15794): handleTunerRawData: b0 50 
+02-19 17:38:04.266 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:108) onTunerInfoChanged: onTunerInfoChanged - flag: 80 - asFlag: 0 - psFlag: 0 - scanFlag: 0 - seekFlag: 0 - mStFlag: 1 - mLocFlag: 0 - mIsSearching: true - mTempSearching: false
+02-19 17:38:04.266 D/TunerManagerForExt(15794): FMRadio main (TunerManagerForExt.java:118) onTunerInfoChanged: mIsSearching: false - mTempSearching: false - asFlag: 0 - seekFlag: 0
+02-19 17:38:04.775 E/mcu_services( 5512): APP2MCU - writeToUart: [ff fd fe 0a 01 40 2e c2 04 01 36 24 00 de 64 ff ]
+02-19 17:38:06.052 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:08.041 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:10.030 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:12.019 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:14.007 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]
+02-19 17:38:15.996 E/mcu_services( 5512): MCU2APP : [ff fe fd 03 01 29 6d 45 ff ]

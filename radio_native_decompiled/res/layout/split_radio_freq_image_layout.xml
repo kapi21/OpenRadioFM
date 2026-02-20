@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="@dimen/dp_h144"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@id/iv_freq_image_num5" android:layout_width="@dimen/dp_w76" android:layout_height="fill_parent" android:src="@drawable/ic_freq_num1" android:contentDescription="@string/app_name" />
+    <ImageView android:id="@id/iv_freq_image_num4" android:layout_width="@dimen/dp_w76" android:layout_height="fill_parent" android:src="@drawable/ic_freq_num0" android:contentDescription="@string/app_name" />
+    <ImageView android:id="@id/iv_freq_image_num3" android:layout_width="@dimen/dp_w76" android:layout_height="fill_parent" android:src="@drawable/ic_freq_num8" android:contentDescription="@string/app_name" />
+    <ImageView android:id="@id/iv_freq_image_point" android:layout_width="@dimen/dp_w20" android:layout_height="fill_parent" android:src="@drawable/ic_freq_point" android:contentDescription="@string/app_name" />
+    <ImageView android:id="@id/iv_freq_image_num2" android:layout_width="@dimen/dp_w76" android:layout_height="fill_parent" android:src="@drawable/ic_freq_num0" android:contentDescription="@string/app_name" />
+    <ImageView android:id="@id/iv_freq_image_num1" android:layout_width="@dimen/dp_w76" android:layout_height="fill_parent" android:src="@drawable/ic_freq_num0" android:contentDescription="@string/app_name" />
+</LinearLayout>
