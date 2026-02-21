@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.IBinder;
 import android.os.Bundle;
 import android.os.Parcel;
+import android.content.Intent;
 import android.os.RemoteException;
 import android.util.Log;
 import com.hcn.autoradio.IRadioCallBack;
@@ -932,8 +933,65 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 Log.d(TAG, "[+/9] Activado TA via QFTunerManager (Trigger motor RDS)");
             } catch (Exception e) {}
         }
+        
+        // 10. V9.9: ULTIMO RECURSO - BROADCOM DIRECT OVERRIDE
+        // Si el MCU no emite los paquetes B5 y B7, forzamos al chip Broadcom a encender
+        // sus features RDS de bajo nivel saltándonos al MCU mediante la API de sistema.
+        enableBroadcomRdsFeatures();
 
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM V7.2d ===");
+    }
+    
+    /**
+     * Intenta conectar con el servicio FmProxy y habilita a la fuerza 
+     * todas las características del RDS (PTY, RT, etc.) usando reflection.
+     */
+    private void enableBroadcomRdsFeatures() {
+        try {
+            // Buscamos FmProxy de Broadcom 
+            Class<?> fmProxyClass = Class.forName("com.broadcom.bt.app.fm.FmProxy");
+            Method getProxyMethod = fmProxyClass.getMethod("getProxy", Context.class, Class.forName("com.broadcom.bt.app.fm.IFmProxyCallback"));
+            
+            Log.d(TAG, "[Broadcom] Encontrado FmProxy. Intentando activar features RDS...");
+            
+            // Instalar un proxy dinámico para el callback no es trivial sin la interfaz cargada en nuestra app
+            // Por lo que trataremos de hacer bindService directo al IFmReceiverService si está disponible
+            Intent intent = new Intent();
+            intent.setComponent(new ComponentName("com.broadcom.bt.app.fm", "com.broadcom.bt.app.fm.FmReceiverService"));
+            boolean bound = mContext.bindService(intent, new android.content.ServiceConnection() {
+                @Override
+                public void onServiceConnected(ComponentName name, IBinder service) {
+                    try {
+                        Log.d(TAG, "[Broadcom] OK Conectado a FmReceiverService. Forzando RDS...");
+                        // Obtener interfaz AIDL
+                        Class<?> stubClass = Class.forName("com.broadcom.bt.app.fm.IFmReceiverService$Stub");
+                        Method asInterface = stubClass.getMethod("asInterface", IBinder.class);
+                        Object fmService = asInterface.invoke(null, service);
+                        
+                        // setRdsMode(int rdsMode, int rdsFeatures, int afMode, int afThreshold)
+                        // Features Mask: PS(0x04) | PTY(0x08) | RT(0x01) | PTYN(0x20) | TP(0x02) = 0x2F
+                        Method setRdsMode = fmService.getClass().getMethod("setRdsMode", int.class, int.class, int.class, int.class);
+                        setRdsMode.invoke(fmService, 1, 0x2F, 0, 0); 
+                        Log.d(TAG, "[Broadcom] ¡setRdsMode(1, 0x2F, 0, 0) EJECUTADO!");
+                        
+                    } catch (Exception e) {
+                        Log.w(TAG, "[Broadcom] Error ejecutando invoke en FmReceiverService", e);
+                    }
+                }
+
+                @Override
+                public void onServiceDisconnected(ComponentName name) {
+                    Log.d(TAG, "[Broadcom] Desconectado de FmReceiverService");
+                }
+            }, Context.BIND_AUTO_CREATE);
+            
+            if (!bound) {
+                Log.w(TAG, "[Broadcom] bindService falló. El servicio FmReceiverService no está accesible para la app.");
+            }
+            
+        } catch (Exception e) {
+            Log.w(TAG, "[Broadcom] Broadcom FmProxy / FmReceiverService no disponible o inaccesible vía Reflection.", e);
+        }
     }
 
     private void stopFmAudioSequence() {
