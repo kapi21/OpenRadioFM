@@ -40,10 +40,12 @@ La auditoría intensiva del microcontrolador K706 ha estabilizado profundamente 
 
 ## 🗺️ 3. Roadmap para Mañana
 1.  **Investigación RDS PTY Profunda:**
-    *   Desarrollar una herramienta temporal para guardar *volcados en bruto completos* del payload I2C RDS en la aplicación cuando esté en una emisora como Los40 o RNE, y hacer volcado de memoria. Extraer PTY puro del paquete RDS en caso de que la MCU esté parseando y enviando el paquete PTY mal alineado (Ej. desplazado por 1 bit).
-2.  **Revisión Interfaz Alternativa FM (Broadcom):**
-    *   Efectuar pruebas piloto en OpenRadioFM llamando vía "Reflection" o "AIDL" a las funciones `IFmReceiverService`. Si tenemos acceso, podremos gestionar **LOC/DX mediante SnrThreshold** y **PTY filtrándolo nosotros mismos**.
-3.  **Auditoría de Logs Nativos:**
-    *   Si es viable, el usuario deberá capturar logcat en la Head Unit mientras pulsa el botón PTY o LOC/DX de la app FM genérica china que vino instalada en su equipo (Radio_original).
+    *   Desarrollar una herramienta temporal para guardar *volcados en bruto completos* del payload I2C RDS...
+2.  **Integración con Widget del Sistema K706 (¡NUEVO!):**
+    *   Implementar envío del sistema Broadcast `com.qf.radio.update_action` y sus 'extras' (Frecuencia, Banda, Nombre RDS) para que el Widget oficial de la pantalla de inicio del Launcher muestre la info de OpenRadioFM en lugar de "unknown".
+3.  **Revisión Interfaz Alternativa FM (Broadcom):**
+    *   Efectuar pruebas piloto en OpenRadioFM llamando vía "Reflection" o "AIDL" a las funciones `IFmReceiverService`.
+4.  **Auditoría de Logs Nativos:**
+    *   Capturar logcat en la Head Unit mientras...
 
 > ¡Buen trabajo hoy resolviendo el AM, los colores, desajustes de UI y la gran fuga de audio! El código base queda impecabilizado a una versión `K706version` sólida en Github.

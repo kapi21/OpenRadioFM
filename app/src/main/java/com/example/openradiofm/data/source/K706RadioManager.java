@@ -373,6 +373,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         // V9.4: Corregido offset al byte 1. 0xB5 [TYPE, PTY, STATUS]
                         int pty = data[1] & 0xFF;
                         Log.d(TAG, "RDS PTY (0xB5): " + pty + " (raw=" + bytesToHex(data) + ")");
+                        // We must send string to fireEvent, so stringify pty
                         fireEvent(102, String.valueOf(pty));
                     }
                     break;
@@ -516,16 +517,25 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         if (data.length <= 1) return;
         try {
             // V9.1: Logging extendido para depurar Radio Text
-            // Probamos varios offsets por si el texto empieza más adelante
-            String rt1 = new String(data, 1, data.length - 1, "UTF-8").trim();
-            Log.d(TAG, "RDS RT Try(1): '" + rt1 + "'");
+            // A veces el RadioText viene precedido por un flag o offset extra.
+            String rtRaw = new String(data, 1, data.length - 1, "UTF-8");
+            Log.d(TAG, "RDS RT Try(1): '" + rtRaw + "'");
             
+            // Usualmente RT empieza en el offset 1 o offset 2 en los sistemas chinos (0xB7 0x01 [Texto])
             int startOffset = 1;
+            
+            // Check if byte 1 is just a length or status, and text starts at 2
+            if (data.length > 2 && data[1] < 10) {
+                startOffset = 2; // skip status/length byte
+            }
+            
             int len = data.length - startOffset;
             if (len > 0) {
                 String rtText = new String(data, startOffset, len, "UTF-8").trim();
                 rtText = rtText.replaceAll("[^\\x20-\\x7E]", "");
-                if (!rtText.isEmpty()) {
+                
+                if (!rtText.isEmpty() && !rtText.equals("               ")) {
+                    Log.d(TAG, "RDS RT Extracted: '" + rtText + "'");
                     fireEvent(101, rtText);
                 }
             }
@@ -894,32 +904,34 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Log.w(TAG, "[7/7] setMute(false) failed", e);
         }
 
-        // 8. RDS - COMENTADO en V9.7: causa autoscan en este firmware
-        /*
+        // 8. RDS - V9.8: Re-habilitado de forma segura vía QFTunerManager
         if (mTunerSetRdsSwitch != null && mTunerManager != null) {
             try {
                 mTunerSetRdsSwitch.invoke(mTunerManager, 1);
                 Log.d(TAG, "[8/9] RDS ON via QFTunerManager.setRdsSwitch(1)");
             } catch (Exception e) {
-                sendCmd(SUB_RDS_SWITCH, (byte) 0x01, (byte) 0x00);
-                Log.d(TAG, "[8/9] RDS ON fallback sendCmd");
+                // Si falla el alto nivel, no enviamos el comando de bajo nivel (0x15) porque causa autoscan/cuelgue
+                Log.w(TAG, "[8/9] Falló setRdsSwitch de QFTunerManager", e);
             }
-        } else {
-            sendCmd(SUB_RDS_SWITCH, (byte) 0x01, (byte) 0x00);
-            Log.d(TAG, "[8/9] Activando RDS (sendCmd)");
         }
-        */
 
-        // 9. V9.8: RESET FILTRO PTY (Comentado)
-        // Se ha descubierto que usar sendRdsCmd con 0x15 (RDS Switch) a 0x00 estaba apagando
-        // la emisión de los paquetes de PTY desde la MCU. 
-        /*
-        Log.d(TAG, "[9/9] Resetting PTY filter...");
-        sendRdsCmd((byte) 0x00); 
-        try { Thread.sleep(50); } catch (Exception e) {}
-        sendRdsCmd((byte) 0xFF); // V9.8: Intentar con FF para "limpiar"
-        Log.d(TAG, "[9/9] PTY filter reset commands sent (0x00, 0xFF)");
-        */
+        // 9. V9.8: RESET FILTRO PTY - Vía alto nivel
+        if (mTunerSetRdsPtyType != null && mTunerManager != null) {
+            try {
+                mTunerSetRdsPtyType.invoke(mTunerManager, 0); // 0 suele significar "sin filtro / todos"
+                Log.d(TAG, "[9/9] Resetting PTY filter via QFTunerManager.setRdsPtyType(0)");
+            } catch (Exception e) {
+                Log.w(TAG, "[9/9] Falló setRdsPtyType de QFTunerManager", e);
+            }
+        }
+        
+        // Vamos a intentar forzar la activación de TA y AF para ver si eso enciende el motor RDS completo
+        if (mTunerSetRdsTA != null && mTunerManager != null) {
+            try {
+                mTunerSetRdsTA.invoke(mTunerManager);
+                Log.d(TAG, "[+/9] Activado TA via QFTunerManager (Trigger motor RDS)");
+            } catch (Exception e) {}
+        }
 
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM V7.2d ===");
     }
