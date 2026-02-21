@@ -128,6 +128,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private SignalQuality mCurrentQuality = SignalQuality.NO_SIGNAL;
+    
+    // V9.9: RDS Debugging Tracker
+    public K706EngineeringDialog mEngineeringDialog = null;
 
     // V3.0: Background personalizado
     private android.view.View mRootLayout;
@@ -343,6 +346,11 @@ public class MainActivity extends AppCompatActivity {
                             boolean isStereo = "1".equals(data);
                             int color = isStereo ? Color.parseColor("#00E676") : Color.parseColor("#FFD600");
                             ivSignalLevel.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
+                        }
+                        break;
+                    case 110: // Raw RDS byte dumping
+                        if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
+                            mEngineeringDialog.addRdsLog(data);
                         }
                         break;
                     case 104: // Band ID from MCU
@@ -613,7 +621,9 @@ public class MainActivity extends AppCompatActivity {
                     mTestClickCount = 0; // Reset
                     // V9.5: Abrir menú de desarrollo correcto según hardware
                     if (mMode == FmMode.FM_K706) {
-                        new K706EngineeringDialog(MainActivity.this).show();
+                        mEngineeringDialog = new K706EngineeringDialog(MainActivity.this);
+                        mEngineeringDialog.setOnDismissListener(dialog -> mEngineeringDialog = null);
+                        mEngineeringDialog.show();
                     } else {
                         new EngineeringModeDialog(MainActivity.this).show();
                     }

@@ -486,6 +486,10 @@ public class K706EngineeringDialog extends Dialog {
         });
     }
 
+    public void addRdsLog(String msg) {
+        logEvent("RDS_RAW", msg);
+    }
+
     @Override
     public void dismiss() {
         mIsRunning = false;

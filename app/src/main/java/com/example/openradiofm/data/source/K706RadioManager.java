@@ -363,13 +363,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     if (data.length > 1) {
                         Log.d(TAG, "RDS B3 Flags: 0x" + String.format("%02X", data[1]));
                     }
+                    fireEvent(110, "B3: " + bytesToHex(data));
                     break;
                 case 0xB4: // RDS Indicate Info
                     if (data.length > 1) {
                         Log.d(TAG, "RDS B4 Flags: 0x" + String.format("%02X", data[1]));
                     }
+                    fireEvent(110, "B4: " + bytesToHex(data));
                     break;
                 case 0xB5: // RDS PTY Type
+                    fireEvent(110, "B5 PTY: " + bytesToHex(data));
                     if (data.length > 1) {
                         // V9.4: Corregido offset al byte 1. 0xB5 [TYPE, PTY, STATUS]
                         int pty = data[1] & 0xFF;
@@ -379,10 +382,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     }
                     break;
                 case 0xB6: // RDS PS
+                    fireEvent(110, "B6 PS:  " + bytesToHex(data));
                     handleRdsPs(data);
                     break;
                 case 0xB7: // RDS RT Info
                     Log.d(TAG, "MCU[0xB7] RT RAW: " + bytesToHex(data));
+                    fireEvent(110, "B7 RT:  " + bytesToHex(data));
                     handleRdsRt(data);
                     break;
                 case 0xB8: // RDS PS Preset List (Research)
