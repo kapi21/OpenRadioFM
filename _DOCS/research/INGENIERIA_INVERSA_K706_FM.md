@@ -358,7 +358,7 @@ La app nativa **NO usa** todas las capacidades. Estas son funciones disponibles 
 | `0xB2` | Freq Range Info | Min, Max, Step de la banda actual |
 | `0xB3` | RDS Info | Estado general RDS |
 | `0xB4` | RDS Indicate | TP, TA, indicadores |
-| `0xB5` | RDS PTY Type | Tipo de programa (0-31) |
+| `0xB5` | RDS PTY Type | Tipo de programa (0-31) en byte 2 |
 | `0xB6` | RDS PS | Programme Service Name (8 chars) |
 | `0xB7` | RDS RT | Radio Text (64 chars) |
 | `0xB8` | RDS PS Preset List | Nombres PS de todos los presets |

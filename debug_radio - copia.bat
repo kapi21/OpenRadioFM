@@ -11,10 +11,10 @@ echo.
 echo Limpiando buffer de logcat...
 %ADB% logcat -c
 echo.
-echo Capturando logs en: radio_widget_debug.log (Incluyendo crashes de OpenRadioFM)
+echo Capturando logs en: radio_debug_v72.log
 echo Pulsa Ctrl+C para detener la captura.
 echo.
-%ADB% logcat -v time | findstr /i "intent broadcast qf radio widget FmService FmMain update_action AndroidRuntime FATAL Exception openradiofm" > radio_widget_debug.log
+%ADB% logcat -v time -s K706RadioManager:D mcu_services:E TunerPresenter:D TunerManagerForExt:D FmService:D McuManager:E > radio_debug_v72.log
 echo.
-echo Log guardado en radio_widget_debug.log
+echo Log guardado en radio_debug_v72.log
 pause

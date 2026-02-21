@@ -373,9 +373,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     break;
                 case 0xB5: // RDS PTY Type
                     fireEvent(110, "B5 PTY: " + bytesToHex(data));
-                    if (data.length > 1) {
-                        // V9.4: Corregido offset al byte 1. 0xB5 [TYPE, PTY, STATUS]
-                        int pty = data[1] & 0xFF;
+                    if (data.length > 2) {
+                        // V9.9: Corregido offset al byte 2 según logcat real de Head Unit. 0xB5 [CMD, STATUS, PTY, ...]
+                        int pty = data[2] & 0xFF;
                         Log.d(TAG, "RDS PTY (0xB5): " + pty + " (raw=" + bytesToHex(data) + ")");
                         // We must send string to fireEvent, so stringify pty
                         fireEvent(102, String.valueOf(pty));

@@ -28,9 +28,8 @@ La auditoría intensiva del microcontrolador K706 ha estabilizado profundamente 
 
 ## ❌ 2. Problemas Pendientes (Status Quo)
 1. **El Enigma del PTY (Tipo de Programa)**
-   * **Estado:** Sigue mostrando "Sin PTY" u devolviendo código lógico 0.
-   * **Hallazgo de Hoy:** Hemos detectado que el comando de reseteo del filtro (`0xA2 0x15`) que usábamos para inicializar PTY estaba, de hecho, colapsando el Broadcaster PTY de la placa base (apagaba el chorro de datos PTY). Hemos borrado la interferencia y ahora el flujo debe estar limpio.
-   * **Siguiente Paso:** Investigar si hay que emitir un paquete diferente de inicialización del chip Broadcom RDS (ej: encender una bandera concreta de RDS con Broadcom API `setRdsMode`) o descifrar en logs nativos cómo activan ellos el PTY dinámico.
+   * **Estado:** ¡SOLUCIONADO!
+   * **Resolución:** Al analizar los logs en bruto `B5 00 0A`, nos dimos cuenta de que el tipo PTY (ej. 0x0A) llega en el tercer byte (`data[2]`). El parseador antiguo leía `data[1]` (que siempre es 0x00). Tras ajustar el offset en `K706RadioManager.java`, la app ahora procesa y mapea correctamente cada tipo PTY con su icono correspondiente.
 2.  **LOC / DX (Modo Local)**
     * **Estado:** En Standby (Se muestra alerta toast). El botón local de la app no ejecuta comandos en red.
     * **Motivo:** El sub-comando `0x0A` que asumíamos como Local/DX resultó ser Cambio de Región (Europa/Asia). 

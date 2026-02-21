@@ -1300,7 +1300,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private int getSkinDrawableId() {
-        if (mCurrentSkin == null) return R.drawable.bg_glass_card_classic;
+        if (mCurrentSkin == null) return R.drawable.bg_glass_card_premium;
         switch (mCurrentSkin) {
             case NIGHT_MODE: return R.drawable.bg_glass_card_night;
             case ORANGE:     return R.drawable.bg_glass_card_orange;
@@ -1312,7 +1312,7 @@ public class MainActivity extends AppCompatActivity {
             case CYAN:       return R.drawable.bg_glass_card_cyan;
             case PINK:       return R.drawable.bg_glass_card_pink;
             case WHITE:      return R.drawable.bg_glass_card_white;
-            default:         return R.drawable.bg_glass_card_classic;
+            default:         return R.drawable.bg_glass_card_premium;
         }
     }
 
@@ -1498,17 +1498,24 @@ public class MainActivity extends AppCompatActivity {
                 mLastFreq = freq;
                 mHasRdsLock = false; // Reset lock on manual change
 
-                // V4.0: Clear RDS UI on Tune
+                // V4.0 / V5.1: Clear RDS UI on Tune aggressively (User request)
+                // When frequency changes, blank out RDS data until new data arrives
+                mCurrentPty = null; // Clear live PTY
+                
                 runOnUiThread(() -> {
                     if (tvRdsName != null) {
                         tvRdsName.setText("");
-                        // V4.0: Keep visible in Layout 2 to prevent shift, GONE in V3
+                        // Keep visible in Layout 2 to prevent shift, GONE in V3
                         tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                     }
                     if (tvRdsInfo != null) {
                         tvRdsInfo.setText("");
-                        // V4.0: Keep visible in Layout 2 to prevent shift, GONE in V3
+                        // Keep visible in Layout 2 to prevent shift, GONE in V3
                         tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                    }
+                    if (tvPty != null) {
+                        tvPty.setText("Sin PTY");
+                        if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
                     }
                 });
 
@@ -1609,7 +1616,50 @@ public class MainActivity extends AppCompatActivity {
                     btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
                 }
             });
+            
+            // V5.2: Send update intent to K706 Native system Widget
+            sendWidgetUpdateIntent(freq, band, rdsName);
         });
+    }
+
+    /**
+     * V5.2: Broadcast to K706 Launcher Widget
+     */
+    private void sendWidgetUpdateIntent(int freq, int band, String rdsName) {
+        try {
+            android.content.Intent intent = new android.content.Intent("com.qf.radio.update_action");
+            
+            // Format frequency string (e.g., "92.20") exactly as K706 native FmUtils.formatStation does.
+            String freqStr;
+            int nativeFreqInt;
+            if (band == BAND_AM1 || band == BAND_AM2) {
+                freqStr = String.valueOf(freq);
+                nativeFreqInt = freq;
+            } else {
+                java.text.DecimalFormat df = new java.text.DecimalFormat("0.00");
+                java.text.DecimalFormatSymbols dfs = new java.text.DecimalFormatSymbols(java.util.Locale.US);
+                df.setDecimalFormatSymbols(dfs);
+                freqStr = df.format(freq / 1000.0f);
+                nativeFreqInt = freq / 10; // K706 native uses 8750 for 87.5 MHz (our freq is 87500)
+            }
+            
+            intent.putExtra("com.qf.radio.update_action_key", freqStr);
+            intent.putExtra("com.qf.radio.update_action_freq_key", nativeFreqInt);
+            intent.putExtra("com.qf.radio.update_action_band_key", band);
+            intent.putExtra("com.qf.radio.update_action_preset_key", getPresetIndex(freq)); // Send 0 if not a preset
+            intent.putExtra("com.qf.radio.update_action_searching_key", false); // We don't track search status globally here yet
+            
+            String widgetName = (rdsName != null && !rdsName.isEmpty() && !rdsName.equals("STATION NAME") && !rdsName.equals("STATION")) ? rdsName : "";
+            intent.putExtra("com.qf.radio.update_action_name_key", widgetName);
+            
+            // Try to make the intent explicit to bypass background implicit broadcast restrictions
+            intent.setPackage("com.android.auto.autohome");
+            
+            // Send standard broadcast (system apps or apps with correct permission will receive it)
+            sendBroadcast(intent);
+        } catch (Exception ex) {
+            Log.e(TAG, "Error sending widget broadcast: " + ex.getMessage());
+        }
     }
 
     /**
@@ -1802,7 +1852,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Logos Online Switch
         if (swLogosOnline != null) {
-            swLogosOnline.setChecked(mPrefs.getBoolean("pref_logos_online", true));
+            swLogosOnline.setChecked(mPrefs.getBoolean("pref_logos_online", false));
             swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
                 mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
                 showToast(checked ? "Logos Online: Activado" : "Logos Online: Desactivado");

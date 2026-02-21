@@ -188,6 +188,15 @@ public class RadioRepository {
             // 2. Fallback Cloud + Download
             final String stationNameForLambda = finalName;
 
+            // Check if online logos are enabled
+            boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_logos_online", false);
+
+            if (!onlineLogosEnabled) {
+                android.util.Log.d("RadioLogos", "Download skipped: pref_logos_online is disabled.");
+                return station; // Skip download entirely
+            }
+
             logoExecutor.submit(() -> {
                 // Prioridad 1: Usar logo del catálogo predefinido si existe
                 String catalogLogoUrl = (predefined != null) ? predefined.getLogoUrl() : null;
