@@ -83,9 +83,9 @@ public class MainActivity extends AppCompatActivity {
      * adelante, nombres manuales).
      */
     private enum FmMode {
-        FM_COMPLETO,
+        FM_MT8163, // Ahora usamos FM_MT8163 en lugar de FM_COMPLETO para claridad
         FM_BASICO,
-        FM_K706 // Nuevo modo para K706 (MT8163)
+        FM_K706
     }
 
     IRadioServiceAPI mRadioService;
@@ -189,8 +189,8 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                // Solo inicializamos el listener oculto de RDS en modo completo.
-                if (mMode == FmMode.FM_COMPLETO) {
+                // Solo inicializamos el listener oculto de RDS en modo MT8163 (completo).
+                if (mMode == FmMode.FM_MT8163) {
                     initHiddenPlayer();
                 }
             } catch (Exception e) {
@@ -539,16 +539,20 @@ public class MainActivity extends AppCompatActivity {
         Log.d(TAG, "Modo de funcionamiento: " + mMode);
 
         if (mMode == FmMode.FM_BASICO) {
-            showToast("Modo Básico: Sin Root (Nombres Manuales)");
+            showToast("Modo Básico: Sin Motor Detectado");
         } else if (mMode == FmMode.FM_K706) {
-             showToast("Modo K706: Hardware Nativo Detectado");
+             showToast("Motor K706: Hardware Nativo Detectado");
         } else {
-            showToast("Modo Completo: Root + Servicio HCN");
+            showToast("Motor MT8163: Servicio de Sistema Detectado");
         }
 
-        // Repositorio de datos (nombres RDS por root + logos locales/cloud).
-        // En MODO_FM_BASICO desactivamos por completo el uso de root.
-        mRepository = new com.example.openradiofm.data.repository.RadioRepository(this, mMode == FmMode.FM_COMPLETO);
+        if (mMode == FmMode.FM_MT8163) {
+            // Repositorio de datos (nombres RDS por root + logos locales/cloud).
+            mRepository = new com.example.openradiofm.data.repository.RadioRepository(this, true);
+        } else {
+            // En modo K706 o básico, el RDS Name ya lo gestiona el Manager o se saca de metadatos.
+            mRepository = new com.example.openradiofm.data.repository.RadioRepository(this, false);
+        }
         // Preferencias para presets y estados de indicadores (TA/AF/TP, etc.).
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE);
 
@@ -717,8 +721,10 @@ public class MainActivity extends AppCompatActivity {
                         mEngineeringDialog = new K706EngineeringDialog(MainActivity.this);
                         mEngineeringDialog.setOnDismissListener(dialog -> mEngineeringDialog = null);
                         mEngineeringDialog.show();
-                    } else {
+                    } else if (mMode == FmMode.FM_MT8163) {
                         new EngineeringModeDialog(MainActivity.this).show();
+                    } else {
+                        showToast("Modo básico: Menú de ingeniería no disponible");
                     }
                 } else {
                     // Single click action: Open GPS
@@ -933,18 +939,17 @@ public class MainActivity extends AppCompatActivity {
      * crashes.
      */
     private FmMode detectMode() {
-        boolean hasService = hasCarRadioService();
-        boolean hasRootBinary = hasRootBinary();
-
-        if (hasService && hasRootBinary) {
-            return FmMode.FM_COMPLETO;
-        }
-        
-        // V6.0: Detectar K706 (mcu_service)
+        // 1. Prioridad: K706 (mcu_service nativo)
         if (isK706()) {
             return FmMode.FM_K706;
         }
+
+        // 2. Prioridad: MT8163 (Servicio de radio del sistema)
+        if (hasCarRadioService()) {
+            return FmMode.FM_MT8163;
+        }
         
+        // 3. Fallback: Modo básico
         return FmMode.FM_BASICO;
     }
 
@@ -1490,7 +1495,7 @@ public class MainActivity extends AppCompatActivity {
                 mRadioService.registerRadioCallback(mCallback);
                 mCurrentBand = mRadioService.getCurrentBand();
                 startStatusPolling();
-                showToast("Modo K706 Activado (Directo)");
+                showToast("Motor K706 Activado (Directo)");
                 
                 // V6.1: Restore state to avoid reset to 87.5 on rotation/layout change
                 if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
@@ -1503,10 +1508,11 @@ public class MainActivity extends AppCompatActivity {
                 refreshPresetsCache();
                 refreshPresetButtons();
                 refreshRadioStatus();
+                return;
             } catch (Exception e) {
                 showToast("Error iniciando K706: " + e.getMessage());
+                // Fallback a detección de servicio si falla la instancia local
             }
-            return;
         }
 
         int engineIdx = mPrefs.getInt("pref_radio_engine", 0);
