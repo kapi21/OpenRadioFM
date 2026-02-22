@@ -477,7 +477,7 @@ public class MainActivity extends AppCompatActivity {
             Log.d(TAG, "MCU Key injected: " + key);
         } catch (Exception e) {
             Log.e(TAG, "Error injecting MCU key: " + e.getMessage());
-            showToast("Hardware EQ not supported on this device");
+            showToast("Hardware EQ no soportado en este dispositivo");
         }
     }
 
@@ -663,21 +663,25 @@ public class MainActivity extends AppCompatActivity {
         ImageButton btnEq = findViewById(R.id.btnSettings);
         if (btnEq != null) {
             btnEq.setOnClickListener(v -> {
-                try {
-                    // V9.4d: Abrir QF Sound Effect del K706 directamente
-                    Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.qf.soundeffect");
-                    if (launchIntent != null) {
-                        launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(launchIntent);
-                    } else {
-                        // Fallback: abrir ajustes de sonido de Android
-                        Intent intent = new Intent("android.intent.action.MAIN");
-                        intent.setClassName("com.android.settings", "com.android.settings.Settings$SoundSettingsActivity");
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        startActivity(intent);
+                if (mMode == FmMode.FM_MT8163) {
+                    sendMcuKey(0x134); // Keycode 308 for DSP in MT8163 (from v4.5)
+                } else {
+                    try {
+                        // V9.4d: Abrir QF Sound Effect del K706 directamente
+                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.qf.soundeffect");
+                        if (launchIntent != null) {
+                            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(launchIntent);
+                        } else {
+                            // Fallback: abrir ajustes de sonido de Android
+                            Intent intent = new Intent("android.intent.action.MAIN");
+                            intent.setClassName("com.android.settings", "com.android.settings.Settings$SoundSettingsActivity");
+                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            startActivity(intent);
+                        }
+                    } catch (Exception e) {
+                        showToast("No se pudo abrir el DSP");
                     }
-                } catch (Exception e) {
-                    showToast("No se pudo abrir el DSP");
                 }
             });
 
@@ -753,8 +757,12 @@ public class MainActivity extends AppCompatActivity {
         btnLocDx = findViewById(R.id.btnLocDx);
         if (btnLocDx != null) {
             btnLocDx.setOnClickListener(v -> {
-                // V9.8: Función LOC/DX desactivada temporalmente (Standby)
-                showToast("LOC / DX (Standby - En investigación)");
+                if (mMode == FmMode.FM_MT8163) {
+                    execRemote(IRadioServiceAPI::onLocDxEvent);
+                } else {
+                    // V9.8: Función LOC/DX desactivada temporalmente para K706 (Standby)
+                    showToast("LOC / DX (Standby en K706 - En investigación)");
+                }
             });
             // V3.5: Layout Toggle on Long Press
             btnLocDx.setOnLongClickListener(v -> {
@@ -2204,14 +2212,6 @@ public class MainActivity extends AppCompatActivity {
 
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
     private void updateFrequencyDisplay(int freq) {
-    if (tvRdsName != null) { tvRdsName.setText(""); tvRdsName.setVisibility(View.GONE); }
-    if (tvRdsInfo != null) { tvRdsInfo.setText(""); tvRdsInfo.setVisibility(View.GONE); }
-    if (ivAfIcon != null) ivAfIcon.setAlpha(0.2f);
-    if (ivTaIcon != null) ivTaIcon.setAlpha(0.2f);
-    if (ivTpIcon != null) ivTpIcon.setAlpha(0.2f);
-    if (ivStereoIcon != null) ivStereoIcon.setVisibility(View.GONE);
-    mCurrentPty = null;
-    mHasRdsLock = false;
         if (tvFrequency != null) {
             if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
                 tvFrequency.setText(String.valueOf(freq));
@@ -2284,31 +2284,29 @@ public class MainActivity extends AppCompatActivity {
                 tvRdsName.setVisibility(View.VISIBLE);
             } else {
                 String current = tvRdsName.getText().toString();
-                if (current.isEmpty() || current.equals("STATION") || current.equals("STATION NAME")
-                        || current.equals("STATION ") || current.equals(" NAME")) {
+                // V4.5.1: Si ya hay un nombre recibido por callback (no es el default), NO lo borramos ni lo ocultamos
+                if (!current.isEmpty() && !current.equals("STATION") && !current.equals("STATION NAME")
+                        && !current.equals("STATION ") && !current.equals(" NAME")) {
+                    tvRdsName.setVisibility(View.VISIBLE);
+                } else {
                     // V4.0: Keep visible in V2 to prevent shifts
                     tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                     if (!mIsV3)
                         tvRdsName.setText("");
-                } else {
-                    tvRdsName.setVisibility(View.VISIBLE);
                 }
             }
 
             if (tvRdsInfo != null) {
                 String rdsText = tvRdsInfo.getText().toString();
-                if (rdsText.isEmpty() || rdsText.equals("RDS TEXT INFO") || rdsText.equals("RDS Info Text")) {
+                // V4.5.1: Si ya hay texto RDS recibido, no lo ocultamos bajo ninguna circunstancia en este ciclo
+                if (!rdsText.isEmpty() && !rdsText.equals("RDS TEXT INFO") && !rdsText.equals("RDS Info Text")) {
+                    tvRdsInfo.setVisibility(View.VISIBLE);
+                    tvRdsInfo.setTextColor(isNight ? nightBlue : white);
+                } else {
                     // V4.0: Keep visible in V2 to prevent shifts
                     tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                     if (!mIsV3)
                         tvRdsInfo.setText("");
-                } else {
-                    tvRdsInfo.setVisibility(View.VISIBLE);
-                    if (isNight) {
-                        tvRdsInfo.setTextColor(nightBlue);
-                    } else {
-                        tvRdsInfo.setTextColor(white);
-                    }
                 }
             }
 
@@ -3284,11 +3282,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onSeekUpEvent() {
-        execRemote(IRadioServiceAPI::onSeekUpEvent);
+        if (mMode == FmMode.FM_MT8163) {
+            // Punto 3: Lógica invertida en MT8163
+            execRemote(IRadioServiceAPI::onSeekDownEvent);
+        } else {
+            execRemote(IRadioServiceAPI::onSeekUpEvent);
+        }
     }
 
     private void onSeekDownEvent() {
-        execRemote(IRadioServiceAPI::onSeekDownEvent);
+        if (mMode == FmMode.FM_MT8163) {
+            // Punto 3: Lógica invertida en MT8163
+            execRemote(IRadioServiceAPI::onSeekUpEvent);
+        } else {
+            execRemote(IRadioServiceAPI::onSeekDownEvent);
+        }
     }
 
     private void gotoFreq(int freq) {
