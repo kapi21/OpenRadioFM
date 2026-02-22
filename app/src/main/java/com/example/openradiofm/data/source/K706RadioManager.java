@@ -15,6 +15,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
+import android.media.AudioFocusRequest;
+import android.media.AudioAttributes;
 
 /**
  * V7.1: Implementación de la interfaz de radio para K706 (MT8163).
@@ -93,7 +95,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsSeeking = false; // V7.1: Estado de seek
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAudioFocusChangeListener;
+    private AudioFocusRequest mAudioFocusRequest;
     private boolean mIsAudioFocusHeld = false;
+    private boolean mIsRadioActive = false; // V9.9: Flag para controlar si la radio "debe" estar sonando
+    // V9.9: AF/TA Flags
+    private boolean mIsAfEnabled = false;
+    private boolean mIsTaEnabled = false;
+    private boolean mIsTpEnabled = false;
 
     public K706RadioManager(Context context) {
         this.mContext = context;
@@ -102,6 +110,56 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             @Override
             public void onAudioFocusChange(int focusChange) {
                 Log.d(TAG, "onAudioFocusChange: " + focusChange);
+                switch (focusChange) {
+                    case AudioManager.AUDIOFOCUS_LOSS:
+                        Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS----");
+                        // Alguien más (ej. otra app, Bluetooth largo) tomó el foco permanentemente.
+                        // Debemos silenciarnos y soltar el foco.
+                        try {
+                            setMute(true);
+                            if (mSetChannel != null && mMcuManager != null) {
+                                mSetChannel.invoke(mMcuManager, (byte) 4); // Devolver contexto
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error on AUDIOFOCUS_LOSS", e);
+                        }
+                        abandonAudioFocus();
+                        break;
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                    case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                        Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS_TRANSIENT (" + focusChange + ")----");
+                        // Interrupción corta (Notificación, Android Auto, indicación GPS).
+                        // Solo nos silenciamos, pero mantenemos nuestra intención de volver a sonar.
+                        mIsAudioFocusHeld = true; // Retenemos el flag aunque no tengamos el foco actual
+                        try {
+                            setMute(true);
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error muting on AUDIOFOCUS_LOSS_TRANSIENT", e);
+                        }
+                        break;
+                    case AudioManager.AUDIOFOCUS_GAIN:
+                    case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
+                        Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_GAIN----");
+                        // Recuperamos el foco (terminó la llamada/notificación o se desconectó BT).
+                        // Volvemos a levantar nuestro canal de radio.
+                        mIsAudioFocusHeld = true;
+                        
+                        // Si estábamos en modo activo, forzamos recuperar
+                        if (mIsRadioActive) {
+                            try {
+                                if (mMcuManager != null && mSetChannel != null) {
+                                    mSetChannel.invoke(mMcuManager, (byte) 2);
+                                    Log.d(TAG, "AUDIOFOCUS_GAIN: Forced RPC_SetChannel(2)");
+                                }
+                                setAudioParams(true);
+                                setMute(false);
+                                Log.d(TAG, "AUDIOFOCUS_GAIN: Radio unmuted and params restored");
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error restoring audio on AUDIOFOCUS_GAIN", e);
+                            }
+                        }
+                        break;
+                }
             }
         };
         initMcuConnection();
@@ -361,13 +419,32 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     break;
                 case 0xB3: // RDS AF/TA Status Flags
                     if (data.length > 1) {
-                        Log.d(TAG, "RDS B3 Flags: 0x" + String.format("%02X", data[1]));
+                        int rdsFlagsB3 = data[1] & 0xFF;
+                        Log.d(TAG, "RDS B3 Flags: 0x" + String.format("%02X", rdsFlagsB3));
+                        
+                        // Hipótesis AF (si el bitmasck es el bit 0 o 1)
+                        boolean afState = (rdsFlagsB3 & 0x01) != 0;
+                        if (mIsAfEnabled != afState) {
+                            mIsAfEnabled = afState;
+                            fireEvent(111, "AF:" + (afState ? 1 : 0));
+                        }
                     }
                     fireEvent(110, "B3: " + bytesToHex(data));
                     break;
                 case 0xB4: // RDS Indicate Info
                     if (data.length > 1) {
-                        Log.d(TAG, "RDS B4 Flags: 0x" + String.format("%02X", data[1]));
+                        int rdsFlagsB4 = data[1] & 0xFF;
+                        Log.d(TAG, "RDS B4 Flags: 0x" + String.format("%02X", rdsFlagsB4));
+                        
+                        // Hipótesis TA y TP bits (basado en estándares)
+                        boolean taState = (rdsFlagsB4 & 0x08) != 0 || (rdsFlagsB4 & 0x02) != 0; 
+                        boolean tpState = (rdsFlagsB4 & 0x10) != 0 || (rdsFlagsB4 & 0x01) != 0;
+                        
+                        if (mIsTaEnabled != taState || mIsTpEnabled != tpState) {
+                            mIsTaEnabled = taState;
+                            mIsTpEnabled = tpState;
+                            fireEvent(111, "TA:" + (taState ? 1 : 0) + ",TP:" + (tpState ? 1 : 0));
+                        }
                     }
                     fireEvent(110, "B4: " + bytesToHex(data));
                     break;
@@ -799,22 +876,48 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private void requestAudioFocus() {
         if (mAudioManager != null && !mIsAudioFocusHeld) {
-            int result = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, 
-                    AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
-            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-                mIsAudioFocusHeld = true;
-                Log.d(TAG, "Audio Focus Granted");
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                AudioAttributes attributes = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build();
+
+                mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                        .setAudioAttributes(attributes)
+                        .setAcceptsDelayedFocusGain(true)
+                        .setOnAudioFocusChangeListener(mAudioFocusChangeListener)
+                        .build();
+
+                int result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    mIsAudioFocusHeld = true;
+                    Log.d(TAG, "Audio Focus Granted (API 26+)");
+                } else {
+                    Log.w(TAG, "Audio Focus Failed (API 26+)");
+                }
             } else {
-                Log.w(TAG, "Audio Focus Failed");
+                int result = mAudioManager.requestAudioFocus(mAudioFocusChangeListener, 
+                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                    mIsAudioFocusHeld = true;
+                    Log.d(TAG, "Audio Focus Granted (Legacy)");
+                } else {
+                    Log.w(TAG, "Audio Focus Failed (Legacy)");
+                }
             }
         }
     }
 
     private void abandonAudioFocus() {
         if (mAudioManager != null && mIsAudioFocusHeld) {
-            mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && mAudioFocusRequest != null) {
+                mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
+                Log.d(TAG, "Audio Focus Abandoned (API 26+)");
+            } else {
+                mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
+                Log.d(TAG, "Audio Focus Abandoned (Legacy)");
+            }
             mIsAudioFocusHeld = false;
-            Log.d(TAG, "Audio Focus Abandoned");
         }
     }
 
@@ -944,6 +1047,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // sus features RDS de bajo nivel saltándonos al MCU mediante la API de sistema.
         enableBroadcomRdsFeatures();
 
+        mIsRadioActive = true; // V9.9: Activar el flag para el Heartbeat
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM V7.2d ===");
     }
     
@@ -1001,6 +1105,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private void stopFmAudioSequence() {
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM (Teardown V9.5) ===");
+        mIsRadioActive = false; // V9.9: Limpiar flag activo
         try {
             // 1. Silenciar (Mute true)
             setMute(true);
@@ -1181,6 +1286,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // V7.2: La frecuencia se actualiza vía callback MCU (handlePresetList).
         // RPC_GetChannel retorna el CANAL DE AUDIO (2=FM, 4=Android), NO la frecuencia.
         // mCurrentFreq ya está en formato OpenRadioFM (×1000) gracias a updateFrequency().
+        
+        // V9.9: Aprovechamos este polling (1 vez por seg) para vigilar que el coche no nos haya robado el canal
+        if (mIsRadioActive) {
+            checkAndRecoverAudio();
+        }
+
         return mCurrentFreq; 
     }
 
@@ -1261,5 +1372,60 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private void notifyFreqUpdate() {
         // La UI actualiza por polling a getCurrentFreq()
         // y también por el evento 105
+    }
+
+    // V9.9: Hack for Bluetooth recovery. The system's MediaFocusControl "steals" the audio channel
+    // but never gives it back to us via normal OnAudioFocusChange because it uses an OEM "abandonCustomAudioFocus"
+    public void enforceAudioChannelRecovery() {
+        Log.d(TAG, "enforceAudioChannelRecovery: Forzando SetChannel(2) tras desconexión BT");
+        try {
+            // Repetimos la secuencia vital para asegurar el audio FM
+            requestAudioFocus(); // Asegurarnos de tener el foco estándar Android
+            
+            if (mSetChannel != null && mMcuManager != null) {
+                mSetChannel.invoke(mMcuManager, (byte) 2);
+                Log.d(TAG, "enforceAudioChannelRecovery: mSetChannel(2) enviado");
+            }
+            
+            // Refrescar el Mute al estado actual (si estábamos desmuteados, que suene)
+            setMute(false);
+        } catch (Exception e) {
+            Log.e(TAG, "enforceAudioChannelRecovery FAILED", e);
+        }
+    }
+
+    // V9.9: Helper to gracefully surrender the audio channel to the system (Media = 4)
+    public void returnAudioChannel() {
+        Log.d(TAG, "returnAudioChannel: Cediendo canal al sistema (SetChannel 4)");
+        try {
+            if (mSetChannel != null && mMcuManager != null) {
+                mSetChannel.invoke(mMcuManager, (byte) 4);
+                Log.d(TAG, "returnAudioChannel: mSetChannel(4) enviado");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "returnAudioChannel FAILED", e);
+        }
+    }
+
+    // V9.9: Heartbeat agresivo para evitar que MediaFocusControl o la Marcha Atrás nos roben el audio
+    private void checkAndRecoverAudio() {
+        if (mGetChannel == null || mSetChannel == null || mMcuManager == null) return;
+        
+        try {
+            // Le preguntamos a la placa base en qué canal de audio está ahora mismo
+            byte currentChannel = (byte) mGetChannel.invoke(mMcuManager);
+            
+            // 2 = FM Radio, 4 = Android Media, 6 = Bluetooth, etc.
+            if (currentChannel != 2) {
+                // EXCEPCIÓN: Si acabamos de ceder el foco conscientemente, no peleamos
+                if (!mIsAudioFocusHeld) return;
+
+                Log.w(TAG, "HEARTBEAT WARNING: Canal de audio secuestrado (Canal actual: " + currentChannel + "). Forzando recuperación a 2 (Radio).");
+                mSetChannel.invoke(mMcuManager, (byte) 2);
+                setMute(false); // Asegurarnos de desmutear
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error en checkAndRecoverAudio", e);
+        }
     }
 }

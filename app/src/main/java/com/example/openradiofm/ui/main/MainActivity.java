@@ -10,6 +10,8 @@ import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -102,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvPty;
     private ImageView ivSignalLevel;
     private ImageView ivPtyIcon; // V5.0: Categorical Icon
+    private ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
 
     // V5.0: State & Presets
     private boolean mMuteState = false;
@@ -199,6 +202,45 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceDisconnected(ComponentName name) {
             stopStatusPolling();
             mRadioService = null;
+        }
+    };
+
+    // V9.9: Hack para el problema del K706 donde MediaFocusControl "roba" 
+    // el canal pero no nos envía OnAudioFocusChange (solo abandona customAudioFocus).
+    private BroadcastReceiver mBtStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if ("com.qf.action.BT_STATE".equals(intent.getAction())) {
+                // state=0 (Desconectado), state=1 (Conectando), state=2 (Conectado)
+                int state = intent.getIntExtra("state", -1);
+                Log.d(TAG, "BT_STATE Broadcast Received: " + state);
+                
+                if (mRadioService != null && mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+                    com.example.openradiofm.data.source.K706RadioManager k706Manager = 
+                        (com.example.openradiofm.data.source.K706RadioManager) mRadioService;
+                    
+                    if (state == 0) {
+                        Log.d(TAG, "Bluetooth Desconectado: Forzando recuperación de audio FM (SetChannel 2)");
+                        // Tras unos milisegundos para dejar que el sistema asimile la desconexión
+                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                            try {
+                                k706Manager.enforceAudioChannelRecovery(); // Need to add this helper in K706RadioManager
+                                showToast("Recuperando Audio FM...");
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error recuperando canal FM tras BT", e);
+                            }
+                        }, 500); 
+                    } else if (state == 2) {
+                        Log.d(TAG, "Bluetooth Conectado: Nos silenciamos preventivamente");
+                        try {
+                            k706Manager.setMute(true);
+                            k706Manager.returnAudioChannel(); // Helper para RPC_SetChannel(4)
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error cediendo canal FM tras BT connect", e);
+                        }
+                    }
+                }
+            }
         }
     };
 
@@ -382,6 +424,30 @@ public class MainActivity extends AppCompatActivity {
                     btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
                 }
                         break;
+                    case 111: // V9.9: RDS AF/TA/TP Status (0xB3/0xB4 parse)
+                        if (data != null && !data.isEmpty()) {
+                            // Example formats: "AF:1", "TA:1", "TP:0"
+                            String[] parts = data.split(",");
+                            for (String part : parts) {
+                                String[] kv = part.split(":");
+                                if (kv.length == 2) {
+                                    String key = kv[0].trim();
+                                    boolean active = "1".equals(kv[1].trim());
+
+                                    if ("AF".equals(key) && ivAfIcon != null) {
+                                        ivAfIcon.setImageResource(active ? R.drawable.rds_af_p : R.drawable.rds_af_n);
+                                        ivAfIcon.setAlpha(active ? 1.0f : 0.8f);
+                                    } else if ("TA".equals(key) && ivTaIcon != null) {
+                                        ivTaIcon.setImageResource(active ? R.drawable.rds_ta_p : R.drawable.rds_ta_n);
+                                        ivTaIcon.setAlpha(active ? 1.0f : 0.8f);
+                                    } else if ("TP".equals(key) && ivTpIcon != null) {
+                                        ivTpIcon.setImageResource(active ? R.drawable.rds_tp_p : R.drawable.rds_tp_n);
+                                        ivTpIcon.setAlpha(active ? 1.0f : 0.8f);
+                                    }
+                                }
+                            }
+                        }
+                        break;
                 }
             });
         }
@@ -435,6 +501,10 @@ public class MainActivity extends AppCompatActivity {
             mIsV3 = savedInstanceState.getBoolean("mIsV3", false);
             Log.d(TAG, "State Restored: Freq=" + mLastFreq);
         }
+
+        // Registrar receiver para las desconexiones Bluetooth de la placa QF (K706)
+        IntentFilter filter = new IntentFilter("com.qf.action.BT_STATE");
+        registerReceiver(mBtStateReceiver, filter);
 
         // V3.0: Layout Selection
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
@@ -498,6 +568,10 @@ public class MainActivity extends AppCompatActivity {
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
         ivUnitLabel = findViewById(R.id.ivUnitLabel);
         ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
+        
+        ivAfIcon = findViewById(R.id.ivAfIcon);
+        ivTaIcon = findViewById(R.id.ivTaIcon);
+        ivTpIcon = findViewById(R.id.ivTpIcon);
 
         android.view.View boxLogo = findViewById(R.id.boxLogo);
 
@@ -792,6 +866,10 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // 3) Desconectar del Servicio de Radio del Coche.
+        try {
+            unregisterReceiver(mBtStateReceiver);
+        } catch (Exception e) {}
+        
         try {
             if (mRadioService != null) {
                 mRadioService.unRegisterRadioCallback(mCallback);

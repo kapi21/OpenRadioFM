@@ -241,6 +241,38 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
+                <!-- RDS Status Icons (AF, TA, TP) -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+                    
+                    <ImageView
+                        android:id="@+id/ivAfIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/rds_af_n" />
+                        
+                    <ImageView
+                        android:id="@+id/ivTaIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/rds_ta_n" />
+                        
+                    <ImageView
+                        android:id="@+id/ivTpIcon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:scaleType="fitCenter"
+                        android:src="@drawable/rds_tp_n" />
+                </LinearLayout>
+
                 <ImageView
                     android:id="@+id/ivUnitLabel"
                     android:layout_width="56dp"
