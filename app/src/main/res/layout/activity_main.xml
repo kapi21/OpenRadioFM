@@ -118,17 +118,32 @@
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
         app:layout_constraintBottom_toTopOf="@+id/btnSeekDown">
 
-        <!-- Band indicator arriba-izquierda -->
-        <ImageView
-            android:id="@+id/ivBandIndicator"
-            android:layout_width="160dp"
-            android:layout_height="60dp"
+        <!-- Top Left Corner: Band + Stereo -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_gravity="top|start"
-            android:layout_marginEnd="12dp"
             android:layout_marginTop="12dp"
             android:layout_marginStart="4dp"
-            android:scaleType="fitStart"
-            android:src="@drawable/radio_fm1" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            
+            <ImageView
+                android:id="@+id/ivBandIndicator"
+                android:layout_width="160dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="12dp"
+                android:scaleType="fitStart"
+                android:src="@drawable/radio_fm1" />
+                
+            <ImageView
+                android:id="@+id/ivStereoIcon"
+                android:layout_width="48dp"
+                android:layout_height="24dp"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                android:src="@drawable/fwt" />
+        </LinearLayout>
 
         <!-- Frecuencia centrada (ocupa todo el espacio) -->
         <androidx.appcompat.widget.AppCompatTextView
@@ -150,8 +165,8 @@
         <!-- Signal: esquina inferior-izquierda -->
         <ImageView
             android:id="@+id/ivSignalLevel"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
             android:layout_gravity="bottom|start"
             android:layout_margin="8dp"
             android:scaleType="fitCenter"
@@ -168,26 +183,28 @@
             android:scaleType="fitCenter"
             android:src="@drawable/radio_mhz" />
 
-        <!-- Overlays fijos en las esquinas -->
+        <!-- PTY Text -->
         <TextView
             android:id="@+id/tvPty"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="80dp"
             android:layout_marginBottom="8dp"
             android:text="PTY NONE"
             android:textColor="@color/white"
-            android:textSize="18sp"
+            android:textSize="14sp"
             android:textStyle="bold"
             android:visibility="gone" />
 
-        <!-- V5.0: PTY Icon -->
+        <!-- PTY Icon -->
         <ImageView
             android:id="@+id/ivPtyIcon"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="32dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="bottom|start"
+            android:layout_marginStart="80dp"
+            android:layout_marginBottom="28dp"
             android:scaleType="fitCenter"
             android:visibility="gone"
             tools:src="@drawable/ic_pty_music"
@@ -202,6 +219,45 @@
             android:alpha="0.8"
             android:visibility="gone"
             android:src="@drawable/radio_icon_p01" />
+
+        <!-- RDS Status Icons (AF, TA, TP) -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="72dp"
+            android:layout_marginBottom="8dp"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/ivAfIcon"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="4dp"
+                android:scaleType="fitCenter"
+                android:visibility="visible"
+                android:alpha="0.2"
+                android:src="@drawable/rds_af_n" />
+
+            <ImageView
+                android:id="@+id/ivTaIcon"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginEnd="4dp"
+                android:scaleType="fitCenter"
+                android:visibility="visible"
+                android:alpha="0.2"
+                android:src="@drawable/rds_ta_n" />
+
+            <ImageView
+                android:id="@+id/ivTpIcon"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:scaleType="fitCenter"
+                android:visibility="visible"
+                android:alpha="0.2"
+                android:src="@drawable/rds_tp_n" />
+        </LinearLayout>
     </FrameLayout>
 
     <!-- Seek Buttons -->

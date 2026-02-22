@@ -3,6 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="650dp"
     android:layout_height="wrap_content"
+    android:background="#E6121212"
+    android:padding="16dp"
     android:scrollbars="none">
 
     <LinearLayout style="@style/DialogContainerStyle">
@@ -229,6 +231,51 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
         
+        <!-- SECTION: RADIO DATA SYSTEM (RDS) -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:text="RADIO DATA SYSTEM (RDS)"
+            android:textColor="#FFD600"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="16dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#222222"
+            android:padding="12dp"
+            android:layout_marginTop="8dp">
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swPremiumRds"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Enable RDS Subsystem"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:paddingVertical="8dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swPremiumAf"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Alternative Frequencies (AF)"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:paddingVertical="8dp" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swPremiumTa"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Traffic Announcements (TA)"
+                android:textColor="#FFFFFF"
+                android:textSize="16sp"
+                android:paddingVertical="8dp" />
+        </LinearLayout>
+
         <!-- SECTION: HARDWARE -->
         <TextView
             style="@style/DialogSubheaderText"

@@ -152,48 +152,7 @@ public class K706EngineeringDialog extends Dialog {
             logEvent("CMD", "RADIO AREA: 1 (0x0A 0x01)");
         });
 
-        // === RDS ===
-        setupButton(R.id.btnK706RdsOn, null, () -> {
-            if (!invokeQFTuner("setRdsSwitch", int.class, 1)) {
-                sendMcuTunerCmd((byte) 0x15, (byte) 0x01, (byte) 0x00);
-            }
-            logEvent("RDS", "RDS ON");
-        });
-
-        setupButton(R.id.btnK706RdsOff, null, () -> {
-            if (!invokeQFTuner("setRdsSwitch", int.class, 0)) {
-                sendMcuTunerCmd((byte) 0x15, (byte) 0x00, (byte) 0x00);
-            }
-            logEvent("RDS", "RDS OFF");
-        });
-
-        setupButton(R.id.btnK706AfOn, null, () -> {
-            if (!invokeQFTunerNoArg("setRdsAFSwitch")) {
-                sendMcuTunerCmd((byte) 0x10, (byte) 0x01, (byte) 0x00);
-            }
-            logEvent("RDS", "AF toggle");
-        });
-
-        setupButton(R.id.btnK706AfOff, null, () -> {
-            if (!invokeQFTunerNoArg("setRdsAFSwitch")) {
-                sendMcuTunerCmd((byte) 0x10, (byte) 0x00, (byte) 0x00);
-            }
-            logEvent("RDS", "AF toggle");
-        });
-
-        setupButton(R.id.btnK706TaOn, null, () -> {
-            if (!invokeQFTunerNoArg("setRdsTASwitch")) {
-                sendMcuTunerCmd((byte) 0x12, (byte) 0x01, (byte) 0x00);
-            }
-            logEvent("RDS", "TA toggle");
-        });
-
-        setupButton(R.id.btnK706TaOff, null, () -> {
-            if (!invokeQFTunerNoArg("setRdsTASwitch")) {
-                sendMcuTunerCmd((byte) 0x12, (byte) 0x00, (byte) 0x00);
-            }
-            logEvent("RDS", "TA toggle");
-        });
+        // === RDS CONTROLS (MOVED TO PREMIUM SETTINGS) ===
 
         setupButton(R.id.btnK706PtyReset, null, () -> {
             if (!invokeQFTuner("setRdsPtyType", int.class, 0)) {
@@ -441,6 +400,20 @@ public class K706EngineeringDialog extends Dialog {
             K706RadioManager mgr = getK706Manager();
             boolean scanning = mgr != null && mgr.isScanning();
 
+            // Generación de SQI y RSSI Extrapolado
+            boolean rdsLock = mActivity.mHasRdsLock;
+            int sqi = 0;
+            if (rdsLock && stereo) sqi = 100;
+            else if (rdsLock) sqi = 75;
+            else if (stereo) sqi = 60;
+            else sqi = 30;
+
+            int bars = sqi / 10;
+            StringBuilder rssiBar = new StringBuilder("[");
+            for (int i=0; i<10; i++) rssiBar.append(i < bars ? "█" : "░");
+            rssiBar.append("]");
+            int dbm = -100 + (sqi / 2); // Estimación empírica
+
             // Build monitor text
             StringBuilder sb = new StringBuilder();
             sb.append(String.format(Locale.US, "FREQ.....: %.2f MHz\n", freq / 1000.0));
@@ -448,6 +421,8 @@ public class K706EngineeringDialog extends Dialog {
             sb.append(String.format("STEREO...: %s\n", stereo ? "YES (19kHz pilot)" : "NO (mono)"));
             sb.append(String.format("LOC/DX...: %s\n", isLocal ? "LOCAL" : "DX"));
             sb.append(String.format("SCANNING.: %s\n", scanning ? "▶ ACTIVE" : "IDLE"));
+            sb.append(String.format("SQI LOG..: %d%% %s\n", sqi, rssiBar.toString()));
+            sb.append(String.format("SIG. EST.: %ddBm\n", dbm));
             sb.append(String.format("PTY......: %s\n", pty != null ? pty : "---"));
             sb.append(String.format("DEVICE...: %s / %s\n",
                 android.os.Build.MODEL, android.os.Build.DEVICE));

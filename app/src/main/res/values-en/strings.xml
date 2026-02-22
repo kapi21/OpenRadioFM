@@ -26,6 +26,7 @@
     <string name="font_digital">Digital (LED)</string>
     <string name="font_modern">Modern (Inter)</string>
     <string name="font_orbitron">Futuristic (Orbitron)</string>
+    <string name="font_formula1">Racing (Formula 1)</string>
     
     <!-- V4.0: App Options -->
     <string name="app_options">App Options</string>
@@ -92,7 +93,7 @@
     <string name="night_schedule">Night Mode Schedule</string>
     <string name="night_start">Start</string>
     <string name="night_end">End</string>
-    <string name="night_schedule_updated">✅ Report updated: %1$s - %2$s</string>
+    <string name="night_schedule_updated">✅ Schedule updated: %1$s - %2$s</string>
 
     <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
     <string name="pty_none">No PTY</string>

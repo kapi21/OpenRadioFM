@@ -26,6 +26,7 @@
     <string name="font_digital">Цифровой (LED)</string>
     <string name="font_modern">Современный (Inter)</string>
     <string name="font_orbitron">Футуристический (Orbitron)</string>
+    <string name="font_formula1">Гонки (Formula 1)</string>
     
     <!-- V4.0: App Options -->
     <string name="app_options">Настройки Приложения</string>

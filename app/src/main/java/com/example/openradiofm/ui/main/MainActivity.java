@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView tvFrequency, tvRdsName, tvRdsInfo;
     private android.view.View boxFrequency;
-    private ImageView ivBandIndicator, ivUnitLabel, ivFavoriteIndicator;
+    private ImageView ivBandIndicator, ivUnitLabel, ivFavoriteIndicator, ivStereoIcon;
     private ImageButton btnLocDx, btnBand;
 
     private final android.view.View[] cardPresets = new android.view.View[PRESETS_COUNT];
@@ -383,11 +383,14 @@ public class MainActivity extends AppCompatActivity {
                 }
                         break;
                     case 103: // Stereo Debug
+                        boolean isStereo = "1".equals(data);
                         if (ivSignalLevel != null) {
                             // Update signal color based on stereo flag ("1" or "0")
-                            boolean isStereo = "1".equals(data);
                             int color = isStereo ? Color.parseColor("#00E676") : Color.parseColor("#FFD600");
                             ivSignalLevel.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
+                        }
+                        if (ivStereoIcon != null) {
+                            ivStereoIcon.setVisibility(isStereo ? View.VISIBLE : View.GONE);
                         }
                         break;
                     case 110: // Raw RDS byte dumping
@@ -435,14 +438,11 @@ public class MainActivity extends AppCompatActivity {
                                     boolean active = "1".equals(kv[1].trim());
 
                                     if ("AF".equals(key) && ivAfIcon != null) {
-                                        ivAfIcon.setImageResource(active ? R.drawable.rds_af_p : R.drawable.rds_af_n);
-                                        ivAfIcon.setAlpha(active ? 1.0f : 0.8f);
+                                        ivAfIcon.setAlpha(active ? 1.0f : 0.2f);
                                     } else if ("TA".equals(key) && ivTaIcon != null) {
-                                        ivTaIcon.setImageResource(active ? R.drawable.rds_ta_p : R.drawable.rds_ta_n);
-                                        ivTaIcon.setAlpha(active ? 1.0f : 0.8f);
+                                        ivTaIcon.setAlpha(active ? 1.0f : 0.2f);
                                     } else if ("TP".equals(key) && ivTpIcon != null) {
-                                        ivTpIcon.setImageResource(active ? R.drawable.rds_tp_p : R.drawable.rds_tp_n);
-                                        ivTpIcon.setAlpha(active ? 1.0f : 0.8f);
+                                        ivTpIcon.setAlpha(active ? 1.0f : 0.2f);
                                     }
                                 }
                             }
@@ -568,10 +568,15 @@ public class MainActivity extends AppCompatActivity {
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
         ivUnitLabel = findViewById(R.id.ivUnitLabel);
         ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
-        
+        ivStereoIcon = findViewById(R.id.ivStereoIcon);
         ivAfIcon = findViewById(R.id.ivAfIcon);
         ivTaIcon = findViewById(R.id.ivTaIcon);
         ivTpIcon = findViewById(R.id.ivTpIcon);
+        
+        // V9.9: RDS Icons must be dimmed by default, not gone.
+        if (ivAfIcon != null) ivAfIcon.setAlpha(0.2f);
+        if (ivTaIcon != null) ivTaIcon.setAlpha(0.2f);
+        if (ivTpIcon != null) ivTpIcon.setAlpha(0.2f);
 
         android.view.View boxLogo = findViewById(R.id.boxLogo);
 
@@ -593,6 +598,20 @@ public class MainActivity extends AppCompatActivity {
                         this).cycleSkin();
                 applySkin(next);
                 showToast("Skin: " + next.displayName);
+            });
+        }
+
+        android.view.View ivCarLogo = findViewById(R.id.ivCarLogo);
+        if (ivCarLogo != null) {
+            ivCarLogo.setOnClickListener(v -> {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin next = new com.example.openradiofm.ui.theme.ThemeManager(
+                        this).cycleSkin();
+                applySkin(next);
+                showToast("Skin: " + next.displayName);
+            });
+            ivCarLogo.setOnLongClickListener(v -> {
+                showHistoryDialog();
+                return true;
             });
         }
 
@@ -1038,6 +1057,8 @@ public class MainActivity extends AppCompatActivity {
                 typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.inter);
             else if (fontType == 4)
                 typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.orbitron);
+            else if (fontType == 5)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.formula1);
         } catch (Exception e) {
             // Si no existen los archivos en res/font todavía, usamos el por defecto
             // (Orbitron en assets o System)
@@ -2056,6 +2077,40 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
+        // V4.5: RADIO DATA SYSTEM (RDS) Switches en Premium Settings
+        androidx.appcompat.widget.SwitchCompat swPremiumRds = dialog.findViewById(R.id.swPremiumRds);
+        if (swPremiumRds != null) {
+            swPremiumRds.setOnCheckedChangeListener((bv, checked) -> {
+                if (!invokeQFTuner("setRdsSwitch", int.class, checked ? 1 : 0)) {
+                    sendMcuTunerCmd((byte) 0x15, (byte) (checked ? 0x01 : 0x00), (byte) 0x00);
+                }
+                showToast("RDS Subsystem: " + (checked ? "Activado" : "Desactivado"));
+            });
+        }
+
+        androidx.appcompat.widget.SwitchCompat swPremiumAf = dialog.findViewById(R.id.swPremiumAf);
+        androidx.appcompat.widget.SwitchCompat swPremiumTa = dialog.findViewById(R.id.swPremiumTa);
+
+        if (swPremiumAf != null) {
+            swPremiumAf.setOnCheckedChangeListener((bv, checked) -> {
+                boolean taChecked = swPremiumTa != null && swPremiumTa.isChecked();
+                if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+                    ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).enableSilentlyRdsFeatures(checked, taChecked);
+                }
+                showToast("Alternative Frequencies (AF): " + (checked ? "Activado" : "Desactivado"));
+            });
+        }
+
+        if (swPremiumTa != null) {
+            swPremiumTa.setOnCheckedChangeListener((bv, checked) -> {
+                boolean afChecked = swPremiumAf != null && swPremiumAf.isChecked();
+                if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+                    ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).enableSilentlyRdsFeatures(afChecked, checked);
+                }
+                showToast("Traffic Announcements (TA): " + (checked ? "Activado" : "Desactivado"));
+            });
+        }
+
         btnClose.setOnClickListener(v -> dialog.dismiss());
         dialog.show();
     }
@@ -2090,6 +2145,8 @@ public class MainActivity extends AppCompatActivity {
                 typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.inter);
             else if (fontType == 4)
                 typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.orbitron);
+            else if (fontType == 5)
+                typeface = androidx.core.content.res.ResourcesCompat.getFont(this, R.font.formula1);
         } catch (Exception e) {
         }
         tv.setTypeface(typeface);
@@ -2101,7 +2158,7 @@ public class MainActivity extends AppCompatActivity {
 
         // Font
         int fontIdx = mPrefs.getInt("pref_font_type", 0);
-        String[] fonts = { "Default", "Bebas", "Digital", "Inter", "Orbitron" };
+        String[] fonts = { getString(R.string.font_default), getString(R.string.font_bebas), getString(R.string.font_digital), getString(R.string.font_modern), getString(R.string.font_orbitron), getString(R.string.font_formula1) };
         if (fontIdx >= 0 && fontIdx < fonts.length)
             tvFont.setText(fonts[fontIdx]);
 
@@ -2141,6 +2198,14 @@ public class MainActivity extends AppCompatActivity {
 
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
     private void updateFrequencyDisplay(int freq) {
+    if (tvRdsName != null) { tvRdsName.setText(""); tvRdsName.setVisibility(View.GONE); }
+    if (tvRdsInfo != null) { tvRdsInfo.setText(""); tvRdsInfo.setVisibility(View.GONE); }
+    if (ivAfIcon != null) ivAfIcon.setAlpha(0.2f);
+    if (ivTaIcon != null) ivTaIcon.setAlpha(0.2f);
+    if (ivTpIcon != null) ivTpIcon.setAlpha(0.2f);
+    if (ivStereoIcon != null) ivStereoIcon.setVisibility(View.GONE);
+    mCurrentPty = null;
+    mHasRdsLock = false;
         if (tvFrequency != null) {
             if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
                 tvFrequency.setText(String.valueOf(freq));
@@ -2263,12 +2328,25 @@ public class MainActivity extends AppCompatActivity {
 
                 if (mHasRdsLock && hasStereo) {
                     signalColor = android.graphics.Color.parseColor("#00E676"); // Green
-                } else if (mHasRdsLock || hasStereo) {
-                    signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow
+                } else if (hasStereo) {
+                    signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow (Solo si hay estéreo mínimo, lo consideramos emisión válida normal en FM)
+                } else if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
+                    // AM bands don't usually have stereo, maybe we show yellow if we are tuned?
+                    // We assume that the tune locked, so we provide default AM color
+                    signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow for AM
                 } else {
-                    signalColor = android.graphics.Color.parseColor("#FF5252"); // Red
+                    signalColor = android.graphics.Color.parseColor("#FF5252"); // Red (No emisión reconocible)
                 }
                 ivSignalLevel.setColorFilter(signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            }
+            
+            // Re-apply stereo visibility based on immediate hardware state
+            if (ivStereoIcon != null) {
+                try {
+                    boolean hasStereo = mRadioService != null && mRadioService.IsStereo();
+                    ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.GONE);
+                } catch (Exception ignored) {
+                }
             }
         }
     }
@@ -2321,7 +2399,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showFontSelector(android.app.Dialog parentDialog, TextView fontPreview) {
-        String[] fonts = { "Default", "Bebas", "Digital", "Inter", "Orbitron" };
+        String[] fonts = { getString(R.string.font_default), getString(R.string.font_bebas), getString(R.string.font_digital), getString(R.string.font_modern), getString(R.string.font_orbitron), getString(R.string.font_formula1) };
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
                 .setTitle(R.string.select_typography)
                 .setItems(fonts, (d, w) -> {
@@ -2842,6 +2920,8 @@ public class MainActivity extends AppCompatActivity {
 
         android.view.View btnSave = dialog.findViewById(R.id.btnSave);
         android.view.View btnLoad = dialog.findViewById(R.id.btnLoad);
+        android.view.View btnDeleteAllFavs = dialog.findViewById(R.id.btnDeleteAllFavs);
+        android.view.View btnClearHistory = dialog.findViewById(R.id.btnClearHistory);
         android.view.View btnClose = dialog.findViewById(R.id.btnClose);
 
         if (btnSave != null) {
@@ -2858,8 +2938,25 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        if (btnClose != null) {
-            btnClose.setOnClickListener(v -> dialog.dismiss());
+        if (btnDeleteAllFavs != null) {
+            btnDeleteAllFavs.setOnClickListener(v -> {
+                if (mPrefs != null) {
+                    mPrefs.edit().clear().apply();
+                    showToast("Todos los favoritos han sido borrados");
+                    refreshPresetButtons();
+                }
+                dialog.dismiss();
+            });
+        }
+
+        if (btnClearHistory != null) {
+            btnClearHistory.setOnClickListener(v -> {
+                if (mPrefs != null) {
+                    mPrefs.edit().remove("pref_station_history").apply();
+                    showToast("El historial ha sido borrado");
+                }
+                dialog.dismiss();
+            });
         }
 
         if (btnClose != null) {
@@ -3265,5 +3362,61 @@ public class MainActivity extends AppCompatActivity {
      */
     private void promptAutoScan() {
         execRemote(IRadioServiceAPI::onScanEvent);
+    }
+
+    // === V4.5: QFTunerManager & MCU Helpers para Settings Premium ===
+
+    private Object mCachedQFTunerManager;
+    private boolean mQFTunerChecked = false;
+
+    private Object getQFTunerManager() {
+        if (!mQFTunerChecked) {
+            mQFTunerChecked = true;
+            try {
+                Class<?> clazz = Class.forName("com.qf.clientsdk.QFTunerManager");
+                java.lang.reflect.Method getInstance = clazz.getMethod("getInstance");
+                mCachedQFTunerManager = getInstance.invoke(null);
+            } catch (Exception e) {
+                // Not available
+            }
+        }
+        return mCachedQFTunerManager;
+    }
+
+    private boolean invokeQFTuner(String methodName, Class<?> paramType, Object arg) {
+        Object mgr = getQFTunerManager();
+        if (mgr == null) return false;
+        try {
+            java.lang.reflect.Method m = mgr.getClass().getMethod(methodName, paramType);
+            m.invoke(mgr, arg);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private boolean invokeQFTunerNoArg(String methodName) {
+        Object mgr = getQFTunerManager();
+        if (mgr == null) return false;
+        try {
+            java.lang.reflect.Method m = mgr.getClass().getMethod(methodName);
+            m.invoke(mgr);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    private void sendMcuTunerCmd(byte subCmd, byte param1, byte param2) {
+        if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+            try {
+                java.lang.reflect.Method sendCmd = com.example.openradiofm.data.source.K706RadioManager.class.getDeclaredMethod(
+                    "sendCmd", byte.class, byte.class, byte.class);
+                sendCmd.setAccessible(true);
+                sendCmd.invoke(mRadioService, subCmd, param1, param2);
+            } catch (Exception e) {
+                android.util.Log.e("MainActivity", "sendMcuTunerCmd error", e);
+            }
+        }
     }
 }

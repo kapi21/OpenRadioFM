@@ -73,6 +73,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private Method mGetChannel; // RPC_GetChannel (audio channel, NOT frequency)
     private Method mSetChannel; // RPC_SetChannel (Audio routing MCU)
 
+    // --- Broadcom FmReceiverService Reflection (V9.9: RDS Silencioso) ---
+    private Object mFmReceiverService;
+    private Method mBroadcomSetRdsMode;
+
     // V9.6: QFTunerManager - Canal de alto nivel para seek/scan/RDS
     // sendCmd (MCU directo) solo funciona fiable para tune/band/fine.
     // Para seek, scan y RDS la app nativa usa QFTunerManager.
@@ -254,6 +258,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
             // V9.6: Reflect QFTunerManager (canal de alto nivel para seek/scan/RDS)
             initQFTunerManager();
+            
+            // V9.9: Broadcom FmReceiverService (RDS silente / alternativo a QFTuner)
+            initBroadcomFmReceiverService();
 
             // V7.1: Log ALL available methods for debugging
             Log.d(TAG, "=== Métodos disponibles en IMcuManager ===");
@@ -809,6 +816,36 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Log.e(TAG, "Error connecting to QFTunerManager", e);
         }
     }
+    
+    /**
+     * Helper to initialize android.broadcom.IFmReceiverService via reflection for silent RDS setting.
+     */
+    private void initBroadcomFmReceiverService() {
+        try {
+            Class<?> serviceManagerClass = Class.forName("android.os.ServiceManager");
+            Method getService = serviceManagerClass.getMethod("getService", String.class);
+            IBinder binder = (IBinder) getService.invoke(null, "fm_receiver");
+            if (binder != null) {
+                // IFmReceiverService.Stub.asInterface
+                Class<?> stubClass = Class.forName("android.broadcom.IFmReceiverService$Stub");
+                Method asInterface = stubClass.getMethod("asInterface", IBinder.class);
+                mFmReceiverService = asInterface.invoke(null, binder);
+                Log.d(TAG, "Broadcom FmReceiverService: Obtenido con éxito.");
+
+                try {
+                    // signature: setRdsMode(int rdsMode, int rdsFeatures, int afMode, int afThreshold)
+                    mBroadcomSetRdsMode = mFmReceiverService.getClass().getMethod("setRdsMode", int.class, int.class, int.class, int.class);
+                    Log.d(TAG, "Broadcom setRdsMode: CREADO con éxito.");
+                } catch (NoSuchMethodException ex) {
+                    Log.w(TAG, "Broadcom setRdsMode NO DISPONIBLE.");
+                }
+            } else {
+                Log.w(TAG, "Broadcom FmReceiverService NOT FOUND (fm_receiver is null)");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Error localizando Broadcom FmReceiverService para RDS Silencioso.", e);
+        }
+    }
 
     // ==========================================
     // COMMAND SENDING
@@ -1342,6 +1379,33 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         this.mCurrentFreq = freq;
         this.mCurrentBand = band;
         Log.d(TAG, "Estado sincronizado manual: " + freq + " / B" + band);
+    }
+
+    /**
+     * Call the lowest-level Broadcom driver to configure Alternative Frequencies / Traffic Announcement 
+     * WITHOUT triggering a scan/seek from the QFTuner API.
+     */
+    public void enableSilentlyRdsFeatures(boolean afOn, boolean taOn) {
+        if (mFmReceiverService == null || mBroadcomSetRdsMode == null) {
+            Log.w(TAG, "enableSilentlyRdsFeatures FAILED: Broadcom FmReceiverService not initialized. Try native method.");
+            // Fallback (might trigger scan combo, user beware)
+            if (afOn) sendCmd((byte) 0x10, (byte) 0x01, (byte) 0x00);
+            if (taOn) sendCmd((byte) 0x12, (byte) 0x01, (byte) 0x00);
+            return;
+        }
+
+        try {
+            int rdsMode = 1;      // RDS always listening
+            int rdsFeatures = taOn ? 1 : 0; // We guess TA is matched to bitmask in Broadcom? Or just set to 0. Actually, TS = Traffic Service might be part of rdsFeatures. Let's use standard mode.
+            int afMode = afOn ? 1 : 0;
+            int afThreshold = 10; // Default RSSI threshold for AF jumping
+            
+            // setRdsMode(int rdsMode, int rdsFeatures, int afMode, int afThreshold)
+            mBroadcomSetRdsMode.invoke(mFmReceiverService, rdsMode, rdsFeatures, afMode, afThreshold);
+            Log.d(TAG, "Broadcom setRdsMode invoked: AF=" + afOn + ", TA=" + taOn + " (Silently!)");
+        } catch (Exception e) {
+            Log.e(TAG, "Error invoking Broadcom setRdsMode.", e);
+        }
     }
 
     /**

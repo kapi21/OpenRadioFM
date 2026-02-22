@@ -59,17 +59,34 @@
     <!-- ROW 1: TOP STATUS & RDS (15%) -->
     <!-- ====================================================================================== -->
 
-    <ImageView
-        android:id="@+id/ivBandIndicator"
-        android:layout_width="150dp"
+    <LinearLayout
+        android:id="@+id/containerBand"
+        android:layout_width="wrap_content"
         android:layout_height="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:scaleType="fitCenter"
-        android:src="@drawable/radio_fm1"
+        android:orientation="horizontal"
+        android:gravity="center"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ivBandIndicator"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_fm1" />
+
+        <ImageView
+            android:id="@+id/ivStereoIcon"
+            android:layout_width="48dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            android:src="@drawable/fwt" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/containerRds"
@@ -79,7 +96,7 @@
         android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
         app:layout_constraintEnd_toStartOf="@+id/ivCarLogo"
-        app:layout_constraintStart_toEndOf="@+id/ivBandIndicator"
+        app:layout_constraintStart_toEndOf="@+id/containerBand"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -251,25 +268,31 @@
                     
                     <ImageView
                         android:id="@+id/ivAfIcon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:layout_marginEnd="4dp"
                         android:scaleType="fitCenter"
+                        android:visibility="visible"
+                        android:alpha="0.2"
                         android:src="@drawable/rds_af_n" />
                         
                     <ImageView
                         android:id="@+id/ivTaIcon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:layout_marginEnd="4dp"
                         android:scaleType="fitCenter"
+                        android:visibility="visible"
+                        android:alpha="0.2"
                         android:src="@drawable/rds_ta_n" />
                         
                     <ImageView
                         android:id="@+id/ivTpIcon"
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
                         android:scaleType="fitCenter"
+                        android:visibility="visible"
+                        android:alpha="0.2"
                         android:src="@drawable/rds_tp_n" />
                 </LinearLayout>
 
@@ -277,6 +300,7 @@
                     android:id="@+id/ivUnitLabel"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
+                    android:layout_marginStart="24dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/radio_mhz" />
             </LinearLayout>

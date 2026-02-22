@@ -2,16 +2,24 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="500dp"
     android:layout_height="wrap_content"
+    android:background="#E6121212"
+    android:padding="16dp"
     android:scrollbars="none">
 
     <LinearLayout style="@style/DialogContainerStyle">
 
         <!-- Header -->
         <LinearLayout style="@style/DialogTitleLayout"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginBottom="16dp">
             <TextView
-                style="@style/DialogTitleText"
-                android:text="Acerca de OpenRadioFM"/>
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Acerca de OpenRadioFM"
+                android:textColor="#00E676"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:fontFamily="sans-serif-medium" />
         </LinearLayout>
 
         <ImageView
@@ -35,39 +43,87 @@
         <!-- SUBHEADER -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="INFORMACIÓN"/>
+            android:text="INFORMACIÓN"
+            android:textColor="#FFD600"
+            android:textSize="14sp"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginTop="16dp"
+            android:layout_marginBottom="8dp"/>
 
-        <!-- Dev Info -->
-        <LinearLayout style="@style/DialogBoxStyle">
-            <TextView
-                style="@style/DialogBoxTitle"
-                android:text="Desarrollado por"/>
-            <TextView
-                style="@style/DialogBoxDesc"
-                android:text="OpenRadio Team (Soporte Multi-Lenguaje)"/>
-        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="#222222"
+            android:padding="12dp">
 
-        <!-- Tech Info -->
-        <LinearLayout style="@style/DialogBoxStyle">
-            <TextView
-                style="@style/DialogBoxTitle"
-                android:text="Detalles Técnicos"/>
-            <TextView
-                style="@style/DialogBoxDesc"
-                android:text="@string/favorites_loaded"/> <!-- Reusing a string temporarily or put hardcoded -->
-            <TextView 
-                 android:layout_width="wrap_content"
-                 android:layout_height="wrap_content"
-                 android:textColor="#AAAAAA"
-                 android:textSize="12sp"
-                 android:text="Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos"/>
+            <!-- Dev Info -->
+            <LinearLayout 
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="12dp">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:text="Desarrollado por"
+                    android:layout_marginBottom="2dp"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp"
+                    android:text="OpenRadio Team (Soporte Multi-Lenguaje)"/>
+            </LinearLayout>
+
+            <View 
+                android:layout_width="match_parent" 
+                android:layout_height="1dp" 
+                android:background="#444444" 
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Tech Info -->
+            <LinearLayout 
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#FFFFFF"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:text="Detalles Técnicos"
+                    android:layout_marginBottom="2dp"/>
+                <TextView 
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#AAAAAA"
+                    android:textSize="14sp"
+                    android:lineSpacingExtra="4dp"
+                    android:text="Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos"/>
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Close -->
         <TextView
             android:id="@+id/btnClose"
-            style="@style/DialogCloseButton"
-            android:text="@string/close"/>
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/close"
+            android:gravity="center"
+            android:textColor="#AAAAAA"
+            android:textSize="16sp"
+            android:padding="16dp"
+            android:layout_marginTop="24dp"
+            android:background="?android:attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"/>
 
     </LinearLayout>
 </ScrollView>
