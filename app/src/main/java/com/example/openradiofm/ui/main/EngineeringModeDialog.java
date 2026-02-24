@@ -115,6 +115,9 @@ public class EngineeringModeDialog extends Dialog {
         setupDataButtons();
         setupTunerButtons();
         setupExitButton();
+
+        // V4.6: Selector de motor de radio (movido desde Settings)
+        setupEngineSelector();
     }
 
     private void setupCloseButton() {
@@ -289,6 +292,32 @@ public class EngineeringModeDialog extends Dialog {
                 "Clear station history?",
                 () -> resetHistory()
             ));
+        }
+    }
+
+    /**
+     * V4.6: Selector de motor de radio (movido desde Settings al Engineering Menu)
+     */
+    private void setupEngineSelector() {
+        Button btnEngine = new Button(getContext());
+        int idx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
+        String[] engines = { "Auto", "HCN", "MTK", "Standard", "TS" };
+        String name = (idx >= 0 && idx < engines.length) ? engines[idx] : "Auto";
+        btnEngine.setText("⚙ RADIO ENGINE: " + name);
+        btnEngine.setTextColor(Color.parseColor("#00FF00"));
+        btnEngine.setBackgroundColor(Color.parseColor("#1a1a2e"));
+        btnEngine.setAllCaps(false);
+        btnEngine.setTextSize(12);
+        btnEngine.setOnClickListener(v -> {
+            mActivity.showEngineSelector();
+            dismiss();
+        });
+
+        // Insertarlo antes del botón Exit
+        if (btnExitSystem != null && btnExitSystem.getParent() instanceof android.view.ViewGroup) {
+            android.view.ViewGroup parent = (android.view.ViewGroup) btnExitSystem.getParent();
+            int exitIdx = parent.indexOfChild(btnExitSystem);
+            parent.addView(btnEngine, exitIdx);
         }
     }
 

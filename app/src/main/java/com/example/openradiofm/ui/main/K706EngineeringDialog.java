@@ -84,6 +84,35 @@ public class K706EngineeringDialog extends Dialog {
         if (btnClose != null) btnClose.setOnClickListener(v -> dismiss());
         View btnExit = findViewById(R.id.btnK706Exit);
         if (btnExit != null) btnExit.setOnClickListener(v -> dismiss());
+
+        // V4.6: Selector de motor de radio (movido desde Settings)
+        setupEngineSelector();
+    }
+
+    /**
+     * V4.6: Selector de motor de radio (movido desde Settings al Engineering Menu)
+     */
+    private void setupEngineSelector() {
+        Button btnEngine = new Button(getContext());
+        int idx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
+        String[] engines = { "Auto", "HCN", "MTK", "Standard", "TS" };
+        String name = (idx >= 0 && idx < engines.length) ? engines[idx] : "Auto";
+        btnEngine.setText("⚙ RADIO ENGINE: " + name);
+        btnEngine.setTextColor(Color.parseColor("#00FF00"));
+        btnEngine.setBackgroundColor(Color.parseColor("#1a1a2e"));
+        btnEngine.setAllCaps(false);
+        btnEngine.setTextSize(12);
+        btnEngine.setOnClickListener(v -> {
+            mActivity.showEngineSelector();
+            dismiss();
+        });
+
+        View exitBtn = findViewById(R.id.btnK706Exit);
+        if (exitBtn != null && exitBtn.getParent() instanceof android.view.ViewGroup) {
+            android.view.ViewGroup parent = (android.view.ViewGroup) exitBtn.getParent();
+            int exitIdx = parent.indexOfChild(exitBtn);
+            parent.addView(btnEngine, exitIdx);
+        }
     }
 
     private K706RadioManager getK706Manager() {

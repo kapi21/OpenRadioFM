@@ -2135,17 +2135,10 @@ public class MainActivity extends AppCompatActivity {
             });
         }
 
-        // V4.3: Hardware Settings - Engine
+        // V4.6: Motor selector movido al Engineering Menu (no visible para usuario normal)
         android.view.View rowEngine = dialog.findViewById(R.id.rowEngine);
-        TextView tvCurrentEngine = dialog.findViewById(R.id.tvCurrentEngine);
-        if (tvCurrentEngine != null) {
-            updateCurrentEngineText(tvCurrentEngine);
-        }
         if (rowEngine != null) {
-            rowEngine.setOnClickListener(v -> {
-                showEngineSelector();
-                dialog.dismiss();
-            });
+            rowEngine.setVisibility(View.GONE);
         }
 
         cardTheme.setOnClickListener(v -> {
@@ -2248,7 +2241,8 @@ public class MainActivity extends AppCompatActivity {
             tv.setText(engines[idx]);
     }
 
-    private void showEngineSelector() {
+    // V4.6: Cambiado a package-private para acceso desde Engineering Dialogs
+    void showEngineSelector() {
         String[] options = {
                 getString(R.string.engine_auto),
                 getString(R.string.engine_hcn),
