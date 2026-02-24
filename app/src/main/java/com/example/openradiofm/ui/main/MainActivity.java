@@ -851,21 +851,14 @@ public class MainActivity extends AppCompatActivity {
             btnAutoScan.setOnClickListener(v -> toggleAutoScan(btnAutoScan));
         }
 
-        // LOC/DX Switch
+        // LOC/DX Switch — V5.0: Via RadioEngine
         btnLocDx = findViewById(R.id.btnLocDx);
         if (btnLocDx != null) {
             btnLocDx.setOnClickListener(v -> {
-                if (mMode == FmMode.FM_MT8163) {
-                    execRemote(IRadioServiceAPI::onLocDxEvent);
+                if (mEngine != null) {
+                    mEngine.toggleDxLocal();
                 } else {
-                    // V9.9: Habilitado para K706
-                    v.setAlpha(0.5f); // Feedback optimista
-                    if (mRadioService != null) {
-                        try {
-                            mRadioService.toggleRdsFeature(3);
-                        } catch (Exception e) { e.printStackTrace(); }
-                    }
-                    Log.d(TAG, "DX/Local toggled for K706");
+                    execRemote(IRadioServiceAPI::onLocDxEvent);
                 }
             });
 
@@ -3366,18 +3359,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onSeekUpEvent() {
-        if (mMode == FmMode.FM_MT8163) {
-            // Punto 3: Lógica invertida en MT8163
-            execRemote(IRadioServiceAPI::onSeekDownEvent);
+        // V5.0: El engine sabe si necesita invertir (MT8163 invierte internamente)
+        if (mEngine != null) {
+            mEngine.seekUp();
         } else {
             execRemote(IRadioServiceAPI::onSeekUpEvent);
         }
     }
 
     private void onSeekDownEvent() {
-        if (mMode == FmMode.FM_MT8163) {
-            // Punto 3: Lógica invertida en MT8163
-            execRemote(IRadioServiceAPI::onSeekUpEvent);
+        if (mEngine != null) {
+            mEngine.seekDown();
         } else {
             execRemote(IRadioServiceAPI::onSeekDownEvent);
         }
