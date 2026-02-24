@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:gravity="center_vertical" android:orientation="horizontal" android:background="@drawable/all_station_info_list_item_selector" android:descendantFocusability="blocksDescendants" android:layout_width="fill_parent" android:layout_height="fill_parent" android:paddingStart="@dimen/dp_w10" android:paddingEnd="@dimen/dp_w10"
-  xmlns:android="http://schemas.android.com/apk/res/android">
-    <TextView android:textColor="@color/light_gray" android:gravity="center" android:id="@id/tv_station_band" android:layout_width="@dimen/dp_w100" android:layout_height="@dimen/favorite_station_btn_height" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="@dimen/dp_h20" android:autoSizeMaxTextSize="@dimen/dp_h24" />
-    <TextView android:textColor="@color/light_gray" android:gravity="center_vertical" android:id="@id/tv_station_freq" android:layout_width="0.0dip" android:layout_height="@dimen/favorite_station_btn_height" android:layout_weight="1.0" android:layout_marginStart="@dimen/dp_w10" android:layout_marginEnd="@dimen/dp_w10" android:autoSizeTextType="uniform" android:autoSizeMinTextSize="@dimen/dp_h20" android:autoSizeMaxTextSize="@dimen/dp_h24" />
-    <ImageButton android:id="@id/btn_favorite" android:background="@drawable/btn_favorite_selector" android:layout_width="@dimen/favorite_station_btn_width" android:layout_height="@dimen/favorite_station_btn_height" android:contentDescription="@string/app_name" />
-</LinearLayout>

@@ -293,6 +293,16 @@ public class MainActivity extends AppCompatActivity {
                     mHasRdsLock = true;
                 }
             }
+
+            @Override
+            public void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled) {
+                // V4.6: Actualizar iconos AF/TA en la UI desde MT8163
+                runOnUiThread(() -> {
+                    if (ivAfIcon != null) ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
+                    if (ivTaIcon != null) ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
+                    Log.d(TAG, "MT8163 RDS Status: AF=" + afEnabled + " TA=" + taEnabled);
+                });
+            }
         });
         if (!mHiddenPlayer.init()) {
             Log.e(TAG, "Error RDS Hardware Init");
@@ -423,13 +433,14 @@ public class MainActivity extends AppCompatActivity {
                         if (btnLocDx != null) {
                     boolean isLocal = "1".equals(data);
                     btnLocDx.setSelected(isLocal);
+                    btnLocDx.setAlpha(1.0f); // V4.6.1: Restaurar alpha tras feedback optimista
                     // V9: LOCAL=radio_loc_p (active/filled), DX=radio_loc_n (normal/outline)
                     btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
                 }
                         break;
                     case 111: // V9.9: RDS AF/TA/TP Status (0xB3/0xB4 parse)
                         if (data != null && !data.isEmpty()) {
-                            // Example formats: "AF:1", "TA:1", "TP:0"
+                            // Example formats: "AF:1", "TA:1", "TP:0" (Indicadores de actividad)
                             String[] parts = data.split(",");
                             for (String part : parts) {
                                 String[] kv = part.split(":");
@@ -437,8 +448,9 @@ public class MainActivity extends AppCompatActivity {
                                     String key = kv[0].trim();
                                     boolean active = "1".equals(kv[1].trim());
 
-                                    if ("AF".equals(key) && ivAfIcon != null) {
-                                        ivAfIcon.setAlpha(active ? 1.0f : 0.2f);
+                                    if ("AF".equals(key)) {
+                                        if (ivAfIcon != null) ivAfIcon.setAlpha(active ? 1.0f : 0.2f);
+                                        // V9.9: btnAf was a typo, using ivAfIcon which is the clickable element
                                     } else if ("TA".equals(key) && ivTaIcon != null) {
                                         ivTaIcon.setAlpha(active ? 1.0f : 0.2f);
                                     } else if ("TP".equals(key) && ivTpIcon != null) {
@@ -446,6 +458,14 @@ public class MainActivity extends AppCompatActivity {
                                     }
                                 }
                             }
+                        }
+                        break;
+
+                    case 112: // V9.9: RDS TA Switch Status real desde MCU (0xB3)
+                        if (ivTaIcon != null) {
+                            boolean isTaOn = data.contains(":1");
+                            ivTaIcon.setAlpha(isTaOn ? 1.0f : 0.4f);
+                            Log.d(TAG, "Sync TA UI to Hardware: " + isTaOn);
                         }
                         break;
                 }
@@ -578,9 +598,50 @@ public class MainActivity extends AppCompatActivity {
         ivTpIcon = findViewById(R.id.ivTpIcon);
         
         // V9.9: RDS Icons must be dimmed by default, not gone.
-        if (ivAfIcon != null) ivAfIcon.setAlpha(0.2f);
-        if (ivTaIcon != null) ivTaIcon.setAlpha(0.2f);
-        if (ivTpIcon != null) ivTpIcon.setAlpha(0.2f);
+        if (ivAfIcon != null) {
+            ivAfIcon.setAlpha(0.2f);
+            ivAfIcon.setOnClickListener(v -> {
+                animateButton(ivAfIcon);
+                if (mMode == FmMode.FM_MT8163 && mHiddenPlayer != null) {
+                    // V4.6: MT8163 usa HiddenRadioPlayer directamente
+                    mHiddenPlayer.toggleRdsFeature(1);
+                } else if (mRadioService != null) {
+                    try {
+                        ivAfIcon.setAlpha(ivAfIcon.getAlpha() > 0.5f ? 0.5f : 0.8f);
+                        mRadioService.toggleRdsFeature(1); // 1 = AF
+                    } catch (RemoteException e) { e.printStackTrace(); }
+                }
+            });
+        }
+        if (ivTaIcon != null) {
+            ivTaIcon.setAlpha(0.2f);
+            ivTaIcon.setOnClickListener(v -> {
+                animateButton(ivTaIcon);
+                if (mMode == FmMode.FM_MT8163 && mHiddenPlayer != null) {
+                    // V4.6: MT8163 usa HiddenRadioPlayer directamente
+                    mHiddenPlayer.toggleRdsFeature(2);
+                } else if (mRadioService != null) {
+                    try {
+                        ivTaIcon.setAlpha(ivTaIcon.getAlpha() > 0.5f ? 0.5f : 0.8f);
+                        mRadioService.toggleRdsFeature(2); // 2 = TA
+                    } catch (RemoteException e) { e.printStackTrace(); }
+                }
+            });
+        }
+        if (ivTpIcon != null) {
+            ivTpIcon.setAlpha(0.2f);
+            // TP is usually indicator-only in many regions, but we can make it toggle global RDS
+            ivTpIcon.setOnClickListener(v -> {
+                animateButton(ivTpIcon);
+                if (mMode == FmMode.FM_MT8163 && mHiddenPlayer != null) {
+                    mHiddenPlayer.toggleRdsFeature(0); // 0 = RDS global
+                } else if (mRadioService != null) {
+                    try {
+                        mRadioService.toggleRdsFeature(0); // 0 = RDS Switch
+                    } catch (RemoteException e) { e.printStackTrace(); }
+                }
+            });
+        }
 
         android.view.View boxLogo = findViewById(R.id.boxLogo);
 
@@ -653,6 +714,17 @@ public class MainActivity extends AppCompatActivity {
 
         // Conectamos con el servicio de radio del coche.
         conectarRadio();
+    }
+
+    @Override
+    public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Log.d(TAG, "onConfigurationChanged: Nueva configuración detectada");
+        
+        // V10: Manejar cambio de modo noche sin recrear la Activity
+        if (mPrefs != null && mPrefs.getBoolean("pref_night_mode_auto", false)) {
+            checkAndApplyNightMode();
+        }
     }
 
     /**
@@ -760,10 +832,17 @@ public class MainActivity extends AppCompatActivity {
                 if (mMode == FmMode.FM_MT8163) {
                     execRemote(IRadioServiceAPI::onLocDxEvent);
                 } else {
-                    // V9.8: Función LOC/DX desactivada temporalmente para K706 (Standby)
-                    showToast("LOC / DX (Standby en K706 - En investigación)");
+                    // V9.9: Habilitado para K706
+                    v.setAlpha(0.5f); // Feedback optimista
+                    if (mRadioService != null) {
+                        try {
+                            mRadioService.toggleRdsFeature(3);
+                        } catch (Exception e) { e.printStackTrace(); }
+                    }
+                    Log.d(TAG, "DX/Local toggled for K706");
                 }
             });
+
             // V3.5: Layout Toggle on Long Press
             btnLocDx.setOnLongClickListener(v -> {
                 boolean current = mPrefs.getBoolean("pref_layout_v3", false);
@@ -2092,38 +2171,16 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // V4.5: RADIO DATA SYSTEM (RDS) Switches en Premium Settings
+        /* RDS controls removed - now direct buttons on main UI */
         androidx.appcompat.widget.SwitchCompat swPremiumRds = dialog.findViewById(R.id.swPremiumRds);
-        if (swPremiumRds != null) {
-            swPremiumRds.setOnCheckedChangeListener((bv, checked) -> {
-                if (!invokeQFTuner("setRdsSwitch", int.class, checked ? 1 : 0)) {
-                    sendMcuTunerCmd((byte) 0x15, (byte) (checked ? 0x01 : 0x00), (byte) 0x00);
-                }
-                showToast("RDS Subsystem: " + (checked ? "Activado" : "Desactivado"));
-            });
-        }
-
+        if (swPremiumRds != null) swPremiumRds.setVisibility(View.GONE);
+        
         androidx.appcompat.widget.SwitchCompat swPremiumAf = dialog.findViewById(R.id.swPremiumAf);
+        if (swPremiumAf != null) swPremiumAf.setVisibility(View.GONE);
+        
         androidx.appcompat.widget.SwitchCompat swPremiumTa = dialog.findViewById(R.id.swPremiumTa);
+        if (swPremiumTa != null) swPremiumTa.setVisibility(View.GONE);
 
-        if (swPremiumAf != null) {
-            swPremiumAf.setOnCheckedChangeListener((bv, checked) -> {
-                boolean taChecked = swPremiumTa != null && swPremiumTa.isChecked();
-                if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
-                    ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).enableSilentlyRdsFeatures(checked, taChecked);
-                }
-                showToast("Alternative Frequencies (AF): " + (checked ? "Activado" : "Desactivado"));
-            });
-        }
-
-        if (swPremiumTa != null) {
-            swPremiumTa.setOnCheckedChangeListener((bv, checked) -> {
-                boolean afChecked = swPremiumAf != null && swPremiumAf.isChecked();
-                if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
-                    ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).enableSilentlyRdsFeatures(afChecked, checked);
-                }
-                showToast("Traffic Announcements (TA): " + (checked ? "Activado" : "Desactivado"));
-            });
-        }
 
         btnClose.setOnClickListener(v -> dialog.dismiss());
         dialog.show();

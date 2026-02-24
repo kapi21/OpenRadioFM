@@ -160,7 +160,8 @@
             app:autoSizeMinTextSize="@dimen/text_size_frequency_min"
             app:autoSizeMaxTextSize="@dimen/text_size_frequency_large"
             app:autoSizeStepGranularity="2sp"
-            android:maxLines="1" />
+            android:maxLines="1"
+            android:includeFontPadding="false" />
 
         <!-- Signal: esquina inferior-izquierda -->
         <ImageView
@@ -310,6 +311,7 @@
         android:singleLine="true"
         android:ellipsize="end"
         android:padding="8dp"
+        android:includeFontPadding="false"
         app:layout_constraintBottom_toTopOf="@+id/tvRdsInfo"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"/>
@@ -332,7 +334,9 @@
         android:marqueeRepeatLimit="marquee_forever"
         android:requiresFadingEdge="horizontal"
         android:fadingEdgeLength="16dp"
-        android:padding="6dp"
+        android:paddingVertical="10dp"
+        android:paddingHorizontal="8dp"
+        android:includeFontPadding="false"
         app:layout_constraintBottom_toTopOf="@+id/btnBand"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"/>

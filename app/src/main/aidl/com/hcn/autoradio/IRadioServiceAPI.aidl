@@ -78,4 +78,10 @@ interface IRadioServiceAPI {
     
     // Transaction ID: 25 (0x19)
     boolean requestPlayAudio();
+
+    /**
+     * V10: Toggle RDS features.
+     * type 0: RDS Switch, 1: AF, 2: TA
+     */
+    void toggleRdsFeature(int type);
 }

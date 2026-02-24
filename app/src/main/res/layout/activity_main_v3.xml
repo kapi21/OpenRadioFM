@@ -78,15 +78,19 @@
             android:scaleType="fitCenter"
             android:src="@drawable/radio_fm1" />
 
-        <ImageView
-            android:id="@+id/ivStereoIcon"
-            android:layout_width="48dp"
-            android:layout_height="24dp"
-            android:layout_marginEnd="8dp"
-            android:scaleType="fitCenter"
-            android:visibility="gone"
-            android:src="@drawable/fwt" />
     </LinearLayout>
+
+    <!-- V4.6.1: Stereo Icon FUERA de containerBand para evitar desplazar containerRds -->
+    <ImageView
+        android:id="@+id/ivStereoIcon"
+        android:layout_width="48dp"
+        android:layout_height="24dp"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        android:src="@drawable/fwt"
+        app:layout_constraintStart_toEndOf="@id/containerBand"
+        app:layout_constraintTop_toTopOf="@id/containerBand"
+        app:layout_constraintBottom_toBottomOf="@id/containerBand" />
 
     <LinearLayout
         android:id="@+id/containerRds"
@@ -113,7 +117,8 @@
             android:text=""
             android:textColor="@color/white"
             android:textSize="@dimen/text_size_rds_name"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            android:includeFontPadding="false" />
 
         <TextView
             android:id="@+id/tvRdsInfo"
@@ -121,7 +126,7 @@
             android:layout_height="wrap_content"
             android:background="@drawable/bg_glass_card_premium"
             android:paddingHorizontal="16dp"
-            android:paddingVertical="4dp"
+            android:paddingVertical="8dp"
             android:layout_marginTop="2dp"
             android:gravity="center"
             android:ellipsize="marquee"
@@ -131,7 +136,8 @@
             android:singleLine="true"
             android:text="RDS Info Text"
             android:textColor="@color/white"
-            android:textSize="18sp" />
+            android:textSize="18sp"
+            android:includeFontPadding="false" />
 
     </LinearLayout>
 
@@ -255,7 +261,8 @@
                         android:textColor="@color/white"
                         android:textSize="18sp"
                         android:textStyle="bold"
-                        android:visibility="gone" />
+                        android:visibility="gone"
+                        android:includeFontPadding="false" />
                 </LinearLayout>
 
                 <!-- RDS Status Icons (AF, TA, TP) -->
@@ -452,7 +459,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="8dp"
+            android:padding="0dp"
             android:scaleType="fitCenter"
             android:src="@drawable/radio_gps" />
 
@@ -463,7 +470,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="8dp"
+            android:padding="0dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_android_settings" />
 
@@ -474,7 +481,7 @@
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:background="?attr/selectableItemBackgroundBorderless"
-            android:padding="8dp"
+            android:padding="0dp"
             android:scaleType="fitCenter"
             android:src="@drawable/ic_save_load" />
 

@@ -13,20 +13,26 @@ public class HiddenRadioPlayer {
     private static final String CLASS_LISTENER = "android.radio.RadioPlayer$OnEventListener";
 
     // RDS Event Codes identified in technical documentation
+    public static final int EVENT_RDS_STATE = 0x4;
     public static final int EVENT_PS_DONE = 0x8;
     public static final int EVENT_PS_MESSAGE = 0x26;
     public static final int EVENT_RT_MESSAGE = 0x29;
     public static final int EVENT_PTY_TYPE = 0x22;
+
+    // V4.6: Estado interno AF/TA para MT8163
+    private boolean mIsAfEnabled = false;
+    private boolean mIsTaEnabled = false;
 
     private Object mRadioPlayerInstance;
     private Listener mClientListener;
 
     public interface Listener {
         void onRdsText(String text);
-
         void onRdsName(String name);
         void onRdsPty(String pty);
         void onRawEvent(int code, Object infoObj, String strArg);
+        /** V4.6: Notifica cambios de estado AF/TA al UI */
+        void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled);
     }
 
     /**
@@ -179,6 +185,63 @@ public class HiddenRadioPlayer {
             Log.e(TAG, "Error parseando evento: " + e.getMessage());
         }
     }
+
+    /**
+     * V4.6: Toggle AF (Alternative Frequencies) via RadioPlayer.setAF(boolean).
+     */
+    public void setAF(boolean enable) {
+        if (mRadioPlayerInstance == null) return;
+        try {
+            Method setAfMethod = mRadioPlayerInstance.getClass().getMethod("setAF", boolean.class);
+            setAfMethod.invoke(mRadioPlayerInstance, enable);
+            mIsAfEnabled = enable;
+            Log.d(TAG, "setAF(" + enable + ") ejecutado.");
+            if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled);
+        } catch (Exception e) {
+            Log.e(TAG, "Error llamando a setAF(): " + e.getMessage());
+        }
+    }
+
+    /**
+     * V4.6: Toggle TA (Traffic Announcement) via RadioPlayer.setTA(boolean).
+     */
+    public void setTA(boolean enable) {
+        if (mRadioPlayerInstance == null) return;
+        try {
+            Method setTaMethod = mRadioPlayerInstance.getClass().getMethod("setTA", boolean.class);
+            setTaMethod.invoke(mRadioPlayerInstance, enable);
+            mIsTaEnabled = enable;
+            Log.d(TAG, "setTA(" + enable + ") ejecutado.");
+            if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled);
+        } catch (Exception e) {
+            Log.e(TAG, "Error llamando a setTA(): " + e.getMessage());
+        }
+    }
+
+    /**
+     * V4.6: Toggle RDS features para MT8163.
+     * type 0: RDS global, 1: AF, 2: TA
+     */
+    public void toggleRdsFeature(int type) {
+        switch (type) {
+            case 1: // AF
+                setAF(!mIsAfEnabled);
+                break;
+            case 2: // TA
+                setTA(!mIsTaEnabled);
+                break;
+            case 0: // RDS global (futuro)
+                Log.d(TAG, "RDS global toggle not yet implemented for MT8163");
+                break;
+            default:
+                Log.w(TAG, "toggleRdsFeature: tipo desconocido " + type);
+                break;
+        }
+    }
+
+    /** V4.6: Getters de estado para la UI */
+    public boolean isAfEnabled() { return mIsAfEnabled; }
+    public boolean isTaEnabled() { return mIsTaEnabled; }
 
     /**
      * Libera referencias para evitar fugas de memoria.

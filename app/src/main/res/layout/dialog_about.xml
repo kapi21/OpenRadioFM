@@ -37,7 +37,7 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:text="Versión 4.5.1 Server Test"
+            android:text="Versión 4.6 Beta Integration"
             android:layout_marginBottom="24dp"/>
 
         <!-- SUBHEADER -->

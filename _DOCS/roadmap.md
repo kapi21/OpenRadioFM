@@ -12,42 +12,47 @@
 - [x] **Constantes MCU limpias** — Eliminados 6 duplicados/conflictos
 - [x] **Botón EQ** — Apunta a `com.qf.soundeffect` con `getLaunchIntentForPackage()`
 - [x] **RDS (PS + RT)** — Nombre y texto de emisora funcionando
+- [x] **Fix Crash Luces** — Bloqueada recreación de Activity en `uiMode` y `nightMode`
 
 ---
 
-## 🔴 Prioritario (Próxima Sesión)
+## 🔴 Prioritario (Próxima Sesión) — 🚀 ESTRATEGIA "LEVEL UP"
 
-### 1. PTY Filter Bug
-- Al abrir la app, aplica un filtro PTY (busca solo emisoras de noticias)
-- **Causa probable**: La MCU conserva un filtro PTY de sesiones anteriores
-- **Solución**: Enviar reset PTY al inicio → `[0xA2, 0x00]` (setRdsPtyType=0)
-- **Alternativa**: Verificar si el paquete 0xB5 se está interpretando como comando
+Siguiendo el feedback técnico, mañana iniciaremos la transformación profunda de la arquitectura para convertir OpenRadioFM en un producto de ingeniería sólido.
 
-### 2. LOC/DX sin comando MCU real
-- El comando `0x0A` cambia la **región geográfica**, no LOC/DX
-- Actualmente solo toggle visual (no envía nada a MCU)
-- **Acción**: Capturar logs MCU de la app nativa al pulsar LOC/DX
-- **Comando**: `adb logcat -s McuManager QFTunerManager | grep -i loc`
+### 1. Fase de Modularización & Kotlin Migration
+- **Módulo `:core`**: Extraer parsers RDS y lógica de negocio a Kotlin puro.
+- **Módulo `:engines`**: Implementar el patrón Strategy para separar el hardware.
+- **MockEngine**: Implementar un simulador de tráfico MCU para desarrollo offline.
+- **Kotlin First**: Migrar `K706RadioManager` y `HiddenRadioPlayer` a Kotlin, integrando **Corrutinas** para el manejo asíncrono.
 
-### 3. Seek — Verificación profunda
-- La banda ya se mantiene ✅
-- Falta verificar: ¿el seek encuentra emisoras correctamente en FM2/FM3?
-- ¿La MCU reporta correctamente la frecuencia encontrada?
+### 2. RadioEngine Reactivo (StateFlow)
+- Eliminar la dependencia de callbacks y polling.
+- Exponer un `StateFlow<RadioStatus>` único desde el core.
+- Transformar la UI para que sea "Stateless" y solo reaccione al hardware.
+
+### 3. Bugs Pendientes (Integrar en la nueva arquitectura)
+- **TA Bug Fix**: Investigar por qué el botón TA no muestra feedback visual y por qué entra en un bucle sin fin al activarse.
+- **PTY Filter Reset**: Enviar `[0xA2, 0x00]` al inicio.
+- **LOC/DX Command**: Capturar logs para identificar el comando real de sensibilidad.
 
 ---
 
 ## 🟡 Mejoras Planificadas
 
-### 4. Audio Path Fix
-- `RPC_SetChannel(2)` funciona pero el audio a veces no arranca
-- Implementar secuencia completa: `setMute(true)` → `RPC_SetChannel(2)` → `setMute(false)` → `setVolume(9)`
+### 4. Audio Path Fix & Heartbeat
+- Refinar secuencia: `setMute(true)` → `RPC_SetChannel(2)` → `setMute(false)`.
+- **Auto-Corrección**: Implementar el Heartbeat inteligente para recuperar el canal de audio si el sistema lo "roba".
 
 ### 5. Broadcom FM Service
-- Intentar binding para obtener:
-  - RSSI/SNR en tiempo real (`setLiveAudioPolling`)
-  - Barra de señal REAL
-  - `setSnrThreshold()` para búsqueda configurable
-  - `estimateNoiseFloorLevel()` para diagnóstico RF
+- Obtener RSSI/SNR real y barra de señal dinámica.
+
+---
+
+## 🎨 V11.0 — Visual WOW & Hacking
+- **Espectro Dinámico**: Dibujar señal FFT basada en datos del tuner.
+- **Glassmorphism Dinámico**: Desenfoque reactivo a la señal.
+- **Analizador Lógico**: Herramientas integradas para exportar tramas a PulseView.
 
 ### 6. Funciones RDS Avanzadas
 - PI Code (identificador único de emisora)
@@ -70,4 +75,14 @@
 - Usa `0x0A` que ya sabemos que funciona
 
 ### 10. Volumen FM independiente
-- `setFMVolume()` vía Broadcom para control separado del sistema
+    - Usar la Raspberry Pi 400 como servidor de logs remoto por ADB inalámbrico para depurar sin cables.
+    - Scripting en Python (desde la Pi) para automatizar pruebas de estrés sobre la placa MCU.
+
+### 🎨 Nivel 2: UI/UX de Élite (Visual WOW)
+- **Espectro Dinámico (FFT)**: Intentar obtener los niveles de portadora/ruido del Broadcom para dibujar un espectro real mientras se hace "Fine Tune".
+- **Glassmorphism Dinámico**: Fondos que reaccionan sutilmente a la intensidad de la señal (blur variable).
+- **Logos Cloud Pro**: Integración con API de Radio-Browser para descargar logos automáticamente por geolocalización.
+
+### 🧠 Nivel 3: Inteligencia & Persistencia
+- **Database 2.0**: Migración de SharedPreferences a SQLite/Room para gestionar miles de emisoras con metadatos extendidos (Género, País, Cobertura).
+- **Auto-Corrección**: Heartbeat inteligente que detecta micro-cortes de audio y restablece el canal `0x02` en milisegundos sin que el usuario lo note.

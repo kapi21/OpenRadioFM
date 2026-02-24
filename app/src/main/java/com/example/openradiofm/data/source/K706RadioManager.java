@@ -97,15 +97,14 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsDxLocal = false; // V7.1: Estado DX/Local real
     private boolean mIsScanning = false; // V7.1: Estado de scan
     private boolean mIsSeeking = false; // V7.1: Estado de seek
+    private boolean mIsTaEnabled = false; // V9.6: Estado TA habilitado
+    private boolean mIsTpEnabled = false; // V9.6: Estado TP disponible
+    private boolean mIsAfEnabled = false; // V9.6: Estado AF habilitado
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAudioFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
     private boolean mIsAudioFocusHeld = false;
     private boolean mIsRadioActive = false; // V9.9: Flag para controlar si la radio "debe" estar sonando
-    // V9.9: AF/TA Flags
-    private boolean mIsAfEnabled = false;
-    private boolean mIsTaEnabled = false;
-    private boolean mIsTpEnabled = false;
 
     public K706RadioManager(Context context) {
         this.mContext = context;
@@ -424,33 +423,40 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB1: // Preset List / Current Station
                     handlePresetList(data);
                     break;
-                case 0xB3: // RDS AF/TA Status Flags
+                case 0xB3: // RDS AF/TA Status Flags (Interruptores)
                     if (data.length > 1) {
                         int rdsFlagsB3 = data[1] & 0xFF;
                         Log.d(TAG, "RDS B3 Flags: 0x" + String.format("%02X", rdsFlagsB3));
                         
-                        // Hipótesis AF (si el bitmasck es el bit 0 o 1)
+                        // V9.9: Según TunerManagerForExt$UITunerObserver.onTuneRdsInfo:
+                        // bit 0: AF Switch
+                        // bit 1: TA Switch
                         boolean afState = (rdsFlagsB3 & 0x01) != 0;
+                        boolean taState = (rdsFlagsB3 & 0x02) != 0;
+
                         if (mIsAfEnabled != afState) {
                             mIsAfEnabled = afState;
                             fireEvent(111, "AF:" + (afState ? 1 : 0));
                         }
+                        if (mIsTaEnabled != taState) {
+                            mIsTaEnabled = taState;
+                            fireEvent(112, "TA_SWITCH:" + (taState ? 1 : 0));
+                            Log.d(TAG, "TA Switch state updated from MCU B3: " + taState);
+                        }
                     }
                     fireEvent(110, "B3: " + bytesToHex(data));
                     break;
-                case 0xB4: // RDS Indicate Info
+                case 0xB4: // RDS Indicate Info (solo TP, NO TA - TA se controla desde 0xB3)
                     if (data.length > 1) {
                         int rdsFlagsB4 = data[1] & 0xFF;
                         Log.d(TAG, "RDS B4 Flags: 0x" + String.format("%02X", rdsFlagsB4));
                         
-                        // Hipótesis TA y TP bits (basado en estándares)
-                        boolean taState = (rdsFlagsB4 & 0x08) != 0 || (rdsFlagsB4 & 0x02) != 0; 
+                        // V4.6.1: Solo TP desde B4. TA se maneja exclusivamente en B3.
                         boolean tpState = (rdsFlagsB4 & 0x10) != 0 || (rdsFlagsB4 & 0x01) != 0;
                         
-                        if (mIsTaEnabled != taState || mIsTpEnabled != tpState) {
-                            mIsTaEnabled = taState;
+                        if (mIsTpEnabled != tpState) {
                             mIsTpEnabled = tpState;
-                            fireEvent(111, "TA:" + (taState ? 1 : 0) + ",TP:" + (tpState ? 1 : 0));
+                            fireEvent(111, "TP:" + (tpState ? 1 : 0));
                         }
                     }
                     fireEvent(110, "B4: " + bytesToHex(data));
@@ -488,50 +494,44 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     private void handleTunerInfo(byte[] data) {
-        // V7.2: CONFIRMADO por logcat de la app nativa:
-        // Paquete 0xB0 tiene SOLO 2 bytes: [B0, flags]
-        // NO contiene frecuencia. La frecuencia viene en B1.
-        // 
-        // Flags (byte[1]) decodificación según TunerManagerForExt.smali:
-        //   bit0: saveFlag
-        //   bit1-2: reserved  
-        //   bit3: asFlag (AutoScan)
-        //   bit4: finishTag
-        //   bit5: validTag  
-        //   bit6: playingTag / stFlag (stereo)
-        //   bit7: locFlag (DX/Local)
-        //
-        // Ejemplo del log nativo: flag=0x70=01110000
-        //   -> asFlag=0, scanFlag=0, seekFlag=0, stFlag=1, locFlag=1
+        // V9.9: Mapeo CORREGIDO según TunerManagerForExt.smali ($UITunerObserver.onTunerInfoChanged)
+        // Paquete 0xB0 [B0, flags]
+        // Flags (byte[1]):
+        //   bit 0: asFlag (AutoScan) -> 0x01
+        //   bit 1: scanFlag          -> 0x02
+        //   bit 2: psFlag            -> 0x04
+        //   bit 3: seekFlag          -> 0x08
+        //   bit 4: stFlag (Stereo)   -> 0x10
+        //   bit 5: locFlag (Local)    -> 0x20
+        //   bit 6: searching         -> 0x40
+        //   bit 7: tempSearching     -> 0x80
+        
         if (data.length < 2) return;
         
         int flags = data[1] & 0xFF;
         
-        // Decodificación basada en TunerManagerForExt.onTunerInfoChanged:
-        boolean saveFlag   = (flags & 0x01) != 0; // bit 0
-        boolean asFlag     = (flags & 0x08) != 0; // bit 3 (AutoScan)
-        boolean finishTag  = (flags & 0x10) != 0; // bit 4
-        boolean validTag   = (flags & 0x20) != 0; // bit 5
-        boolean stFlag     = (flags & 0x40) != 0; // bit 6 (stereo)
-        boolean locFlag    = (flags & 0x80) != 0; // bit 7 (DX/Local: 1=local)
-        
-        // Extraer seekFlag de otro bit — en el log nativo, seekFlag aparece separado
-        // Probablemente bit 2 o 3
-        boolean seekFlag   = (flags & 0x04) != 0; // bit 2
-        boolean scanFlag   = (flags & 0x02) != 0; // bit 1
+        boolean asFlag     = (flags & 0x01) != 0; 
+        boolean scanFlag   = (flags & 0x02) != 0;
+        boolean seekFlag   = (flags & 0x08) != 0;
+        boolean stFlag     = (flags & 0x10) != 0; // V9.9: Bit 4 es Stereo
+        boolean locFlag    = (flags & 0x20) != 0; // V9.9: Bit 5 es Local (1=Local, 0=DX)
         
         mIsScanning = asFlag || scanFlag;
         mIsSeeking = seekFlag;
-        mIsDxLocal = locFlag;
+        
+        // V9.9: Solo actualizamos si cambia para evitar spam de eventos
+        if (mIsDxLocal != locFlag) {
+            mIsDxLocal = locFlag;
+            Log.d(TAG, "DX/Local State Changed: " + (locFlag ? "LOCAL" : "DX"));
+        }
         
         Log.d(TAG, "TunerInfo: flags=0x" + String.format("%02X", flags) + 
-                    " save=" + saveFlag + " AS=" + asFlag + " finish=" + finishTag + 
-                    " valid=" + validTag + " ST=" + stFlag + " LOC=" + locFlag +
-                    " seek=" + seekFlag + " scan=" + scanFlag);
+                    " AS=" + asFlag + " Scan=" + scanFlag + " Seek=" + seekFlag +
+                    " ST=" + stFlag + " LOC=" + locFlag);
         
         // Notificar UI
         fireEvent(103, String.valueOf(stFlag ? 1 : 0)); // Stereo
-        fireEvent(106, String.valueOf(locFlag ? 1 : 0)); // DX/Local
+        fireEvent(106, String.valueOf(locFlag ? 1 : 0)); // DX/Local (1=Loc, 0=DX)
     }
 
     private void handlePresetList(byte[] data) {
@@ -1405,6 +1405,88 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Log.d(TAG, "Broadcom setRdsMode invoked: AF=" + afOn + ", TA=" + taOn + " (Silently!)");
         } catch (Exception e) {
             Log.e(TAG, "Error invoking Broadcom setRdsMode.", e);
+        }
+    }
+
+    @Override
+    public void toggleRdsFeature(int type) {
+        try {
+            switch (type) {
+                case 0: // RDS Switch (Global)
+                    // Intentamos Broadcom primero para el switch global silente
+                    if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
+                        // Toggle logic: we need current state. Using a local flag or assuming swap.
+                        // Default to ON (1) if unknown for now, as RDS is almost always wanted.
+                        mBroadcomSetRdsMode.invoke(mFmReceiverService, 1, 0x0F, mIsAfEnabled ? 1 : 0, 10);
+                        Log.d(TAG, "Broadcom setRdsMode invoked for Global RDS Switch");
+                    }
+                    if (mTunerSetRdsSwitch != null && mTunerManager != null) {
+                        mTunerSetRdsSwitch.invoke(mTunerManager, 1); // 1 = On
+                        Log.d(TAG, "QFTunerManager.setRdsSwitch(1) invoked");
+                    }
+                    break;
+                case 1: // AF Switch
+                    boolean nextAfState = !mIsAfEnabled;
+                    mIsAfEnabled = nextAfState; // V4.6.1: Actualizar estado local ANTES
+                    if (mTunerSetRdsAF != null && mTunerManager != null) {
+                        try {
+                            mTunerSetRdsAF.invoke(mTunerManager);
+                            Log.d(TAG, "QFTunerManager.setRdsAFSwitch() invoked. AF now=" + nextAfState);
+                        } catch (Exception e) { e.printStackTrace(); }
+                    } else {
+                        // Fallback: Comando MCU directo 0x11
+                        byte newState = (byte) (nextAfState ? 1 : 0);
+                        sendCmd(SUB_RDS_AF, newState, (byte)0);
+                        Log.d(TAG, "MCU Fallback: SUB_RDS_AF (0x11) sent with state " + newState);
+                    }
+                    // Sincronizar con Broadcom (Silencioso)
+                    enableSilentlyRdsFeatures(nextAfState, mIsTaEnabled);
+                    break;
+                case 2: // TA Switch
+                    boolean nextTaState = !mIsTaEnabled;
+                    mIsTaEnabled = nextTaState; // V4.6.1: Actualizar estado local ANTES
+                    if (mTunerSetRdsTA != null && mTunerManager != null) {
+                        // V9.6: Si estamos buscando (bucle infinito detectado), forzamos una parada
+                        if (mIsScanning) {
+                            Log.w(TAG, "TA Toggle while SCANNING detected. Sending STOP SCAN instead.");
+                            if (mTunerStopScan != null) {
+                                try { mTunerStopScan.invoke(mTunerManager); } catch (Exception e) { e.printStackTrace(); }
+                            } else {
+                                sendCmd(SUB_AUTO_SCAN_STOP, (byte)0, (byte)0);
+                            }
+                        } else {
+                            try { mTunerSetRdsTA.invoke(mTunerManager); } catch (Exception e) { e.printStackTrace(); }
+                            Log.d(TAG, "QFTunerManager.setRdsTASwitch() invoked. TA now=" + nextTaState);
+                        }
+                    } else {
+                        // Fallback: Comando MCU directo 0x12
+                        if (mIsScanning) {
+                             sendCmd(SUB_AUTO_SCAN_STOP, (byte)0, (byte)0);
+                        } else {
+                            sendCmd(SUB_RDS_TA, (byte)0, (byte)0);
+                        }
+                    }
+                    // V4.6.1: Sincronizar con Broadcom (Silencioso) - Vital para que deje de interrumpir
+                    enableSilentlyRdsFeatures(mIsAfEnabled, nextTaState);
+                    break;
+                case 3: // DX/Local Toggle (V9.9)
+                    byte nextLocMode = mIsDxLocal ? (byte) 0 : (byte) 1; // Si es Local (1), pasar a DX (0)
+                    if (mTunerOnLoc != null && mTunerManager != null) {
+                        try {
+                            mTunerOnLoc.invoke(mTunerManager, nextLocMode);
+                            Log.d(TAG, "QFTunerManager.onLoc(" + nextLocMode + ") invoked");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    } else {
+                        // Fallback MCU: 0xA0 0x07 [mode] 0x00
+                        sendCmd(SUB_SWITCH_LOC, nextLocMode, (byte) 0);
+                    }
+                    break;
+
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error toggling RDS feature " + type, e);
         }
     }
 

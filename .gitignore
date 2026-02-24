@@ -1,16 +1,53 @@
+# ================================
+# OpenRadioFM .gitignore
+# Profesionalizado v4.6
+# ================================
+
+# === IDE / Editor ===
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.gradle/
+.idea/
+.vscode/
 .DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+*.swp
+*.swo
+*~
+
+# === Build outputs ===
+/build/
+/app/build/
+/captures/
+.externalNativeBuild/
+.cxx/
 local.properties
+
+# === Logs (build, debug, radio) ===
+*.log
+_BUILD_LOGS/
+_DOCS/logs/
+build_errors*.txt
+build_log*.txt
+compile_error*.log
+
+# === APKs y binarios compilados ===
+_RELEASES/
+*.apk
+*.aab
+
+# === Material de ingeniería inversa (no distribuible) ===
+radio_native_decompiled/
+
+# === Certificados de firma (SEGURIDAD) ===
+platform.pk8
+platform.x509.pem
+*.keystore
+*.jks
+
+# === Archivos temporales y personales ===
+*.lnk
+*.fav
+*copia*
 /recursos/
+
+# === Kotlin ===
+.kotlin/
