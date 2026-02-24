@@ -36,6 +36,14 @@
 
 ## 🔲 Sesión 25/Feb — Siguiente
 
+### Prioridad 0: Investigación RDS PI (identificación instantánea de emisoras)
+- [ ] Capturar logcat dirigido con emisora RDS activa (RNE, SER, COPE)
+- [ ] Localizar el paquete MCU que contiene datos RDS crudos (PI, no B1)
+- [ ] Investigar acceso al PI via `IFmReceiverService` por reflexión
+- [ ] Si se encuentra: diseñar función de extracción PI de ByteArray
+- [ ] Crear base de datos PI → nombre para emisoras España (~500 entradas)
+- [ ] Estructura PI español: `E` = España, 2º nibble = cobertura, 3-4 = red
+
 ### Prioridad 1: Completar migración RadioEngine
 - [ ] Migrar EQ/DSP al engine (cada motor sabe qué app de sonido abrir)
 - [ ] Migrar `initHiddenPlayer()` al engine MT8163 (ya lo hace `MT8163Engine.init()`)
