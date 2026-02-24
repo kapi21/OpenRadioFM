@@ -32,6 +32,10 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.hcn.autoradio.IRadioServiceAPI;
 import com.hcn.autoradio.IRadioCallBack;
 import com.example.openradiofm.data.source.HiddenRadioPlayer;
+import com.example.openradiofm.data.source.RadioEngine;
+import com.example.openradiofm.data.source.RadioEngineCallback;
+import com.example.openradiofm.data.source.K706Engine;
+import com.example.openradiofm.data.source.K706RadioManager;
 import com.example.openradiofm.R;
 
 /**
@@ -92,6 +96,9 @@ public class MainActivity extends AppCompatActivity {
     com.example.openradiofm.data.repository.RadioRepository mRepository;
     android.content.SharedPreferences mPrefs;
     HiddenRadioPlayer mHiddenPlayer;
+
+    // V5.0: Capa de abstracción de hardware
+    RadioEngine mEngine;
 
     // V3.0: Caché de logos por banda
     int mLastFreq = -1;
@@ -473,6 +480,47 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    // V5.0: Callback unificado del RadioEngine para actualizar iconos RDS
+    private final RadioEngineCallback mEngineCallback = new RadioEngineCallback() {
+        @Override public void onFrequencyChanged(int freqKhz) {
+            runOnUiThread(() -> updateFrequencyDisplay(freqKhz));
+        }
+        @Override public void onBandChanged(int band) {
+            runOnUiThread(() -> { mCurrentBand = band; refreshPresetButtons(); });
+        }
+        @Override public void onStereoChanged(boolean stereo) {
+            runOnUiThread(() -> { if (ivStereoIcon != null) ivStereoIcon.setVisibility(stereo ? android.view.View.VISIBLE : android.view.View.GONE); });
+        }
+        @Override public void onRdsName(String name) {
+            runOnUiThread(() -> { if (tvRdsName != null) tvRdsName.setText(name); });
+        }
+        @Override public void onRdsText(String text) {
+            runOnUiThread(() -> { if (tvRdsInfo != null) tvRdsInfo.setText(text); });
+        }
+        @Override public void onRdsPty(String pty) {
+            runOnUiThread(() -> {
+                mCurrentPty = pty;
+                if (tvPty != null) tvPty.setText(pty != null ? pty : "");
+            });
+        }
+        @Override public void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled) {
+            runOnUiThread(() -> {
+                if (ivAfIcon != null) ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
+                if (ivTaIcon != null) ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
+                Log.d(TAG, "Engine RDS Status: AF=" + afEnabled + " TA=" + taEnabled);
+            });
+        }
+        @Override public void onDxLocalChanged(boolean isLocal) {
+            runOnUiThread(() -> { if (btnLocDx != null) btnLocDx.setAlpha(isLocal ? 0.5f : 1.0f); });
+        }
+        @Override public void onRawEvent(int code, String data) {
+            // Forward to engineering dialog if open
+            if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
+                mEngineeringDialog.addRdsLog(data);
+            }
+        }
+    };
+
     private int mTestClickCount = 0;
     private long mTestStartTime = 0;
 
@@ -598,48 +646,26 @@ public class MainActivity extends AppCompatActivity {
         ivTpIcon = findViewById(R.id.ivTpIcon);
         
         // V9.9: RDS Icons must be dimmed by default, not gone.
+        // V5.0: RDS Icons - Ahora usan mEngine (sin bifurcación por modo)
         if (ivAfIcon != null) {
             ivAfIcon.setAlpha(0.2f);
             ivAfIcon.setOnClickListener(v -> {
                 animateButton(ivAfIcon);
-                if (mMode == FmMode.FM_MT8163 && mHiddenPlayer != null) {
-                    // V4.6: MT8163 usa HiddenRadioPlayer directamente
-                    mHiddenPlayer.toggleRdsFeature(1);
-                } else if (mRadioService != null) {
-                    try {
-                        ivAfIcon.setAlpha(ivAfIcon.getAlpha() > 0.5f ? 0.5f : 0.8f);
-                        mRadioService.toggleRdsFeature(1); // 1 = AF
-                    } catch (RemoteException e) { e.printStackTrace(); }
-                }
+                if (mEngine != null) mEngine.toggleRdsFeature(1); // AF
             });
         }
         if (ivTaIcon != null) {
             ivTaIcon.setAlpha(0.2f);
             ivTaIcon.setOnClickListener(v -> {
                 animateButton(ivTaIcon);
-                if (mMode == FmMode.FM_MT8163 && mHiddenPlayer != null) {
-                    // V4.6: MT8163 usa HiddenRadioPlayer directamente
-                    mHiddenPlayer.toggleRdsFeature(2);
-                } else if (mRadioService != null) {
-                    try {
-                        ivTaIcon.setAlpha(ivTaIcon.getAlpha() > 0.5f ? 0.5f : 0.8f);
-                        mRadioService.toggleRdsFeature(2); // 2 = TA
-                    } catch (RemoteException e) { e.printStackTrace(); }
-                }
+                if (mEngine != null) mEngine.toggleRdsFeature(2); // TA
             });
         }
         if (ivTpIcon != null) {
             ivTpIcon.setAlpha(0.2f);
-            // TP is usually indicator-only in many regions, but we can make it toggle global RDS
             ivTpIcon.setOnClickListener(v -> {
                 animateButton(ivTpIcon);
-                if (mMode == FmMode.FM_MT8163 && mHiddenPlayer != null) {
-                    mHiddenPlayer.toggleRdsFeature(0); // 0 = RDS global
-                } else if (mRadioService != null) {
-                    try {
-                        mRadioService.toggleRdsFeature(0); // 0 = RDS Switch
-                    } catch (RemoteException e) { e.printStackTrace(); }
-                }
+                if (mEngine != null) mEngine.toggleRdsFeature(0); // RDS global
             });
         }
 
@@ -1578,24 +1604,31 @@ public class MainActivity extends AppCompatActivity {
         // V6.0: K706 Direct Connection
         if (mMode == FmMode.FM_K706) {
             try {
-                mRadioService = new com.example.openradiofm.data.source.K706RadioManager(this);
-                mRadioService.registerRadioCallback(mCallback);
-                mCurrentBand = mRadioService.getCurrentBand();
-                startStatusPolling();
-                showToast("Motor K706 Activado (Directo)");
-                
-                // V6.1: Restore state to avoid reset to 87.5 on rotation/layout change
-                if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
-                     int safeFreq = (mLastFreq > 0) ? mLastFreq : 87500; // Default if first run
-                     // If band is unknown or 0 (FM1), keep it.
-                     ((com.example.openradiofm.data.source.K706RadioManager)mRadioService).syncState(safeFreq, mCurrentBand);
-                }
+                // V5.0: Usar RadioEngine como capa de abstracción
+                K706Engine k706Engine = new K706Engine();
+                if (k706Engine.init(this)) {
+                    mEngine = k706Engine;
+                    mRadioService = k706Engine.asAidl(); // Compatibilidad temporal con execRemote()
+                    mRadioService.registerRadioCallback(mCallback);
 
-                // Init UI immediatelly
-                refreshPresetsCache();
-                refreshPresetButtons();
-                refreshRadioStatus();
-                return;
+                    // V5.0: Registrar callback unificado para iconos AF/TA
+                    mEngine.setCallback(mEngineCallback);
+
+                    mCurrentBand = mEngine.getCurrentBand();
+                    startStatusPolling();
+                    showToast("Motor K706 Activado (Engine)");
+
+                    // V6.1: Restore state
+                    if (mRadioService instanceof K706RadioManager) {
+                        int safeFreq = (mLastFreq > 0) ? mLastFreq : 87500;
+                        ((K706RadioManager) mRadioService).syncState(safeFreq, mCurrentBand);
+                    }
+
+                    refreshPresetsCache();
+                    refreshPresetButtons();
+                    refreshRadioStatus();
+                    return;
+                }
             } catch (Exception e) {
                 showToast("Error iniciando K706: " + e.getMessage());
                 // Fallback a detección de servicio si falla la instancia local
