@@ -1,7 +1,7 @@
 package com.example.openradiofm.data.source;
 
 /**
- * V5.0: Callbacks del motor de radio hacia la UI.
+ * V5.1: Callbacks del motor de radio hacia la UI.
  *
  * Todas las implementaciones de RadioEngine notifican cambios
  * a través de esta interfaz. MainActivity la implementa para
@@ -29,6 +29,9 @@ public interface RadioEngineCallback {
 
     /** RDS: Estado AF/TA actualizado */
     void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled);
+
+    /** RDS: Program Identification (PI) Code */
+    void onRdsPi(String piCode);
 
     /** DX/Local cambiado */
     void onDxLocalChanged(boolean isLocal);

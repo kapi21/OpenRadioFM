@@ -205,6 +205,25 @@ public class MT8163Engine implements RadioEngine {
     }
 
     @Override
+    public void openEq(Context context) {
+        // En MT8163, el ecualizador se suele lanzar con un código de tecla MCU específico
+        sendMcuKey(0x134); // Keycode 308 for DSP in MT8163
+    }
+
+    private void sendMcuKey(int key) {
+        try {
+            Class<?> mcuClass = Class.forName("android.carsource.McuManager");
+            java.lang.reflect.Method getInstance = mcuClass.getMethod("getsInstance");
+            Object instance = getInstance.invoke(null);
+            java.lang.reflect.Method injectKey = mcuClass.getMethod("injectKeyEventTimeout", int.class, int.class);
+            injectKey.invoke(instance, key, 0x32);
+            Log.d(TAG, "MCU Key injected: " + key);
+        } catch (Exception e) {
+            Log.e(TAG, "Error injecting MCU key: " + e.getMessage());
+        }
+    }
+
+    @Override
     public boolean requestPlayAudio() {
         if (mService == null) return false;
         try { return mService.requestPlayAudio(); } catch (RemoteException e) { return false; }

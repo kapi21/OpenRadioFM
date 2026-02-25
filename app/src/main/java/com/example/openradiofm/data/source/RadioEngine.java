@@ -32,6 +32,7 @@ public interface RadioEngine {
     boolean isStereo();
     void setStereo(boolean enable);
     void setMute(boolean mute);
+    void openEq(Context context);
     boolean requestPlayAudio();
 
     // === RDS ===

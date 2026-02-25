@@ -141,6 +141,25 @@ public class K706Engine implements RadioEngine {
     }
 
     @Override
+    public void openEq(Context context) {
+        try {
+            android.content.Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("com.qf.soundeffect");
+            if (launchIntent != null) {
+                launchIntent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(launchIntent);
+            } else {
+                // Fallback: abrir ajustes de sonido de Android
+                android.content.Intent intent = new android.content.Intent("android.intent.action.MAIN");
+                intent.setClassName("com.android.settings", "com.android.settings.Settings$SoundSettingsActivity");
+                intent.setFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(intent);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "No se pudo abrir el EQ", e);
+        }
+    }
+
+    @Override
     public boolean requestPlayAudio() {
         if (mManager == null) return false;
         try { return mManager.requestPlayAudio(); } catch (RemoteException e) { return false; }
@@ -226,15 +245,21 @@ public class K706Engine implements RadioEngine {
             case 106: // DX/Local changed
                 mCallback.onDxLocalChanged("1".equals(data));
                 break;
-            case 107: // AF status
+            case 107: // PI Code Detected
+                mCallback.onRdsPi(data);
+                break;
+            case 111: // AF/TP status indicators
                 if (data != null && data.startsWith("AF:")) {
                     mAfEnabled = data.contains("1");
                     mCallback.onRdsAfTaStatus(mAfEnabled, mTaEnabled);
                 }
                 break;
-            case 108: // TA status
-                if (data != null && data.startsWith("TA:")) {
-                    mTaEnabled = data.contains("1");
+            case 112: // TA switch status from B3
+                if (data != null && data.contains(":1")) {
+                    mTaEnabled = true;
+                    mCallback.onRdsAfTaStatus(mAfEnabled, mTaEnabled);
+                } else if (data != null && data.contains(":0")) {
+                    mTaEnabled = false;
                     mCallback.onRdsAfTaStatus(mAfEnabled, mTaEnabled);
                 }
                 break;

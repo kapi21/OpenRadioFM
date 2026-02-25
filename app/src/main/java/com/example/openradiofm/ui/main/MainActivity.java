@@ -100,6 +100,10 @@ public class MainActivity extends AppCompatActivity {
     // V5.0: Capa de abstracción de hardware
     RadioEngine mEngine;
 
+    // V11: RDS PI Database Identification
+    private com.example.openradiofm.data.source.RdsDatabase mRdsDb;
+    private String mCurrentPi = null;
+
     // V3.0: Caché de logos por banda
     int mLastFreq = -1;
     boolean mHasRdsLock = false;
@@ -483,6 +487,7 @@ public class MainActivity extends AppCompatActivity {
     // V5.0: Callback unificado del RadioEngine para actualizar iconos RDS
     private final RadioEngineCallback mEngineCallback = new RadioEngineCallback() {
         @Override public void onFrequencyChanged(int freqKhz) {
+            mCurrentPi = null; // Reset PI on tune
             runOnUiThread(() -> updateFrequencyDisplay(freqKhz));
         }
         @Override public void onBandChanged(int band) {
@@ -492,7 +497,15 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> { if (ivStereoIcon != null) ivStereoIcon.setVisibility(stereo ? android.view.View.VISIBLE : android.view.View.GONE); });
         }
         @Override public void onRdsName(String name) {
-            runOnUiThread(() -> { if (tvRdsName != null) tvRdsName.setText(name); });
+            runOnUiThread(() -> { 
+                if (tvRdsName != null && name != null && !name.isEmpty()) {
+                    tvRdsName.setText(name);
+                    // V11: Aprendizaje automático
+                    if (mCurrentPi != null && mRdsDb != null) {
+                        mRdsDb.savePiName(mCurrentPi, name);
+                    }
+                }
+            });
         }
         @Override public void onRdsText(String text) {
             runOnUiThread(() -> { if (tvRdsInfo != null) tvRdsInfo.setText(text); });
@@ -508,6 +521,27 @@ public class MainActivity extends AppCompatActivity {
                 if (ivAfIcon != null) ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
                 if (ivTaIcon != null) ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
                 Log.d(TAG, "Engine RDS Status: AF=" + afEnabled + " TA=" + taEnabled);
+            });
+        }
+        @Override public void onRdsPi(String piCode) {
+            mCurrentPi = piCode;
+            runOnUiThread(() -> {
+                Log.d(TAG, "RDS PI Code received from engine: " + piCode);
+                
+                // V11: Identificación instantánea
+                if (mRdsDb != null) {
+                    String savedName = mRdsDb.getNameForPi(piCode);
+                    if (savedName != null && tvRdsName != null) {
+                        tvRdsName.setText(savedName);
+                        tvRdsName.setVisibility(View.VISIBLE);
+                        Log.d(TAG, "Instant Identification via PI: " + savedName);
+                    }
+                }
+
+                // V11: Posibilidad de mostrar el código PI en Engineering Dialog si está abierto
+                if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
+                    mEngineeringDialog.addRdsLog("PI: " + piCode);
+                }
             });
         }
         @Override public void onDxLocalChanged(boolean isLocal) {
@@ -604,6 +638,9 @@ public class MainActivity extends AppCompatActivity {
         // Determinar modo de funcionamiento (FM completo vs básico) antes de crear el
         // repositorio.
         mMode = detectMode();
+
+        // V11: Database RDS PI
+        mRdsDb = new com.example.openradiofm.data.source.RdsDatabase(this);
         Log.d(TAG, "Modo de funcionamiento: " + mMode);
 
         if (mMode == FmMode.FM_BASICO) {
@@ -757,29 +794,15 @@ public class MainActivity extends AppCompatActivity {
      * Configura los botones de control (EQ, Mute, Test, AutoScan, LOC/DX).
      */
     private void setupControlButtons() {
-        // EQ Logic (V9.3: Direct DSP Intent)
+        // EQ Logic (V10: Delegated to RadioEngine)
         ImageButton btnEq = findViewById(R.id.btnSettings);
         if (btnEq != null) {
             btnEq.setOnClickListener(v -> {
-                if (mMode == FmMode.FM_MT8163) {
-                    sendMcuKey(0x134); // Keycode 308 for DSP in MT8163 (from v4.5)
+                if (mEngine != null) {
+                    mEngine.openEq(MainActivity.this);
                 } else {
-                    try {
-                        // V9.4d: Abrir QF Sound Effect del K706 directamente
-                        Intent launchIntent = getPackageManager().getLaunchIntentForPackage("com.qf.soundeffect");
-                        if (launchIntent != null) {
-                            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(launchIntent);
-                        } else {
-                            // Fallback: abrir ajustes de sonido de Android
-                            Intent intent = new Intent("android.intent.action.MAIN");
-                            intent.setClassName("com.android.settings", "com.android.settings.Settings$SoundSettingsActivity");
-                            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(intent);
-                        }
-                    } catch (Exception e) {
-                        showToast("No se pudo abrir el DSP");
-                    }
+                    // Fallback para modo básico o inicio temprano
+                    showToast("Ecualizador no disponible (Motor no iniciado)");
                 }
             });
 

@@ -810,6 +810,35 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 }
             }
 
+            // V7.2c: Registrar ITunerTool para capturar el código PI
+            try {
+                Class<?> itunerToolClass = Class.forName("com.qf.clientsdk.ITunerTool");
+                Method setTunerTool = clazz.getMethod("setTunerTool", itunerToolClass);
+                
+                Object proxyTunerTool = Proxy.newProxyInstance(
+                    itunerToolClass.getClassLoader(),
+                    new Class<?>[] { itunerToolClass },
+                    new InvocationHandler() {
+                        @Override
+                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                            if (method.getName().equals("onCurrentFrequencyPICodeChange")) {
+                                if (args != null && args.length > 0) {
+                                    int pi = (Integer) args[0];
+                                    Log.d(TAG, "PI Code Detected via ITunerTool: 0x" + Integer.toHexString(pi).toUpperCase());
+                                    // Notificamos como evento 107 (PI Code)
+                                    fireEvent(107, String.valueOf(pi));
+                                }
+                            }
+                            return null;
+                        }
+                    });
+                
+                setTunerTool.invoke(mTunerManager, proxyTunerTool);
+                Log.d(TAG, "  → ITunerTool Listener (PI Capture): REGISTERED");
+            } catch (Exception e) {
+                Log.w(TAG, "  → setTunerTool NOT AVAILABLE or Proxy error: " + e.getMessage());
+            }
+
         } catch (ClassNotFoundException e) {
             Log.w(TAG, "QFTunerManager class not found - sendCmd MCU directo será el único canal");
         } catch (Exception e) {
