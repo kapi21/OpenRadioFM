@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenRadioFM v4.6 Beta Integration</string>
+    
+    <!-- Premium Menu Strings -->
+    <string name="premium_customization">Преміум Кастомізація</string>
+    <string name="theme_colors">Кольори Теми</string>
+    <string name="typography">Типографіка</string>
+    <string name="background_mode">Режим Фону</string>
+    <string name="accent_color">Акцентний Колір</string>
+    <string name="select_typography">Вибрати Типографіку</string>
+    <string name="select_bg_mode">Режим Фону</string>
+    <string name="close">Закрити</string>
+    <string name="select_skin">🎨 Вибрати Тему</string>
+    <string name="select_font">🔤 Вибрати Типографіку</string>
+    <string name="font_applied">Шрифт застосовано</string>
+    <string name="bg_mode_updated">Режим фону оновлено</string>
+    
+    <!-- Background Modes -->
+    <string name="bg_pure_black">Чистий Чорний</string>
+    <string name="bg_fixed_image">Зображення background.png</string>
+    <string name="bg_dynamic_logo">Логотип Станції (Динамічний)</string>
+
+    <!-- Font Names -->
+    <string name="font_default">За замовчуванням (Система)</string>
+    <string name="font_bebas">Роботизований (Bebas)</string>
+    <string name="font_digital">Цифровий (LED)</string>
+    <string name="font_modern">Сучасний (Inter)</string>
+    <string name="font_orbitron">Футуристичний (Orbitron)</string>
+    <string name="font_formula1">Гонки (Formula 1)</string>
+    
+    <!-- V4.0: App Options -->
+    <string name="app_options">Опції Додатка</string>
+    <string name="night_mode_auto">Автоматичний Нічний Режим</string>
+    <string name="save_history">Зберегти Історію Станцій</string>
+    <string name="enable_gestures_beta">Увімкнути Жести (Swipe) (beta)</string>
+    <string name="online_logos">Логотипи Онлайн</string>
+    
+    <!-- V4.0: Feedback Messages -->
+    <string name="night_mode_enabled">✅ Автоматичний нічний режим увімкнено</string>
+    <string name="night_mode_disabled">❌ Автоматичний нічний режим вимкнено</string>
+    <string name="history_enabled">✅ Історію станцій увімкнено</string>
+    <string name="history_disabled">❌ Історію станцій вимкнено</string>
+    <string name="gestures_enabled">✅ Жести гортання увімкнено</string>
+    <string name="gestures_disabled">❌ Жести гортання вимкнено</string>
+    <string name="logos_online_enabled">✅ Онлайн логотипи увімкнено</string>
+    <string name="logos_online_disabled">❌ Онлайн логотипи вимкнено</string>
+    <string name="night_mode_manual_blocked">Вимкніть автоматичний нічний режим, щоб вибрати тему вручну</string>
+    
+    <!-- V4.0: Save/Load Favorites -->
+    <string name="save_load_favorites">💾 Зберегти/Завантажити Вибране</string>
+    <string name="save_favorites">💾 Зберегти Вибране</string>
+    <string name="load_favorites">📂 Завантажити Вибране</string>
+    <string name="select_favorites_file">📂 Вибрати файл вибраного</string>
+    <string name="cancel">Скасувати</string>
+    <string name="favorites_saved">✅ Вибране збережено: %s</string>
+    <string name="favorites_loaded" formatted="false">✅ %d вибраних завантажено з %s</string>
+    <string name="error_saving_favorites">❌ Помилка при збереженні вибраного: %s</string>
+    <string name="error_loading_favorites">❌ Помилка при завантаженні вибраного: %s</string>
+    <string name="folder_not_found">❌ Папку RadioLogos не знайдено</string>
+    <string name="no_favorites_files">❌ Файлів вибраного не знайдено</string>
+    
+    <!-- V4.0: Android Settings -->
+    <string name="error_opening_settings">Не вдалося відкрити Налаштування</string>
+    
+    <!-- V4.0: History -->
+    <string name="history_empty">Історія порожня</string>
+    <string name="station_history">📜 Історія Станцій</string>
+    
+    <!-- V4.0: Language Selector -->
+    <string name="app_language">Мова Додатка</string>
+    <string name="select_language">Вибрати Мову</string>
+    <string name="language_spanish">Іспанська</string>
+    <string name="language_english">Англійська</string>
+    <string name="language_russian">Російська</string>
+    <string name="language_romanian">Румунська</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_changed">✅ Мову змінено на %s</string>
+    <string name="about_openradio">ℹ️ Про OpenRadioFM</string>
+    <string name="touch_to_change">Торкніться, щоб змінити</string>
+
+    <!-- V4.3: Hardware Settings -->
+    <string name="hardware_settings">⚙️ Налаштування Обладнання</string>
+    <string name="enable_am_band">Увімкнути АМ Діапазон</string>
+    <string name="radio_engine">Двигун Радіо</string>
+    <string name="engine_auto">Автоматично (Рекомендовано)</string>
+    <string name="engine_hcn">HCN (Eonon/Xtrons)</string>
+    <string name="engine_mtk">Mediatek (MtkRadio)</string>
+    <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_standard">Стандартний Android</string>
+    <string name="am_band_enabled">✅ АМ діапазон увімкнено</string>
+    <string name="am_band_disabled">❌ АМ діапазон вимкнено</string>
+    <string name="engine_changed">✅ Двигун радіо змінено на %s</string>
+
+    <!-- V4.5: Night Mode Schedule -->
+    <string name="night_schedule">Графік Нічного Режиму</string>
+    <string name="night_start">Початок</string>
+    <string name="night_end">Кінець</string>
+    <string name="night_schedule_updated">✅ Графік оновлено: %1$s - %2$s</string>
+
+    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    <string name="pty_none">Без PTY</string>
+    <string name="pty_news">Новини</string>
+    <string name="pty_current_affairs">Поточні події</string>
+    <string name="pty_information">Інформація</string>
+    <string name="pty_sport">Спорт</string>
+    <string name="pty_education">Освіта</string>
+    <string name="pty_drama">Драма</string>
+    <string name="pty_culture">Культура</string>
+    <string name="pty_science">Наука</string>
+    <string name="pty_varied">Різне</string>
+    <string name="pty_pop">Поп-музика</string>
+    <string name="pty_rock">Рок-музика</string>
+    <string name="pty_easy_listening">Легка музика</string>
+    <string name="pty_light_classical">Легка класика</string>
+    <string name="pty_serious_classical">Серйозна класика</string>
+    <string name="pty_other_music">Інша музика</string>
+    <string name="pty_weather">Погода</string>
+    <string name="pty_finance">Фінанси</string>
+    <string name="pty_children">Дитячі програми</string>
+    <string name="pty_social">Соціальні питання</string>
+    <string name="pty_religion">Релігія</string>
+    <string name="pty_phone_in">Прямий ефір</string>
+    <string name="pty_travel">Подорожі</string>
+    <string name="pty_leisure">Дозвілля</string>
+    <string name="pty_jazz">Джаз</string>
+    <string name="pty_country">Кантрі</string>
+    <string name="pty_national">Національна музика</string>
+    <string name="pty_oldies">Ретро</string>
+    <string name="pty_folk">Фолк</string>
+    <string name="pty_documentary">Документалістика</string>
+    <string name="pty_alarm_test">Тест Тривоги</string>
+    <string name="pty_alarm">Тривога</string>
+</resources>

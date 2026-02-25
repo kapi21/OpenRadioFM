@@ -62,11 +62,10 @@ public class MT8163Engine implements RadioEngine {
 
         // 1. Conectar con servicio HCN del sistema (tune, seek, band)
         try {
-            Intent intent = new Intent();
-            intent.setComponent(new ComponentName(
-                "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE"));
+            Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
+            intent.setPackage("com.hcn.autoradio");
             context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-            Log.d(TAG, "Binding al servicio HCN...");
+            Log.d(TAG, "Binding al servicio HCN via Action...");
         } catch (Exception e) {
             Log.e(TAG, "No se pudo conectar al servicio HCN: " + e.getMessage());
         }
@@ -94,8 +93,8 @@ public class MT8163Engine implements RadioEngine {
             }
 
             @Override
-            public void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled) {
-                if (mCallback != null) mCallback.onRdsAfTaStatus(afEnabled, taEnabled);
+            public void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
+                if (mCallback != null) mCallback.onRdsStatus(afEnabled, taEnabled, tpEnabled);
             }
         });
 
@@ -244,6 +243,11 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public boolean isTaEnabled() {
         return mHiddenPlayer != null && mHiddenPlayer.isTaEnabled();
+    }
+
+    @Override
+    public boolean isTpEnabled() {
+        return mHiddenPlayer != null && mHiddenPlayer.isTpEnabled();
     }
 
     // === DX/Local (via AIDL) ===

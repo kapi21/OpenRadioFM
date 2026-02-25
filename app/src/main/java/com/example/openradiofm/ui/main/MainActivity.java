@@ -36,6 +36,7 @@ import com.example.openradiofm.data.source.RadioEngine;
 import com.example.openradiofm.data.source.RadioEngineCallback;
 import com.example.openradiofm.data.source.K706Engine;
 import com.example.openradiofm.data.source.K706RadioManager;
+import com.example.openradiofm.data.source.QS6Engine; // V12.0
 import com.example.openradiofm.R;
 
 /**
@@ -89,7 +90,8 @@ public class MainActivity extends AppCompatActivity {
     private enum FmMode {
         FM_MT8163, // Ahora usamos FM_MT8163 en lugar de FM_COMPLETO para claridad
         FM_BASICO,
-        FM_K706
+        FM_K706,
+        FM_QS6 // V12.0: QS6 G5 (NWD)
     }
 
     IRadioServiceAPI mRadioService;
@@ -459,11 +461,12 @@ public class MainActivity extends AppCompatActivity {
                 updatePtyUI(pty);
             });
         }
-        @Override public void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled) {
+        @Override public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
             runOnUiThread(() -> {
                 if (ivAfIcon != null) ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
                 if (ivTaIcon != null) ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
-                Log.d(TAG, "Engine RDS Status: AF=" + afEnabled + " TA=" + taEnabled);
+                if (ivTpIcon != null) ivTpIcon.setAlpha(tpEnabled ? 1.0f : 0.2f);
+                Log.d(TAG, "Engine RDS Status: AF=" + afEnabled + " TA=" + taEnabled + " TP=" + tpEnabled);
             });
         }
         @Override public void onRdsPi(String piCode) {
@@ -995,17 +998,22 @@ public class MainActivity extends AppCompatActivity {
      * crashes.
      */
     private FmMode detectMode() {
-        // 1. Prioridad: K706 (mcu_service nativo)
+        // 1. QS6 G5 (NWD) - New Hardware
+        if (isQS6()) {
+            return FmMode.FM_QS6;
+        }
+
+        // 2. Prioridad: K706 (mcu_service nativo)
         if (isK706()) {
             return FmMode.FM_K706;
         }
 
-        // 2. Prioridad: MT8163 (Servicio de radio del sistema)
+        // 3. Prioridad: MT8163 (Servicio de radio del sistema)
         if (hasCarRadioService()) {
             return FmMode.FM_MT8163;
         }
         
-        // 3. Fallback: Modo básico
+        // 4. Fallback: Modo básico
         return FmMode.FM_BASICO;
     }
 
@@ -1092,11 +1100,23 @@ public class MainActivity extends AppCompatActivity {
                 Log.d(TAG, "K706 Detectado: mcu_service encontrado.");
                 return true;
             }
-            // Fallback: Check system property usually present on these units
-            /*
-            String platform = android.os.SystemProperties.get("ro.board.platform", "");
-            if (platform.contains("mt8163")) return true;
-            */
+        } catch (Exception e) {}
+        return false;
+    }
+
+    /**
+     * V12.0: Detecta si es una plataforma NWD (QS6 G5).
+     */
+    private boolean isQS6() {
+        try {
+            android.content.pm.PackageManager pm = getPackageManager();
+            android.content.Intent intent = new android.content.Intent("com.nwd.radio.service.ACTION_RADIO_SERVICE");
+            intent.setPackage("com.nwd.radio.service");
+            java.util.List<android.content.pm.ResolveInfo> list = pm.queryIntentServices(intent, 0);
+            if (list != null && !list.isEmpty()) {
+                Log.d(TAG, "QS6 G5 Detectado: Servicio NWD encontrado.");
+                return true;
+            }
         } catch (Exception e) {}
         return false;
     }
@@ -1562,6 +1582,48 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        if (mMode == FmMode.FM_QS6) {
+            try {
+                QS6Engine qs6Engine = new QS6Engine();
+                if (qs6Engine.init(this)) {
+                    mEngine = qs6Engine;
+                    mEngine.setCallback(mEngineCallback);
+
+                    mCurrentBand = mEngine.getCurrentBand();
+                    startStatusPolling();
+                    showToast("Motor QS6 Activado (Engine)");
+
+                    refreshPresetsCache();
+                    refreshPresetButtons();
+                    refreshRadioStatus();
+                    return;
+                }
+            } catch (Exception e) {
+                showToast("Error iniciando QS6: " + e.getMessage());
+            }
+        }
+
+        if (mMode == FmMode.FM_MT8163) {
+            try {
+                com.example.openradiofm.data.source.MT8163Engine mt8163Engine = new com.example.openradiofm.data.source.MT8163Engine();
+                if (mt8163Engine.init(this)) {
+                    mEngine = mt8163Engine;
+                    mEngine.setCallback(mEngineCallback);
+
+                    mCurrentBand = mEngine.getCurrentBand();
+                    startStatusPolling();
+                    showToast("Motor MT8163 Activado (Engine)");
+
+                    refreshPresetsCache();
+                    refreshPresetButtons();
+                    refreshRadioStatus();
+                    return;
+                }
+            } catch (Exception e) {
+                showToast("Error iniciando MT8163: " + e.getMessage());
+            }
+        }
+
         int engineIdx = mPrefs.getInt("pref_radio_engine", 0);
 
         String[][] allProviders = {
@@ -1619,6 +1681,8 @@ public class MainActivity extends AppCompatActivity {
             return;
 
         int freq = mEngine.getCurrentFreq();
+        if (freq <= 0) return; // V11.7: No actualizar si el servicio aún no reporta frecuencia
+
         int band = mEngine.getCurrentBand();
         boolean isStereo = mEngine.isStereo();
         boolean isLocal = mEngine.isDxLocal();
@@ -2208,6 +2272,7 @@ public class MainActivity extends AppCompatActivity {
 
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
     private void updateFrequencyDisplay(int freq) {
+        if (freq <= 0) return; // V11.7: Evitar mostrar 00.0/0
         if (tvFrequency != null) {
             if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
                 tvFrequency.setText(String.valueOf(freq));
@@ -2435,16 +2500,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     // V4.2: New Language Selector to ensure correct preference key usage
+    // V4.2: New Language Selector and V12: Romanian/Ukrainian
     private void showNewLanguageSelector() {
         String[] languages = { "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)", "Português (PT)",
-                "Italiano (IT)", "Русский (RU)" };
-        final String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru" };
+                "Italiano (IT)", "Русский (RU)", "Română (RO)", "Українська (UK)", "Srpski (SR)" };
+        final String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr" };
 
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
                 .setTitle(R.string.select_language)
                 .setItems(languages, (d, w) -> {
                     if (w < codes.length) {
                         mPrefs.edit().putString("pref_app_language", codes[w]).apply();
+                        mPrefs.edit().putString("app_language", codes[w]).apply(); // Sync both keys
                         // Recreate activity to apply new context
                         recreate();
                     }
@@ -3139,10 +3206,13 @@ public class MainActivity extends AppCompatActivity {
         String[] languages = {
                 getString(R.string.language_spanish),
                 getString(R.string.language_english),
-                getString(R.string.language_russian)
+                getString(R.string.language_russian),
+                getString(R.string.language_romanian),
+                getString(R.string.language_ukrainian),
+                getString(R.string.language_serbian)
         };
 
-        String[] languageCodes = { "es", "en", "ru" };
+        String[] languageCodes = { "es", "en", "ru", "ro", "uk", "sr" };
         String currentLang = mPrefs.getString("app_language", "es");
 
         int selectedIndex = 0;
@@ -3185,6 +3255,15 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case "ru":
                 langName = getString(R.string.language_russian);
+                break;
+            case "ro":
+                langName = getString(R.string.language_romanian);
+                break;
+            case "uk":
+                langName = getString(R.string.language_ukrainian);
+                break;
+            case "sr":
+                langName = getString(R.string.language_serbian);
                 break;
             default:
                 langName = getString(R.string.language_spanish);

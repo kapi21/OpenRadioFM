@@ -190,6 +190,11 @@ public class K706Engine implements RadioEngine {
         return mTaEnabled;
     }
 
+    @Override
+    public boolean isTpEnabled() {
+        return false; // K706 doesn't report TP yet
+    }
+
     // === DX/Local ===
 
     @Override
@@ -258,16 +263,16 @@ public class K706Engine implements RadioEngine {
             case 111: // AF/TP status indicators
                 if (data != null && data.startsWith("AF:")) {
                     mAfEnabled = data.contains("1");
-                    mCallback.onRdsAfTaStatus(mAfEnabled, mTaEnabled);
+                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, false);
                 }
                 break;
             case 112: // TA switch status from B3
                 if (data != null && data.contains(":1")) {
                     mTaEnabled = true;
-                    mCallback.onRdsAfTaStatus(mAfEnabled, mTaEnabled);
+                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, false);
                 } else if (data != null && data.contains(":0")) {
                     mTaEnabled = false;
-                    mCallback.onRdsAfTaStatus(mAfEnabled, mTaEnabled);
+                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, false);
                 }
                 break;
             default:

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">OpenRadioFM v4.6 Beta Integration</string>
+    
+    <!-- Premium Menu Strings -->
+    <string name="premium_customization">Personalizare Premium</string>
+    <string name="theme_colors">Culori Temă</string>
+    <string name="typography">Tipografie</string>
+    <string name="background_mode">Mod Fundal</string>
+    <string name="accent_color">Culoare Accent</string>
+    <string name="select_typography">Selectează Tipografia</string>
+    <string name="select_bg_mode">Mod Fundal</string>
+    <string name="close">Închide</string>
+    <string name="select_skin">🎨 Selectează Tema</string>
+    <string name="select_font">🔤 Selectează Tipografia</string>
+    <string name="font_applied">Font aplicat</string>
+    <string name="bg_mode_updated">Mod fundal actualizat</string>
+    
+    <!-- Background Modes -->
+    <string name="bg_pure_black">Negru Pur</string>
+    <string name="bg_fixed_image">Imagine background.png</string>
+    <string name="bg_dynamic_logo">Logo Stație (Dinamic)</string>
+
+    <!-- Font Names -->
+    <string name="font_default">Implicit (Sistem)</string>
+    <string name="font_bebas">Robotic (Bebas)</string>
+    <string name="font_digital">Digital (LED)</string>
+    <string name="font_modern">Modern (Inter)</string>
+    <string name="font_orbitron">Futurist (Orbitron)</string>
+    <string name="font_formula1">Curse (Formula 1)</string>
+    
+    <!-- V4.0: App Options -->
+    <string name="app_options">Opțiuni Aplicație</string>
+    <string name="night_mode_auto">Mod Noapte Automat</string>
+    <string name="save_history">Salvează Istoricul Stațiilor</string>
+    <string name="enable_gestures_beta">Activează Geste (Swipe) (beta)</string>
+    <string name="online_logos">Logo-uri Online</string>
+    
+    <!-- V4.0: Feedback Messages -->
+    <string name="night_mode_enabled">✅ Mod Noapte Automat activat</string>
+    <string name="night_mode_disabled">❌ Mod Noapte Automat dezactivat</string>
+    <string name="history_enabled">✅ Istoric stații activat</string>
+    <string name="history_disabled">❌ Istoric stații dezactivat</string>
+    <string name="gestures_enabled">✅ Geste de glisare activate</string>
+    <string name="gestures_disabled">❌ Geste de glisare dezactivate</string>
+    <string name="logos_online_enabled">✅ Logo-uri online activate</string>
+    <string name="logos_online_disabled">❌ Logo-uri online dezactivate</string>
+    <string name="night_mode_manual_blocked">Dezactivați Modul Noapte Automat pentru a alege tema manual</string>
+    
+    <!-- V4.0: Save/Load Favorites -->
+    <string name="save_load_favorites">💾 Salvează/Încarcă Favorite</string>
+    <string name="save_favorites">💾 Salvează Favorite</string>
+    <string name="load_favorites">📂 Încarcă Favorite</string>
+    <string name="select_favorites_file">📂 Selectează fișier favorite</string>
+    <string name="cancel">Anulează</string>
+    <string name="favorites_saved">✅ Favorite salvate: %s</string>
+    <string name="favorites_loaded" formatted="false">✅ %d favorite încărcate din %s</string>
+    <string name="error_saving_favorites">❌ Eroare la salvarea favoritelor: %s</string>
+    <string name="error_loading_favorites">❌ Eroare la încărcarea favoritelor: %s</string>
+    <string name="folder_not_found">❌ Dosarul RadioLogos nu a fost găsit</string>
+    <string name="no_favorites_files">❌ Nu s-au găsit fișiere de favorite</string>
+    
+    <!-- V4.0: Android Settings -->
+    <string name="error_opening_settings">Nu s-au putut deschide Setările</string>
+    
+    <!-- V4.0: History -->
+    <string name="history_empty">Istoric gol</string>
+    <string name="station_history">📜 Istoric Stații</string>
+    
+    <!-- V4.0: Language Selector -->
+    <string name="app_language">Limba Aplicației</string>
+    <string name="select_language">Selectează Limba</string>
+    <string name="language_spanish">Spaniolă</string>
+    <string name="language_english">Engleză</string>
+    <string name="language_russian">Rusă</string>
+    <string name="language_romanian">Română</string>
+    <string name="language_ukrainian">Ucraineană</string>
+    <string name="language_changed">✅ Limba schimbată în %s</string>
+    <string name="about_openradio">ℹ️ Despre OpenRadioFM</string>
+    <string name="touch_to_change">Atinge pentru a schimba</string>
+
+    <!-- V4.3: Hardware Settings -->
+    <string name="hardware_settings">⚙️ Setări Hardware</string>
+    <string name="enable_am_band">Activează Banda AM</string>
+    <string name="radio_engine">Motor Radio</string>
+    <string name="engine_auto">Automat (Recomandat)</string>
+    <string name="engine_hcn">HCN (Eonon/Xtrons)</string>
+    <string name="engine_mtk">Mediatek (MtkRadio)</string>
+    <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_standard">Android Standard</string>
+    <string name="am_band_enabled">✅ Bandă AM activată</string>
+    <string name="am_band_disabled">❌ Bandă AM dezactivată</string>
+    <string name="engine_changed">✅ Motor radio schimbat în %s</string>
+
+    <!-- V4.5: Night Mode Schedule -->
+    <string name="night_schedule">Program Mod Noapte</string>
+    <string name="night_start">Start</string>
+    <string name="night_end">Sfârșit</string>
+    <string name="night_schedule_updated">✅ Program actualizat: %1$s - %2$s</string>
+
+    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    <string name="pty_none">Fără PTY</string>
+    <string name="pty_news">Știri</string>
+    <string name="pty_current_affairs">Actualități</string>
+    <string name="pty_information">Informații</string>
+    <string name="pty_sport">Sport</string>
+    <string name="pty_education">Educație</string>
+    <string name="pty_drama">Dramă</string>
+    <string name="pty_culture">Cultură</string>
+    <string name="pty_science">Știință</string>
+    <string name="pty_varied">Variat</string>
+    <string name="pty_pop">Muzică Pop</string>
+    <string name="pty_rock">Muzică Rock</string>
+    <string name="pty_easy_listening">Ascultare Ușoară</string>
+    <string name="pty_light_classical">Clasică Ușoară</string>
+    <string name="pty_serious_classical">Clasică Serioasă</string>
+    <string name="pty_other_music">Altă Muzică</string>
+    <string name="pty_weather">Vremea</string>
+    <string name="pty_finance">Finanțe</string>
+    <string name="pty_children">Copii</string>
+    <string name="pty_social">Social</string>
+    <string name="pty_religion">Religie</string>
+    <string name="pty_phone_in">Interactiv</string>
+    <string name="pty_travel">Călătorii</string>
+    <string name="pty_leisure">Timp Liber</string>
+    <string name="pty_jazz">Jazz</string>
+    <string name="pty_country">Country</string>
+    <string name="pty_national">Național</string>
+    <string name="pty_oldies">Oldies</string>
+    <string name="pty_folk">Folk</string>
+    <string name="pty_documentary">Documentar</string>
+    <string name="pty_alarm_test">Test Alarmă</string>
+    <string name="pty_alarm">Alarmă</string>
+</resources>

@@ -27,8 +27,8 @@ public interface RadioEngineCallback {
     /** RDS: Tipo de programa (PTY) */
     void onRdsPty(String pty);
 
-    /** RDS: Estado AF/TA actualizado */
-    void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled);
+    /** RDS: Estado AF/TA/TP actualizado */
+    void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled);
 
     /** RDS: Program Identification (PI) Code */
     void onRdsPi(String piCode);

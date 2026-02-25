@@ -36,7 +36,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Temas / Night Mode | ✅ | ✅ |
 | Logos de emisora | ✅ | ✅ |
 | 18 favoritos × 3 bandas | ✅ | ✅ |
-| Multilingüe (ES/EN/RU) | ✅ | ✅ |
+| Multilingüe (ES/EN/RU/RO/UK/SR) | ✅ | ✅ |
 
 ---
 
@@ -95,6 +95,7 @@ graph TB
 |---|---|---|---|
 | HCN AutoRadio (ESSGO, JUNSU) | MediaTek MT8163 | `FM_MT8163` | ✅ Completo |
 | Radio K706 | K706 + MCU | `FM_K706` | ✅ Completo |
+| Radio NWD G5 | NWD Platform | `FM_QS6` | ✅ Beta |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
 ---
@@ -141,10 +142,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ### v4.6 "Beta Integration" (Febrero 2026)
 - **Dual Hardware:** Unificación de motores MT8163 y K706 en una sola APK.
+- **Soporte QS6 G5:** Integración inicial para plataformas NWD G5.
 - **RDS AF/TA/TP:** Funcional en ambos motores con iconos interactivos.
+- **Localización:** Añadidos idiomas Rumano, Ucraniano y Serbio.
 - **DX/Local:** Toggle funcional para K706 con feedback visual.
 - **Layout V3:** Corrección del desplazamiento causado por el icono Stereo.
 - **Fuente Formula 1:** Integración tipográfica premium para la frecuencia.
+- **Bug Fix:** Corrección de la frecuencia "00.0" en MT8163 durante el arranque.
 
 <details>
 <summary>Versiones anteriores</summary>

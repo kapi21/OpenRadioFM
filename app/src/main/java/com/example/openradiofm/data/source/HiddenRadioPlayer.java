@@ -19,9 +19,10 @@ public class HiddenRadioPlayer {
     public static final int EVENT_RT_MESSAGE = 0x29;
     public static final int EVENT_PTY_TYPE = 0x22;
 
-    // V4.6: Estado interno AF/TA para MT8163
+    // V4.6: Estado interno AF/TA/TP para MT8163
     private boolean mIsAfEnabled = false;
     private boolean mIsTaEnabled = false;
+    private boolean mIsTpEnabled = false;
 
     private Object mRadioPlayerInstance;
     private Listener mClientListener;
@@ -31,8 +32,8 @@ public class HiddenRadioPlayer {
         void onRdsName(String name);
         void onRdsPty(String pty);
         void onRawEvent(int code, Object infoObj, String strArg);
-        /** V4.6: Notifica cambios de estado AF/TA al UI */
-        void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled);
+        /** V4.6: Notifica cambios de estado AF/TA/TP al UI */
+        void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled);
     }
 
     /**
@@ -176,6 +177,19 @@ public class HiddenRadioPlayer {
                 }
             }
 
+            // V11.6: EVENT_RDS_STATE (0x04) contains TP/TA/AF status flags
+            if (code == EVENT_RDS_STATE) {
+                if (arg2 instanceof Integer) {
+                    int state = (Integer) arg2;
+                    // Bit 5 (0x20) is typically TP (Traffic Program) indicator in RDS status byte
+                    boolean tp = (state & 0x20) != 0;
+                    if (tp != mIsTpEnabled) {
+                        mIsTpEnabled = tp;
+                        if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
+                    }
+                }
+            }
+
             // PS_DONE también puede indicar que el nombre está listo
             if (code == EVENT_PS_DONE) {
                  Log.d(TAG, "RDS PS_DONE received");
@@ -196,7 +210,7 @@ public class HiddenRadioPlayer {
             setAfMethod.invoke(mRadioPlayerInstance, enable);
             mIsAfEnabled = enable;
             Log.d(TAG, "setAF(" + enable + ") ejecutado.");
-            if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled);
+            if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
         } catch (Exception e) {
             Log.e(TAG, "Error llamando a setAF(): " + e.getMessage());
         }
@@ -212,7 +226,7 @@ public class HiddenRadioPlayer {
             setTaMethod.invoke(mRadioPlayerInstance, enable);
             mIsTaEnabled = enable;
             Log.d(TAG, "setTA(" + enable + ") ejecutado.");
-            if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled);
+            if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
         } catch (Exception e) {
             Log.e(TAG, "Error llamando a setTA(): " + e.getMessage());
         }
@@ -242,6 +256,7 @@ public class HiddenRadioPlayer {
     /** V4.6: Getters de estado para la UI */
     public boolean isAfEnabled() { return mIsAfEnabled; }
     public boolean isTaEnabled() { return mIsTaEnabled; }
+    public boolean isTpEnabled() { return mIsTpEnabled; }
 
     /**
      * Libera referencias para evitar fugas de memoria.

@@ -72,6 +72,9 @@
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
+    <string name="language_romanian">Română</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_serbian">Srpski</string>
     <string name="language_changed">✅ Idioma cambiado a %s</string>
     <string name="about_openradio">ℹ️ Acerca de OpenRadioFM</string>
     <string name="touch_to_change">Toca para cambiar</string>

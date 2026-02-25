@@ -39,6 +39,7 @@ public interface RadioEngine {
     void toggleRdsFeature(int type); // 0=RDS global, 1=AF, 2=TA
     boolean isAfEnabled();
     boolean isTaEnabled();
+    boolean isTpEnabled();
 
     // === DX/Local ===
     void toggleDxLocal();
