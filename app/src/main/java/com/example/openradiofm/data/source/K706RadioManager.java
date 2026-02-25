@@ -132,11 +132,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS_TRANSIENT (" + focusChange + ")----");
-                        // Interrupción corta (Notificación, Android Auto, indicación GPS).
-                        // Solo nos silenciamos, pero mantenemos nuestra intención de volver a sonar.
-                        mIsAudioFocusHeld = true; // Retenemos el flag aunque no tengamos el foco actual
+                        // Interrupción corta (Llamada, Notificación, Android Auto, GPS).
+                        mIsAudioFocusHeld = true; // Retenemos para poder recuperar
+                        mIsInCall = true; // V11.5: Marcar como en llamada para que heartbeat no pelee
                         try {
                             setMute(true);
+                            // V11.5: Soltar canal MCU para que BT/teléfono suene limpio
+                            if (mSetChannel != null && mMcuManager != null) {
+                                mSetChannel.invoke(mMcuManager, (byte) 4);
+                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: RPC_SetChannel(4) - canal FM liberado");
+                            }
                         } catch (Exception e) {
                             Log.e(TAG, "Error muting on AUDIOFOCUS_LOSS_TRANSIENT", e);
                         }
@@ -147,6 +152,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         // Recuperamos el foco (terminó la llamada/notificación o se desconectó BT).
                         // Volvemos a levantar nuestro canal de radio.
                         mIsAudioFocusHeld = true;
+                        mIsInCall = false; // V11.5: Ya no estamos en llamada
                         
                         // Si estábamos en modo activo, forzamos recuperar
                         if (mIsRadioActive) {
@@ -1654,8 +1660,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             
             // 2 = FM Radio, 4 = Android Media, 6 = Bluetooth, etc.
             if (currentChannel != 2) {
-                // EXCEPCIÓN: Si acabamos de ceder el foco conscientemente, no peleamos
+                // EXCEPCIÓN 1: Si acabamos de ceder el foco conscientemente, no peleamos
                 if (!mIsAudioFocusHeld) return;
+                // EXCEPCIÓN 2: Si estamos en llamada/interrupción, no peleamos
+                if (mIsInCall) return;
 
                 Log.w(TAG, "HEARTBEAT WARNING: Canal de audio secuestrado (Canal actual: " + currentChannel + "). Forzando recuperación a 2 (Radio).");
                 mSetChannel.invoke(mMcuManager, (byte) 2);
