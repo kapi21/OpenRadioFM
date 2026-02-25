@@ -36,18 +36,30 @@ body {
     font-family: 'AppInter', sans-serif;
     margin: 0;
     line-height: 1.6;
+    overflow-x: hidden;
 }
 
 .carbon-bg {
     background:
-        linear-gradient(27deg, #151515 5px, transparent 5px) 0 5px,
-        linear-gradient(207deg, #151515 5px, transparent 5px) 10px 0,
-        linear-gradient(27deg, #222 5px, transparent 5px) 0 10px,
-        linear-gradient(207deg, #222 5px, transparent 5px) 10px 5px,
-        linear-gradient(90deg, #1b1b1b 10px, transparent 10px),
-        linear-gradient(#1d1d1d 25%, #1a1a1a 25%, #1a1a1a 50%, transparent 50%, transparent 75%, #242424 75%, #242424);
-    background-color: #131313;
-    background-size: 20px 20px;
+        radial-gradient(circle at 0% 0%, rgba(255, 126, 0, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(255, 126, 0, 0.1) 0%, transparent 50%),
+        #050505;
+    position: relative;
+}
+
+.carbon-bg::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    z-index: -1;
+    pointer-events: none;
 }
 
 .container {
@@ -61,6 +73,8 @@ body {
     background: var(--panel-bg);
     border: 1px solid var(--border-ui);
     border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
 }
 
 .orbitron-text {
@@ -228,21 +242,25 @@ nav {
 }
 
 .feature-card {
-    padding: 2rem;
+    padding: 2.5rem;
     text-align: left;
-    transition: var(--transition);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    position: relative;
+    overflow: hidden;
 }
 
 .feature-card:hover {
     border-color: var(--primary);
-    transform: translateY(-5px);
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 0 15px var(--primary-glow);
 }
 
 .feature-icon {
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: var(--primary);
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
     display: block;
+    filter: drop-shadow(0 0 8px var(--primary-glow));
 }
 
 /* Video Section */
