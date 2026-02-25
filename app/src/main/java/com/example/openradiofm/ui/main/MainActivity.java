@@ -949,51 +949,43 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void showEditNameDialog() {
-        if (mRadioService == null)
+        if (mEngine == null)
             return;
-        try {
-            int currentFreq = mRadioService.getCurrentFreq();
+        int currentFreq = mEngine.getCurrentFreq();
 
-            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-            builder.setTitle("Editar nombre de emisora");
-            builder.setMessage("Frecuencia: " + String.format("%.1f MHz", currentFreq / 1000.0));
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Editar nombre de emisora");
+        builder.setMessage("Frecuencia: " + String.format("%.1f MHz", currentFreq / 1000.0));
 
-            final android.widget.EditText input = new android.widget.EditText(this);
-            input.setSingleLine(true);
+        final android.widget.EditText input = new android.widget.EditText(this);
+        input.setSingleLine(true);
 
-            // Pre-llenar con el nombre actual (si es custom o RDS)
-            com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(currentFreq, null);
-            if (s.getName() != null) {
-                input.setText(s.getName());
-                input.setSelectAllOnFocus(true);
-            }
-
-            builder.setView(input);
-
-            builder.setPositiveButton("Guardar", (dialog, which) -> {
-                String newName = input.getText().toString();
-                // Guardar en repositorio (SharedPreferences)
-                mRepository.setCustomName(currentFreq, newName);
-                showToast("Nombre guardado");
-                // Forzar refresco inmediato de UI
-                refreshRadioStatus();
-            });
-
-            builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
-
-            // Botón para borrar nombre personalizado y volver al original/RDS
-            builder.setNeutralButton("Restaurar Original", (dialog, which) -> {
-                mRepository.setCustomName(currentFreq, null); // Null borra la entrada custom
-                showToast("Nombre restaurado");
-                refreshRadioStatus();
-            });
-
-            builder.show();
-            input.requestFocus(); // Focus automático
-
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        // Pre-llenar con el nombre actual (si es custom o RDS)
+        com.example.openradiofm.data.model.RadioStation s = mRepository.getStationInfo(currentFreq, null);
+        if (s.getName() != null) {
+            input.setText(s.getName());
+            input.setSelectAllOnFocus(true);
         }
+
+        builder.setView(input);
+
+        builder.setPositiveButton("Guardar", (dialog, which) -> {
+            String newName = input.getText().toString();
+            mRepository.setCustomName(currentFreq, newName);
+            showToast("Nombre guardado");
+            refreshRadioStatus();
+        });
+
+        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+
+        builder.setNeutralButton("Restaurar Original", (dialog, which) -> {
+            mRepository.setCustomName(currentFreq, null);
+            showToast("Nombre restaurado");
+            refreshRadioStatus();
+        });
+
+        builder.show();
+        input.requestFocus();
     }
 
     @Override
@@ -1600,19 +1592,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private interface RemoteAction {
-        void run(IRadioServiceAPI s) throws RemoteException;
-    }
 
-    private void execRemote(RemoteAction action) {
-        if (mRadioService == null)
-            return;
-        try {
-            action.run(mRadioService);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-    }
 
     private void conectarRadio() {
         // V6.0: K706 Direct Connection
@@ -2407,11 +2387,7 @@ public class MainActivity extends AppCompatActivity {
             if (ivSignalLevel != null) {
                 int signalColor;
                 boolean hasStereo = false;
-                try {
-                    if (mRadioService != null)
-                        hasStereo = mRadioService.IsStereo();
-                } catch (Exception ignored) {
-                }
+                if (mEngine != null) hasStereo = mEngine.isStereo();
 
                 if (mHasRdsLock && hasStereo) {
                     signalColor = android.graphics.Color.parseColor("#00E676"); // Green
@@ -2429,11 +2405,8 @@ public class MainActivity extends AppCompatActivity {
             
             // Re-apply stereo visibility based on immediate hardware state
             if (ivStereoIcon != null) {
-                try {
-                    boolean hasStereo = mRadioService != null && mRadioService.IsStereo();
-                    ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.GONE);
-                } catch (Exception ignored) {
-                }
+                boolean hasStereo = mEngine != null && mEngine.isStereo();
+                ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.GONE);
             }
         }
     }
@@ -2774,53 +2747,39 @@ public class MainActivity extends AppCompatActivity {
 
     // V4: Frequency Step Helpers (Manual Tuning)
     private void stepFreqUp() {
-        mCurrentPty = null; // V5.2: Reset PTY on tune
-        if (mRadioService == null)
-            return;
-        try {
-            int current = mRadioService.getCurrentFreq();
-            int band = mRadioService.getCurrentBand();
-            boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
+        mCurrentPty = null;
+        if (mEngine == null) return;
+        int current = mEngine.getCurrentFreq();
+        int band = mEngine.getCurrentBand();
+        boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
 
-            int newFreq;
-            if (isAm) {
-                newFreq = current + 9;
-                if (newFreq > 1620)
-                    newFreq = 522; // AM Europe range
-            } else {
-                newFreq = current + 50;
-                if (newFreq > 108000)
-                    newFreq = 87500;
-            }
-            mRadioService.gotoFreq(newFreq);
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        int newFreq;
+        if (isAm) {
+            newFreq = current + 9;
+            if (newFreq > 1620) newFreq = 522;
+        } else {
+            newFreq = current + 50;
+            if (newFreq > 108000) newFreq = 87500;
         }
+        mEngine.tune(newFreq);
     }
 
     private void stepFreqDown() {
-        mCurrentPty = null; // V5.2: Reset PTY on tune
-        if (mRadioService == null)
-            return;
-        try {
-            int current = mRadioService.getCurrentFreq();
-            int band = mRadioService.getCurrentBand();
-            boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
+        mCurrentPty = null;
+        if (mEngine == null) return;
+        int current = mEngine.getCurrentFreq();
+        int band = mEngine.getCurrentBand();
+        boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
 
-            int newFreq;
-            if (isAm) {
-                newFreq = current - 9;
-                if (newFreq < 522)
-                    newFreq = 1620;
-            } else {
-                newFreq = current - 50;
-                if (newFreq < 87500)
-                    newFreq = 108000;
-            }
-            mRadioService.gotoFreq(newFreq);
-        } catch (RemoteException e) {
-            e.printStackTrace();
+        int newFreq;
+        if (isAm) {
+            newFreq = current - 9;
+            if (newFreq < 522) newFreq = 1620;
+        } else {
+            newFreq = current - 50;
+            if (newFreq < 87500) newFreq = 108000;
         }
+        mEngine.tune(newFreq);
     }
 
     // V4: Swipe Listener Class
@@ -2964,12 +2923,8 @@ public class MainActivity extends AppCompatActivity {
         android.app.AlertDialog dialog = new android.app.AlertDialog.Builder(this)
                 .setTitle(getString(R.string.station_history))
                 .setItems(displayNames, (d, w) -> {
-                    if (mRadioService != null) {
-                        try {
-                            mRadioService.gotoFreq(Integer.parseInt(freqs[w]));
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
+                    if (mEngine != null) {
+                        mEngine.tune(Integer.parseInt(freqs[w]));
                     }
                 })
                 .create();
