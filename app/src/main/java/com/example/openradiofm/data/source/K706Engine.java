@@ -39,6 +39,11 @@ public class K706Engine implements RadioEngine {
             });
 
             Log.d(TAG, "K706Engine inicializado correctamente.");
+            
+            // V11.5: Solicitar AudioFocus para que Android nos notifique
+            // de llamadas telefónicas y otras interrupciones de audio
+            mManager.requestPlayAudio();
+            
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Error inicializando K706Engine: " + e.getMessage());

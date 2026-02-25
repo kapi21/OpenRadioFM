@@ -1382,7 +1382,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     @Override
-    public boolean requestPlayAudio() throws RemoteException { return true; }
+    public boolean requestPlayAudio() throws RemoteException {
+        requestAudioFocus();
+        mIsRadioActive = true;
+        Log.d(TAG, "requestPlayAudio: focus=" + mIsAudioFocusHeld + " radioActive=true");
+        return mIsAudioFocusHeld;
+    }
 
     public void setMute(boolean mute) throws RemoteException {
         if (mSetMute == null) {
