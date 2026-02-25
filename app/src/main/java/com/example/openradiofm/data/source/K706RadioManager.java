@@ -1163,14 +1163,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             }
         }
         
-        // Vamos a intentar forzar la activación de TA y AF para ver si eso enciende el motor RDS completo
-        if (mTunerSetRdsTA != null && mTunerManager != null) {
-            try {
-                mTunerSetRdsTA.invoke(mTunerManager);
-                mIsTaEnabled = true; // V11.5: Sincronizar flag con estado real
-                Log.d(TAG, "[+/9] Activado TA via QFTunerManager (mIsTaEnabled=true)");
-            } catch (Exception e) {}
-        }
+        // V11.6: setRdsTASwitch() ya NO se llama al inicio - lanzaba un TA SEEK scan
+        // TA se maneja puramente en software con mIsTaEnabled
+        mIsTaEnabled = false; // TA desactivado por defecto
         
         // 10. V9.9: ULTIMO RECURSO - BROADCOM DIRECT OVERRIDE
         // Si el MCU no emite los paquetes B5 y B7, forzamos al chip Broadcom a encender
@@ -1540,32 +1535,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     // Sincronizar con Broadcom (Silencioso)
                     enableSilentlyRdsFeatures(nextAfState, mIsTaEnabled);
                     break;
-                case 2: // TA Switch
-                    boolean nextTaState = !mIsTaEnabled;
-                    mIsTaEnabled = nextTaState; // V4.6.1: Actualizar estado local ANTES
-                    if (mTunerSetRdsTA != null && mTunerManager != null) {
-                        // V9.6: Si estamos buscando (bucle infinito detectado), forzamos una parada
-                        if (mIsScanning) {
-                            Log.w(TAG, "TA Toggle while SCANNING detected. Sending STOP SCAN instead.");
-                            if (mTunerStopScan != null) {
-                                try { mTunerStopScan.invoke(mTunerManager); } catch (Exception e) { e.printStackTrace(); }
-                            } else {
-                                sendCmd(SUB_AUTO_SCAN_STOP, (byte)0, (byte)0);
-                            }
-                        } else {
-                            try { mTunerSetRdsTA.invoke(mTunerManager); } catch (Exception e) { e.printStackTrace(); }
-                            Log.d(TAG, "QFTunerManager.setRdsTASwitch() invoked. TA now=" + nextTaState);
-                        }
-                    } else {
-                        // Fallback: Comando MCU directo 0x12
-                        if (mIsScanning) {
-                             sendCmd(SUB_AUTO_SCAN_STOP, (byte)0, (byte)0);
-                        } else {
-                            sendCmd(SUB_RDS_TA, (byte)0, (byte)0);
-                        }
+                case 2: // TA Switch — V11.6: Solo software, setRdsTASwitch() lanza un seek
+                    mIsTaEnabled = !mIsTaEnabled;
+                    Log.d(TAG, "TA toggled (software): mIsTaEnabled=" + mIsTaEnabled);
+                    // Notificar a la UI directamente
+                    if (mCallback != null) {
+                        try {
+                            mCallback.onEvent(0xB3, "TA_SW:" + (mIsTaEnabled ? "1" : "0"));
+                        } catch (Exception ignored) {}
                     }
-                    // V4.6.1: Sincronizar con Broadcom (Silencioso) - Vital para que deje de interrumpir
-                    enableSilentlyRdsFeatures(mIsAfEnabled, nextTaState);
                     break;
                 case 3: // DX/Local Toggle (V9.9)
                     byte nextLocMode = mIsDxLocal ? (byte) 0 : (byte) 1; // Si es Local (1), pasar a DX (0)
