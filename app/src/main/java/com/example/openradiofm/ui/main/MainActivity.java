@@ -182,7 +182,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 mRadioService.registerRadioCallback(mCallback);
 
-                // Fix v4.5.1: Obtener banda real INMEDIATAMENTE antes de cargar presets
                 try {
                     mCurrentBand = mRadioService.getCurrentBand();
                 } catch (Exception ignored) {
@@ -191,7 +190,6 @@ public class MainActivity extends AppCompatActivity {
                 startStatusPolling();
                 showToast("Conexión Establecida");
 
-                // V5.7: Immediate UI refresh after recreation if we have a stored frequency
                 refreshPresetsCache();
                 runOnUiThread(() -> {
                     refreshPresetButtons();
@@ -199,11 +197,6 @@ public class MainActivity extends AppCompatActivity {
                         updateFrequencyDisplay(mLastFreq);
                     }
                 });
-
-                // Solo inicializamos el listener oculto de RDS en modo MT8163 (completo).
-                if (mMode == FmMode.FM_MT8163) {
-                    initHiddenPlayer();
-                }
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -255,73 +248,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-    private void initHiddenPlayer() {
-        mHiddenPlayer = new HiddenRadioPlayer(new HiddenRadioPlayer.Listener() {
-            @Override
-            public void onRdsText(String text) {
-                String cleanedText = MetadataUtils.cleanRdsText(text);
-                runOnUiThread(() -> {
-                    if (tvRdsInfo != null) {
-                        String current = tvRdsInfo.getText().toString();
-                        if (!current.equals(cleanedText)) {
-                            tvRdsInfo.setText(cleanedText);
-            tvRdsInfo.setSelected(true); // V9: Enable marquee
-            if (cleanedText == null || cleanedText.trim().isEmpty()) {
-                                // V5.0: Keep visible in V2 to prevent shifts
-                                tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
-                            } else {
-                                tvRdsInfo.setVisibility(View.VISIBLE);
-                            }
-                        }
-                        mHasRdsLock = (cleanedText != null && !cleanedText.isEmpty());
-                    }
-                });
-            }
-
-            @Override
-            public void onRdsName(String name) {
-                runOnUiThread(() -> {
-                    if (tvRdsName != null && name != null && !name.isEmpty()) {
-                        tvRdsName.setText(name);
-                        tvRdsName.setVisibility(View.VISIBLE);
-                        mHasRdsLock = true;
-                    }
-                });
-            }
-
-            @Override
-            public void onRdsPty(String pty) {
-                runOnUiThread(() -> {
-                    mCurrentPty = pty;
-                    updatePtyUI(pty); // V5.0: Update Icon & Text
-                });
-            }
-
-            @Override
-            public void onRawEvent(int code, Object info, String str) {
-                // Posibilidad de loguear eventos desconocidos para depuración
-                if (code == HiddenRadioPlayer.EVENT_PS_DONE) {
-                    mHasRdsLock = true;
-                }
-            }
-
-            @Override
-            public void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled) {
-                // V4.6: Actualizar iconos AF/TA en la UI desde MT8163
-                runOnUiThread(() -> {
-                    if (ivAfIcon != null) ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
-                    if (ivTaIcon != null) ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
-                    Log.d(TAG, "MT8163 RDS Status: AF=" + afEnabled + " TA=" + taEnabled);
-                });
-            }
-        });
-        if (!mHiddenPlayer.init()) {
-            Log.e(TAG, "Error RDS Hardware Init");
-        } else {
-            // V5.0: Forzar estéreo nada más iniciar para mejorar sensibilidad
-            mHiddenPlayer.setStereo(true);
-        }
-    }
 
     // ScheduledExecutorService para sondear el estado de la radio en segundo plano.
     // Más robusto que Timer y evita fugas de memoria.
@@ -500,6 +426,8 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> { 
                 if (tvRdsName != null && name != null && !name.isEmpty()) {
                     tvRdsName.setText(name);
+                    tvRdsName.setVisibility(View.VISIBLE);
+                    mHasRdsLock = true;
                     // V11: Aprendizaje automático
                     if (mCurrentPi != null && mRdsDb != null) {
                         mRdsDb.savePiName(mCurrentPi, name);
@@ -508,12 +436,27 @@ public class MainActivity extends AppCompatActivity {
             });
         }
         @Override public void onRdsText(String text) {
-            runOnUiThread(() -> { if (tvRdsInfo != null) tvRdsInfo.setText(text); });
+            String cleanedText = MetadataUtils.cleanRdsText(text);
+            runOnUiThread(() -> {
+                if (tvRdsInfo != null) {
+                    String current = tvRdsInfo.getText().toString();
+                    if (!current.equals(cleanedText)) {
+                        tvRdsInfo.setText(cleanedText);
+                        tvRdsInfo.setSelected(true); // Enable marquee
+                        if (cleanedText == null || cleanedText.trim().isEmpty()) {
+                            tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
+                        } else {
+                            tvRdsInfo.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    mHasRdsLock = (cleanedText != null && !cleanedText.isEmpty());
+                }
+            });
         }
         @Override public void onRdsPty(String pty) {
             runOnUiThread(() -> {
                 mCurrentPty = pty;
-                if (tvPty != null) tvPty.setText(pty != null ? pty : "");
+                updatePtyUI(pty);
             });
         }
         @Override public void onRdsAfTaStatus(boolean afEnabled, boolean taEnabled) {
