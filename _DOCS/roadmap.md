@@ -56,23 +56,32 @@
 
 ---
 
-## 🔲 Sesión 25/Feb (continuación) — En Progreso
+---
 
-### Prioridad 1: Completar migración RadioEngine
-- [ ] Migrar `refreshRadioStatus()` para que use `mEngine` en vez de `mRadioService`
-- [ ] Eliminar `initHiddenPlayer()` duplicado en MainActivity
-- [ ] Eliminar `execRemote()` cuando toda la lógica use `mEngine`
+## ✅ Sesión 25/Feb/2026 (Noche) — Completado (V.4.6 Beta)
 
-### Prioridad 2: Unificar Engineering Dialogs
-- [ ] Crear `EngineeringDialog` base que se adapte al engine activo
-- [ ] Eliminar duplicación entre `EngineeringModeDialog` y `K706EngineeringDialog`
+### Localización y Hardware
+- [x] **Multi-idioma:** Integración total de Rumano, Ucraniano y Serbio (6 idiomas total).
+- [x] **QS6 G5:** Soporte inicial para hardware NWD G5 mediante `QS6Engine`.
+- [x] **MT8163 Fixes:** Solucionado el problema de frecuencia 0.0 y sincronización de iconos AF/TA/TP.
 
-### Prioridad 3: Reducir MainActivity
-- [ ] Extraer lógica de presets a `PresetManager`
-- [ ] Extraer lógica de skins/temas a helper separado
-- [ ] Objetivo: `MainActivity` de ~3500 líneas a <1500
+### Arquitectura y Web
+- [x] **Unificación:** `RadioEngine` es ahora el estándar. Rama de refactor fusionada en `main`.
+- [x] **Web Premium:** Rediseño estético total (Glassmorphism + Mesh Gradients) y nuevas capturas.
+- [x] **Despliegue:** Web oficial actualizada y en producción.
 
-### Prioridad 4: Merge y testing
-- [ ] Merge `refactor/radio-engine-interface` → `feature/k706-mt8163-unification`
-- [ ] Test completo en K706: tune, seek, RDS, AF/TA, presets
-- [ ] Test completo en MT8163: seek invertido, AF/TA por HiddenRadioPlayer
+---
+
+## 🔲 Próximos Pasos (V.5.0+)
+
+### Prioridad 1: Estabilidad y Feedback
+- [ ] Monitorizar feedback de la Beta v4.6 en MT8163 y K706.
+- [ ] Ajustar sensibilidad de reporte de RDS en QS6 G5.
+
+### Prioridad 2: Funcionalidades Premium
+- [ ] **Visualización Espectro:** Implementar visualizador de audio integrado en la UI principal.
+- [ ] **Android Auto:** Soporte para control de medios desde la unidad principal externa.
+
+### Prioridad 3: Limpieza Continua
+- [ ] Extraer lógica de presets a `PresetManager` (MainActivity sigue pesada).
+- [ ] Refinar `ThemeManager` para soportar dinámicamente nuevos iconos sin modificar código base.
