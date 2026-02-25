@@ -134,9 +134,10 @@
             android:requiresFadingEdge="horizontal"
             android:fadingEdgeLength="16dp"
             android:singleLine="true"
+            android:scrollHorizontally="true"
             android:text="RDS Info Text"
             android:textColor="@color/white"
-            android:textSize="18sp"
+            android:textSize="@dimen/text_size_rds_info"
             android:includeFontPadding="false" />
 
     </LinearLayout>

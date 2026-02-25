@@ -1532,6 +1532,14 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         sendCmd(SUB_RDS_AF, newState, (byte)0);
                         Log.d(TAG, "MCU Fallback: SUB_RDS_AF (0x11) sent with state " + newState);
                     }
+
+                    // V11.6d: Notificar a la UI (vía K706Engine case 111) para sincronizar icono
+                    if (mCallback != null) {
+                        try {
+                            mCallback.onEvent(111, "AF:" + (nextAfState ? "1" : "0"));
+                        } catch (Exception ignored) {}
+                    }
+
                     // Sincronizar con Broadcom (Silencioso)
                     enableSilentlyRdsFeatures(nextAfState, mIsTaEnabled);
                     break;
