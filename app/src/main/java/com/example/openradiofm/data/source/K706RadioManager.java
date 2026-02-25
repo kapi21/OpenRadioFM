@@ -1167,7 +1167,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         if (mTunerSetRdsTA != null && mTunerManager != null) {
             try {
                 mTunerSetRdsTA.invoke(mTunerManager);
-                Log.d(TAG, "[+/9] Activado TA via QFTunerManager (Trigger motor RDS)");
+                mIsTaEnabled = true; // V11.5: Sincronizar flag con estado real
+                Log.d(TAG, "[+/9] Activado TA via QFTunerManager (mIsTaEnabled=true)");
             } catch (Exception e) {}
         }
         
