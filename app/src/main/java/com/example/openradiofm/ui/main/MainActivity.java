@@ -880,8 +880,6 @@ public class MainActivity extends AppCompatActivity {
             btnLocDx.setOnClickListener(v -> {
                 if (mEngine != null) {
                     mEngine.toggleDxLocal();
-                } else {
-                    execRemote(IRadioServiceAPI::onLocDxEvent);
                 }
             });
 
@@ -1472,7 +1470,7 @@ public class MainActivity extends AppCompatActivity {
         // Loop Band Logic
         if (btnBand != null) {
             btnBand.setOnClickListener(v -> {
-                execRemote(IRadioServiceAPI::onBandEvent);
+                if (mEngine != null) mEngine.bandCycle();
             });
         }
     }
@@ -1511,7 +1509,7 @@ public class MainActivity extends AppCompatActivity {
             animateButton(v); // V4
             int freq = mPrefs.getInt(key, 0);
             if (freq > 0) {
-                execRemote(s -> s.gotoFreq(freq));
+                if (mEngine != null) mEngine.tune(freq);
             } else {
                 showToast("Vacío - Mantén para guardar");
             }
@@ -1704,163 +1702,148 @@ public class MainActivity extends AppCompatActivity {
             runOnUiThread(() -> updateFrequencyDisplay(mLastFreq));
         }
 
-        if (mRadioService == null)
+        if (mEngine == null)
             return;
-        execRemote(s -> {
-            int freq = s.getCurrentFreq();
-            int band = s.getCurrentBand();
-            boolean isStereo = s.IsStereo();
-            boolean isLocal = s.IsDxLocal();
 
-            // Fix v4.5.1: SIEMPRE sincronizar mCurrentBand y refrescar presets
-            if (band != mCurrentBand) {
-                mCurrentBand = band;
-                refreshPresetsCache();
-                runOnUiThread(() -> refreshPresetButtons());
-            }
+        int freq = mEngine.getCurrentFreq();
+        int band = mEngine.getCurrentBand();
+        boolean isStereo = mEngine.isStereo();
+        boolean isLocal = mEngine.isDxLocal();
 
-            // V4.3: Hardware Toggle for AM
-            boolean amEnabled = mPrefs.getBoolean("pref_enable_am", true);
-            boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
-            if (isAm && !amEnabled) {
-                // Auto skip to next band
-                execRemote(IRadioServiceAPI::onBandEvent);
-                return;
-            }
+        // Fix v4.5.1: SIEMPRE sincronizar mCurrentBand y refrescar presets
+        if (band != mCurrentBand) {
+            mCurrentBand = band;
+            refreshPresetsCache();
+            runOnUiThread(() -> refreshPresetButtons());
+        }
 
-            // V5.0: Composite Signal Quality Logic
-            // Raw SNR/RSSI is not available in SDK, so we infer quality
-            // mCurrentQuality = calculateSignalQuality(isStereo, isLocal, mHasRdsLock); //
-            // Legacy removed
+        // V4.3: Hardware Toggle for AM
+        boolean amEnabled = mPrefs.getBoolean("pref_enable_am", true);
+        boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
+        if (isAm && !amEnabled) {
+            mEngine.bandCycle();
+            return;
+        }
 
-            String bandCacheKey = band + "_" + freq;
+        String bandCacheKey = band + "_" + freq;
 
-            if (freq != mLastFreq) {
-                mLastFreq = freq;
-                mHasRdsLock = false; // Reset lock on manual change
-
-                // V4.0 / V5.1: Clear RDS UI on Tune aggressively (User request)
-                // When frequency changes, blank out RDS data until new data arrives
-                mCurrentPty = null; // Clear live PTY
-                
-                runOnUiThread(() -> {
-                    if (tvRdsName != null) {
-                        tvRdsName.setText("");
-                        // Keep visible in Layout 2 to prevent shift, GONE in V3
-                        tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
-                    }
-                    if (tvRdsInfo != null) {
-                        tvRdsInfo.setText("");
-                        // Keep visible in Layout 2 to prevent shift, GONE in V3
-                        tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
-                    }
-                    if (tvPty != null) {
-                        tvPty.setText("Sin PTY");
-                        if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
-                    }
-                });
-
-                if (mPrefs.getBoolean("pref_save_history", true)) {
-                    addToHistory(freq);
-                }
-            }
-
-            com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
-            String rdsName = station.getName();
-
+        if (freq != mLastFreq) {
+            mLastFreq = freq;
+            mHasRdsLock = false;
+            mCurrentPty = null;
+            
             runOnUiThread(() -> {
-                // Quality Indicator
-                // updateQualityUI(mCurrentQuality); // Legacy removed
-
-                // FIXED LOGIC: Freq formatting (MHz for FM, kHz for AM)
-                if (isAm) {
-                    tvFrequency.setText(String.valueOf(freq));
-                    if (ivUnitLabel != null) {
-                        ivUnitLabel.setImageResource(R.drawable.radio_khz);
-                        if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null),
-                                    android.graphics.PorterDuff.Mode.SRC_IN);
-                        } else {
-                            ivUnitLabel.clearColorFilter();
-                        }
-                    }
-                } else {
-                    tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", freq / 1000.0));
-                    if (ivUnitLabel != null) {
-                        ivUnitLabel.setImageResource(R.drawable.radio_mhz);
-                        if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                            ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null),
-                                    android.graphics.PorterDuff.Mode.SRC_IN);
-                        } else {
-                            ivUnitLabel.clearColorFilter();
-                        }
-                    }
+                if (tvRdsName != null) {
+                    tvRdsName.setText("");
+                    tvRdsName.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                 }
-
-                // RDS Display logic moved to updateFrequencyDisplay
-                updateFrequencyDisplay(freq);
-
-                // V4.0: Logo & Background Logic (Independent for V3 support)
-                String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
-                ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
-
-                if (cachedLogo != null) {
-                    if (!cachedLogo.equals(mLastLogoUrl)) {
-                        mLastLogoUrl = cachedLogo;
-                        if (ivMainLogo != null && !mIsV3) {
-                            ivMainLogo.setVisibility(View.VISIBLE);
-                            Glide.with(MainActivity.this)
-                                    .load(cachedLogo)
-                                    .transition(DrawableTransitionOptions.withCrossFade())
-                                    .into(ivMainLogo);
-                        }
-                        updateDynamicBackground(cachedLogo);
-                    }
-                } else {
-                    mRepository.getStationInfo(freq, url -> {
-                        runOnUiThread(() -> {
-                            if (url != null) {
-                                if (!url.equals(mLastLogoUrl)) {
-                                    mLastLogoUrl = url;
-                                    mLogoCachePerBand.put(bandCacheKey, url);
-                                    if (ivMainLogo != null && !mIsV3) {
-                                        ivMainLogo.setVisibility(View.VISIBLE);
-                                        Glide.with(MainActivity.this)
-                                                .load(url)
-                                                .transition(DrawableTransitionOptions.withCrossFade())
-                                                .into(ivMainLogo);
-                                    }
-                                    updateDynamicBackground(url);
-                                }
-                            } else {
-                                mLastLogoUrl = "";
-                                mLogoCachePerBand.remove(bandCacheKey);
-                                if (ivMainLogo != null && !mIsV3) {
-                                    ivMainLogo.setImageResource(R.mipmap.ic_launcher);
-                                    ivMainLogo.setVisibility(View.VISIBLE);
-                                }
-                                updateDynamicBackground(null);
-                            }
-                        });
-                    });
+                if (tvRdsInfo != null) {
+                    tvRdsInfo.setText("");
+                    tvRdsInfo.setVisibility(mIsV3 ? View.GONE : View.VISIBLE);
                 }
-
-                // Hide logo always in V3 if it somehow exists
-                if (mIsV3 && ivMainLogo != null) {
-                    ivMainLogo.setVisibility(View.GONE);
-                }
-
-                updateBandImage(band);
-                if (btnLocDx != null) {
-                    btnLocDx.setSelected(isLocal);
-                    // V9: LOCAL=radio_loc_p, DX=radio_loc_n
-                    btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                if (tvPty != null) {
+                    tvPty.setText("Sin PTY");
+                    if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
                 }
             });
-            
-            // V5.2: Send update intent to K706 Native system Widget
-            sendWidgetUpdateIntent(freq, band, rdsName);
+
+            if (mPrefs.getBoolean("pref_save_history", true)) {
+                addToHistory(freq);
+            }
+        }
+
+        com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+        String rdsName = station.getName();
+        final int fFreq = freq;
+        final int fBand = band;
+        final boolean fIsAm = isAm;
+        final boolean fIsLocal = isLocal;
+
+        runOnUiThread(() -> {
+            // FIXED LOGIC: Freq formatting (MHz for FM, kHz for AM)
+            if (fIsAm) {
+                tvFrequency.setText(String.valueOf(fFreq));
+                if (ivUnitLabel != null) {
+                    ivUnitLabel.setImageResource(R.drawable.radio_khz);
+                    if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                        ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null),
+                                android.graphics.PorterDuff.Mode.SRC_IN);
+                    } else {
+                        ivUnitLabel.clearColorFilter();
+                    }
+                }
+            } else {
+                tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", fFreq / 1000.0));
+                if (ivUnitLabel != null) {
+                    ivUnitLabel.setImageResource(R.drawable.radio_mhz);
+                    if (mCurrentSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                        ivUnitLabel.setColorFilter(getResources().getColor(R.color.night_blue_primary, null),
+                                android.graphics.PorterDuff.Mode.SRC_IN);
+                    } else {
+                        ivUnitLabel.clearColorFilter();
+                    }
+                }
+            }
+
+            updateFrequencyDisplay(fFreq);
+
+            // V4.0: Logo & Background Logic
+            String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
+            ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
+
+            if (cachedLogo != null) {
+                if (!cachedLogo.equals(mLastLogoUrl)) {
+                    mLastLogoUrl = cachedLogo;
+                    if (ivMainLogo != null && !mIsV3) {
+                        ivMainLogo.setVisibility(View.VISIBLE);
+                        Glide.with(MainActivity.this)
+                                .load(cachedLogo)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .into(ivMainLogo);
+                    }
+                    updateDynamicBackground(cachedLogo);
+                }
+            } else {
+                mRepository.getStationInfo(fFreq, url -> {
+                    runOnUiThread(() -> {
+                        if (url != null) {
+                            if (!url.equals(mLastLogoUrl)) {
+                                mLastLogoUrl = url;
+                                mLogoCachePerBand.put(bandCacheKey, url);
+                                if (ivMainLogo != null && !mIsV3) {
+                                    ivMainLogo.setVisibility(View.VISIBLE);
+                                    Glide.with(MainActivity.this)
+                                            .load(url)
+                                            .transition(DrawableTransitionOptions.withCrossFade())
+                                            .into(ivMainLogo);
+                                }
+                                updateDynamicBackground(url);
+                            }
+                        } else {
+                            mLastLogoUrl = "";
+                            mLogoCachePerBand.remove(bandCacheKey);
+                            if (ivMainLogo != null && !mIsV3) {
+                                ivMainLogo.setImageResource(R.mipmap.ic_launcher);
+                                ivMainLogo.setVisibility(View.VISIBLE);
+                            }
+                            updateDynamicBackground(null);
+                        }
+                    });
+                });
+            }
+
+            if (mIsV3 && ivMainLogo != null) {
+                ivMainLogo.setVisibility(View.GONE);
+            }
+
+            updateBandImage(fBand);
+            if (btnLocDx != null) {
+                btnLocDx.setSelected(fIsLocal);
+                btnLocDx.setImageResource(fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+            }
         });
+        
+        sendWidgetUpdateIntent(freq, band, rdsName);
     }
 
     /**
@@ -3382,37 +3365,23 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void onSeekUpEvent() {
-        // V5.0: El engine sabe si necesita invertir (MT8163 invierte internamente)
-        if (mEngine != null) {
-            mEngine.seekUp();
-        } else {
-            execRemote(IRadioServiceAPI::onSeekUpEvent);
-        }
+        if (mEngine != null) mEngine.seekUp();
     }
 
     private void onSeekDownEvent() {
-        if (mEngine != null) {
-            mEngine.seekDown();
-        } else {
-            execRemote(IRadioServiceAPI::onSeekDownEvent);
-        }
+        if (mEngine != null) mEngine.seekDown();
     }
 
     private void gotoFreq(int freq) {
         mCurrentPty = null; // V5.2: Reset PTY on tune
-        if (mRadioService == null)
-            return;
-        execRemote(s -> s.gotoFreq(freq));
+        if (mEngine != null) mEngine.tune(freq);
     }
 
     private void refreshPresetsCache() {
-        // Fix v4.5.1: Usar mCurrentBand directamente (ya actualizado en refreshRadioStatus)
         int band = mCurrentBand;
-        if (mRadioService != null) {
-            try {
-                band = mRadioService.getCurrentBand();
-                mCurrentBand = band; // Sincronizar siempre
-            } catch (RemoteException ignored) {}
+        if (mEngine != null) {
+            band = mEngine.getCurrentBand();
+            mCurrentBand = band;
         }
         for (int i = 0; i < PRESETS_COUNT; i++) {
             String key = "P" + (i + 1) + "_B" + band;
@@ -3450,31 +3419,27 @@ public class MainActivity extends AppCompatActivity {
      * V9.5: AutoScan Toggle — click 1 inicia, click 2 detiene.
      */
     private void toggleAutoScan(ImageButton btn) {
+        if (mEngine == null) return;
         if (!mIsScanning) {
-            // Iniciar AutoScan (0x08)
-            execRemote(IRadioServiceAPI::onScanEvent);
+            mEngine.scan();
             mIsScanning = true;
             if (btn != null) {
                 btn.setColorFilter(android.graphics.Color.parseColor("#00E676"),
-                    android.graphics.PorterDuff.Mode.SRC_IN); // Verde = escaneando
+                    android.graphics.PorterDuff.Mode.SRC_IN);
             }
             showToast("AutoScan iniciado...");
         } else {
-            // Detener AutoScan (0x09 = onPSEvent/stopScan)
-            execRemote(IRadioServiceAPI::onPSEvent);
+            mEngine.stopScan();
             mIsScanning = false;
             if (btn != null) {
-                btn.clearColorFilter(); // Restaurar color original
+                btn.clearColorFilter();
             }
             showToast("AutoScan detenido");
         }
     }
 
-    /**
-     * V4.3: Auto Scan Wrapper (legacy, ahora usa toggleAutoScan)
-     */
     private void promptAutoScan() {
-        execRemote(IRadioServiceAPI::onScanEvent);
+        if (mEngine != null) mEngine.scan();
     }
 
     // === V4.5: QFTunerManager & MCU Helpers para Settings Premium ===
