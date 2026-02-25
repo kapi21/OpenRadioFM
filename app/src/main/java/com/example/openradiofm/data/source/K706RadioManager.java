@@ -104,7 +104,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private OnAudioFocusChangeListener mAudioFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
     private boolean mIsAudioFocusHeld = false;
-    private boolean mIsRadioActive = false; // V9.9: Flag para controlar si la radio "debe" estar sonando
+    private boolean mIsRadioActive = false;
+    private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
 
     public K706RadioManager(Context context) {
         this.mContext = context;
@@ -166,6 +167,62 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             }
         };
         initMcuConnection();
+        
+        // V11.5: Detectar llamadas telefónicas para silenciar la radio
+        // AudioFocus no funciona en K706 porque el MCU enruta FM directo.
+        // PhoneStateListener detecta llamadas a nivel de SO.
+        try {
+            android.telephony.TelephonyManager tm = 
+                (android.telephony.TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            if (tm != null) {
+                tm.listen(new android.telephony.PhoneStateListener() {
+                    @Override
+                    public void onCallStateChanged(int state, String phoneNumber) {
+                        switch (state) {
+                            case android.telephony.TelephonyManager.CALL_STATE_RINGING:
+                            case android.telephony.TelephonyManager.CALL_STATE_OFFHOOK:
+                                if (!mIsInCall) {
+                                    mIsInCall = true;
+                                    Log.d(TAG, "📞 Llamada detectada - silenciando radio FM");
+                                    try {
+                                        setMute(true);
+                                        // Soltar el canal de audio MCU para que el BT/teléfono suene
+                                        if (mSetChannel != null && mMcuManager != null) {
+                                            mSetChannel.invoke(mMcuManager, (byte) 4);
+                                            Log.d(TAG, "📞 RPC_SetChannel(4) - canal FM liberado");
+                                        }
+                                    } catch (Exception e) {
+                                        Log.e(TAG, "Error silenciando radio en llamada", e);
+                                    }
+                                }
+                                break;
+                            case android.telephony.TelephonyManager.CALL_STATE_IDLE:
+                                if (mIsInCall) {
+                                    mIsInCall = false;
+                                    Log.d(TAG, "📞 Llamada finalizada - restaurando radio FM");
+                                    // Esperar un momento para que el sistema asimile
+                                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                        try {
+                                            if (mSetChannel != null && mMcuManager != null) {
+                                                mSetChannel.invoke(mMcuManager, (byte) 2);
+                                                Log.d(TAG, "📞 RPC_SetChannel(2) - canal FM recuperado");
+                                            }
+                                            setAudioParams(true);
+                                            setMute(false);
+                                        } catch (Exception e) {
+                                            Log.e(TAG, "Error restaurando radio tras llamada", e);
+                                        }
+                                    }, 800);
+                                }
+                                break;
+                        }
+                    }
+                }, android.telephony.PhoneStateListener.LISTEN_CALL_STATE);
+                Log.d(TAG, "V11.5: PhoneStateListener registrado OK");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error registrando PhoneStateListener", e);
+        }
     }
 
     private void initMcuConnection() {
