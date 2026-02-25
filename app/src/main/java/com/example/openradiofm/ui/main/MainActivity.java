@@ -219,9 +219,9 @@ public class MainActivity extends AppCompatActivity {
                 int state = intent.getIntExtra("state", -1);
                 Log.d(TAG, "BT_STATE Broadcast Received: " + state);
                 
-                if (mRadioService != null && mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
+                if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
                     com.example.openradiofm.data.source.K706RadioManager k706Manager = 
-                        (com.example.openradiofm.data.source.K706RadioManager) mRadioService;
+                        ((com.example.openradiofm.data.source.K706Engine) mEngine).getManager();
                     
                     if (state == 0) {
                         Log.d(TAG, "Bluetooth Desconectado: Forzando recuperación de audio FM (SetChannel 2)");
@@ -307,8 +307,8 @@ public class MainActivity extends AppCompatActivity {
                             
                             // V9: Persist RDS name for presets and refresh if needed
                             try {
-                                if (mRadioService != null && mRepository != null) {
-                                    int freq = mRadioService.getCurrentFreq();
+                                if (mEngine != null && mRepository != null) {
+                                    int freq = mEngine.getCurrentFreq();
                                     mRepository.saveRdsName(freq, rdsName);
                                     // If this frequency is in presets, refresh visuals
                                     for (int i = 0; i < PRESETS_COUNT; i++) {
@@ -941,15 +941,9 @@ public class MainActivity extends AppCompatActivity {
         // 1) Detener el Timer de sondeo.
         stopStatusPolling();
 
-        // 2) Apagar el subsistema de hardware de radio (evitar que siga sonando de fondo)
-        if (mRadioService != null) {
-            if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
-                try {
-                    ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).closeDevice();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+        // 2) Apagar el subsistema de hardware de radio
+        if (mEngine != null) {
+            mEngine.release();
         }
 
         // 3) Desconectar del Servicio de Radio del Coche.
@@ -1452,14 +1446,10 @@ public class MainActivity extends AppCompatActivity {
 
         cardPresets[index].setOnLongClickListener(v -> {
             animateButton(v); // V4
-            if (mRadioService != null) {
-                try {
-                    int current = mRadioService.getCurrentFreq();
-                    mPrefs.edit().putInt(key, current).apply();
-                    updateCardVisuals(index, current);
-                    // showToast("Guardado en B" + (mCurrentBand + 1)); // V8.4: Disabled toast
-                } catch (RemoteException e) {
-                }
+            if (mEngine != null) {
+                int current = mEngine.getCurrentFreq();
+                mPrefs.edit().putInt(key, current).apply();
+                updateCardVisuals(index, current);
             }
             return true;
         });
@@ -3240,13 +3230,9 @@ public class MainActivity extends AppCompatActivity {
     private void setMute(boolean mute) {
         mMuteState = mute;
         
-        // V6.2: Support for K706 Native Mute
-        if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
-            try {
-                ((com.example.openradiofm.data.source.K706RadioManager) mRadioService).setMute(mute);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
+        // V11: Via RadioEngine
+        if (mEngine != null) {
+            mEngine.setMute(mute);
         }
 
         android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
@@ -3384,14 +3370,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendMcuTunerCmd(byte subCmd, byte param1, byte param2) {
-        if (mRadioService instanceof com.example.openradiofm.data.source.K706RadioManager) {
-            try {
-                java.lang.reflect.Method sendCmd = com.example.openradiofm.data.source.K706RadioManager.class.getDeclaredMethod(
-                    "sendCmd", byte.class, byte.class, byte.class);
-                sendCmd.setAccessible(true);
-                sendCmd.invoke(mRadioService, subCmd, param1, param2);
-            } catch (Exception e) {
-                android.util.Log.e("MainActivity", "sendMcuTunerCmd error", e);
+        if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
+            com.example.openradiofm.data.source.K706RadioManager mgr = 
+                ((com.example.openradiofm.data.source.K706Engine) mEngine).getManager();
+            if (mgr != null) {
+                try {
+                    java.lang.reflect.Method sendCmd = com.example.openradiofm.data.source.K706RadioManager.class.getDeclaredMethod(
+                        "sendCmd", byte.class, byte.class, byte.class);
+                    sendCmd.setAccessible(true);
+                    sendCmd.invoke(mgr, subCmd, param1, param2);
+                } catch (Exception e) {
+                    android.util.Log.e("MainActivity", "sendMcuTunerCmd error", e);
+                }
             }
         }
     }

@@ -48,7 +48,9 @@ public class K706Engine implements RadioEngine {
 
     @Override
     public void release() {
-        // K706RadioManager no tiene release() explícito
+        if (mManager != null) {
+            try { mManager.closeDevice(); } catch (Exception ignored) {}
+        }
         mCallback = null;
         mManager = null;
     }
@@ -136,8 +138,8 @@ public class K706Engine implements RadioEngine {
 
     @Override
     public void setMute(boolean mute) {
-        // K706 no expone setMute directo en AIDL
-        Log.d(TAG, "setMute no disponible en K706");
+        if (mManager == null) return;
+        try { mManager.setMute(mute); } catch (Exception e) { Log.e(TAG, "setMute error", e); }
     }
 
     @Override
