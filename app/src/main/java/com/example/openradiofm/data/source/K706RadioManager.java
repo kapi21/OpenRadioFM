@@ -1538,10 +1538,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 2: // TA Switch — V11.6: Solo software, setRdsTASwitch() lanza un seek
                     mIsTaEnabled = !mIsTaEnabled;
                     Log.d(TAG, "TA toggled (software): mIsTaEnabled=" + mIsTaEnabled);
-                    // Notificar a la UI directamente
+                    // Notificar a la UI via código 112 (el que handleCallback espera para TA)
                     if (mCallback != null) {
                         try {
-                            mCallback.onEvent(0xB3, "TA_SW:" + (mIsTaEnabled ? "1" : "0"));
+                            mCallback.onEvent(112, "TA_SW:" + (mIsTaEnabled ? "1" : "0"));
                         } catch (Exception ignored) {}
                     }
                     break;
