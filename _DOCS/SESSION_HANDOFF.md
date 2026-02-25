@@ -1,53 +1,56 @@
-# 🔄 Session Handoff — 19 Feb 2026
+# 🔄 Session Handoff — 25 Feb 2026
 
-**Versión actual**: V9.4d  
-**Estado**: Funcional con bugs menores  
-**Próxima sesión**: 20 Feb 2026
+**Versión actual**: V11  
+**Estado**: Funcional, compilando en rama `refactor/radio-engine-interface`  
+**Próxima sesión**: Continuar migración RadioEngine
 
 ---
 
-## 🏆 Logro del Día
+## 🏆 Logros del Día
 
-**La app arranca y controla la radio FM de forma independiente, sin necesidad de la app nativa.**
+- **RadioEngine extendido**: `openEq(Context)` + `onRdsPi(String)` en interfaces
+- **EQ delegado al engine**: K706 → `com.qf.soundeffect`, MT8163 → MCU key `0x134`
+- **RdsDatabase.java creado**: Persistencia PI→Nombre y PI→Logo (SharedPreferences)
+- **Aprendizaje automático**: Guarda nombre RDS cuando tiene PI, identificación instantánea al detectar PI
+
+---
+
+## ⚠️ Hallazgo Importante: RDS PI NO disponible en K706
+
+**QFTunerManager class not found** en el firmware del K706.  
+El proxy `ITunerTool` no se registra porque la clase no existe en el dispositivo.
+
+La MCU del K706 **decodifica RDS internamente** y sólo reenvía datos de alto nivel:
+- `0xB5` → PTY, `0xB6` → PS Name, `0xB7` → RT Text  
+- `0xB3/B4` → AF/TA/TP flags  
+- **No hay paquete MCU con PI crudo**
+
+**Consecuencia**: La identificación cross-frecuencia (misma cadena en distintas ciudades) no es viable sin PI. El aprendizaje por frecuencia+nombre sigue funcionando para identificación local.
 
 ---
 
 ## Lo que funciona ✅
 
-- Sintonización de frecuencia (tune, fine step up/down)
-- Seek up/down (0x0C/0x0D) con banda persistente
-- Cambio de banda FM1/FM2/FM3 (se mantiene al hacer seek)
-- RDS: nombre de emisora (PS) y texto (RT)
-- AutoScan
-- Presets (seleccionar y guardar)
-- Botón EQ → abre `com.qf.soundeffect`
-- Audio FM vía `RPC_SetChannel(2)`
+- Todo lo de sesiones anteriores (tune, seek, RDS, AF/TA, presets, EQ)
+- EQ abre la app correcta según hardware (delegado al engine)
+- RdsDatabase inicializado y listo para aprender nombres
 
-## Lo que falla ❌
+## Lo que falta ❌
 
-1. **PTY aplica filtro al abrir** — La MCU filtra por PTY (noticias). Debe solo mostrar el PTY actual, no filtrar
-2. **LOC/DX** — Sin comando MCU identificado. Solo toggle visual
-3. **Audio intermitente** — A veces el audio no arranca al primer intento
+1. **Migrar `refreshRadioStatus()`** a RadioEngine (actualmente usa `mRadioService` directo)
+2. **Eliminar `initHiddenPlayer()` duplicado** en MainActivity (MT8163Engine ya lo hace)
+3. **Unificar Engineering Dialogs** (K706 vs MT8163)
+4. **Reducir MainActivity** (~3500 líneas → objetivo <1500)
+5. **Merge y testing completo** en ambos dispositivos
 
-## Contexto técnico clave
+## Archivos principales modificados hoy
 
-- Todos los sub-comandos MCU están verificados contra `INGENIERIA_INVERSA_K706_FM.md`
-- Tabla de comandos actualizada en `K706RadioManager.java` líneas 32-48
-- El comando `0x0A` es **cambio de región geográfica**, NO LOC/DX
-- `handlePresetList()` ya NO actualiza `mCurrentBand` (fix del reset FM1)
-- Hay dos stacks FM disponibles: **QF SDK** (activo) y **Broadcom FM** (dormido)
-
-## Archivos principales
-
-| Archivo | Rol |
+| Archivo | Cambio |
 |---|---|
-| `K706RadioManager.java` | Driver MCU — comandos y callbacks |
-| `MainActivity.java` | UI — botones, display, presets |
-| `INGENIERIA_INVERSA_K706_FM.md` | Fuente de verdad de comandos MCU |
-| `auditoria_mcu.md` | Informe de discrepancias (artifact) |
-
-## Primera tarea mañana
-
-1. **Fix PTY filter**: Enviar `[0xA2, 0x00]` al inicio para resetear el filtro PTY
-2. **Capturar logs LOC/DX** de la app nativa: `adb logcat -s McuManager QFTunerManager`
-3. Probar Broadcom FM Service binding
+| `RadioEngine.java` | +`openEq(Context)` |
+| `RadioEngineCallback.java` | +`onRdsPi(String)` |
+| `K706RadioManager.java` | ITunerTool proxy (inactivo sin QFTunerManager) |
+| `K706Engine.java` | `openEq` + PI callback routing |
+| `MT8163Engine.java` | `openEq` via MCU key injection |
+| `RdsDatabase.java` | **NUEVO** — PI persistence layer |
+| `MainActivity.java` | EQ delegado, PI learning/lookup |

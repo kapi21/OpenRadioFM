@@ -34,20 +34,33 @@
 
 ---
 
-## 🔲 Sesión 25/Feb — Siguiente
+## ✅ Sesión 25/Feb/2026 — Completado
 
-### Prioridad 0: Investigación RDS PI (identificación instantánea de emisoras)
-- [ ] Capturar logcat dirigido con emisora RDS activa (RNE, SER, COPE)
-- [ ] Localizar el paquete MCU que contiene datos RDS crudos (PI, no B1)
-- [ ] Investigar acceso al PI via `IFmReceiverService` por reflexión
-- [ ] Si se encuentra: diseñar función de extracción PI de ByteArray
-- [ ] Crear base de datos PI → nombre para emisoras España (~500 entradas)
-- [ ] Estructura PI español: `E` = España, 2º nibble = cobertura, 3-4 = red
+### RDS PI Investigation (Resultado: NO viable en K706)
+- [x] ITunerTool proxy implementado vía `Proxy.newProxyInstance`
+- [x] Logcat en dispositivo real confirma: **QFTunerManager NOT FOUND**
+- [x] MCU no reenvía PI crudo (solo PS, RT, PTY, flags)
+- [x] Conclusión: Identificación cross-frecuencia requiere otro enfoque
+
+### RadioEngine V11
+- [x] `openEq(Context)` añadido a `RadioEngine`
+- [x] `onRdsPi(String)` añadido a `RadioEngineCallback`
+- [x] K706Engine: EQ abre `com.qf.soundeffect`
+- [x] MT8163Engine: EQ inyecta MCU key `0x134`
+- [x] EQ en MainActivity: **25 líneas → 3 líneas** (delegado al engine)
+
+### RdsDatabase (Infraestructura lista)
+- [x] `RdsDatabase.java`: PI→Nombre y PI→Logo via SharedPreferences
+- [x] Aprendizaje automático en `onRdsName` + lookup en `onRdsPi`
+- [x] (Pendiente de PI real para activarse — funcional pero inactivo)
+
+---
+
+## 🔲 Sesión 25/Feb (continuación) — En Progreso
 
 ### Prioridad 1: Completar migración RadioEngine
-- [ ] Migrar EQ/DSP al engine (cada motor sabe qué app de sonido abrir)
-- [ ] Migrar `initHiddenPlayer()` al engine MT8163 (ya lo hace `MT8163Engine.init()`)
-- [ ] Migrar `gotoFreq()`, `refreshRadioStatus()` para usar `mEngine`
+- [ ] Migrar `refreshRadioStatus()` para que use `mEngine` en vez de `mRadioService`
+- [ ] Eliminar `initHiddenPlayer()` duplicado en MainActivity
 - [ ] Eliminar `execRemote()` cuando toda la lógica use `mEngine`
 
 ### Prioridad 2: Unificar Engineering Dialogs
