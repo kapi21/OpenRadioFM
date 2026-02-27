@@ -23,6 +23,7 @@ public class K706Engine implements RadioEngine {
     // Track AF/TA state internally (K706RadioManager fields are private)
     private boolean mAfEnabled = false;
     private boolean mTaEnabled = false;
+    private boolean mTpEnabled = false;
 
     @Override
     public boolean init(Context context) {
@@ -122,6 +123,12 @@ public class K706Engine implements RadioEngine {
     }
 
     @Override
+    public boolean isScanning() {
+        if (mManager == null) return false;
+        try { return mManager.isScanning(); } catch (Exception e) { return false; }
+    }
+
+    @Override
     public void bandCycle() {
         if (mManager == null) return;
         try { mManager.onBandEvent(); } catch (RemoteException e) { e.printStackTrace(); }
@@ -192,7 +199,7 @@ public class K706Engine implements RadioEngine {
 
     @Override
     public boolean isTpEnabled() {
-        return false; // K706 doesn't report TP yet
+        return mTpEnabled;
     }
 
     // === DX/Local ===
@@ -215,6 +222,18 @@ public class K706Engine implements RadioEngine {
     public void gotoPreset(int index) {
         if (mManager == null) return;
         try { mManager.gotoFreqIndex(index); } catch (RemoteException e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void nextFavorite() {
+        if (mManager == null) return;
+        try { mManager.onNextFavoriteEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void prevFavorite() {
+        if (mManager == null) return;
+        try { mManager.onPreFavoriteEvent(); } catch (RemoteException e) { e.printStackTrace(); }
     }
 
     // === Callbacks ===
@@ -260,19 +279,27 @@ public class K706Engine implements RadioEngine {
             case 107: // PI Code Detected
                 mCallback.onRdsPi(data);
                 break;
+            case 108: // Scan Status Changed
+                mCallback.onScanStatusChanged("1".equals(data));
+                break;
             case 111: // AF/TP status indicators
-                if (data != null && data.startsWith("AF:")) {
-                    mAfEnabled = data.contains("1");
-                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, false);
+                if (data != null) {
+                    if (data.startsWith("AF:")) {
+                        mAfEnabled = data.contains("1");
+                    } else if (data.startsWith("TP:")) {
+                        mTpEnabled = data.contains("1");
+                    }
+                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, mTpEnabled);
                 }
                 break;
             case 112: // TA switch status from B3
-                if (data != null && data.contains(":1")) {
-                    mTaEnabled = true;
-                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, false);
-                } else if (data != null && data.contains(":0")) {
-                    mTaEnabled = false;
-                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, false);
+                if (data != null) {
+                    if (data.contains(":1")) {
+                        mTaEnabled = true;
+                    } else if (data.contains(":0")) {
+                        mTaEnabled = false;
+                    }
+                    mCallback.onRdsStatus(mAfEnabled, mTaEnabled, mTpEnabled);
                 }
                 break;
             default:

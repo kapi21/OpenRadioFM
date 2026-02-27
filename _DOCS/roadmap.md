@@ -72,16 +72,34 @@
 
 ---
 
+## ✅ Sesión 27/Feb/2026 — Completado (V.4.6.1 Stable Integration)
+
+### Navegación y Control (Hardware)
+- [x] **Navegación de Favoritos:** Rediseño de Layout 2 y Layout 3 para rodear la frecuencia con botones `Seek Down - Prev Fav - Next Fav - Seek Up`.
+- [x] **Integración MCU (K706):** Envío de comandos `0x0E` (Prev Fav) y `0x0F` (Next Fav) directamente al hardware.
+- [x] **Integración MT8163:** Implementada reflexión sobre `HiddenRadioPlayer` para saltos de emisora memorizada.
+
+### Interfaz y Experiencia Premium
+- [x] **Barra de Estado Opcional:** Añadida opción en el menú Premium para habilitar/deshabilitar la status bar de Android en el Layout 2.
+- [x] **Easter Egg "Hacker":** Nuevo diálogo de créditos premium con imagen personalizada de Jimmy80 y fondo traslúcido.
+- [x] **Corrección de Colores:** Tintado azul noche unificado para ST, PTY, AF, TA y TP en modo noche.
+
+### Organización y Limpieza
+- [x] **Consolidación de Docs:** Migración de logs de investigación y limpieza de la estructura de carpetas raíz.
+- [x] **Documentación Actualizada:** README y Manual de Usuario reflejan las nuevas capacidades de la versión 4.6.
+
+---
+
 ## 🔲 Próximos Pasos (V.5.0+)
 
-### Prioridad 1: Estabilidad y Feedback
-- [ ] Monitorizar feedback de la Beta v4.6 en MT8163 y K706.
-- [ ] Ajustar sensibilidad de reporte de RDS en QS6 G5.
+### Prioridad 1: Estabilidad
+- [ ] Monitorizar feedback de los nuevos botones de favoritos en mandos de volante.
+- [ ] Refinar sensado de señal RDS en zonas de baja cobertura.
 
 ### Prioridad 2: Funcionalidades Premium
 - [ ] **Visualización Espectro:** Implementar visualizador de audio integrado en la UI principal.
 - [ ] **Android Auto:** Soporte para control de medios desde la unidad principal externa.
 
 ### Prioridad 3: Limpieza Continua
-- [ ] Extraer lógica de presets a `PresetManager` (MainActivity sigue pesada).
-- [ ] Refinar `ThemeManager` para soportar dinámicamente nuevos iconos sin modificar código base.
+- [ ] Extraer lógica de presets a `PresetManager`.
+- [ ] Implementar sistema de temas dinámicos basado en JSON.

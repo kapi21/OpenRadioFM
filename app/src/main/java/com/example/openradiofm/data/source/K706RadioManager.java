@@ -93,6 +93,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private IRadioCallBack mCallback;
     private int mCurrentFreq = 8750; // Cache (en unidades x10, ej: 8750 = 87.50 MHz)
+    public int mLastFreq = -1;
+    public boolean mIsStereo = false; // V12.3: Estado real de Stereo
+    public boolean mHasRdsLock = false;
     private int mCurrentBand = BAND_FM1;
     private boolean mIsDxLocal = false; // V7.1: Estado DX/Local real
     private boolean mIsScanning = false; // V7.1: Estado de scan
@@ -106,6 +109,17 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsAudioFocusHeld = false;
     private boolean mIsRadioActive = false;
     private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
+    
+    // V13.1: Estabilización de Dial / Debouncing
+    private long mLastFreqUpdateTime = 0;
+    private int mPendingFreq = -1;
+    private final android.os.Handler mFreqHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final Runnable mFreqDebounceRunnable = () -> {
+        if (mPendingFreq != -1) {
+            updateFrequencyDelayed(mPendingFreq);
+            mPendingFreq = -1;
+        }
+    };
 
     public K706RadioManager(Context context) {
         this.mContext = context;
@@ -527,11 +541,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB5: // RDS PTY Type
                     fireEvent(110, "B5 PTY: " + bytesToHex(data));
                     if (data.length > 2) {
-                        // V9.9: Corregido offset al byte 2 según logcat real de Head Unit. 0xB5 [CMD, STATUS, PTY, ...]
                         int pty = data[2] & 0xFF;
-                        Log.d(TAG, "RDS PTY (0xB5): " + pty + " (raw=" + bytesToHex(data) + ")");
-                        // We must send string to fireEvent, so stringify pty
-                        fireEvent(102, String.valueOf(pty));
+                        fireEvent(105, String.valueOf(pty)); // PTY = 105
                     }
                     break;
                 case 0xB6: // RDS PS
@@ -575,12 +586,17 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         
         boolean asFlag     = (flags & 0x01) != 0; 
         boolean scanFlag   = (flags & 0x02) != 0;
-        boolean seekFlag   = (flags & 0x08) != 0;
+        boolean flagsSeek   = (flags & 0x08) != 0;
         boolean stFlag     = (flags & 0x10) != 0; // V9.9: Bit 4 es Stereo
         boolean locFlag    = (flags & 0x20) != 0; // V9.9: Bit 5 es Local (1=Local, 0=DX)
         
-        mIsScanning = asFlag || scanFlag;
-        mIsSeeking = seekFlag;
+        // V12.4: Incluir seekFlag en el estado de escaneo para que la UI sepa cuando se detiene un Seek Up/Down
+        boolean newScanState = asFlag || scanFlag || flagsSeek;
+        if (mIsScanning != newScanState) {
+            mIsScanning = newScanState;
+            fireEvent(108, String.valueOf(mIsScanning ? 1 : 0));
+        }
+        mIsSeeking = flagsSeek;
         
         // V9.9: Solo actualizamos si cambia para evitar spam de eventos
         if (mIsDxLocal != locFlag) {
@@ -588,13 +604,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Log.d(TAG, "DX/Local State Changed: " + (locFlag ? "LOCAL" : "DX"));
         }
         
+        mIsStereo = stFlag; // V12.3: Actualizar estado real
+        
         Log.d(TAG, "TunerInfo: flags=0x" + String.format("%02X", flags) + 
-                    " AS=" + asFlag + " Scan=" + scanFlag + " Seek=" + seekFlag +
+                    " AS=" + asFlag + " Scan=" + scanFlag + " Seek=" + flagsSeek +
                     " ST=" + stFlag + " LOC=" + locFlag);
         
         // Notificar UI
-        fireEvent(103, String.valueOf(stFlag ? 1 : 0)); // Stereo
-        fireEvent(106, String.valueOf(locFlag ? 1 : 0)); // DX/Local (1=Loc, 0=DX)
+        fireEvent(102, String.valueOf(stFlag ? 1 : 0)); // Stereo = 102
+        fireEvent(106, String.valueOf(locFlag ? 1 : 0)); // DX/Local = 106
     }
 
     private void handlePresetList(byte[] data) {
@@ -659,7 +677,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             
             if (!psName.isEmpty()) {
                 Log.d(TAG, "RDS PS: '" + psName + "'");
-                fireEvent(100, psName);
+                fireEvent(103, psName); // PS Name = 103
             }
         } catch (Exception e) {
             Log.e(TAG, "Error parsing RDS PS", e);
@@ -689,7 +707,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 
                 if (!rtText.isEmpty() && !rtText.equals("               ")) {
                     Log.d(TAG, "RDS RT Extracted: '" + rtText + "'");
-                    fireEvent(101, rtText);
+                    fireEvent(104, rtText); // RT Text = 104
                 }
             }
         } catch (Exception e) {
@@ -726,27 +744,53 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
      */
     private void updateFrequency(int mcuFreq) {
         // Convertir de MCU×100 a OpenRadioFM×1000 
-        // 9220 → 92200 (que luego la UI formatea como 92200/1000.0 = 92.20)
         int freqForUI;
         if (mcuFreq >= 8750 && mcuFreq <= 10800) {
-            // FM: multiplicar por 10 para pasar de ×100 a ×1000
+            // V12.4: Redondear al múltiplo de 100 kHz (10 en MCU units) más cercano
+            mcuFreq = ((mcuFreq + 5) / 10) * 10;
             freqForUI = mcuFreq * 10;
         } else if (mcuFreq >= 522 && mcuFreq <= 1710) {
-            // AM: ya está en kHz, usar directamente
             freqForUI = mcuFreq;
         } else {
-            Log.w(TAG, "Frecuencia MCU inválida: " + mcuFreq);
             return;
         }
         
-        if (freqForUI == mCurrentFreq) return;
+        if (freqForUI == mCurrentFreq) {
+            mPendingFreq = -1;
+            mFreqHandler.removeCallbacks(mFreqDebounceRunnable);
+            return;
+        }
+
+        long now = android.os.SystemClock.elapsedRealtime();
+        int diff = Math.abs(freqForUI - mCurrentFreq);
         
+        // V13.1: Lógica de Suavizado (Histeresis/Debounce)
+        // Si el cambio es el mínimo (100 kHz en OpenRadioFM units) y estamos en sintonía fina
+        // o jitter de hardware, esperamos un poco para confirmar que se asienta.
+        if (diff <= 100 && !mIsScanning && !mIsSeeking && (now - mLastFreqUpdateTime < 500)) {
+            mPendingFreq = freqForUI;
+            mFreqHandler.removeCallbacks(mFreqDebounceRunnable);
+            mFreqHandler.postDelayed(mFreqDebounceRunnable, 150); // 150ms para estabilizar
+            return;
+        }
+
+        // Si es un cambio mayor o el tiempo de gracia pasó, actualizamos inmediatamente
+        updateFrequencyDelayed(freqForUI);
+    }
+
+    private void updateFrequencyDelayed(int freqForUI) {
+        mFreqHandler.removeCallbacks(mFreqDebounceRunnable);
         int oldFreq = mCurrentFreq;
         mCurrentFreq = freqForUI;
-        Log.d(TAG, ">>> FREQ: " + oldFreq + " -> " + freqForUI + " (MCU=" + mcuFreq + ", " + String.format("%.2f", mcuFreq / 100.0) + " MHz)");
+        mLastFreqUpdateTime = android.os.SystemClock.elapsedRealtime();
         
-        // Notificar a la UI 
-        fireEvent(105, String.valueOf(freqForUI));
+        Log.d(TAG, ">>> FREQ STABLE: " + oldFreq + " -> " + freqForUI);
+        notifyFreqUpdate();
+    }
+    
+    private void notifyFreqUpdate() {
+        fireEvent(100, String.valueOf(mCurrentFreq)); // Frequency = 100
+        fireEvent(101, String.valueOf(mCurrentBand)); // Band = 101
     }
     
     private void sendMcuCmd(byte cmdId, byte[] data) {
@@ -1401,6 +1445,18 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         Log.d(TAG, "Select Preset Index -> " + index);
     }
 
+    public void onNextFavoriteEvent() throws RemoteException {
+        // V13.5: Comando nativo para siguiente favorito (0x0E)
+        sendCmd(SUB_TUNE_NEXT, (byte) 0, (byte) 0);
+        Log.d(TAG, "Next Favorite (0x0E) command sent");
+    }
+
+    public void onPreFavoriteEvent() throws RemoteException {
+        // V13.5: Comando nativo para favorito anterior (0x0F)
+        sendCmd(SUB_TUNE_PREV, (byte) 0, (byte) 0);
+        Log.d(TAG, "Previous Favorite (0x0F) command sent");
+    }
+
     @Override
     public int getCurrentBand() throws RemoteException {
         return mCurrentBand;
@@ -1433,7 +1489,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     public boolean IsSeek() throws RemoteException { return mIsSeeking; }
 
     @Override
-    public boolean IsStereo() throws RemoteException { return true; }
+    public boolean IsStereo() throws RemoteException { return mIsStereo; }
 
     @Override
     public boolean IsDxLocal() throws RemoteException { 
@@ -1599,10 +1655,6 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
-    private void notifyFreqUpdate() {
-        // La UI actualiza por polling a getCurrentFreq()
-        // y también por el evento 105
-    }
 
     // V9.9: Hack for Bluetooth recovery. The system's MediaFocusControl "steals" the audio channel
     // but never gives it back to us via normal OnAudioFocusChange because it uses an OEM "abandonCustomAudioFocus"

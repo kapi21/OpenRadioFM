@@ -34,6 +34,9 @@
     <string name="save_history">Guardar Historial de Emisoras</string>
     <string name="enable_gestures_beta">Habilitar Gestos (Swipe) (beta)</string>
     <string name="online_logos">Logos Online</string>
+    <string name="status_bar_v2">Barra de Estado (Layout 2)</string>
+    <string name="status_bar_enabled">✅ Barra de estado activada (Layout 2)</string>
+    <string name="status_bar_disabled">❌ Barra de estado desactivada (Layout 2)</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Modo Noche Automático activado</string>
@@ -75,6 +78,9 @@
     <string name="language_romanian">Română</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_serbian">Srpski</string>
+    <string name="language_french">Français</string>
+    <string name="language_chinese">中文 (简体)</string>
+    <string name="language_japanese">日本語</string>
     <string name="language_changed">✅ Idioma cambiado a %s</string>
     <string name="about_openradio">ℹ️ Acerca de OpenRadioFM</string>
     <string name="touch_to_change">Toca para cambiar</string>

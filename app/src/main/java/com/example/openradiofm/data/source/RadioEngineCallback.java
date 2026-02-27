@@ -36,6 +36,9 @@ public interface RadioEngineCallback {
     /** DX/Local cambiado */
     void onDxLocalChanged(boolean isLocal);
 
+    /** Estado de escaneo/búsqueda cambiado (true=activo, false=detenido) */
+    void onScanStatusChanged(boolean scanning);
+
     /** Evento crudo para Engineering Mode */
     void onRawEvent(int code, String data);
 }

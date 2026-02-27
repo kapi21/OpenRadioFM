@@ -209,6 +209,12 @@ public class QS6Engine implements RadioEngine {
     public boolean isTaEnabled() { return false; }
     @Override
     public boolean isTpEnabled() { return false; }
+    
+    @Override
+    public boolean isScanning() {
+        // V12.2: Implementación mínima para satisfacer la interfaz
+        return false;
+    }
 
     @Override
     public void toggleDxLocal() {
@@ -221,6 +227,16 @@ public class QS6Engine implements RadioEngine {
     @Override
     public void gotoPreset(int index) {
         // goto index
+    }
+
+    @Override
+    public void nextFavorite() {
+        // No soportado nativamente en QS6 vía intents por ahora
+    }
+
+    @Override
+    public void prevFavorite() {
+        // No soportado nativamente en QS6 vía intents por ahora
     }
 
     @Override

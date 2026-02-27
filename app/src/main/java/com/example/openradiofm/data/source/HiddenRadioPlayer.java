@@ -128,6 +128,34 @@ public class HiddenRadioPlayer {
     }
 
     /**
+     * Navegación nativa al siguiente favorito guardado en el chip.
+     */
+    public void next() {
+        if (mRadioPlayerInstance == null) return;
+        try {
+            Method nextMethod = mRadioPlayerInstance.getClass().getMethod("next");
+            nextMethod.invoke(mRadioPlayerInstance);
+            Log.d(TAG, "next() ejecutado.");
+        } catch (Exception e) {
+            Log.e(TAG, "Error llamando a next(): " + e.getMessage());
+        }
+    }
+
+    /**
+     * Navegación nativa al favorito anterior guardado en el chip.
+     */
+    public void prev() {
+        if (mRadioPlayerInstance == null) return;
+        try {
+            Method prevMethod = mRadioPlayerInstance.getClass().getMethod("prev");
+            prevMethod.invoke(mRadioPlayerInstance);
+            Log.d(TAG, "prev() ejecutado.");
+        } catch (Exception e) {
+            Log.e(TAG, "Error llamando a prev(): " + e.getMessage());
+        }
+    }
+
+    /**
      * Procesa cada evento recibido desde la API interna del coche
      * y lo traduce a callbacks de alto nivel para la Activity.
      */

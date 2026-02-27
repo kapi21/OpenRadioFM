@@ -166,6 +166,20 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
+        <!-- Option: Status Bar V2 -->
+        <LinearLayout style="@style/SettingsRowStyle">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/status_bar_v2"
+                android:textColor="@color/white"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchStatusBarV2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
         <!-- Option: Night Mode -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView
@@ -231,50 +245,6 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
         
-        <!-- SECTION: RADIO DATA SYSTEM (RDS) -->
-        <TextView
-            style="@style/DialogSubheaderText"
-            android:text="RADIO DATA SYSTEM (RDS)"
-            android:textColor="#FFD600"
-            android:textSize="14sp"
-            android:fontFamily="sans-serif-medium"
-            android:layout_marginTop="16dp"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="#222222"
-            android:padding="12dp"
-            android:layout_marginTop="8dp">
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/swPremiumRds"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Enable RDS Subsystem"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:paddingVertical="8dp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/swPremiumAf"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Alternative Frequencies (AF)"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:paddingVertical="8dp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/swPremiumTa"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Traffic Announcements (TA)"
-                android:textColor="#FFFFFF"
-                android:textSize="16sp"
-                android:paddingVertical="8dp" />
-        </LinearLayout>
 
         <!-- SECTION: HARDWARE -->
         <TextView

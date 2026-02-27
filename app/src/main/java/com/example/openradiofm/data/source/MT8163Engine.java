@@ -146,13 +146,13 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public void seekUp() {
         if (mService == null) return;
-        try { mService.onSeekUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mService.onSeekDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
     }
 
     @Override
     public void seekDown() {
         if (mService == null) return;
-        try { mService.onSeekDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mService.onSeekUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
     }
 
     @Override
@@ -250,6 +250,12 @@ public class MT8163Engine implements RadioEngine {
         return mHiddenPlayer != null && mHiddenPlayer.isTpEnabled();
     }
 
+    @Override
+    public boolean isScanning() {
+        // V12.2: Implementación mínima para satisfacer la interfaz
+        return false;
+    }
+
     // === DX/Local (via AIDL) ===
 
     @Override
@@ -270,6 +276,16 @@ public class MT8163Engine implements RadioEngine {
     public void gotoPreset(int index) {
         if (mService == null) return;
         try { mService.gotoFreqIndex(index); } catch (RemoteException e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void nextFavorite() {
+        if (mHiddenPlayer != null) mHiddenPlayer.next();
+    }
+
+    @Override
+    public void prevFavorite() {
+        if (mHiddenPlayer != null) mHiddenPlayer.prev();
     }
 
     // === Callbacks ===

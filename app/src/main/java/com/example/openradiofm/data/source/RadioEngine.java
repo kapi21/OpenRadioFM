@@ -27,6 +27,7 @@ public interface RadioEngine {
     void scan();
     void stopScan();
     void bandCycle();
+    boolean isScanning();
 
     // === Audio ===
     boolean isStereo();
@@ -47,6 +48,8 @@ public interface RadioEngine {
 
     // === Presets ===
     void gotoPreset(int index);
+    void nextFavorite();
+    void prevFavorite();
 
     // === Callbacks ===
     void setCallback(RadioEngineCallback cb);

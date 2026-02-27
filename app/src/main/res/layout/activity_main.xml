@@ -262,35 +262,69 @@
     </FrameLayout>
 
     <!-- Seek Buttons -->
+    <!-- Navigation & Seek Buttons -->
+    <!-- Navigation & Seek Buttons (Classic Layout - Reordered) -->
     <ImageButton
         android:id="@+id/btnSeekDown"
         android:layout_width="0dp"
         android:layout_height="90dp"
         android:layout_marginStart="8dp"
-        android:layout_marginEnd="4dp"
+        android:layout_marginEnd="2dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/bg_glass_card_premium"
         android:src="@drawable/seek_down"
         android:scaleType="fitCenter"
-        android:padding="12dp"
+        android:padding="14dp"
         app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
+        app:layout_constraintEnd_toStartOf="@+id/btnFavPrev"
+        app:layout_constraintHorizontal_weight="1"/>
+
+    <ImageButton
+        android:id="@+id/btnFavPrev"
+        android:layout_width="0dp"
+        android:layout_height="90dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_glass_card_premium"
+        android:src="@drawable/btn_previous_n"
+        android:scaleType="fitCenter"
+        android:padding="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
+        app:layout_constraintStart_toEndOf="@id/btnSeekDown"
+        app:layout_constraintEnd_toStartOf="@+id/btnFavNext"
+        app:layout_constraintHorizontal_weight="1"/>
+
+    <ImageButton
+        android:id="@+id/btnFavNext"
+        android:layout_width="0dp"
+        android:layout_height="90dp"
+        android:layout_marginStart="2dp"
+        android:layout_marginEnd="2dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_glass_card_premium"
+        android:src="@drawable/btn_next_n"
+        android:scaleType="fitCenter"
+        android:padding="20dp"
+        app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
+        app:layout_constraintStart_toEndOf="@id/btnFavPrev"
         app:layout_constraintEnd_toStartOf="@+id/btnSeekUp"
         app:layout_constraintHorizontal_weight="1"/>
-        
+
     <ImageButton
         android:id="@+id/btnSeekUp"
         android:layout_width="0dp"
         android:layout_height="90dp"
-        android:layout_marginStart="4dp"
+        android:layout_marginStart="2dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:background="@drawable/bg_glass_card_premium"
         android:src="@drawable/seek_up"
         android:scaleType="fitCenter"
-        android:padding="12dp"
+        android:padding="14dp"
         app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
-        app:layout_constraintStart_toEndOf="@+id/btnSeekDown"
+        app:layout_constraintStart_toEndOf="@+id/btnFavNext"
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
         app:layout_constraintHorizontal_weight="1"/>
 

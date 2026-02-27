@@ -1,6 +1,6 @@
-# Manual de Usuario - OpenRadioFM v4.5.1 Server Test
+# Manual de Usuario - OpenRadioFM v4.6.1 Stable Integration
 
-Bienvenido a **OpenRadioFM v4.0**, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión "Global Edition" está optimizada para ofrecer la máxima estabilidad, una calidad visual impecable y una integración total con el hardware del vehículo.
+Bienvenido a **OpenRadioFM v4.6.1**, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión está optimizada para ofrecer la máxima estabilidad, una calidad visual impecable y una integración total con el hardware del vehículo, incluyendo control directo de favoritos.
 
 ---
 
@@ -8,15 +8,14 @@ Bienvenido a **OpenRadioFM v4.0**, la evolución definitiva de la radio FM para 
 
 ### 1.1 Modos de Pantalla (Layouts)
 OpenRadioFM cuenta con dos diseños principales que puedes intercambiar:
-- **V2 (Clásico Vertical):** Optimizado para pantallas tipo tablet o verticales. *Ahora con estabilidad total en los textos RDS.*
+- **V2 (Clásico Vertical):** Optimizado para pantallas tipo tablet o verticales.
 - **V3 (Premium Horizontal):** Diseño panorámico ideal para el salpicadero, con iconos de gran formato y el nuevo **"Glass Mode"** de fondo.
 - **Cómo cambiar:** Mantén pulsado el botón **LOC/DX** para alternar entre los diseños. La app se reiniciará automáticamente.
 
-### 1.2 Indicador de Calidad de Señal [Novedad v4.0]
-El icono de antena (`level_signal.png`) ahora es inteligente y cambia de color según la recepción real:
-- 🟢 **Verde:** Señal excelente (Estéreo detectado y RDS sincronizado).
-- 🟡 **Amarillo:** Señal media (Solo Estéreo o solo RDS disponible).
-- 🔴 **Rojo:** Señal pobre o nula.
+### 1.2 Navegación de Favoritos (Hardware) [Novedad v4.6.1]
+En los Layouts 2 y 3, los botones de navegación ahora rodean la frecuencia central para un acceso rápido:
+- **Favoritos:** Los botones centrales permiten saltar entre tus emisoras memorizadas directamente. Esta función está integrada con los mandos de volante de tu unidad (K706/MT8163).
+- **Búsqueda (Seek):** Los botones exteriores realizan la búsqueda automática de la siguiente emisora con señal.
 
 ---
 
@@ -24,61 +23,35 @@ El icono de antena (`level_signal.png`) ahora es inteligente y cambia de color s
 
 Mantén pulsado el botón de **Configuración (EQ)** para acceder al centro de personalización:
 
-### 2.1 Colores del Tema
-Elige entre 10 esquemas de color que se aplican a los bordes y acentos. En **Modo Noche**, la app forzará el color "Night Blue" para reducir la fatiga visual.
+### 2.1 Barra de Estado Opcional [Novedad v4.6.1]
+En el Layout 2, ahora puedes elegir ocultar o mostrar la barra de estado de Android (reloj, notificaciones, etc.) mediante el interruptor **"Barra de Estado v2"**.
 
-### 2.2 Modo de Fondo (Glass Mode)
+### 2.2 Colores del Tema y Modo Noche
+Elige entre 10 esquemas de color para los bordes y acentos. En **Modo Noche**, la app aplicará el color **"Night Blue"** a todos los indicadores (ST, PTY, AF, TA, TP) para una visibilidad nocturna premium.
+
+### 2.3 Modo de Fondo (Glass Mode)
 1. **Negro Puro:** Máximo contraste.
 2. **Imagen background.png:** Carga tu imagen desde `/sdcard/RadioLogos/background.png`.
-3. **Logo Dinámico (Glass Mode):** El fondo se genera automáticamente a partir del logo de la emisora, creando un efecto de cristal esmerilado muy elegante. En V3, este efecto funciona incluso si decides ocultar el logo central.
-
-### 2.3 Horario Modo Noche [Novedad v4.5.1]
-Ahora puedes automatizar el cambio de tema oscuro:
-1. Activa **"Modo Noche Automático"** en Ajustes Premium.
-2. Pulsa en las horas de **Inicio** y **Fin** para definir tu horario preferido (ej: 20:00 a 07:00).
+3. **Logo Dinámico (Glass Mode):** El fondo se genera automáticamente a partir del logo de la emisora.
 
 ---
 
-## 3. Gestión de Logos y Nombres
+## 3. Créditos y Easter Egg
 
-### 3.1 Logos de Emisoras (Hybrid Logic)
-La app busca logos de tres formas:
-1. **Local:** En `/sdcard/RadioLogos/frecuencia_khz.png`.
-   - Ejemplo: Para 94.1 MHz => **94100.png** o **9410.png**.
-2. **API Online:** Si está activado en ajustes, descarga logos automáticamente.
-3. **Prioridad:** El logo local siempre tiene prioridad sobre el online.
-
-### 3.2 Logo de Marca de Coche
-En Layout V3, puedes mostrar tu marca en el lateral derecho:
-- Ubicación: `/sdcard/RadioLogos/car_logo.png`
+### 3.1 El Diálogo "Hacker" [Novedad v4.6.1]
+Si quieres conocer los detalles técnicos y los créditos del desarrollador:
+- **Cómo activar:** Pulsa **5 veces seguidas** sobre el visor de frecuencia principal.
+- Verás un diálogo premium con la imagen del desarrollador Jimmy80 y la confirmación de la versión estable actual.
 
 ---
 
-## 4. Gestión de Favoritos
+## 4. Gestión de Logos y Favoritos
 
-### 4.0 Memoria por Banda [Novedad v4.5.1]
-Cada banda (FM1, FM2, FM3) tiene sus propios 6 espacios de memoria independientes. Al cambiar de banda, se cargan automáticamente tus emisoras guardadas para esa frecuencia.
+### 4.1 Logos de Emisoras
+La app busca logos localmente en `/sdcard/RadioLogos/frecuencia_khz.png` o mediante la API Online si está habilitada.
 
-### 4.1 Guardar y Cargar
-Usa el botón del **Disquete (💾)** para abrir el gestor de archivos `.fav`. Esto te permite mover tus emisoras favoritas entre diferentes radios o hacer copias de seguridad antes de resetear el equipo.
-
----
-
-## 5. Configuración de Hardware
-
-### 5.1 Motor de Radio (Radio Engine)
-Si tu radio no sintoniza correctamente, ve a **Ajustes de Hardware** y selecciona tu motor:
-- **HCN:** Para la mayoría de radios Eonon, Xtrons y similares.
-- **MTK:** Para placas Mediatek estándar.
-- **TS/SYU:** Para unidades TopWay o Joying.
+### 4.2 Guardar y Cargar (.fav)
+Usa el botón del **Disquete (💾)** para exportar o importar tu lista de favoritos.
 
 ---
-
-## 6. Solución de Problemas
-
-- **Los botones se mueven de sitio:** Esto ha sido corregido en la v4.0. Las cajas de RDS ahora son fijas para evitar saltos visuales.
-- **El fondo dinámico no carga:** Asegúrate de tener activada la opción en el menú Premium y que la emisora tenga un logo (local o remoto).
-- **No se ve el color azul en modo noche:** Verifica que el "Modo Noche Automático" esté activado en las opciones de la app.
-
----
-*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v4.0 Final*
+*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v4.6.1 Final*

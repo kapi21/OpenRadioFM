@@ -108,6 +108,23 @@
                     android:lineSpacingExtra="4dp"
                     android:text="Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos"/>
             </LinearLayout>
+
+            <View 
+                android:layout_width="match_parent" 
+                android:layout_height="1dp" 
+                android:background="#444444" 
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Credits Info -->
+            <TextView
+                android:id="@+id/tvIcons8Credit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#AAAAAA"
+                android:textSize="13sp"
+                android:text="Icons by Icons8"
+                android:layout_gravity="center_horizontal"/>
         </LinearLayout>
 
         <!-- Close -->

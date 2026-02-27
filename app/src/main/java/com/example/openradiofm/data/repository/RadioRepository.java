@@ -19,9 +19,9 @@ public class RadioRepository {
     private final java.util.concurrent.ExecutorService logoExecutor = java.util.concurrent.Executors
             .newFixedThreadPool(3);
 
-    // Caché en memoria para evitar recargas de logos al cambiar frecuencia.
-    // Key: frecuencia en kHz, Value: URL o path del logo
-    private final java.util.HashMap<Integer, String> logoCache = new java.util.HashMap<>();
+    // Caché en memoria para evitar recargas de logos al cambiar frecuencia o nombre.
+    // V13.6: Key: freqKHz + "_" + stationName, Value: URL o path del logo
+    private final java.util.HashMap<String, String> logoCache = new java.util.HashMap<>();
 
     // Repositorio central que combina:
     // - RootRDSSource: nombres RDS desde el fichero interno del servicio de radio
@@ -165,8 +165,8 @@ public class RadioRepository {
 
         // 0. Revisar Caché en Memoria
         String cacheKey = freqKHz + "_" + finalName; // V3.0: Caché con nombre RDS
-        if (logoCache.containsKey(freqKHz)) {
-            String cachedPath = logoCache.get(freqKHz);
+        if (logoCache.containsKey(cacheKey)) {
+            String cachedPath = logoCache.get(cacheKey);
             station.setLogoUrl(cachedPath);
             if (callback != null)
                 callback.onLogoFound(cachedPath);
@@ -180,7 +180,7 @@ public class RadioRepository {
         if (logoPath != null) {
             android.util.Log.d("RadioLogos", "FOUND: " + logoPath);
             station.setLogoUrl(logoPath);
-            logoCache.put(freqKHz, logoPath);
+            logoCache.put(cacheKey, logoPath);
             if (callback != null)
                 callback.onLogoFound(logoPath);
         } else {
@@ -208,13 +208,13 @@ public class RadioRepository {
                     String savedPath = downloadAndSaveLogo(logoUrlToDownload, freqKHz, stationNameForLambda);
                     if (savedPath != null) {
                         station.setLogoUrl(savedPath);
-                        logoCache.put(freqKHz, savedPath);
+                        logoCache.put(cacheKey, savedPath);
                         if (callback != null)
                             callback.onLogoFound(savedPath);
                     } else {
                         // Fallback to URL if download fails
                         station.setLogoUrl(logoUrlToDownload);
-                        logoCache.put(freqKHz, logoUrlToDownload);
+                        logoCache.put(cacheKey, logoUrlToDownload);
                         if (callback != null)
                             callback.onLogoFound(logoUrlToDownload);
                     }
