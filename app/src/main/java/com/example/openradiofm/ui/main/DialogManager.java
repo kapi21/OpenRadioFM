@@ -170,6 +170,10 @@ public class DialogManager {
 
         dialog.findViewById(R.id.btnAbout).setOnClickListener(v -> showAboutDialog());
         dialog.findViewById(R.id.btnCloseSettings).setOnClickListener(v -> dialog.dismiss());
+        
+        // V15.1: Aplicar fuente de forma recursiva al diálogo de ajustes
+        applyRecursiveFont(dialog.getWindow().getDecorView(), getSystemTypeface());
+        
         dialog.show();
     }
 
@@ -237,8 +241,40 @@ public class DialogManager {
         Window window = dialog.getWindow();
         if (window != null) {
             window.setBackgroundDrawable(mActivity.getResources().getDrawable(R.drawable.bg_submenu_box));
-            // Asegurar que el título y la lista sean visibles si los overrides de sistema fallan
             window.setDimAmount(0.6f);
+        }
+        
+        // V15.1: Aplicar fuente del sistema a la vista raíz del diálogo
+        applyRecursiveFont(dialog.getWindow().getDecorView(), getSystemTypeface());
+    }
+
+    /**
+     * Obtiene la fuente configurada actualmente en las preferencias.
+     */
+    private Typeface getSystemTypeface() {
+        int fontIdx = mActivity.mPrefs.getInt("pref_font_type", 0);
+        try {
+            int[] fontRes = { 0, R.font.bebas, R.font.digital, R.font.inter, R.font.orbitron, R.font.formula1 };
+            if (fontIdx > 0 && fontIdx < fontRes.length) {
+                return androidx.core.content.res.ResourcesCompat.getFont(mActivity, fontRes[fontIdx]);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error loading font: " + fontIdx, e);
+        }
+        return Typeface.DEFAULT_BOLD;
+    }
+
+    /**
+     * Aplica una fuente de forma recursiva a todos los TextViews (y derivados) en un árbol de vistas.
+     */
+    private void applyRecursiveFont(View v, Typeface tf) {
+        if (v instanceof android.view.ViewGroup) {
+            android.view.ViewGroup vg = (android.view.ViewGroup) v;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                applyRecursiveFont(vg.getChildAt(i), tf);
+            }
+        } else if (v instanceof TextView) {
+            ((TextView) v).setTypeface(tf);
         }
     }
 
@@ -277,6 +313,9 @@ public class DialogManager {
         View btnClose = dialog.findViewById(R.id.btnClose);
         if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
 
+        // V15.1: Aplicar fuente recursiva al diálogo About
+        applyRecursiveFont(dialog.getWindow().getDecorView(), getSystemTypeface());
+
         dialog.show();
     }
 
@@ -305,13 +344,16 @@ public class DialogManager {
             displayNames[i] = String.format("%.2f MHz", f / 1000.0f);
         }
 
-        new AlertDialog.Builder(mActivity)
+        AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(mActivity.getString(R.string.station_history))
                 .setItems(displayNames, (d, w) -> {
                     if (mActivity.mEngine != null) {
                         mActivity.mEngine.tune(Integer.parseInt(freqs[w]));
                     }
-                }).show();
+                }).create();
+        
+        applyPremiumListStyle(dialog);
+        dialog.show();
     }
 
     public void showSaveLoadFavoritesDialog() {
@@ -354,6 +396,10 @@ public class DialogManager {
         });
 
         dialog.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
+        
+        // V15.1: Aplicar fuente recursiva al diálogo Save/Load
+        applyRecursiveFont(dialog.getWindow().getDecorView(), getSystemTypeface());
+        
         dialog.show();
     }
 
