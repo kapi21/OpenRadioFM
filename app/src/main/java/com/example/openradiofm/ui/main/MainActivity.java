@@ -114,6 +114,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public java.util.List<ScannedStation> mCapturedList = new java.util.ArrayList<>();
     public StationAdapter mStationAdapter;
     public DialogManager mDialogManager;
+    public LogoManager mLogoManager;
 
     // V11: RDS PI Database Identification
     private com.example.openradiofm.data.source.RdsDatabase mRdsDb;
@@ -635,12 +636,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
         }
 
-        // V2.0: Crear carpeta RadioLogos si no existe
-        createRadioLogosFolder();
+        // V13: Inicializar Managers
+        mPresetManager = new PresetManager(this, mRepository, mPrefs, PRESETS_COUNT);
+        mDialogManager = new DialogManager(this);
+        mLogoManager = new LogoManager(this);
 
         // V2.0: Cargar fondo personalizado si existe
-        loadCustomBackground();
-        loadCarLogo(); // V3.9: Cargar logo marca coche
+        mLogoManager.loadCustomBackground();
+        mLogoManager.loadCarLogo(); // V3.9: Cargar logo marca coche
 
         // Determinar modo de funcionamiento (FM completo vs básico) antes de crear el
         // repositorio.
@@ -1343,67 +1346,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     /**
-     * V13.2: Aplica un logo de respaldo (Coche > App) a un ImageView.
-     */
-    private void applyFallbackLogo(ImageView iv) {
-        if (iv == null) return;
-        java.io.File logoFile = new java.io.File("/sdcard/RadioLogos/car_logo.png");
-        if (logoFile.exists()) {
-            Glide.with(this)
-                    .load(logoFile)
-                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(iv);
-        } else {
-            // V14.0: Si es Layout V3, no mostrar el icono de la radio (dejar vacío o invisible)
-            if (mIsV3 && iv.getId() == R.id.ivMainLogo) {
-                iv.setImageDrawable(null);
-                iv.setVisibility(View.GONE);
-            } else {
-                iv.setImageResource(R.mipmap.ic_launcher);
-                iv.setVisibility(View.VISIBLE);
-            }
-        }
-    }
-
-    /**
-     * V3.9: Carga el logo de la marca del coche si existe en
-     * /sdcard/RadioLogos/car_logo.png
-     * Se coloca en el hueco derecho del layout V3 (ivCarLogo) y en el central del
-     * V2 (ivMainLogo).
-     */
-    public void loadCarLogo() {
-        // Layout V3
-        ImageView ivCarLogo = findViewById(R.id.ivCarLogo);
-        // Layout V2
-        ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
-
-        java.io.File logoFile = new java.io.File("/sdcard/RadioLogos/car_logo.png");
-        boolean logoExists = logoFile.exists();
-
-        // Logic for Layout V3
-        if (ivCarLogo != null) {
-            if (logoExists) {
-                ivCarLogo.setVisibility(View.VISIBLE);
-                Glide.with(this)
-                        .load(logoFile)
-                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE)
-                        .skipMemoryCache(true)
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .into(ivCarLogo);
-            } else {
-                ivCarLogo.setVisibility(View.INVISIBLE);
-            }
-        }
-
-        // Logic for Layout V2 (Standardization via Fallback)
-        if (ivMainLogo != null && !mIsV3) {
-            applyFallbackLogo(ivMainLogo);
-        }
-    }
-
-    /**
      * Configura los botones de búsqueda manual y automática de frecuencias.
      *
      * - Los pasos manuales (+/- 0.1 MHz) se hacen mediante llamadas AIDL al
@@ -1687,12 +1629,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 
                 // V12.2: Limpieza inmediata de imágenes
                 ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
-                if (ivMainLogo != null) { // V14: Permitir V3 para que applyFallbackLogo lo limpie
-                    applyFallbackLogo(ivMainLogo);
+                if (ivMainLogo != null && mLogoManager != null) {
+                    mLogoManager.applyFallbackLogo(ivMainLogo);
                 }
 
                 // V13.7: Limpieza de fondo dinámico al sintonizar
-                updateDynamicBackground(null);
+                if (mLogoManager != null) mLogoManager.updateDynamicBackground(null);
                 if (tvPty != null) {
                     tvPty.setText("Sin PTY");
                     if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
@@ -1743,53 +1685,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             updateFrequencyDisplay(fFreq);
 
-            // V4.0: Logo & Background Logic
-            String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
-            ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
-
-            if (cachedLogo != null) {
-                if (!cachedLogo.equals(mLastLogoUrl)) {
-                    mLastLogoUrl = cachedLogo;
-                    if (ivMainLogo != null) { // V14: Permitir V3
-                        ivMainLogo.setVisibility(View.VISIBLE);
-                        Glide.with(MainActivity.this)
-                                .load(cachedLogo)
-                                .transition(DrawableTransitionOptions.withCrossFade())
-                                .into(ivMainLogo);
-                    }
-                    updateDynamicBackground(cachedLogo);
-                }
-            } else {
-                mRepository.getStationInfo(fFreq, url -> {
-                    runOnUiThread(() -> {
-                        if (url != null) {
-                            if (!url.equals(mLastLogoUrl)) {
-                                mLastLogoUrl = url;
-                                mLogoCachePerBand.put(bandCacheKey, url);
-                                if (ivMainLogo != null) { // V14: Permitir V3
-                                    ivMainLogo.setVisibility(View.VISIBLE);
-                                    Glide.with(MainActivity.this)
-                                            .load(url)
-                                            .transition(DrawableTransitionOptions.withCrossFade())
-                                            .into(ivMainLogo);
-                                }
-                                updateDynamicBackground(url);
-                            }
-                        } else {
-                            mLastLogoUrl = "";
-                            mLogoCachePerBand.remove(bandCacheKey);
-                            if (ivMainLogo != null && !mIsV3) {
-                                applyFallbackLogo(ivMainLogo);
-                                ivMainLogo.setVisibility(View.VISIBLE);
-                            }
-                            updateDynamicBackground(null);
-                        }
-                    });
-                });
-            }
-
-            if (mIsV3 && ivMainLogo != null) {
-                ivMainLogo.setVisibility(View.GONE);
+            // V4.0: Logo & Background Logic (Handled by LogoManager)
+            if (mLogoManager != null) {
+                String cachedLogo = mLogoCachePerBand.get(bandCacheKey);
+                mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
             }
 
             updateBandImage(fBand);
@@ -2348,36 +2247,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
-    /**
-     * V3.8: Actualiza el fondo de la aplicación con el logo de la radio
-     * (difuminado).
-     */
-    public void updateDynamicBackground(String logoUrl) {
-        if (ivDynamicBackground == null)
-            return;
-
-        // V4.0: Layout 3 always allows dynamic background if enabled in prefs
-        int bgMode = mPrefs.getInt("pref_bg_mode", 1); // 1: Classic, 2: Dynamic
-
-        if (bgMode == 2) {
-            if (logoUrl != null && !logoUrl.isEmpty()) {
-                ivDynamicBackground.setVisibility(View.VISIBLE);
-                Glide.with(this)
-                        .load(logoUrl)
-                        .centerCrop()
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .into(ivDynamicBackground);
-            } else {
-                // V13.7: Limpieza total si no hay logo
-                ivDynamicBackground.setVisibility(View.GONE);
-                Glide.with(this).clear(ivDynamicBackground);
-                loadCustomBackground(); // Volver al fondo estático/clásico
-            }
-        } else {
-            ivDynamicBackground.setVisibility(View.GONE);
-            loadCustomBackground();
-        }
-    }
 
     // V4: Frequency Step Helpers (Manual Tuning)
     private void stepFreqUp() {
