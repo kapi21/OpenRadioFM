@@ -71,6 +71,10 @@ public class K706EngineeringDialog extends Dialog {
         setupButtons();
 
         mIsRunning = true;
+        
+        // V15.6: Aplicar tipografía global al diálogo de ingeniería
+        mActivity.applyRecursiveFont(getWindow().getDecorView(), mActivity.getSystemTypeface());
+        
         logEvent("SYS", "K706 DEV MODE INITIALIZED");
         logEvent("SYS", "MCU BRIDGE: " + (getK706Manager() != null ? "CONNECTED" : "DISCONNECTED"));
         startUpdateLoop();
@@ -118,8 +122,8 @@ public class K706EngineeringDialog extends Dialog {
     }
 
     private K706RadioManager getK706Manager() {
-        if (mActivity.mRadioService instanceof K706RadioManager) {
-            return (K706RadioManager) mActivity.mRadioService;
+        if (mActivity.mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
+            return ((com.example.openradiofm.data.source.K706Engine) mActivity.mEngine).getManager();
         }
         return null;
     }
