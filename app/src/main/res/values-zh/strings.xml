@@ -67,10 +67,12 @@
     <string name="enable_am_band">启用 AM 波段</string>
     <string name="radio_engine">收音机引擎</string>
     <string name="engine_auto">自动 (推荐)</string>
-    <string name="engine_hcn">HCN (Eonon/Xtrons)</string>
-    <string name="engine_mtk">Mediatek (MtkRadio)</string>
+    <string name="engine_k706">Vento / HCN (K706)</string>
+    <string name="engine_qs6">NWD / Nanis (QS6)</string>
+    <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
+    <string name="engine_mtk">MediaTek 通用</string>
     <string name="engine_ts">TopWay (MainUI)</string>
-    <string name="engine_standard">标准 Android</string>
+    <string name="engine_standard">标准 Android API</string>
     <string name="am_band_enabled">✅ AM 波段已启用</string>
     <string name="am_band_disabled">❌ AM 波段已禁用</string>
     <string name="engine_changed">✅ 收音机引擎已更改为 %s</string>

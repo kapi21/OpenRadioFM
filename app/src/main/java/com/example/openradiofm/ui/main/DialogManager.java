@@ -158,6 +158,44 @@ public class DialogManager {
             swAm.setOnCheckedChangeListener((bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_enable_am", checked).apply());
         }
 
+        if (swHistory != null) {
+            swHistory.setChecked(mActivity.mPrefs.getBoolean("pref_save_history", true));
+            swHistory.setOnCheckedChangeListener((bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply());
+        }
+
+        if (swGestures != null) {
+            swGestures.setChecked(mActivity.mPrefs.getBoolean("pref_enable_gestures", false));
+            swGestures.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_enable_gestures", checked).apply();
+                mActivity.showToast(checked ? "Gestos (Beta): Activados" : "Gestos: Desactivados");
+            });
+        }
+
+        // Engine Row Logic
+        View rowEngine = dialog.findViewById(R.id.rowEngine);
+        TextView tvCurrentEngine = dialog.findViewById(R.id.tvCurrentEngine);
+        if (tvCurrentEngine != null) {
+            int engineIdx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
+            String[] engineNames = { 
+                mActivity.getString(R.string.engine_auto), 
+                mActivity.getString(R.string.engine_k706), 
+                mActivity.getString(R.string.engine_qs6), 
+                mActivity.getString(R.string.engine_mt8163), 
+                mActivity.getString(R.string.engine_mtk), 
+                mActivity.getString(R.string.engine_ts), 
+                mActivity.getString(R.string.engine_standard) 
+            };
+            if (engineIdx >= 0 && engineIdx < engineNames.length) {
+                tvCurrentEngine.setText(engineNames[engineIdx]);
+            }
+        }
+        if (rowEngine != null) {
+            rowEngine.setOnClickListener(v -> {
+                showEngineSelector();
+                dialog.dismiss();
+            });
+        }
+
         cardTheme.setOnClickListener(v -> {
             if (mActivity.mPrefs.getBoolean("pref_night_mode_auto", false)) {
                 mActivity.showToast("Desactiva Modo Noche Automático para elegir skin manualmente");
@@ -212,9 +250,9 @@ public class DialogManager {
                 .setTitle(R.string.select_bg_mode)
                 .setItems(modes, (d, w) -> {
                     mActivity.mPrefs.edit().putInt("pref_bg_mode", w).apply();
-                    mActivity.loadCustomBackground();
-                    mActivity.loadCarLogo();
-                    mActivity.updateDynamicBackground(mActivity.mLastLogoUrl);
+                    mActivity.mLogoManager.loadCustomBackground();
+                    mActivity.mLogoManager.loadCarLogo();
+                    mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
                     if (tvStatus != null) tvStatus.setText(modes[w]);
                 }).create();
         applyPremiumListStyle(dialog);
@@ -222,11 +260,16 @@ public class DialogManager {
     }
 
     public void showNewLanguageSelector() {
-        String[] languages = { "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)", "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)", "Українська (UK)", "Srpski (SR)" };
+        String[] languages = { 
+            "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)", 
+            "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)", 
+            "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)" 
+        };
+        String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr", "zh", "ja" };
+        
         AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.select_language)
                 .setItems(languages, (d, w) -> {
-                    String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr" };
                     if (w < codes.length) {
                         mActivity.mPrefs.edit().putString("app_language", codes[w]).apply();
                         mActivity.showToast("Idioma cambiado: " + languages[w] + ". Reinicia la app.");
@@ -320,14 +363,25 @@ public class DialogManager {
     }
 
     public void showEngineSelector() {
-        String[] options = { mActivity.getString(R.string.engine_auto), "HCN", "MTK", "Standard", "TS" };
-        new AlertDialog.Builder(mActivity)
+        String[] options = { 
+            mActivity.getString(R.string.engine_auto), 
+            mActivity.getString(R.string.engine_k706), 
+            mActivity.getString(R.string.engine_qs6), 
+            mActivity.getString(R.string.engine_mt8163), 
+            mActivity.getString(R.string.engine_mtk), 
+            mActivity.getString(R.string.engine_ts), 
+            mActivity.getString(R.string.engine_standard) 
+        };
+        
+        AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.radio_engine)
-                .setItems(options, (dialog, which) -> {
+                .setItems(options, (d, which) -> {
                     mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
                     mActivity.showToast("Motor cambiado: " + options[which]);
-                    mActivity.conectarRadio();
-                }).show();
+                    mActivity.mServiceController.start();
+                }).create();
+        applyPremiumListStyle(dialog);
+        dialog.show();
     }
 
     public void showHistoryDialog() {

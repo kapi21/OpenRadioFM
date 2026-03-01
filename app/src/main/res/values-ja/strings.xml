@@ -67,10 +67,12 @@
     <string name="enable_am_band">AM バンドを有効にする</string>
     <string name="radio_engine">ラジオエンジン</string>
     <string name="engine_auto">自動 (推奨)</string>
-    <string name="engine_hcn">HCN (Eonon/Xtrons)</string>
-    <string name="engine_mtk">Mediatek (MtkRadio)</string>
+    <string name="engine_k706">ヴェント / HCN (K706)</string>
+    <string name="engine_qs6">NWD / ナニス (QS6)</string>
+    <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
+    <string name="engine_mtk">MediaTek 汎用</string>
     <string name="engine_ts">TopWay (MainUI)</string>
-    <string name="engine_standard">標準 Android</string>
+    <string name="engine_standard">Android 標準</string>
     <string name="am_band_enabled">✅ AM バンドを有効にしました</string>
     <string name="am_band_disabled">❌ AM バンドを無効にしました</string>
     <string name="engine_changed">✅ ラジオエンジンを %s に変更しました</string>
