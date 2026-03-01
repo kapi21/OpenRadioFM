@@ -21,12 +21,20 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - [ ] Mejorar el algoritmo de parsing de RDS RT para manejar caracteres especiales.
 - [ ] Añadir soporte para logos de emisoras en alta resolución (256x256).
 
-### Fase 2: Soporte Global y Hardware (Prioridad Media)
+### Fase 2: Modularización - "Managers" Pendientes (Prioridad Media)
+- [ ] **ScanManager**: Extraer lógica de escaneo selectivo y adaptadores de `MainActivity`.
+- [ ] **HistoryManager**: Centralizar la persistencia y gestión de emisoras recientes.
+- [ ] **NightModeManager**: Encapsular la lógica de horario y cambio de skin automático.
+- [ ] **AudioManager**: Punto único para Mute, EQ de hardware y foco de audio.
+- [ ] **WeatherManager**: Integrar API de clima y geolocalización asíncrona.
+- [ ] **PermissionManager**: Simplificar el manejo de permisos de Android.
+
+### Fase 3: Soporte Global y Hardware (Prioridad Media)
 - [ ] Añadir selector de Región (USA, EU, JP, OIRT) para ajustar pasos de frecuencia y de-énfasis.
 - [ ] Implementar soporte para Dongles DAB+ USB externos.
 - [ ] Soporte para mandos al volante (SWC) mediante el broker de RadioEngine.
 
-### Fase 3: Experiencia de Usuario (Prioridad Baja)
+### Fase 4: Experiencia de Usuario (Prioridad Baja)
 - [ ] **Diseño V3 Gold**: Refinamiento estético del Layout 3 con animaciones fluidas.
 - [ ] Modo "Visualizador" con espectro de audio (vía AudioLoopback si es posible).
 - [ ] Integración con servicios de carátulas de álbumes para emisoras que transmiten metadatos de canciones.
