@@ -36,6 +36,7 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 
 ### Fase 4: Experiencia de Usuario (Prioridad Baja)
 - [ ] **Diseño V3 Gold**: Refinamiento estético del Layout 3 con animaciones fluidas.
+- [ ] **Botón Power Off**: Implementar el botón `power_off.png` en los layouts con lógica de cierre seguro de la aplicación.
 - [ ] Modo "Visualizador" con espectro de audio (vía AudioLoopback si es posible).
 - [ ] Integración con servicios de carátulas de álbumes para emisoras que transmiten metadatos de canciones.
 
