@@ -490,7 +490,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // V7.1: Log TODOS los paquetes MCU para diagnóstico
         StringBuilder hexDump = new StringBuilder();
         for (byte b : data) hexDump.append(String.format("%02X ", b));
-        Log.d(TAG, "MCU[0x" + String.format("%02X", packetType) + "] len=" + data.length + " : " + hexDump.toString());
+        
+        String researchPrefix = "";
+        if (packetType == 0xB0 || packetType == 0xB5 || packetType == 0xB6 || packetType == 0xB7 || packetType == 0xBC) {
+            researchPrefix = "🔬 [RESEARCH] ";
+        }
+        Log.d(TAG, researchPrefix + "MCU[0x" + String.format("%02X", packetType) + "] len=" + data.length + " : " + hexDump.toString());
 
         try {
             switch (packetType) {
@@ -612,6 +617,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         Log.d(TAG, "TunerInfo: flags=0x" + String.format("%02X", flags) + 
                     " AS=" + asFlag + " Scan=" + scanFlag + " Seek=" + flagsSeek +
                     " ST=" + stFlag + " LOC=" + locFlag);
+        
+        // V15.5 Research: Log extra bytes for Signal Quality (RSSI/SNR)
+        if (data.length > 2) {
+            StringBuilder extra = new StringBuilder();
+            for (int i=2; i<data.length; i++) extra.append(String.format("[%d]=%02X ", i, data[i]));
+            Log.d(TAG, "RESEARCH: MCU[0xB0] Extra Bytes (Potential RSSI/SNR): " + extra.toString());
+        }
         
         // Notificar UI
         fireEvent(102, String.valueOf(stFlag ? 1 : 0)); // Stereo = 102

@@ -365,7 +365,31 @@ La app nativa **NO usa** todas las capacidades. Estas son funciones disponibles 
 
 ---
 
-## 🚀 Plan de Implementación para OpenRadioFM v5.0
+## � Fase 2: Investigación Profunda (Marzo 2026)
+
+Tras el éxito inicial, hemos identificado 4 áreas críticas para llevar la radio al nivel "Premium/OEM":
+
+### 1. Extracción del Código PI (Program Identification)
+*   **Hipótesis**: El PI code (ej: `E211` para RNE 1) es la clave para la persistencia. Si lo capturamos, la radio puede saber qué emisora es aunque cambie de frecuencia.
+*   **Canal**: `ITunerTool.onCurrentFrequencyPICodeChange(int pi)`.
+*   **Acción**: Ya está implementado un *Proxy dinámico* en `K706RadioManager` para capturar este evento del QF SDK.
+
+### 2. Sniffing del Paquete 0xB0 (Calidad de Señal)
+*   **Hipótesis**: El paquete `0xB0` tiene más de 2 bytes. Sospechamos que los bytes `[2]` o `[3]` contienen el **RSSI** o **SNR** bruto del hardware.
+*   **Acción**: Revisar logs de `MCU[0xB0]` buscando bytes que fluctúen al tapar la antena o entrar en túneles.
+
+### 3. El "Santo Grial" del AF (Frecuencias Alternativas)
+*   **Hipótesis**: El firmware del MCU debe reportar las frecuencias alternativas detectadas en el RDS. 
+*   **Acción**: Buscar paquetes desconocidos (`0xB9` en adelante) tras activar el AF vía `toggleRdsFeature(1)`.
+
+### 4. Modo DAB (Digital Audio Broadcasting)
+*   **Hipótesis**: El hardware K706 podría ser compatible con módulos DAB externos o integrados vía QF SDK.
+*   **Acción**: Investigar el método `onDABSignalFound` en el SDK y buscar pines de reset/power en el esquema del MCU.
+
+---
+
+*OpenRadioFM development roadmap - Mar 2026*
+## �🚀 Plan de Implementación para OpenRadioFM v5.0
 
 ### Fase 1: Audio Fix (Máxima Prioridad)
 - [ ] Implementar `RPC_SetChannel(2)` correctamente al iniciar FM
@@ -392,6 +416,7 @@ La app nativa **NO usa** todas las capacidades. Estas son funciones disponibles 
 
 ### Fase 5: Control Total del Chip
 - [ ] `setAudioPath()` para routing directo Speaker/Headset
+- [ ] `setAudioMode()` para Forzar Stereo/Mono/Blend
 - [ ] `setWorldRegion()` para cambio dinámico de región
 - [ ] `setStepSize()` para sintonización personalizada
 - [ ] Presets masivos vía `setPresetList()`

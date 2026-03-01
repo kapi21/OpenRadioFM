@@ -13,6 +13,8 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - El motor **K706** requiere permisos de Root para interactuar con la consola `/dev/ttyMT1`.
 - El motor **MT8163** utiliza una combinación de AIDL (`IRadioServiceAPI`) y reflexión para el RDS oculto.
 - Se ha implementado un reset centralizado de RDS en `handleFrequencyChange` para evitar datos residuales al cambiar de emisora.
+- **Investigación K706 (Marzo 2026)**: El motor está instrumentado con prefijos `🔬 [RESEARCH]` en el Logcat para cazar PI Codes y la fuerza de señal real (RSSI) en los paquetes `0xB0` y superiores.
+- **Hipótesis de Hardware**: Tras el análisis de logs, se sospecha que la falta de datos avanzados (PI/AF) en la MCU principal puede deberse a **limitaciones en la antena actual** o a la falta de un comando de "despertar" (wakeup) específico para esas tramas.
 
 ## Roadmap (Próximos Pasos)
 
