@@ -37,6 +37,7 @@ public class PresetManager {
         this.ivPresets = new ImageView[count];
     }
 
+
     public void bindViews(View root, boolean isV3) {
         for (int i = 0; i < mPresetsCount; i++) {
             int cardId = mActivity.getResources().getIdentifier("cardP" + (i + 1), "id", mActivity.getPackageName());

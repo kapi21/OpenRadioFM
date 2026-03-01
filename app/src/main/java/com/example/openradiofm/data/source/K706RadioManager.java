@@ -557,6 +557,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB8: // RDS PS Preset List (Research)
                     Log.d(TAG, "MCU[0xB8] PS Preset List RAW: " + bytesToHex(data));
                     break;
+                case 0x29: // V13.1: Heartbeat silencioso del MCU (29 6D)
+                    // Ignoramos para evitar que se interprete como frecuencia (0x296D hex = 10605 decimal -> 106.10 MHz)
+                    return; 
                 default:
                     // Log unknown packets for research
                     Log.d(TAG, "Unknown MCU packet type: 0x" + String.format("%02X", packetType));
@@ -1032,6 +1035,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // V9.6 (Fix AM band): El comando real para cambiar la banda en MCU es 0x06 (SWITCH_BAND)
         sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
         Log.d(TAG, "Band -> " + mCurrentBand + " (sent [0xA0 06 " + String.format("%02X", mCurrentBand) + " 00])");
+        
+        // V13.1: Notificar INMEDIATAMENTE el cambio de banda para que la UI responda rápido
+        fireEvent(101, String.valueOf(mCurrentBand));
     }
 
     public void closeDevice() throws RemoteException {
@@ -1418,13 +1424,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     @Override
     public void gotoFreq(int freq) throws RemoteException {
         // La freq de OpenRadioFM viene en formato x1000 (ej. 96900 = 96.9 MHz)
-        // La MCU internamente espera el numero en deca-kiloherzios o formato base 100/10 freq, o directo si es AM
-        // TunerCmdFactory usa int2Bytes para la freq (multiplicada en su capa).
-        int freqKhz = freq / 1000;
-        int freqMcu = (freqKhz >= 522 && freqKhz <= 1710) ? freqKhz : (freq/10); 
+        int freqMcu = (freq >= 522 && freq <= 1710) ? freq : (freq / 10); 
         mCurrentFreq = freq;
         sendCmd(SUB_TUNE_FREQUENCY, (byte) ((freqMcu >> 8) & 0xFF), (byte) (freqMcu & 0xFF));
         Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ")");
+        
+        // V13.1: Feedback inmediato a la UI al deslizar el dial
+        notifyFreqUpdate();
     }
 
     @Override
@@ -1443,18 +1449,27 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // El index (0-5) corresponde al preset. Extraído: SUB_PRESET_SELECT = 0x0D
         sendCmd(SUB_PRESET_SELECT, (byte) index, (byte) 0);
         Log.d(TAG, "Select Preset Index -> " + index);
+        
+        // V13.1: Forzamos refresco del estado para que la UI detecte la nueva frecuencia y banda
+        notifyFreqUpdate();
     }
 
     public void onNextFavoriteEvent() throws RemoteException {
         // V13.5: Comando nativo para siguiente favorito (0x0E)
         sendCmd(SUB_TUNE_NEXT, (byte) 0, (byte) 0);
         Log.d(TAG, "Next Favorite (0x0E) command sent");
+        
+        // V13.1: Feedback UI
+        notifyFreqUpdate();
     }
 
     public void onPreFavoriteEvent() throws RemoteException {
         // V13.5: Comando nativo para favorito anterior (0x0F)
         sendCmd(SUB_TUNE_PREV, (byte) 0, (byte) 0);
         Log.d(TAG, "Previous Favorite (0x0F) command sent");
+        
+        // V13.1: Feedback UI
+        notifyFreqUpdate();
     }
 
     @Override

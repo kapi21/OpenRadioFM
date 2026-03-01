@@ -21,6 +21,14 @@ public class QS6Engine implements RadioEngine {
     private int mCurrentBand = 0;
     private boolean mIsStereo = false;
     private boolean mIsConnected = false;
+    private com.hcn.autoradio.IRadioServiceAPI mService;
+
+    public QS6Engine() {}
+
+    public QS6Engine(com.hcn.autoradio.IRadioServiceAPI service) {
+        this.mService = service;
+        this.mIsConnected = (service != null);
+    }
 
     // Constantes NWD
     private static final String ACTION_RADIO_SERVICE = "com.nwd.radio.service.ACTION_RADIO_SERVICE";

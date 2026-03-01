@@ -86,8 +86,16 @@ public class LogoManager {
      */
     public void applyFallbackLogo(ImageView iv) {
         if (iv == null) return;
+
+        // V13.9.1: Ocultar logo principal en Layout 3 (V3)
+        if (iv.getId() == R.id.ivMainLogo && mActivity.mIsV3) {
+            iv.setVisibility(View.GONE);
+            return;
+        }
+
         File logoFile = new File(LOGO_DIR + "car_logo.png");
         if (logoFile.exists()) {
+            iv.setVisibility(View.VISIBLE);
             Glide.with(mActivity)
                     .load(logoFile)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -95,13 +103,8 @@ public class LogoManager {
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(iv);
         } else {
-            if (mActivity.mIsV3 && iv.getId() == R.id.ivMainLogo) {
-                iv.setImageDrawable(null);
-                iv.setVisibility(View.GONE);
-            } else {
-                iv.setImageResource(R.mipmap.ic_launcher);
-                iv.setVisibility(View.VISIBLE);
-            }
+            iv.setImageResource(R.mipmap.ic_launcher);
+            iv.setVisibility(View.VISIBLE);
         }
     }
 
@@ -129,7 +132,7 @@ public class LogoManager {
             }
         }
 
-        if (ivMainLogo != null && !mActivity.mIsV3) {
+        if (ivMainLogo != null) {
             applyFallbackLogo(ivMainLogo);
         }
     }
@@ -172,15 +175,20 @@ public class LogoManager {
             if (!cachedUrl.equals(mActivity.mLastLogoUrl)) {
                 mActivity.mLastLogoUrl = cachedUrl;
                 if (ivMainLogo != null) {
-                    ivMainLogo.setVisibility(View.VISIBLE);
-                    Glide.with(mActivity)
-                            .load(cachedUrl)
-                            .transition(DrawableTransitionOptions.withCrossFade())
-                            .into(ivMainLogo);
+                    if (mActivity.mIsV3) {
+                        ivMainLogo.setVisibility(View.GONE);
+                    } else {
+                        ivMainLogo.setVisibility(View.VISIBLE);
+                        Glide.with(mActivity)
+                                .load(cachedUrl)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .into(ivMainLogo);
+                    }
                 }
                 updateDynamicBackground(cachedUrl);
             }
         } else {
+            if (mActivity.mRepository == null) return;
             mActivity.mRepository.getStationInfo(freq, url -> {
                 mActivity.runOnUiThread(() -> {
                     if (url != null) {
@@ -188,20 +196,24 @@ public class LogoManager {
                             mActivity.mLastLogoUrl = url;
                             mActivity.mLogoCachePerBand.put(bandCacheKey, url);
                             if (ivMainLogo != null) {
-                                ivMainLogo.setVisibility(View.VISIBLE);
-                                Glide.with(mActivity)
-                                        .load(url)
-                                        .transition(DrawableTransitionOptions.withCrossFade())
-                                        .into(ivMainLogo);
+                                if (mActivity.mIsV3) {
+                                    ivMainLogo.setVisibility(View.GONE);
+                                } else {
+                                    ivMainLogo.setVisibility(View.VISIBLE);
+                                    Glide.with(mActivity)
+                                            .load(url)
+                                            .transition(DrawableTransitionOptions.withCrossFade())
+                                            .into(ivMainLogo);
+                                }
                             }
                             updateDynamicBackground(url);
                         }
                     } else {
                         mActivity.mLastLogoUrl = "";
                         mActivity.mLogoCachePerBand.remove(bandCacheKey);
-                        if (ivMainLogo != null && !mActivity.mIsV3) {
+                        if (ivMainLogo != null) {
                             applyFallbackLogo(ivMainLogo);
-                            ivMainLogo.setVisibility(View.VISIBLE);
+                            if (mActivity.mIsV3) ivMainLogo.setVisibility(View.GONE);
                         }
                         updateDynamicBackground(null);
                     }
@@ -209,8 +221,6 @@ public class LogoManager {
             });
         }
 
-        if (mActivity.mIsV3 && ivMainLogo != null) {
-            ivMainLogo.setVisibility(View.GONE);
-        }
+        // V3 ya permite la visualización del logo. Sin restricción aquí.
     }
 }

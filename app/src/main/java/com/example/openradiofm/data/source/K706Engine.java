@@ -76,8 +76,11 @@ public class K706Engine implements RadioEngine {
 
     @Override
     public int getCurrentFreq() {
-        if (mManager == null) return 0;
-        try { return mManager.getCurrentFreq(); } catch (RemoteException e) { return 0; }
+        if (mManager == null) return 87500;
+        try {
+            // K706RadioManager ya devuelve la freq en kHz a través de updateFrequency
+            return mManager.getCurrentFreq();
+        } catch (RemoteException e) { e.printStackTrace(); return 87500; }
     }
 
     @Override
@@ -253,8 +256,12 @@ public class K706Engine implements RadioEngine {
         switch (code) {
             case 100: // Frequency changed
                 try {
-                    mCallback.onFrequencyChanged(Integer.parseInt(data));
-                } catch (NumberFormatException ignored) {}
+                    int rawFreq = Integer.parseInt(data);
+                    // K706RadioManager ya envía la frecuencia en kHz (ej. 87500)
+                    mCallback.onFrequencyChanged(rawFreq);
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                }
                 break;
             case 101: // Band changed
                 try {

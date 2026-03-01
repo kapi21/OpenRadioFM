@@ -188,7 +188,7 @@ public class RadioRepository {
             // 2. Fallback Cloud + Download
             final String stationNameForLambda = finalName;
 
-            // Check if online logos are enabled
+            // V13.9: Default to FALSE for online logos for testing
             boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
                     .getBoolean("pref_logos_online", false);
 

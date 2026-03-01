@@ -27,6 +27,15 @@ public class MT8163Engine implements RadioEngine {
     private HiddenRadioPlayer mHiddenPlayer;
     private RadioEngineCallback mCallback;
     private boolean mBound = false;
+    private boolean mExternalService = false;
+
+    public MT8163Engine() {}
+
+    public MT8163Engine(IRadioServiceAPI service) {
+        this.mService = service;
+        this.mBound = true;
+        this.mExternalService = true;
+    }
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -61,13 +70,27 @@ public class MT8163Engine implements RadioEngine {
         mContext = context;
 
         // 1. Conectar con servicio HCN del sistema (tune, seek, band)
-        try {
-            Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
-            intent.setPackage("com.hcn.autoradio");
-            context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-            Log.d(TAG, "Binding al servicio HCN via Action...");
-        } catch (Exception e) {
-            Log.e(TAG, "No se pudo conectar al servicio HCN: " + e.getMessage());
+        if (!mExternalService) {
+            try {
+                Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
+                intent.setPackage("com.hcn.autoradio");
+                context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+                Log.d(TAG, "Binding al servicio HCN via Action...");
+            } catch (Exception e) {
+                Log.e(TAG, "No se pudo conectar al servicio HCN: " + e.getMessage());
+            }
+        } else {
+            // Si el servicio es externo, registrar el callback de todas formas
+            try {
+                mService.registerRadioCallback(new IRadioCallBack.Stub() {
+                    @Override
+                    public void onEvent(int code, String data) {
+                        handleAidlCallback(code, data);
+                    }
+                });
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error registrando callback AIDL externo", e);
+            }
         }
 
         // 2. Inicializar HiddenRadioPlayer (RDS AF/TA via RadioPlayer oculto)
@@ -110,7 +133,7 @@ public class MT8163Engine implements RadioEngine {
             mHiddenPlayer.release();
             mHiddenPlayer = null;
         }
-        if (mBound && mContext != null) {
+        if (mBound && mContext != null && !mExternalService) {
             try { mContext.unbindService(mConnection); } catch (Exception ignored) {}
             mBound = false;
         }
