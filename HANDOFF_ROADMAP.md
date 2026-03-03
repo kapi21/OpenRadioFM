@@ -18,21 +18,44 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - **MediaSession**: El sistema de medios de Android Auto se desconecta explícitamente en `onDestroy` para liberar recursos.
 - **Investigación K706 (Marzo 2026)**: El motor está instrumentado con prefijos `🔬 [RESEARCH]` en el Logcat para cazar PI Codes y la fuerza de señal real (RSSI).
 
+## Hallazgos y Observaciones (Auditoría Marzo 2026)
+
+### ⚠️ Infraestructura y Deuda Técnica
+- **Paquete `domain/` vacío**: El directorio existe pero no contiene lógica. Debe eliminarse o usarse para las interfaces del motor.
+- **Inconsistencia de Documentación**: `REFAC_README.md` menciona motores teóricos (`MtkEngine`, `StandardEngine`) que no existen. Los motores reales son **K706**, **MT8163** y **QS6**.
+- **Callback AIDL Legacy**: En `MainActivity` (L394) persiste un `IRadioCallBack.Stub` parcial que solo maneja el código 110 (Debug RDS). Es un residuo que debe migrarse al sistema unificado de `RadioEngineCallback`.
+
+### ⚠️ MainActivity y Encapsulamiento
+- **Tamaño de Clase**: A pesar de los nuevos managers, `MainActivity` (+2700 líneas) aún retiene lógica crítica que debería ser delegada:
+    - Gestión de archivos `.fav` (Import/Export).
+    - Lógica pesada de UI en `updateFrequencyDisplay`.
+    - Clases internas de escaneo (`ScannedStation`, `StationAdapter`).
+- **Exposición de Campos**: Exceso de campos `public` (`mEngine`, `mPresetManager`, etc.). Se requiere una migración a `private` con Getters/Setters o visibilidad de paquete para mejorar el encapsulamiento.
+
 ## Roadmap (Próximos Pasos)
+
 
 ### Fase 1: Optimización de RDS y Logos (Prioridad Alta)
 - [ ] Implementar caché de logos RDS PS local para evitar búsquedas constantes.
 - [ ] Mejorar el algoritmo de parsing de RDS RT para manejar caracteres especiales.
 - [ ] Añadir soporte para logos de emisoras en alta resolución (256x256).
 
-### Fase 2: Modularización - "Managers" Finalizados (Prioridad Media)
+### Fase 2: Modularización y Limpieza (Prioridad Media)
 - [x] **NightModeManager**: Encapsular la lógica de horario y cambio de skin automático.
 - [x] **HistoryManager**: Centralizar la persistencia y gestión de emisoras recientes.
 - [x] **PresetManager**: Extraer lógica de presets de `MainActivity`.
 - [x] **Android Auto Manager**: Soporte para MediaSession y Google Assistant.
-- [ ] **ScanManager**: Extraer lógica de escaneo selectivo y adaptadores de `MainActivity`.
+- [ ] **Limpieza de Arquitectura**: 
+    - [ ] Eliminar paquete `domain/` vacío.
+    - [ ] Sincronizar `REFAC_README.md` con motores reales.
+    - [ ] Migrar callback AIDL legacy (mCallback) a `RadioEngineCallback`.
+- [ ] **Refactorización MainActivity**:
+    - [ ] Delegar Import/Export de Favoritos a `HistoryManager`.
+    - [ ] Mover lógica de escaneo a `ScanManager`.
+    - [ ] Encapsular campos públicos mediante Getters/Setters.
 - [ ] **AudioManager**: Punto único para Mute, EQ de hardware y foco de audio.
 - [ ] **WeatherManager**: Integrar API de clima y geolocalización asíncrona.
+
 
 ### Fase 3: Soporte Global y Hardware (Prioridad Media)
 - [ ] Añadir selector de Región (USA, EU, JP, OIRT) para ajustar pasos de frecuencia y de-énfasis.
