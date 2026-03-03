@@ -14,8 +14,7 @@ Se ha implementado un patrón de **Estrategia (Strategy)** para abstraer las dif
     *   `K706Engine`: Comunicación directa vía Bridge/Root (Vento/HCN).
     *   `MT8163Engine`: Motor híbrido AIDL + Reflexión (Topway/Eonon).
     *   `QS6Engine`: Comunicación vía Broadcasts y UART (NWD/Nanis).
-    *   `MtkEngine`: Basado en `MtkRadio`.
-    *   `StandardEngine`: API genérica de Android.
+
 
 ## Diagrama de Clases
 
