@@ -79,6 +79,9 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - [ ] **Servidor de Logos Centralizado**: Crear una API/Backend para servir logos de emisoras basados en PI Code / Frecuencia / Localización.
     - [ ] Sincronización asíncrona para descargar logos que no estén en la base de datos local.
     - [ ] Contribución comunitaria para mantener la base de datos de logos actualizada.
+- [ ] **Radio Híbrida (FM + Streaming)**: Opción de escuchar la emisora a través de Internet cuando la señal FM sea débil.
+    - [ ] Vincular URLs de streaming a la base de datos de PI Codes/Nombres RDS.
+    - [ ] Conmutación inteligente (Seamless switching) entre FM y Stream según calidad de señal.
 - [ ] **Modo "Visualizador"**: Espectro de audio dinámico basado en la salida de audio de la head unit.
 
 ---
