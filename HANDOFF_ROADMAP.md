@@ -45,6 +45,7 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - [x] **HistoryManager**: Centralizar la persistencia y gestión de emisoras recientes.
 - [x] **PresetManager**: Extraer lógica de presets de `MainActivity`.
 - [x] **Android Auto Manager**: Soporte para MediaSession y Google Assistant.
+- [x] **Audio Focus Recovery**: Sistema de autocuración para Spotify y llamadas.
 - [ ] **Limpieza de Arquitectura**: 
     - [ ] Eliminar paquete `domain/` vacío.
     - [ ] Sincronizar `REFAC_README.md` con motores reales.
@@ -64,8 +65,15 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 
 ### Fase 4: Experiencia de Usuario (Prioridad Baja)
 - [ ] **Diseño V3 Gold**: Refinamiento estético del Layout 3 con animaciones fluidas.
-- [ ] **Botón Power Off**: Implementar el botón `power_off.png` en los layouts con lógica de cierre seguro de la aplicación.
+- [x] **Botón Power Off**: Implementado el botón `power_off.png` en los layouts con lógica de cierre seguro de la aplicación.
+- [ ] **Hardware Hacking Dashboard**: Analizar integración de herramientas externas (Analizador Lógico, UART Console) para depuración profunda de MCU.
 - [ ] Modo "Visualizador" con espectro de audio (vía AudioLoopback si es posible).
+
+### Fase 5: Limpieza Técnica (Deuda Técnica)
+- [ ] **Visibilidad de campos en `MainActivity`**: Reorganización parcial iniciada con Managers. ~25 campos pendientes de encapsulamiento total.
+- [x] **Directorio `domain/` eliminado**: ✅ Eliminado V5.5.
+- [x] **Callback AIDL legacy (`mCallback`)**: Documentado — solo gestiona el código 110 (Debug RDS). Migración no necesaria.
+- [x] **Arquitectura de Managers**: Implementados `PlaybackManager` y `DeviceManager`.
 
 ---
 *OpenRadioFM development roadmap - Mar 2026*

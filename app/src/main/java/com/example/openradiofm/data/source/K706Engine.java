@@ -62,6 +62,13 @@ public class K706Engine implements RadioEngine {
     }
 
     @Override
+    public void closeDevice() {
+        if (mManager != null) {
+            try { mManager.closeDevice(); } catch (RemoteException e) { e.printStackTrace(); }
+        }
+    }
+
+    @Override
     public String getEngineName() {
         return "K706";
     }
@@ -180,6 +187,12 @@ public class K706Engine implements RadioEngine {
     public boolean requestPlayAudio() {
         if (mManager == null) return false;
         try { return mManager.requestPlayAudio(); } catch (RemoteException e) { return false; }
+    }
+
+    @Override
+    public void enforceAudioRecovery() {
+        if (mManager == null) return;
+        try { mManager.enforceAudioRecovery(); } catch (Exception e) { e.printStackTrace(); }
     }
 
     // === RDS ===

@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.2.0] - 2026-03-03
+### Added
+- **Botón Power Off**: Implementación de botón de apagado seguro en Layout 2 (clásico) y Layout 3 (V3).
+- **Lógica de Cierre**: Cierre de hardware (`closeDevice()`) integrado para asegurar que el MCU recupere el canal de audio del sistema al cerrar la app.
+- **Audio Focus Recovery**: Nuevo sistema de "latido" y recuperación manual (`enforceAudioRecovery`) para Spotify/Android Auto.
+- **Iconografía**: Incorporación del icono `power_off.png` a los recursos del sistema.
+
+### Fixed
+- **Audio Focus Loop**: Corregido el bloqueo de audio tras pausar Spotify en Android Auto.
+- **Mapeo de Comandos**: Sincronización de los comandos `PLAY/PAUSE` de Android Auto con la recuperación del hardware de radio.
+
 ## [5.0.0-Beta] - In Progress
 ### Added
 - **Engineering Mode Dashboard**: Hidden diagnostic menu (GPS button x5) features:

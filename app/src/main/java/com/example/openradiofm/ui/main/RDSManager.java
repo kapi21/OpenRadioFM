@@ -28,6 +28,7 @@ public class RDSManager {
 
     private String mCurrentPi;
     private String mCurrentPty;
+    private String mLastConfirmedName; // V5.3: RDS PS Substitution
     private boolean mHasRdsLock = false;
 
     public interface RDSListener {
@@ -59,6 +60,7 @@ public class RDSManager {
             }
 
             if (mListener != null) {
+                mLastConfirmedName = name; // V5.3: RDS PS Substitution
                 mListener.onRdsNameConfirmed(name);
             }
         }
@@ -67,7 +69,7 @@ public class RDSManager {
     public void onRdsText(String text) {
         String cleanedText = MetadataUtils.cleanRdsText(text);
         if (tvRdsInfo != null) {
-            String targetText = (cleanedText == null || cleanedText.isEmpty()) ? "Sin datos RDS RT" : cleanedText;
+            String targetText = (cleanedText == null || cleanedText.isEmpty()) ? "" : cleanedText;
             String current = tvRdsInfo.getText().toString();
             if (!current.equals(targetText)) {
                 tvRdsInfo.setText(targetText);
@@ -91,6 +93,7 @@ public class RDSManager {
                 tvRdsName.setText(savedName);
                 tvRdsName.setVisibility(View.VISIBLE);
                 if (mListener != null) {
+                    mLastConfirmedName = savedName; // V5.3: RDS PS Substitution
                     mListener.onRdsNameConfirmed(savedName);
                 }
             }
@@ -132,11 +135,12 @@ public class RDSManager {
     public void reset(boolean clearTexts) {
         mCurrentPi = null;
         mCurrentPty = null;
+        mLastConfirmedName = null; // V5.3: RDS PS Substitution Reset
         mHasRdsLock = false;
 
         if (clearTexts) {
             if (tvRdsName != null) tvRdsName.setText("");
-            if (tvRdsInfo != null) tvRdsInfo.setText("Sin datos RDS RT");
+            if (tvRdsInfo != null) tvRdsInfo.setText("");
             if (tvPty != null) tvPty.setText(mContext.getString(R.string.pty_none));
             if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
         }
@@ -144,4 +148,32 @@ public class RDSManager {
 
     public String getCurrentPty() { return mCurrentPty; }
     public boolean hasRdsLock() { return mHasRdsLock; }
+    public String getConfirmedName() { return mLastConfirmedName; } // V5.3: RDS PS Substitution
+
+    /**
+     * V5.5: Devuelve el nombre que debería sustituir a la frecuencia numérica.
+     * Prioridad:
+     * 1. RDS PS en vivo (confirmado por el broadcast)
+     * 2. Nombre personalizado del usuario (guardado en SharedPreferences)
+     * 3. null (mostrar frecuencia numérica)
+     */
+    public String getDisplayName(int freqKhz) {
+        // 1. RDS en vivo
+        if (mLastConfirmedName != null && !mLastConfirmedName.isEmpty()) {
+            return mLastConfirmedName;
+        }
+        // 2. Nombre personalizado del usuario
+        try {
+            String customName = mContext.getSharedPreferences("RadioStationNames",
+                    android.content.Context.MODE_PRIVATE)
+                    .getString("CUSTOM_" + freqKhz, null);
+            if (customName != null && !customName.isEmpty()) {
+                return customName;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error reading custom name for freq " + freqKhz, e);
+        }
+        // 3. Sin nombre
+        return null;
+    }
 }

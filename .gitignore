@@ -49,5 +49,14 @@ platform.x509.pem
 *copia*
 /recursos/
 
+# === Gestión de Seguridad y Privacidad (V5.5) ===
+_DOCS/keys/
+_DOCS/research/
+_DOCS/brain_records/
+_ASSETS/
+docs/QS6_Integration/
+.gemini/
+.antigravity/
+
 # === Kotlin ===
 .kotlin/

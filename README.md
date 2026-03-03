@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-4.7.0_Stable_Integration-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-5.2.0_Stable_Integration-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -54,41 +54,37 @@ graph TB
         L3[Layout V3 - Horizontal]
     end
 
-    subgraph "Service Layer"
-        RS[RadioService - IRadioServiceAPI]
+    subgraph "Manager Layer"
+        PM[PlaybackManager<br/>Audio & Controls]
+        DM[DeviceManager<br/>Power & Lifecycle]
+        RM[RDSManager<br/>Metadata & PTY]
     end
 
     subgraph "Hardware Abstraction"
-        HRP["HiddenRadioPlayer<br/>(MT8163 - Reflexión)"]
-        K706["K706RadioManager<br/>(K706 - MCU Direct)"]
+        RS[RadioServiceController]
+        RE[RadioEngine Interface]
     end
 
-    subgraph "System APIs (Hidden)"
-        RP["android.radio.RadioPlayer<br/>(Sistema MT8163)"]
-        MCU["QFTunerManager<br/>+ MCU Binder<br/>(K706 SDK)"]
-        BC["Broadcom FmReceiver<br/>(K706 RDS)"]
+    subgraph "Hardware Engines"
+        K706[K706Engine]
+        MT[MT8163Engine]
+        QS[QS6Engine]
     end
 
-    subgraph "Hardware"
-        MT["MediaTek MT8163<br/>FM integrado en SoC"]
-        QF["K706 Radio Chip<br/>+ MCU Controller"]
-    end
-
-    MA --> RS
-    MA --> HRP
-    RS --> K706
-    HRP --> RP
-    K706 --> MCU
-    K706 --> BC
-    RP --> MT
-    MCU --> QF
-    BC --> QF
+    MA --> PM
+    MA --> DM
+    MA --> RM
+    PM --> RS
+    DM --> RS
+    RS --> RE
+    RE --> K706
+    RE --> MT
+    RE --> QS
 
     style MA fill:#1a1a2e,stroke:#e94560,color:#fff
-    style HRP fill:#16213e,stroke:#0f3460,color:#fff
-    style K706 fill:#16213e,stroke:#0f3460,color:#fff
-    style MT fill:#533483,stroke:#e94560,color:#fff
-    style QF fill:#533483,stroke:#e94560,color:#fff
+    style PM fill:#16213e,stroke:#0f3460,color:#fff
+    style DM fill:#16213e,stroke:#0f3460,color:#fff
+    style RM fill:#16213e,stroke:#0f3460,color:#fff
 ```
 
 ---
@@ -143,6 +139,17 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.5.0 "Manager & RDS Architecture" (Marzo 2026)
+- **Refactorización V5.5**: Creación de `PlaybackManager` (Audio/Mute) y `DeviceManager` (Hardware/Power) para desacoplar `MainActivity`.
+- **RDS PS Dinámico**: Sustitución inteligente de la frecuencia por el nombre de la emisora (RDS PS) o nombre personalizado.
+- **Optimización Layout 2**: Reestructuración de PTY y alineación de iconos con mayores tamaños para mejorar la visibilidad.
+- **Limpieza Estructural**: Eliminación de placeholders redundantes y directorios vacíos.
+
+### v5.2.0 "Power & Focus Integration" (Marzo 2026)
+- **Botón de Apagado**: Implementado en todos los layouts para un cierre seguro y liberación inmediata del canal de audio.
+- **Recuperación de Audio Focus**: Sistema de autocuración mejorado para Spotify y llamadas.
+- **Unificación de Interfaz**: Añadido `closeDevice()` a la capa de abstracción `RadioEngine`.
 
 ### v4.7.0 "Car & Audio Integration" (Marzo 2026)
 - **Soporte Android Auto**: Integración completa mediante `MediaSession` y `MediaBrowserService`. Los favoritos ahora aparecen como una lista navegable en el coche.

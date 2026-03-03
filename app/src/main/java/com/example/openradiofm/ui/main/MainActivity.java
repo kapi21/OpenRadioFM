@@ -129,6 +129,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public HistoryManager mHistoryManager;
     public MediaSessionManager mMediaSessionManager;
 
+    // V5.5: Managers de Audio y Dispositivo
+    public PlaybackManager mPlaybackManager;
+    public DeviceManager mDeviceManager;
+
 
     // V11: RDS PI Database Identification
     private com.example.openradiofm.data.source.RdsDatabase mRdsDb;
@@ -311,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private TextView tvFrequency, tvRdsName, tvRdsInfo;
     private android.view.View boxFrequency;
     private ImageView ivBandIndicator, ivUnitLabel, ivFavoriteIndicator, ivStereoIcon;
-    private ImageButton btnLocDx, btnBand;
+    private ImageButton btnLocDx, btnBand, btnPowerOff;
 
     // UI Arrays for Presets - REMOVED (Managed by PresetManager)
 
@@ -527,6 +531,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 int freq = mEngine.getCurrentFreq();
                 mRepository.saveRdsName(freq, name);
 
+                // V5.3: RDS PS Substitution (La variable reside en mRdsManager)
+                runOnUiThread(() -> updateFrequencyDisplay(freq));
+
                 if (mPresetManager != null) {
                     mPresetManager.updateCardVisuals(-1, freq, mCurrentBand);
                 }
@@ -663,6 +670,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mEngine = engine;
             mEngine.setCallback(MainActivity.this);
 
+            // V5.5: Sincronizar managers con el nuevo motor
+            if (mPlaybackManager != null) {
+                mPlaybackManager.setEngine(engine);
+            }
+            if (mDeviceManager != null) {
+                mDeviceManager.init(engine, mPlaybackManager, mMediaSessionManager,
+                        mServiceController, mRdsManager, mRepository, mPollingExecutor);
+            }
+
             // Si el motor no se ha inicializado todavía (ej: K706), lo hacemos aquí
             if (mEngine.getCurrentFreq() <= 0) {
                 mEngine.init(MainActivity.this);
@@ -764,8 +780,38 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mMediaSessionManager = new MediaSessionManager(this);
         mMediaSessionManager.connect();
 
-        // Registro de control de medios (Broadcast de RadioMediaService)
-        registerReceiver(mMediaControlReceiver, new android.content.IntentFilter("com.example.openradiofm.MEDIA_CONTROL"));
+        // V5.5: Inicializar PlaybackManager y DeviceManager
+        mPlaybackManager = new PlaybackManager(this);
+        mPlaybackManager.init(mEngine, new PlaybackManager.PlaybackListener() {
+            @Override
+            public void onMuteStateChanged(boolean isMuted) {
+                mMuteState = isMuted;
+                runOnUiThread(() -> {
+                    ImageButton btnMute = findViewById(R.id.btnMute);
+                    if (btnMute != null) {
+                        btnMute.setSelected(isMuted);
+                        btnMute.setImageResource(isMuted ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+                    }
+                });
+            }
+
+            @Override
+            public void onMediaCommand(String command) {
+                runOnUiThread(() -> {
+                    switch (command) {
+                        case "ACTION_NEXT":
+                            if (mPresetManager != null) mPresetManager.playNextPreset();
+                            break;
+                        case "ACTION_PREV":
+                            if (mPresetManager != null) mPresetManager.playPrevPreset();
+                            break;
+                    }
+                });
+            }
+        });
+        mPlaybackManager.registerMediaReceiver();
+
+        mDeviceManager = new DeviceManager(this);
 
 
         // V2.0: Cargar fondo personalizado si existe
@@ -789,6 +835,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         btnLocDx = findViewById(R.id.btnLocDx);
         btnBand = findViewById(R.id.btnBand);
+        btnPowerOff = findViewById(R.id.btnPowerOff);
 
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
         ivUnitLabel = findViewById(R.id.ivUnitLabel);
@@ -918,15 +965,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // btnExtra1
         }
 
-        // Mute Logic (System Audio)
+        // V5.5: Mute Logic delegada a PlaybackManager
         ImageButton btnMute = findViewById(R.id.btnMute);
         if (btnMute != null) {
             btnMute.setOnClickListener(v -> {
-                boolean newState = !mMuteState;
-                setMute(newState);
-                // V4.3: Mute Icon Logic (Selected = Mute On = Speaker+X)
-                btnMute.setSelected(newState);
-                btnMute.setImageResource(newState ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+                if (mPlaybackManager != null) {
+                    mPlaybackManager.setMute(!mMuteState);
+                }
             });
         }
 
@@ -991,6 +1036,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
              * }
              * });
              */
+        }
+
+
+        // V5.5: Power Off delegado a DeviceManager
+        if (btnPowerOff != null) {
+            btnPowerOff.setOnClickListener(v -> {
+                animateButton(btnPowerOff);
+                if (mDeviceManager != null) {
+                    mDeviceManager.powerOff();
+                }
+            });
         }
 
         // BAND Switch — V5.0: Via RadioEngine
@@ -1088,24 +1144,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     protected void onDestroy() {
-        // V16: Limpieza de Android Auto MediaSession
-        if (mMediaSessionManager != null) {
-            mMediaSessionManager.disconnect();
-        }
-        try {
-            unregisterReceiver(mMediaControlReceiver);
-        } catch (Exception ignored) {}
-
-        // --------------------------------------------------------------------------------
-        // LIMPIEZA DE RECURSOS (CRÍTICO PARA EVITAR FUGAS DE MEMORIA)
-        // --------------------------------------------------------------------------------
-
+        // V5.5: Limpieza delegada a DeviceManager
         stopStatusPolling();
 
-        if (mEngine != null) {
-            mEngine.release();
+        if (mDeviceManager != null) {
+            mDeviceManager.releaseAllResources();
         }
 
+        // Recursos no gestionados por DeviceManager (legacy específico)
         try {
             unregisterReceiver(mBtStateReceiver);
         } catch (Exception e) {}
@@ -1116,23 +1162,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
         } catch (Exception e) {}
 
-        if (mServiceController != null) {
-            mServiceController.release();
-        }
-
         if (mHiddenPlayer != null) {
             mHiddenPlayer.release();
             mHiddenPlayer = null;
-        }
-
-        if (mRepository != null) {
-            mRdsManager.reset(true); // V16: Sincronizado
-            mRepository.shutdown();
-            mRepository = null;
-        }
-        
-        if (mPollingExecutor != null) {
-            mPollingExecutor.shutdown();
         }
 
         super.onDestroy();
@@ -1694,11 +1726,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (freq <= 0)
             return; // V11.7: Evitar mostrar 00.0/0
         if (tvFrequency != null) {
-            if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
+            // V5.5: Resolución de nombre delegada al RDSManager (RDS live > customName > frecuencia)
+            String displayName = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : null;
+            
+            if (displayName != null && !displayName.isEmpty()) {
+                tvFrequency.setText(displayName);
+            } else if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
                 tvFrequency.setText(String.valueOf(freq));
             } else {
-                // V12.3: Usar double para evitar errores de precisión de punto flotante (+/-
-                // 0.05)
+                // V12.3: Usar double para evitar errores de precisión de punto flotante (+/- 0.05)
                 tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", (double) freq / 1000.0));
             }
 
@@ -1789,13 +1825,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 String rdsText = tvRdsInfo.getText().toString();
                 // V13.9: Si ya hay texto RDS recibido, no lo ocultamos. Si está vacío o es
                 // default, poner "Sin datos RDS RT"
-                if (!rdsText.isEmpty() && !rdsText.equals("Sin datos RDS RT") && !rdsText.equals("RDS TEXT INFO")
+                if (!rdsText.isEmpty() && !rdsText.equals("RDS TEXT INFO")
                         && !rdsText.equals("RDS Info Text")) {
                     tvRdsInfo.setVisibility(View.VISIBLE);
                     tvRdsInfo.setTextColor(isNight ? nightBlue : white);
                 } else {
                     tvRdsInfo.setVisibility(View.VISIBLE);
-                    tvRdsInfo.setText("Sin datos RDS RT");
+                    tvRdsInfo.setText("");
                 }
             }
 
@@ -2186,24 +2222,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mDialogManager.showEngineSelector();
     }
 
+    // V5.5: setMute delegado a mPlaybackManager (ver PlaybackManager.java)
     private void setMute(boolean mute) {
-        mMuteState = mute;
-
-        // V11: Via RadioEngine
-        if (mEngine != null) {
-            mEngine.setMute(mute);
-        }
-
-        android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-            // Using setStreamMute (deprecated but effective for simple needs) or
-            // adjustStreamVolume
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC,
-                        mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
-            } else {
-                am.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
-            }
+        if (mPlaybackManager != null) {
+            mPlaybackManager.setMute(mute);
         }
     }
 
@@ -2409,27 +2431,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
-    private final android.content.BroadcastReceiver mMediaControlReceiver = new android.content.BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, android.content.Intent intent) {
-            String command = intent.getStringExtra("command");
-            if (command == null) return;
-            Log.d(TAG, "Media Control Received: " + command);
-            switch (command) {
-                case "ACTION_NEXT":
-                    if (mPresetManager != null) mPresetManager.playNextPreset();
-                    break;
-                case "ACTION_PREV":
-                    if (mPresetManager != null) mPresetManager.playPrevPreset();
-                    break;
-                case "ACTION_PLAY":
-                case "ACTION_PAUSE":
-                    // El botón de Mute actúa como Play/Pause en radio
-                    setMute(!mMuteState);
-                    break;
-            }
-        }
-    };
+    // V5.5: mMediaControlReceiver migrado a PlaybackManager (ver PlaybackManager.java)
 }
 
 

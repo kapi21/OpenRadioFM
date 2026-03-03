@@ -110,6 +110,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsAudioFocusHeld = false;
     private boolean mIsRadioActive = false;
     private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
+    private boolean mIsTransientFocusLoss = false; // V17.0: Spotify/Android Auto
     
     // V13.1: Estabilización de Dial / Debouncing
     private long mLastFreqUpdateTime = 0;
@@ -149,40 +150,34 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS_TRANSIENT (" + focusChange + ")----");
                         // Interrupción corta (Llamada, Notificación, Android Auto, GPS).
                         mIsAudioFocusHeld = true; // Retenemos para poder recuperar
-                        mIsInCall = true; // V11.5: Marcar como en llamada para que heartbeat no pelee
+                        
+                        // V17.0: Diferenciar llamada real de interrupción de música
+                        if (mAudioManager.isMusicActive()) {
+                             mIsTransientFocusLoss = true;
+                             mIsInCall = false;
+                        } else {
+                             mIsInCall = true;
+                             mIsTransientFocusLoss = false;
+                        }
+                        
                         try {
                             setMute(true);
                             // V11.5: Soltar canal MCU para que BT/teléfono suene limpio
                             if (mSetChannel != null && mMcuManager != null) {
                                 mSetChannel.invoke(mMcuManager, (byte) 4);
-                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: RPC_SetChannel(4) - canal FM liberado");
+                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: RPC_SetChannel(4) - canal FM liberado (mIsInCall=" + mIsInCall + ")");
                             }
                         } catch (Exception e) {
-                            Log.e(TAG, "Error muting on AUDIOFOCUS_LOSS_TRANSIENT", e);
+                            Log.e(TAG, "Error on AUDIOFOCUS_LOSS_TRANSIENT", e);
                         }
                         break;
                     case AudioManager.AUDIOFOCUS_GAIN:
-                    case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_GAIN----");
-                        // Recuperamos el foco (terminó la llamada/notificación o se desconectó BT).
-                        // Volvemos a levantar nuestro canal de radio.
                         mIsAudioFocusHeld = true;
-                        mIsInCall = false; // V11.5: Ya no estamos en llamada
-                        
-                        // Si estábamos en modo activo, forzamos recuperar
-                        if (mIsRadioActive) {
-                            try {
-                                if (mMcuManager != null && mSetChannel != null) {
-                                    mSetChannel.invoke(mMcuManager, (byte) 2);
-                                    Log.d(TAG, "AUDIOFOCUS_GAIN: Forced RPC_SetChannel(2)");
-                                }
-                                setAudioParams(true);
-                                setMute(false);
-                                Log.d(TAG, "AUDIOFOCUS_GAIN: Radio unmuted and params restored");
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error restoring audio on AUDIOFOCUS_GAIN", e);
-                            }
-                        }
+                        mIsInCall = false;
+                        mIsTransientFocusLoss = false;
+                        // Forzar recuperación inmediata
+                        enforceAudioChannelRecovery();
                         break;
                 }
             }
@@ -204,6 +199,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             case android.telephony.TelephonyManager.CALL_STATE_OFFHOOK:
                                 if (!mIsInCall) {
                                     mIsInCall = true;
+                                    mIsTransientFocusLoss = false; // No es una pérdida transitoria de música
                                     Log.d(TAG, "📞 Llamada detectada - silenciando radio FM");
                                     try {
                                         setMute(true);
@@ -1552,9 +1548,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public boolean requestPlayAudio() throws RemoteException {
+        // V17.0: Limpiar estados de interrupcion al forzar play
+        mIsInCall = false;
+        mIsTransientFocusLoss = false;
+        
         requestAudioFocus();
         mIsRadioActive = true;
         Log.d(TAG, "requestPlayAudio: focus=" + mIsAudioFocusHeld + " radioActive=true");
+        // Forzar canal 2 por si acaso
+        enforceAudioChannelRecovery();
         return mIsAudioFocusHeld;
     }
 
@@ -1710,6 +1712,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
 
+    public void enforceAudioRecovery() {
+        enforceAudioChannelRecovery();
+    }
+
     // V9.9: Hack for Bluetooth recovery. The system's MediaFocusControl "steals" the audio channel
     // but never gives it back to us via normal OnAudioFocusChange because it uses an OEM "abandonCustomAudioFocus"
     public void enforceAudioChannelRecovery() {
@@ -1755,8 +1761,19 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             if (currentChannel != 2) {
                 // EXCEPCIÓN 1: Si acabamos de ceder el foco conscientemente, no peleamos
                 if (!mIsAudioFocusHeld) return;
-                // EXCEPCIÓN 2: Si estamos en llamada/interrupción, no peleamos
+                
+                // EXCEPCIÓN 2: Si estamos en LLAMADA REAL, no peleamos
                 if (mIsInCall) return;
+                
+                // V17.0: Si es pérdida transitoria (Spotify), permitimos recuperación 
+                // si la música ya no suena o si el usuario ha interactuado
+                if (mIsTransientFocusLoss) {
+                    // Si la música de Android sigue sonando fuera de nuestra app, no le robamos el audio aún
+                    if (mAudioManager.isMusicActive()) return;
+                    
+                    Log.d(TAG, "HEARTBEAT: Recuperando audio FM tras pausa de música transitoria.");
+                    mIsTransientFocusLoss = false;
+                }
 
                 Log.w(TAG, "HEARTBEAT WARNING: Canal de audio secuestrado (Canal actual: " + currentChannel + "). Forzando recuperación a 2 (Radio).");
                 mSetChannel.invoke(mMcuManager, (byte) 2);

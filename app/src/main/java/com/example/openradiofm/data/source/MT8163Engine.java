@@ -142,6 +142,11 @@ public class MT8163Engine implements RadioEngine {
     }
 
     @Override
+    public void closeDevice() {
+        release();
+    }
+
+    @Override
     public String getEngineName() {
         return "MT8163";
     }
@@ -249,6 +254,15 @@ public class MT8163Engine implements RadioEngine {
     public boolean requestPlayAudio() {
         if (mService == null) return false;
         try { return mService.requestPlayAudio(); } catch (RemoteException e) { return false; }
+    }
+
+    @Override
+    public void enforceAudioRecovery() {
+        // En MT8163 basta con volver a pedir el canal de audio al servicio AIDL
+        requestPlayAudio();
+        if (mHiddenPlayer != null) {
+            mHiddenPlayer.setMute(false);
+        }
     }
 
     // === RDS (via HiddenRadioPlayer) ===

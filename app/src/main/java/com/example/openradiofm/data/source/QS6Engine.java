@@ -209,6 +209,11 @@ public class QS6Engine implements RadioEngine {
     }
 
     @Override
+    public void closeDevice() {
+        release();
+    }
+
+    @Override
     public String getEngineName() {
         return "QS6-AIDL-Engine";
     }
@@ -351,6 +356,13 @@ public class QS6Engine implements RadioEngine {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public void enforceAudioRecovery() {
+        // En QS6 forzamos de nuevo el cambio de fuente a Radio
+        requestPlayAudio();
+        setMute(false);
     }
 
     public void requestStopAudio() {

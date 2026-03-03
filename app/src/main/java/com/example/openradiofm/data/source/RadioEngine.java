@@ -14,6 +14,7 @@ public interface RadioEngine {
     // === Lifecycle ===
     boolean init(Context context);
     void release();
+    void closeDevice();
     String getEngineName();
 
     // === Tuning ===
@@ -35,6 +36,7 @@ public interface RadioEngine {
     void setMute(boolean mute);
     void openEq(Context context);
     boolean requestPlayAudio();
+    void enforceAudioRecovery(); // Fuerza la recuperación del hardware de audio (ej: canal MCU)
 
     // === RDS ===
     void toggleRdsFeature(int type); // 0=RDS global, 1=AF, 2=TA

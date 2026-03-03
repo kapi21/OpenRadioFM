@@ -36,6 +36,7 @@ classDiagram
         +init()
         +tune(freq)
         +seekUp()
+        +closeDevice()
         +setCallback()
     }
     class K706Engine {
