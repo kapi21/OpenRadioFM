@@ -1760,6 +1760,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     tvRdsInfo.setTextColor(nightBlue);
                 if (tvPty != null)
                     tvPty.setTextColor(nightBlue);
+                if (btnPowerOff != null)
+                    btnPowerOff.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
             } else {
                 // Normal Mode -> Always White
                 tvFrequency.setTextColor(white);
@@ -1771,6 +1773,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     tvRdsInfo.setTextColor(white);
                 if (tvPty != null)
                     tvPty.setTextColor(white);
+                if (btnPowerOff != null)
+                    btnPowerOff.clearColorFilter();
             }
 
             // 2. Favorite Icon
@@ -1823,8 +1827,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             if (tvRdsInfo != null) {
                 String rdsText = tvRdsInfo.getText().toString();
-                // V13.9: Si ya hay texto RDS recibido, no lo ocultamos. Si está vacío o es
-                // default, poner "Sin datos RDS RT"
+                // V5.6: Si ya hay texto RDS recibido, lo mostramos. Si está vacío o es
+                // default, poner vacío ("") para una UI limpia.
                 if (!rdsText.isEmpty() && !rdsText.equals("RDS TEXT INFO")
                         && !rdsText.equals("RDS Info Text")) {
                     tvRdsInfo.setVisibility(View.VISIBLE);
@@ -2392,7 +2396,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 tvRdsName.setVisibility(View.VISIBLE);
             }
             if (tvRdsInfo != null) {
-                tvRdsInfo.setText("Sin datos RDS RT");
+                tvRdsInfo.setText("");
                 tvRdsInfo.setVisibility(View.VISIBLE);
             }
             if (ivStereoIcon != null) {

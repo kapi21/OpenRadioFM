@@ -4,7 +4,7 @@
     <dimen name="text_size_preset">22sp</dimen>
     <dimen name="text_size_preset_small">19sp</dimen>
     <dimen name="text_size_frequency_large">115sp</dimen>
-    <dimen name="text_size_frequency_min">40sp</dimen>
+    <dimen name="text_size_frequency_min">20sp</dimen>
     <dimen name="text_size_frequency_base_v3">90sp</dimen>
     <dimen name="text_size_mhz">22sp</dimen>
     <dimen name="text_size_rds_name">24sp</dimen>

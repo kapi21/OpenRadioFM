@@ -69,12 +69,18 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - [ ] **Hardware Hacking Dashboard**: Analizar integración de herramientas externas (Analizador Lógico, UART Console) para depuración profunda de MCU.
 - [ ] Modo "Visualizador" con espectro de audio (vía AudioLoopback si es posible).
 
-### Fase 5: Limpieza Técnica (Deuda Técnica)
-- [ ] **Visibilidad de campos en `MainActivity`**: Reorganización parcial iniciada con Managers. ~25 campos pendientes de encapsulamiento total.
-- [x] **Directorio `domain/` eliminado**: ✅ Eliminado V5.5.
-- [x] **Callback AIDL legacy (`mCallback`)**: Documentado — solo gestiona el código 110 (Debug RDS). Migración no necesaria.
-- [x] **Arquitectura de Managers**: Implementados `PlaybackManager` y `DeviceManager`.
+### Fase 5: Limpieza Técnica y Refinamiento (V5.7)
+- [x] **Arquitectura de Managers**: Implementados `PlaybackManager`, `DeviceManager` y `RDSManager`.
+- [x] **RDS PS Dinámico**: Implementado auto-dimensionado de texto en ambos layouts para nombres largos.
+- [x] **UX Pulida**: Icono PowerOff con tintado dinámico y eliminación de placeholders RDS residuales.
+- [x] **Directorio `domain/` eliminado**: ✅ Limpieza estructural completada.
+
+### Fase 6: Ideas de Expansión y Servidores (Nueva)
+- [ ] **Servidor de Logos Centralizado**: Crear una API/Backend para servir logos de emisoras basados en PI Code / Frecuencia / Localización.
+    - [ ] Sincronización asíncrona para descargar logos que no estén en la base de datos local.
+    - [ ] Contribución comunitaria para mantener la base de datos de logos actualizada.
+- [ ] **Modo "Visualizador"**: Espectro de audio dinámico basado en la salida de audio de la head unit.
 
 ---
-*OpenRadioFM development roadmap - Mar 2026*
+*OpenRadioFM development roadmap - Actualizado Mar 2026*
 

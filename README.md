@@ -140,6 +140,15 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
+### v5.7.0 "Dynamic PS Scaling" (Marzo 2026)
+- **Auto-dimensionado de Texto**: La frecuencia/nombre de emisora ahora se escala dinámicamente en ambos layouts para evitar recortes.
+- **Optimización de Espacio**: Reducción de márgenes laterales y ajuste de fuente mínima a 20sp para nombres extra largos.
+
+### v5.6.0 "NighMode Polish" (Marzo 2026)
+- **UI NightBlue**: El botón PowerOff ahora hereda el color azul noche en el modo nocturno.
+- **PTY Agrandado**: Icono y texto de Tipo de Programa un 30% más grandes en Layout 2.
+- **Clean UI**: Eliminación total de placeholders "Sin datos RDS RT" para una interfaz vacía más elegante.
+
 ### v5.5.0 "Manager & RDS Architecture" (Marzo 2026)
 - **Refactorización V5.5**: Creación de `PlaybackManager` (Audio/Mute) y `DeviceManager` (Hardware/Power) para desacoplar `MainActivity`.
 - **RDS PS Dinámico**: Sustitución inteligente de la frecuencia por el nombre de la emisora (RDS PS) o nombre personalizado.

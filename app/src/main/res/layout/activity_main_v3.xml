@@ -222,13 +222,18 @@
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tvFrequency"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical|start"
                     android:includeFontPadding="false"
                     android:text="92.30"
                     android:textColor="@color/white"
-                    android:textSize="@dimen/text_size_frequency_base_v3"
-                    android:textStyle="bold" />
+                    app:autoSizeTextType="uniform"
+                    app:autoSizeMinTextSize="@dimen/text_size_frequency_min"
+                    app:autoSizeMaxTextSize="@dimen/text_size_frequency_base_v3"
+                    app:autoSizeStepGranularity="2sp"
+                    android:maxLines="1" />
             </LinearLayout>
 
             <!-- Fila inferior: Signal + PTY + Unit -->
