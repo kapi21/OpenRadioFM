@@ -1,0 +1,28 @@
+# Walkthrough: Refactorización y Android Auto
+
+He completado la refactorización de [MainActivity](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/MainActivity.java#64-2434), la implementación de Android Auto y la resolución de errores de compilación.
+
+## Cambios Realizados
+
+### 1. Refactorización (Modularización)
+- **[NightModeManager](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/NightModeManager.java#19-214)**: Extraída toda la lógica de colores y detección de modo noche.
+- **[HistoryManager](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/HistoryManager.java#26-251)**: Gestión centralizada del historial de emisoras y archivos `.fav`.
+- **[PresetManager](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/PresetManager.java#17-241)**: Limpieza de [MainActivity](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/MainActivity.java#64-2434), moviendo la lógica de los botones de favoritos a esta clase.
+
+### 2. Soporte Android Auto
+- **[RadioMediaService](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/service/RadioMediaService.java#25-148)**: Servicio de medios registrado para que el coche detecte la app.
+- **[MediaSessionManager](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/MediaSessionManager.java#20-127)**: Sincroniza RDS, logos y comandos del volante con el sistema del coche.
+- **[automotive_app_desc.xml](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/res/xml/automotive_app_desc.xml)**: Descriptor necesario para la visibilidad en Android Auto.
+
+### 3. Correcciones de Compilación (Fase Final)
+- [x] **Accesibilidad**: `MainActivity.gotoFreq(int)` ahora es `public` para que [PresetManager](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/PresetManager.java#17-241) pueda ejecutar cambios de frecuencia.
+- [x] **Excepciones**: Eliminado `try-catch` de `RemoteException` en [MediaSessionManager](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/MediaSessionManager.java#20-127) por ser redundante en la versión actual de la librería.
+- [x] **Limpieza de Recursos**: Unificados los métodos [onDestroy](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/MainActivity.java#1089-1140) para evitar fugas de memoria y asegurar que la [MediaSession](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/app/src/main/java/com/example/openradiofm/ui/main/MediaSessionManager.java#20-127) se cierre correctamente.
+
+## Verificación
+- Se ha validado la estructura de los archivos Java.
+- Se han corregido las advertencias de depreciación en [build.gradle.kts](file:///c:/@MIS%20PROYECTOS/K706_RE/OpenRadioFM/build.gradle.kts).
+- El receptor de comandos de medios (`mMediaControlReceiver`) está correctamente registrado y manejado.
+
+---
+**Nota**: El proyecto ahora cumple con los requisitos de **Android Gradle Plugin 9.0+** y está listo para ser compilado y probado en hardware real o emulador con soporte de medios.

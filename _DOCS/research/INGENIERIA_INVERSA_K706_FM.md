@@ -513,5 +513,158 @@ setChannel.invoke(mcuManager, 2); // Canal FM
 
 ---
 
+## 🔬 Fase 3: Investigación por Software del Cuello de Botella TEF6686 (3 Marzo 2026)
+
+### Contexto
+
+Tras analizar el firmware del MCU y confirmar que versiones recientes (Nov/Dic 2025) incluyen intentos de "reducir la tasa de error del RDS" y "arreglar la detección de SNR" sin éxito real, se realizó una investigación **completa por software** (ADB + logcat + ingeniería inversa de APKs) para mapear exactamente la arquitectura y el cuello de botella.
+
+### Arquitectura de Hardware Confirmada
+
+```mermaid
+graph LR
+    A["NXP TEF6686<br/>(Chip Radio)"] -->|"I2C Privado<br/>⛔ NO accesible"| B["ST MCU<br/>(Carsyso)"]
+    B -->|"UART /dev/ttyS0<br/>115200 baud"| C["UNISOC Marlin3<br/>(SoC Android)"]
+    C -->|"QF Framework<br/>com.qf.framework"| D["mcu_service<br/>AIDL"]
+    D -->|"Callbacks"| E["FMRadio App<br/>TunerManagerForExt"]
+```
+
+| Componente | Identificación Confirmada | Puerto/Bus |
+|---|---|---|
+| **SoC** | **UNISOC Marlin3** (Spreadtrum, NO MT8163) | — |
+| **MCU** | STMicroelectronics, protocolo **'mustmax'** (Carsyso) | `/dev/ttyS0` (NO ttyMT1) |
+| **Chip Radio** | NXP TEF6686 | I2C privado del MCU |
+| **DAC Audio** | AKM AK7738 | Gestionado por `AK7738VolumeManager` |
+| **FM Nativo SoC** | SPRD FM (`sprd_fm` kernel module) | `/dev/fm` |
+
+> [!IMPORTANT]
+> **Descubrimiento clave**: El TEF6686 **NO está conectado a ninguno de los 6 buses I2C del SoC** (i2c-0 a i2c-5). Está en un bus I2C propio del MCU, completamente inaccesible desde Android. Toda comunicación DEBE pasar por el protocolo serial del MCU.
+
+### Buses I2C Explorados (Descartados para TEF6686)
+
+| Bus | Dispositivos Encontrados | Tipo |
+|---|---|---|
+| I2C-3 | 0x20 (dsx-i2c), 0x38 (fts), 0x48 (hxcommon), 0x4a (sitronix), 0x4b (gt9xx), 0x55 (jdcommon), 0x5d (stmvl53l0), 0x68 | Touchscreens, sensores |
+| I2C-4 | 0x29 | Sensor ToF |
+| I2C-0,1,2,5 | — | Sin dispositivos accesibles |
+
+### Protocolo Serial Carsyso "mustmax" (Descifrado)
+
+#### Estructura de Trama
+
+```
+[FF] [DIR] [DIR2] [LEN] [TYPE] [CMD] [DATA...] [CHECKSUM] [FF]
+```
+
+| Campo | ARM→MCU | MCU→ARM |
+|---|---|---|
+| **Header** | `FF FD FE` | `FF FE FD` |
+| **TYPE** | 0=Control, 1=Request, 2=ACK | — |
+| **Tail** | `FF` | `FF` |
+
+#### Cadena de Software Completa
+
+```
+QF_Framework.apk (com.qf.framework) — PID: 12043
+├── McuManagerService (android.qf.mcu.IMcuManager$Stub)
+│   ├── McuSerialPort → /dev/ttyS0 @ 115200 baud (libmcuserialport.so)
+│   ├── McuReceiverRunnable → Lee UART → readMcuMessageInBuf()
+│   ├── McuProcessor → processResponse() → dispatchToClients()
+│   │   ├── 0x20-0x2A → Handlers específicos (keycode, voltage, etc.)
+│   │   ├── 0xB0-0xB8 → onRawMcuDataChanged() [HANDLER GENÉRICO]
+│   │   │   ├── AK7738VolumeManager.handleRadioDatas()
+│   │   │   └── handleMcuInfoChanged() → reenvío crudo a clientes
+│   │   └── 0xC0-0xC1 → Diagnóstico/errores
+│   └── DispatchProcessor → Reenvío a clientes AIDL registrados
+└── CarsysoMCUProtocolImpl (protocolo "mustmax")
+    └── transformTerminalData() → [FF, FD, FE, ...payload..., FF]
+```
+
+### Tráfico MCU Capturado en Vivo
+
+#### Ejemplo de paquete Heartbeat (cada ~2s)
+```
+MCU2APP: [ff fe fd 03 01 29 68 40 ff]
+  → control: 0x29 (BATTERY_VOLTAGE), data: [29 68]
+```
+
+#### Ejemplo de paquete RDS PS Name (esporádico)
+```
+MCU2APP: [ff fe fd 0a 01 b6 20 4c 4f 53 34 30 20 20 ...]
+  → control: 0xB6 (RDS_PS_INFO), data: " LOS40  " ✅ CONFIRMADO
+```
+
+#### Ejemplo de paquete RDS PTY
+```
+MCU2APP: [ff fe fd 05 01 b5 00 0a ...]
+  → control: 0xB5 (RDS_PTY_TYPE_INFO), data: [b5 00 0a] (PTY=10=Pop Music)
+```
+
+#### Paquete RDS Radio Text (0xB7)
+```
+⛔ NUNCA OBSERVADO en capturas — el MCU no lo envía
+```
+
+### Paquetes Observados vs No Observados
+
+| Cmd | Nombre | ¿Observado? | Notas |
+|---|---|---|---|
+| `0x29` | Battery/Heartbeat | ✅ Constante | Cada ~2s, `[29 68]`/`[29 6a]` |
+| `0xB4` | RDS Indicate | ✅ Esporádico | `[b4 00]` |
+| `0xB5` | RDS PTY | ✅ Esporádico | `[b5 00 0a]` (PTY=10) |
+| `0xB6` | RDS PS Name | ✅ Esporádico | `[b6 20 4c 4f 53 34 30 20 20]` = "LOS40" |
+| `0xB0` | Tuner Info | ❓ No capturado | Posiblemente solo al cambiar frecuencia |
+| `0xB3` | RDS Info | ❓ No capturado | Podría contener PI Code |
+| `0xB7` | RDS Radio Text | ❌ **NUNCA** | **EL MCU NO LO ENVÍA** |
+
+### Servicios Android Relacionados
+
+| # | Servicio | AIDL Interface |
+|---|---|---|
+| 6 | `mcu_service` | `android.qf.mcu.IMcuManager` |
+| 28 | `framework_service` | `android.qf.mcu.IQFFramework` |
+| 75 | `broadcastradio` | `android.hardware.radio.IRadioService` |
+
+### Binarios y Librerías
+
+| Archivo | Función |
+|---|---|
+| `/system/lib64/libmcuserialport.so` | JNI para puerto serial MCU |
+| `/system/lib64/libfmjni.so` | JNI para FM SPRD nativo |
+| `/system/bin/fm_tools` | CLI para FM nativo (-o, -t, -s, -g rssi) |
+| `/system/priv-app/QF_Framework/QF_Framework.apk` | Framework MCU completo |
+| `/system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk` | App FM con TunerManager |
+
+### APKs Descompilados (Disponibles en C:\temp\)
+
+- `C:\temp\QF_Framework_dec\` → smali de `com.qf.framework` (protocolo MCU)
+- `C:\temp\QF_FMRadio_dec\` → smali de `com.android.fmradio.ext` (app FM)
+
+---
+
+## ⚖️ Evaluación Realista: Probabilidad de Éxito del Bypass por Software
+
+### Enviar cmd 0xA2 para activar más RDS: **~15-25% de éxito**
+
+| Factor | Detalle |
+|---|---|
+| ❌ **Firmware cerrado** | El MCU decide qué enviar. Si el código no está implementado, no hay forma de activarlo desde Android |
+| ❌ **0xB7 nunca observado** | Ni siquiera la app original del fabricante recibe Radio Text — el firmware del MCU probablemente no lo implementó |
+| ❌ **PI Code sin comando** | No existe un cmdId dedicado para PI; podría estar en 0xB3 (no observado) o simplemente no existe |
+| ✅ **0xA2 existe** | La constante `CMD_ARM2MCU_TUNER_SETTING_RDS` existe, lo que sugiere que el fabricante contempló la configuración |
+| ✅ **Lo básico funciona** | PS Name, PTY, e indicadores RDS ya llegan correctamente |
+| ⚠️ **Cuello de botella confirmado** | El framework QF es un passthrough puro — no filtra nada. Todo el problema está en el firmware del MCU |
+
+### Resumen
+
+| Vía | Probabilidad | Descripción |
+|---|---|---|
+| Cmd 0xA2 (RDS config) | **15-25%** | Intentar activar RT/PI desde software |
+| SPRD FM nativo (`/dev/fm`) | **5-10%** | Posiblemente no cableado a la antena del MCU |
+| Bypass I2C con analizador lógico | **85-95%** | La solución definitiva, requiere abrir la radio |
+
+---
+
 *Documento de referencia para el desarrollo de OpenRadioFM v5.0 - The Engineering Update*
 *Basado en análisis de smali decompilado de Radio_Original.apk (com.android.fmradio.ext)*
+*Actualizado: 3 Marzo 2026 — Investigación software TEF6686 vía ADB*

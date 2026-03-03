@@ -200,6 +200,32 @@ public class PresetManager {
         return (prevFreq != -1 && Math.abs(prevFreq - currentFreq) > tolerance) ? prevFreq : -1;
     }
 
+    /**
+     * V16: Reproduce el siguiente favorito disponible.
+     */
+    public void playNextPreset() {
+        if (mActivity == null) return;
+        int currentFreq = (mActivity.mEngine != null) ? mActivity.mEngine.getCurrentFreq() : 0;
+        int next = getNextFavorite(currentFreq);
+        if (next != -1) {
+            final int target = next;
+            mActivity.runOnUiThread(() -> mActivity.gotoFreq(target));
+        }
+    }
+
+    /**
+     * V16: Reproduce el favorito anterior disponible.
+     */
+    public void playPrevPreset() {
+        if (mActivity == null) return;
+        int currentFreq = (mActivity.mEngine != null) ? mActivity.mEngine.getCurrentFreq() : 0;
+        int prev = getPreviousFavorite(currentFreq);
+        if (prev != -1) {
+            final int target = prev;
+            mActivity.runOnUiThread(() -> mActivity.gotoFreq(target));
+        }
+    }
+
     public int getFreq(int index) {
         return (index >= 0 && index < mPresetsCount) ? mPresets[index] : 0;
     }

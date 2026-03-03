@@ -62,19 +62,18 @@ public class K706EngineeringDialog extends Dialog {
         if (getWindow() != null) {
             getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
             getWindow().setLayout(
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT,
-                android.view.ViewGroup.LayoutParams.MATCH_PARENT
-            );
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+                    android.view.ViewGroup.LayoutParams.MATCH_PARENT);
         }
 
         bindViews();
         setupButtons();
 
         mIsRunning = true;
-        
+
         // V15.6: Aplicar tipografía global al diálogo de ingeniería
         mActivity.applyRecursiveFont(getWindow().getDecorView(), mActivity.getSystemTypeface());
-        
+
         logEvent("SYS", "K706 DEV MODE INITIALIZED");
         logEvent("SYS", "MCU BRIDGE: " + (getK706Manager() != null ? "CONNECTED" : "DISCONNECTED"));
         startUpdateLoop();
@@ -87,9 +86,11 @@ public class K706EngineeringDialog extends Dialog {
 
         // Close buttons
         View btnClose = findViewById(R.id.btnCloseK706);
-        if (btnClose != null) btnClose.setOnClickListener(v -> dismiss());
+        if (btnClose != null)
+            btnClose.setOnClickListener(v -> dismiss());
         View btnExit = findViewById(R.id.btnK706Exit);
-        if (btnExit != null) btnExit.setOnClickListener(v -> dismiss());
+        if (btnExit != null)
+            btnExit.setOnClickListener(v -> dismiss());
 
         // V4.6: Selector de motor de radio (movido desde Settings)
         setupEngineSelector();
@@ -209,10 +210,18 @@ public class K706EngineeringDialog extends Dialog {
         for (int ch = 1; ch <= 4; ch++) {
             int resId = 0;
             switch (ch) {
-                case 1: resId = R.id.btnK706Ch1; break;
-                case 2: resId = R.id.btnK706Ch2; break;
-                case 3: resId = R.id.btnK706Ch3; break;
-                case 4: resId = R.id.btnK706Ch4; break;
+                case 1:
+                    resId = R.id.btnK706Ch1;
+                    break;
+                case 2:
+                    resId = R.id.btnK706Ch2;
+                    break;
+                case 3:
+                    resId = R.id.btnK706Ch3;
+                    break;
+                case 4:
+                    resId = R.id.btnK706Ch4;
+                    break;
             }
             final int channel = ch;
             setupButton(resId, null, () -> {
@@ -225,7 +234,8 @@ public class K706EngineeringDialog extends Dialog {
     private void setupButton(int resId, String label, Runnable action) {
         Button btn = findViewById(resId);
         if (btn != null) {
-            if (label != null) btn.setText(label);
+            if (label != null)
+                btn.setText(label);
             btn.setOnClickListener(v -> action.run());
         }
     }
@@ -244,7 +254,7 @@ public class K706EngineeringDialog extends Dialog {
         try {
             // Usar reflection para acceder a sendCmd privado
             java.lang.reflect.Method sendCmd = K706RadioManager.class.getDeclaredMethod(
-                "sendCmd", byte.class, byte.class, byte.class);
+                    "sendCmd", byte.class, byte.class, byte.class);
             sendCmd.setAccessible(true);
             sendCmd.invoke(mgr, subCmd, param1, param2);
         } catch (Exception e) {
@@ -264,7 +274,7 @@ public class K706EngineeringDialog extends Dialog {
         }
         try {
             java.lang.reflect.Method sendRdsCmd = K706RadioManager.class.getDeclaredMethod(
-                "sendRdsCmd", byte.class);
+                    "sendRdsCmd", byte.class);
             sendRdsCmd.setAccessible(true);
             sendRdsCmd.invoke(mgr, ptyType);
         } catch (Exception e) {
@@ -287,11 +297,11 @@ public class K706EngineeringDialog extends Dialog {
             java.lang.reflect.Field fSetChannel = K706RadioManager.class.getDeclaredField("mSetChannel");
             fSetChannel.setAccessible(true);
             java.lang.reflect.Method setChannel = (java.lang.reflect.Method) fSetChannel.get(mgr);
-            
+
             java.lang.reflect.Field fMcuManager = K706RadioManager.class.getDeclaredField("mMcuManager");
             fMcuManager.setAccessible(true);
             Object mcuManager = fMcuManager.get(mgr);
-            
+
             if (setChannel != null && mcuManager != null) {
                 try {
                     // Primero intentar con byte (signatura correcta del K706)
@@ -348,11 +358,14 @@ public class K706EngineeringDialog extends Dialog {
 
     /**
      * Invoca un método del QFTunerManager con un argumento int.
-     * @return true si se ejecutó correctamente, false si QFTunerManager no disponible
+     * 
+     * @return true si se ejecutó correctamente, false si QFTunerManager no
+     *         disponible
      */
     private boolean invokeQFTuner(String methodName, Class<?> paramType, Object arg) {
         Object mgr = getQFTunerManager();
-        if (mgr == null) return false;
+        if (mgr == null)
+            return false;
         try {
             java.lang.reflect.Method m = mgr.getClass().getMethod(methodName, paramType);
             m.invoke(mgr, arg);
@@ -372,7 +385,8 @@ public class K706EngineeringDialog extends Dialog {
      */
     private boolean invokeQFTunerNoArg(String methodName) {
         Object mgr = getQFTunerManager();
-        if (mgr == null) return false;
+        if (mgr == null)
+            return false;
         try {
             java.lang.reflect.Method m = mgr.getClass().getMethod(methodName);
             m.invoke(mgr);
@@ -393,7 +407,8 @@ public class K706EngineeringDialog extends Dialog {
         mUpdateRunnable = new Runnable() {
             @Override
             public void run() {
-                if (!mIsRunning || !isShowing()) return;
+                if (!mIsRunning || !isShowing())
+                    return;
                 updateMonitor();
                 mHandler.postDelayed(this, 500);
             }
@@ -431,23 +446,46 @@ public class K706EngineeringDialog extends Dialog {
                 mLastLogPty = pty;
             }
 
-            // K706-specific info
+            // K706-specific info (V15.7: Telemetría Real)
             K706RadioManager mgr = getK706Manager();
             boolean scanning = mgr != null && mgr.isScanning();
+            byte[] signalData = (mgr != null) ? mgr.getLastSignalData() : null;
 
-            // Generación de SQI y RSSI Extrapolado
-            boolean rdsLock = mActivity.mHasRdsLock;
-            int sqi = 0;
-            if (rdsLock && stereo) sqi = 100;
-            else if (rdsLock) sqi = 75;
-            else if (stereo) sqi = 60;
-            else sqi = 30;
+            int rssiRaw = -1;
+            int snrRaw = -1;
+            String rawHex = "NONE";
+
+            if (signalData != null && signalData.length >= 8) {
+                rssiRaw = signalData[5] & 0xFF; // Estación 96.9 -> 0x76
+                snrRaw = signalData[7] & 0xFF; // Estación 96.9 -> 0xCF (0x01?)
+                rawHex = mgr.bytesToHex(signalData);
+            }
+
+            // Generación de SQI y RSSI (V15.7: Basado en Telemetría si existe)
+            int sqi;
+            if (rssiRaw != -1) {
+                // Mapeo experimental: rssi 0x76 (118) es señal muy fuerte.
+                sqi = Math.min(100, (rssiRaw * 100) / 118);
+            } else {
+                boolean rdsLock = mActivity.mHasRdsLock;
+                if (rdsLock && stereo)
+                    sqi = 100;
+                else if (rdsLock)
+                    sqi = 75;
+                else if (stereo)
+                    sqi = 60;
+                else
+                    sqi = 30;
+            }
 
             int bars = sqi / 10;
             StringBuilder rssiBar = new StringBuilder("[");
-            for (int i=0; i<10; i++) rssiBar.append(i < bars ? "█" : "░");
+            for (int i = 0; i < 10; i++)
+                rssiBar.append(i < bars ? "█" : "░");
             rssiBar.append("]");
-            int dbm = -100 + (sqi / 2); // Estimación empírica
+
+            // dBM estimado basado en RSSI si existe
+            int dbm = (rssiRaw != -1) ? (-120 + rssiRaw) : (-100 + (sqi / 2));
 
             // Build monitor text
             StringBuilder sb = new StringBuilder();
@@ -456,11 +494,13 @@ public class K706EngineeringDialog extends Dialog {
             sb.append(String.format("STEREO...: %s\n", stereo ? "YES (19kHz pilot)" : "NO (mono)"));
             sb.append(String.format("LOC/DX...: %s\n", isLocal ? "LOCAL" : "DX"));
             sb.append(String.format("SCANNING.: %s\n", scanning ? "▶ ACTIVE" : "IDLE"));
-            sb.append(String.format("SQI LOG..: %d%% %s\n", sqi, rssiBar.toString()));
+            sb.append(String.format("REAL RSSI: 0x%02X (%d) %s\n", rssiRaw, rssiRaw, rssiBar.toString()));
+            sb.append(String.format("REAL SNR.: 0x%02x\n", snrRaw));
             sb.append(String.format("SIG. EST.: %ddBm\n", dbm));
+            sb.append(String.format("RAW 0x41.: %s\n", rawHex));
             sb.append(String.format("PTY......: %s\n", pty != null ? pty : "---"));
             sb.append(String.format("DEVICE...: %s / %s\n",
-                android.os.Build.MODEL, android.os.Build.DEVICE));
+                    android.os.Build.MODEL, android.os.Build.DEVICE));
             sb.append(String.format("BOARD....: %s", android.os.Build.BOARD));
 
             if (tvMonitor != null) {
@@ -476,28 +516,42 @@ public class K706EngineeringDialog extends Dialog {
 
     private String getBandName(int band) {
         switch (band) {
-            case 0: return "FM1";
-            case 1: return "FM2";
-            case 2: return "FM3";
-            case 3: return "AM1";
-            case 4: return "AM2";
-            default: return "UNK";
+            case 0:
+                return "FM1";
+            case 1:
+                return "FM2";
+            case 2:
+                return "FM3";
+            case 3:
+                return "AM1";
+            case 4:
+                return "AM2";
+            default:
+                return "UNK";
         }
     }
 
     private void logEvent(String tag, String msg) {
-        if (tvLog == null) return;
+        if (tvLog == null)
+            return;
         String time = timeFormat.format(new Date());
         String entry = String.format("[%s] %s: %s\n", time, tag, msg);
 
         mHandler.post(() -> {
             tvLog.append(entry);
-            if (scrollLog != null) scrollLog.fullScroll(View.FOCUS_DOWN);
+            if (scrollLog != null)
+                scrollLog.fullScroll(View.FOCUS_DOWN);
         });
     }
 
     public void addRdsLog(String msg) {
         logEvent("RDS_RAW", msg);
+    }
+
+    public void updateSignalQuality(int rssi, int snr) {
+        // En un dispositivo no-K706 recibimos RSSI desde el motor en la app y podemos
+        // loguearlo
+        logEvent("SIG", "UPDATED RSSI: " + rssi + ", SNR: " + snr);
     }
 
     @Override

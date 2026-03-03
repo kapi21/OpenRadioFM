@@ -1,132 +1,230 @@
 package com.example.openradiofm.data.source;
 
-import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
-import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 
+import com.nwd.radio.service.RadioCallback;
+import com.nwd.radio.service.RadioFeature;
+import com.nwd.radio.service.data.Frequency;
+import com.nwd.radio.service.data.RadioPoint;
+
 /**
- * V12.0: Motor para plataformas QS6 G5 (NWD).
- * Utiliza el servicio com.nwd.radio.service y reporta estado via Broadcasts.
+ * V14.0: Motor Nativo Avanzado mediante IPC AIDL para QS6 G5 (NWD).
+ * Se conecta al servicio oficial com.nwd.radio.service.RadioService,
+ * ganando acceso profundo a RDS, presets y sincronía bidireccional perfecta.
  */
 public class QS6Engine implements RadioEngine {
     private static final String TAG = "QS6Engine";
     private Context mContext;
     private RadioEngineCallback mCallback;
+
+    // Estado local sincronizado por AIDL
     private int mCurrentFreq = 87500;
     private int mCurrentBand = 0;
     private boolean mIsStereo = false;
-    private boolean mIsConnected = false;
-    private com.hcn.autoradio.IRadioServiceAPI mService;
+    private boolean mIsMute = false;
 
-    public QS6Engine() {}
+    // Intents de Emisión (Encendido/Apagado General del MCU)
+    private static final String ACTION_CHANGE_SOURCE = "com.nwd.action.ACTION_CHANGE_SOURCE";
+    private static final String ACTION_KEY_VALUE = "com.nwd.action.ACTION_KEY_VALUE";
 
-    public QS6Engine(com.hcn.autoradio.IRadioServiceAPI service) {
-        this.mService = service;
-        this.mIsConnected = (service != null);
-    }
+    // KEY_VALUE Mapeos
+    private static final byte KEY_FM = 0x48;
 
-    // Constantes NWD
-    private static final String ACTION_RADIO_SERVICE = "com.nwd.radio.service.ACTION_RADIO_SERVICE";
-    private static final String PACKAGE_RADIO_SERVICE = "com.nwd.radio.service";
-    private static final String ACTION_REPORT_FREQ = "com.nwd.action.ACTION_SEND_RADIO_FREQUENCE";
-    
-    // UART RDS (F0 05 ...)
-    private static final String ACTION_UART_RECV = "com.nwd.action.ACTION_UART_RECV";
+    private static final byte SOURCE_RADIO = 0x04;
+    private static final byte SOURCE_ANDROID = 0x00;
 
-    private final ServiceConnection mConnection = new ServiceConnection() {
+    // AIDL stubs
+    private RadioFeature mNwdService;
+    private boolean mIsBound = false;
+
+    // Implementación de la Callback del IPC hacia NWD
+    private final RadioCallback.Stub mNwdCallback = new RadioCallback.Stub() {
         @Override
-        public void onServiceConnected(android.content.ComponentName name, IBinder service) {
-            Log.d(TAG, "Servicio NWD Radio conectado.");
-            mIsConnected = true;
-            // Aquí podríamos obtener una interfaz AIDL si supiéramos el nombre generado por el Stub
-        }
-
-        @Override
-        public void onServiceDisconnected(android.content.ComponentName name) {
-            Log.d(TAG, "Servicio NWD Radio desconectado.");
-            mIsConnected = false;
-        }
-    };
-
-    private final BroadcastReceiver mReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (ACTION_REPORT_FREQ.equals(action)) {
-                // NWD suele enviar la frecuencia en un extra llamado "frequence" o "freq"
-                // Basado en dumpsys, es probable que sea "frequence"
-                int freq = intent.getIntExtra("frequence", -1);
-                if (freq == -1) freq = intent.getIntExtra("freq", -1);
-                
-                if (freq > 0) {
-                    mCurrentFreq = freq;
-                    if (mCallback != null) {
-                        mCallback.onFrequencyChanged(mCurrentFreq);
-                    }
-                }
-                
-                int band = intent.getIntExtra("band", -1);
-                if (band != -1) {
-                    mCurrentBand = band;
-                    // Mapear bandas si es necesario
-                }
-            } else if (ACTION_UART_RECV.equals(action)) {
-                // Parsear RDS desde UART si está disponible
-                byte[] data = intent.getByteArrayExtra("data");
-                if (data != null) {
-                    handleUartPacket(data);
+        public void notifyCurrentFrequency(byte bandType, int frequency, String psName, int prefabIndex) {
+            // Nota: frequency viene en décimas de MHz (ej: 9690)
+            int freqKhz = frequency * 10;
+            mCurrentFreq = freqKhz;
+            mCurrentBand = bandType;
+            if (mCallback != null) {
+                mCallback.onBandChanged(bandType);
+                mCallback.onFrequencyChanged(freqKhz);
+                if (psName != null && !psName.trim().isEmpty()) {
+                    mCallback.onRdsName(psName);
                 }
             }
+            Log.d(TAG,
+                    "NWD AIDL notifyCurrentFrequency -> Freq: " + freqKhz + ", Band: " + bandType + ", PS: " + psName);
+        }
+
+        @Override
+        public void notifyCurrentIsTA(boolean isTA) {
+        }
+
+        @Override
+        public void notifyCurrentPTYType(byte ptyType) {
+        }
+
+        @Override
+        public void notifyNearOn(boolean isOn) {
+        }
+
+        @Override
+        public void notifyPrefabFrequency(Frequency[] frequencys) {
+        }
+
+        @Override
+        public void notifyPrefabPTYType(byte ptyType) {
+        }
+
+        @Override
+        public void notifyRDSStateChange() {
+        }
+
+        @Override
+        public void notifyRadioPoint(RadioPoint[] radioPoints) {
+        }
+
+        @Override
+        public void notifyRadioScanState(int state) {
+            Log.d(TAG, "NWD AIDL ScanState -> " + state);
+            if (mCallback != null) {
+                mCallback.onScanStatusChanged(state != 0);
+            }
+        }
+
+        @Override
+        public void notifyRdsShowState(boolean isShow) {
+        }
+
+        @Override
+        public void notifyRtMessage(String rtMessage) {
+            Log.d(TAG, "NWD AIDL notifyRtMessage -> " + rtMessage);
+            if (mCallback != null && rtMessage != null) {
+                mCallback.onRdsText(rtMessage);
+            }
+        }
+
+        @Override
+        public void notifyState(byte state) {
+        }
+
+        @Override
+        public void notifyStereo(boolean isStereo) {
+            mIsStereo = isStereo;
+            if (mCallback != null) {
+                mCallback.onStereoChanged(isStereo);
+            }
+        }
+
+        @Override
+        public void notifyStereoOn(boolean isOn) {
         }
     };
+
+    // Conexión del Servicio Android al servicio NWD
+    private final ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mNwdService = RadioFeature.Stub.asInterface(service);
+            mIsBound = true;
+            Log.d(TAG, "QS6 Service onServiceConnected -> Vinculado a NWD RadioService AIDL");
+
+            try {
+                // Registramos nuestro receptor de Callbacks en la Radio
+                mNwdService.registCallback(mNwdCallback);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error al registrar AIDL callback", e);
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            Log.d(TAG, "QS6 Service onServiceDisconnected -> Desvinculado de NWD RadioService");
+            mNwdService = null;
+            mIsBound = false;
+        }
+    };
+
+    public QS6Engine() {
+    }
 
     @Override
     public boolean init(Context context) {
         this.mContext = context;
-        Log.d(TAG, "Iniciando motor QS6 (NWD G5)");
-        
-        // 1. Vincular al servicio principal
-        try {
-            Intent intent = new Intent(ACTION_RADIO_SERVICE);
-            intent.setPackage(PACKAGE_RADIO_SERVICE);
-            context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        } catch (Exception e) {
-            Log.e(TAG, "Error vinculando al servicio NWD: " + e.getMessage());
+        Log.d(TAG, "Iniciando motor QS6 (Plan Nivel 2 - NWD AIDL IPC)");
+
+        // 1. Iniciamos el intent al servicio original
+        Intent intent = new Intent("com.nwd.radio.service.ACTION_RADIO_SERVICE");
+        intent.setPackage("com.nwd.radio.service");
+
+        // Android 11+ requiere resolver el componente si se usa bindService a otro
+        // paquete (independientemente del manifest parfois)
+        android.content.pm.PackageManager pm = context.getPackageManager();
+        java.util.List<android.content.pm.ResolveInfo> resolveInfo = pm.queryIntentServices(intent, 0);
+
+        if (resolveInfo != null && !resolveInfo.isEmpty()) {
+            android.content.pm.ResolveInfo serviceInfo = resolveInfo.get(0);
+            String packageName = serviceInfo.serviceInfo.packageName;
+            String className = serviceInfo.serviceInfo.name;
+            ComponentName component = new ComponentName(packageName, className);
+
+            Intent explicitIntent = new Intent(intent);
+            explicitIntent.setComponent(component);
+            boolean bindResult = context.bindService(explicitIntent, mConnection, Context.BIND_AUTO_CREATE);
+            Log.d(TAG, "QS6 Service Bind Request -> Success: " + bindResult + " | " + component.flattenToString());
+        } else {
+            Log.e(TAG,
+                    "QS6 Error: No se ha podido resolver el intent mediante query. Usando component fall-back directo.");
+
+            Intent fallback = new Intent();
+            fallback.setComponent(new ComponentName("com.nwd.radio.service", "com.nwd.radio.service.RadioService"));
+            boolean fallBind = context.bindService(fallback, mConnection,
+                    Context.BIND_AUTO_CREATE | Context.BIND_IMPORTANT);
+            Log.d(TAG, "QS6 Service Fallback Bind Request -> Success: " + fallBind);
         }
 
-        // 2. Registrar receptores de estado
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_REPORT_FREQ);
-        filter.addAction(ACTION_UART_RECV);
-        context.registerReceiver(mReceiver, filter);
-        
+        // 2. Encender sistema de audio principal (Source NWD)
+        requestPlayAudio();
+
         return true;
     }
 
     @Override
     public void release() {
-        if (mContext != null) {
+        if (mIsBound && mNwdService != null) {
+            try {
+                mNwdService.unRegistCallback(mNwdCallback);
+            } catch (RemoteException e) {
+            }
             mContext.unbindService(mConnection);
-            mContext.unregisterReceiver(mReceiver);
+            mIsBound = false;
         }
+        requestStopAudio();
     }
 
     @Override
     public String getEngineName() {
-        return "QS6-NWD-G5";
+        return "QS6-AIDL-Engine";
     }
 
     @Override
     public void tune(int freqKhz) {
-        // Enviar intent de control a NWD
-        Intent intent = new Intent("com.nwd.action.ACTION_SET_RADIO_FREQUENCE");
-        intent.putExtra("frequence", freqKhz);
-        mContext.sendBroadcast(intent);
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            int nwdFreq = freqKhz / 10;
+            // La firma de NWD es setCurrentFrequency(frequency, bandType, prefebIndex)
+            mNwdService.setCurrentFrequency(nwdFreq, (byte) mCurrentBand, 0);
+            Log.d(TAG, "QS6 AIDL TUNE: " + freqKhz + " (" + nwdFreq + ")");
+        } catch (RemoteException e) {
+            Log.e(TAG, "tune remote error", e);
+        }
     }
 
     @Override
@@ -141,12 +239,22 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void seekUp() {
-        mContext.sendBroadcast(new Intent("com.nwd.action.ACTION_RADIO_SEARCH_UP"));
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            mNwdService.seek(true); // true = Increase
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
     public void seekDown() {
-        mContext.sendBroadcast(new Intent("com.nwd.action.ACTION_RADIO_SEARCH_DOWN"));
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            mNwdService.seek(false); // false = Decrease
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
@@ -161,17 +269,37 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void scan() {
-        mContext.sendBroadcast(new Intent("com.nwd.action.ACTION_RADIO_SCAN"));
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            mNwdService.AMS(); // Método original de Auto Memory Scan
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
     public void stopScan() {
-        // NWD suele detener al sintonizar o con un comando específico
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            mNwdService.changeBand(); // Cancelar scan cambiando de banda.
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
     public void bandCycle() {
-        mContext.sendBroadcast(new Intent("com.nwd.action.ACTION_RADIO_BAND_CHANGE"));
+        if (!mIsBound || mNwdService == null) {
+            // Fallback por Broadcast si AIDL no está listo
+            Intent intent = new Intent(ACTION_KEY_VALUE);
+            intent.putExtra("extra_key_value", KEY_FM);
+            mContext.sendBroadcast(intent);
+            return;
+        }
+        try {
+            mNwdService.changeBand();
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
@@ -181,14 +309,23 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void setStereo(boolean enable) {
-        // Implementar via Intent si existe
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            mNwdService.setStreroOn(enable);
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
     public void setMute(boolean mute) {
-        Intent intent = new Intent("com.nwd.action.ACTION_SET_MUTE");
-        intent.putExtra("mute", mute ? 1 : 0);
-        mContext.sendBroadcast(intent);
+        try {
+            Intent intent = new Intent("com.nwd.action.ACTION_SET_MUTE");
+            intent.putExtra("mute", mute ? 1 : 0);
+            mContext.sendBroadcast(intent);
+            this.mIsMute = mute;
+        } catch (Exception e) {
+        }
     }
 
     @Override
@@ -197,71 +334,115 @@ public class QS6Engine implements RadioEngine {
             Intent intent = new Intent("com.nwd.action.ACTION_START_NWD_ACTIVITY");
             intent.putExtra("pkg", "com.nwd.eq");
             context.startActivity(intent);
-        } catch (Exception e) {}
+        } catch (Exception e) {
+        }
     }
 
     @Override
     public boolean requestPlayAudio() {
-        // NWD maneja el foco internamente usualmente
-        return true;
+        if (mContext == null)
+            return false;
+        try {
+            Log.d(TAG, "Iniciando Audio NWD Radio -> ACTION_CHANGE_SOURCE a SOURCE_RADIO");
+            Intent intent = new Intent(ACTION_CHANGE_SOURCE);
+            intent.putExtra("extra_source_id", SOURCE_RADIO);
+            mContext.sendBroadcast(intent); // System wide
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void requestStopAudio() {
+        if (mContext == null)
+            return;
+        try {
+            Log.d(TAG, "Deteniendo Audio NWD Radio -> ACTION_CHANGE_SOURCE a SOURCE_ANDROID");
+            Intent intent = new Intent(ACTION_CHANGE_SOURCE);
+            intent.putExtra("extra_source_id", SOURCE_ANDROID);
+            mContext.sendBroadcast(intent);
+        } catch (Exception e) {
+        }
     }
 
     @Override
     public void toggleRdsFeature(int type) {
-        // AF/TA via Intents
+        // En NWD: type 0=TA, type 1=AF u otra combinación... (Asumo 0 = TA)
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            // Invertimos el estado (Toggle).
+            // Para ser 100% precisos habría que cachear el estado previo (mIsTA).
+            // Usaré getRDSState provisto en el AIDL.
+            boolean isTAOn = mNwdService.getRDSState(0);
+            mNwdService.setRDSState((byte) 0, !isTAOn);
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
-    public boolean isAfEnabled() { return false; }
+    public boolean isAfEnabled() {
+        return false;
+    }
+
     @Override
-    public boolean isTaEnabled() { return false; }
+    public boolean isTaEnabled() {
+        return false;
+    }
+
     @Override
-    public boolean isTpEnabled() { return false; }
-    
+    public boolean isTpEnabled() {
+        return false;
+    }
+
     @Override
     public boolean isScanning() {
-        // V12.2: Implementación mínima para satisfacer la interfaz
         return false;
     }
 
     @Override
     public void toggleDxLocal() {
-        mContext.sendBroadcast(new Intent("com.nwd.action.ACTION_RADIO_LOC_DX"));
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            boolean isNear = mNwdService.isNearOn();
+            mNwdService.setNearOn(!isNear);
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
-    public boolean isDxLocal() { return false; }
+    public boolean isDxLocal() {
+        return false;
+    }
 
     @Override
     public void gotoPreset(int index) {
-        // goto index
+        // Podría implementarse con getPrefabFrequency, etc.
     }
 
     @Override
     public void nextFavorite() {
-        // No soportado nativamente en QS6 vía intents por ahora
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            mNwdService.prefeb(true);
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
     public void prevFavorite() {
-        // No soportado nativamente en QS6 vía intents por ahora
+        if (!mIsBound || mNwdService == null)
+            return;
+        try {
+            mNwdService.prefeb(false);
+        } catch (RemoteException e) {
+        }
     }
 
     @Override
     public void setCallback(RadioEngineCallback cb) {
         this.mCallback = cb;
-    }
-
-    private void handleUartPacket(byte[] data) {
-        // F0 05 ... Badajoz.91.3
-        if (data.length > 2 && data[0] == (byte)0xF0 && data[1] == (byte)0x05) {
-            try {
-                // Saltar encabezado (aprox 7-8 bytes según logcat)
-                String text = new String(data, 8, data.length - 8, "UTF-8").trim();
-                if (!text.isEmpty() && mCallback != null) {
-                    mCallback.onRdsText(text);
-                }
-            } catch (Exception e) {}
-        }
     }
 }

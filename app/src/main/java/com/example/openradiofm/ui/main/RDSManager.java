@@ -115,7 +115,7 @@ public class RDSManager {
         if (tvPty != null) {
             tvPty.setText(displayLabel);
             tvPty.setVisibility(View.VISIBLE);
-            Log.d(TAG, "PTY UI Updated: " + displayLabel + " (Code: " + ptyCode + ")");
+            // Log.d(TAG, "PTY UI Updated: " + displayLabel + " (Code: " + ptyCode + ")");
         }
 
         if (ivPtyIcon != null) {

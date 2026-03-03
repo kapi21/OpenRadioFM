@@ -103,6 +103,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsTaEnabled = false; // V9.6: Estado TA habilitado
     private boolean mIsTpEnabled = false; // V9.6: Estado TP disponible
     private boolean mIsAfEnabled = false; // V9.6: Estado AF habilitado
+    private byte[] mLastSignalData = null; // V15.7: Último paquete 0x41 (Telemetría RSSI/SNR)
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAudioFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
@@ -562,12 +563,24 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB8: // RDS PS Preset List (Research)
                     Log.d(TAG, "MCU[0xB8] PS Preset List RAW: " + bytesToHex(data));
                     break;
+                case 0x41: // 🔬 RESEARCH: Posible telemetría de señal (RSSI/SNR)
+                    mLastSignalData = data.clone(); // V15.7: Guardar para Menú Ingeniería
+                    StringBuilder sb41 = new StringBuilder();
+                    for (int i = 1; i < data.length; i++) {
+                        sb41.append(String.format("[%d]=%02X ", i, data[i]));
+                    }
+                    Log.d(TAG, "🔬 [RESEARCH] MCU[0x41] SIGNAL DATA: " + sb41.toString());
+                    break;
                 case 0x29: // V13.1: Heartbeat silencioso del MCU (29 6D)
                     // Ignoramos para evitar que se interprete como frecuencia (0x296D hex = 10605 decimal -> 106.10 MHz)
                     return; 
                 default:
                     // Log unknown packets for research
-                    Log.d(TAG, "Unknown MCU packet type: 0x" + String.format("%02X", packetType));
+                    if (packetType >= 0xB0 && packetType <= 0xBF) {
+                        Log.d(TAG, "🔬 [RESEARCH] NEW RDS/TUNER PACKET FOUND: 0x" + String.format("%02X", packetType) + " -> " + bytesToHex(data));
+                    } else {
+                        Log.d(TAG, "Unknown MCU packet type: 0x" + String.format("%02X", packetType));
+                    }
                     break;
             }
         } catch (Exception e) {
@@ -817,12 +830,18 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
-    private String bytesToHex(byte[] bytes) {
+    public String bytesToHex(byte[] bytes) {
+        if (bytes == null) return "";
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
             sb.append(String.format("%02X ", b));
         }
         return sb.toString();
+    }
+
+    // V15.7: Getter para el Diálogo de Ingeniería
+    public byte[] getLastSignalData() {
+        return mLastSignalData;
     }
 
     // ==========================================
@@ -943,6 +962,14 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     new InvocationHandler() {
                         @Override
                         public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                            StringBuilder argStr = new StringBuilder();
+                            if (args != null) {
+                                for (Object arg : args) {
+                                    argStr.append(arg != null ? arg.toString() : "null").append(" ");
+                                }
+                            }
+                            Log.d(TAG, "🔬 [RESEARCH] ITunerTool Call: " + method.getName() + "(" + argStr.toString().trim() + ")");
+
                             if (method.getName().equals("onCurrentFrequencyPICodeChange")) {
                                 if (args != null && args.length > 0) {
                                     int pi = (Integer) args[0];

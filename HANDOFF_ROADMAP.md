@@ -1,4 +1,4 @@
-# Handoff y Roadmap de Desarrollo (V15.5)
+# Handoff y Roadmap de Desarrollo (V16.0)
 
 Este documento sirve como guía para futuros desarrolladores y establece los próximos pasos para OpenRadioFM tras la refactorización profesional.
 
@@ -6,15 +6,17 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 
 - **Núcleo**: La radio está completamente desacoplada del hardware mediante la interfaz `RadioEngine`.
 - **Detección**: `RadioServiceController` gestiona la lógica de conexión automática y manual.
+- **Android Auto**: Implementado mediante `MediaSession` y `RadioMediaService`.
 - **UI**: Soporta 9 idiomas y 3 layouts (V1, V2, V3).
-- **RDS**: Implementado mediante un sistema de callbacks asíncronos.
+- **RDS**: Implementado mediante un sistema de callbacks asínconos.
+- **Modo Nocturno**: `NightModeManager` gestiona detección horaria/sistema y colores azul noche.
+- **Historial**: `HistoryManager` centraliza emisoras recientes y export/import de favoritos.
 
 ### Puntos de Atención
 - El motor **K706** requiere permisos de Root para interactuar con la consola `/dev/ttyMT1`.
 - El motor **MT8163** utiliza una combinación de AIDL (`IRadioServiceAPI`) y reflexión para el RDS oculto.
-- Se ha implementado un reset centralizado de RDS en `handleFrequencyChange` para evitar datos residuales al cambiar de emisora.
-- **Investigación K706 (Marzo 2026)**: El motor está instrumentado con prefijos `🔬 [RESEARCH]` en el Logcat para cazar PI Codes y la fuerza de señal real (RSSI) en los paquetes `0xB0` y superiores.
-- **Hipótesis de Hardware**: Tras el análisis de logs, se sospecha que la falta de datos avanzados (PI/AF) en la MCU principal puede deberse a **limitaciones en la antena actual** o a la falta de un comando de "despertar" (wakeup) específico para esas tramas.
+- **MediaSession**: El sistema de medios de Android Auto se desconecta explícitamente en `onDestroy` para liberar recursos.
+- **Investigación K706 (Marzo 2026)**: El motor está instrumentado con prefijos `🔬 [RESEARCH]` en el Logcat para cazar PI Codes y la fuerza de señal real (RSSI).
 
 ## Roadmap (Próximos Pasos)
 
@@ -23,13 +25,14 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - [ ] Mejorar el algoritmo de parsing de RDS RT para manejar caracteres especiales.
 - [ ] Añadir soporte para logos de emisoras en alta resolución (256x256).
 
-### Fase 2: Modularización - "Managers" Pendientes (Prioridad Media)
+### Fase 2: Modularización - "Managers" Finalizados (Prioridad Media)
+- [x] **NightModeManager**: Encapsular la lógica de horario y cambio de skin automático.
+- [x] **HistoryManager**: Centralizar la persistencia y gestión de emisoras recientes.
+- [x] **PresetManager**: Extraer lógica de presets de `MainActivity`.
+- [x] **Android Auto Manager**: Soporte para MediaSession y Google Assistant.
 - [ ] **ScanManager**: Extraer lógica de escaneo selectivo y adaptadores de `MainActivity`.
-- [ ] **HistoryManager**: Centralizar la persistencia y gestión de emisoras recientes.
-- [ ] **NightModeManager**: Encapsular la lógica de horario y cambio de skin automático.
 - [ ] **AudioManager**: Punto único para Mute, EQ de hardware y foco de audio.
 - [ ] **WeatherManager**: Integrar API de clima y geolocalización asíncrona.
-- [ ] **PermissionManager**: Simplificar el manejo de permisos de Android.
 
 ### Fase 3: Soporte Global y Hardware (Prioridad Media)
 - [ ] Añadir selector de Región (USA, EU, JP, OIRT) para ajustar pasos de frecuencia y de-énfasis.
@@ -40,7 +43,7 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - [ ] **Diseño V3 Gold**: Refinamiento estético del Layout 3 con animaciones fluidas.
 - [ ] **Botón Power Off**: Implementar el botón `power_off.png` en los layouts con lógica de cierre seguro de la aplicación.
 - [ ] Modo "Visualizador" con espectro de audio (vía AudioLoopback si es posible).
-- [ ] Integración con servicios de carátulas de álbumes para emisoras que transmiten metadatos de canciones.
 
 ---
 *OpenRadioFM development roadmap - Mar 2026*
+

@@ -41,4 +41,7 @@ public interface RadioEngineCallback {
 
     /** Evento crudo para Engineering Mode */
     void onRawEvent(int code, String data);
+
+    /** Actualización de señal RSSI/SNR de los motores de radio */
+    void onSignalUpdate(int rssi, int snr);
 }

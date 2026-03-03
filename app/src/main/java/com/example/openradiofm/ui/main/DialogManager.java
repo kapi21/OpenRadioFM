@@ -29,7 +29,8 @@ public class DialogManager {
     }
 
     public void showEditNameDialog() {
-        if (mActivity.mEngine == null) return;
+        if (mActivity.mEngine == null)
+            return;
         int currentFreq = mActivity.mEngine.getCurrentFreq();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
@@ -53,7 +54,7 @@ public class DialogManager {
             if (!newName.isEmpty()) {
                 mActivity.mRepository.saveRdsName(currentFreq, newName);
                 mActivity.showToast("Nombre guardado: " + newName);
-                
+
                 // Refrescar para que el PresetManager vea el cambio (V13)
                 if (mActivity.mPresetManager != null) {
                     mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
@@ -116,8 +117,10 @@ public class DialogManager {
         updateSettingsPreviews(viewColorPreview, tvFontPreview);
         if (tvBackgroundStatus != null) {
             int bgIdx = mActivity.mPrefs.getInt("pref_bg_mode", 1);
-            String[] modes = { mActivity.getString(R.string.bg_pure_black), mActivity.getString(R.string.bg_fixed_image), mActivity.getString(R.string.bg_dynamic_logo) };
-            if (bgIdx >= 0 && bgIdx < modes.length) tvBackgroundStatus.setText(modes[bgIdx]);
+            String[] modes = { mActivity.getString(R.string.bg_pure_black),
+                    mActivity.getString(R.string.bg_fixed_image), mActivity.getString(R.string.bg_dynamic_logo) };
+            if (bgIdx >= 0 && bgIdx < modes.length)
+                tvBackgroundStatus.setText(modes[bgIdx]);
         }
 
         // Switches
@@ -133,8 +136,10 @@ public class DialogManager {
             swStatusBarV2.setChecked(mActivity.mPrefs.getBoolean("pref_show_status_bar_v2", false));
             swStatusBarV2.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_show_status_bar_v2", checked).apply();
-                mActivity.showToast(checked ? mActivity.getString(R.string.status_bar_enabled) : mActivity.getString(R.string.status_bar_disabled));
-                if (!mActivity.mIsV3) mActivity.showToast("Reinicia la app para aplicar el cambio de barra de estado");
+                mActivity.showToast(checked ? mActivity.getString(R.string.status_bar_enabled)
+                        : mActivity.getString(R.string.status_bar_disabled));
+                if (!mActivity.mIsV3)
+                    mActivity.showToast("Reinicia la app para aplicar el cambio de barra de estado");
             });
         }
 
@@ -142,10 +147,12 @@ public class DialogManager {
             boolean nightEnabled = mActivity.mPrefs.getBoolean("pref_night_mode_auto", false);
             swNight.setChecked(nightEnabled);
             View rowNightSchedule = dialog.findViewById(R.id.rowNightSchedule);
-            if (rowNightSchedule != null) rowNightSchedule.setVisibility(nightEnabled ? View.VISIBLE : View.GONE);
+            if (rowNightSchedule != null)
+                rowNightSchedule.setVisibility(nightEnabled ? View.VISIBLE : View.GONE);
             swNight.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_night_mode_auto", checked).apply();
-                if (rowNightSchedule != null) rowNightSchedule.setVisibility(checked ? View.VISIBLE : View.GONE);
+                if (rowNightSchedule != null)
+                    rowNightSchedule.setVisibility(checked ? View.VISIBLE : View.GONE);
                 if (checked) {
                     mActivity.checkAndApplyNightMode();
                     mActivity.showToast("Modo Noche Automático: Activado");
@@ -155,12 +162,14 @@ public class DialogManager {
 
         if (swAm != null) {
             swAm.setChecked(mActivity.mPrefs.getBoolean("pref_enable_am", true));
-            swAm.setOnCheckedChangeListener((bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_enable_am", checked).apply());
+            swAm.setOnCheckedChangeListener(
+                    (bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_enable_am", checked).apply());
         }
 
         if (swHistory != null) {
             swHistory.setChecked(mActivity.mPrefs.getBoolean("pref_save_history", true));
-            swHistory.setOnCheckedChangeListener((bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply());
+            swHistory.setOnCheckedChangeListener(
+                    (bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply());
         }
 
         if (swGestures != null) {
@@ -176,14 +185,14 @@ public class DialogManager {
         TextView tvCurrentEngine = dialog.findViewById(R.id.tvCurrentEngine);
         if (tvCurrentEngine != null) {
             int engineIdx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
-            String[] engineNames = { 
-                mActivity.getString(R.string.engine_auto), 
-                mActivity.getString(R.string.engine_k706), 
-                mActivity.getString(R.string.engine_qs6), 
-                mActivity.getString(R.string.engine_mt8163), 
-                mActivity.getString(R.string.engine_mtk), 
-                mActivity.getString(R.string.engine_ts), 
-                mActivity.getString(R.string.engine_standard) 
+            String[] engineNames = {
+                    mActivity.getString(R.string.engine_auto),
+                    mActivity.getString(R.string.engine_k706),
+                    mActivity.getString(R.string.engine_qs6),
+                    mActivity.getString(R.string.engine_mt8163),
+                    mActivity.getString(R.string.engine_mtk),
+                    mActivity.getString(R.string.engine_ts),
+                    mActivity.getString(R.string.engine_standard)
             };
             if (engineIdx >= 0 && engineIdx < engineNames.length) {
                 tvCurrentEngine.setText(engineNames[engineIdx]);
@@ -208,19 +217,22 @@ public class DialogManager {
 
         dialog.findViewById(R.id.btnAbout).setOnClickListener(v -> showAboutDialog());
         dialog.findViewById(R.id.btnCloseSettings).setOnClickListener(v -> dialog.dismiss());
-        
-        // V15.6: Aplicar fuente de forma recursiva al diálogo de ajustes usando el gestor de MainActivity
+
+        // V15.6: Aplicar fuente de forma recursiva al diálogo de ajustes usando el
+        // gestor de MainActivity
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
-        
+
         dialog.show();
     }
 
     public void showThemeSelector(Dialog parentDialog, View colorPreview, TextView fontPreview) {
-        String[] skins = { "Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan", "Pink", "White" };
+        String[] skins = { "Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan",
+                "Pink", "White" };
         AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.select_skin)
                 .setItems(skins, (d, w) -> {
-                    com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
+                    com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin
+                            .values();
                     if (w < skinValues.length) {
                         new com.example.openradiofm.ui.theme.ThemeManager(mActivity).setSkin(skinValues[w]);
                         mActivity.applySkin(skinValues[w]);
@@ -232,7 +244,9 @@ public class DialogManager {
     }
 
     public void showFontSelector(Dialog parentDialog, TextView fontPreview) {
-        String[] fonts = { mActivity.getString(R.string.font_default), mActivity.getString(R.string.font_bebas), mActivity.getString(R.string.font_digital), mActivity.getString(R.string.font_modern), mActivity.getString(R.string.font_orbitron), mActivity.getString(R.string.font_formula1) };
+        String[] fonts = { mActivity.getString(R.string.font_default), mActivity.getString(R.string.font_bebas),
+                mActivity.getString(R.string.font_digital), mActivity.getString(R.string.font_modern),
+                mActivity.getString(R.string.font_orbitron), mActivity.getString(R.string.font_formula1) };
         AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.select_typography)
                 .setItems(fonts, (d, w) -> {
@@ -245,7 +259,8 @@ public class DialogManager {
     }
 
     public void showBackgroundSelector(Dialog parentDialog, TextView tvStatus) {
-        String[] modes = { mActivity.getString(R.string.bg_pure_black), mActivity.getString(R.string.bg_fixed_image), mActivity.getString(R.string.bg_dynamic_logo) };
+        String[] modes = { mActivity.getString(R.string.bg_pure_black), mActivity.getString(R.string.bg_fixed_image),
+                mActivity.getString(R.string.bg_dynamic_logo) };
         AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.select_bg_mode)
                 .setItems(modes, (d, w) -> {
@@ -253,20 +268,21 @@ public class DialogManager {
                     mActivity.mLogoManager.loadCustomBackground();
                     mActivity.mLogoManager.loadCarLogo();
                     mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
-                    if (tvStatus != null) tvStatus.setText(modes[w]);
+                    if (tvStatus != null)
+                        tvStatus.setText(modes[w]);
                 }).create();
         applyPremiumListStyle(dialog);
         dialog.show();
     }
 
     public void showNewLanguageSelector() {
-        String[] languages = { 
-            "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)", 
-            "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)", 
-            "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)" 
+        String[] languages = {
+                "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)",
+                "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)",
+                "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)"
         };
         String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr", "zh", "ja" };
-        
+
         AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.select_language)
                 .setItems(languages, (d, w) -> {
@@ -280,17 +296,18 @@ public class DialogManager {
     }
 
     private void applyPremiumListStyle(AlertDialog dialog) {
-        if (dialog == null) return;
+        if (dialog == null)
+            return;
         Window window = dialog.getWindow();
         if (window != null) {
             window.setBackgroundDrawable(mActivity.getResources().getDrawable(R.drawable.bg_submenu_box));
             window.setDimAmount(0.6f);
         }
-        
-        // V15.6: Aplicar fuente del sistema a la vista raíz del diálogo usando MainActivity
+
+        // V15.6: Aplicar fuente del sistema a la vista raíz del diálogo usando
+        // MainActivity
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
     }
-
 
     public void showAboutDialog() {
         Dialog dialog = new Dialog(mActivity);
@@ -307,10 +324,12 @@ public class DialogManager {
         try {
             TextView tvVersion = dialog.findViewById(R.id.tvAppVersion);
             if (tvVersion != null) {
-                String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(), 0).versionName;
+                String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(),
+                        0).versionName;
                 tvVersion.setText("Versión " + versionName);
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         // Crédito Icons8 con Link
         TextView tvIcons8 = dialog.findViewById(R.id.tvIcons8Credit);
@@ -325,7 +344,8 @@ public class DialogManager {
         }
 
         View btnClose = dialog.findViewById(R.id.btnClose);
-        if (btnClose != null) btnClose.setOnClickListener(v -> dialog.dismiss());
+        if (btnClose != null)
+            btnClose.setOnClickListener(v -> dialog.dismiss());
 
         // V15.6: Aplicar fuente recursiva al diálogo About usando MainActivity
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
@@ -334,16 +354,16 @@ public class DialogManager {
     }
 
     public void showEngineSelector() {
-        String[] options = { 
-            mActivity.getString(R.string.engine_auto), 
-            mActivity.getString(R.string.engine_k706), 
-            mActivity.getString(R.string.engine_qs6), 
-            mActivity.getString(R.string.engine_mt8163), 
-            mActivity.getString(R.string.engine_mtk), 
-            mActivity.getString(R.string.engine_ts), 
-            mActivity.getString(R.string.engine_standard) 
+        String[] options = {
+                mActivity.getString(R.string.engine_auto),
+                mActivity.getString(R.string.engine_k706),
+                mActivity.getString(R.string.engine_qs6),
+                mActivity.getString(R.string.engine_mt8163),
+                mActivity.getString(R.string.engine_mtk),
+                mActivity.getString(R.string.engine_ts),
+                mActivity.getString(R.string.engine_standard)
         };
-        
+
         AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.radio_engine)
                 .setItems(options, (d, which) -> {
@@ -376,7 +396,7 @@ public class DialogManager {
                         mActivity.mEngine.tune(Integer.parseInt(freqs[w]));
                     }
                 }).create();
-        
+
         applyPremiumListStyle(dialog);
         dialog.show();
     }
@@ -421,15 +441,16 @@ public class DialogManager {
         });
 
         dialog.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
-        
+
         // V15.6: Aplicar fuente recursiva al diálogo Save/Load usando MainActivity
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
-        
+
         dialog.show();
     }
 
     public void showSelectiveScanDialog() {
-        if (mActivity.mEngine == null || mActivity.mMode != MainActivity.FmMode.FM_K706) return;
+        if (mActivity.mEngine == null || mActivity.mMode != MainActivity.FmMode.FM_K706)
+            return;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         View view = LayoutInflater.from(mActivity).inflate(R.layout.dialog_selective_scan, null);
@@ -468,40 +489,69 @@ public class DialogManager {
             public void onFrequencyChanged(int freqKhz) {
                 lastFreqReported = freqKhz;
                 mActivity.runOnUiThread(() -> {
-                    if (tvFreq != null) tvFreq.setText(String.format("%.2f MHz", (double)freqKhz / 1000.0));
+                    if (tvFreq != null)
+                        tvFreq.setText(String.format("%.2f MHz", (double) freqKhz / 1000.0));
                     tvStatus.setText("Escaneando...");
                 });
             }
 
-            @Override public void onBandChanged(int band) {}
-            @Override public void onStereoChanged(boolean stereo) {}
-            @Override public void onRdsName(String name) {
+            @Override
+            public void onBandChanged(int band) {
+            }
+
+            @Override
+            public void onStereoChanged(boolean stereo) {
+            }
+
+            @Override
+            public void onRdsName(String name) {
                 mActivity.runOnUiThread(() -> {
-                    if(!mActivity.mCapturedList.isEmpty() && (mActivity.mCapturedList.get(0).name == null || mActivity.mCapturedList.get(0).name.equals("Buscando RDS..."))) {
+                    if (!mActivity.mCapturedList.isEmpty() && (mActivity.mCapturedList.get(0).name == null
+                            || mActivity.mCapturedList.get(0).name.equals("Buscando RDS..."))) {
                         mActivity.mCapturedList.get(0).name = name;
-                        if (mActivity.mStationAdapter != null) mActivity.mStationAdapter.notifyItemChanged(0);
+                        if (mActivity.mStationAdapter != null)
+                            mActivity.mStationAdapter.notifyItemChanged(0);
                     }
                 });
             }
-            @Override public void onRdsText(String text) {}
-            @Override public void onRdsPty(String pty) {}
-            @Override public void onRdsStatus(boolean af, boolean ta, boolean tp) {}
-            @Override public void onRdsPi(String piCode) {}
-            @Override public void onDxLocalChanged(boolean isLocal) {}
 
-            @Override public void onScanStatusChanged(boolean scanning) {
+            @Override
+            public void onRdsText(String text) {
+            }
+
+            @Override
+            public void onRdsPty(String pty) {
+            }
+
+            @Override
+            public void onRdsStatus(boolean af, boolean ta, boolean tp) {
+            }
+
+            @Override
+            public void onRdsPi(String piCode) {
+            }
+
+            @Override
+            public void onDxLocalChanged(boolean isLocal) {
+            }
+
+            @Override
+            public void onScanStatusChanged(boolean scanning) {
                 mActivity.runOnUiThread(() -> {
                     if (!scanning) {
                         tvStatus.setText("Escaneo pausado / finalizado");
                         if (lastFreqReported > 0) {
                             boolean alreadyInList = false;
-                            for(MainActivity.ScannedStation s : mActivity.mCapturedList) {
-                                if(Math.abs(s.frequency - lastFreqReported) < 50) alreadyInList = true;
+                            for (MainActivity.ScannedStation s : mActivity.mCapturedList) {
+                                if (Math.abs(s.frequency - lastFreqReported) < 50)
+                                    alreadyInList = true;
                             }
-                            if(!alreadyInList) {
-                                MainActivity.ScannedStation newStation = new MainActivity.ScannedStation(lastFreqReported);
+                            if (!alreadyInList) {
+                                MainActivity.ScannedStation newStation = new MainActivity.ScannedStation(
+                                        lastFreqReported);
                                 mActivity.mCapturedList.add(0, newStation);
-                                if (mActivity.mStationAdapter != null) mActivity.mStationAdapter.notifyItemInserted(0);
+                                if (mActivity.mStationAdapter != null)
+                                    mActivity.mStationAdapter.notifyItemInserted(0);
                                 rv.scrollToPosition(0);
                                 tvStatus.setText("Identificando emisora (RDS)...");
                             }
@@ -512,7 +562,13 @@ public class DialogManager {
                 });
             }
 
-            @Override public void onRawEvent(int code, String data) {}
+            @Override
+            public void onRawEvent(int code, String data) {
+            }
+
+            @Override
+            public void onSignalUpdate(int rssi, int snr) {
+            }
         });
 
         dialog.show();
@@ -533,6 +589,7 @@ public class DialogManager {
         if (ivLogo != null) {
             ivLogo.setOnClickListener(new View.OnClickListener() {
                 private int clicks = 0;
+
                 @Override
                 public void onClick(View v) {
                     clicks++;
@@ -566,9 +623,10 @@ public class DialogManager {
         Typeface typeface = Typeface.DEFAULT_BOLD;
         try {
             int[] fontRes = { 0, R.font.bebas, R.font.digital, R.font.inter, R.font.orbitron, R.font.formula1 };
-            if (fontType > 0 && fontType < fontRes.length) 
+            if (fontType > 0 && fontType < fontRes.length)
                 typeface = androidx.core.content.res.ResourcesCompat.getFont(mActivity, fontRes[fontType]);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         tv.setTypeface(typeface);
     }
 }

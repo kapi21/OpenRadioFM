@@ -11,6 +11,8 @@ appcompat = "1.7.0"
 composeBom = "2024.10.01"
 retrofit = "2.11.0"
 glide = "4.16.0"
+media = "1.7.0"
+
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -29,6 +31,8 @@ androidx-compose-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-
 androidx-compose-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 androidx-constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version = "2.1.4" }
+androidx-media = { group = "androidx.media", name = "media", version.ref = "media" }
+
 
 # Network & Images
 retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }

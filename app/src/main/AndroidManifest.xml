@@ -10,8 +10,20 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-
+    
+    <!-- V16: Permisos QS6/NWD para intentar eludir el error de apertura del socket /dev/audio-dsp -->
+    <uses-permission android:name="android.permission.ACCESS_FM_RADIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_ROUTING" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.CAPTURE_AUDIO_OUTPUT" />
     <queries>
+        <!-- NWD Service -->
+        <package android:name="com.nwd.radio.service" />
+        <intent>
+            <action android:name="com.nwd.radio.service.ACTION_RADIO_SERVICE" />
+        </intent>
+
+        <!-- HCN Service (Legacy) -->
         <package android:name="com.hcn.autoradio" />
         <intent>
             <action android:name="com.hcn.autoradio.FM_PLUG_SERVICE" />
@@ -28,7 +40,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.OpenRadioFm">
+
+        <!-- V16: Android Auto Metadata -->
+        <meta-data android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc"/>
+
         <activity
+
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
@@ -40,6 +58,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- V16: Radio Media Service for Android Auto / MediaSession -->
+        <service android:name=".service.RadioMediaService"
+            android:exported="true"
+            tools:ignore="ExportedService">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+
     </application>
+
 
 </manifest>
