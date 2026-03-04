@@ -128,7 +128,33 @@ public class DialogManager {
             swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", false));
             swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
-                mActivity.showToast(checked ? "Logos Online: Activado" : "Logos Online: Desactivado");
+                if (checked) {
+                    mActivity.showToast("Logos Online: Activado (Requiere Internet)");
+                    mActivity.showToast("Se consultará la base de datos centralizada para buscar logos HD");
+                } else {
+                    mActivity.showToast("Logos Online: Desactivado");
+                }
+            });
+        }
+
+        // Logo Provider Row
+        View rowLogoProvider = dialog.findViewById(R.id.rowLogoProvider);
+        TextView tvCurrentLogoProvider = dialog.findViewById(R.id.tvCurrentLogoProvider);
+        if (tvCurrentLogoProvider != null) {
+            int providerIdx = mActivity.mPrefs.getInt("pref_logo_provider", 0); // 0=Supabase, 1=Web, 2=Both
+            String[] providers = {
+                    mActivity.getString(R.string.provider_supabase),
+                    mActivity.getString(R.string.provider_radiobrowser),
+                    mActivity.getString(R.string.provider_both)
+            };
+            if (providerIdx >= 0 && providerIdx < providers.length) {
+                tvCurrentLogoProvider.setText(providers[providerIdx]);
+            }
+        }
+        if (rowLogoProvider != null) {
+            rowLogoProvider.setOnClickListener(v -> {
+                showLogoProviderSelector();
+                dialog.dismiss();
             });
         }
 
@@ -227,14 +253,14 @@ public class DialogManager {
 
     public void showThemeSelector(Dialog parentDialog, View colorPreview, TextView fontPreview) {
         String[] skins = { "Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan",
-                "Pink", "White" };
+                "Pink", "White", "Grey" };
         AlertDialog dialog = new AlertDialog.Builder(mActivity)
                 .setTitle(R.string.select_skin)
                 .setItems(skins, (d, w) -> {
                     com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin
                             .values();
                     if (w < skinValues.length) {
-                        new com.example.openradiofm.ui.theme.ThemeManager(mActivity).setSkin(skinValues[w]);
+                        mActivity.mThemeManager.setSkin(skinValues[w]);
                         mActivity.applySkin(skinValues[w]);
                         updateSettingsPreviews(colorPreview, fontPreview);
                     }
@@ -375,6 +401,25 @@ public class DialogManager {
         dialog.show();
     }
 
+    public void showLogoProviderSelector() {
+        String[] options = {
+                mActivity.getString(R.string.provider_supabase),
+                mActivity.getString(R.string.provider_radiobrowser),
+                mActivity.getString(R.string.provider_both)
+        };
+
+        AlertDialog dialog = new AlertDialog.Builder(mActivity)
+                .setTitle(R.string.logo_provider)
+                .setItems(options, (d, which) -> {
+                    mActivity.mPrefs.edit().putInt("pref_logo_provider", which).apply();
+                    mActivity.showToast("Proveedor de logos: " + options[which]);
+                    // Reabrir ajustes para ver el cambio (opcional)
+                    showPremiumSettingsDialog();
+                }).create();
+        applyPremiumListStyle(dialog);
+        dialog.show();
+    }
+
     public void showHistoryDialog() {
         String historyStr = mActivity.mPrefs.getString("pref_station_history", "");
         if (historyStr.isEmpty()) {
@@ -428,8 +473,21 @@ public class DialogManager {
         });
 
         dialog.findViewById(R.id.btnDeleteAllFavs).setOnClickListener(v -> {
-            mActivity.mPrefs.edit().clear().apply();
+            // V16.2: Borrado selectivo para no perder la configuración (motor, modo noche, etc)
+            android.content.SharedPreferences.Editor editor = mActivity.mPrefs.edit();
+            for (int b = 0; b < 5; b++) { // Bandas FM1..FM5
+                for (int p = 1; p <= 20; p++) { // Presets P1..P20
+                    editor.remove("P" + p + "_B" + b);
+                }
+            }
+            editor.apply();
+
             mActivity.showToast("Todos los favoritos han sido borrados");
+            
+            // Refrescar caché y botones inmediatamente (Sin reiniciar)
+            if (mActivity.mPresetManager != null) {
+                mActivity.mPresetManager.refreshPresetsCache(mActivity.getCurrentBand());
+            }
             mActivity.refreshPresetButtons();
             dialog.dismiss();
         });
@@ -607,7 +665,7 @@ public class DialogManager {
 
     private void updateSettingsPreviews(View colorView, TextView fontView) {
         if (colorView != null) {
-            int color = new com.example.openradiofm.ui.theme.ThemeManager(mActivity).getAccentColor();
+            int color = mActivity.mThemeManager.getAccentColor();
             android.graphics.drawable.GradientDrawable shape = new android.graphics.drawable.GradientDrawable();
             shape.setShape(android.graphics.drawable.GradientDrawable.OVAL);
             shape.setColor(color);

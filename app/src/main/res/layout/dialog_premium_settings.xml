@@ -166,6 +166,40 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
+        <!-- V16.2: Logo Provider Selector -->
+        <LinearLayout
+            android:id="@+id/rowLogoProvider"
+            style="@style/DialogBoxStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/logo_provider"
+                android:textColor="@color/white"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/tvCurrentLogoProvider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/provider_supabase"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
         <!-- Option: Status Bar V2 -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView

@@ -1,0 +1,46 @@
+package com.example.openradiofm.data.source.network;
+
+import com.example.openradiofm.data.source.network.model.SupabaseLogoResponse;
+import java.util.List;
+import retrofit2.Call;
+import retrofit2.http.GET;
+import retrofit2.http.Header;
+import retrofit2.http.Headers;
+import retrofit2.http.POST;
+import retrofit2.http.Query;
+
+public interface SupabaseApi {
+    @GET("rest/v1/logos")
+    Call<List<SupabaseLogoResponse>> getLogosByPi(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("pi_code") String piFilter,
+            @Query("select") String select
+    );
+
+    @GET("rest/v1/logos")
+    Call<List<SupabaseLogoResponse>> getLogosByName(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("rds_name") String nameFilter,
+            @Query("select") String select
+    );
+
+    @GET("rest/v1/logos")
+    Call<List<SupabaseLogoResponse>> getLogosByFreq(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("frequency") String freqFilter,
+            @Query("select") String select
+    );
+
+    @Headers({"Content-Type: application/json"})
+    @POST("rest/v1/logos")
+    Call<Void> upsertLogo(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Header("Prefer") String prefer, // resolution=merge-duplicates
+            @Query("on_conflict") String onConflict,
+            @retrofit2.http.Body SupabaseLogoResponse data
+    );
+}

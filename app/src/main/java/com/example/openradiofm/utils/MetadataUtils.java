@@ -31,24 +31,31 @@ public class MetadataUtils {
 
         // 1. Manejar formato ICY (Streaming): StreamTitle='Artista - Cancion';
         if (cleaned.contains("StreamTitle='")) {
-            Matcher matcher = ICY_TITLE_PATTERN.matcher(cleaned);
+            java.util.regex.Matcher matcher = ICY_TITLE_PATTERN.matcher(cleaned);
             if (matcher.find()) {
                 cleaned = matcher.group(1);
             }
         }
 
         // 2. Eliminar caracteres de control (Basura RDS común en hardware)
-        cleaned = RDS_GARBAGE_PATTERN.matcher(cleaned).replaceAll("");
+        // V16.2: Ampliado para cubrir más rangos de control y caracteres nulos
+        cleaned = cleaned.replaceAll("[\\x00-\\x1F\\x7F-\\x9F]", "");
 
-        // 3. Normalizar comillas y caracteres especiales comunes
-        cleaned = cleaned.replace("'", "").replace("\"", "").trim();
+        // 3. Normalizar comillas, apóstrofes y secuencias de escape comunes
+        cleaned = cleaned.replace("'", "")
+                        .replace("\"", "")
+                        .replace("\\r", "")
+                        .replace("\\n", "")
+                        .replace("\\t", "")
+                        .trim();
 
-        // 4. Limpiar espacios duplicados
-        cleaned = cleaned.replaceAll("\\s+", " ");
+        // 4. Limpiar espacios duplicados y caracteres raros al inicio/final
+        cleaned = cleaned.replaceAll("\\s+", " ").trim();
 
-        // 5. Caso especial: Si el texto está en mayúsculas sostenidas, lo suavizamos
-        // (Opcional)
-        // Pero para RDS suele ser mejor dejarlo como viene si es corto.
+        // 5. Caso especial: Filtrar prefijos técnicos de algunos encoders (ej: "RT:", "PS:")
+        if (cleaned.toUpperCase().startsWith("RT:")) {
+            cleaned = cleaned.substring(3).trim();
+        }
 
         // 6. Si el resultado es una cadena técnica vacía como "url=" etc.
         if (cleaned.toLowerCase().startsWith("url=") || cleaned.equals("text=")) {

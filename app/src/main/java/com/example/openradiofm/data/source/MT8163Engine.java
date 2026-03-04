@@ -11,6 +11,9 @@ import android.util.Log;
 import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
 
+import android.os.Handler;
+import android.os.Looper;
+
 /**
  * V5.0: Motor MT8163 — Combina IRadioServiceAPI (servicio nativo del coche)
  * con HiddenRadioPlayer (API oculta del chip para RDS AF/TA).
@@ -28,6 +31,12 @@ public class MT8163Engine implements RadioEngine {
     private RadioEngineCallback mCallback;
     private boolean mBound = false;
     private boolean mExternalService = false;
+
+    // V16.2: Polling mechanism for continuous frequency updates during seek/scan
+    private Handler mPollingHandler = new Handler(Looper.getMainLooper());
+    private Runnable mPollingRunnable;
+    private int mLastPolledFreq = -1;
+    private int mPollingTicks = 0;
 
     public MT8163Engine() {}
 
@@ -129,6 +138,9 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void release() {
+        if (mPollingRunnable != null) {
+            mPollingHandler.removeCallbacks(mPollingRunnable);
+        }
         if (mHiddenPlayer != null) {
             mHiddenPlayer.release();
             mHiddenPlayer = null;
@@ -156,7 +168,46 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public void tune(int freqKhz) {
         if (mService == null) return;
+        resetRdsUI();
         try { mService.gotoFreq(freqKhz); } catch (RemoteException e) { e.printStackTrace(); }
+        startFreqPolling();
+    }
+
+    private void resetRdsUI() {
+        if (mCallback != null) {
+            mCallback.onRdsName("");
+            mCallback.onRdsText("");
+            mCallback.onRdsPty("");
+            mCallback.onRdsPi("");
+            // Force a resync of logo by firing an empty name or explicitly triggering frequency unchanged? 
+            // Wait, LogoManager handles logos based on frequency and RDS name. 
+            // The empty RDS name triggered above will force a logo update next time freq is updated.
+        }
+    }
+
+    private void startFreqPolling() {
+        if (mPollingRunnable != null) {
+            mPollingHandler.removeCallbacks(mPollingRunnable);
+        }
+        mPollingTicks = 0;
+        mPollingRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (mService == null) return;
+                int f = getCurrentFreq();
+                if (f > 0 && f != mLastPolledFreq) {
+                    mLastPolledFreq = f;
+                    if (mCallback != null) mCallback.onFrequencyChanged(f);
+                }
+                
+                mPollingTicks++;
+                // Poll for 4 seconds (40 * 100ms)
+                if (mPollingTicks < 40) {
+                    mPollingHandler.postDelayed(this, 100);
+                }
+            }
+        };
+        mPollingHandler.postDelayed(mPollingRunnable, 100);
     }
 
     @Override
@@ -170,35 +221,58 @@ public class MT8163Engine implements RadioEngine {
         if (mService == null) return 0;
         try { return mService.getCurrentBand(); } catch (RemoteException e) { return 0; }
     }
-
     @Override
     public void seekUp() {
         if (mService == null) return;
+        resetRdsUI();
+        int current = getCurrentFreq();
+        if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current + 100);
         try { mService.onSeekDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        startFreqPolling();
     }
 
     @Override
     public void seekDown() {
         if (mService == null) return;
+        resetRdsUI();
+        int current = getCurrentFreq();
+        if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current - 100);
         try { mService.onSeekUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        startFreqPolling();
     }
 
     @Override
     public void stepUp() {
         if (mService == null) return;
+        resetRdsUI();
+        // V16.2: Notificar frecuencia inmediata para sensación de movimiento
+        int current = getCurrentFreq();
+        if (current > 0 && mCallback != null) {
+            mCallback.onFrequencyChanged(current + 100);
+        }
         try { mService.onManualUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        startFreqPolling();
     }
 
     @Override
     public void stepDown() {
         if (mService == null) return;
+        resetRdsUI();
+        // V16.2: Notificar frecuencia inmediata para sensación de movimiento
+        int current = getCurrentFreq();
+        if (current > 0 && mCallback != null) {
+            mCallback.onFrequencyChanged(current - 100);
+        }
         try { mService.onManualDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        startFreqPolling();
     }
 
     @Override
     public void scan() {
         if (mService == null) return;
+        resetRdsUI();
         try { mService.onScanEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        startFreqPolling();
     }
 
     @Override

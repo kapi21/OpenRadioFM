@@ -133,4 +133,10 @@
     <string name="pty_documentary">Documentary</string>
     <string name="pty_alarm_test">Alarm Test</string>
     <string name="pty_alarm">Alarm</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Logo Provider</string>
+    <string name="provider_supabase">Supabase (HD Community)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Fallback)</string>
+    <string name="provider_both">Combined (Supabase > Web)</string>
 </resources>

@@ -11,6 +11,7 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.ScrollView;
 import android.widget.TextView;
+import androidx.appcompat.widget.SwitchCompat;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 
@@ -40,6 +41,7 @@ public class K706EngineeringDialog extends Dialog {
     // Monitor
     private TextView tvMonitor, tvLog;
     private ScrollView scrollLog;
+    private SwitchCompat swLogosOnline;
 
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss.SSS", Locale.US);
 
@@ -83,6 +85,15 @@ public class K706EngineeringDialog extends Dialog {
         tvMonitor = findViewById(R.id.tvK706Monitor);
         tvLog = findViewById(R.id.tvK706Log);
         scrollLog = findViewById(R.id.scrollK706Log);
+        swLogosOnline = findViewById(R.id.swK706LogosOnline);
+
+        if (swLogosOnline != null) {
+            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", false));
+            swLogosOnline.setOnCheckedChangeListener((v, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
+                logEvent("SET", "LOGOS_ONLINE > " + (checked ? "ON" : "OFF"));
+            });
+        }
 
         // Close buttons
         View btnClose = findViewById(R.id.btnCloseK706);
@@ -227,6 +238,19 @@ public class K706EngineeringDialog extends Dialog {
             setupButton(resId, null, () -> {
                 setAudioChannel(channel);
                 logEvent("AUD", "SET CHANNEL: " + channel);
+            });
+        }
+
+        // === RDS TEST TOOLS (V16.2) ===
+        Button btnInject = findViewById(R.id.btnInjectRt);
+        android.widget.EditText etRt = findViewById(R.id.etRdsTest);
+        if (btnInject != null && etRt != null) {
+            btnInject.setOnClickListener(v -> {
+                String testText = etRt.getText().toString();
+                if (!testText.isEmpty() && mActivity.mRdsManager != null) {
+                    mActivity.mRdsManager.onRdsText(testText);
+                    logEvent("TEST", "INJECTED RDS RT: " + testText);
+                }
             });
         }
     }
@@ -545,7 +569,13 @@ public class K706EngineeringDialog extends Dialog {
     }
 
     public void addRdsLog(String msg) {
-        logEvent("RDS_RAW", msg);
+        if (msg != null && msg.startsWith("B7")) {
+            logEvent("RDS_RT", msg);
+        } else if (msg != null && msg.startsWith("B6")) {
+            logEvent("RDS_PS", msg);
+        } else {
+            logEvent("RDS_RAW", msg);
+        }
     }
 
     public void updateSignalQuality(int rssi, int snr) {

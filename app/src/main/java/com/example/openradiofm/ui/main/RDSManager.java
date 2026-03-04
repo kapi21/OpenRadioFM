@@ -146,6 +146,42 @@ public class RDSManager {
         }
     }
 
+    /**
+     * V16.2: Centraliza la visualización de RDS en una sola llamada desde MainActivity.
+     * Mueve la lógica de visibilidad y colores fuera de la Activity.
+     */
+    public void updateRDSDisplay(int freqKhz, boolean isNight, int nightBlue, int white) {
+        // 1. RDS Name (PS) - Aunque esté GONE en XML, mantenemos la lógica para retrocompatibilidad
+        String displayName = getDisplayName(freqKhz);
+        if (tvRdsName != null) {
+            if (displayName != null && !displayName.isEmpty()) {
+                tvRdsName.setText(displayName);
+                // No forzamos VISIBLE aquí porque el XML puede tenerlo GONE intencionadamente
+            } else {
+                tvRdsName.setText("");
+            }
+            tvRdsName.setTextColor(isNight ? nightBlue : white);
+        }
+
+        // 2. RDS Info (RT)
+        if (tvRdsInfo != null) {
+            String rdsText = tvRdsInfo.getText().toString();
+            // Si el texto es el por defecto o está vacío, lo limpiamos
+            if (rdsText.isEmpty() || rdsText.equals("RDS TEXT INFO") || rdsText.equals("RDS Info Text")) {
+                tvRdsInfo.setText("");
+            }
+            tvRdsInfo.setVisibility(View.VISIBLE);
+            tvRdsInfo.setTextColor(isNight ? nightBlue : white);
+            tvRdsInfo.setSelected(true); // Forzar marquee
+        }
+
+        // 3. PTY
+        updatePtyUI(mCurrentPty);
+        if (tvPty != null) {
+            tvPty.setTextColor(isNight ? nightBlue : white);
+        }
+    }
+
     public String getCurrentPty() { return mCurrentPty; }
     public boolean hasRdsLock() { return mHasRdsLock; }
     public String getConfirmedName() { return mLastConfirmedName; } // V5.3: RDS PS Substitution

@@ -1,14 +1,16 @@
 package com.example.openradiofm.ui.theme;
 
-import android.content.Context;
+import android.app.Activity;
 import android.content.SharedPreferences;
+import android.view.View;
+
+import com.example.openradiofm.R;
 
 /**
- * Sistema de Skins para OpenRadioFM.
- * 
- * Permite cambiar dinámicamente el color de acento de la interfaz.
- * Los colores se guardan en SharedPreferences y se aplican en tiempo de
- * ejecución.
+ * V16.2: Sistema de Skins para OpenRadioFM.
+ *
+ * Gestiona la persistencia, el drawable actual y la aplicación visual
+ * del skin a todas las vistas de la interfaz.
  */
 public class ThemeManager {
 
@@ -27,7 +29,8 @@ public class ThemeManager {
         YELLOW("Yellow", "#FFD700"),
         CYAN("Cyan", "#00CED1"),
         PINK("Pink", "#FF69B4"),
-        WHITE("White", "#FFFFFF");
+        WHITE("White", "#FFFFFF"),
+        GREY("Grey", "#757575");
 
         public final String displayName;
         public final String colorHex;
@@ -38,15 +41,39 @@ public class ThemeManager {
         }
     }
 
-    private final SharedPreferences prefs;
-
-    public ThemeManager(Context context) {
-        this.prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+    /**
+     * Listener para que el manager notifique al host cuando necesita
+     * ejecutar lógica que depende del contexto de la Activity
+     * (como aplicar night mode colors que vive en NightModeManager).
+     */
+    public interface SkinAppliedListener {
+        void onSkinApplied(Skin skin);
     }
 
-    /**
-     * Obtiene el skin actualmente seleccionado.
-     */
+    private final SharedPreferences prefs;
+    private final Activity mActivity;
+    private SharedPreferences mLayoutPrefs;
+    private SkinAppliedListener mListener;
+    private Skin mCurrentSkin = Skin.CLASSIC_GRAY;
+
+    public ThemeManager(android.content.Context context) {
+        this.prefs = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
+        this.mActivity = (context instanceof Activity) ? (Activity) context : null;
+        this.mLayoutPrefs = null; // Se establece con setLayoutPrefs()
+    }
+
+    /** V16.2: Establece las SharedPreferences del layout (las mismas que usa MainActivity). */
+    public void setLayoutPrefs(SharedPreferences layoutPrefs) {
+        this.mLayoutPrefs = layoutPrefs;
+    }
+
+    /** Registra listener para recibir notificación post-applySkin. */
+    public void setSkinAppliedListener(SkinAppliedListener listener) {
+        this.mListener = listener;
+    }
+
+    // ==================== Persistencia ====================
+
     public Skin getCurrentSkin() {
         String skinName = prefs.getString(KEY_SKIN, Skin.CLASSIC_GRAY.name());
         try {
@@ -56,16 +83,10 @@ public class ThemeManager {
         }
     }
 
-    /**
-     * Guarda el skin seleccionado.
-     */
     public void setSkin(Skin skin) {
         prefs.edit().putString(KEY_SKIN, skin.name()).apply();
     }
 
-    /**
-     * Cicla al siguiente skin disponible.
-     */
     public Skin cycleSkin() {
         Skin current = getCurrentSkin();
         Skin[] all = Skin.values();
@@ -75,10 +96,118 @@ public class ThemeManager {
         return next;
     }
 
-    /**
-     * Obtiene el color de acento actual en formato int (para usar en código).
-     */
     public int getAccentColor() {
         return android.graphics.Color.parseColor(getCurrentSkin().colorHex);
+    }
+
+    // ==================== Skin activo en memoria ====================
+
+    /** Devuelve el skin actualmente aplicado (en memoria). */
+    public Skin getActiveSkin() {
+        return mCurrentSkin;
+    }
+
+    // ==================== Drawable del Skin ====================
+
+    /**
+     * Devuelve el drawable resource ID correspondiente al skin activo.
+     */
+    public int getSkinDrawableId() {
+        if (mCurrentSkin == null)
+            return R.drawable.bg_glass_card_premium;
+        switch (mCurrentSkin) {
+            case NIGHT_MODE:
+                return R.drawable.bg_glass_card_night;
+            case ORANGE:
+                return R.drawable.bg_glass_card_orange;
+            case BLUE:
+                return R.drawable.bg_glass_card_blue;
+            case GREEN:
+                return R.drawable.bg_glass_card_green;
+            case PURPLE:
+                return R.drawable.bg_glass_card_purple;
+            case RED:
+                return R.drawable.bg_glass_card_red;
+            case YELLOW:
+                return R.drawable.bg_glass_card_yellow;
+            case CYAN:
+                return R.drawable.bg_glass_card_cyan;
+            case PINK:
+                return R.drawable.bg_glass_card_pink;
+            case WHITE:
+                return R.drawable.bg_glass_card_white;
+            case GREY:
+                return R.drawable.bg_glass_card_classic;
+            default:
+                return R.drawable.bg_glass_card_premium;
+        }
+    }
+
+    // ==================== Aplicación Visual del Skin ====================
+
+    /**
+     * V16.2: Aplica el skin seleccionado a todos los elementos de la interfaz.
+     * Migrado desde MainActivity.applySkin().
+     */
+    public void applySkin(Skin skin) {
+        if (mActivity == null) return;
+
+        this.mCurrentSkin = skin;
+        int drawableId = getSkinDrawableId();
+
+        // Detectar layout activo
+        boolean isLayoutV3 = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_v3", false);
+
+        // Aplicar bordes del skin SOLO en Layout V2
+        if (!isLayoutV3) {
+            int[] viewIds = {
+                    R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
+                    R.id.btnFavPrev, R.id.btnFavNext,
+                    R.id.tvRdsName, R.id.tvRdsInfo,
+                    R.id.btnBand, R.id.btnAutoScan,
+                    R.id.boxLogo,
+                    R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
+                    R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff
+            };
+
+            for (int id : viewIds) {
+                View v = mActivity.findViewById(id);
+                if (v != null) {
+                    int pL = v.getPaddingLeft();
+                    int pT = v.getPaddingTop();
+                    int pR = v.getPaddingRight();
+                    int pB = v.getPaddingBottom();
+                    v.setBackgroundResource(drawableId);
+                    v.setPadding(pL, pT, pR, pB);
+                }
+            }
+        } else {
+            // Layout V3: RDS boxes sin borde (borderless)
+            int[] v3BoxIds = { R.id.tvRdsName, R.id.tvRdsInfo };
+            for (int id : v3BoxIds) {
+                View v = mActivity.findViewById(id);
+                if (v != null) {
+                    int pL = v.getPaddingLeft();
+                    int pT = v.getPaddingTop();
+                    int pR = v.getPaddingRight();
+                    int pB = v.getPaddingBottom();
+                    v.setBackground(null);
+                    v.setPadding(pL, pT, pR, pB);
+                }
+            }
+        }
+
+        // Aplicar a Presets P1-P12
+        for (int i = 1; i <= 12; i++) {
+            int id = mActivity.getResources().getIdentifier("cardP" + i, "id", mActivity.getPackageName());
+            View v = mActivity.findViewById(id);
+            if (v != null)
+                v.setBackgroundResource(drawableId);
+        }
+
+        // Notificar al listener (Night Mode colors, etc.)
+        if (mListener != null) {
+            mListener.onSkinApplied(skin);
+        }
     }
 }

@@ -80,4 +80,10 @@
     <string name="night_start">开始</string>
     <string name="night_end">结束</string>
     <string name="night_schedule_updated">✅ 计划已更新: %1$s - %2$s</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">徽标提供者</string>
+    <string name="provider_supabase">Supabase (高清社区)</string>
+    <string name="provider_radiobrowser">Radio-Browser (备用)</string>
+    <string name="provider_both">组合 (Supabase > 网页)</string>
 </resources>

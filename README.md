@@ -1,10 +1,10 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-5.2.0_Stable_Integration-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-16.3.0_Online_Logos-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
-[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706-purple.svg)]()
+[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6-purple.svg)]()
 
 **Aplicación de radio FM premium para Android Head Units**, con soporte para hardware MediaTek MT8163 y K706.  
 Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada.
@@ -36,6 +36,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Glassmorphism UI | ✅ | ✅ |
 | Temas / Night Mode | ✅ | ✅ |
 | Logos de emisora | ✅ | ✅ |
+| Logos Online (Supabase) | ✅ | ✅ |
 | 18 favoritos × 3 bandas | ✅ | ✅ |
 | Nav. Hardware Favoritos | ✅ | ✅ |
 | Soporte Android Auto | ✅ | ✅ |
@@ -139,6 +140,14 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v16.3.0 "Online Logos & Stability" (Marzo 2026)
+- **Sistema de Logos Online (Supabase)**: Búsqueda centralizada de logos por PI Code, RDS Name y Frecuencia, con contribución comunitaria automática.
+- **Caché Negativa**: Evita reintentos infinitos de búsqueda cuando un logo no existe en el servidor.
+- **Menú DEV**: Toggle para activar/desactivar el sistema de logos online en ambos motores (MT8163 y K706).
+- **Radio-Browser Estabilizado**: Endpoint migrado a `at1.api.radio-browser.info` para mayor fiabilidad.
+- **Sincronización de Hilos**: Contador de actividad de red movido al UI Thread para evitar parpadeos permanentes del icono de datos.
+- **Bug Fix**: Corregida lectura de preferencias en `downloadAndSaveLogo` (leía del archivo incorrecto).
 
 ### v5.7.0 "Dynamic PS Scaling" (Marzo 2026)
 - **Auto-dimensionado de Texto**: La frecuencia/nombre de emisora ahora se escala dinámicamente en ambos layouts para evitar recortes.

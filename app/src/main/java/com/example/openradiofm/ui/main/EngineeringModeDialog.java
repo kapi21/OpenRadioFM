@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.ImageView; 
+import androidx.appcompat.widget.SwitchCompat;
 import android.view.Window;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -41,6 +42,7 @@ public class EngineeringModeDialog extends Dialog {
     // File System & Assets
     private TextView tvAssetsInfo;
     private Button btnResetFavs, btnResetHistory;
+    private SwitchCompat swLogosOnline;
 
     // Tuner & Log
     private Button btnTuneDown, btnTuneUp, btnExitSystem;
@@ -111,6 +113,15 @@ public class EngineeringModeDialog extends Dialog {
         btnExitSystem = findViewById(R.id.btnExitSystem);
         tvTerminalLog = findViewById(R.id.tvTerminalLog);
         scrollLog = findViewById(R.id.scrollLog);
+        swLogosOnline = findViewById(R.id.swLogosOnlineEng);
+
+        if (swLogosOnline != null) {
+            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", false));
+            swLogosOnline.setOnCheckedChangeListener((v, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
+                logEvent("SET", "LOGOS_ONLINE > " + (checked ? "ON" : "OFF"));
+            });
+        }
 
         setupDataButtons();
         setupTunerButtons();
@@ -133,7 +144,6 @@ public class EngineeringModeDialog extends Dialog {
             public void run() {
                 if (!mIsRunning || !isShowing()) return;
 
-                updateMetrics();
                 updateMetrics();
                 checkAssets(); // V5.0: Check Files
                 mHandler.postDelayed(this, 1000); // 1Hz refresh for files is enough

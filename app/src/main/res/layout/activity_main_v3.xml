@@ -64,7 +64,7 @@
         android:layout_width="wrap_content"
         android:layout_height="0dp"
         android:orientation="horizontal"
-        android:gravity="center"
+        android:gravity="center_vertical"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -74,23 +74,30 @@
             android:layout_width="150dp"
             android:layout_height="match_parent"
             android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="4dp"
             android:scaleType="fitCenter"
             android:src="@drawable/radio_fm1" />
 
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/ivStereoIcon"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_marginEnd="8dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            android:src="@drawable/fwt" />
 
-    <!-- V4.6.1: Stereo Icon FUERA de containerBand para evitar desplazar containerRds -->
-    <ImageView
-        android:id="@+id/ivStereoIcon"
-        android:layout_width="48dp"
-        android:layout_height="24dp"
-        android:scaleType="fitCenter"
-        android:visibility="gone"
-        android:src="@drawable/fwt"
-        app:layout_constraintStart_toEndOf="@id/containerBand"
-        app:layout_constraintTop_toTopOf="@id/containerBand"
-        app:layout_constraintBottom_toBottomOf="@id/containerBand" />
+        <ImageView
+            android:id="@+id/ivDataActivity"
+            android:layout_width="wrap_content"
+            android:layout_height="24dp"
+            android:layout_marginStart="8dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:visibility="gone"
+            android:src="@drawable/datos" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/containerRds"
@@ -103,31 +110,22 @@
         app:layout_constraintStart_toEndOf="@+id/containerBand"
         app:layout_constraintTop_toTopOf="parent">
 
+        <!-- V16.2: tvRdsName oculto, el nombre RDS PS se muestra sobre la frecuencia -->
         <TextView
             android:id="@+id/tvRdsName"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_glass_card_premium"
-            android:paddingHorizontal="16dp"
-            android:paddingVertical="4dp"
-            android:layout_marginBottom="2dp"
-            android:gravity="center"
-            android:ellipsize="end"
-            android:singleLine="true"
-            android:text=""
-            android:textColor="@color/white"
-            android:textSize="@dimen/text_size_rds_name"
-            android:textStyle="bold"
-            android:includeFontPadding="false" />
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            android:text="" />
 
+        <!-- RDS RT: Ahora ocupa todo el espacio del containerRds -->
         <TextView
             android:id="@+id/tvRdsInfo"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:background="@drawable/bg_glass_card_premium"
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"
-            android:layout_marginTop="2dp"
             android:gravity="center"
             android:ellipsize="marquee"
             android:marqueeRepeatLimit="marquee_forever"
@@ -135,10 +133,12 @@
             android:fadingEdgeLength="16dp"
             android:singleLine="true"
             android:scrollHorizontally="true"
-            android:text="RDS Info Text"
+            android:text=""
             android:textColor="@color/white"
-            android:textSize="@dimen/text_size_rds_info"
-            android:includeFontPadding="false" />
+            android:textSize="22sp"
+            android:includeFontPadding="false"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
 
     </LinearLayout>
 
@@ -230,7 +230,7 @@
                     android:text="92.30"
                     android:textColor="@color/white"
                     app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="@dimen/text_size_frequency_min"
+                    app:autoSizeMinTextSize="14sp"
                     app:autoSizeMaxTextSize="@dimen/text_size_frequency_base_v3"
                     app:autoSizeStepGranularity="2sp"
                     android:maxLines="1" />
@@ -254,13 +254,13 @@
                     android:src="@drawable/level_signal"
                     android:visibility="visible" />
 
-                <!-- PTY Icon + Text centrados -->
+                <!-- PTY Icon + Text ligados a la señal -->
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:gravity="center_vertical"
                     android:orientation="horizontal">
 
                     <ImageView
@@ -282,8 +282,17 @@
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:visibility="gone"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:ellipsize="end"
                         android:includeFontPadding="false" />
                 </LinearLayout>
+
+                <!-- Separador elástico para enviar el resto de iconos a la derecha -->
+                <View
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1" />
 
                 <!-- RDS Status Icons (AF, TA, TP) -->
                 <LinearLayout

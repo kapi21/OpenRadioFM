@@ -133,4 +133,10 @@
     <string name="pty_documentary">Документалістика</string>
     <string name="pty_alarm_test">Тест Тривоги</string>
     <string name="pty_alarm">Тривога</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Постачальник логотипів</string>
+    <string name="provider_supabase">Supabase (HD Спільнота)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Резерв)</string>
+    <string name="provider_both">Комбінований (Supabase > Web)</string>
 </resources>

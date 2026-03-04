@@ -130,4 +130,10 @@
     <string name="pty_documentary">Документальное</string>
     <string name="pty_alarm_test">Тест Тревоги</string>
     <string name="pty_alarm">Тревога</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Поставщик логотипов</string>
+    <string name="provider_supabase">Supabase (HD Сообщество)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Резерв)</string>
+    <string name="provider_both">Комбинированный (Supabase > Web)</string>
 </resources>

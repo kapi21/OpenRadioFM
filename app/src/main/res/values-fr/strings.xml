@@ -80,4 +80,10 @@
     <string name="night_start">Début</string>
     <string name="night_end">Fin</string>
     <string name="night_schedule_updated">✅ Horaire mis à jour: %1$s - %2$s</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Fournisseur de Logos</string>
+    <string name="provider_supabase">Supabase (Communauté HD)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Réserve)</string>
+    <string name="provider_both">Combiné (Supabase > Web)</string>
 </resources>

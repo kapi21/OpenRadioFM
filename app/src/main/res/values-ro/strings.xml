@@ -133,4 +133,10 @@
     <string name="pty_documentary">Documentar</string>
     <string name="pty_alarm_test">Test Alarmă</string>
     <string name="pty_alarm">Alarmă</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Furnizor de Logo-uri</string>
+    <string name="provider_supabase">Supabase (Comunitate HD)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Rezervă)</string>
+    <string name="provider_both">Combinat (Supabase > Web)</string>
 </resources>

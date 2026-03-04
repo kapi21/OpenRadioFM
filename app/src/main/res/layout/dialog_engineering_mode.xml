@@ -352,6 +352,41 @@
 
                 </LinearLayout>
             </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvSectionWeb"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:fontFamily="monospace"
+                android:text="[ WEB_DATA_SERVICES ]"
+                android:textColor="#FF8E00"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/containerSys" />
+
+            <LinearLayout
+                android:id="@+id/containerWeb"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:background="#1A00FF00"
+                android:padding="8dp"
+                app:layout_constraintTop_toBottomOf="@id/tvSectionWeb">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swLogosOnlineEng"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ONLINE_LOGOS_SYSTEM"
+                    android:textColor="#00FF00"
+                    android:fontFamily="monospace"
+                    android:textSize="12sp"
+                    android:thumbTint="#00FF00"
+                    app:trackTint="#3300FF00" />
+            </LinearLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
     

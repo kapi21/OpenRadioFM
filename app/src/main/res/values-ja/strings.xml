@@ -80,4 +80,10 @@
     <string name="night_start">開始</string>
     <string name="night_end">終了</string>
     <string name="night_schedule_updated">✅ スケジュールを更新しました: %1$s - %2$s</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">ロゴプロバイダー</string>
+    <string name="provider_supabase">Supabase (HDコミュニティ)</string>
+    <string name="provider_radiobrowser">Radio-Browser (フォールバック)</string>
+    <string name="provider_both">結合 (Supabase > Web)</string>
 </resources>

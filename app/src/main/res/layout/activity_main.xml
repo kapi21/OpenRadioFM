@@ -138,11 +138,22 @@
                 
             <ImageView
                 android:id="@+id/ivStereoIcon"
-                android:layout_width="48dp"
+                android:layout_width="wrap_content"
                 android:layout_height="24dp"
+                android:adjustViewBounds="true"
                 android:scaleType="fitCenter"
                 android:visibility="gone"
                 android:src="@drawable/fwt" />
+
+            <ImageView
+                android:id="@+id/ivDataActivity"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:layout_marginStart="8dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitCenter"
+                android:visibility="gone"
+                android:src="@drawable/datos" />
         </LinearLayout>
 
         <!-- Frecuencia centrada (ocupa todo el espacio) -->
@@ -157,7 +168,7 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             app:autoSizeTextType="uniform"
-            app:autoSizeMinTextSize="@dimen/text_size_frequency_min"
+            app:autoSizeMinTextSize="14sp"
             app:autoSizeMaxTextSize="@dimen/text_size_frequency_large"
             app:autoSizeStepGranularity="2sp"
             android:maxLines="1"
@@ -184,40 +195,6 @@
             android:scaleType="fitCenter"
             android:src="@drawable/radio_mhz" />
 
-        <!-- PTY Icon + Text (Inline Row) -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|start"
-            android:layout_marginStart="72dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <ImageView
-                android:id="@+id/ivPtyIcon"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:layout_marginEnd="8dp"
-                android:scaleType="fitCenter"
-                android:visibility="gone"
-                tools:src="@drawable/ic_pty_music"
-                android:tint="@color/white" />
-
-            <TextView
-                android:id="@+id/tvPty"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=""
-                android:textColor="@color/white"
-                android:textSize="15sp"
-                android:textStyle="bold"
-                android:maxLines="1"
-                android:ellipsize="end"
-                android:visibility="gone" />
-        </LinearLayout>
-
         <ImageView
             android:id="@+id/ivFavoriteIndicator"
             android:layout_width="48dp"
@@ -228,43 +205,84 @@
             android:visibility="gone"
             android:src="@drawable/radio_icon_p01" />
 
-        <!-- RDS Status Icons (AF, TA, TP) -->
+        <!-- PTY + RDS Status Icons: Barra inferior distribuida con pesos -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="72dp"
             android:layout_marginEnd="72dp"
             android:layout_marginBottom="8dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-            <ImageView
-                android:id="@+id/ivAfIcon"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:layout_marginEnd="4dp"
-                android:scaleType="fitCenter"
-                android:visibility="visible"
-                android:alpha="0.2"
-                android:src="@drawable/rds_af_n" />
+            <!-- PTY Icon + Text (alineado a la izquierda) -->
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="start|center_vertical">
 
-            <ImageView
-                android:id="@+id/ivTaIcon"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:layout_marginEnd="4dp"
-                android:scaleType="fitCenter"
-                android:visibility="visible"
-                android:alpha="0.2"
-                android:src="@drawable/rds_ta_n" />
+                <ImageView
+                    android:id="@+id/ivPtyIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_marginEnd="4dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    tools:src="@drawable/ic_pty_music"
+                    android:tint="@color/white" />
 
-            <ImageView
-                android:id="@+id/ivTpIcon"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
-                android:scaleType="fitCenter"
-                android:visibility="visible"
-                android:alpha="0.2"
-                android:src="@drawable/rds_tp_n" />
+                <TextView
+                    android:id="@+id/tvPty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/white"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- RDS Status Icons (AF, TA, TP) alineados a la derecha -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end|center_vertical">
+
+                <ImageView
+                    android:id="@+id/ivAfIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="2dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="visible"
+                    android:alpha="0.2"
+                    android:src="@drawable/rds_af_n" />
+
+                <ImageView
+                    android:id="@+id/ivTaIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="2dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="visible"
+                    android:alpha="0.2"
+                    android:src="@drawable/rds_ta_n" />
+
+                <ImageView
+                    android:id="@+id/ivTpIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="visible"
+                    android:alpha="0.2"
+                    android:src="@drawable/rds_tp_n" />
+            </LinearLayout>
         </LinearLayout>
     </FrameLayout>
 
@@ -282,7 +300,7 @@
         android:src="@drawable/seek_down"
         android:scaleType="fitCenter"
         android:padding="14dp"
-        app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
+        app:layout_constraintBottom_toTopOf="@+id/tvRdsInfo"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
         app:layout_constraintEnd_toStartOf="@+id/btnFavPrev"
         app:layout_constraintHorizontal_weight="1"/>
@@ -298,7 +316,7 @@
         android:src="@drawable/btn_previous_n"
         android:scaleType="fitCenter"
         android:padding="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
+        app:layout_constraintBottom_toTopOf="@+id/tvRdsInfo"
         app:layout_constraintStart_toEndOf="@id/btnSeekDown"
         app:layout_constraintEnd_toStartOf="@+id/btnFavNext"
         app:layout_constraintHorizontal_weight="1"/>
@@ -314,7 +332,7 @@
         android:src="@drawable/btn_next_n"
         android:scaleType="fitCenter"
         android:padding="16dp"
-        app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
+        app:layout_constraintBottom_toTopOf="@+id/tvRdsInfo"
         app:layout_constraintStart_toEndOf="@id/btnFavPrev"
         app:layout_constraintEnd_toStartOf="@+id/btnSeekUp"
         app:layout_constraintHorizontal_weight="1"/>
@@ -330,34 +348,23 @@
         android:src="@drawable/seek_up"
         android:scaleType="fitCenter"
         android:padding="14dp"
-        app:layout_constraintBottom_toTopOf="@+id/tvRdsName"
+        app:layout_constraintBottom_toTopOf="@+id/tvRdsInfo"
         app:layout_constraintStart_toEndOf="@+id/btnFavNext"
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
         app:layout_constraintHorizontal_weight="1"/>
 
-    <!-- RDS Name -->
+    <!-- V16.2: RDS Name oculto, el nombre se muestra sobre la frecuencia -->
     <TextView
         android:id="@+id/tvRdsName"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass_card_premium"
-        android:gravity="center"
+        android:layout_height="0dp"
+        android:visibility="gone"
         android:text=""
-        android:textColor="@color/white"
-        android:textSize="@dimen/text_size_rds_name"
-        android:textStyle="bold"
-        android:singleLine="true"
-        android:ellipsize="end"
-        android:padding="8dp"
-        android:includeFontPadding="false"
         app:layout_constraintBottom_toTopOf="@+id/tvRdsInfo"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"/>
 
-    <!-- RDS Info -->
+    <!-- RDS RT: Ahora ocupa el espacio combinado de ambos boxes RDS -->
     <TextView
         android:id="@+id/tvRdsInfo"
         android:layout_width="0dp"
@@ -369,15 +376,17 @@
         android:gravity="center"
         android:text=""
         android:textColor="@color/white"
-        android:textSize="@dimen/text_size_rds_info"
+        android:textSize="20sp"
         android:singleLine="true"
         android:ellipsize="marquee"
         android:marqueeRepeatLimit="marquee_forever"
         android:requiresFadingEdge="horizontal"
         android:fadingEdgeLength="16dp"
-        android:paddingVertical="10dp"
+        android:paddingVertical="20dp"
         android:paddingHorizontal="8dp"
         android:includeFontPadding="false"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
         app:layout_constraintBottom_toTopOf="@+id/btnBand"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"/>
@@ -467,6 +476,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp" 
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_glass_card_premium" 
         android:src="@drawable/ic_android_settings" 
         android:scaleType="fitCenter" 
@@ -485,12 +495,13 @@
         android:layout_marginStart="4dp" 
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_glass_card_premium" 
         android:src="@drawable/ic_save_load" 
         android:scaleType="fitCenter" 
         android:padding="16dp"
         app:layout_constraintTop_toBottomOf="@+id/boxLogo"
-        app:layout_constraintBottom_toTopOf="@+id/btnMute"
+        app:layout_constraintBottom_toTopOf="@+id/btnGps"
         app:layout_constraintStart_toEndOf="@+id/btnExtra1" 
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintVertical_weight="1"
@@ -504,6 +515,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp" 
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_glass_card_premium" 
         android:src="@drawable/radio_mute_n" 
         android:scaleType="fitCenter" 
@@ -522,6 +534,7 @@
         android:layout_marginStart="4dp" 
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_glass_card_premium" 
         android:src="@drawable/radio_gps" 
         android:scaleType="fitCenter" 
@@ -541,6 +554,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp" 
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_glass_card_premium" 
         android:src="@drawable/radio_eq_n" 
         android:scaleType="fitCenter" 
@@ -559,6 +573,7 @@
         android:layout_marginStart="4dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp" 
+        android:layout_marginTop="4dp"
         android:background="@drawable/bg_glass_card_premium" 
         android:src="@drawable/power_off" 
         android:scaleType="fitCenter" 

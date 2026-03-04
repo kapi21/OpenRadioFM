@@ -46,11 +46,13 @@ public class NightModeManager {
         if (!autoNight) return;
 
         if (isNightTime()) {
-            ThemeManager themeManager = new ThemeManager(mActivity);
-            themeManager.setSkin(ThemeManager.Skin.NIGHT_MODE);
-            // Delega a MainActivity la aplicación del skin completo
+            // V16.2: Usar instancia compartida de ThemeManager
             if (mActivity instanceof MainActivity) {
-                ((MainActivity) mActivity).applySkin(ThemeManager.Skin.NIGHT_MODE);
+                MainActivity main = (MainActivity) mActivity;
+                if (main.mThemeManager != null) {
+                    main.mThemeManager.setSkin(ThemeManager.Skin.NIGHT_MODE);
+                    main.applySkin(ThemeManager.Skin.NIGHT_MODE);
+                }
             }
         }
     }
@@ -116,13 +118,14 @@ public class NightModeManager {
         tintImageView(R.id.ivAfIcon, nightBlue);
         tintImageView(R.id.ivTaIcon, nightBlue);
         tintImageView(R.id.ivTpIcon, nightBlue);
+        tintImageView(R.id.ivDataActivity, nightBlue); // V16.2: New Data Activity Icon
 
         // Botones de control
         int[] buttonIds = {
                 R.id.btnSeekUp, R.id.btnSeekDown, R.id.btnFavPrev, R.id.btnFavNext,
                 R.id.btnBand, R.id.btnAutoScan,
                 R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
-                R.id.btnExtra1, R.id.btnExtra2
+                R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff // V16.1: PowerOff night
         };
         for (int id : buttonIds) {
             ImageButton btn = mActivity.findViewById(id);
@@ -176,13 +179,14 @@ public class NightModeManager {
         clearImageViewFilter(R.id.ivAfIcon);
         clearImageViewFilter(R.id.ivTaIcon);
         clearImageViewFilter(R.id.ivTpIcon);
+        clearImageViewFilter(R.id.ivDataActivity);
 
         // Botones
         int[] buttonIds = {
                 R.id.btnSeekUp, R.id.btnSeekDown, R.id.btnFavPrev, R.id.btnFavNext,
                 R.id.btnBand, R.id.btnAutoScan,
                 R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
-                R.id.btnExtra1, R.id.btnExtra2
+                R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff // V16.1: PowerOff night
         };
         for (int id : buttonIds) {
             ImageButton btn = mActivity.findViewById(id);

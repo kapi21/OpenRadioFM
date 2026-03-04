@@ -134,4 +134,10 @@
     <string name="pty_documentary">Dokumentarni program</string>
     <string name="pty_alarm_test">Test alarma</string>
     <string name="pty_alarm">Alarm</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Добављач логотипа</string>
+    <string name="provider_supabase">Supabase (HD заједница)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Резерва)</string>
+    <string name="provider_both">Комбиновано (Supabase > Web)</string>
 </resources>

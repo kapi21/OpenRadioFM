@@ -3,11 +3,13 @@ package com.example.openradiofm.data.repository;
 import com.example.openradiofm.data.model.RadioStation;
 import com.example.openradiofm.data.source.PredefinedStationSource;
 import com.example.openradiofm.data.source.RootRDSSource;
+import com.example.openradiofm.data.source.SupabaseLogoSource;
 import com.example.openradiofm.data.source.WebRadioSource;
 
 public class RadioRepository {
     private final RootRDSSource rootSource;
     private final WebRadioSource webSource;
+    private final SupabaseLogoSource supabaseSource; // V16.0: Servidor centralizado
     private final PredefinedStationSource predefinedSource;
     private final boolean useRoot;
 
@@ -23,11 +25,16 @@ public class RadioRepository {
     // V13.6: Key: freqKHz + "_" + stationName, Value: URL o path del logo
     private final java.util.HashMap<String, String> logoCache = new java.util.HashMap<>();
 
+    // V16.2: Caché por nombre de emisora (Independiente de la frecuencia)
+    // Evita búsquedas en red para diferentes frecuencias de la misma cadena.
+    private final java.util.HashMap<String, String> nameLogoCache = new java.util.HashMap<>();
+
     // Repositorio central que combina:
     // - RootRDSSource: nombres RDS desde el fichero interno del servicio de radio
     // (requiere root).
     // - WebRadioSource: búsqueda de logos en internet (RadioBrowser) y caché local
     // en /sdcard/RadioLogos.
+    // - SupabaseLogoSource: Servidor centralizado con PI Code y logos HD.
     // - SharedPreferences: nombres personalizados definidos por el usuario.
     //
     // El flag enableRoot permite desactivar por completo el acceso root cuando
@@ -37,6 +44,7 @@ public class RadioRepository {
         this.mContext = context; // V3.0: Store for MediaScanner
         this.rootSource = enableRoot ? new RootRDSSource() : null;
         this.webSource = new WebRadioSource();
+        this.supabaseSource = new SupabaseLogoSource();
         this.predefinedSource = new PredefinedStationSource(context);
         // Usamos un archivo de preferencias específico para los nombres de emisoras
         this.mPrefs = context.getSharedPreferences("RadioStationNames", android.content.Context.MODE_PRIVATE);
@@ -61,6 +69,12 @@ public class RadioRepository {
 
     public interface LogoCallback {
         void onLogoFound(String logoUrl);
+    }
+
+    public void setDataActivityListener(SupabaseLogoSource.DataActivityListener listener) {
+        if (supabaseSource != null) {
+            supabaseSource.setDataActivityListener(listener);
+        }
     }
 
     /**
@@ -99,6 +113,18 @@ public class RadioRepository {
     }
 
     /**
+     * V16.0: Guarda el PI Code recibido para una frecuencia.
+     */
+    public void saveRdsPi(int freqKHz, String pi) {
+        if (pi != null && !pi.trim().isEmpty()) {
+            String existing = mPrefs.getString("PI_" + freqKHz, "");
+            if (!pi.equals(existing)) {
+                mPrefs.edit().putString("PI_" + freqKHz, pi.trim()).apply();
+            }
+        }
+    }
+
+    /**
      * Devuelve la información de la emisora para una frecuencia dada.
      * Prioridad de nombre:
      * 1. Nombre Personalizado (Usuario)
@@ -129,6 +155,7 @@ public class RadioRepository {
         String customName = mPrefs.getString("CUSTOM_" + freqKHz, null);
         String rdsPsName = mPrefs.getString("RDS_" + freqKHz, null);
         String ptyStored = mPrefs.getString("PTY_" + freqKHz, null);
+        String piCode = mPrefs.getString("PI_" + freqKHz, null);
         
         String rootName = null;
         if (useRoot && rootSource != null) {
@@ -163,11 +190,27 @@ public class RadioRepository {
         */
         RadioStation predefined = null; // Force null
 
-        // 0. Revisar Caché en Memoria
-        String cacheKey = freqKHz + "_" + finalName; // V3.0: Caché con nombre RDS
+        // 0. Revisar Caché en Memoria (Por Frecuencia + Metadata)
+        // V16.3: Incluimos PI Code en la clave para reinvavlidar si cambia la metadata.
+        String cacheKey = freqKHz + "_" + (piCode != null ? piCode : "") + "_" + (finalName != null ? finalName.trim().toUpperCase() : "");
         if (logoCache.containsKey(cacheKey)) {
             String cachedPath = logoCache.get(cacheKey);
+            if ("NO_LOGO".equals(cachedPath)) {
+                return station; // No reintentar búsqueda online
+            }
             station.setLogoUrl(cachedPath);
+            if (callback != null)
+                callback.onLogoFound(cachedPath);
+            return station;
+        }
+
+        // 0.1 Revisar Caché en Memoria (Por Nombre Sanitizado)
+        String sanitizedNameKey = (finalName != null && !finalName.trim().isEmpty()) 
+                ? finalName.trim().toUpperCase() : null;
+        if (sanitizedNameKey != null && nameLogoCache.containsKey(sanitizedNameKey)) {
+            String cachedPath = nameLogoCache.get(sanitizedNameKey);
+            station.setLogoUrl(cachedPath);
+            logoCache.put(cacheKey, cachedPath); // Sincronizar caché de freq
             if (callback != null)
                 callback.onLogoFound(cachedPath);
             return station;
@@ -181,8 +224,21 @@ public class RadioRepository {
             android.util.Log.d("RadioLogos", "FOUND: " + logoPath);
             station.setLogoUrl(logoPath);
             logoCache.put(cacheKey, logoPath);
+            if (sanitizedNameKey != null) nameLogoCache.put(sanitizedNameKey, logoPath);
+            
             if (callback != null)
                 callback.onLogoFound(logoPath);
+
+            // V16.2: Contribuir logo local a la nube si tenemos PI o RDS
+            boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_logos_online", false);
+
+            if (onlineLogosEnabled) {
+                final String fPi = piCode;
+                final String fName = finalName;
+                final String fPath = logoPath;
+                logoExecutor.submit(() -> supabaseSource.upsertLogoData(fPi, fName, freqKHz, "file://" + fPath, getCountryCode()));
+            }
         } else {
             android.util.Log.d("RadioLogos", "NOT FOUND LOCAL");
             // 2. Fallback Cloud + Download
@@ -197,11 +253,21 @@ public class RadioRepository {
                 return station; // Skip download entirely
             }
 
+            // V16.3: Evitar colas infinitas si ya tenemos 3 hilos en curso para esta frecuencia
             logoExecutor.submit(() -> {
-                // Prioridad 1: Usar logo del catálogo predefinido si existe
-                String catalogLogoUrl = (predefined != null) ? predefined.getLogoUrl() : null;
-                String logoUrlToDownload = (catalogLogoUrl != null) ? catalogLogoUrl
-                        : webSource.fetchLogo(freqKHz, stationNameForLambda, "ES");
+                String country = getCountryCode();
+                int provider = mPrefs.getInt("pref_logo_provider", 0); // 0=Supabase, 1=Web, 2=Both
+                String logoUrlToDownload = null;
+
+                // 1. Intentar Supabase si está habilitado (0 o 2)
+                if (provider == 0 || provider == 2) {
+                    logoUrlToDownload = supabaseSource.fetchLogo(piCode, stationNameForLambda, freqKHz, country);
+                }
+
+                // 2. Intentar RadioBrowser si Supabase falló o si se eligió solo Web (1 o 2)
+                if (logoUrlToDownload == null && (provider == 1 || provider == 2)) {
+                    logoUrlToDownload = webSource.fetchLogo(freqKHz, stationNameForLambda, country);
+                }
 
                 if (logoUrlToDownload != null) {
                     // Try to download and save with RDS name
@@ -209,15 +275,21 @@ public class RadioRepository {
                     if (savedPath != null) {
                         station.setLogoUrl(savedPath);
                         logoCache.put(cacheKey, savedPath);
+                        if (sanitizedNameKey != null) nameLogoCache.put(sanitizedNameKey, savedPath);
                         if (callback != null)
                             callback.onLogoFound(savedPath);
                     } else {
                         // Fallback to URL if download fails
                         station.setLogoUrl(logoUrlToDownload);
                         logoCache.put(cacheKey, logoUrlToDownload);
+                        if (sanitizedNameKey != null) nameLogoCache.put(sanitizedNameKey, logoUrlToDownload);
                         if (callback != null)
                             callback.onLogoFound(logoUrlToDownload);
                     }
+                } else {
+                    // V16.3: CACHÉ NEGATIVA. Guardar que no hay logo para evitar reintentos inmediatos.
+                    logoCache.put(cacheKey, "NO_LOGO");
+                    // No ponemos en nameLogoCache para permitir reintentar con otra frecuencia.
                 }
             });
         }
@@ -306,6 +378,14 @@ public class RadioRepository {
                     null,
                     (path, uri) -> android.util.Log.i("RadioLogos", "Scanned " + path + ":-> uri=" + uri));
 
+            // V16.2: Alimentar servidor central tras descarga exitosa
+            boolean onlineAfterDownload = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_logos_online", false);
+            if (onlineAfterDownload) {
+                String pi = mPrefs.getString("PI_" + freqKHz, null);
+                supabaseSource.upsertLogoData(pi, rdsName, freqKHz, urlString, getCountryCode());
+            }
+
             return destFile.getAbsolutePath();
         } catch (Exception e) {
             e.printStackTrace();
@@ -327,5 +407,14 @@ public class RadioRepository {
         // Cerrar el ExecutorService de logos
         logoExecutor.shutdownNow();
         android.util.Log.d("RadioRepository", "ExecutorService de logos cerrado.");
+    }
+
+    private String getCountryCode() {
+        try {
+            String country = java.util.Locale.getDefault().getCountry();
+            return (country != null && !country.isEmpty()) ? country.toUpperCase() : "ES";
+        } catch (Exception e) {
+            return "ES";
+        }
     }
 }
