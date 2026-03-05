@@ -37,6 +37,11 @@ public class MT8163Engine implements RadioEngine {
     private Runnable mPollingRunnable;
     private int mLastPolledFreq = -1;
     private int mPollingTicks = 0;
+    
+    // V18.4: AudioFocus y Streaming Guard para MT8163
+    private boolean mIsOnlineStreamingActive = false;
+    private android.media.AudioManager mAudioManager;
+    private android.media.AudioManager.OnAudioFocusChangeListener mAudioFocusListener;
 
     public MT8163Engine() {}
 
@@ -133,11 +138,34 @@ public class MT8163Engine implements RadioEngine {
         boolean rdsOk = mHiddenPlayer.init();
         Log.d(TAG, "HiddenRadioPlayer init: " + (rdsOk ? "OK" : "FAIL"));
 
-        return true; // Incluso si RDS falla, el servicio AIDL puede funcionar
+        // V18.4: Setup AudioFocus Listener (igual que en K706)
+        mAudioManager = (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
+        mAudioFocusListener = focusChange -> {
+            switch (focusChange) {
+                case android.media.AudioManager.AUDIOFOCUS_LOSS:
+                    if (mIsOnlineStreamingActive) break;
+                    switchToAndroidAudio();
+                    break;
+                case android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                case android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                    if (mIsOnlineStreamingActive) break;
+                    setMute(true);
+                    break;
+                case android.media.AudioManager.AUDIOFOCUS_GAIN:
+                    if (mIsOnlineStreamingActive) break;
+                    switchToFmAudio();
+                    break;
+            }
+        };
+
+        return true; 
     }
 
     @Override
     public void release() {
+        Log.d(TAG, "release: Soltando recursos MT8163");
+        switchToAndroidAudio(); // Asegurar liberación de audio al salir
+        
         if (mPollingRunnable != null) {
             mPollingHandler.removeCallbacks(mPollingRunnable);
         }
@@ -151,6 +179,16 @@ public class MT8163Engine implements RadioEngine {
         }
         mService = null;
         mCallback = null;
+    }
+
+    // V18.4: Permitir que OnlineStreamManager nos notifique el estado
+    @Override
+    public void setOnlineStreamingActive(boolean active) {
+        this.mIsOnlineStreamingActive = active;
+        Log.d(TAG, "setOnlineStreamingActive: " + active);
+        if (active) {
+            switchToAndroidAudio();
+        }
     }
 
     @Override
@@ -337,6 +375,32 @@ public class MT8163Engine implements RadioEngine {
         if (mHiddenPlayer != null) {
             mHiddenPlayer.setMute(false);
         }
+    }
+
+    @Override
+    public void switchToAndroidAudio() {
+        Log.d(TAG, "switchToAndroidAudio (MT8163) - Liberando canal para sistema");
+        setMute(true);
+        if (mAudioManager != null) {
+            // V18.4: Notificar al mixer de Android que FM ya no suena
+            mAudioManager.setParameters("fm_radio_on=0;fm_mute=1");
+        }
+        
+        // Pequeño delay para asegurar que el mute del chip se ha procesado
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            setMute(false); // Desmutear el canal master para que otras apps suenen
+            if (mAudioManager != null) mAudioManager.abandonAudioFocus(mAudioFocusListener);
+        }, 300);
+    }
+
+    @Override
+    public void switchToFmAudio() {
+        Log.d(TAG, "switchToFmAudio (MT8163)");
+        if (mAudioManager != null) {
+            mAudioManager.requestAudioFocus(mAudioFocusListener, android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.AUDIOFOCUS_GAIN);
+            mAudioManager.setParameters("fm_radio_on=1;fm_mute=0");
+        }
+        enforceAudioRecovery();
     }
 
     // === RDS (via HiddenRadioPlayer) ===

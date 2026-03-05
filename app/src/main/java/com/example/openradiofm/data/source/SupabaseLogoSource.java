@@ -18,6 +18,14 @@ public class SupabaseLogoSource {
         this.api = SupabaseClient.getApi();
     }
 
+    public SupabaseApi getSupabaseApi() {
+        return api;
+    }
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
     public interface DataActivityListener {
         void onDataActivity(boolean active);
     }
@@ -28,7 +36,7 @@ public class SupabaseLogoSource {
         this.mActivityListener = mActivityListener;
     }
 
-    private void notifyActivity(boolean active) {
+    public void notifyActivity(boolean active) {
         android.util.Log.d("SupabaseLogoSource", "notifyActivity: active=" + active);
         if (mActivityListener != null) {
             mActivityListener.onDataActivity(active);
@@ -38,13 +46,13 @@ public class SupabaseLogoSource {
      * Busca el logo en Supabase siguiendo el orden de prioridad.
      * V16.2: Ahora filtra también por país si está disponible.
      */
-    public String fetchLogo(String piCode, String rdsName, int freqKHz, String country) {
+    public String fetchLogo(String piCode, String rdsName, int freqKHz) {
         notifyActivity(true);
-        android.util.Log.d("SupabaseLogoSource", "FETCH START: PI=" + piCode + ", Name=" + rdsName + ", Freq=" + freqKHz + ", Country=" + country);
+        android.util.Log.d("SupabaseLogoSource", "FETCH START: PI=" + piCode + ", Name=" + rdsName + ", Freq=" + freqKHz);
         try {
             // 1. prioridad: PI Code (exacto)
             if (piCode != null && !piCode.isEmpty()) {
-                String logo = queryByPi(piCode, country);
+                String logo = queryByPi(piCode);
                 if (logo != null) {
                     android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (PI): " + logo);
                     return logo;
@@ -53,7 +61,7 @@ public class SupabaseLogoSource {
 
             // 2. prioridad: RDS Name (exacto)
             if (rdsName != null && !rdsName.isEmpty()) {
-                String logo = queryByName(rdsName.trim(), country);
+                String logo = queryByName(rdsName.trim());
                 if (logo != null) {
                     android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (Name): " + logo);
                     return logo;
@@ -61,7 +69,7 @@ public class SupabaseLogoSource {
             }
 
             // 3. prioridad: Frecuencia (kHz)
-            String logoFreq = queryByFreq(freqKHz, country);
+            String logoFreq = queryByFreq(freqKHz);
             if (logoFreq != null) {
                 android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (Freq): " + logoFreq);
             } else {
@@ -79,15 +87,15 @@ public class SupabaseLogoSource {
     /**
      * V16.2: Envía o actualiza los datos de una emisora en el servidor centralizado.
      */
-    public void upsertLogoData(String piCode, String rdsName, int freqKHz, String logoUrl, String country) {
+    public void upsertLogoData(String piCode, String rdsName, int freqKHz, String logoUrl, String streamUrl) {
         if (logoUrl == null || logoUrl.isEmpty()) return;
 
         new Thread(() -> {
             notifyActivity(true);
             try {
-                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqKHz, logoUrl, country);
-                // V16.2: Añadido on_conflict para evitar duplicados. Preferimos rds_name si PI es nulo.
-                String conflictColumns = (piCode != null && !piCode.isEmpty()) ? "pi_code" : "rds_name";
+                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqKHz, logoUrl, streamUrl);
+                // V16.2: Añadido on_conflict para evitar duplicados. Preferimos ps_name si PI es nulo.
+                String conflictColumns = (piCode != null && !piCode.isEmpty()) ? "pi_code" : "ps_name";
                 
                 Call<Void> call = api.upsertLogo(apiKey, "Bearer " + apiKey, "resolution=merge-duplicates", conflictColumns, data);
                 retrofit2.Response<Void> response = call.execute();
@@ -108,49 +116,33 @@ public class SupabaseLogoSource {
         }).start();
     }
 
-    private String queryByPi(String pi, String country) {
+    private String queryByPi(String pi) {
         try {
-            Call<List<SupabaseLogoResponse>> call = api.getLogosByPi(apiKey, "Bearer " + apiKey, "eq." + pi, "*");
+            Call<List<SupabaseLogoResponse>> call = api.getLogosByPi(apiKey, "Bearer " + apiKey, "ilike." + pi, "*");
             Response<List<SupabaseLogoResponse>> res = call.execute();
             if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                // Si hay filtro de país, buscar coincidencia, si no, devolver el primero
-                if (country != null) {
-                    for (SupabaseLogoResponse r : res.body()) {
-                        if (country.equalsIgnoreCase(r.getCountry())) return r.getLogoUrl();
-                    }
-                }
                 return res.body().get(0).getLogoUrl();
             }
         } catch (Exception ignored) {}
         return null;
     }
 
-    private String queryByName(String name, String country) {
+    private String queryByName(String name) {
         try {
-            Call<List<SupabaseLogoResponse>> call = api.getLogosByName(apiKey, "Bearer " + apiKey, "eq." + name, "*");
+            Call<List<SupabaseLogoResponse>> call = api.getLogosByName(apiKey, "Bearer " + apiKey, "ilike." + name, "*");
             Response<List<SupabaseLogoResponse>> res = call.execute();
             if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                if (country != null) {
-                    for (SupabaseLogoResponse r : res.body()) {
-                        if (country.equalsIgnoreCase(r.getCountry())) return r.getLogoUrl();
-                    }
-                }
                 return res.body().get(0).getLogoUrl();
             }
         } catch (Exception ignored) {}
         return null;
     }
 
-    private String queryByFreq(int freq, String country) {
+    private String queryByFreq(int freq) {
         try {
             Call<List<SupabaseLogoResponse>> call = api.getLogosByFreq(apiKey, "Bearer " + apiKey, "eq." + freq, "*");
             Response<List<SupabaseLogoResponse>> res = call.execute();
             if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                if (country != null) {
-                    for (SupabaseLogoResponse r : res.body()) {
-                        if (country.equalsIgnoreCase(r.getCountry())) return r.getLogoUrl();
-                    }
-                }
                 return res.body().get(0).getLogoUrl();
             }
         } catch (Exception ignored) {}

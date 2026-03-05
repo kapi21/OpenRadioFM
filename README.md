@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-16.3.0_Online_Logos-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-18.5.0_Universal_Streaming-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -41,6 +41,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Nav. Hardware Favoritos | ✅ | ✅ |
 | Soporte Android Auto | ✅ | ✅ |
 | Multilingüe (ES/EN/RU/RO/UK/SR) | ✅ | ✅ |
+| Streaming Online (MP3/HLS/AAC) | ✅ | ✅ |
 
 
 ---
@@ -128,6 +129,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ---
 
+## ⚠️ Problemas Conocidos (Marzo 2026)
+- **Audio Online (K706)**: ✅ Resuelto mediante gestión robusta de AudioFocus y conmutación de canales (Channel 4/2).
+- **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
+- **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas por otros elementos de la UI.
+
+---
+
 ## 📖 Documentación
 
 - [Manual de Usuario (Español)](_DOCS/manual_usuario.md)
@@ -140,6 +148,14 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v18.5.0 "Universal Streaming & UI Polish" (Marzo 2026)
+- **Streaming Universal (ExoPlayer/Media3)**: Soporte completo para MP3, HLS (M3U8) y AAC (.acc/type=aac).
+- **Módulo de Red OkHttp**: Integrado para mejorar la estabilidad de las emisoras online y reconexión rápida.
+- **Fix de Audio Focus**: Implementado en K706, MT8163 y QS6 para evitar el secuestro del canal de audio por la MCU.
+- **UI Refinement**: Eliminado el texto "Buscando..." de los presets. Ahora muestran frecuencia o nombre fijo.
+- **Crédito TDTChannels**: Añadido reconocimiento a la fuente de streaming en el diálogo About.
+- **Limpieza de Debug**: Eliminados Toasts de depuración ("Nube pulsada") para una experiencia final limpia.
 
 ### v16.3.0 "Online Logos & Stability" (Marzo 2026)
 - **Sistema de Logos Online (Supabase)**: Búsqueda centralizada de logos por PI Code, RDS Name y Frecuencia, con contribución comunitaria automática.

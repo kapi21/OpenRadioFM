@@ -84,7 +84,10 @@ public class PlaybackManager {
             }
         }
 
-        // Controlar el stream de audio de Android
+        /* V17.0: No mutear STREAM_MUSIC desde aquí.
+           Muteamos el hardware de la radio vía mEngine.setMute(mute),
+           pero dejar STREAM_MUSIC activo permite que la Radio Online funcione. */
+        /*
         android.media.AudioManager am = (android.media.AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         if (am != null) {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -94,6 +97,7 @@ public class PlaybackManager {
                 am.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
             }
         }
+        */
 
         // Notificar a la UI
         if (mListener != null) {
@@ -109,6 +113,10 @@ public class PlaybackManager {
 
     public void setEngine(RadioEngine engine) {
         this.mEngine = engine;
+    }
+
+    public RadioEngine getEngine() {
+        return mEngine;
     }
 
     /**

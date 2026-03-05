@@ -108,6 +108,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private OnAudioFocusChangeListener mAudioFocusChangeListener;
     private AudioFocusRequest mAudioFocusRequest;
     private boolean mIsAudioFocusHeld = false;
+    private boolean mIsOnlineStreamingActive = false; // V18.3: Evita mutes en AudioFocusChange si el stream está OK
     private boolean mIsRadioActive = false;
     private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
     private boolean mIsTransientFocusLoss = false; // V17.0: Spotify/Android Auto
@@ -133,13 +134,21 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 switch (focusChange) {
                     case AudioManager.AUDIOFOCUS_LOSS:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS----");
-                        // Alguien más (ej. otra app, Bluetooth largo) tomó el foco permanentemente.
-                        // Debemos silenciarnos y soltar el foco.
+                        if (mIsOnlineStreamingActive) {
+                            Log.d(TAG, "onAudioFocusChange(LOSS): Ignorando mute porque el Streaming Online está activo");
+                            break;
+                        }
                         try {
+                            // Secuencia de salida segura
+                            mIsRadioActive = false; // Detener Heartbeat inmediatamente
                             setMute(true);
                             if (mSetChannel != null && mMcuManager != null) {
                                 mSetChannel.invoke(mMcuManager, (byte) 4); // Devolver contexto
                             }
+                            setAudioParams(false); // Apagar flag radio
+                            
+                            // V18.4: ¡IMPORTANTE! Desmutear para que la nueva app que tomó el foco (Spotify/YouTube) se oiga.
+                            setMute(false);
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS", e);
                         }
@@ -148,8 +157,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS_TRANSIENT (" + focusChange + ")----");
-                        // Interrupción corta (Llamada, Notificación, Android Auto, GPS).
-                        mIsAudioFocusHeld = true; // Retenemos para poder recuperar
+                        if (mIsOnlineStreamingActive) {
+                            Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorando mute porque el Streaming Online está activo");
+                            break;
+                        }
+                        mIsAudioFocusHeld = true;
                         
                         // V17.0: Diferenciar llamada real de interrupción de música
                         if (mAudioManager.isMusicActive()) {
@@ -161,12 +173,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         }
                         
                         try {
+                            mIsRadioActive = false; // Detener Heartbeat temporalmente
                             setMute(true);
                             // V11.5: Soltar canal MCU para que BT/teléfono suene limpio
                             if (mSetChannel != null && mMcuManager != null) {
                                 mSetChannel.invoke(mMcuManager, (byte) 4);
                                 Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: RPC_SetChannel(4) - canal FM liberado (mIsInCall=" + mIsInCall + ")");
                             }
+                            // V18.4: Desmutear canal 4 para que Android/BT se oiga
+                            setMute(false);
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS_TRANSIENT", e);
                         }
@@ -176,6 +191,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         mIsAudioFocusHeld = true;
                         mIsInCall = false;
                         mIsTransientFocusLoss = false;
+                        mIsRadioActive = true; // Rehabilitar Heartbeat
                         // Forzar recuperación inmediata
                         enforceAudioChannelRecovery();
                         break;
@@ -199,15 +215,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             case android.telephony.TelephonyManager.CALL_STATE_OFFHOOK:
                                 if (!mIsInCall) {
                                     mIsInCall = true;
-                                    mIsTransientFocusLoss = false; // No es una pérdida transitoria de música
+                                    mIsTransientFocusLoss = false; 
+                                    mIsRadioActive = false; // Detener Heartbeat
                                     Log.d(TAG, "📞 Llamada detectada - silenciando radio FM");
                                     try {
                                         setMute(true);
-                                        // Soltar el canal de audio MCU para que el BT/teléfono suene
                                         if (mSetChannel != null && mMcuManager != null) {
                                             mSetChannel.invoke(mMcuManager, (byte) 4);
                                             Log.d(TAG, "📞 RPC_SetChannel(4) - canal FM liberado");
                                         }
+                                        setMute(false); // Desmutear para oír la llamada
                                     } catch (Exception e) {
                                         Log.e(TAG, "Error silenciando radio en llamada", e);
                                     }
@@ -1315,21 +1332,25 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private void stopFmAudioSequence() {
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM (Teardown V9.5) ===");
-        mIsRadioActive = false; // V9.9: Limpiar flag activo
+        mIsRadioActive = false; // V9.9: Limpiar flag activo inmediatamente
         try {
-            // 1. Silenciar (Mute true)
+            // 1. Silenciar temporalmente para evitar transitorios
             setMute(true);
-            Log.d(TAG, "[1/3] setMute(true)");
-        } catch (Exception e) {}
-
-        try {
+            setAudioParams(false); // V18.4: Apagar radio hardware
+            
             // 2. Devolver canal a MPU (Media = 4)
             if (mSetChannel != null && mMcuManager != null) {
                 mSetChannel.invoke(mMcuManager, (byte) 4);
-                Log.d(TAG, "[2/2] RPC_SetChannel(4) - Contexto devuelto a Android MPU");
+                Log.d(TAG, "[Teardown] RPC_SetChannel(4) - Contexto devuelto a Android MPU");
             }
+            
+            // 3. V18.4: DESMUTEAR GLOBAL. Si no, YouTube/Spotify no sonarán tras cerrar la app.
+            setMute(false);
+            Log.d(TAG, "[Teardown] setMute(false) finalizado");
+            
         } catch (Exception e) {
-            Log.w(TAG, "[2/2] Failed to set channel 4", e);
+            Log.w(TAG, "Teardown error", e);
+            try { setMute(false); } catch (Exception ignored) {}
         }
     }
 
@@ -1413,17 +1434,41 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     @Override
     public void onSeekDownEvent() throws RemoteException {
         // V9.6: Seek down real
+        // Prefer QFTunerManager if available for better stability and system integration
+        if (mTunerManager != null && mTunerOnSeek != null) {
+            try {
+                mTunerOnSeek.invoke(mTunerManager, false);
+                mIsSeeking = true;
+                Log.d(TAG, "Seek Down via QFTunerManager (onSeek false)");
+                return;
+            } catch (Exception e) {
+                Log.w(TAG, "QFTunerManager.onSeek failed, falling back to raw MCU cmd", e);
+            }
+        }
+
         sendCmd(SUB_SEEK_DOWN, (byte) 0x02, (byte) 0);
         mIsSeeking = true;
-        Log.d(TAG, "Seek Down (0x02) command sent");
+        Log.d(TAG, "Seek Down (0x02) raw MCU command sent");
     }
 
     @Override
     public void onSeekUpEvent() throws RemoteException {
         // V9.6: Seek up real (true=0x01/0x02 según param)
+        // Prefer QFTunerManager if available
+        if (mTunerManager != null && mTunerOnSeek != null) {
+            try {
+                mTunerOnSeek.invoke(mTunerManager, true);
+                mIsSeeking = true;
+                Log.d(TAG, "Seek Up via QFTunerManager (onSeek true)");
+                return;
+            } catch (Exception e) {
+                Log.w(TAG, "QFTunerManager.onSeek failed, falling back to raw MCU cmd", e);
+            }
+        }
+
         sendCmd(SUB_SEEK_UP, (byte) 0x01, (byte) 0);
         mIsSeeking = true;
-        Log.d(TAG, "Seek Up (0x01) command sent");
+        Log.d(TAG, "Seek Up (0x01) raw MCU command sent");
     }
 
     @Override
@@ -1731,6 +1776,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             
             // Refrescar el Mute al estado actual (si estábamos desmuteados, que suene)
             setMute(false);
+            setAudioParams(true); // V18.1: Restaurar flag de FM activo en el mixer de Android
         } catch (Exception e) {
             Log.e(TAG, "enforceAudioChannelRecovery FAILED", e);
         }
@@ -1738,11 +1784,28 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     // V9.9: Helper to gracefully surrender the audio channel to the system (Media = 4)
     public void returnAudioChannel() {
-        Log.d(TAG, "returnAudioChannel: Cediendo canal al sistema (SetChannel 4)");
+        mIsAudioFocusHeld = false; // V17.2: Previene que checkAndRecoverAudio() robe el canal 4 de Android
+        abandonAudioFocus();       // V17.2: Soltamos el control de Android explícitamente para el MediaPlayer
+        setAudioParams(false);     // V18.1: Avisar al OS de que FM ya no suena (libera el mixer)
         try {
             if (mSetChannel != null && mMcuManager != null) {
-                mSetChannel.invoke(mMcuManager, (byte) 4);
-                Log.d(TAG, "returnAudioChannel: mSetChannel(4) enviado");
+                mSetChannel.invoke(mMcuManager, (byte) 4); // V13.5: RPC_SetChannel(4) - Restore to Android
+                Log.d(TAG, "returnAudioChannel: Radio Channel 4 (MPU) restore requested");
+        
+                setMute(false);
+                
+                // V18.3: Segundo desmuteo retardado para ganar cualquier carrera contra el sistema
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                    if (mIsOnlineStreamingActive) {
+                        try {
+                            setMute(false);
+                            setAudioParams(false);
+                            Log.d(TAG, "returnAudioChannel: Desmuteo de seguridad REFORZADO ejecutado");
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error in delayed un-mute", e);
+                        }
+                    }
+                }, 500);
             }
         } catch (Exception e) {
             Log.e(TAG, "returnAudioChannel FAILED", e);
@@ -1762,6 +1825,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 // EXCEPCIÓN 1: Si acabamos de ceder el foco conscientemente, no peleamos
                 if (!mIsAudioFocusHeld) return;
                 
+                // EXCEPCIÓN 1.1: Si el streaming online está activo, el canal deseado es 4 (Android), no el 2 (Radio)
+                if (mIsOnlineStreamingActive) return;
+                
                 // EXCEPCIÓN 2: Si estamos en LLAMADA REAL, no peleamos
                 if (mIsInCall) return;
                 
@@ -1777,10 +1843,31 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
                 Log.w(TAG, "HEARTBEAT WARNING: Canal de audio secuestrado (Canal actual: " + currentChannel + "). Forzando recuperación a 2 (Radio).");
                 mSetChannel.invoke(mMcuManager, (byte) 2);
-                setMute(false); // Asegurarnos de desmutear
+                try {
+                    setMute(false); // Asegurarnos de desmutear
+                } catch (Exception ignored) {}
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error en checkAndRecoverAudio", e);
+            Log.e(TAG, "checkAndRecoverAudio FAILED", e);
         }
+    }
+
+    public void setOnlineStreamingActive(boolean active) {
+        this.mIsOnlineStreamingActive = active;
+        Log.d(TAG, "setOnlineStreamingActive: " + active);
+        if (active) {
+            // V18.3: Desmutear inmediatamente si el streaming empieza,
+            // por si AudioFocusChange disparó un mute justo antes.
+            try {
+                setMute(false);
+                setAudioParams(false);
+            } catch (Exception e) {
+                Log.e(TAG, "Error setting mute in setOnlineStreamingActive", e);
+            }
+        }
+    }
+
+    public boolean isOnlineStreamingActive() {
+        return mIsOnlineStreamingActive;
     }
 }

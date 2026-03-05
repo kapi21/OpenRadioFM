@@ -5,6 +5,7 @@ import com.example.openradiofm.data.source.PredefinedStationSource;
 import com.example.openradiofm.data.source.RootRDSSource;
 import com.example.openradiofm.data.source.SupabaseLogoSource;
 import com.example.openradiofm.data.source.WebRadioSource;
+import com.example.openradiofm.data.source.network.model.SupabaseLogoResponse;
 
 public class RadioRepository {
     private final RootRDSSource rootSource;
@@ -28,6 +29,9 @@ public class RadioRepository {
     // V16.2: Caché por nombre de emisora (Independiente de la frecuencia)
     // Evita búsquedas en red para diferentes frecuencias de la misma cadena.
     private final java.util.HashMap<String, String> nameLogoCache = new java.util.HashMap<>();
+    
+    // V16.4: Evita inundar el executor con peticiones idénticas si ya hay una en curso.
+    private final java.util.Set<String> pendingRequests = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
 
     // Repositorio central que combina:
     // - RootRDSSource: nombres RDS desde el fichero interno del servicio de radio
@@ -77,6 +81,10 @@ public class RadioRepository {
         }
     }
 
+    public SupabaseLogoSource getSupabaseSource() {
+        return supabaseSource;
+    }
+
     /**
      * Guarda un nombre personalizado para una frecuencia específica.
      */
@@ -85,6 +93,71 @@ public class RadioRepository {
             mPrefs.edit().remove("CUSTOM_" + freqKHz).apply();
         } else {
             mPrefs.edit().putString("CUSTOM_" + freqKHz, name.trim()).apply();
+        }
+        
+        // V16.5: Limpiar caché en memoria para forzar una nueva consulta a Supabase
+        String prefix = freqKHz + "_";
+        java.util.Iterator<java.util.Map.Entry<String, String>> it = logoCache.entrySet().iterator();
+        while (it.hasNext()) {
+            if (it.next().getKey().startsWith(prefix)) {
+                it.remove();
+            }
+        }
+        java.util.Iterator<String> pendIt = pendingRequests.iterator();
+        while (pendIt.hasNext()) {
+            if (pendIt.next().startsWith(prefix)) {
+                pendIt.remove();
+            }
+        }
+        // Eliminar también posibles URL de streaming cacheadas (incluso las vacías) para forzar reintento
+        mPrefs.edit().remove("STREAM_" + freqKHz).apply();
+    }
+
+    /**
+     * V17.1: Limpia la caché local (memoria y disco/SharedPreferences) de una frecuencia
+     * y fuerza la recarga desde Supabase (como si fuese la primera vez).
+     */
+    public void clearCacheForFrequency(int freqKHz) {
+        String prefix = freqKHz + "_";
+        
+        // 1. Limpiar Caché en Memoria
+        java.util.Iterator<java.util.Map.Entry<String, String>> it = logoCache.entrySet().iterator();
+        while (it.hasNext()) {
+            if (it.next().getKey().startsWith(prefix)) {
+                it.remove();
+            }
+        }
+        java.util.Iterator<String> pendIt = pendingRequests.iterator();
+        while (pendIt.hasNext()) {
+            if (pendIt.next().startsWith(prefix)) {
+                pendIt.remove();
+            }
+        }
+
+        // 2. Limpiar SharedPreferences
+        mPrefs.edit()
+            .remove("CUSTOM_" + freqKHz)
+            .remove("RDS_" + freqKHz)
+            .remove("PTY_" + freqKHz)
+            .remove("PI_" + freqKHz)
+            .remove("STREAM_" + freqKHz)
+            .apply();
+
+        // 3. Borrar logo local de la carpeta para forzar descarga
+        try {
+            java.io.File dir = new java.io.File("/sdcard/RadioLogos/");
+            if (dir.exists() && dir.isDirectory()) {
+                java.io.File[] files = dir.listFiles((d, name) -> name.startsWith(prefix));
+                if (files != null) {
+                    for (java.io.File file : files) {
+                        if (file.delete()) {
+                            android.util.Log.d("RadioRepository", "Logo cache borrado: " + file.getName());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            android.util.Log.e("RadioRepository", "Error borrando logo de disco", e);
         }
     }
 
@@ -156,6 +229,7 @@ public class RadioRepository {
         String rdsPsName = mPrefs.getString("RDS_" + freqKHz, null);
         String ptyStored = mPrefs.getString("PTY_" + freqKHz, null);
         String piCode = mPrefs.getString("PI_" + freqKHz, null);
+        String streamUrlStored = mPrefs.getString("STREAM_" + freqKHz, null);
         
         String rootName = null;
         if (useRoot && rootSource != null) {
@@ -174,6 +248,9 @@ public class RadioRepository {
         RadioStation station = new RadioStation(freqKHz, finalName);
         if (ptyStored != null) {
             station.setPty(ptyStored);
+        }
+        if (streamUrlStored != null) {
+            station.setStreamUrl(streamUrlStored);
         }
 
         // 2.5. Si no hay nombre aún, intentar desde el catálogo predefinido
@@ -195,12 +272,19 @@ public class RadioRepository {
         String cacheKey = freqKHz + "_" + (piCode != null ? piCode : "") + "_" + (finalName != null ? finalName.trim().toUpperCase() : "");
         if (logoCache.containsKey(cacheKey)) {
             String cachedPath = logoCache.get(cacheKey);
-            if ("NO_LOGO".equals(cachedPath)) {
-                return station; // No reintentar búsqueda online
+            if (!"NO_LOGO".equals(cachedPath)) {
+                station.setLogoUrl(cachedPath);
+                if (callback != null)
+                    callback.onLogoFound(cachedPath);
             }
-            station.setLogoUrl(cachedPath);
-            if (callback != null)
-                callback.onLogoFound(cachedPath);
+            
+            // V16.3: Si tenemos el logo en caché de memoria pero nos falta el streaming, pedirlo en background
+            boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_logos_online", true);
+            if (onlineLogosEnabled && streamUrlStored == null && !"NO_LOGO".equals(cachedPath)) {
+                fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
+            }
+            
             return station;
         }
 
@@ -213,6 +297,12 @@ public class RadioRepository {
             logoCache.put(cacheKey, cachedPath); // Sincronizar caché de freq
             if (callback != null)
                 callback.onLogoFound(cachedPath);
+                
+            boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_logos_online", true);
+            if (onlineLogosEnabled && streamUrlStored == null) {
+                fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
+            }
             return station;
         }
 
@@ -231,13 +321,17 @@ public class RadioRepository {
 
             // V16.2: Contribuir logo local a la nube si tenemos PI o RDS
             boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
-                    .getBoolean("pref_logos_online", false);
+                    .getBoolean("pref_logos_online", true);
 
-            if (onlineLogosEnabled) {
-                final String fPi = piCode;
-                final String fName = finalName;
-                final String fPath = logoPath;
-                logoExecutor.submit(() -> supabaseSource.upsertLogoData(fPi, fName, freqKHz, "file://" + fPath, getCountryCode()));
+            if (onlineLogosEnabled && streamUrlStored == null) {
+                // Si tenemos el logo local pero nos falta la URL de streaming, la pedimos a Supabase
+                fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
+            } else if (onlineLogosEnabled) {
+                // Desactivado temporalmente upsert para evitar error 400 (no unique constraint en ps_name)
+                // final String fPi = piCode;
+                // final String fName = finalName;
+                // final String fPath = logoPath;
+                // logoExecutor.submit(() -> supabaseSource.upsertLogoData(fPi, fName, freqKHz, "file://" + fPath, null));
             }
         } else {
             android.util.Log.d("RadioLogos", "NOT FOUND LOCAL");
@@ -246,50 +340,108 @@ public class RadioRepository {
 
             // V13.9: Default to FALSE for online logos for testing
             boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
-                    .getBoolean("pref_logos_online", false);
+                    .getBoolean("pref_logos_online", true);
 
             if (!onlineLogosEnabled) {
                 android.util.Log.d("RadioLogos", "Download skipped: pref_logos_online is disabled.");
                 return station; // Skip download entirely
             }
 
+            android.util.Log.e("DEBUG_FETCH", "Fetching freq=" + freqKHz + ", Name=" + finalName + ", PI=" + piCode + ", Provider=" + mPrefs.getInt("pref_logo_provider", 0));
+
+            if (pendingRequests.contains(cacheKey)) {
+                android.util.Log.e("DEBUG_FETCH", "Skipped due to pendingRequests: " + cacheKey);
+                // Ya hay una búsqueda en curso para esta combinación de freq+meta
+                return station;
+            }
+            pendingRequests.add(cacheKey);
+
             // V16.3: Evitar colas infinitas si ya tenemos 3 hilos en curso para esta frecuencia
             logoExecutor.submit(() -> {
-                String country = getCountryCode();
-                int provider = mPrefs.getInt("pref_logo_provider", 0); // 0=Supabase, 1=Web, 2=Both
-                String logoUrlToDownload = null;
+                try {
+                    String country = getCountryCode();
+                    int provider = mPrefs.getInt("pref_logo_provider", 0); // 0=Supabase, 1=Web, 2=Both
+                    String logoUrlToDownload = null;
 
-                // 1. Intentar Supabase si está habilitado (0 o 2)
-                if (provider == 0 || provider == 2) {
-                    logoUrlToDownload = supabaseSource.fetchLogo(piCode, stationNameForLambda, freqKHz, country);
-                }
+                    // 1. Intentar Supabase si está habilitado (0 o 2)
+                    SupabaseLogoResponse supabaseData = null;
+                    if (provider == 0 || provider == 2) {
+                        // Notificar inicio de actividad de red
+                        supabaseSource.notifyActivity(true);
 
-                // 2. Intentar RadioBrowser si Supabase falló o si se eligió solo Web (1 o 2)
-                if (logoUrlToDownload == null && (provider == 1 || provider == 2)) {
-                    logoUrlToDownload = webSource.fetchLogo(freqKHz, stationNameForLambda, country);
-                }
+                        try {
+                            String pi = piCode != null ? piCode : "";
+                            android.util.Log.d("RadioRepository", "SUPABASE FETCH START: PI=" + piCode + ", Name=" + stationNameForLambda);
 
-                if (logoUrlToDownload != null) {
-                    // Try to download and save with RDS name
-                    String savedPath = downloadAndSaveLogo(logoUrlToDownload, freqKHz, stationNameForLambda);
-                    if (savedPath != null) {
-                        station.setLogoUrl(savedPath);
-                        logoCache.put(cacheKey, savedPath);
-                        if (sanitizedNameKey != null) nameLogoCache.put(sanitizedNameKey, savedPath);
-                        if (callback != null)
-                            callback.onLogoFound(savedPath);
-                    } else {
-                        // Fallback to URL if download fails
-                        station.setLogoUrl(logoUrlToDownload);
-                        logoCache.put(cacheKey, logoUrlToDownload);
-                        if (sanitizedNameKey != null) nameLogoCache.put(sanitizedNameKey, logoUrlToDownload);
-                        if (callback != null)
-                            callback.onLogoFound(logoUrlToDownload);
+                            String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
+                            retrofit2.Call<java.util.List<SupabaseLogoResponse>> call = null;
+                            if (cName != null && !cName.isEmpty() && stationNameForLambda != null && stationNameForLambda.equals(cName)) {
+                                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "*");
+                            } else if (piCode != null && !piCode.isEmpty()) {
+                                call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "*");
+                            } else if (stationNameForLambda != null && !stationNameForLambda.trim().isEmpty()) {
+                                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "*");
+                            }
+
+                            if (call != null) {
+                                retrofit2.Response<java.util.List<SupabaseLogoResponse>> res = call.execute();
+                                if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
+                                    supabaseData = res.body().get(0);
+                                    logoUrlToDownload = supabaseData.getLogoUrl();
+                                    android.util.Log.d("RadioRepository", "SUPABASE SUCCESS: Logo=" + logoUrlToDownload + ", Stream=" + supabaseData.getStreamUrl());
+                                    // Guardar streamUrl en SharedPreferences (incluso si es null para evitar reconsultas) y en el objeto station
+                                    String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
+                                    mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();
+                                    if (!streamUrlToSave.isEmpty()) {
+                                        station.setStreamUrl(streamUrlToSave);
+                                    }
+                                } else {
+                                    android.util.Log.d("RadioRepository", "SUPABASE EMPTY OR ERROR: " + (res != null ? res.code() : "null"));
+                                    mPrefs.edit().putString("STREAM_" + freqKHz, "").apply();
+                                }
+                            }
+                        } catch (Exception e) {
+                            android.util.Log.e("RadioRepository", "Error fetching Supabase data: " + e.getMessage());
+                        } finally {
+                            // Garantizar que la animación de la UI dure lo suficiente para ser visible
+                            try { Thread.sleep(700); } catch (Exception ignored) {}
+                            // Notificar fin de actividad de red
+                            supabaseSource.notifyActivity(false);
+                        }
                     }
-                } else {
-                    // V16.3: CACHÉ NEGATIVA. Guardar que no hay logo para evitar reintentos inmediatos.
-                    logoCache.put(cacheKey, "NO_LOGO");
-                    // No ponemos en nameLogoCache para permitir reintentar con otra frecuencia.
+
+                    // 2. Intentar RadioBrowser si Supabase falló o si se eligió solo Web (1 o 2)
+                    if (logoUrlToDownload == null && (provider == 1 || provider == 2)) {
+                        logoUrlToDownload = webSource.fetchLogo(freqKHz, stationNameForLambda, country);
+                    }
+
+                    if (logoUrlToDownload != null) {
+                        // Try to download and save with RDS name
+                        String savedPath = downloadAndSaveLogo(logoUrlToDownload, freqKHz, stationNameForLambda);
+                        if (savedPath != null) {
+                            station.setLogoUrl(savedPath);
+                            logoCache.put(cacheKey, savedPath);
+                            if (sanitizedNameKey != null) nameLogoCache.put(sanitizedNameKey, savedPath);
+                            if (callback != null)
+                                callback.onLogoFound(savedPath);
+                        } else {
+                            // Fallback to URL if download fails
+                            station.setLogoUrl(logoUrlToDownload);
+                            logoCache.put(cacheKey, logoUrlToDownload);
+                            if (sanitizedNameKey != null) nameLogoCache.put(sanitizedNameKey, logoUrlToDownload);
+                            if (callback != null)
+                                callback.onLogoFound(logoUrlToDownload);
+                        }
+                    } else {
+                        // V16.3: CACHÉ NEGATIVA. Guardar que no hay logo para evitar reintentos inmediatos.
+                        logoCache.put(cacheKey, "NO_LOGO");
+                        // No ponemos en nameLogoCache para permitir reintentar con otra frecuencia.
+                    }
+                } catch (Exception e) {
+                    android.util.Log.e("RadioRepository", "Fatal loop error: " + e.getMessage());
+                } finally {
+                    // SIEMPRE liberar la petición pendiente al terminar (éxito o fallo)
+                    pendingRequests.remove(cacheKey);
                 }
             });
         }
@@ -383,7 +535,7 @@ public class RadioRepository {
                     .getBoolean("pref_logos_online", false);
             if (onlineAfterDownload) {
                 String pi = mPrefs.getString("PI_" + freqKHz, null);
-                supabaseSource.upsertLogoData(pi, rdsName, freqKHz, urlString, getCountryCode());
+                supabaseSource.upsertLogoData(pi, rdsName, freqKHz, urlString, null);
             }
 
             return destFile.getAbsolutePath();
@@ -416,5 +568,55 @@ public class RadioRepository {
         } catch (Exception e) {
             return "ES";
         }
+    }
+
+    // Método auxiliar para buscar la URL de streaming en background
+    private void fetchStreamUrlAsync(String cacheKey, int freqKHz, String finalName, String piCode, RadioStation station) {
+        String streamCacheKey = cacheKey + "_STREAM";
+        if (pendingRequests.contains(streamCacheKey)) return;
+        pendingRequests.add(streamCacheKey);
+        
+        final String stationNameForLambda = finalName;
+        logoExecutor.submit(() -> {
+            try {
+                int provider = mPrefs.getInt("pref_logo_provider", 0);
+                if (provider == 0 || provider == 2) {
+                    supabaseSource.notifyActivity(true);
+                    try {
+                        String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
+                        retrofit2.Call<java.util.List<com.example.openradiofm.data.source.network.model.SupabaseLogoResponse>> call = null;
+                        if (cName != null && !cName.isEmpty() && stationNameForLambda != null && stationNameForLambda.equals(cName)) {
+                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "*");
+                        } else if (piCode != null && !piCode.isEmpty()) {
+                            call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "*");
+                        } else if (stationNameForLambda != null && !stationNameForLambda.trim().isEmpty()) {
+                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "*");
+                        }
+
+                        if (call != null) {
+                            retrofit2.Response<java.util.List<com.example.openradiofm.data.source.network.model.SupabaseLogoResponse>> res = call.execute();
+                            if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
+                                com.example.openradiofm.data.source.network.model.SupabaseLogoResponse supabaseData = res.body().get(0);
+                                String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
+                                mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();
+                                if (!streamUrlToSave.isEmpty()) {
+                                    station.setStreamUrl(streamUrlToSave);
+                                }
+                            } else {
+                                mPrefs.edit().putString("STREAM_" + freqKHz, "").apply();
+                            }
+                        }
+                    } finally {
+                        // Garantizar que la animación de la UI dure lo suficiente para ser visible
+                        try { Thread.sleep(700); } catch (Exception ignored) {}
+                        supabaseSource.notifyActivity(false);
+                    }
+                }
+            } catch (Exception e) {
+                android.util.Log.e("RadioRepository", "Error fetching stream URL: " + e.getMessage());
+            } finally {
+                pendingRequests.remove(streamCacheKey);
+            }
+        });
     }
 }

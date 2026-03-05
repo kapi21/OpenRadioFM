@@ -96,36 +96,35 @@ public class PresetManager {
             }
             return;
         }
-
         if (tvPresets[index] != null) {
-            RadioStation s = mRepository.getStationInfo(freq, null);
-            String displayName = s.getName();
+            RadioStation s = null;
+            if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
+                s = mRepository.getStationInfo(freq, null);
+            }
+            String displayName = (s != null) ? s.getName() : "";
             if (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+")) {
                 tvPresets[index].setText(displayName);
             } else {
-                // V12.2: Si estamos escaneando y no hay nombre, NO mostrar la frecuencia para evitar "correr"
-                if (mActivity.mEngine != null && mActivity.mEngine.isScanning()) {
-                    tvPresets[index].setText("Buscando...");
-                } else {
-                    tvPresets[index].setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
-                }
+                tvPresets[index].setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
             }
             tvPresets[index].setVisibility(View.VISIBLE);
         }
 
         final int fIndex = index;
-        mRepository.getStationInfo(freq, logoUrl -> {
-            mActivity.runOnUiThread(() -> {
-                if (logoUrl != null && ivPresets[fIndex] != null) {
-                    Glide.with(mActivity)
-                            .load(logoUrl)
-                            .transition(DrawableTransitionOptions.withCrossFade())
-                            .into(ivPresets[fIndex]);
-                } else if (ivPresets[fIndex] != null) {
-                    ivPresets[fIndex].setImageDrawable(null);
-                }
+        if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
+            mRepository.getStationInfo(freq, logoUrl -> {
+                mActivity.runOnUiThread(() -> {
+                    if (logoUrl != null && ivPresets[fIndex] != null) {
+                        Glide.with(mActivity)
+                                .load(logoUrl)
+                                .transition(DrawableTransitionOptions.withCrossFade())
+                                .into(ivPresets[fIndex]);
+                    } else if (ivPresets[fIndex] != null) {
+                        ivPresets[fIndex].setImageDrawable(null);
+                    }
+                });
             });
-        });
+        }
     }
 
     /**

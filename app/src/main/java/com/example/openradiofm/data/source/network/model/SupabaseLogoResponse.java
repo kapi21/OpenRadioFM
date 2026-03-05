@@ -12,8 +12,8 @@ public class SupabaseLogoResponse {
     @SerializedName("pi_code")
     private String piCode;
 
-    @SerializedName("rds_name")
-    private String rdsName;
+    @SerializedName("ps_name")
+    private String psName;
 
     @SerializedName("frequency")
     private Integer frequency;
@@ -21,23 +21,27 @@ public class SupabaseLogoResponse {
     @SerializedName("logo_url")
     private String logoUrl;
 
-    @SerializedName("country")
-    private String country;
+    @SerializedName("stream_url")
+    private String streamUrl;
 
     public SupabaseLogoResponse() {}
 
-    public SupabaseLogoResponse(String piCode, String rdsName, Integer frequency, String logoUrl, String country) {
+    public SupabaseLogoResponse(String piCode, String psName, Integer frequency, String logoUrl) {
         this.piCode = piCode;
-        this.rdsName = rdsName;
+        this.psName = psName;
         this.frequency = frequency;
         this.logoUrl = logoUrl;
-        this.country = country;
+    }
+
+    public SupabaseLogoResponse(String piCode, String psName, Integer frequency, String logoUrl, String streamUrl) {
+        this(piCode, psName, frequency, logoUrl);
+        this.streamUrl = streamUrl;
     }
 
     // Getters
     public String getPiCode() { return piCode; }
-    public String getRdsName() { return rdsName; }
+    public String getPsName() { return psName; }
     public Integer getFrequency() { return frequency; }
     public String getLogoUrl() { return logoUrl; }
-    public String getCountry() { return country; }
+    public String getStreamUrl() { return streamUrl; }
 }

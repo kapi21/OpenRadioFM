@@ -11,6 +11,8 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     
     <!-- V16: Permisos QS6/NWD para intentar eludir el error de apertura del socket /dev/audio-dsp -->
     <uses-permission android:name="android.permission.ACCESS_FM_RADIO" />
@@ -32,6 +34,7 @@
     </queries>
 
     <application
+        android:usesCleartextTraffic="true"
         android:requestLegacyExternalStorage="true"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"

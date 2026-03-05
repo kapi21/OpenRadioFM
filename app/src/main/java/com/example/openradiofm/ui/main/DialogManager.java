@@ -52,26 +52,41 @@ public class DialogManager {
         builder.setPositiveButton("Guardar", (dialog, which) -> {
             String newName = input.getText().toString().trim();
             if (!newName.isEmpty()) {
-                mActivity.mRepository.saveRdsName(currentFreq, newName);
+                // V16.4: Usar setCustomName (CUSTOM_) en vez de saveRdsName (RDS_)
+                mActivity.mRepository.setCustomName(currentFreq, newName);
                 mActivity.showToast("Nombre guardado: " + newName);
 
-                // Refrescar para que el PresetManager vea el cambio (V13)
+                // V16.4: Notificar al RDSManager para que el custom tenga prioridad
+                if (mActivity.mRdsManager != null) {
+                    mActivity.mRdsManager.setCustomNameOverride(newName);
+                }
+
+                // Refrescar para que el PresetManager vea el cambio
                 if (mActivity.mPresetManager != null) {
                     mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
                 }
-                mActivity.refreshRadioStatus();
+                // V16.4: Forzar refresco de la frecuencia en pantalla
+                mActivity.runOnUiThread(() -> mActivity.updateFrequencyDisplay(currentFreq));
             }
         });
 
         builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
 
         builder.setNeutralButton("Restaurar Original", (dialog, which) -> {
-            mActivity.mRepository.saveRdsName(currentFreq, null);
+            // V16.4: Limpiar nombre custom
+            mActivity.mRepository.setCustomName(currentFreq, null);
             mActivity.showToast("Nombre restaurado");
+
+            // V16.4: Limpiar override en RDSManager
+            if (mActivity.mRdsManager != null) {
+                mActivity.mRdsManager.clearCustomNameOverride();
+            }
+
             if (mActivity.mPresetManager != null) {
                 mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
             }
-            mActivity.refreshRadioStatus();
+            // V16.4: Forzar refresco
+            mActivity.runOnUiThread(() -> mActivity.updateFrequencyDisplay(currentFreq));
         });
 
         builder.show();
@@ -125,7 +140,7 @@ public class DialogManager {
 
         // Switches
         if (swLogosOnline != null) {
-            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", false));
+            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", true));
             swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
                 if (checked) {
@@ -164,8 +179,8 @@ public class DialogManager {
                 mActivity.mPrefs.edit().putBoolean("pref_show_status_bar_v2", checked).apply();
                 mActivity.showToast(checked ? mActivity.getString(R.string.status_bar_enabled)
                         : mActivity.getString(R.string.status_bar_disabled));
-                if (!mActivity.mIsV3)
-                    mActivity.showToast("Reinicia la app para aplicar el cambio de barra de estado");
+                // V13.9: Aplicar visibilidad inmediatamente sin reiniciar
+                mActivity.applyStatusBarVisibility();
             });
         }
 

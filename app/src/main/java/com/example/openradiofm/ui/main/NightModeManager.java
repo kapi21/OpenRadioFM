@@ -118,7 +118,11 @@ public class NightModeManager {
         tintImageView(R.id.ivAfIcon, nightBlue);
         tintImageView(R.id.ivTaIcon, nightBlue);
         tintImageView(R.id.ivTpIcon, nightBlue);
-        tintImageView(R.id.ivDataActivity, nightBlue); // V16.2: New Data Activity Icon
+        
+        // V17: El ID real del icono es ivDataActivityIcon, el wrapper FrameLayout es ivDataActivity.
+        // tintImageView ahora es seguro contra casts.
+        tintImageView(R.id.ivDataActivityIcon, nightBlue);
+        tintImageView(R.id.ivDataActivity, nightBlue);
 
         // Botones de control
         int[] buttonIds = {
@@ -179,7 +183,10 @@ public class NightModeManager {
         clearImageViewFilter(R.id.ivAfIcon);
         clearImageViewFilter(R.id.ivTaIcon);
         clearImageViewFilter(R.id.ivTpIcon);
-        clearImageViewFilter(R.id.ivDataActivity);
+        
+        // V17: El ID real del icono es ivDataActivityIcon, el wrapper FrameLayout es ivDataActivity
+        clearImageViewFilter(R.id.ivDataActivityIcon);
+        clearImageViewFilter(R.id.ivDataActivity); // Safe helper handles FrameLayout too now
 
         // Botones
         int[] buttonIds = {
@@ -204,14 +211,16 @@ public class NightModeManager {
     // --- Helpers privados ---
 
     private void tintImageView(int resId, int color) {
-        ImageView iv = mActivity.findViewById(resId);
-        if (iv != null) {
-            iv.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
+        android.view.View v = mActivity.findViewById(resId);
+        if (v instanceof ImageView) {
+            ((ImageView) v).setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
         }
     }
 
     private void clearImageViewFilter(int resId) {
-        ImageView iv = mActivity.findViewById(resId);
-        if (iv != null) iv.clearColorFilter();
+        android.view.View v = mActivity.findViewById(resId);
+        if (v instanceof ImageView) {
+            ((ImageView) v).clearColorFilter();
+        }
     }
 }

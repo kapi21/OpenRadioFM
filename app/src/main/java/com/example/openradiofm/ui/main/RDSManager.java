@@ -29,6 +29,7 @@ public class RDSManager {
     private String mCurrentPi;
     private String mCurrentPty;
     private String mLastConfirmedName; // V5.3: RDS PS Substitution
+    private String mCustomNameOverride; // V16.4: Override del usuario al editar nombre
     private boolean mHasRdsLock = false;
 
     public interface RDSListener {
@@ -118,6 +119,7 @@ public class RDSManager {
         if (tvPty != null) {
             tvPty.setText(displayLabel);
             tvPty.setVisibility(View.VISIBLE);
+            tvPty.setSelected(true); // V16.x: Activar Marquee
             // Log.d(TAG, "PTY UI Updated: " + displayLabel + " (Code: " + ptyCode + ")");
         }
 
@@ -136,6 +138,7 @@ public class RDSManager {
         mCurrentPi = null;
         mCurrentPty = null;
         mLastConfirmedName = null; // V5.3: RDS PS Substitution Reset
+        mCustomNameOverride = null; // V16.4: Reset custom override
         mHasRdsLock = false;
 
         if (clearTexts) {
@@ -194,11 +197,11 @@ public class RDSManager {
      * 3. null (mostrar frecuencia numérica)
      */
     public String getDisplayName(int freqKhz) {
-        // 1. RDS en vivo
-        if (mLastConfirmedName != null && !mLastConfirmedName.isEmpty()) {
-            return mLastConfirmedName;
+        // V16.4: 1. Nombre custom del usuario (máxima prioridad si fue editado explícitamente)
+        if (mCustomNameOverride != null && !mCustomNameOverride.isEmpty()) {
+            return mCustomNameOverride;
         }
-        // 2. Nombre personalizado del usuario
+        // 2. Nombre personalizado guardado en SharedPreferences
         try {
             String customName = mContext.getSharedPreferences("RadioStationNames",
                     android.content.Context.MODE_PRIVATE)
@@ -209,7 +212,27 @@ public class RDSManager {
         } catch (Exception e) {
             Log.e(TAG, "Error reading custom name for freq " + freqKhz, e);
         }
-        // 3. Sin nombre
+        // 3. RDS en vivo
+        if (mLastConfirmedName != null && !mLastConfirmedName.isEmpty()) {
+            return mLastConfirmedName;
+        }
+        // 4. Sin nombre
         return null;
+    }
+
+    /**
+     * V16.4: Establece un override de nombre custom del usuario.
+     * Tiene máxima prioridad en getDisplayName() hasta resetear.
+     */
+    public void setCustomNameOverride(String name) {
+        mCustomNameOverride = name;
+    }
+
+    /**
+     * V16.4: Limpia el override de nombre custom.
+     * Se vuelve a la lógica normal de prioridades.
+     */
+    public void clearCustomNameOverride() {
+        mCustomNameOverride = null;
     }
 }

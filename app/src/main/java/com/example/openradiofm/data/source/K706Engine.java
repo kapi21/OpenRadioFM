@@ -195,6 +195,31 @@ public class K706Engine implements RadioEngine {
         try { mManager.enforceAudioRecovery(); } catch (Exception e) { e.printStackTrace(); }
     }
 
+    @Override
+    public void switchToAndroidAudio() {
+        if (mManager == null) return;
+        try { 
+            mManager.setOnlineStreamingActive(true); // V18.3: Evitar mutes por competencia de foco
+            mManager.returnAudioChannel(); 
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void switchToFmAudio() {
+        if (mManager == null) return;
+        try { 
+            mManager.setOnlineStreamingActive(false); // V18.3: Volvemos a modo radio estándar
+            mManager.enforceAudioChannelRecovery(); 
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @Override
+    public void setOnlineStreamingActive(boolean active) {
+        if (mManager != null) {
+            mManager.setOnlineStreamingActive(active);
+        }
+    }
+
     // === RDS ===
 
     @Override

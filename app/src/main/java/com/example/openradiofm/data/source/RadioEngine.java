@@ -37,6 +37,9 @@ public interface RadioEngine {
     void openEq(Context context);
     boolean requestPlayAudio();
     void enforceAudioRecovery(); // Fuerza la recuperación del hardware de audio (ej: canal MCU)
+    void switchToAndroidAudio(); // Conmuta el MCU al canal de Android (MPU)
+    void switchToFmAudio();      // Conmuta el MCU al canal de Radio FM
+    void setOnlineStreamingActive(boolean active); // V18.4: Notificar modo streaming para protecciones de audio
 
     // === RDS ===
     void toggleRdsFeature(int type); // 0=RDS global, 1=AF, 2=TA

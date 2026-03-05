@@ -1,4 +1,4 @@
-# Handoff y Roadmap de Desarrollo (V16.3)
+# Handoff y Roadmap de Desarrollo (V18.5)
 
 Este documento sirve como guía para futuros desarrolladores y establece los próximos pasos para OpenRadioFM tras la refactorización profesional.
 
@@ -17,7 +17,8 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
 - El motor **K706** requiere permisos de Root para interactuar con la consola `/dev/ttyMT1`.
 - El motor **MT8163** utiliza una combinación de AIDL (`IRadioServiceAPI`) y reflexión para el RDS oculto.
 - **MediaSession**: El sistema de medios de Android Auto se desconecta explícitamente en `onDestroy` para liberar recursos.
-- **Investigación K706 (Marzo 2026)**: El motor está instrumentado con prefijos `🔬 [RESEARCH]` en el Logcat para cazar PI Codes y la fuerza de señal real (RSSI).
+- **Investigación K706 (Marzo 2026)**: ✅ Canal de audio FM -> Streaming resuelto. Se usa `RPC_SetChannel(4)` con delay y `AUDIOFOCUS_GAIN` para forzar la apertura del MPU.
+- **Estado de Bloqueo**: El sistema de streaming online es ahora compatible con MP3, HLS y AAC.
 - **Sistema de Logos Online (V16.3)**: El toggle `pref_logos_online` se almacena en `RadioPresets`. Cuando está desactivado, no se realizan peticiones de red ni se sube nada al servidor.
 
 ## Cambios Sesión 4 Marzo 2026
@@ -94,5 +95,10 @@ Este documento sirve como guía para futuros desarrolladores y establece los pr�
     - [ ] Conmutación inteligente (Seamless switching) entre FM y Stream según calidad de señal.
     - [ ] Recurso `cloud.png` ya añadido para futura UI de streaming.
 
----
+### Fase 7: Streaming y Audio Universal (Fase Actual V18.5)
+- [x] **Soporte HLS/M3U8/AAC**: Integración de módulos ExoPlayer y OkHttp.
+- [x] **Universalización de Motores**: `setOnlineStreamingActive` implementado en K706, MT8163 y QS6.
+- [x] **Audio Focus Fix**: Manejo de interrupciones para evitar que la MCU se quede con el audio.
+- [x] **Limpieza de UI**: Eliminación de "Buscando..." en presets y Toasts de debug.
+- [ ] **Seek por Hardware**: Investigar por qué intercepta pulsaciones como volumen en K706.
 *OpenRadioFM development roadmap - Actualizado 4 Marzo 2026*

@@ -118,58 +118,74 @@
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
         app:layout_constraintBottom_toTopOf="@+id/btnSeekDown">
 
-        <!-- Top Left Corner: Band + Stereo -->
+        <!-- V17.1: Contenedor Superior de Iconos (Banda, Estéreo, Nube) -->
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:id="@+id/boxIcons"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="top|start"
-            android:layout_marginTop="12dp"
-            android:layout_marginStart="4dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
             android:orientation="horizontal"
-            android:gravity="center_vertical">
+            android:gravity="center_vertical"
+            android:elevation="20dp"
+            android:translationZ="20dp">
             
             <ImageView
                 android:id="@+id/ivBandIndicator"
-                android:layout_width="160dp"
-                android:layout_height="60dp"
-                android:layout_marginEnd="12dp"
+                android:layout_width="140dp"
+                android:layout_height="50dp"
+                android:layout_marginEnd="8dp"
                 android:scaleType="fitStart"
                 android:src="@drawable/radio_fm1" />
                 
             <ImageView
                 android:id="@+id/ivStereoIcon"
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
+                android:layout_width="60dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="8dp"
                 android:adjustViewBounds="true"
                 android:scaleType="fitCenter"
-                android:visibility="gone"
+                android:visibility="invisible"
                 android:src="@drawable/fwt" />
 
-            <ImageView
+            <FrameLayout
                 android:id="@+id/ivDataActivity"
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
-                android:layout_marginStart="8dp"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:visibility="gone"
-                android:src="@drawable/datos" />
+                android:layout_width="100dp"
+                android:layout_height="65dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:visibility="invisible">
+                
+                <ImageView
+                    android:id="@+id/ivDataActivityIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="4dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/cloud" />
+            </FrameLayout>
         </LinearLayout>
 
-        <!-- Frecuencia centrada (ocupa todo el espacio) -->
+        <!-- Frecuencia centrada -->
+        <!-- V17.1: Ajustada altura y padding para dar espacio al boxIcons y evitar truncado en 1280x720 -->
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tvFrequency"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginTop="45dp"
             android:gravity="center"
             android:text="100.00"
             android:textColor="@color/white"
             android:textStyle="bold"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
+            android:paddingBottom="10dp"
             app:autoSizeTextType="uniform"
             app:autoSizeMinTextSize="14sp"
-            app:autoSizeMaxTextSize="@dimen/text_size_frequency_large"
+            app:autoSizeMaxTextSize="100sp"
             app:autoSizeStepGranularity="2sp"
             android:maxLines="1"
             android:includeFontPadding="false" />
@@ -226,9 +242,9 @@
 
                 <ImageView
                     android:id="@+id/ivPtyIcon"
-                    android:layout_width="24dp"
-                    android:layout_height="24dp"
-                    android:layout_marginEnd="4dp"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginEnd="6dp"
                     android:scaleType="fitCenter"
                     android:visibility="gone"
                     tools:src="@drawable/ic_pty_music"
@@ -236,14 +252,19 @@
 
                 <TextView
                     android:id="@+id/tvPty"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text=""
                     android:textColor="@color/white"
-                    android:textSize="13sp"
+                    android:textSize="18sp"
                     android:textStyle="bold"
-                    android:maxLines="1"
-                    android:ellipsize="end"
+                    android:gravity="start|center_vertical"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:scrollHorizontally="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
                     android:visibility="gone" />
             </LinearLayout>
 
@@ -285,6 +306,8 @@
             </LinearLayout>
         </LinearLayout>
     </FrameLayout>
+    
+    <!-- V17.1: ivDataActivity se ha vuelto a integrar dentro de boxIcons con posicionamiento corregido -->
 
     <!-- Seek Buttons -->
     <!-- Navigation & Seek Buttons -->

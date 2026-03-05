@@ -10,7 +10,7 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface SupabaseApi {
-    @GET("rest/v1/logos")
+    @GET("rest/v1/stations")
     Call<List<SupabaseLogoResponse>> getLogosByPi(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -18,15 +18,15 @@ public interface SupabaseApi {
             @Query("select") String select
     );
 
-    @GET("rest/v1/logos")
+    @GET("rest/v1/stations")
     Call<List<SupabaseLogoResponse>> getLogosByName(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
-            @Query("rds_name") String nameFilter,
+            @Query("ps_name") String nameFilter,
             @Query("select") String select
     );
 
-    @GET("rest/v1/logos")
+    @GET("rest/v1/stations")
     Call<List<SupabaseLogoResponse>> getLogosByFreq(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
@@ -35,7 +35,7 @@ public interface SupabaseApi {
     );
 
     @Headers({"Content-Type: application/json"})
-    @POST("rest/v1/logos")
+    @POST("rest/v1/stations")
     Call<Void> upsertLogo(
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,

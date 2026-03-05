@@ -125,6 +125,15 @@
                 android:textSize="13sp"
                 android:text="Icons by Icons8"
                 android:layout_gravity="center_horizontal"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="#AAAAAA"
+                android:textSize="13sp"
+                android:text="Streaming by www.tdtchannels.com"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="4dp"/>
         </LinearLayout>
 
         <!-- Close -->

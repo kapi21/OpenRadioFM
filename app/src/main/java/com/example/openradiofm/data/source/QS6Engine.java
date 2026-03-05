@@ -365,6 +365,24 @@ public class QS6Engine implements RadioEngine {
         setMute(false);
     }
 
+    @Override
+    public void switchToAndroidAudio() {
+        requestStopAudio(); // Cambia a SOURCE_ANDROID
+    }
+
+    @Override
+    public void switchToFmAudio() {
+        requestPlayAudio(); // Cambia a SOURCE_RADIO
+    }
+
+    @Override
+    public void setOnlineStreamingActive(boolean active) {
+        // En QS6 el cambio de fuente ya es potente, no necesitamos flag interno por ahora
+        if (active) {
+            switchToAndroidAudio();
+        }
+    }
+
     public void requestStopAudio() {
         if (mContext == null)
             return;

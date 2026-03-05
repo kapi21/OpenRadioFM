@@ -59,6 +59,7 @@
     <!-- ROW 1: TOP STATUS & RDS (15%) -->
     <!-- ====================================================================================== -->
 
+    <!-- Barra superior: Band + ST + Data (izquierda) | RDS RT (centro) | CarLogo (derecha) -->
     <LinearLayout
         android:id="@+id/containerBand"
         android:layout_width="wrap_content"
@@ -80,33 +81,24 @@
 
         <ImageView
             android:id="@+id/ivStereoIcon"
-            android:layout_width="wrap_content"
-            android:layout_height="24dp"
+            android:layout_width="80dp"
+            android:layout_height="60dp"
             android:layout_marginEnd="8dp"
             android:adjustViewBounds="true"
             android:scaleType="fitCenter"
-            android:visibility="gone"
+            android:visibility="invisible"
             android:src="@drawable/fwt" />
-
-        <ImageView
-            android:id="@+id/ivDataActivity"
-            android:layout_width="wrap_content"
-            android:layout_height="24dp"
-            android:layout_marginStart="8dp"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:visibility="gone"
-            android:src="@drawable/datos" />
     </LinearLayout>
 
-    <LinearLayout
+    <!-- RDS RT: Centrado con tvFrequency (boxFrequency utiliza guideline_col1/col2 en V2, aquí usamos pesos) -->
+    <!-- Para que quede centrado con tvFrequency (que está en boxFrequency), usamos las mismas restricciones horizontales -->
+    <FrameLayout
         android:id="@+id/containerRds"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:gravity="center"
-        android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
-        app:layout_constraintEnd_toStartOf="@+id/ivCarLogo"
+        app:layout_constraintEnd_toStartOf="@+id/ivDataActivity"
         app:layout_constraintStart_toEndOf="@+id/containerBand"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -118,7 +110,7 @@
             android:visibility="gone"
             android:text="" />
 
-        <!-- RDS RT: Ahora ocupa todo el espacio del containerRds -->
+        <!-- RDS RT: Ocupa su espacio propio, centrado, sin solaparse con ST/Data -->
         <TextView
             android:id="@+id/tvRdsInfo"
             android:layout_width="match_parent"
@@ -139,8 +131,34 @@
             android:includeFontPadding="false"
             android:focusable="true"
             android:focusableInTouchMode="true" />
+    </FrameLayout>
 
-    </LinearLayout>
+    <!-- V18.2: Cloud movido a la derecha de RDS RT (izquierda de CarLogo) -->
+    <FrameLayout
+        android:id="@+id/ivDataActivity"
+        android:layout_width="80dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:elevation="10dp"
+        android:translationZ="10dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toStartOf="@+id/ivCarLogo"
+        app:layout_constraintTop_toTopOf="parent">
+        
+        <ImageView
+            android:id="@+id/ivDataActivityIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/cloud" />
+    </FrameLayout>
+
+
 
     <ImageView
         android:id="@+id/ivCarLogo"
@@ -254,10 +272,11 @@
                     android:src="@drawable/level_signal"
                     android:visibility="visible" />
 
-                <!-- PTY Icon + Text ligados a la señal -->
+                <!-- PTY Icon + Text ligados a la señal, usa el espacio delástico -->
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
                     android:gravity="center_vertical"
@@ -275,24 +294,22 @@
 
                     <TextView
                         android:id="@+id/tvPty"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="PTY NONE"
                         android:textColor="@color/white"
                         android:textSize="18sp"
                         android:textStyle="bold"
                         android:visibility="gone"
-                        android:gravity="center"
-                        android:maxLines="1"
-                        android:ellipsize="end"
+                        android:gravity="start|center_vertical"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
                         android:includeFontPadding="false" />
                 </LinearLayout>
-
-                <!-- Separador elástico para enviar el resto de iconos a la derecha -->
-                <View
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1" />
 
                 <!-- RDS Status Icons (AF, TA, TP) -->
                 <LinearLayout

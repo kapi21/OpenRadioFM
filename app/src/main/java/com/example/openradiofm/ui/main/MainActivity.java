@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             lang = prefs.getString("app_language", "es");
             // V13.9: Default to FALSE for online logos as requested for testing
             if (!prefs.contains("pref_logos_online")) {
-                prefs.edit().putBoolean("pref_logos_online", false).apply();
+                prefs.edit().putBoolean("pref_logos_online", true).apply();
             }
         } catch (Exception e) {
         }
@@ -146,13 +146,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public String mCurrentPty = null;
     public String mLastLogoUrl = "";
     public java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
+    private com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
+    private com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
 
     // V5.0: UI Elements (Fixing Compilation Errors)
     private TextView tvPty;
     private ImageView ivSignalLevel;
     private ImageView ivPtyIcon; // V5.0: Categorical Icon
     private ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
-    private ImageView ivDataActivity; // V16.2: Cloud Data indicator
+    private android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
+    private ImageView ivDataActivityIcon; // El icono real que cambia de color
     private int mActiveDataOps = 0; // V16.2: Concurrent Supabase Operations
     private android.animation.ObjectAnimator mDataBlinkAnimator;
 
@@ -430,7 +433,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public void onStereoChanged(boolean stereo) {
         runOnUiThread(() -> {
             if (ivStereoIcon != null)
-                ivStereoIcon.setVisibility(stereo ? android.view.View.VISIBLE : android.view.View.GONE);
+                ivStereoIcon.setVisibility(stereo ? android.view.View.VISIBLE : android.view.View.INVISIBLE);
             if (ivSignalLevel != null) {
                 // V12.4: Actualizar color de señal según estado Stereo (Verde=Stereo,
                 // Amarillo=Mono)
@@ -479,18 +482,101 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         Log.d(TAG, "updateDataActivityUI: onlineEnabled=" + onlineEnabled + ", isConnected=" + isConnected + ", mActiveDataOps=" + mActiveDataOps);
 
         if (!onlineEnabled) {
-            ivDataActivity.setVisibility(View.GONE);
+            ivDataActivity.setVisibility(View.INVISIBLE);
             stopDataBlink();
             return;
         }
 
         // V16.2: Siempre visible si está activado para indicar soporte nube.
         ivDataActivity.setVisibility(View.VISIBLE);
+        
+        // V16.3: Long click para sincronizar base de datos desde radio.m3u8 local
+        ivDataActivity.setOnLongClickListener(v -> {
+            if (mSupabaseSyncManager != null) {
+                showToast("Sincronizando con base de datos central...");
+                mSupabaseSyncManager.syncFromM3u("/sdcard/radio.m3u8");
+            }
+            return true;
+        });
 
         if (mActiveDataOps > 0) {
             startDataBlink();
         } else {
             stopDataBlink();
+        }
+
+        // V17.0: Indicador visual de Streaming Online activo
+        if (mOnlineStreamManager != null && ivDataActivityIcon != null) {
+            if (mOnlineStreamManager.isPlaying()) {
+                // Streaming active -> RED
+                ivDataActivityIcon.setVisibility(View.VISIBLE);
+                ivDataActivityIcon.setColorFilter(android.graphics.Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
+            } else if (mOnlineStreamManager.isLoading()) {
+                ivDataActivityIcon.setColorFilter(android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
+            } else {
+                ivDataActivityIcon.clearColorFilter();
+            }
+        }
+    }
+
+    /**
+     * V17.0: Configura el toggle de Radio Online vs Radio FM.
+     */
+    private void setupOnlineStreaming() {
+        mOnlineStreamManager = new com.example.openradiofm.ui.main.OnlineStreamManager(this, mPlaybackManager);
+        mOnlineStreamManager.setListener(new com.example.openradiofm.ui.main.OnlineStreamManager.StreamListener() {
+            @Override
+            public void onStreamStatusChanged(boolean isLoading, boolean isPlaying) {
+                runOnUiThread(() -> updateDataActivityUI());
+            }
+
+            @Override
+            public void onStreamError(String message) {
+                runOnUiThread(() -> showToast(message));
+            }
+        });
+
+        if (ivDataActivity != null) {
+            ivDataActivity.setOnClickListener(v -> {
+                int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
+                if (freq <= 0) return;
+
+                // Obtener datos de la emisora actual (incluyendo streamUrl)
+                com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+                if (station != null && station.getStreamUrl() != null && !station.getStreamUrl().isEmpty()) {
+                    mOnlineStreamManager.toggleStream(station.getStreamUrl());
+                    if (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading()) {
+                        showToast("Iniciando Radio Online...");
+                    } else {
+                        showToast("Volviendo a Radio FM...");
+                    }
+                } else {
+                    showToast("Streaming no disponible para esta emisora");
+                }
+            });
+
+            // V17.1: Pulsación larga para forzar recarga (borrar caché) de Supabase
+            ivDataActivity.setOnLongClickListener(v -> {
+                int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
+                if (freq > 0) {
+                    showToast("Resincronizando emisora...");
+                    mRepository.clearCacheForFrequency(freq);
+                    
+                    // Asegurar que forzamos también la recarga visual deteniendo el posible stream actual
+                    if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
+                        mOnlineStreamManager.stopStream();
+                    }
+
+                    // Forzar recarga en segundo plano
+                    new Thread(() -> {
+                        mRepository.getStationInfo(freq, logoUrl -> {
+                            runOnUiThread(() -> updateFrequencyDisplay(freq));
+                        });
+                        runOnUiThread(() -> updateFrequencyDisplay(freq));
+                    }).start();
+                }
+                return true;
+            });
         }
     }
 
@@ -628,10 +714,19 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     public void onScanStatusChanged(boolean scanning) {
         runOnUiThread(() -> {
+            mIsScanning = scanning; // V13.9: Track global scanning state
             if (!scanning && mStationAdapter != null) {
                 // Si el escaneo terminó automáticamente, podemos actualizar algún indicador si
                 // existiera
                 Log.d(TAG, "Scan finished callback received");
+            }
+            
+            // V13.9: Al terminar el escaneo, forzamos un refresco completo para cargar logos y nombres
+            if (!scanning && mEngine != null) {
+                int currentFreq = mEngine.getCurrentFreq();
+                mLastFreq = -1; // Force trigger
+                handleFrequencyChange(currentFreq);
+                updateFrequencyDisplay(currentFreq);
             }
         });
     }
@@ -818,13 +913,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mIsV3 = mPrefs.getBoolean("pref_layout_v3", false);
 
         // V4.7: Manejo de Barra de Estado (Fullscreen condicional)
-        boolean showStatusBarV2 = mPrefs.getBoolean("pref_show_status_bar_v2", false);
-        if (mIsV3 || (!mIsV3 && showStatusBarV2)) {
-            getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        } else {
-            // El Layout 2 por defecto es pantalla completa
-            getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
+        applyStatusBarVisibility();
 
         setContentView(mIsV3 ? R.layout.activity_main_v3 : R.layout.activity_main);
 
@@ -841,6 +930,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V13: Inicializar Managers agnósticos
         mLogoManager = new LogoManager(this);
+        if (mRepository != null) {
+            mSupabaseSyncManager = new com.example.openradiofm.data.source.SupabaseSyncManager(this, mRepository.getSupabaseSource());
+        }
         mServiceController = new RadioServiceController(this, mPrefs, mServiceListener);
 
         // V16: NightMode y History Managers
@@ -914,6 +1006,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         ivTaIcon = findViewById(R.id.ivTaIcon);
         ivTpIcon = findViewById(R.id.ivTpIcon);
         ivDataActivity = findViewById(R.id.ivDataActivity);
+        ivDataActivityIcon = findViewById(R.id.ivDataActivityIcon);
+        setupOnlineStreaming();
 
         // El listener de mRepository se configura asíncronamente en onModeDetected
 
@@ -1238,6 +1332,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mHiddenPlayer = null;
         }
 
+        if (mOnlineStreamManager != null) {
+            mOnlineStreamManager.release();
+            mOnlineStreamManager = null;
+        }
+
         super.onDestroy();
     }
 
@@ -1471,6 +1570,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             });
             // Standard: Long Left = Seek Down
             btnSeekDown.setOnLongClickListener(v -> {
+                Log.d(TAG, "Seek Down (Long Click) triggered");
                 onSeekDownEvent();
                 return true;
             });
@@ -1484,6 +1584,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             });
             // Standard: Long Right = Seek Up
             btnSeekUp.setOnLongClickListener(v -> {
+                Log.d(TAG, "Seek Up (Long Click) triggered");
                 onSeekUpEvent();
                 return true;
             });
@@ -1505,9 +1606,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
 
         // V4: Bind Frequency Box for gestures (Fluid Drag)
-        boxFrequency = findViewById(R.id.boxFrequency);
-        if (boxFrequency != null) {
-            boxFrequency.setOnTouchListener(new OnSwipeTouchListener(this) {
+        // V17.1: Mover el listener a tvFrequency para que no bloquee los iconos de ivDataActivity
+        if (tvFrequency != null) {
+            tvFrequency.setOnTouchListener(new OnSwipeTouchListener(this) {
                 private float scrollAccumulator = 0;
                 private static final int SCROLL_SENSITIVITY = 30; // Pixels per step
 
@@ -1591,10 +1692,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (freq != mLastFreq) {
             Log.d(TAG, "Ultima frecuencia guardada: " + freq);
         }
-
-        com.example.openradiofm.data.model.RadioStation station = (mRepository != null)
-                ? mRepository.getStationInfo(freq, null)
-                : null;
+        com.example.openradiofm.data.model.RadioStation station = null;
+        if (mRepository != null && !mIsScanning) {
+            station = mRepository.getStationInfo(freq, null);
+        }
         String rdsName = (station != null) ? station.getName() : "";
         final int fFreq = freq;
         final int fBand = band;
@@ -1796,15 +1897,22 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
-    private void updateFrequencyDisplay(int freq) {
+    void updateFrequencyDisplay(int freq) {
         if (freq <= 0)
             return; // V11.7: Evitar mostrar 00.0/0
         if (tvFrequency != null) {
             // V5.5: Resolución de nombre delegada al RDSManager (RDS live > customName > frecuencia)
-            String displayName = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : null;
+            // V13.9: Durante el escaneo, NO buscamos nombres en DB para ganar fluidez
+            String displayName = null;
+            if (!mIsScanning && mRdsManager != null) {
+                displayName = mRdsManager.getDisplayName(freq);
+            }
             
             if (displayName != null && !displayName.isEmpty()) {
                 tvFrequency.setText(displayName);
+                // V16.4: Forzar un re-layout para asegurar que el auto-sizing se active correctamente
+                // si el nombre es largo, evitando que se vea entrecortado en Layout 2.
+                tvFrequency.requestLayout();
             } else if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
                 tvFrequency.setText(String.valueOf(freq));
             } else {
@@ -1902,7 +2010,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // Re-apply stereo visibility based on immediate hardware state
             if (ivStereoIcon != null) {
                 boolean hasStereo = mEngine != null && mEngine.isStereo();
-                ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.GONE);
+                ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.INVISIBLE);
             }
         }
     }
@@ -2197,11 +2305,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     private void onSeekUpEvent() {
+        Log.d(TAG, "onSeekUpEvent call");
         if (mEngine != null)
             mEngine.seekUp();
     }
 
     private void onSeekDownEvent() {
+        Log.d(TAG, "onSeekDownEvent call");
         if (mEngine != null)
             mEngine.seekDown();
     }
@@ -2337,6 +2447,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     /**
+     * V13.9: Aplica la visibilidad de la barra de estado según las preferencias y el layout.
+     */
+    public void applyStatusBarVisibility() {
+        if (mPrefs == null) return;
+        boolean showStatusBarV2 = mPrefs.getBoolean("pref_show_status_bar_v2", false);
+        runOnUiThread(() -> {
+            if (mIsV3 || (!mIsV3 && showStatusBarV2)) {
+                getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            } else {
+                getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
+        });
+    }
+
+    /**
      * V13.9: Centralized reset when frequency changes.
      */
     private void handleFrequencyChange(int freq) {
@@ -2353,6 +2478,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mRdsManager.reset(true);
         }
 
+        if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
+            mOnlineStreamManager.stopStream();
+        }
+
         runOnUiThread(() -> {
             if (tvRdsName != null) {
                 tvRdsName.setText("");
@@ -2363,7 +2492,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 tvRdsInfo.setVisibility(View.VISIBLE);
             }
             if (ivStereoIcon != null) {
-                ivStereoIcon.setVisibility(View.GONE);
+                ivStereoIcon.setVisibility(View.INVISIBLE);
             }
             if (tvPty != null) {
                 tvPty.setText(getString(R.string.pty_none));
@@ -2379,6 +2508,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mLogoManager.updateDynamicBackground(null);
             }
         });
+
+        // V13.9: Durante el escaneo, OMITIMOS guardar historial y persistencia para mayor fluidez
+        if (mIsScanning) {
+            Log.d(TAG, "Scanning in progress: skipping history/persistence for freq " + freq);
+            return;
+        }
 
         // V13.9: Logic moved from refreshRadioStatus
         if (mPrefs != null) {

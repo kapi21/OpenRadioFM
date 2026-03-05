@@ -6,6 +6,7 @@ public class RadioStation {
     private String logoUrl; // e.g. "http://.../los40.png"
     private boolean isFavorite;
     private String pty; // e.g. "POP MUSIC"
+    private String streamUrl; // V16.2: URL de streaming (Supabase)
 
     public RadioStation(int freqKHz, String name) {
         this.freqKHz = freqKHz;
@@ -49,6 +50,14 @@ public class RadioStation {
 
     public void setPty(String pty) {
         this.pty = pty;
+    }
+
+    public String getStreamUrl() {
+        return streamUrl;
+    }
+
+    public void setStreamUrl(String streamUrl) {
+        this.streamUrl = streamUrl;
     }
 
     public String getFreqLabel() {
