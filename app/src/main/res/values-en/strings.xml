@@ -142,4 +142,6 @@
     <string name="provider_supabase">Supabase (HD Community)</string>
     <string name="provider_radiobrowser">Radio-Browser (Fallback)</string>
     <string name="provider_both">Combined (Supabase > Web)</string>
+    <string name="contrib_cloud">Contribute to Community (HD Logos)</string>
+    <string name="contrib_cloud_desc">Automatically send Frequency and PI Code of local stations to improve the global database.</string>
 </resources>

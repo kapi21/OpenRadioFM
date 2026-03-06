@@ -113,6 +113,7 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
+        androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
         androidx.appcompat.widget.SwitchCompat swGestures = dialog.findViewById(R.id.switchSwipeGestures);
         androidx.appcompat.widget.SwitchCompat swStatusBarV2 = dialog.findViewById(R.id.switchStatusBarV2);
         androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm);
@@ -211,6 +212,14 @@ public class DialogManager {
             swHistory.setChecked(mActivity.mPrefs.getBoolean("pref_save_history", true));
             swHistory.setOnCheckedChangeListener(
                     (bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply());
+        }
+
+        if (swCloudContrib != null) {
+            swCloudContrib.setChecked(mActivity.mPrefs.getBoolean("pref_cloud_contrib", true));
+            swCloudContrib.setOnCheckedChangeListener((v, isChecked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_cloud_contrib", isChecked).apply();
+                mActivity.showStyledToast(isChecked ? "Contribución activada" : "Contribución desactivada");
+            });
         }
 
         if (swGestures != null) {

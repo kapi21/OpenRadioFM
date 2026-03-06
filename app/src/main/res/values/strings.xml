@@ -148,4 +148,6 @@
     <string name="provider_supabase">Supabase (Comunidad HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Reserva)</string>
     <string name="provider_both">Combinado (Supabase > Web)</string>
+    <string name="contrib_cloud">Contribuir a la Comunidad (Logos HD)</string>
+    <string name="contrib_cloud_desc">Envía automáticamente Frecuencia y PI Code de emisoras locales para mejorar la base de datos global.</string>
 </resources>

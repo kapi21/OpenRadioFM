@@ -36,13 +36,18 @@ Choose from 10 color schemes. In **Night Mode**, "Night Blue" will be applied to
 
 ### 3.1 Logo Server (Beta)
 The app can automatically download logos from our Supabase server.
-- **IMPORTANT:** Currently, the logo catalog is primarily focused on **Spain**. More regions will be added progressively.
+- **Cache Reset:** If a logo is incorrect or you want to force a reload, long press the **Cloud icon**. The message *"Station cache cleared"* will appear and info will be reset.
+- **IMPORTANT:** Currently, the logo catalog is primarily focused on **Spain**, but thanks to Crowdsourcing it expands every day.
 - Enable in *Premium Settings > Online Logos*.
 
 ### 3.2 Online Streaming (Beta)
 - **Functionality:** Listen to stations via internet if the FM signal is weak.
 - **Status:** This feature is in the **testing** phase. The streaming catalog is currently focused on stations from **Spain**.
 - **Hardware:** The MT8163 engine has been optimized to prevent freezes when switching between FM and Streaming.
+
+### 3.3 Community Contribution (Crowdsourcing)
+- **How to help:** Enable **"Contribute to Community"** in Premium Settings.
+- **How it works:** When tuning a station with stable RDS, the app will anonymously send frequency and PI code to the server so other users can benefit from HD logos in your area.
 
 ---
 

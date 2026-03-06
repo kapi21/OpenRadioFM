@@ -34,15 +34,20 @@ OpenRadioFM има два главна дизајна:
 
 ## 3. Онлајн логотипи и стримовање [Ново у v4.7 Beta]
 
-### 3.1 Сервер за логотипе (Beta)
-Апликација може аутоматски да преузима логотипе са нашег Supabase сервера.
-- **ВАЖНО:** Тренутно је каталог логотипа првенствено фокусиран на **Шпанију**. Више региона ће бити додато постепено.
-- Омогућите у *Премијум подешавањима > Онлајн логотипи*.
+### 3.1 Server logotipa (Beta)
+Aplikacija može automatski preuzeti logotipe sa našeg Supabase servera.
+- **Resetovanje keša:** Ako je logo neispravan ili želite da iznudite ponovno učitavanje, dugo pritisnite ikonu **Cloud**. Pojaviće se poruka *"Кеш станице обрисан"* i informacije će biti resetovane.
+- **VAŽNO:** Trenutno je katalog logotipa prvenstveno fokusiran na **Španiju**, ali se zahvaljujući Crowdsourcing-u širi svakodnevno.
+- Aktivirajte u *Premium podešavanja > Onlajn logotipi*.
 
-### 3.2 Онлајн стримовање (Beta)
-- **Функционалност:** Слушајте станице путем интернета ако је ФМ сигнал слаб.
-- **Статус:** Ова функција је у фази **тестирања**. Каталог стриминга је тренутно фокусиран на станице из **Шпаније**.
-- **Хардвер:** MT8163 мотор је оптимизован да спречи блокирање при пребацивању између ФМ-а и стримовања.
+### 3.2 Onlajn striming (Beta)
+- **Funkcionalnost:** Slušajte stanice putem interneta ako je FM signal slab.
+- **Status:** Ova funkcija je u fazi **testiranja**. Katalog striminga je trenutno fokusiran na stanice iz **Španije**.
+- **Hardver:** MT8163 motor je optimizovan da spreči zamrzavanje prilikom prebacivanja između FM-a i striminga.
+
+### 3.3 Doprinos zajednici (Crowdsourcing)
+- **Kako pomoći:** Aktivirajte opciju **"Doprinesi zajednici"** u Premium podešavanjima.
+- **Kako funkcioniše:** Kada podesite stanicu sa stabilnim RDS-om, aplikacija će anonimno poslati frekvenciju i PI kod serveru kako bi drugi korisnici u vašem regionu mogli da koriste HD logotipe.
 
 ---
 

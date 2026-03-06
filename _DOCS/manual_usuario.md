@@ -36,13 +36,18 @@ Elige entre 10 esquemas de color. En **Modo Noche**, se aplicará el color **"Ni
 
 ### 3.1 Servidor de Logos (Beta)
 La app puede descargar logos automáticamente desde nuestro servidor Supabase.
-- **IMPORTANTE:** Actualmente el catálogo de logos está enfocado principalmente a **España**. Se irán añadiendo más regiones progresivamente.
+- **Reset de Caché:** Si un logo es incorrecto o quieres forzar la recarga, mantén pulsado el icono de la **Nubecita Cloud**. Aparecerá el mensaje *"Caché de emisora borrada"* y se reajustará la información.
+- **IMPORTANTE:** Actualmente el catálogo de logos está enfocado principalmente a **España**, pero gracias al Crowdsourcing se expande cada día.
 - Se puede activar en *Ajustes Premium > Logos en Línea*.
 
 ### 3.2 Streaming Online (Beta)
 - **Funcionalidad:** Permite escuchar la emisora vía internet si la señal FM es débil.
 - **Estado:** Esta función está en fase de **pruebas**. El catálogo de streaming está centrado actualmente en emisoras de **España**.
 - **Hardware:** Se ha optimizado el motor MT8163 para evitar bloqueos al conmutar entre FM y Streaming.
+
+### 3.3 Contribución a la Comunidad (Crowdsourcing)
+- **Cómo ayudar:** Activa la opción *"Contribuir a la Comunidad"* en Ajustes Premium. 
+- **Funcionamiento:** Al sintonizar una emisora con RDS estable, la app enviará de forma anónima la frecuencia y el código PI al servidor para que otros usuarios se beneficien de los logos HD en tu zona.
 
 ---
 

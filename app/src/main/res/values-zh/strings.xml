@@ -86,4 +86,6 @@
     <string name="provider_supabase">Supabase (高清社区)</string>
     <string name="provider_radiobrowser">Radio-Browser (备用)</string>
     <string name="provider_both">组合 (Supabase > 网页)</string>
+    <string name="contrib_cloud">向社区贡献（高清图标）</string>
+    <string name="contrib_cloud_desc">自动发送本地电台的频率和PI码，以改进全球数据库。</string>
 </resources>

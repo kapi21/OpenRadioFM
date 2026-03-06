@@ -34,15 +34,20 @@ Alegeți din 10 scheme de culori. În **Modul de Noapte**, va fi aplicată culoa
 
 ## 3. Logo-uri și Streaming Online [Nou în v4.7 Beta]
 
-### 3.1 Server de Logo-uri (Beta)
-Aplicația poate descărca automat logo-uri de pe serverul nostru Supabase.
-- **IMPORTANT:** În prezent, catalogul de logo-uri este axat în principal pe **Spania**. Mai multe regiuni vor fi adăugate progresiv.
-- Activați din *Setări Premium > Logo-uri Online*.
+### 3.1 Server de Logouri (Beta)
+Aplicația poate descărca automat logouri de pe serverul nostru Supabase.
+- **Resetare Cache:** Dacă un logo este incorect sau doriți să forțați o reîncărcare, apăsați lung pictograma **Cloud**. Va apărea mesajul *"Cache post șters"* și informațiile vor fi resetate.
+- **IMPORTANT:** În prezent, catalogul de logouri este axat în principal pe **Spania**, dar datorită Crowdsourcing-ului se extinde în fiecare zi.
+- Activare în *Setări Premium > Logouri Online*.
 
 ### 3.2 Streaming Online (Beta)
-- **Funcționalitate:** Permite ascultarea stațiilor prin internet dacă semnalul FM este slab.
-- **Stare:** Această funcție este în faza de **testare**. Catalogul de streaming este concentrat în prezent pe stațiile din **Spania**.
-- **Hardware:** Motorul MT8163 a fost optimizat pentru a preveni blocarea la comutarea între FM și Streaming.
+- **Funcționalitate:** Permite ascultarea postului prin internet dacă semnalul FM este slab.
+- **Stare:** Această funcție este în faza de **testare**. Catalogul de streaming este momentan axat pe posturile din **Spania**.
+- **Hardware:** Motorul MT8163 a fost optimizat pentru a preveni blocările la comutarea între FM și Streaming.
+
+### 3.3 Contribuție la Comunitate (Crowdsourcing)
+- **Cum să ajuți:** Activați opțiunea **"Contribuie la Comunitate"** în Setările Premium.
+- **Cum funcționează:** Când acordați un post cu RDS stabil, aplicația va trimite anonim frecvența și codul PI la server, astfel încât alți utilizatori să poată beneficia de logouri HD în zona dumneavoastră.
 
 ---
 

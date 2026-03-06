@@ -2,24 +2,19 @@
 
 Esta versión representa un salto cualitativo en la integración con servicios en la nube para las unidades Android Head Units. Seguimos optimizando el hardware y añadiendo funciones premium.
 
-## 📝 Novedades en v.4.7
+- **Novedades en v.4.7**:
+    - **Crowdsourcing (Contribución Cloud)**: 🆕 ¡Nueva función comunitaria! Ahora puedes ayudar a alimentar la base de datos de logos HD automáticamente desde los ajustes.
+    - **Reset de Caché Cloud**: Si un logo o URL es incorrecto, mantén pulsado el icono de la **Nube** para forzar una recarga limpia.
+    - **Mejora Visual PTY**: Eliminado el icono de categoría PTY para dar más espacio al texto, evitando truncamientos en nombres largos.
+    - **Night Mode Total**: El icono de actividad de red (Nube) ahora se tiñe correctamente en azul noche cuando el modo nocturno está activo.
 - **Aviso de Versión**: Ahora la app se identifica como **v.4.7 Beta Server**.
 - **Online Streaming (BETA)**: Implementada la capacidad de escucha vía streaming. 
-    - *Nota:* Actualmente en pruebas y con catálogo centrado en **España**.
 - **Online Logos (BETA)**: Descarga automática de logos desde servidor Supabase.
-    - *Nota:* Catálogo inicial centrado en **España**.
-- **Fix Crítico MT8163**: Solucionado el problema de congelación (freeze) al conmutar entre FM y Streaming en procesadores MT8163. La gestión de audio ahora es mucho más fluida.
-- **Seguridad de Compilación**: Añadidas reglas de ProGuard para proteger los motores de radio (K706, MT8163, QS6) y asegurar que las versiones de "Release" funcionen perfectamente.
-- **Multilenguaje**: Actualización masiva de traducciones y manuales en:
-    - 🇪🇸 Español
-    - 🇺🇸 Inglés
-    - 🇷🇺 Ruso
-    - 🇫🇷 Francés (Manual Nuevo)
-    - 🇷🇴 Rumano (Manual Nuevo)
-    - 🇨🇳 Chino (Manual Nuevo)
-    - 🇯🇵 Japonés (Manual Nuevo)
-    - 🇷🇸 Serbio (Manual Nuevo)
-    - 🇺🇦 Ucraniano (Manual Nuevo)
+- **Fix Crítico MT8163**: Solucionado el problema de congelación (freeze) al conmutar entre FM y Streaming en procesadores MT8163.
+- **Multilenguaje**: Actualización masiva con nuevos manuales y traducciones integrales:
+    - 🇪🇸 Español | 🇺🇸 Inglés | 🇷🇺 Ruso | 🇫🇷 Francés
+    - 🇩🇪 Alemán (NUEVO) | 🇮🇹 Italiano (NUEVO) | 🇵🇹 Portugués (NUEVO)
+    - 🇷🇴 Rumano | 🇨🇳 Chino | 🇯🇵 Japonés | 🇷🇸 Serbio | 🇺🇦 Ucraniano
 
 ## 🛠 Instalación y Requerimientos
 - Recomendado desinstalar versiones antiguas si experimentas conflictos de firma.

@@ -149,6 +149,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
+### v4.7.5 "Cloud Intelligence & UI Perfection" (Marzo 2026)
+- **Crowdsourcing (Contribución Cloud)**: Los usuarios ahora pueden alimentar la base de datos de logos enviando RDS PS y PI Code automáticamente.
+- **Cloud Cache Reset**: Pulsación larga en el icono de nube para invalidar la caché local y forzar la recarga de logos/streams.
+- **Localización Completa**: Añadidos manuales y recursos para **Alemán (DE)**, **Italiano (IT)** y **Portugués (PT)**.
+- **Fix de Modo Noche**: El icono de actividad de red ahora hereda correctamente el tinte azul noche.
+- **Optimización RDS PTY**: Eliminado icono redundante para mejorar la legibilidad de categorías de radio.
+
 ### v18.5.0 "Universal Streaming & UI Polish" (Marzo 2026)
 - **Streaming Universal (ExoPlayer/Media3)**: Soporte completo para MP3, HLS (M3U8) y AAC (.acc/type=aac).
 - **Módulo de Red OkHttp**: Integrado para mejorar la estabilidad de las emisoras online y reconexión rápida.

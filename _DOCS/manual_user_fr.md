@@ -36,13 +36,18 @@ Choisissez parmi 10 schémas de couleurs. En **Mode Nuit**, la couleur "Night Bl
 
 ### 3.1 Serveur de Logos (Beta)
 L'application peut télécharger automatiquement des logos depuis notre serveur Supabase.
-- **IMPORTANT :** Actuellement, le catalogue de logos est principalement axé sur l'**Espagne**. D'autres régions seront ajoutées progressivement.
-- À activer dans *Paramètres Premium > Logos en Ligne*.
+- **Réinitialisation du Cache :** Si un logo est incorrect ou si vous souhaitez forcer un rechargement, maintenez enfoncé l'icône du **Nuage Cloud**. Le message *"Cache de la station effacé"* apparaîtra et les informations seront réinitialisées.
+- **IMPORTANT :** Actuellement, le catalogue de logos est principalement axé sur l'**Espagne**, mais grâce au Crowdsourcing, il s'étend chaque jour.
+- Activer dans *Paramètres Premium > Logos en Ligne*.
 
 ### 3.2 Streaming en Ligne (Beta)
-- **Fonctionnalité :** Permet d'écouter des stations via internet si le signal FM est faible.
-- **État :** Cette fonction est en phase de **test**. Le catalogue de streaming est actuellement centré sur les stations d'**Espagne**.
-- **Matériel :** Le moteur MT8163 a été optimisé pour éviter les blocages lors du passage de la FM au Streaming.
+- **Fonctionnalité :** Permet d'écouter la station via internet si le signal FM est faible.
+- **État :** Cette fonction est en phase de **test**. Le catalogue de streaming est actuellement axé sur les stations en **Espagne**.
+- **Matériel :** Le moteur MT8163 a été optimisé pour éviter les blocages lors de la commutation entre FM et Streaming.
+
+### 3.3 Contribution à la Communauté (Crowdsourcing)
+- **Comment aider :** Activez l'option **"Contribuer à la Communauté"** dans les Paramètres Premium.
+- **Fonctionnement :** Lors de la syntonisation d'une station avec un RDS stable, l'application enverra de manière anonyme la fréquence et le code PI au serveur afin que d'autres utilisateurs puissent bénéficier des logos HD dans votre zone.
 
 ---
 

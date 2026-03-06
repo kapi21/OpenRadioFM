@@ -22,7 +22,6 @@ public class RDSManager {
     private final TextView tvRdsName;
     private final TextView tvRdsInfo;
     private final TextView tvPty;
-    private final ImageView ivPtyIcon;
     private final RdsDatabase mRdsDb;
     private final RDSListener mListener;
 
@@ -47,7 +46,6 @@ public class RDSManager {
         this.tvRdsName = rootView.findViewById(R.id.tvRdsName);
         this.tvRdsInfo = rootView.findViewById(R.id.tvRdsInfo);
         this.tvPty = rootView.findViewById(R.id.tvPty);
-        this.ivPtyIcon = rootView.findViewById(R.id.ivPtyIcon);
     }
 
     public void onRdsName(String name) {
@@ -122,16 +120,6 @@ public class RDSManager {
             tvPty.setSelected(true); // V16.x: Activar Marquee
             // Log.d(TAG, "PTY UI Updated: " + displayLabel + " (Code: " + ptyCode + ")");
         }
-
-        if (ivPtyIcon != null) {
-            int iconRes = (ptyCode > 0) ? PtyManager.getPtyIconResource(ptyCode) : 0;
-            if (iconRes != 0) {
-                ivPtyIcon.setImageResource(iconRes);
-                ivPtyIcon.setVisibility(View.VISIBLE);
-            } else {
-                ivPtyIcon.setVisibility(View.GONE);
-            }
-        }
     }
 
     public void reset(boolean clearTexts) {
@@ -145,7 +133,6 @@ public class RDSManager {
             if (tvRdsName != null) tvRdsName.setText("");
             if (tvRdsInfo != null) tvRdsInfo.setText("");
             if (tvPty != null) tvPty.setText(mContext.getString(R.string.pty_none));
-            if (ivPtyIcon != null) ivPtyIcon.setVisibility(View.GONE);
         }
     }
 
@@ -215,6 +202,18 @@ public class RDSManager {
         // 3. RDS en vivo
         if (mLastConfirmedName != null && !mLastConfirmedName.isEmpty()) {
             return mLastConfirmedName;
+        }
+        
+        // 4. RDS Guardado (Histórico)
+        try {
+            String rdsSaved = mContext.getSharedPreferences("RadioStationNames",
+                    android.content.Context.MODE_PRIVATE)
+                    .getString("RDS_" + freqKhz, null);
+            if (rdsSaved != null && !rdsSaved.isEmpty()) {
+                return rdsSaved;
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error reading saved RDS name for freq " + freqKhz, e);
         }
         // 4. Sin nombre
         return null;

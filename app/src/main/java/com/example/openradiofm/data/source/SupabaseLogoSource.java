@@ -95,6 +95,11 @@ public class SupabaseLogoSource {
             try {
                 SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqKHz, logoUrl, streamUrl);
                 // V16.2: Añadido on_conflict para evitar duplicados. Preferimos ps_name si PI es nulo.
+                // V17.5: Evitar subir nombres genéricos o demasiado cortos que ensucian la base
+                if (piCode == null && (rdsName == null || rdsName.length() < 3 || rdsName.equals("BUSCANDO") || rdsName.contains("..."))) {
+                    return;
+                }
+
                 String conflictColumns = (piCode != null && !piCode.isEmpty()) ? "pi_code" : "ps_name";
                 
                 Call<Void> call = api.upsertLogo(apiKey, "Bearer " + apiKey, "resolution=merge-duplicates", conflictColumns, data);

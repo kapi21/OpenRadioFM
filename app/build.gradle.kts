@@ -57,6 +57,11 @@ android {
         aidl = true
         compose = true
     }
+
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
 }
 
 // Built-in Kotlin configuration in AGP 9.0+

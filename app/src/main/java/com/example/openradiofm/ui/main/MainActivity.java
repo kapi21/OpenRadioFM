@@ -152,7 +152,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V5.0: UI Elements (Fixing Compilation Errors)
     private TextView tvPty;
     private ImageView ivSignalLevel;
-    private ImageView ivPtyIcon; // V5.0: Categorical Icon
     private ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
     private android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
     private ImageView ivDataActivityIcon; // El icono real que cambia de color
@@ -490,14 +489,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V16.2: Siempre visible si está activado para indicar soporte nube.
         ivDataActivity.setVisibility(View.VISIBLE);
         
-        // V16.3: Long click para sincronizar base de datos desde radio.m3u8 local
-        ivDataActivity.setOnLongClickListener(v -> {
-            if (mSupabaseSyncManager != null) {
-                showToast("Sincronizando con base de datos central...");
-                mSupabaseSyncManager.syncFromM3u("/sdcard/radio.m3u8");
-            }
-            return true;
-        });
 
         if (mActiveDataOps > 0) {
             startDataBlink();
@@ -514,7 +505,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } else if (mOnlineStreamManager.isLoading()) {
                 ivDataActivityIcon.setColorFilter(android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
             } else {
-                ivDataActivityIcon.clearColorFilter();
+                // V17.4: Al limpiar filtros, respetar el color azul noche si el modo noche está activo
+                if (mNightModeManager != null && mNightModeManager.isNightTime() && 
+                    mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+                    ivDataActivityIcon.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                } else {
+                    ivDataActivityIcon.clearColorFilter();
+                }
             }
         }
     }
@@ -559,7 +557,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             ivDataActivity.setOnLongClickListener(v -> {
                 int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
                 if (freq > 0) {
-                    showToast("Resincronizando emisora...");
+                    showToast("Caché de emisora borrada. Sincronizando...");
                     mRepository.clearCacheForFrequency(freq);
                     
                     // Asegurar que forzamos también la recarga visual deteniendo el posible stream actual
@@ -992,7 +990,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V4.3: New UI Elements
         tvPty = findViewById(R.id.tvPty);
         ivSignalLevel = findViewById(R.id.ivSignalLevel);
-        ivPtyIcon = findViewById(R.id.ivPtyIcon); // V5.0
 
         btnLocDx = findViewById(R.id.btnLocDx);
         btnBand = findViewById(R.id.btnBand);
@@ -1038,27 +1035,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             });
         }
 
-        android.view.View boxLogo = findViewById(R.id.boxLogo);
-
-        if (boxLogo != null) {
-            boxLogo.setOnClickListener(v -> {
-                com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
-                applySkin(next);
-                showToast("Skin: " + next.displayName);
-            });
-            boxLogo.setOnLongClickListener(v -> {
-                mDialogManager.showHistoryDialog();
-                return true;
-            });
-        }
-        if (tvRdsName != null) {
-            tvRdsName.setOnClickListener(v -> {
-                com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
-                applySkin(next);
-                showToast("Skin: " + next.displayName);
-            });
-        }
-
+        // V16.2: Skin cycling remains in Car Logo (as it's more visual)
         android.view.View ivCarLogo = findViewById(R.id.ivCarLogo);
         if (ivCarLogo != null) {
             ivCarLogo.setOnClickListener(v -> {
@@ -1067,7 +1044,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 showToast("Skin: " + next.displayName);
             });
             ivCarLogo.setOnLongClickListener(v -> {
-                mDialogManager.showHistoryDialog();
+                if (mDialogManager != null) mDialogManager.showHistoryDialog();
                 return true;
             });
         }
@@ -1445,6 +1422,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mCreditsClickCount = 0;
             if (mDialogManager != null)
                 mDialogManager.showCreditsDialog();
+        } else if (mCreditsClickCount == 1) {
+            // V17.4: Restaurar Historial en el primer click (comportamiento GPS)
+            if (mDialogManager != null)
+                mDialogManager.showHistoryDialog();
         }
     }
 
@@ -1465,6 +1446,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V16.2: También en el contenedor para facilitar la interacción
         android.view.View boxFrequency = findViewById(R.id.boxFrequency);
         if (boxFrequency != null) {
+            // Click normal: Historial (y contador de créditos)
+            boxFrequency.setOnClickListener(v -> handleCreditsClick());
+
             boxFrequency.setOnLongClickListener(v -> {
                 if (mDialogManager != null) {
                     mDialogManager.showEditNameDialog();
@@ -1606,36 +1590,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             });
         }
 
-        // V4: Bind Frequency Box for gestures (Fluid Drag)
-        // V17.1: Mover el listener a tvFrequency para que no bloquee los iconos de ivDataActivity
+        // V4: Bind Frequency Box for gestures (Fluid Drag) - ELIMINADO para simplificar
         if (tvFrequency != null) {
-            tvFrequency.setClickable(true); // Ensura clickability
-            tvFrequency.setOnTouchListener(new OnSwipeTouchListener(this) {
-                private float scrollAccumulator = 0;
-                private static final int SCROLL_SENSITIVITY = 30; // Pixels per step
-
-                @Override
-                public void onScrollEvent(float deltaX) {
-                    if (!mPrefs.getBoolean("pref_swipe_gestures", true))
-                        return;
-
-                    scrollAccumulator += deltaX;
-                    if (Math.abs(scrollAccumulator) > SCROLL_SENSITIVITY) {
-                        if (scrollAccumulator > 0) {
-                            stepFreqUp();
-                        } else {
-                            stepFreqDown();
-                        }
-                        scrollAccumulator = 0;
-                    }
-                }
-
-                @Override
-                public void onSingleTap() {
-                    // Si falla el performClick directo, llamamos a la lógica
-                    handleCreditsClick();
-                }
-            });
+            tvFrequency.setClickable(true); 
         }
 
         // Loop Band Logic
@@ -1711,25 +1668,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         final boolean fIsLocal = isLocal;
 
         runOnUiThread(() -> {
-            // FIXED LOGIC: Standardize Freq Display
-            if (fIsAm) {
-                if (tvFrequency != null)
-                    tvFrequency.setText(String.valueOf(fFreq));
-                if (ivUnitLabel != null) {
-                    ivUnitLabel.setImageResource(R.drawable.radio_khz);
-                    ivUnitLabel.clearColorFilter();
-                }
-            } else {
-                if (tvFrequency != null) {
-                    // fFreq comes in kHz (eg 87500). We want 87.50
-                    tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", (double) fFreq / 1000.0));
-                }
-                if (ivUnitLabel != null) {
-                    ivUnitLabel.setImageResource(R.drawable.radio_mhz);
-                    ivUnitLabel.clearColorFilter();
-                }
-            }
-
             // Sync color filters if in Night Mode
             if (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
                 int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
@@ -1916,6 +1854,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 displayName = mRdsManager.getDisplayName(freq);
             }
             
+            // V17.4: Fallback adicional al repositorio si el RDSManager no reconoce el nombre (ej: al volver a sintonizar)
+            if ((displayName == null || displayName.isEmpty()) && mRepository != null && !mIsScanning) {
+                com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+                if (station != null) {
+                    displayName = station.getName();
+                }
+            }
+            
             if (displayName != null && !displayName.isEmpty()) {
                 tvFrequency.setText(displayName);
                 // V16.4: Forzar un re-layout para asegurar que el auto-sizing se active correctamente
@@ -2099,81 +2045,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     // V4: Swipe Listener Class
-    private static class OnSwipeTouchListener implements View.OnTouchListener {
-        private final GestureDetector gestureDetector;
-        private final View targetView;
-
-        public OnSwipeTouchListener(Context ctx) {
-            this(ctx, null);
-        }
-
-        public OnSwipeTouchListener(Context ctx, View view) {
-            this.targetView = view;
-            gestureDetector = new GestureDetector(ctx, new GestureListener());
-        }
-
-        @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            boolean handled = gestureDetector.onTouchEvent(event);
-            // V17.2: Si hay un ACTION_UP y no ha sido manejado por gestos (swipe/fling), 
-            // dejamos que el sistema intente el click normal o llamamos a performClick.
-            if (event.getAction() == MotionEvent.ACTION_UP && !handled) {
-                v.performClick();
-            }
-            return handled;
-        }
-
-        private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
-            private static final int SWIPE_THRESHOLD = 80;
-            private static final int SWIPE_VELOCITY_THRESHOLD = 80;
-
-            @Override
-            public boolean onDown(MotionEvent e) {
-                return true;
-            }
-
-            @Override
-            public boolean onSingleTapUp(MotionEvent e) {
-                onSingleTap();
-                return false; // Retornamos falso para que ACTION_UP lance el click si fuera necesario
-            }
-
-            @Override
-            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-                try {
-                    float diffX = e2.getX() - e1.getX();
-                    if (Math.abs(diffX) > SWIPE_THRESHOLD && Math.abs(velocityX) > SWIPE_VELOCITY_THRESHOLD) {
-                        if (diffX > 0)
-                            onSwipeRight();
-                        else
-                            onSwipeLeft();
-                        return true;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return false;
-            }
-
-            @Override
-            public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-                onScrollEvent(-distanceX); // Negative because swipe left is positive distanceX
-                return true;
-            }
-        }
-
-        public void onSwipeRight() {
-        }
-
-        public void onSwipeLeft() {
-        }
-
-        public void onScrollEvent(float distanceX) {
-        }
-
-        public void onSingleTap() {
-        }
-    }
 
     // V16: Delegaciones a NightModeManager
     public void checkAndApplyNightMode() {
@@ -2525,8 +2396,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
             if (tvPty != null) {
                 tvPty.setText(getString(R.string.pty_none));
-                if (ivPtyIcon != null)
-                    ivPtyIcon.setVisibility(View.GONE);
             }
 
             // Clear logos immediately

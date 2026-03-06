@@ -85,5 +85,7 @@
     <string name="logo_provider">ロゴプロバイダー</string>
     <string name="provider_supabase">Supabase (HDコミュニティ)</string>
     <string name="provider_radiobrowser">Radio-Browser (フォールバック)</string>
-    <string name="provider_both">結合 (Supabase > Web)</string>
+    <string name="provider_both">組み合わせ (Supabase > Web)</string>
+    <string name="contrib_cloud">コミュニティに貢献（HDロゴ）</string>
+    <string name="contrib_cloud_desc">ローカル局の周波数とPIコードを自動的に送信し、グローバルデータベースを改善します。</string>
 </resources>

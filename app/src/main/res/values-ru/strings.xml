@@ -139,4 +139,6 @@
     <string name="provider_supabase">Supabase (HD Сообщество)</string>
     <string name="provider_radiobrowser">Radio-Browser (Резерв)</string>
     <string name="provider_both">Комбинированный (Supabase > Web)</string>
+    <string name="contrib_cloud">Внести вклад в сообщество (логотипы HD)</string>
+    <string name="contrib_cloud_desc">Автоматически отправлять частоту и PI-код местных станций для улучшения глобальной базы данных.</string>
 </resources>

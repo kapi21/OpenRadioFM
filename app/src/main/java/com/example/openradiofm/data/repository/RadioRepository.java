@@ -326,12 +326,18 @@ public class RadioRepository {
             if (onlineLogosEnabled && streamUrlStored == null) {
                 // Si tenemos el logo local pero nos falta la URL de streaming, la pedimos a Supabase
                 fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
-            } else if (onlineLogosEnabled) {
-                // Desactivado temporalmente upsert para evitar error 400 (no unique constraint en ps_name)
-                // final String fPi = piCode;
-                // final String fName = finalName;
-                // final String fPath = logoPath;
-                // logoExecutor.submit(() -> supabaseSource.upsertLogoData(fPi, fName, freqKHz, "file://" + fPath, null));
+            }
+            
+            // V17.5: Contribuir logo local/RDS a la nube si el ajuste de contribución está activado
+            boolean contribCloud = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_cloud_contrib", true);
+
+            if (contribCloud && (piCode != null || (finalName != null && finalName.length() >= 4))) {
+                final String fPi = piCode;
+                final String fName = finalName;
+                final String fPath = logoPath;
+                // Intentamos subir si es un logo de archivo (no nulo) o al menos tenemos la info RDS
+                logoExecutor.submit(() -> supabaseSource.upsertLogoData(fPi, fName, freqKHz, "file://" + fPath, null));
             }
         } else {
             android.util.Log.d("RadioLogos", "NOT FOUND LOCAL");

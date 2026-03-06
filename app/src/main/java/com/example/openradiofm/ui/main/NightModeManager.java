@@ -114,7 +114,6 @@ public class NightModeManager {
 
         // Iconos de estado y PTY
         tintImageView(R.id.ivStereoIcon, nightBlue);
-        tintImageView(R.id.ivPtyIcon, nightBlue);
         tintImageView(R.id.ivAfIcon, nightBlue);
         tintImageView(R.id.ivTaIcon, nightBlue);
         tintImageView(R.id.ivTpIcon, nightBlue);
@@ -179,7 +178,6 @@ public class NightModeManager {
         if (ivUnitLabel != null) ivUnitLabel.clearColorFilter();
 
         clearImageViewFilter(R.id.ivStereoIcon);
-        clearImageViewFilter(R.id.ivPtyIcon);
         clearImageViewFilter(R.id.ivAfIcon);
         clearImageViewFilter(R.id.ivTaIcon);
         clearImageViewFilter(R.id.ivTpIcon);

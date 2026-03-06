@@ -142,4 +142,6 @@
     <string name="provider_supabase">Supabase (Comunitate HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Rezervă)</string>
     <string name="provider_both">Combinat (Supabase > Web)</string>
+    <string name="contrib_cloud">Contribuie la Comunitate (Logouri HD)</string>
+    <string name="contrib_cloud_desc">Trimite automat frecvența și codul PI al stațiilor locale pentru a îmbunătăți baza de date globală.</string>
 </resources>
