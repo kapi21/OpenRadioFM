@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRadioFM | Automotive Open Source</title>
+    <meta name="description"
+        content="OpenRadioFM V.4.7: O firmware definitivo para entusiastas de hardware hacking e rádio Android.">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="carbon-bg">
+    <div class="lang-selector">
+        <a href="../es/index.html">ES</a> | <a href="../en/index.html">EN</a> | <a href="../ru/index.html">RU</a> | <a
+            href="../fr/index.html">FR</a> | <a href="../de/index.html">DE</a> | <a href="../it/index.html">IT</a> |
+        <span class="active">PT</span>
+    </div>
+
+    <header class="container">
+        <nav>
+            <div class="logo-container">
+                <img src="../img/app_icon.png" alt="OpenRadioFM V.4 Logo" class="main-logo">
+                <div class="logo-text orbitron-text">
+                    OPENRADIOFM <span class="v4">V.4.7.5</span> <span
+                        style="font-size: 0.8rem; color: #00ff00; font-weight: bold; text-shadow: 0 0 10px rgba(0,255,0,0.5);">
+                        (CLOUD UPDATE)</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="https://github.com/kapi21/OpenRadioFM" class="nav-link bebas-text">GitHub Repo</a>
+                <a href="#hardware" class="nav-link bebas-text">Hardware</a>
+                <a href="#support" class="btn btn-primary bebas-text">Suporte</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-text">
+                <h1 class="orbitron-text">OPENRADIOFM</h1>
+                <span class="slogan">Sua Rádio, Suas Regras</span>
+                <p class="app-desc">
+                    Personalize a instrumentação do seu veículo com potência low-level. Extraia o firmware, audite o RDS
+                    e assuma o controle total. Otimizado para ecrãs <strong>1024x600 e superiores</strong>.
+                </p>
+                <div class="hero-actions">
+                    <a href="https://github.com/kapi21/OpenRadioFM/releases" class="btn btn-primary">Descarregar APK</a>
+                    <a href="https://github.com/kapi21/OpenRadioFM/wiki" class="btn btn-outline">Wiki Técnica</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="app-widget">
+                    <div class="status-bar digital-text">
+                        <span>BT</span>
+                        <span>GPS</span>
+                        <span>17:50</span>
+                    </div>
+                    <div class="dial-container">
+                        <div class="orbitron-text"
+                            style="font-size: 0.9rem; color: var(--primary); margin-bottom: 0.3rem; letter-spacing: 3px;">
+                            FM1</div>
+                        <div class="digital-text dial-number">93.50</div>
+                        <div class="orbitron-text dial-unit">MHz</div>
+                        <div id="waveform"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <h2 class="orbitron-text section-title">Funções Premium</h2>
+            <div class="features-grid">
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🎨</span>
+                    <h3 class="bebas-text">Logos Personalizados</h3>
+                    <p>Gira os logos das estações. Carregue os seus próprios designs, logos de marcas e fundos dinâmicos
+                        com efeito de desfoque.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">✏️</span>
+                    <h3 class="bebas-text">Edição RDS Avançada</h3>
+                    <p>Decodificação RDS em tempo real. Personalize nomes de estações e texto PS/RT com precisão.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">☁️</span>
+                    <h3 class="bebas-text">Crowdsourcing Cloud</h3>
+                    <p>Contribua para a comunidade. A aplicação carrega dados automaticamente para que todos tenham
+                        logos HD atualizados.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🌍</span>
+                    <h3 class="bebas-text">12 Idiomas</h3>
+                    <p>Interface e manuais em Português, Inglês, Espanhol, Russo, Francês, Alemão, Italiano e mais.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hardware Specs Section -->
+        <section id="hardware" class="hardware-specs ui-panel">
+            <h2 class="orbitron-text">Especificações de Hardware</h2>
+            <ul class="specs-list">
+                <li><span class="bebas-text">Hardware:</span> Compatível com MT8163, K706 e rádio NWD G5 (QS6).</li>
+                <li><span class="bebas-text">Chip de Rádio:</span> NXP TEF6686 com suporte RDS total.</li>
+                <li><span class="bebas-text">Firmware:</span> Android 8.1+. Root recomendado.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="container">
+        <p>&copy; 2026 OpenRadioFM. Projeto Open Source sob licença MIT.</p>
+        <p>Desenvolvido com ❤️ pela comunidade de hardware hacking.</p>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+
+</html>
