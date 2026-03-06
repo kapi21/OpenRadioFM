@@ -16,6 +16,7 @@
 # === Build outputs ===
 /build/
 /app/build/
+/app/release/
 /captures/
 .externalNativeBuild/
 .cxx/
@@ -53,10 +54,23 @@ platform.x509.pem
 _DOCS/keys/
 _DOCS/research/
 _DOCS/brain_records/
+_DOCS/logs/
+_DOCS/*HANDOFF*
+_DOCS/TODO.md
+_DOCS/roadmap.md
+_DOCS/INFORME_DANOS.md
+_DOCS/LAYOUT_PROPOSAL.md
+_DOCS/PROJECT_SUMMARY*
 _ASSETS/
 docs/QS6_Integration/
 .gemini/
 .antigravity/
+
+# === Scripts y Herramientas internas ===
+debug_logs.bat
+massive_upload.py
+HANDOFF_ROADMAP.md
+REFAC_README.md
 
 # === Kotlin ===
 .kotlin/

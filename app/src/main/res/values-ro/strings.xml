@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">OpenRadioFM v4.6 Beta Integration</string>
+    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalizare Premium</string>
@@ -77,6 +77,9 @@
     <string name="language_ukrainian">Ucraineană</string>
     <string name="language_changed">✅ Limba schimbată în %s</string>
     <string name="about_openradio">ℹ️ Despre OpenRadioFM</string>
+    <string name="about_info_header">INFORMAȚII</string>
+    <string name="about_dev_by">Dezvoltat de</string>
+    <string name="about_tech_details">Detalii Tehnice</string>
     <string name="touch_to_change">Atinge pentru a schimba</string>
 
     <!-- V4.3: Hardware Settings -->

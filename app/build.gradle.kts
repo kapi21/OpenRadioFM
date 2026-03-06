@@ -11,19 +11,40 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 7
-        versionName = "4.6-BETA-INTEGRATION"
+        versionCode = 8
+        versionName = "v.4.7 Beta Server"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // V4.7: Configuraciones de firma recomendadas para distribución en radios chinas.
+    // Usar V1 y V2 asegura compatibilidad con Android 4.4 hasta 14.
+    signingConfigs {
+        create("release") {
+            // Para automatizar la firma, rellena estos campos y apunta a tu archivo .jks
+            // storeFile = file("ruta/a/tu/llave.jks")
+            // storePassword = "password"
+            // keyAlias = "alias"
+            // keyPassword = "password"
+            isV1SigningEnabled = true
+            isV2SigningEnabled = true
+        }
+    }
+
     buildTypes {
         release {
+            // CRÍTICO: Mantener false. El uso de Reflexión para los motores de radio (K706, MT8163, QS6)
+            // hará que la app crashee si ProGuard/R8 ofusca los nombres de las clases de hardware.
             isMinifyEnabled = false
+            isShrinkResources = false 
+            
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            
+            // Vincular con la firma si se configura arriba
+            // signingConfig = signingConfigs.getByName("release")
         }
     }
 

@@ -1,82 +1,65 @@
-# User Manual - OpenRadioFM v4.5.1 Server Test
+# User Manual - OpenRadioFM v.4.7 Beta Server
 
-Welcome to **OpenRadioFM v4.0**, the ultimate evolution of FM radio for Android Head Units. This "Global Edition" is optimized for maximum stability, impeccable visual quality, and seamless vehicle hardware integration.
+Welcome to **OpenRadioFM v.4.7 Beta Server**, the ultimate evolution of FM radio for Android Head Units. This version introduces cloud streaming and logo management capabilities, optimized for maximum stability and performance.
 
 ---
 
 ## 1. Interface & Navigation
 
 ### 1.1 Screen Layouts
-OpenRadioFM features two main designs that you can toggle:
-- **V2 (Classic Vertical):** Optimized for tablet-style or vertical screens. *Now with total stability in RDS text display.*
-- **V3 (Premium Horizontal):** Widescreen design ideal for car dashboards, featuring large-format icons and the new **"Glass Mode"** background.
-- **How to switch:** Long press the **LOC/DX** button to toggle between designs. The app will automatically restart.
+OpenRadioFM features two main designs:
+- **V2 (Classic Vertical):** Optimized for tablet-style or vertical screens.
+- **V3 (Premium Horizontal):** Widescreen design ideal for dashboards, with large icons and **"Glass Mode"** effect.
+- **How to switch:** Long press the **LOC/DX** button to toggle. The app will restart automatically.
 
-### 1.2 Signal Quality Indicator [New v4.0]
-The antenna icon (`level_signal.png`) is now intelligent and changes color based on actual reception quality:
-- 🟢 **Green:** Excellent signal (Stereo detected and RDS synced).
-- 🟡 **Yellow:** Medium signal (Stereo only or RDS only available).
-- 🔴 **Red:** Poor or no signal.
+### 1.2 Favorites Navigation (Hardware)
+- **Favorites:** Central buttons skip between your saved stations. Compatible with steering wheel controls (K706/MT8163).
+- **Seek:** Outer buttons perform automatic signal search.
 
 ---
 
 ## 2. Premium Customization (Secret Menu)
 
-Long press the **Settings (EQ)** button to access the customization center:
+Long press the **Settings (EQ)** button to access:
 
-### 2.1 Theme Colors
-Choose from 10 color schemes applied to borders and accents. In **Night Mode**, the app will force the "Night Blue" color to reduce visual fatigue.
+### 2.1 Theme Colors & Night Mode
+Choose from 10 color schemes. In **Night Mode**, "Night Blue" will be applied to improve night visibility and reduce eye strain.
 
 ### 2.2 Background Mode (Glass Mode)
 1. **Pure Black:** Maximum contrast.
-2. **background.png Image:** Load your custom image from `/sdcard/RadioLogos/background.png`.
-3. **Dynamic Logo (Glass Mode):** The background is automatically generated from the station logo, creating an elegant frosted glass effect. In V3, this effect works even if you choose to hide the central logo.
+2. **background.png Image:** Load a custom image from `/sdcard/RadioLogos/background.png`.
+3. **Dynamic Logo (Glass Mode):** The background is automatically generated from the station logo.
 
-### 2.3 Night Mode Schedule [New in v4.5.1]
-You can now automate the dark theme switch:
-1. Enable **"Auto Night Mode"** in Premium Settings.
-2. Tap on **Start** and **End** times to define your schedule (e.g., 20:00 to 07:00).
+---
 
-## 3. Logo & Name Management
+## 3. Online Logos & Streaming [New in v4.7 Beta]
 
-### 3.1 Station Logos (Hybrid Logic)
-The app looks for logos in three ways:
-1. **Local:** In `/sdcard/RadioLogos/frequency_khz.png`.
-   - Example: For 94.1 MHz => **94100.png** or **9410.png**.
-2. **Online API:** If enabled in settings, downloads logos automatically.
-3. **Priority:** Local logos always take priority over online ones.
+### 3.1 Logo Server (Beta)
+The app can automatically download logos from our Supabase server.
+- **IMPORTANT:** Currently, the logo catalog is primarily focused on **Spain**. More regions will be added progressively.
+- Enable in *Premium Settings > Online Logos*.
 
-### 3.2 Car Brand Logo
-In Layout V3, you can display your brand on the right side:
-- Location: `/sdcard/RadioLogos/car_logo.png`
+### 3.2 Online Streaming (Beta)
+- **Functionality:** Listen to stations via internet if the FM signal is weak.
+- **Status:** This feature is in the **testing** phase. The streaming catalog is currently focused on stations from **Spain**.
+- **Hardware:** The MT8163 engine has been optimized to prevent freezes when switching between FM and Streaming.
 
 ---
 
 ## 4. Favorites Management
 
-### 4.0 Independent Band Memory [New in v4.5.1]
-Each band (FM1, FM2, FM3) has its own independent 6 memory slots. Switching bands automatically loads the saved stations for that specific band.
-
-### 4.1 Save and Load
-Use the **Floppy Disk (💾)** button to open the `.fav` file manager. This allows you to move your favorite stations between different radios or perform backups before resetting the device.
+### 4.1 Save and Load (.fav)
+Use the **Floppy Disk (💾)** button to export or import your favorites list. This allows for backups or moving settings between devices.
 
 ---
 
 ## 5. Hardware Configuration
 
-### 5.1 Radio Engine
-If your radio doesn't tune correctly, go to **Hardware Settings** and select your engine:
-- **HCN:** For most Eonon, Xtrons, and similar units.
-- **MTK:** For standard Mediatek boards.
-- **TS/SYU:** For TopWay or Joying units.
+If you experience audio or tuning issues, select your engine in *Hardware Settings*:
+- **HCN (K706):** For Vento/HCN units.
+- **Eonon/Topway (MT8163):** Optimized to prevent freezes in v4.7.
+- **QS6:** For Nanis/NWD units.
 
 ---
-
-## 6. Troubleshooting
-
-- **Buttons move around:** This has been fixed in v4.0. RDS boxes are now fixed-size to prevent visual jumping.
-- **Dynamic background not loading:** Ensure the option is enabled in the Premium menu and that the station has a logo (local or remote).
-- **Night mode blue color not visible:** Verify that "Automatic Night Mode" is enabled in the app options.
-
----
-*Developed with ❤️ by Jimmy80 for the Android Head Unit community - v4.0 Final*
+**NOTICE:** This is a **BETA** version. Some server and streaming functions are under constant testing.
+*Developed with ❤️ by Jimmy80 for the Android Head Unit community - v.4.7 Beta Server*

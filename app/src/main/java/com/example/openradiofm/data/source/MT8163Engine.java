@@ -381,16 +381,26 @@ public class MT8163Engine implements RadioEngine {
     public void switchToAndroidAudio() {
         Log.d(TAG, "switchToAndroidAudio (MT8163) - Liberando canal para sistema");
         setMute(true);
-        if (mAudioManager != null) {
-            // V18.4: Notificar al mixer de Android que FM ya no suena
-            mAudioManager.setParameters("fm_radio_on=0;fm_mute=1");
-        }
         
-        // Pequeño delay para asegurar que el mute del chip se ha procesado
-        new Handler(Looper.getMainLooper()).postDelayed(() -> {
-            setMute(false); // Desmutear el canal master para que otras apps suenen
-            if (mAudioManager != null) mAudioManager.abandonAudioFocus(mAudioFocusListener);
-        }, 300);
+        // V18.5: Ejecutar parámetros de audio en un hilo ligero para no congelar la UI si el hardware tarda
+        new Thread(() -> {
+            if (mAudioManager != null) {
+                try {
+                    mAudioManager.setParameters("fm_radio_on=0;fm_mute=1");
+                } catch (Exception e) {
+                    Log.e(TAG, "Error setting audio parameters", e);
+                }
+            }
+            
+            // Retorno al hilo principal para el resto de la secuencia
+            mPollingHandler.postDelayed(() -> {
+                // V18.5: NO desmutear aquí si estamos en streaming, el master debe controlarlo la app de origen
+                // setMute(false); 
+                if (mAudioManager != null) {
+                    try { mAudioManager.abandonAudioFocus(mAudioFocusListener); } catch (Exception ignored) {}
+                }
+            }, 300);
+        }).start();
     }
 
     @Override

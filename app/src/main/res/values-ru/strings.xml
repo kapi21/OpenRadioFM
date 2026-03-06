@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v4.6 Beta Integration</string>
+    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Премиум Настройки</string>
@@ -74,6 +74,9 @@
     <string name="language_russian">Русский</string>
     <string name="language_changed">✅ Язык изменён на %s</string>
     <string name="about_openradio">ℹ️ О приложении OpenRadioFM</string>
+    <string name="about_info_header">ИНФОРМАЦИЯ</string>
+    <string name="about_dev_by">Разработано</string>
+    <string name="about_tech_details">Технические детали</string>
     <string name="touch_to_change">Нажмите для изменения</string>
 
     <!-- V4.3: Hardware Settings -->

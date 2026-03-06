@@ -1,57 +1,65 @@
-# Manual de Usuario - OpenRadioFM v4.6.1 Stable Integration
+# Manual de Usuario - OpenRadioFM v.4.7 Beta Server
 
-Bienvenido a **OpenRadioFM v4.6.1**, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión está optimizada para ofrecer la máxima estabilidad, una calidad visual impecable y una integración total con el hardware del vehículo, incluyendo control directo de favoritos.
+Bienvenido a **OpenRadioFM v.4.7 Beta Server**, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión introduce capacidades de streaming y gestión de logos en la nube, optimizada para máxima estabilidad y rendimiento.
 
 ---
 
 ## 1. Interfaz y Navegación
 
 ### 1.1 Modos de Pantalla (Layouts)
-OpenRadioFM cuenta con dos diseños principales que puedes intercambiar:
+OpenRadioFM cuenta con dos diseños principales:
 - **V2 (Clásico Vertical):** Optimizado para pantallas tipo tablet o verticales.
-- **V3 (Premium Horizontal):** Diseño panorámico ideal para el salpicadero, con iconos de gran formato y el nuevo **"Glass Mode"** de fondo.
-- **Cómo cambiar:** Mantén pulsado el botón **LOC/DX** para alternar entre los diseños. La app se reiniciará automáticamente.
+- **V3 (Premium Horizontal):** Diseño panorámico ideal para el salpicadero, con iconos de gran formato y efecto **"Glass Mode"**.
+- **Cómo cambiar:** Mantén pulsado el botón **LOC/DX** para alternar. La app se reiniciará automáticamente.
 
-### 1.2 Navegación de Favoritos (Hardware) [Novedad v4.6.1]
-En los Layouts 2 y 3, los botones de navegación ahora rodean la frecuencia central para un acceso rápido:
-- **Favoritos:** Los botones centrales permiten saltar entre tus emisoras memorizadas directamente. Esta función está integrada con los mandos de volante de tu unidad (K706/MT8163).
-- **Búsqueda (Seek):** Los botones exteriores realizan la búsqueda automática de la siguiente emisora con señal.
+### 1.2 Navegación de Favoritos (Hardware)
+- **Favoritos:** Los botones centrales permiten saltar entre tus emisoras memorizadas. Compatible con mandos de volante (K706/MT8163).
+- **Búsqueda (Seek):** Los botones exteriores realizan la búsqueda automática de señal.
 
 ---
 
 ## 2. Personalización Premium (Menú Secreto)
 
-Mantén pulsado el botón de **Configuración (EQ)** para acceder al centro de personalización:
+Mantén pulsado el botón de **Configuración (EQ)** para acceder:
 
-### 2.1 Barra de Estado Opcional [Novedad v4.6.1]
-En el Layout 2, ahora puedes elegir ocultar o mostrar la barra de estado de Android (reloj, notificaciones, etc.) mediante el interruptor **"Barra de Estado v2"**.
+### 2.1 Colores del Tema y Modo Noche
+Elige entre 10 esquemas de color. En **Modo Noche**, se aplicará el color **"Night Blue"** para mejorar la visibilidad nocturna y reducir la fatiga visual.
 
-### 2.2 Colores del Tema y Modo Noche
-Elige entre 10 esquemas de color para los bordes y acentos. En **Modo Noche**, la app aplicará el color **"Night Blue"** a todos los indicadores (ST, PTY, AF, TA, TP) para una visibilidad nocturna premium.
-
-### 2.3 Modo de Fondo (Glass Mode)
+### 2.2 Modo de Fondo (Glass Mode)
 1. **Negro Puro:** Máximo contraste.
-2. **Imagen background.png:** Carga tu imagen desde `/sdcard/RadioLogos/background.png`.
+2. **Imagen background.png:** Carga una imagen personalizada desde `/sdcard/RadioLogos/background.png`.
 3. **Logo Dinámico (Glass Mode):** El fondo se genera automáticamente a partir del logo de la emisora.
 
 ---
 
-## 3. Créditos y Easter Egg
+## 3. Logos y Streaming Online [Novedad v4.7 Beta]
 
-### 3.1 El Diálogo "Hacker" [Novedad v4.6.1]
-Si quieres conocer los detalles técnicos y los créditos del desarrollador:
-- **Cómo activar:** Pulsa **5 veces seguidas** sobre el visor de frecuencia principal.
-- Verás un diálogo premium con la imagen del desarrollador Jimmy80 y la confirmación de la versión estable actual.
+### 3.1 Servidor de Logos (Beta)
+La app puede descargar logos automáticamente desde nuestro servidor Supabase.
+- **IMPORTANTE:** Actualmente el catálogo de logos está enfocado principalmente a **España**. Se irán añadiendo más regiones progresivamente.
+- Se puede activar en *Ajustes Premium > Logos en Línea*.
+
+### 3.2 Streaming Online (Beta)
+- **Funcionalidad:** Permite escuchar la emisora vía internet si la señal FM es débil.
+- **Estado:** Esta función está en fase de **pruebas**. El catálogo de streaming está centrado actualmente en emisoras de **España**.
+- **Hardware:** Se ha optimizado el motor MT8163 para evitar bloqueos al conmutar entre FM y Streaming.
+
+---
+
+## 4. Gestión de Favoritos
+
+### 4.1 Guardar y Cargar (.fav)
+Usa el botón del **Disquete (💾)** para exportar o importar tu lista de favoritos. Esto permite copias de seguridad o mover tu configuración entre dispositivos.
 
 ---
 
-## 4. Gestión de Logos y Favoritos
+## 5. Configuración de Hardware
 
-### 4.1 Logos de Emisoras
-La app busca logos localmente en `/sdcard/RadioLogos/frecuencia_khz.png` o mediante la API Online si está habilitada.
-
-### 4.2 Guardar y Cargar (.fav)
-Usa el botón del **Disquete (💾)** para exportar o importar tu lista de favoritos.
+Si experimentas problemas de audio o sintonización, selecciona tu motor en *Ajustes Hardware*:
+- **HCN (K706):** Para unidades Vento/HCN.
+- **Eonon/Topway (MT8163):** Optimizado para evitar congelaciones en v4.7.
+- **QS6:** Para unidades Nanis/NWD.
 
 ---
-*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v4.6.1 Final*
+**AVISO:** Esta es una versión **BETA**. Algunas funciones de servidor y streaming están bajo pruebas constantes.
+*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v.4.7 Beta Server*

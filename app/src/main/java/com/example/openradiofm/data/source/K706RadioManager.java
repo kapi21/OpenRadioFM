@@ -624,8 +624,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         boolean stFlag     = (flags & 0x10) != 0; // V9.9: Bit 4 es Stereo
         boolean locFlag    = (flags & 0x20) != 0; // V9.9: Bit 5 es Local (1=Local, 0=DX)
         
-        // V12.4: Incluir seekFlag en el estado de escaneo para que la UI sepa cuando se detiene un Seek Up/Down
-        boolean newScanState = asFlag || scanFlag || flagsSeek;
+        // V12.4: El estado de escaneo real para la UI solo debe ser AutoStore o Scan.
+        // NO incluimos flagsSeek aquí para evitar que PresetManager oculte los nombres RDS.
+        boolean newScanState = asFlag || scanFlag;
         if (mIsScanning != newScanState) {
             mIsScanning = newScanState;
             fireEvent(108, String.valueOf(mIsScanning ? 1 : 0));
@@ -1732,7 +1733,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     /**
-     * V9.5: Getter público para estado de scanning.
+     * V9.5: Getter público para estado de scanning (AutoStore o Scan).
+     * V18.5: Excluimos deliberadamente el estado de Seek para que los textos de favoritos
+     * no se conviertan en frecuencia durante un simple seek.
      */
     public boolean isScanning() {
         return mIsScanning;

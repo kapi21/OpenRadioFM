@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v4.6 Beta Integration</string>
+    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium Customization</string>
@@ -77,6 +77,9 @@
     <string name="language_japanese">Japanese</string>
     <string name="language_changed">✅ Language changed to %s</string>
     <string name="about_openradio">ℹ️ About OpenRadioFM</string>
+    <string name="about_info_header">INFORMATION</string>
+    <string name="about_dev_by">Developed by</string>
+    <string name="about_tech_details">Technical Details</string>
     <string name="touch_to_change">Touch to change</string>
 
     <!-- V4.3: Hardware Settings -->

@@ -63,8 +63,9 @@ public class OnlineStreamManager {
         // 1. Conmutar canal MCU a Android (El hardware de la radio debe saber que Android va a sonar)
         if (mPlaybackManager != null) {
             if (mPlaybackManager.getEngine() != null) {
-                mPlaybackManager.getEngine().setOnlineStreamingActive(true); // V18.4: Notificar modo streaming
-                mPlaybackManager.getEngine().switchToAndroidAudio();
+                // V18.5: setOnlineStreamingActive ya llama internamente a switchToAndroidAudio() 
+                // en motores como MT8163, evitamos llamadas redundantes que bloqueen el hilo.
+                mPlaybackManager.getEngine().setOnlineStreamingActive(true); 
             }
         }
 

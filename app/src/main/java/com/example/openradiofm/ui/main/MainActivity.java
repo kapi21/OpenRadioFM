@@ -1430,26 +1430,27 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     /**
-     * Configura el Easter Egg de créditos al pulsar la frecuencia. (Restaurado)
+     * V17.2: Acción centralizada para el Easter Egg de créditos.
      */
+    private void handleCreditsClick() {
+        long now = System.currentTimeMillis();
+        if (mCreditsClickCount == 0 || (now - mCreditsStartTime) > 3000) {
+            mCreditsClickCount = 1;
+            mCreditsStartTime = now;
+        } else {
+            mCreditsClickCount++;
+        }
+
+        if (mCreditsClickCount >= 5) {
+            mCreditsClickCount = 0;
+            if (mDialogManager != null)
+                mDialogManager.showCreditsDialog();
+        }
+    }
+
     private void setupCreditsEasterEgg() {
         if (tvFrequency != null) {
-            tvFrequency.setOnClickListener(v -> {
-                long now = System.currentTimeMillis();
-                // Reset si han pasado más de 3 segundos desde el primer clic
-                if (mCreditsClickCount == 0 || (now - mCreditsStartTime) > 3000) {
-                    mCreditsClickCount = 1;
-                    mCreditsStartTime = now;
-                } else {
-                    mCreditsClickCount++;
-                }
-
-                if (mCreditsClickCount >= 5) {
-                    mCreditsClickCount = 0;
-                    if (mDialogManager != null)
-                        mDialogManager.showCreditsDialog();
-                }
-            });
+            tvFrequency.setOnClickListener(v -> handleCreditsClick());
 
             // V16.2: Pulsación larga para editar nombre (RDS PS)
             tvFrequency.setOnLongClickListener(v -> {
@@ -1608,6 +1609,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V4: Bind Frequency Box for gestures (Fluid Drag)
         // V17.1: Mover el listener a tvFrequency para que no bloquee los iconos de ivDataActivity
         if (tvFrequency != null) {
+            tvFrequency.setClickable(true); // Ensura clickability
             tvFrequency.setOnTouchListener(new OnSwipeTouchListener(this) {
                 private float scrollAccumulator = 0;
                 private static final int SCROLL_SENSITIVITY = 30; // Pixels per step
@@ -1626,6 +1628,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         }
                         scrollAccumulator = 0;
                     }
+                }
+
+                @Override
+                public void onSingleTap() {
+                    // Si falla el performClick directo, llamamos a la lógica
+                    handleCreditsClick();
                 }
             });
         }
@@ -2093,14 +2101,26 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V4: Swipe Listener Class
     private static class OnSwipeTouchListener implements View.OnTouchListener {
         private final GestureDetector gestureDetector;
+        private final View targetView;
 
         public OnSwipeTouchListener(Context ctx) {
+            this(ctx, null);
+        }
+
+        public OnSwipeTouchListener(Context ctx, View view) {
+            this.targetView = view;
             gestureDetector = new GestureDetector(ctx, new GestureListener());
         }
 
         @Override
         public boolean onTouch(View v, MotionEvent event) {
-            return gestureDetector.onTouchEvent(event);
+            boolean handled = gestureDetector.onTouchEvent(event);
+            // V17.2: Si hay un ACTION_UP y no ha sido manejado por gestos (swipe/fling), 
+            // dejamos que el sistema intente el click normal o llamamos a performClick.
+            if (event.getAction() == MotionEvent.ACTION_UP && !handled) {
+                v.performClick();
+            }
+            return handled;
         }
 
         private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -2110,6 +2130,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             @Override
             public boolean onDown(MotionEvent e) {
                 return true;
+            }
+
+            @Override
+            public boolean onSingleTapUp(MotionEvent e) {
+                onSingleTap();
+                return false; // Retornamos falso para que ACTION_UP lance el click si fuera necesario
             }
 
             @Override
@@ -2143,6 +2169,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
 
         public void onScrollEvent(float distanceX) {
+        }
+
+        public void onSingleTap() {
         }
     }
 

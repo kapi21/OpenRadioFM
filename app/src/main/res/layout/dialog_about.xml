@@ -15,7 +15,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Acerca de OpenRadioFM"
+                android:text="@string/about_openradio"
                 android:textColor="#00E676"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -37,13 +37,13 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:text="Versión 4.6 Beta Integration"
+            android:text="v.4.7 Beta Server"
             android:layout_marginBottom="24dp"/>
 
         <!-- SUBHEADER -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="INFORMACIÓN"
+            android:text="@string/about_info_header"
             android:textColor="#FFD600"
             android:textSize="14sp"
             android:fontFamily="sans-serif-medium"
@@ -70,7 +70,7 @@
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:text="Desarrollado por"
+                    android:text="@string/about_dev_by"
                     android:layout_marginBottom="2dp"/>
                 <TextView
                     android:layout_width="wrap_content"
@@ -98,7 +98,7 @@
                     android:textColor="#FFFFFF"
                     android:textSize="16sp"
                     android:textStyle="bold"
-                    android:text="Detalles Técnicos"
+                    android:text="@string/about_tech_details"
                     android:layout_marginBottom="2dp"/>
                 <TextView 
                     android:layout_width="wrap_content"
