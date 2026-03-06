@@ -1,28 +1,26 @@
-# ROADMAP v.5.0 & FUTURE - OpenRadioFM 🗺️
+# ROADMAP v.5.0 & THE FUTURE - OpenRadioFM 🗺️
 
-Tras el éxito de la **v.4.7 Beta Server**, estos son los objetivos propuestos para las siguientes fases de desarrollo:
+Tras la culminación de la **v.4.7.5 "Global Edition"**, los siguientes hitos de desarrollo establecen la ruta técnica y funcional para la versión 5.0, priorizando la arquitectura y la integración profunda con Android Automotive.
 
-## 🚀 Próxima Versión (v.5.0 - Dynamic Integration)
-### 1. Sistema de Logos Global
-- Expandir el catálogo de logos más allá de España (Portugal, Francia, UK, etc.).
-- Implementar un sistema de "caché persistente" más eficiente para logos online.
+## 🚀 Fase 1: Desacoplamiento Arquitectónico (Clean Architecture)
+- **Refactorización de `MainActivity`**: Reducir sus >2400 líneas migrando hacia Patrones de Presentación (MVVM o controladores dedicados).
+- **Gestión Reactiva**: Remplazar el complejo sistema de callbacks de UI por observadores de estado.
+- **`PresetUIController` y `MediaSessionControl`**: Extraer la lógica de favoritos y gestión del foco de audio (Bluetooth) a componentes aislados.
 
-### 2. Audio & Streaming
-- Implementar soporte para metadatos (título/artista) en Online Streaming.
-- Añadir un selector de calidad para el streaming (Bajo/Medio/Alto).
+## 🛡️ Fase 2: Robustez del Motor (Service-Based)
+- **`RadioForegroundService`**: Independizar el motor de radio (K706, MT8163, QS6) de la actividad principal. Esto asegurará que la radio nunca muera cuando el coche se quede sin memoria o se cambie a navegadores pesados.
+- **Soporte `MediaSessionCompat` avanzado**: Permitirá a los controles del volante (SWC) y minireproductores del coche (pantalla dividida, PiP launcher) interactuar sin que la App principal esté abierta en pantalla.
+- **Unificación de motores `BaseRadioEngine`**: Factorizar la infraestructura común de las plataformas para simplificar adición de futuros SoCs.
 
-### 3. UI/UX "Liquid Design"
-- Añadir animaciones de transición suaves entre Layouts.
-- Implementar un "Modo Mini-Reproductor" para la barra de estado del sistema.
+## 🌍 Fase 3: Ecosistema y Networking
+- **Sistema de Logos Expandido (Europa+)**: Continuar potenciando el Crowdsourcing para cubrir PI Codes de Francia, UK, Alemania, Italia y Portugal en Supabase.
+- **Modo Radio Híbrido**: Transición automática (Trigger de pérdida de señal RDS/RSSI o AF pasivo) del canal FM/AM a Online Streaming cuando el coche entra en un túnel.
+- **Kotlin Migration (Fase Piloto)**: Iniciar adopción de Coroutines en Repositorios (Supabase/RadioBrowser) para reducir la complejidad técnica de los procesos multi-hilo de Java (`ExecutorService`).
 
-## 🛠️ Investigación Técnica (Largo Plazo)
-- **RDS PI Monitoring**: Mejorar la detección automática de nombres RDS mediante base de datos PI remota.
-- **DAB+ Support**: Investigar la integración de dongles DAB externos mediante protocolos USB genéricos.
-- **Android Auto Native**: Migrar el servicio de medios para una mayor compatibilidad con las últimas versiones de Android Auto.
-
-## 🧹 Mantenimiento Continuo
-- Refactorización de `MainActivity.java` (actualmente +2500 líneas) moviendo lógica de gestos a una clase independiente.
-- Actualización de dependencias de Media3 y ExoPlayer.
+## 💎 Características Premium y Experiencia
+- **Soporte Nativo Android Auto**: Preparar los motores para emitir de forma universal a consolas conectadas externas usando la arquitectura Service-Based.
+- **Liquid UI Animations**: Añadir transiciones interpoladas suaves entre Vistas (Layout 1, 2, 3) y al navegar por favoritos.
+- **Analizador Espectro DSP**: Interceptar audio interno del chip principal para visualizar la banda sonora en tiempo real en la pantalla.
 
 ---
-*OpenRadioFM: La radio definitiva para Android Head Units.*
+*OpenRadioFM: Elevando el estándar del In-Car Infotainment Libre.*
