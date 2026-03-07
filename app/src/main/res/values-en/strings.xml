@@ -144,4 +144,32 @@
     <string name="provider_both">Combined (Supabase > Web)</string>
     <string name="contrib_cloud">Contribute to Community (HD Logos)</string>
     <string name="contrib_cloud_desc">Automatically send Frequency and PI Code of local stations to improve the global database.</string>
+
+    <string name="status_bar_v2">Status Bar (Layout 2)</string>
+    <string name="status_bar_enabled">✅ Status bar enabled (Layout 2)</string>
+    <string name="status_bar_disabled">❌ Status bar disabled (Layout 2)</string>
+    <string name="language_romanian">Română</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_serbian">Srpski</string>
+
+    <!-- App Status & Dialogs -->
+    <string name="edit_station_name">Edit station name</string>
+    <string name="frequency_label">Frequency: %1$s MHz</string>
+    <string name="searching_next">Searching next...</string>
+    <string name="scanning">Scanning...</string>
+    <string name="scan_completed">Scan paused / finished</string>
+    <string name="identifying_rds">Identifying station (RDS)...</string>
+    <string name="version">Version %1$s</string>
+    
+    <!-- Engineering Mode -->
+    <string name="radio_engine_label">⚙ RADIO ENGINE: %1$s</string>
+    <string name="freq_no_service">FREQ: NO_SERVICE\nBAND: ---\nFLAGS: ---</string>
+    <string name="freq_error_read">FREQ: ERROR_READ\nBAND: ---\n%1$s</string>
+    <string name="sqi_no_service">SQI_INDEX.....: NO_SERVICE</string>
+    <string name="sqi_error_read">SQI_INDEX.....: ERROR_READ</string>
+    <string name="af_list_scanning">AF_LIST.......: [SCANNING]</string>
+    <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
+    <string name="favorites_reset_complete">Favorites reset correctly</string>
+    <string name="history_cleared">History cleared</string>
+    <string name="my_favorites">My Favorites</string>
 </resources>

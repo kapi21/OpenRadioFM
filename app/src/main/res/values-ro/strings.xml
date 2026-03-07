@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
     
-    <!-- Premium Menu Strings -->
+    
     <string name="premium_customization">Personalizare Premium</string>
     <string name="theme_colors">Culori Temă</string>
     <string name="typography">Tipografie</string>
@@ -16,12 +16,12 @@
     <string name="font_applied">Font aplicat</string>
     <string name="bg_mode_updated">Mod fundal actualizat</string>
     
-    <!-- Background Modes -->
+    
     <string name="bg_pure_black">Negru Pur</string>
     <string name="bg_fixed_image">Imagine background.png</string>
     <string name="bg_dynamic_logo">Logo Stație (Dinamic)</string>
 
-    <!-- Font Names -->
+    
     <string name="font_default">Implicit (Sistem)</string>
     <string name="font_bebas">Robotic (Bebas)</string>
     <string name="font_digital">Digital (LED)</string>
@@ -29,14 +29,14 @@
     <string name="font_orbitron">Futurist (Orbitron)</string>
     <string name="font_formula1">Curse (Formula 1)</string>
     
-    <!-- V4.0: App Options -->
+    
     <string name="app_options">Opțiuni Aplicație</string>
     <string name="night_mode_auto">Mod Noapte Automat</string>
     <string name="save_history">Salvează Istoricul Stațiilor</string>
     <string name="enable_gestures_beta">Activează Geste (Swipe) (beta)</string>
     <string name="online_logos">Logo-uri Online</string>
     
-    <!-- V4.0: Feedback Messages -->
+    
     <string name="night_mode_enabled">✅ Mod Noapte Automat activat</string>
     <string name="night_mode_disabled">❌ Mod Noapte Automat dezactivat</string>
     <string name="history_enabled">✅ Istoric stații activat</string>
@@ -47,7 +47,7 @@
     <string name="logos_online_disabled">❌ Logo-uri online dezactivate</string>
     <string name="night_mode_manual_blocked">Dezactivați Modul Noapte Automat pentru a alege tema manual</string>
     
-    <!-- V4.0: Save/Load Favorites -->
+    
     <string name="save_load_favorites">💾 Salvează/Încarcă Favorite</string>
     <string name="save_favorites">💾 Salvează Favorite</string>
     <string name="load_favorites">📂 Încarcă Favorite</string>
@@ -60,14 +60,14 @@
     <string name="folder_not_found">❌ Dosarul RadioLogos nu a fost găsit</string>
     <string name="no_favorites_files">❌ Nu s-au găsit fișiere de favorite</string>
     
-    <!-- V4.0: Android Settings -->
+    
     <string name="error_opening_settings">Nu s-au putut deschide Setările</string>
     
-    <!-- V4.0: History -->
+    
     <string name="history_empty">Istoric gol</string>
     <string name="station_history">📜 Istoric Stații</string>
     
-    <!-- V4.0: Language Selector -->
+    
     <string name="app_language">Limba Aplicației</string>
     <string name="select_language">Selectează Limba</string>
     <string name="language_spanish">Spaniolă</string>
@@ -82,7 +82,7 @@
     <string name="about_tech_details">Detalii Tehnice</string>
     <string name="touch_to_change">Atinge pentru a schimba</string>
 
-    <!-- V4.3: Hardware Settings -->
+    
     <string name="hardware_settings">⚙️ Setări Hardware</string>
     <string name="enable_am_band">Activează Banda AM</string>
     <string name="radio_engine">Motor Radio</string>
@@ -97,13 +97,13 @@
     <string name="am_band_disabled">❌ Bandă AM dezactivată</string>
     <string name="engine_changed">✅ Motor radio schimbat în %s</string>
 
-    <!-- V4.5: Night Mode Schedule -->
+    
     <string name="night_schedule">Program Mod Noapte</string>
     <string name="night_start">Start</string>
     <string name="night_end">Sfârșit</string>
     <string name="night_schedule_updated">✅ Program actualizat: %1$s - %2$s</string>
 
-    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    
     <string name="pty_none">Fără PTY</string>
     <string name="pty_news">Știri</string>
     <string name="pty_current_affairs">Actualități</string>
@@ -137,11 +137,11 @@
     <string name="pty_alarm_test">Test Alarmă</string>
     <string name="pty_alarm">Alarmă</string>
 
-    <!-- V16.2: Logo Providers -->
+    
     <string name="logo_provider">Furnizor de Logo-uri</string>
     <string name="provider_supabase">Supabase (Comunitate HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Rezervă)</string>
-    <string name="provider_both">Combinat (Supabase > Web)</string>
+    <string name="provider_both">Combinat (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Contribuie la Comunitate (Logouri HD)</string>
     <string name="contrib_cloud_desc">Trimite automat frecvența și codul PI al stațiilor locale pentru a îmbunătăți baza de date globală.</string>
-</resources>
+<string name="status_bar_v2">Bara de stare (Layout 2)</string><string name="status_bar_enabled">✅ Bara de stare activată</string><string name="status_bar_disabled">❌ Bara de stare dezactivată</string><string name="edit_station_name">Editează numele stației</string><string name="frequency_label">Frecvență: %1$s MHz</string><string name="searching_next">Căutare următoarea...</string><string name="scanning">Scanare...</string><string name="scan_completed">Scanare completă</string><string name="identifying_rds">Identificare stație (RDS)...</string><string name="version">Versiunea %1$s</string><string name="radio_engine_label">⚙ MOTOR RADIO : %1$s</string><string name="freq_no_service">FREQ: FĂRĂ_SERVICIU\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: EROARE_CITIRE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: FĂRĂ_SERVICIU</string><string name="sqi_error_read">SQI_INDEX.....: EROARE_CITIRE</string><string name="af_list_scanning">AF_LIST.......: [SCANARE]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoritele au fost resetate cu succes</string><string name="history_cleared">Istoric șters</string><string name="my_favorites">Favoritele mele</string></resources>

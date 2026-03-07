@@ -1,3 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
     <string name="premium_customization">高级个性化</string>
@@ -81,11 +82,11 @@
     <string name="night_end">结束</string>
     <string name="night_schedule_updated">✅ 计划已更新: %1$s - %2$s</string>
 
-    <!-- V16.2: Logo Providers -->
+    
     <string name="logo_provider">徽标提供者</string>
     <string name="provider_supabase">Supabase (高清社区)</string>
     <string name="provider_radiobrowser">Radio-Browser (备用)</string>
-    <string name="provider_both">组合 (Supabase > 网页)</string>
+    <string name="provider_both">组合 (Supabase &gt; 网页)</string>
     <string name="contrib_cloud">向社区贡献（高清图标）</string>
     <string name="contrib_cloud_desc">自动发送本地电台的频率和PI码，以改进全球数据库。</string>
-</resources>
+<string name="status_bar_v2">状态栏 (布局 2)</string><string name="status_bar_enabled">✅ 状态栏已启用</string><string name="status_bar_disabled">❌ 状态栏已禁用</string><string name="pty_none">无 PTY</string><string name="pty_news">新闻</string><string name="pty_current_affairs">时事</string><string name="pty_information">信息</string><string name="pty_sport">体育</string><string name="pty_education">教育</string><string name="pty_drama">剧情</string><string name="pty_culture">文化</string><string name="pty_science">科学</string><string name="pty_varied">杂项</string><string name="pty_pop">流行音乐</string><string name="pty_rock">摇滚音乐</string><string name="pty_easy_listening">轻音乐</string><string name="pty_light_classical">轻古典</string><string name="pty_serious_classical">古典音乐</string><string name="pty_other_music">其他音乐</string><string name="pty_weather">天气</string><string name="pty_finance">金融</string><string name="pty_children">儿童</string><string name="pty_social">社会</string><string name="pty_religion">宗教</string><string name="pty_phone_in">热线</string><string name="pty_travel">旅游</string><string name="pty_leisure">休闲</string><string name="pty_jazz">爵士</string><string name="pty_country">乡村</string><string name="pty_national">国家</string><string name="pty_oldies">怀旧</string><string name="pty_folk">民谣</string><string name="pty_documentary">纪录片</string><string name="pty_alarm_test">报警测试</string><string name="pty_alarm">报警</string><string name="edit_station_name">编辑电台名称</string><string name="frequency_label">频率: %1$s MHz</string><string name="searching_next">正在搜索下一个...</string><string name="scanning">扫描中...</string><string name="scan_completed">扫描完成</string><string name="identifying_rds">正在识别电台 (RDS)...</string><string name="version">版本 %1$s</string><string name="radio_engine_label">⚙ 广播引擎 : %1$s</string><string name="freq_no_service">FREQ: 无服务\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: 读取错误\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: 无服务</string><string name="sqi_error_read">SQI_INDEX.....: 读取错误</string><string name="af_list_scanning">AF_LIST.......: [扫描中]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">已成功重置收藏夹</string><string name="history_cleared">历史记录已清除</string><string name="my_favorites">我的收藏</string></resources>

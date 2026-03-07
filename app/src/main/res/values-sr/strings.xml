@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
     
-    <!-- Premium Menu Strings -->
+    
     <string name="premium_customization">Premium Prilagođavanje</string>
     <string name="theme_colors">Boje Teme</string>
     <string name="typography">Tipografija</string>
@@ -16,12 +16,12 @@
     <string name="font_applied">Font primenjen</string>
     <string name="bg_mode_updated">Režim pozadine ažuriran</string>
     
-    <!-- Background Modes -->
+    
     <string name="bg_pure_black">Potpuno Crna</string>
     <string name="bg_fixed_image">Slika background.png</string>
     <string name="bg_dynamic_logo">Logo Stanice (Dinamički)</string>
 
-    <!-- Font Names -->
+    
     <string name="font_default">Podrazumevano (Sistem)</string>
     <string name="font_bebas">Robotski (Bebas)</string>
     <string name="font_digital">Digitalni (LED)</string>
@@ -29,14 +29,14 @@
     <string name="font_orbitron">Futuristički (Orbitron)</string>
     <string name="font_formula1">Trkački (Formula 1)</string>
     
-    <!-- V4.0: App Options -->
+    
     <string name="app_options">Opcije Aplikacije</string>
     <string name="night_mode_auto">Automatski Noćni Režim</string>
     <string name="save_history">Sačuvaj Istoriju Stanica</string>
     <string name="enable_gestures_beta">Omogući Gestove (Svajp) (beta)</string>
     <string name="online_logos">Logotipi na mreži</string>
     
-    <!-- V4.0: Feedback Messages -->
+    
     <string name="night_mode_enabled">✅ Automatski noćni režim omogućen</string>
     <string name="night_mode_disabled">❌ Automatski noćni režim onemogućen</string>
     <string name="history_enabled">✅ Istorija stanica omogućena</string>
@@ -47,7 +47,7 @@
     <string name="logos_online_disabled">❌ Logotipi na mreži onemogućeni</string>
     <string name="night_mode_manual_blocked">Onemogućite automatski noćni režim da biste ručno izabrali temu</string>
     
-    <!-- V4.0: Save/Load Favorites -->
+    
     <string name="save_load_favorites">💾 Sačuvaj/Učitaj Omiljeno</string>
     <string name="save_favorites">💾 Sačuvaj Omiljeno</string>
     <string name="load_favorites">📂 Učitaj Omiljeno</string>
@@ -60,14 +60,14 @@
     <string name="folder_not_found">❌ Fascikla RadioLogos nije pronađena</string>
     <string name="no_favorites_files">❌ Nisu pronađene datoteke omiljenih</string>
     
-    <!-- V4.0: Android Settings -->
+    
     <string name="error_opening_settings">Neuspešno otvaranje Podešavanja</string>
     
-    <!-- V4.0: History -->
+    
     <string name="history_empty">Istorija je prazna</string>
     <string name="station_history">📜 Istorija Stanica</string>
     
-    <!-- V4.0: Language Selector -->
+    
     <string name="app_language">Jezik Aplikacije</string>
     <string name="select_language">Izaberi Jezik</string>
     <string name="language_spanish">Španski</string>
@@ -80,7 +80,7 @@
     <string name="about_openradio">ℹ️ O OpenRadioFM</string>
     <string name="touch_to_change">Dodirnite da biste promenili</string>
 
-    <!-- V4.3: Hardware Settings -->
+    
     <string name="hardware_settings">⚙️ Hardverska Podešavanja</string>
     <string name="enable_am_band">Omogući AM Opseg</string>
     <string name="radio_engine">Radio Motor</string>
@@ -95,13 +95,13 @@
     <string name="am_band_disabled">❌ AM opseg onemogućen</string>
     <string name="engine_changed">✅ Radio motor promenjen u %s</string>
 
-    <!-- V4.5: Night Mode Schedule -->
+    
     <string name="night_schedule">Raspored Noćnog Režima</string>
     <string name="night_start">Početak</string>
     <string name="night_end">Završetak</string>
     <string name="night_schedule_updated">✅ Raspored ažuriran: %1$s - %2$s</string>
 
-    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    
     <string name="pty_none">Nema PTY</string>
     <string name="pty_news">Vesti</string>
     <string name="pty_current_affairs">Aktuelnosti</string>
@@ -135,11 +135,11 @@
     <string name="pty_alarm_test">Test alarma</string>
     <string name="pty_alarm">Alarm</string>
 
-    <!-- V16.2: Logo Providers -->
+    
     <string name="logo_provider">Добављач логотипа</string>
     <string name="provider_supabase">Supabase (HD заједница)</string>
     <string name="provider_radiobrowser">Radio-Browser (Резерва)</string>
-    <string name="provider_both">Kombinovano (Supabase > Web)</string>
+    <string name="provider_both">Kombinovano (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Doprinesi zajednici (HD logotipi)</string>
     <string name="contrib_cloud_desc">Automatski šalji frekvenciju i PI kod lokalnih stanica radi poboljšanja globalne baze podataka.</string>
-</resources>
+<string name="status_bar_v2">Статусна трака (Layout 2)</string><string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string></resources>

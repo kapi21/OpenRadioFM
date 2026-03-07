@@ -115,7 +115,7 @@ public class K706EngineeringDialog extends Dialog {
         int idx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
         String[] engines = { "Auto", "HCN", "MTK", "Standard", "TS" };
         String name = (idx >= 0 && idx < engines.length) ? engines[idx] : "Auto";
-        btnEngine.setText("⚙ RADIO ENGINE: " + name);
+        btnEngine.setText(getContext().getString(R.string.radio_engine_label, name));
         btnEngine.setTextColor(Color.parseColor("#00FF00"));
         btnEngine.setBackgroundColor(Color.parseColor("#1a1a2e"));
         btnEngine.setAllCaps(false);
@@ -443,7 +443,7 @@ public class K706EngineeringDialog extends Dialog {
     private void updateMonitor() {
         if (mActivity == null || mActivity.mRadioService == null) {
             if (tvMonitor != null) {
-                tvMonitor.setText("FREQ: NO_SERVICE\nBAND: ---\nFLAGS: ---");
+                tvMonitor.setText(getContext().getString(R.string.freq_no_service));
             }
             return;
         }
@@ -533,7 +533,7 @@ public class K706EngineeringDialog extends Dialog {
 
         } catch (Exception e) {
             if (tvMonitor != null) {
-                tvMonitor.setText("FREQ: ERROR_READ\nBAND: ---\n" + e.getMessage());
+                tvMonitor.setText(getContext().getString(R.string.freq_error_read, e.getMessage()));
             }
         }
     }

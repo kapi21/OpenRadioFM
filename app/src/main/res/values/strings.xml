@@ -150,4 +150,25 @@
     <string name="provider_both">Combinado (Supabase > Web)</string>
     <string name="contrib_cloud">Contribuir a la Comunidad (Logos HD)</string>
     <string name="contrib_cloud_desc">Envía automáticamente Frecuencia y PI Code de emisoras locales para mejorar la base de datos global.</string>
+
+    <!-- App Status & Dialogs -->
+    <string name="edit_station_name">Editar nombre de emisora</string>
+    <string name="frequency_label">Frecuencia: %1$s MHz</string>
+    <string name="searching_next">Buscando siguiente...</string>
+    <string name="scanning">Escaneando...</string>
+    <string name="scan_completed">Escaneo pausado / finalizado</string>
+    <string name="identifying_rds">Identificando emisora (RDS)...</string>
+    <string name="version">Versión %1$s</string>
+    
+    <!-- Engineering Mode -->
+    <string name="radio_engine_label">⚙ RADIO ENGINE: %1$s</string>
+    <string name="freq_no_service">FREQ: NO_SERVICE\nBAND: ---\nFLAGS: ---</string>
+    <string name="freq_error_read">FREQ: ERROR_READ\nBAND: ---\n%1$s</string>
+    <string name="sqi_no_service">SQI_INDEX.....: NO_SERVICE</string>
+    <string name="sqi_error_read">SQI_INDEX.....: ERROR_READ</string>
+    <string name="af_list_scanning">AF_LIST.......: [SCANNING]</string>
+    <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
+    <string name="favorites_reset_complete">Favoritos restablecidos correctamente</string>
+    <string name="history_cleared">Historial borrado</string>
+    <string name="my_favorites">Mis Favoritos</string>
 </resources>

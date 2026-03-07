@@ -1,7 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
     
-    <!-- Premium Menu Strings -->
+    
     <string name="premium_customization">Премиум Настройки</string>
     <string name="theme_colors">Цвета Темы</string>
     <string name="typography">Типография</string>
@@ -15,12 +16,12 @@
     <string name="font_applied">Шрифт применён</string>
     <string name="bg_mode_updated">Режим фона обновлён</string>
     
-    <!-- Background Modes -->
+    
     <string name="bg_pure_black">Чистый Чёрный</string>
     <string name="bg_fixed_image">Фиксированное Изображение (background.png)</string>
     <string name="bg_dynamic_logo">Логотип Станции (Динамический)</string>
 
-    <!-- Font Names -->
+    
     <string name="font_default">По умолчанию (System)</string>
     <string name="font_bebas">Роботический (Bebas)</string>
     <string name="font_digital">Цифровой (LED)</string>
@@ -28,14 +29,14 @@
     <string name="font_orbitron">Футуристический (Orbitron)</string>
     <string name="font_formula1">Гонки (Formula 1)</string>
     
-    <!-- V4.0: App Options -->
+    
     <string name="app_options">Настройки Приложения</string>
     <string name="night_mode_auto">Автоматический Ночной Режим</string>
     <string name="save_history">Сохранять Историю Станций</string>
     <string name="enable_gestures_beta">Включить Жесты (Свайп) (бета)</string>
     <string name="online_logos">Онлайн Логотипы</string>
     
-    <!-- V4.0: Feedback Messages -->
+    
     <string name="night_mode_enabled">✅ Автоматический ночной режим включён</string>
     <string name="night_mode_disabled">❌ Автоматический ночной режим выключен</string>
     <string name="history_enabled">✅ История станций включена</string>
@@ -46,7 +47,7 @@
     <string name="logos_online_disabled">❌ Онлайн логотипы выключены</string>
     <string name="night_mode_manual_blocked">Отключите автоматический ночной режим для выбора темы вручную</string>
     
-    <!-- V4.0: Save/Load Favorites -->
+    
     <string name="save_load_favorites">💾 Сохранить/Загрузить Избранное</string>
     <string name="save_favorites">💾 Сохранить Избранное</string>
     <string name="load_favorites">📂 Загрузить Избранное</string>
@@ -59,14 +60,14 @@
     <string name="folder_not_found">❌ Папка RadioLogos не найдена</string>
     <string name="no_favorites_files">❌ Файлы избранного не найдены</string>
     
-    <!-- V4.0: Android Settings -->
+    
     <string name="error_opening_settings">Не удалось открыть Настройки</string>
     
-    <!-- V4.0: History -->
+    
     <string name="history_empty">История пуста</string>
     <string name="station_history">📜 История Станций</string>
     
-    <!-- V4.0: Language Selector -->
+    
     <string name="app_language">Язык Приложения</string>
     <string name="select_language">Выбрать Язык</string>
     <string name="language_spanish">Español</string>
@@ -79,7 +80,7 @@
     <string name="about_tech_details">Технические детали</string>
     <string name="touch_to_change">Нажмите для изменения</string>
 
-    <!-- V4.3: Hardware Settings -->
+    
     <string name="hardware_settings">⚙️ Настройки Оборудования</string>
     <string name="enable_am_band">Включить AM Диапазон</string>
     <string name="radio_engine">Радио Движок</string>
@@ -94,13 +95,13 @@
     <string name="am_band_disabled">❌ AM Диапазон выключен</string>
     <string name="engine_changed">✅ Радио движок изменён на %s</string>
 
-    <!-- V4.5: Night Mode Schedule -->
+    
     <string name="night_schedule">Расписание Ночного Режима</string>
     <string name="night_start">Начало</string>
     <string name="night_end">Конец</string>
     <string name="night_schedule_updated">✅ Расписание обновлено: %1$s - %2$s</string>
 
-    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    
     <string name="pty_none">Без PTY</string>
     <string name="pty_news">Новости</string>
     <string name="pty_current_affairs">Текущие События</string>
@@ -134,11 +135,11 @@
     <string name="pty_alarm_test">Тест Тревоги</string>
     <string name="pty_alarm">Тревога</string>
 
-    <!-- V16.2: Logo Providers -->
+    
     <string name="logo_provider">Поставщик логотипов</string>
     <string name="provider_supabase">Supabase (HD Сообщество)</string>
     <string name="provider_radiobrowser">Radio-Browser (Резерв)</string>
-    <string name="provider_both">Комбинированный (Supabase > Web)</string>
+    <string name="provider_both">Комбинированный (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Внести вклад в сообщество (логотипы HD)</string>
     <string name="contrib_cloud_desc">Автоматически отправлять частоту и PI-код местных станций для улучшения глобальной базы данных.</string>
-</resources>
+<string name="status_bar_v2">Строка состояния (Layout 2)</string><string name="status_bar_enabled">✅ Строка состояния включена</string><string name="status_bar_disabled">❌ Строка состояния отключена</string><string name="edit_station_name">Изменить название радиостанции</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Поиск следующей...</string><string name="scanning">Сканирование...</string><string name="scan_completed">Сканирование завершено</string><string name="identifying_rds">Определение радиостанции (RDS)...</string><string name="version">Версия %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДИО : %1$s</string><string name="freq_no_service">FREQ: НЕТ_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ОШИБКА_ЧТЕНИЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕТ_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ОШИБКА_ЧТЕНИЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНИРОВАНИЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Избранное успешно сброшено</string><string name="history_cleared">История очищена</string><string name="my_favorites">Мое избранное</string></resources>

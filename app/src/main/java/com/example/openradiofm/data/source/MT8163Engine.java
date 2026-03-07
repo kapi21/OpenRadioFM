@@ -66,6 +66,14 @@ public class MT8163Engine implements RadioEngine {
                         handleAidlCallback(code, data);
                     }
                 });
+                
+                // V18.6: Si el servicio fue matado por el sistema (ej. abriendo Youtube)
+                // y teníamos una emisora sintonizada, la restauramos automáticamente
+                if (mLastPolledFreq > 0 && !mIsOnlineStreamingActive) {
+                    Log.d(TAG, "Restaurando frecuencia tras reconexión: " + mLastPolledFreq);
+                    mService.gotoFreq(mLastPolledFreq);
+                    mService.requestPlayAudio();
+                }
             } catch (RemoteException e) {
                 Log.e(TAG, "Error registrando callback AIDL", e);
             }
@@ -75,9 +83,22 @@ public class MT8163Engine implements RadioEngine {
         public void onServiceDisconnected(ComponentName name) {
             mService = null;
             mBound = false;
-            Log.w(TAG, "Servicio HCN desconectado");
+            Log.w(TAG, "Servicio HCN desconectado (Posiblemente asesinado por SourceService)");
         }
     };
+
+    private void reconnectIfNeeded() {
+        if ((!mBound || mService == null) && !mExternalService) {
+            Log.w(TAG, "Reconectando servicio HCN (Estaba muerto)...");
+            try {
+                Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
+                intent.setPackage("com.hcn.autoradio");
+                mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            } catch (Exception e) {
+                Log.e(TAG, "Error intentando reconectar", e);
+            }
+        }
+    }
 
     @Override
     public boolean init(Context context) {
@@ -207,7 +228,14 @@ public class MT8163Engine implements RadioEngine {
     public void tune(int freqKhz) {
         if (mService == null) return;
         resetRdsUI();
-        try { mService.gotoFreq(freqKhz); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.gotoFreq(freqKhz); 
+        } catch (android.os.DeadObjectException e) {
+            Log.e(TAG, "DeadObjectException en tune: " + e.getMessage());
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en tune: " + e.getMessage()); 
+        }
         startFreqPolling();
     }
 
@@ -250,22 +278,45 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public int getCurrentFreq() {
+        if (mIsOnlineStreamingActive && mLastPolledFreq > 0) return mLastPolledFreq;
         if (mService == null) return 0;
-        try { return mService.getCurrentFreq(); } catch (RemoteException e) { return 0; }
+        try { 
+            return mService.getCurrentFreq(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+            return 0;
+        } catch (RemoteException e) { 
+            return 0; 
+        }
     }
 
     @Override
     public int getCurrentBand() {
+        if (mIsOnlineStreamingActive) return 0;
         if (mService == null) return 0;
-        try { return mService.getCurrentBand(); } catch (RemoteException e) { return 0; }
+        try { 
+            return mService.getCurrentBand(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+            return 0;
+        } catch (RemoteException e) { 
+            return 0; 
+        }
     }
+    
     @Override
     public void seekUp() {
         if (mService == null) return;
         resetRdsUI();
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current + 100);
-        try { mService.onSeekDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onSeekDownEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en seekUp"); 
+        }
         startFreqPolling();
     }
 
@@ -275,7 +326,13 @@ public class MT8163Engine implements RadioEngine {
         resetRdsUI();
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current - 100);
-        try { mService.onSeekUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onSeekUpEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en seekDown"); 
+        }
         startFreqPolling();
     }
 
@@ -288,7 +345,13 @@ public class MT8163Engine implements RadioEngine {
         if (current > 0 && mCallback != null) {
             mCallback.onFrequencyChanged(current + 100);
         }
-        try { mService.onManualUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onManualUpEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en stepUp"); 
+        }
         startFreqPolling();
     }
 
@@ -301,7 +364,13 @@ public class MT8163Engine implements RadioEngine {
         if (current > 0 && mCallback != null) {
             mCallback.onFrequencyChanged(current - 100);
         }
-        try { mService.onManualDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onManualDownEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en stepDown"); 
+        }
         startFreqPolling();
     }
 
@@ -309,20 +378,38 @@ public class MT8163Engine implements RadioEngine {
     public void scan() {
         if (mService == null) return;
         resetRdsUI();
-        try { mService.onScanEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onScanEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en scan"); 
+        }
         startFreqPolling();
     }
 
     @Override
     public void stopScan() {
         if (mService == null) return;
-        try { mService.onPSEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onPSEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en stopScan"); 
+        }
     }
 
     @Override
     public void bandCycle() {
         if (mService == null) return;
-        try { mService.onBandEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onBandEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en bandCycle"); 
+        }
     }
 
     // === Audio (via HiddenRadioPlayer) ===
@@ -330,7 +417,14 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public boolean isStereo() {
         if (mService == null) return false;
-        try { return mService.IsStereo(); } catch (RemoteException e) { return false; }
+        try { 
+            return mService.IsStereo(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+            return false;
+        } catch (RemoteException e) { 
+            return false; 
+        }
     }
 
     @Override
@@ -365,11 +459,19 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public boolean requestPlayAudio() {
         if (mService == null) return false;
-        try { return mService.requestPlayAudio(); } catch (RemoteException e) { return false; }
+        try { 
+            return mService.requestPlayAudio(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+            return false;
+        } catch (RemoteException e) { 
+            return false; 
+        }
     }
 
     @Override
     public void enforceAudioRecovery() {
+        reconnectIfNeeded();
         // En MT8163 basta con volver a pedir el canal de audio al servicio AIDL
         requestPlayAudio();
         if (mHiddenPlayer != null) {
@@ -386,7 +488,7 @@ public class MT8163Engine implements RadioEngine {
         new Thread(() -> {
             if (mAudioManager != null) {
                 try {
-                    mAudioManager.setParameters("fm_radio_on=0;fm_mute=1");
+                    mAudioManager.setParameters("fm_radio_on=1;fm_mute=1");
                 } catch (Exception e) {
                     Log.e(TAG, "Error setting audio parameters", e);
                 }
@@ -396,9 +498,7 @@ public class MT8163Engine implements RadioEngine {
             mPollingHandler.postDelayed(() -> {
                 // V18.5: NO desmutear aquí si estamos en streaming, el master debe controlarlo la app de origen
                 // setMute(false); 
-                if (mAudioManager != null) {
-                    try { mAudioManager.abandonAudioFocus(mAudioFocusListener); } catch (Exception ignored) {}
-                }
+                // Ya no abandonamos el audio focus para no interferir con SourceService
             }, 300);
         }).start();
     }
@@ -407,7 +507,7 @@ public class MT8163Engine implements RadioEngine {
     public void switchToFmAudio() {
         Log.d(TAG, "switchToFmAudio (MT8163)");
         if (mAudioManager != null) {
-            mAudioManager.requestAudioFocus(mAudioFocusListener, android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.AUDIOFOCUS_GAIN);
+            // Ya no solicitamos audio focus para no interferir con SourceService
             mAudioManager.setParameters("fm_radio_on=1;fm_mute=0");
         }
         enforceAudioRecovery();
@@ -446,13 +546,26 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public void toggleDxLocal() {
         if (mService == null) return;
-        try { mService.onLocDxEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.onLocDxEvent(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en toggleDxLocal"); 
+        }
     }
 
     @Override
     public boolean isDxLocal() {
         if (mService == null) return false;
-        try { return mService.IsDxLocal(); } catch (RemoteException e) { return false; }
+        try { 
+            return mService.IsDxLocal(); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+            return false;
+        } catch (RemoteException e) { 
+            return false; 
+        }
     }
 
     // === Presets ===
@@ -460,7 +573,13 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public void gotoPreset(int index) {
         if (mService == null) return;
-        try { mService.gotoFreqIndex(index); } catch (RemoteException e) { e.printStackTrace(); }
+        try { 
+            mService.gotoFreqIndex(index); 
+        } catch (android.os.DeadObjectException e) {
+            mService = null;
+        } catch (RemoteException e) { 
+            Log.e(TAG, "RemoteException en gotoPreset"); 
+        }
     }
 
     @Override

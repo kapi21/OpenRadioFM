@@ -125,7 +125,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             items.add(new MediaBrowserCompat.MediaItem(
                     new MediaDescriptionCompat.Builder()
                             .setMediaId(PRESETS_ID)
-                            .setTitle("Mis Favoritos")
+                            .setTitle(getString(R.string.my_favorites))
                             .setSubtitle("Emisoras memorizadas")
                             .build(),
                     MediaBrowserCompat.MediaItem.FLAG_BROWSABLE));

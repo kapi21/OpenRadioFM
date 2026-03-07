@@ -1,0 +1,174 @@
+<resources>
+    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    
+    <!-- Premium Menu Strings -->
+    <string name="premium_customization">Premium-Anpassung</string>
+    <string name="theme_colors">Themenfarben</string>
+    <string name="typography">Typografie</string>
+    <string name="background_mode">Hintergrundmodus</string>
+    <string name="accent_color">Akzentfarbe</string>
+    <string name="select_typography">Typografie auswählen</string>
+    <string name="select_bg_mode">Hintergrundmodus</string>
+    <string name="close">Schließen</string>
+    <string name="select_skin">🎨 Design auswählen</string>
+    <string name="select_font">🔤 Schriftart auswählen</string>
+    <string name="font_applied">Schriftart angewendet</string>
+    <string name="bg_mode_updated">Hintergrundmodus aktualisiert</string>
+    
+    <!-- Background Modes -->
+    <string name="bg_pure_black">Reines Schwarz</string>
+    <string name="bg_fixed_image">Bild (background.png)</string>
+    <string name="bg_dynamic_logo">Senderlogo (Dynamisch)</string>
+
+    <!-- Font Names -->
+    <string name="font_default">Standard (System)</string>
+    <string name="font_bebas">Roboterhaft (Bebas)</string>
+    <string name="font_digital">Digital (LED)</string>
+    <string name="font_modern">Modern (Inter)</string>
+    <string name="font_orbitron">Futuristisch (Orbitron)</string>
+    <string name="font_formula1">Rennen (Formula 1)</string>
+    
+    <!-- V4.0: App Options -->
+    <string name="app_options">App-Optionen</string>
+    <string name="night_mode_auto">Automatischer Nachtmodus</string>
+    <string name="save_history">Senderverlauf speichern</string>
+    <string name="enable_gestures_beta">Gesten aktivieren (Swipe) (beta)</string>
+    <string name="online_logos">Online-Logos</string>
+    <string name="status_bar_v2">Statusleiste (Layout 2)</string>
+    <string name="status_bar_enabled">✅ Statusleiste aktiviert (Layout 2)</string>
+    <string name="status_bar_disabled">❌ Statusleiste deaktiviert (Layout 2)</string>
+    
+    <!-- V4.0: Feedback Messages -->
+    <string name="night_mode_enabled">✅ Automatischer Nachtmodus aktiviert</string>
+    <string name="night_mode_disabled">❌ Automatischer Nachtmodus deaktiviert</string>
+    <string name="history_enabled">✅ Senderverlauf aktiviert</string>
+    <string name="history_disabled">❌ Senderverlauf deaktiviert</string>
+    <string name="gestures_enabled">✅ Wischgesten aktiviert</string>
+    <string name="gestures_disabled">❌ Wischgesten deaktiviert</string>
+    <string name="logos_online_enabled">✅ Online-Logos aktiviert</string>
+    <string name="logos_online_disabled">❌ Online-Logos deaktiviert</string>
+    <string name="night_mode_manual_blocked">Nachtmodus deaktivieren, um Design manuell zu wählen</string>
+    
+    <!-- V4.0: Save/Load Favorites -->
+    <string name="save_load_favorites">💾 Favoriten Speichern/Laden</string>
+    <string name="save_favorites">💾 Favoriten speichern</string>
+    <string name="load_favorites">📂 Favoriten laden</string>
+    <string name="select_favorites_file">📂 Favoritendatei auswählen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="favorites_saved">✅ Favoriten gespeichert: %s</string>
+    <string name="favorites_loaded" formatted="false">✅ %d Favoriten aus %s geladen</string>
+    <string name="error_saving_favorites">❌ Fehler beim Speichern: %s</string>
+    <string name="error_loading_favorites">❌ Fehler beim Laden: %s</string>
+    <string name="folder_not_found">❌ RadioLogos-Ordner nicht gefunden</string>
+    <string name="no_favorites_files">❌ Keine Favoritendateien gefunden</string>
+    
+    <!-- V4.0: Android Settings -->
+    <string name="error_opening_settings">Einstellungen konnten nicht geöffnet werden</string>
+    
+    <!-- V4.0: History -->
+    <string name="history_empty">Verlauf leer</string>
+    <string name="station_history">📜 Senderverlauf</string>
+    
+    <!-- V4.0: Language Selector -->
+    <string name="app_language">App-Sprache</string>
+    <string name="select_language">Sprache auswählen</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_romanian">Română</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_serbian">Srpski</string>
+    <string name="language_french">Français</string>
+    <string name="language_chinese">中文 (简体)</string>
+    <string name="language_japanese">日本語</string>
+    <string name="language_changed">✅ Sprache in %s geändert</string>
+    <string name="about_openradio">ℹ️ Über OpenRadioFM</string>
+    <string name="about_info_header">INFORMATION</string>
+    <string name="about_dev_by">Entwickelt von</string>
+    <string name="about_tech_details">Technische Details</string>
+    <string name="touch_to_change">Zum Ändern tippen</string>
+
+    <!-- V4.3: Hardware Settings -->
+    <string name="hardware_settings">⚙️ Hardware-Einstellungen</string>
+    <string name="enable_am_band">AM-Band aktivieren</string>
+    <string name="radio_engine">Radio-Motor</string>
+    <string name="engine_auto">Automatisch (Empfohlen)</string>
+    <string name="engine_k706">Vento / HCN (K706)</string>
+    <string name="engine_qs6">NWD / Nanis (QS6)</string>
+    <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
+    <string name="engine_mtk">MediaTek Allgemein</string>
+    <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_standard">Android Standard</string>
+    <string name="am_band_enabled">✅ AM-Band aktiviert</string>
+    <string name="am_band_disabled">❌ AM-Band deaktiviert</string>
+    <string name="engine_changed">✅ Radiomotor auf %s geändert</string>
+
+    <!-- V4.5: Night Mode Schedule -->
+    <string name="night_schedule">Nachtmodus-Zeitplan</string>
+    <string name="night_start">Start</string>
+    <string name="night_end">Ende</string>
+    <string name="night_schedule_updated">✅ Zeitplan aktualisiert: %1$s - %2$s</string>
+
+    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    <string name="pty_none">Kein PTY</string>
+    <string name="pty_news">Nachrichten</string>
+    <string name="pty_current_affairs">Aktuelles</string>
+    <string name="pty_information">Information</string>
+    <string name="pty_sport">Sport</string>
+    <string name="pty_education">Bildung</string>
+    <string name="pty_drama">Drama</string>
+    <string name="pty_culture">Kultur</string>
+    <string name="pty_science">Wissenschaft</string>
+    <string name="pty_varied">Verschiedenes</string>
+    <string name="pty_pop">Popmusik</string>
+    <string name="pty_rock">Rockmusik</string>
+    <string name="pty_easy_listening">Leichtes Zuhören</string>
+    <string name="pty_light_classical">Leichte Klassik</string>
+    <string name="pty_serious_classical">Ernste Klassik</string>
+    <string name="pty_other_music">Andere Musik</string>
+    <string name="pty_weather">Wetter</string>
+    <string name="pty_finance">Finanzen</string>
+    <string name="pty_children">Kinder</string>
+    <string name="pty_social">Soziales</string>
+    <string name="pty_religion">Religion</string>
+    <string name="pty_phone_in">Anrufe</string>
+    <string name="pty_travel">Reisen</string>
+    <string name="pty_leisure">Freizeit</string>
+    <string name="pty_jazz">Jazz</string>
+    <string name="pty_country">Country</string>
+    <string name="pty_national">National</string>
+    <string name="pty_oldies">Oldies</string>
+    <string name="pty_folk">Folk</string>
+    <string name="pty_documentary">Dokumentation</string>
+    <string name="pty_alarm_test">Alarm-Test</string>
+    <string name="pty_alarm">Alarm</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Logo-Anbieter</string>
+    <string name="provider_supabase">Supabase (HD-Community)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Ersatz)</string>
+    <string name="provider_both">Kombiniert (Supabase > Web)</string>
+    <string name="contrib_cloud">Mitwirken (HD-Logos)</string>
+    <string name="contrib_cloud_desc">Sende Infos, um globale DB zu verbessern.</string>
+
+    <!-- App Status & Dialogs -->
+    <string name="edit_station_name">Sendernamen bearbeiten</string>
+    <string name="frequency_label">Frequenz: %1$s MHz</string>
+    <string name="searching_next">Suche nächstes...</string>
+    <string name="scanning">Scannen...</string>
+    <string name="scan_completed">Scan abgeschlossen</string>
+    <string name="identifying_rds">Sender identifizieren (RDS)...</string>
+    <string name="version">Version %1$s</string>
+    
+    <!-- Engineering Mode -->
+    <string name="radio_engine_label">⚙ RADIO-MOTOR: %1$s</string>
+    <string name="freq_no_service">FREQ: KEIN_SERVICE\nBAND: ---\nFLAGS: ---</string>
+    <string name="freq_error_read">FREQ: LESET_FEHLER\nBAND: ---\n%1$s</string>
+    <string name="sqi_no_service">SQI_INDEX.....: KEIN_SERVICE</string>
+    <string name="sqi_error_read">SQI_INDEX.....: LESET_FEHLER</string>
+    <string name="af_list_scanning">AF_LIST.......: [SCANNEN]</string>
+    <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
+    <string name="favorites_reset_complete">Favoriten erfolgreich zurückgesetzt</string>
+    <string name="history_cleared">Verlauf gelöscht</string>
+    <string name="my_favorites">Meine Favoriten</string>
+</resources>

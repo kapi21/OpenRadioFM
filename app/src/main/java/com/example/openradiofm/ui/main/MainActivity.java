@@ -1625,13 +1625,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V16.2: Refrescar estado de conectividad/datos del icono de Supabase
         runOnUiThread(this::updateDataActivityUI);
 
-        int freq = mEngine.getCurrentFreq();
+        // V18.6: Si estamos reproduciendo streaming online, saltamos la interrogación síncrona al hardware.
+        // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
+        boolean isStreaming = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
+
+        int freq = isStreaming ? mLastFreq : mEngine.getCurrentFreq();
         if (freq <= 0)
             return;
 
-        int band = mEngine.getCurrentBand();
-        boolean isStereo = mEngine.isStereo();
-        boolean isLocal = mEngine.isDxLocal();
+        int band = isStreaming ? mCurrentBand : mEngine.getCurrentBand();
+        boolean isStereo = isStreaming || mEngine.isStereo();
+        boolean isLocal = !isStreaming && mEngine.isDxLocal();
 
         // Fix v4.5.1: SIEMPRE sincronizar mCurrentBand y refrescar presets
         if (band != mCurrentBand) {
@@ -1657,45 +1661,50 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (freq != mLastFreq) {
             Log.d(TAG, "Ultima frecuencia guardada: " + freq);
         }
-        com.example.openradiofm.data.model.RadioStation station = null;
-        if (mRepository != null && !mIsScanning) {
-            station = mRepository.getStationInfo(freq, null);
-        }
-        String rdsName = (station != null) ? station.getName() : "";
+
         final int fFreq = freq;
         final int fBand = band;
         final boolean fIsAm = (band == BAND_AM1 || band == BAND_AM2);
         final boolean fIsLocal = isLocal;
 
-        runOnUiThread(() -> {
-            // Sync color filters if in Night Mode
-            if (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                if (ivUnitLabel != null)
-                    ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                if (tvFrequency != null)
-                    tvFrequency.setTextColor(nightBlue);
-            } else {
-                if (tvFrequency != null)
-                    tvFrequency.setTextColor(android.graphics.Color.WHITE);
+        // V18.6: Mover recuperación de información de emisora a hilo secundario
+        new Thread(() -> {
+            com.example.openradiofm.data.model.RadioStation station = null;
+            if (mRepository != null && !mIsScanning) {
+                station = mRepository.getStationInfo(fFreq, null);
             }
+            final String rdsName = (station != null) ? station.getName() : "";
 
-            updateFrequencyDisplay(fFreq);
+            runOnUiThread(() -> {
+                // Sync color filters if in Night Mode
+                if (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+                    if (ivUnitLabel != null)
+                        ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    if (tvFrequency != null)
+                        tvFrequency.setTextColor(nightBlue);
+                } else {
+                    if (tvFrequency != null)
+                        tvFrequency.setTextColor(android.graphics.Color.WHITE);
+                }
 
-            // V4.0: Logo & Background (Always refresh logo in polling for consistency)
-            if (mLogoManager != null) {
-                String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
-                mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
-            }
+                updateFrequencyDisplay(fFreq);
 
-            updateBandImage(fBand);
-            if (btnLocDx != null) {
-                btnLocDx.setSelected(fIsLocal);
-                btnLocDx.setImageResource(fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
-            }
-        });
+                // V4.0: Logo & Background (Always refresh logo in polling for consistency)
+                if (mLogoManager != null) {
+                    String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
+                    mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
+                }
 
-        sendWidgetUpdateIntent(freq, band, rdsName);
+                updateBandImage(fBand);
+                if (btnLocDx != null) {
+                    btnLocDx.setSelected(fIsLocal);
+                    btnLocDx.setImageResource(fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                }
+            });
+
+            sendWidgetUpdateIntent(fFreq, fBand, rdsName);
+        }).start();
     }
 
     /**

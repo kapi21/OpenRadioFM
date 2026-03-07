@@ -154,7 +154,7 @@ public class EngineeringModeDialog extends Dialog {
 
     private void updateMetrics() {
         if (mActivity == null || mActivity.mRadioService == null) {
-            tvSignalQualityIndex.setText("SQI_INDEX.....: NO_SERVICE");
+            tvSignalQualityIndex.setText(getContext().getString(R.string.sqi_no_service));
             return;
         }
 
@@ -214,7 +214,7 @@ public class EngineeringModeDialog extends Dialog {
              
             tvPiCode.setText(String.format("PI_CODE.......: %s", pi));
             tvRdsSync.setText(String.format("RDS_SYNC......: %s", rdsLock ? "LOCKED" : "SEARCHING"));
-            tvAfList.setText("AF_LIST.......: [SCANNING]");
+            tvAfList.setText(getContext().getString(R.string.af_list_scanning));
 
             // 3. System Diagnostics
             long maxMem = Runtime.getRuntime().maxMemory();
@@ -233,7 +233,7 @@ public class EngineeringModeDialog extends Dialog {
             tvServiceLatency.setText(String.format(Locale.US, "SERVICE_LATENCY...: %.2fms", latency));
             
             // Chipset - hardcoded detection based on investigation
-            tvChipset.setText("DETECTED_CHIPSET..: MTK8163_NATIVE");
+            tvChipset.setText(getContext().getString(R.string.chipset_mtk));
 
             // 4. Extended System Info (User Request)
             String device = android.os.Build.DEVICE; // e.g. 8163
@@ -253,7 +253,7 @@ public class EngineeringModeDialog extends Dialog {
 
         } catch (Exception e) {
             e.printStackTrace();
-            tvSignalQualityIndex.setText("SQI_INDEX.....: ERROR_READ");
+            tvSignalQualityIndex.setText(getContext().getString(R.string.sqi_error_read));
         }
     }
 
@@ -313,7 +313,7 @@ public class EngineeringModeDialog extends Dialog {
         int idx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
         String[] engines = { "Auto", "HCN", "MTK", "Standard", "TS" };
         String name = (idx >= 0 && idx < engines.length) ? engines[idx] : "Auto";
-        btnEngine.setText("⚙ RADIO ENGINE: " + name);
+        btnEngine.setText(getContext().getString(R.string.radio_engine_label, name));
         btnEngine.setTextColor(Color.parseColor("#00FF00"));
         btnEngine.setBackgroundColor(Color.parseColor("#1a1a2e"));
         btnEngine.setAllCaps(false);
@@ -385,7 +385,7 @@ public class EngineeringModeDialog extends Dialog {
         if (mActivity != null && mActivity.mPrefs != null) {
             mActivity.mPrefs.edit().clear().apply();
             mActivity.refreshPresetButtons(); // Reload UI
-            Toast.makeText(getContext(), "Favorites Reset Complete", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.favorites_reset_complete), Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -393,7 +393,7 @@ public class EngineeringModeDialog extends Dialog {
         if (mActivity != null && mActivity.mPrefs != null) {
             // Remove specific key "pref_station_history"
             mActivity.mPrefs.edit().remove("pref_station_history").apply();
-            Toast.makeText(getContext(), "History Cleared", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), getContext().getString(R.string.history_cleared), Toast.LENGTH_SHORT).show();
         }
     }
 

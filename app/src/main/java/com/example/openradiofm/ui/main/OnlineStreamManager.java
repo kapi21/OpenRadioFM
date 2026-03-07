@@ -63,22 +63,22 @@ public class OnlineStreamManager {
         // 1. Conmutar canal MCU a Android (El hardware de la radio debe saber que Android va a sonar)
         if (mPlaybackManager != null) {
             if (mPlaybackManager.getEngine() != null) {
-                // V18.5: setOnlineStreamingActive ya llama internamente a switchToAndroidAudio() 
-                // en motores como MT8163, evitamos llamadas redundantes que bloqueen el hilo.
                 mPlaybackManager.getEngine().setOnlineStreamingActive(true); 
+                mPlaybackManager.getEngine().switchToAndroidAudio(); // V18.6: K706 lo necesita para retornar el canal de audio
             }
         }
 
         // 2. Inicializar ExoPlayer
         mExoPlayer = new ExoPlayer.Builder(mContext).build();
         
-        // Configurar Atributos de Audio de Media3
-        // El parámetro 'true' indica que ExoPlayer manejará automáticamente el AudioFocus con el sistema.
+        // El parámetro 'false' indica que ExoPlayer NO manejará automáticamente el AudioFocus con el sistema.
+        // Además, usamos atributos de "Navegación GPS" para engañar al coche. Si usamos USAGE_MEDIA,
+        // el sistema MTK detecta que abrimos un hilo de audio musical y asesina el backend de la radio.
         AudioAttributes audioAttributes = new AudioAttributes.Builder()
-                .setUsage(C.USAGE_MEDIA)
-                .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
+                .setUsage(C.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE)
+                .setContentType(C.AUDIO_CONTENT_TYPE_SPEECH)
                 .build();
-        mExoPlayer.setAudioAttributes(audioAttributes, true);
+        mExoPlayer.setAudioAttributes(audioAttributes, false);
 
         // Configurar Listener de eventos
         mExoPlayer.addListener(new Player.Listener() {
@@ -109,6 +109,17 @@ public class OnlineStreamManager {
             @Override
             public void onPlayerError(PlaybackException error) {
                 Log.e(TAG, "ExoPlayer Error genérico", error);
+                
+                // V18.6: Autorecuperación si la conexión a internet es lenta y nos caemos del "Live Window" HLS
+                if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+                    Log.w(TAG, "BehindLiveWindowException - Intentando resincronizar streaming en vivo...");
+                    if (mExoPlayer != null) {
+                        mExoPlayer.seekToDefaultPosition();
+                        mExoPlayer.prepare();
+                    }
+                    return;
+                }
+
                 if (mListener != null) {
                     mListener.onStreamError("Error de reproducción: " + error.getMessage());
                 }
@@ -180,6 +191,16 @@ public class OnlineStreamManager {
     }
 
     public void release() {
-        stopStream();
+        mIsLoading = false;
+        mIsPlaying = false;
+        if (mExoPlayer != null) {
+            try {
+                mExoPlayer.stop();
+                mExoPlayer.release();
+            } catch (Exception e) {}
+            mExoPlayer = null;
+        }
+        // No llamamos a stopStream() completo para evitar reconectar el mixer de hardware FM
+        // si la aplicación se está cerrando o apagando (onDestroy).
     }
 }

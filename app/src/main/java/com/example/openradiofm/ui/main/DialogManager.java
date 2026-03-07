@@ -34,8 +34,8 @@ public class DialogManager {
         int currentFreq = mActivity.mEngine.getCurrentFreq();
 
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle("Editar nombre de emisora");
-        builder.setMessage("Frecuencia: " + String.format("%.1f MHz", currentFreq / 1000.0));
+        builder.setTitle(mActivity.getString(R.string.edit_station_name));
+        builder.setMessage(mActivity.getString(R.string.frequency_label, String.format(java.util.Locale.getDefault(), "%.1f", currentFreq / 1000.0)));
 
         final EditText input = new EditText(mActivity);
         input.setSingleLine(true);
@@ -338,7 +338,8 @@ public class DialogManager {
                 .setItems(languages, (d, w) -> {
                     if (w < codes.length) {
                         mActivity.mPrefs.edit().putString("app_language", codes[w]).apply();
-                        mActivity.showToast("Idioma cambiado: " + languages[w] + ". Reinicia la app.");
+                        // Almacenamos el cambio de idioma y forzamos el reinicio dinámico de la interfaz
+                        mActivity.recreate();
                     }
                 }).create();
         applyPremiumListStyle(dialog);
@@ -376,7 +377,7 @@ public class DialogManager {
             if (tvVersion != null) {
                 String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(),
                         0).versionName;
-                tvVersion.setText("Versión " + versionName);
+                tvVersion.setText(mActivity.getString(R.string.version, versionName));
             }
         } catch (Exception ignored) {
         }
@@ -559,7 +560,7 @@ public class DialogManager {
 
         view.findViewById(R.id.btnNextScan).setOnClickListener(v -> {
             mActivity.mEngine.seekUp();
-            tvStatus.setText("Buscando siguiente...");
+            tvStatus.setText(mActivity.getString(R.string.searching_next));
         });
 
         dialog.setOnDismissListener(d -> mActivity.mEngine.setCallback(mActivity));
@@ -573,7 +574,7 @@ public class DialogManager {
                 mActivity.runOnUiThread(() -> {
                     if (tvFreq != null)
                         tvFreq.setText(String.format("%.2f MHz", (double) freqKhz / 1000.0));
-                    tvStatus.setText("Escaneando...");
+                    tvStatus.setText(mActivity.getString(R.string.scanning));
                 });
             }
 
@@ -621,7 +622,7 @@ public class DialogManager {
             public void onScanStatusChanged(boolean scanning) {
                 mActivity.runOnUiThread(() -> {
                     if (!scanning) {
-                        tvStatus.setText("Escaneo pausado / finalizado");
+                        tvStatus.setText(mActivity.getString(R.string.scan_completed));
                         if (lastFreqReported > 0) {
                             boolean alreadyInList = false;
                             for (MainActivity.ScannedStation s : mActivity.mCapturedList) {
@@ -635,11 +636,11 @@ public class DialogManager {
                                 if (mActivity.mStationAdapter != null)
                                     mActivity.mStationAdapter.notifyItemInserted(0);
                                 rv.scrollToPosition(0);
-                                tvStatus.setText("Identificando emisora (RDS)...");
+                                tvStatus.setText(mActivity.getString(R.string.identifying_rds));
                             }
                         }
                     } else {
-                        tvStatus.setText("Buscando siguiente...");
+                        tvStatus.setText(mActivity.getString(R.string.searching_next));
                     }
                 });
             }
