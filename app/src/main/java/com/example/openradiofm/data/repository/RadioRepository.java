@@ -344,13 +344,11 @@ public class RadioRepository {
             // 2. Fallback Cloud + Download
             final String stationNameForLambda = finalName;
 
-            // V13.9: Default to FALSE for online logos for testing
-            boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
-                    .getBoolean("pref_logos_online", true);
-
-            if (!onlineLogosEnabled) {
-                android.util.Log.d("RadioLogos", "Download skipped: pref_logos_online is disabled.");
-                return station; // Skip download entirely
+            // V18.2: NO buscar información en internet (Supabase/Web) para bandas AM/SW.
+            // Estas bandas no tienen metainformación centralizada fiable por PI/RDS.
+            if (freqKHz < 30000) {
+                android.util.Log.d("RadioRepository", "Download skipped: Freq < 30MHz (AM/SW). Cloud disabled for these bands.");
+                return station;
             }
 
             android.util.Log.e("DEBUG_FETCH", "Fetching freq=" + freqKHz + ", Name=" + finalName + ", PI=" + piCode + ", Provider=" + mPrefs.getInt("pref_logo_provider", 0));
@@ -562,9 +560,11 @@ public class RadioRepository {
             rootSource.shutdown();
         }
 
-        // Cerrar el ExecutorService de logos
-        logoExecutor.shutdownNow();
-        android.util.Log.d("RadioRepository", "ExecutorService de logos cerrado.");
+        // V18.4: Cerrar el ExecutorService de logos inmediatamente
+        if (logoExecutor != null) {
+            logoExecutor.shutdownNow();
+            android.util.Log.d("RadioRepository", "ExecutorService de logos cerrado (shutdownNow).");
+        }
     }
 
     private String getCountryCode() {
@@ -578,6 +578,9 @@ public class RadioRepository {
 
     // Método auxiliar para buscar la URL de streaming en background
     private void fetchStreamUrlAsync(String cacheKey, int freqKHz, String finalName, String piCode, RadioStation station) {
+        // V18.2: Bloqueo global AM/SW
+        if (freqKHz < 30000) return;
+        
         String streamCacheKey = cacheKey + "_STREAM";
         if (pendingRequests.contains(streamCacheKey)) return;
         pendingRequests.add(streamCacheKey);

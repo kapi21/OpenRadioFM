@@ -22,5 +22,11 @@ Tras la culminación de la **v.4.7.5 "Global Edition"**, los siguientes hitos de
 - **Liquid UI Animations**: Añadir transiciones interpoladas suaves entre Vistas (Layout 1, 2, 3) y al navegar por favoritos.
 - **Analizador Espectro DSP**: Interceptar audio interno del chip principal para visualizar la banda sonora en tiempo real en la pantalla.
 
+## 🌑 Fase 4: Estabilidad Crítica y Hardware (Hito Actual)
+- **Investigación de Apagado QS6**: Tras implementar secuencias ultra-agresivas (V18.4) sin éxito total, se requiere investigar el comportamiento del MCU a nivel UART/Firmware para forzar el muteo físico del bus de audio.
+- **Optimización de Bandas Bajas**: Implementada la exclusión de búsqueda en Supabase para AM1/AM2 para evitar latencia innecesaria.
+- **Sincronización de Motores**: Asegurar que todos los motores (MT8163, K706, QS6) sigan la misma lógica de "Clean Shutdown".
+
 ---
 *OpenRadioFM: Elevando el estándar del In-Car Infotainment Libre.*
+*Actualizado: 7 de marzo de 2026*

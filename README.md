@@ -156,13 +156,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Fix de Modo Noche**: El icono de actividad de red ahora hereda correctamente el tinte azul noche.
 - **Optimización RDS PTY**: Eliminado icono redundante para mejorar la legibilidad de categorías de radio.
 
-### v18.5.0 "Universal Streaming & UI Polish" (Marzo 2026)
-- **Streaming Universal (ExoPlayer/Media3)**: Soporte completo para MP3, HLS (M3U8) y AAC (.acc/type=aac).
-- **Módulo de Red OkHttp**: Integrado para mejorar la estabilidad de las emisoras online y reconexión rápida.
-- **Fix de Audio Focus**: Implementado en K706, MT8163 y QS6 para evitar el secuestro del canal de audio por la MCU.
-- **UI Refinement**: Eliminado el texto "Buscando..." de los presets. Ahora muestran frecuencia o nombre fijo.
-- **Crédito TDTChannels**: Añadido reconocimiento a la fuente de streaming en el diálogo About.
-- **Limpieza de Debug**: Eliminados Toasts de depuración ("Nube pulsada") para una experiencia final limpia.
+### v18.5.1 "QS6 Tuning & AM Optimization" (Marzo 2026)
+- **Optimización AM**: Deshabilitada la búsqueda de logos en Supabase para banda AM para evitar bloqueos y mejorar la fluidez.
+- **QS6 Seek/Fine Fix**: Corregida la sintonización automática e incremental para que coincida con el paso del hardware.
+- **Secuencia de Apagado QS6 (Beta)**: Implementación de la secuencia V18.4 con `ACTION_REQUEST_CHANGE_SOURCE` y desvinculación AIDL proactiva.
+- **Limpieza de Recursos**: Mejora en el cierre de hilos de red en `RadioRepository` durante el apagado de la app.
+- **Audio Focus**: Refinamiento en la gestión del foco para asegurar el silencio tras el cierre.
 
 ### v16.3.0 "Online Logos & Stability" (Marzo 2026)
 - **Sistema de Logos Online (Supabase)**: Búsqueda centralizada de logos por PI Code, RDS Name y Frecuencia, con contribución comunitaria automática.

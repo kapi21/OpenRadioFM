@@ -1,0 +1,686 @@
+[1772869761] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869762] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869762] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869763] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869763] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869764] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869764] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869765] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869765] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869766] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869766] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869767] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869767] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869768] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869768] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869769] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869769] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869770] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869770] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869771] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869771] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869772] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869772] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869773] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869773] WARN ActivityManager : Slow operation: 86ms so far, now at startProcess: returned from zygote!
+[1772869773] WARN ActivityManager : Slow operation: 86ms so far, now at startProcess: done updating battery stats
+[1772869773] WARN ActivityManager : Slow operation: 87ms so far, now at startProcess: building log message
+[1772869773] INFO ActivityManager : Start proc 5926:com.google.process.gapps/u0a78 for broadcast com.google.android.gsf/.loginservice.ServicesWatcher
+[1772869773] WARN ActivityManager : Slow operation: 87ms so far, now at startProcess: starting to update pids map
+[1772869773] WARN ActivityManager : Slow operation: 87ms so far, now at startProcess: done updating pids map
+[1772869773] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869774] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869774] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869775] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869775] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869776] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869776] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869777] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869777] INFO ActivityManager : Start proc 6002:android.process.acore/u0a81 for content provider com.android.providers.contacts/.ContactsProvider2
+[1772869777] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869778] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869778] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869779] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869779] WARN ActivityManager : Slow operation: 74ms so far, now at startProcess: returned from zygote!
+[1772869779] WARN ActivityManager : Slow operation: 74ms so far, now at startProcess: done updating battery stats
+[1772869779] WARN ActivityManager : Slow operation: 75ms so far, now at startProcess: building log message
+[1772869779] INFO ActivityManager : Start proc 6049:com.google.android.gms.unstable/u0a78 for service com.google.android.gms/.droidguard.DroidGuardService
+[1772869779] WARN ActivityManager : Slow operation: 75ms so far, now at startProcess: starting to update pids map
+[1772869779] WARN ActivityManager : Slow operation: 75ms so far, now at startProcess: done updating pids map
+[1772869779] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869780] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869780] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869781] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869781] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869782] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869782] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869783] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869783] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869784] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869784] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869785] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869785] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869786] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869786] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869787] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869787] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869788] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869788] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869789] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869789] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869790] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869790] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869791] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869791] INFO ActivityManager : Force stopping com.android.vending appid=10014 user=0: pkg removed
+[1772869791] INFO ActivityManager : Killing 5789:com.android.vending:instant_app_installer/u0a14 (adj 902): stop com.android.vending
+[1772869791] INFO ActivityManager : Killing 5445:com.android.vending/u0a14 (adj 100): stop com.android.vending
+[1772869791] WARN ActivityManager : Scheduling restart of crashed service com.android.vending/com.google.frameworks.client.data.android.server.play.MainProcessEndpointService in 1000ms
+[1772869791] WARN ActivityManager : Scheduling restart of crashed service com.android.vending/com.google.android.finsky.crossprofile.ProfileStateService in 11000ms
+[1772869791] WARN ActivityManager : Scheduling restart of crashed service com.android.vending/com.google.android.finsky.scheduler.process.mainimpl.PhoneskyJobServiceMain in 21000ms
+[1772869791] INFO ActivityManager : Killing 5293:com.android.vending:background/u0a14 (adj 0): stop com.android.vending
+[1772869791] INFO ActivityManager : Killing 5709:com.android.vending:quick_launch/u0a14 (adj 0): stop com.android.vending
+[1772869791] INFO ActivityManager :   Force stopping service ServiceRecord{922fb15 u0 com.android.vending/com.google.android.finsky.scheduler.process.mainimpl.PhoneskyJobServiceMain}
+[1772869791] INFO ActivityManager : Force stopping com.android.vending appid=10014 user=0: pkg removed
+[1772869791] WARN ActivityManager : Service done with onDestroy, but not inDestroying: ServiceRecord{61d1964 u0 com.android.vending/com.google.frameworks.client.data.android.server.play.BackgroundProcessEndpointService}, app=ProcessRecord{53ff33e 0:com.android.vending:background/u0a14}
+[1772869791] WARN ActivityManager : Service done with onDestroy, but not inDestroying: ServiceRecord{fd1398d u0 com.android.vending/com.google.frameworks.client.data.android.server.play.QuickLaunchProcessEndpointService}, app=ProcessRecord{818a488 0:com.android.vending:quick_launch/u0a14}
+[1772869791] WARN ActivityManager : Slow operation: 86ms so far, now at startProcess: returned from zygote!
+[1772869791] WARN ActivityManager : Slow operation: 100ms so far, now at startProcess: done updating battery stats
+[1772869791] WARN ActivityManager : Slow operation: 100ms so far, now at startProcess: building log message
+[1772869791] INFO ActivityManager : Start proc 6150:com.android.vending/u0a14 for broadcast com.android.vending/com.google.android.finsky.packagemonitor.impl.PackageMonitorReceiverImpl$RegisteredReceiver
+[1772869791] WARN ActivityManager : Slow operation: 101ms so far, now at startProcess: starting to update pids map
+[1772869791] WARN ActivityManager : Slow operation: 101ms so far, now at startProcess: done updating pids map
+[1772869791] WARN ActivityManager : Slow operation: 87ms so far, now at startProcess: returned from zygote!
+[1772869791] WARN ActivityManager : Slow operation: 87ms so far, now at startProcess: done updating battery stats
+[1772869791] WARN ActivityManager : Slow operation: 88ms so far, now at startProcess: building log message
+[1772869791] INFO ActivityManager : Start proc 6158:com.google.android.youtube/u0a47 for service com.google.android.youtube/com.google.android.apps.youtube.app.extensions.mediabrowser.impl.MainAppMediaBrowserService
+[1772869791] WARN ActivityManager : Slow operation: 88ms so far, now at startProcess: starting to update pids map
+[1772869791] WARN ActivityManager : Slow operation: 88ms so far, now at startProcess: done updating pids map
+[1772869791] WARN ActivityManager : Slow operation: 79ms so far, now at startProcess: asking zygote to start proc
+[1772869791] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869791] WARN ActivityManager : Slow operation: 148ms so far, now at startProcess: returned from zygote!
+[1772869791] WARN ActivityManager : Slow operation: 169ms so far, now at startProcess: done updating battery stats
+[1772869791] WARN ActivityManager : Slow operation: 169ms so far, now at startProcess: building log message
+[1772869791] INFO ActivityManager : Start proc 6174:com.alphainventor.filemanager/u0a83 for service com.alphainventor.filemanager/com.example.android.uamp.MusicService
+[1772869791] WARN ActivityManager : Slow operation: 169ms so far, now at startProcess: starting to update pids map
+[1772869791] WARN ActivityManager : Slow operation: 169ms so far, now at startProcess: done updating pids map
+[1772869791] WARN ActivityManager : Slow operation: 184ms so far, now at startProcess: asking zygote to start proc
+[1772869791] WARN ActivityManager : Slow operation: 250ms so far, now at startProcess: returned from zygote!
+[1772869791] WARN ActivityManager : Slow operation: 250ms so far, now at startProcess: done updating battery stats
+[1772869791] WARN ActivityManager : Slow operation: 251ms so far, now at startProcess: building log message
+[1772869791] INFO ActivityManager : Start proc 6198:com.android.keychain/1000 for service com.android.keychain/.KeyChainService
+[1772869791] WARN ActivityManager : Slow operation: 251ms so far, now at startProcess: starting to update pids map
+[1772869791] WARN ActivityManager : Slow operation: 251ms so far, now at startProcess: done updating pids map
+[1772869791] WARN ActivityManager : Slow operation: 231ms so far, now at startProcess: asking zygote to start proc
+[1772869791] WARN ActivityManager : Slow operation: 332ms so far, now at startProcess: returned from zygote!
+[1772869791] WARN ActivityManager : Slow operation: 58ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+[1772869791] WARN ActivityManager : Slow operation: 351ms so far, now at startProcess: done updating battery stats
+[1772869791] WARN ActivityManager : Slow operation: 352ms so far, now at startProcess: building log message
+[1772869791] INFO ActivityManager : Start proc 6218:com.google.android.googlequicksearchbox:search/u0a84 for service com.google.android.googlequicksearchbox/com.google.android.libraries.assistant.auto.tng.media.mediabrowser.NewsMediaBrowserService
+[1772869791] WARN ActivityManager : Slow operation: 352ms so far, now at startProcess: starting to update pids map
+[1772869791] WARN ActivityManager : Slow operation: 352ms so far, now at startProcess: done updating pids map
+[1772869791] WARN ActivityManager : Slow operation: 347ms so far, now at startProcess: asking zygote to start proc
+[1772869792] WARN ActivityManager : Slow operation: 447ms so far, now at startProcess: returned from zygote!
+[1772869792] WARN ActivityManager : Slow operation: 517ms so far, now at startProcess: done updating battery stats
+[1772869792] WARN ActivityManager : Slow operation: 518ms so far, now at startProcess: building log message
+[1772869792] INFO ActivityManager : Start proc 6232:com.spotify.music/u0a110 for service com.spotify.music/com.spotify.mediabrowserservice.mediabrowserservice.SpotifyMediaBrowserService
+[1772869792] WARN ActivityManager : Slow operation: 519ms so far, now at startProcess: starting to update pids map
+[1772869792] WARN ActivityManager : Slow operation: 519ms so far, now at startProcess: done updating pids map
+[1772869792] WARN ActivityManager : Slow operation: 509ms so far, now at startProcess: asking zygote to start proc
+[1772869792] WARN ActivityManager : Slow operation: 589ms so far, now at startProcess: returned from zygote!
+[1772869792] WARN ActivityManager : Slow operation: 589ms so far, now at startProcess: done updating battery stats
+[1772869792] WARN ActivityManager : Slow operation: 591ms so far, now at startProcess: building log message
+[1772869792] INFO ActivityManager : Start proc 6249:com.threedmagic.carradio/u0a114 for service com.threedmagic.carradio/.services.BKDMobileMediaBrowserService
+[1772869792] WARN ActivityManager : Slow operation: 591ms so far, now at startProcess: starting to update pids map
+[1772869792] WARN ActivityManager : Slow operation: 591ms so far, now at startProcess: done updating pids map
+[1772869792] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869792] WARN ActivityManager : Slow operation: 61ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+[1772869792] WARN ActivityManager : Slow operation: 79ms so far, now at attachApplicationLocked: after mServices.attachApplicationLocked
+[1772869792] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869793] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869793] INFO ple.openradiof : Background concurrent copying GC freed 81524(3MB) AllocSpace objects, 0(0B) LOS objects, 49% free, 3MB/6MB, paused 181us total 300.050ms
+[1772869793] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869794] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869794] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869794] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869794] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869794] DEBUG PlaybackManager : Mute state: UNMUTED
+[1772869794] DEBUG MT8163Engine : setOnlineStreamingActive: false
+[1772869794] DEBUG MT8163Engine : switchToFmAudio (MT8163)
+[1772869794] WARN AudioManager : Use of stream types is deprecated for operations other than volume control
+[1772869794] WARN AudioManager : See the documentation of requestAudioFocus() for what to use instead with android.media.AudioAttributes to qualify your playback use case
+[1772869794] DEBUG AudioSystem : +setParameters(): fm_radio_on=1;fm_mute=0 
+[1772869794] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869794] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869794] DEBUG OnlineStreamManager : Streaming detenido por completo.
+[1772869794] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869794] DEBUG MT8163Engine : setOnlineStreamingActive: true
+[1772869794] DEBUG MT8163Engine : switchToAndroidAudio (MT8163) - Liberando canal para sistema
+[1772869794] DEBUG HiddenRadioPlayer : setMute(true) ejecutado.
+[1772869794] DEBUG AudioSystem : +setParameters(): fm_radio_on=0;fm_mute=1 
+[1772869794] INFO ExoPlayerImpl : Init a4dd24e [AndroidXMedia3/1.3.1] [tb8163p3_bsp, tb8163p3_bsp, alps, 28]
+[1772869794] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869794] INFO ple.openradiof : The ClassLoaderContext is a special shared library.
+[1772869794] WARN ExoPlayer:Loade : type=1400 audit(0.0:582): avc: denied { read } for name="u:object_r:mtk_em_tel_log_prop:s0" dev="tmpfs" ino=6507 scontext=u:r:untrusted_app:s0:c141,c256,c512,c768 tcontext=u:object_r:mtk_em_tel_log_prop:s0 tclass=file permissive=0
+[1772869794] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869794] ERROR libc : Access denied finding property "persist.vendor.log.tel_dbg"
+[1772869794] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869794] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869794] DEBUG ViewRootImpl[Toast] : hardware acceleration = true , fakeHwAccelerated = false, sRendererDisabled = false, forceHwAccelerated = false, sSystemRendererDisabled = false
+[1772869795] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869795] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869795] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869795] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869795] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869795] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869795] DEBUG Surface : Surface::allocateBuffers(this=0x89ff1000)
+[1772869795] DEBUG Surface : Surface::connect(this=0x89ff1000,api=1)
+[1772869795] DEBUG mali_winsys : EGLint new_window_surface(egl_winsys_display *, void *, EGLSurface, EGLConfig, egl_winsys_surface **, EGLBoolean) returns 0x3000
+[1772869795] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869795] INFO System.out : [OkHttp] sendRequest>>
+[1772869795] INFO System.out : [OkHttp] sendRequest<<
+[1772869795] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869795] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869795] INFO System.out : [OkHttp] sendRequest>>
+[1772869795] INFO System.out : [OkHttp] sendRequest<<
+[1772869795] WARN AudioCapabilities : Unsupported mime audio/x-adpcm-ms
+[1772869795] WARN AudioCapabilities : Unsupported mime audio/x-adpcm-dvi-ima
+[1772869795] WARN AudioCapabilities : Unsupported mime audio/alac
+[1772869795] WARN AudioCapabilities : Unsupported mime audio/ape
+[1772869795] WARN AudioCapabilities : Unsupported mime audio/mpeg-L2
+[1772869795] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869795] WARN VideoCapabilities : Unsupported mime video/divx
+[1772869795] WARN VideoCapabilities : Unsupported mime video/divx3
+[1772869795] WARN VideoCapabilities : Unrecognized profile 4 for video/hevc
+[1772869795] WARN VideoCapabilities : Unrecognized profile/level 1/32 for video/mp4v-es
+[1772869795] WARN VideoCapabilities : Unrecognized profile/level 32768/2 for video/mp4v-es
+[1772869795] WARN VideoCapabilities : Unrecognized profile/level 32768/64 for video/mp4v-es
+[1772869795] WARN VideoCapabilities : Unsupported mime video/x-ms-wmv
+[1772869795] WARN VideoCapabilities : Unsupported mime video/xvid
+[1772869795] WARN VideoCapabilities : Unrecognized profile/level 1/32 for video/mp4v-es
+[1772869795] INFO VideoCapabilities : Unsupported profile 4 for video/mp4v-es
+[1772869796] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869796] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869796] INFO System.out : [OkHttp] sendRequest>>
+[1772869796] INFO System.out : [OkHttp] sendRequest<<
+[1772869796] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869796] INFO OMXClient : IOmx service obtained
+[1772869796] INFO ACodec : codec does not support config priority (err -2147483648)
+[1772869796] DEBUG AudioTrack : set(): 0x8bf10980, streamType -1, sampleRate 48000, format 0x1, channelMask 0x3, frameCount 16400, flags #0, notificationFrames 0, sessionId 57, transferType 3, uid -1, pid -1
+[1772869796] DEBUG AudioTrack : Building AudioTrack with attributes: usage = 1, content = 2, flags = 0x200, tags = []
+[1772869796] DEBUG AudioTrack : set: 0x8bf10980, Create AudioTrackThread, tid = 6505
+[1772869796] DEBUG AudioTrack : createTrack_l: 0x8bf10980, mCblk = 0x89076000, mLatency = 426, mAfLatency = 85, frameCount = 16400, mSampleRate = 48000, mFlags = 0, mReqFrameCount = 16400, mNotificationFramesAct = 8200
+[1772869796] INFO AudioTrack : AudioTrack set from 'com.example.openradiofm', mStreamType 3, mSessionId 57.
+[1772869796] WARN ple.openradiof : Accessing hidden method Landroid/media/AudioTrack$Builder;->setOffloadedPlayback(Z)Landroid/media/AudioTrack$Builder; (dark greylist, linking)
+[1772869796] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869796] INFO ple.openradiof : Background concurrent copying GC freed 41946(2MB) AllocSpace objects, 2(40KB) LOS objects, 50% free, 5MB/10MB, paused 17.982ms total 559.944ms
+[1772869796] ERROR AudioTrack : start(): 0x8bf10980, mState = 1
+[1772869796] DEBUG OnlineStreamManager : ExoPlayer reproduciendo: https://rockfm-cope.flumotion.com/playlist.m3u8
+[1772869796] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869796] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869796] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869796] INFO System.out : [OkHttp] sendRequest>>
+[1772869796] INFO System.out : [OkHttp] sendRequest<<
+[1772869796] DEBUG Surface : Surface::disconnect(this=0x89ff1000,api=1)
+[1772869796] DEBUG Surface : Surface::disconnect(this=0x89ff1000,api=1)
+[1772869796] WARN libEGL : EGLNativeWindowType 0x89ff1008 disconnect failed
+[1772869796] DEBUG View : [Warning] assignParent to null: this = androidx.cardview.widget.CardView{c975599 V.E...... ......ID 0,0-234,48}
+[1772869797] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869797] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869797] INFO System.out : [OkHttp] sendRequest>>
+[1772869797] INFO System.out : [OkHttp] sendRequest<<
+[1772869797] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869797] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869797] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869797] INFO System.out : [OkHttp] sendRequest>>
+[1772869797] INFO System.out : [OkHttp] sendRequest<<
+[1772869797] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869798] INFO ActivityManager : Force stopping com.hcn.autoradio appid=10009 user=0: from pid 615
+[1772869798] INFO ActivityManager : Killing 3465:com.hcn.autoradio/u0a9 (adj 100): stop com.hcn.autoradio
+[1772869798] WARN ActivityManager : Scheduling restart of crashed service com.hcn.autoradio/.service.FMPlugService in 1000ms
+[1772869798] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869798] INFO ActivityManager :   Force stopping service ServiceRecord{a5de37a u0 com.hcn.autoradio/.service.FMPlugService}
+[1772869798] WARN System.err : java.lang.InterruptedException
+[1772869798] WARN System.err : 	at java.util.concurrent.FutureTask.awaitDone(FutureTask.java:420)
+[1772869798] WARN System.err : 	at java.util.concurrent.FutureTask.get(FutureTask.java:205)
+[1772869798] WARN System.err : 	at com.example.openradiofm.data.source.RootRDSSource.getRdsName(RootRDSSource.java:90)
+[1772869798] WARN System.err : 	at com.example.openradiofm.data.repository.RadioRepository.getStationInfo(RadioRepository.java:236)
+[1772869798] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.refreshRadioStatus(MainActivity.java:1662)
+[1772869798] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.lambda$startStatusPolling$0(MainActivity.java:397)
+[1772869798] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.$r8$lambda$isWVX6ZUVteMm5pLcsnLJIXyt4E(Unknown Source:0)
+[1772869798] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity$$ExternalSyntheticLambda47.run(D8$$SyntheticClass:0)
+[1772869798] WARN System.err : 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:458)
+[1772869798] WARN System.err : 	at java.util.concurrent.FutureTask.runAndReset(FutureTask.java:307)
+[1772869798] WARN System.err : 	at java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(ScheduledThreadPoolExecutor.java:302)
+[1772869798] WARN System.err : 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+[1772869798] WARN System.err : 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+[1772869798] WARN System.err : 	at java.lang.Thread.run(Thread.java:764)
+[1772869799] INFO ActivityManager : Killing 6002:android.process.acore/u0a81 (adj 906): empty #4
+[1772869799] ERROR AndroidRuntime : FATAL EXCEPTION: WM.task-1
+Process: com.spotify.music, PID: 6232
+java.lang.IllegalStateException: The file system on the device is in a bad state. WorkManager cannot access the app's internal data store.
+	at p.duq.run(SourceFile:106)
+	at p.ib50.run(SourceFile:261)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641)
+	at java.lang.Thread.run(Thread.java:764)
+Caused by: android.database.sqlite.SQLiteCantOpenDatabaseException: unknown error (code 14 SQLITE_CANTOPEN): Could not open database
+	at android.database.sqlite.SQLiteConnection.nativeOpen(Native Method)
+	at android.database.sqlite.SQLiteConnection.open(SQLiteConnection.java:211)
+	at android.database.sqlite.SQLiteConnection.open(SQLiteConnection.java:195)
+	at android.database.sqlite.SQLiteConnectionPool.openConnectionLocked(SQLiteConnectionPool.java:503)
+	at android.database.sqlite.SQLiteConnectionPool.open(SQLiteConnectionPool.java:204)
+	at android.database.sqlite.SQLiteConnectionPool.open(SQLiteConnectionPool.java:196)
+	at android.database.sqlite.SQLiteDatabase.openInner(SQLiteDatabase.java:880)
+	at android.database.sqlite.SQLiteDatabase.open(SQLiteDatabase.java:865)
+	at android.database.sqlite.SQLiteDatabase.openDatabase(SQLiteDatabase.java:739)
+	at android.database.sqlite.SQLiteDatabase.openDatabase(SQLiteDatabase.java:729)
+	at android.database.sqlite.SQLiteOpenHelper.getDatabaseLocked(SQLiteOpenHelper.java:355)
+	at android.database.sqlite.SQLiteOpenHelper.getWritableDatabase(SQLiteOpenHelper.java:298)
+	at p.n1r.e(SourceFile:115)
+	at p.n1r.a(SourceFile:24)
+	at p.o1r.getWritableDatabase(SourceFile:10)
+	at p.mse0.b(SourceFile:5)
+	at p.duq.a(SourceFile:42)
+	at p.duq.run(SourceFile:54)
+	at p.ib50.run(SourceFile:261) 
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1167) 
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:641) 
+	at java.lang.Thread.run(Thread.java:764) 
+[1772869799] INFO ActivityManager : Killing 6198:com.android.keychain/1000 (adj 906): empty #4
+[1772869801] WARN ActivityManager : crashApplicationInner, com.spotify.music
+[1772869801] INFO ActivityManager : Killing 6174:com.alphainventor.filemanager/u0a83 (adj 906): empty #4
+[1772869801] INFO ActivityManager : Killing 5926:com.google.process.gapps/u0a78 (adj 906): empty #4
+[1772869801] INFO ActivityManager : Killing 6150:com.android.vending/u0a14 (adj 906): empty #5
+[1772869801] WARN ActivityManager : Slow operation: 57ms so far, now at startProcess: returned from zygote!
+[1772869801] WARN ActivityManager : Slow operation: 57ms so far, now at startProcess: done updating battery stats
+[1772869801] WARN ActivityManager : Slow operation: 57ms so far, now at startProcess: building log message
+[1772869801] INFO ActivityManager : Start proc 6626:com.android.vending:background/u0a14 for broadcast com.android.vending/com.google.android.finsky.packagemonitor.backgroundimpl.BackgroundPackageMonitorReceiverImpl$RegisteredReceiver
+[1772869801] WARN ActivityManager : Slow operation: 57ms so far, now at startProcess: starting to update pids map
+[1772869801] WARN ActivityManager : Slow operation: 58ms so far, now at startProcess: done updating pids map
+[1772869801] WARN ActivityManager : Slow operation: 57ms so far, now at attachApplicationLocked: after sendPendingBroadcastsLocked
+[1772869802] INFO ActivityManager : Killing 6249:com.threedmagic.carradio/u0a114 (adj 906): empty #4
+[1772869802] INFO ActivityManager : Killing 6158:com.google.android.youtube/u0a47 (adj 906): empty #4
+[1772869802] WARN ActivityManager : Slow operation: 55ms so far, now at startProcess: returned from zygote!
+[1772869802] WARN ActivityManager : Slow operation: 55ms so far, now at startProcess: done updating battery stats
+[1772869802] WARN ActivityManager : Slow operation: 55ms so far, now at startProcess: building log message
+[1772869802] INFO ActivityManager : Start proc 6686:com.android.vending/u0a14 for broadcast com.android.vending/com.google.android.finsky.packagemonitor.impl.PackageMonitorReceiverImpl$RegisteredReceiver
+[1772869802] WARN ActivityManager : Slow operation: 56ms so far, now at startProcess: starting to update pids map
+[1772869802] WARN ActivityManager : Slow operation: 56ms so far, now at startProcess: done updating pids map
+[1772869802] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869802] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869802] INFO System.out : [OkHttp] sendRequest>>
+[1772869802] INFO System.out : [OkHttp] sendRequest<<
+[1772869802] WARN ActivityManager : Slow operation: 58ms so far, now at attachApplicationLocked: after sendPendingBroadcastsLocked
+[1772869802] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869802] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869802] INFO System.out : [OkHttp] sendRequest>>
+[1772869802] INFO System.out : [OkHttp] sendRequest<<
+[1772869804] WARN ActivityManager : Slow operation: 53ms so far, now at startProcess: returned from zygote!
+[1772869804] WARN ActivityManager : Slow operation: 54ms so far, now at startProcess: done updating battery stats
+[1772869804] WARN ActivityManager : Slow operation: 54ms so far, now at startProcess: building log message
+[1772869804] INFO ActivityManager : Start proc 6755:com.google.process.gapps/u0a78 for content provider com.google.android.gsf/.settings.GoogleSettingsProvider
+[1772869804] WARN ActivityManager : Slow operation: 54ms so far, now at startProcess: starting to update pids map
+[1772869804] WARN ActivityManager : Slow operation: 54ms so far, now at startProcess: done updating pids map
+[1772869804] INFO ActivityManager : Killing 6218:com.google.android.googlequicksearchbox:search/u0a84 (adj 906): empty #4
+[1772869804] INFO ActivityManager : Killing 6686:com.android.vending/u0a14 (adj 906): empty #4
+[1772869805] INFO ActivityManager : Start proc 6812:com.android.vending/u0a14 for broadcast com.android.vending/com.google.android.finsky.verifier.impl.settings.SingleUserSettingsReceiver
+[1772869809] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869809] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869809] INFO System.out : [OkHttp] sendRequest>>
+[1772869809] INFO System.out : [OkHttp] sendRequest<<
+[1772869809] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869809] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869809] INFO System.out : [OkHttp] sendRequest>>
+[1772869809] INFO System.out : [OkHttp] sendRequest<<
+[1772869809] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869809] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869809] INFO System.out : [OkHttp] sendRequest>>
+[1772869809] INFO System.out : [OkHttp] sendRequest<<
+[1772869810] INFO ActivityManager : Killing 6232:com.spotify.music/u0a110 (adj 906): crash
+[1772869816] INFO ActivityManager : Killing 6812:com.android.vending/u0a14 (adj 904): empty #4
+[1772869816] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869816] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869816] INFO System.out : [OkHttp] sendRequest>>
+[1772869816] INFO System.out : [OkHttp] sendRequest<<
+[1772869816] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869816] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869816] INFO System.out : [OkHttp] sendRequest>>
+[1772869816] INFO System.out : [OkHttp] sendRequest<<
+[1772869821] INFO ActivityManager : Start proc 6974:com.android.vending/u0a14 for service com.android.vending/com.google.android.finsky.scheduler.process.mainimpl.PhoneskyJobServiceMain
+[1772869823] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869823] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869823] INFO System.out : [OkHttp] sendRequest>>
+[1772869823] INFO System.out : [OkHttp] sendRequest<<
+[1772869823] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869823] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869823] INFO System.out : [OkHttp] sendRequest>>
+[1772869823] INFO System.out : [OkHttp] sendRequest<<
+[1772869830] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869830] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869830] INFO System.out : [OkHttp] sendRequest>>
+[1772869830] INFO System.out : [OkHttp] sendRequest<<
+[1772869830] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869830] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869830] INFO System.out : [OkHttp] sendRequest>>
+[1772869830] INFO System.out : [OkHttp] sendRequest<<
+[1772869833] INFO ActivityManager : Killing 6049:com.google.android.gms.unstable/u0a78 (adj 900): empty #4
+[1772869833] WARN ActivityManager : Scheduling restart of crashed service com.google.android.gms/.droidguard.DroidGuardService in 1000ms
+[1772869834] INFO ActivityManager : Start proc 7134:com.google.android.gms.unstable/u0a78 for service com.google.android.gms/.droidguard.DroidGuardService
+[1772869834] INFO ActivityManager : Killing 5572:com.google.android.gms/u0a78 (adj 904): empty #4
+[1772869834] WARN ActivityManager : Scheduling restart of crashed service com.google.android.gms/.chimera.GmsBoundBrokerService in 1000ms
+[1772869834] WARN ActivityManager : Scheduling restart of crashed service com.google.android.gms/.chimera.GmsApiService in 11000ms
+[1772869835] INFO ActivityManager : Start proc 7170:com.google.android.gms/u0a78 for service com.google.android.gms/.chimera.GmsBoundBrokerService
+[1772869836] INFO ActivityManager : Killing 6626:com.android.vending:background/u0a14 (adj 904): empty #4
+[1772869836] WARN ActivityManager : Scheduling restart of crashed service com.android.vending/com.google.frameworks.client.data.android.server.play.BackgroundProcessEndpointService in 1000ms
+[1772869837] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869837] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869837] INFO System.out : [OkHttp] sendRequest>>
+[1772869837] INFO System.out : [OkHttp] sendRequest<<
+[1772869837] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869837] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869837] INFO System.out : [OkHttp] sendRequest>>
+[1772869837] INFO System.out : [OkHttp] sendRequest<<
+[1772869844] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869844] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869844] INFO System.out : [OkHttp] sendRequest>>
+[1772869844] INFO System.out : [OkHttp] sendRequest<<
+[1772869844] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869844] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869844] INFO System.out : [OkHttp] sendRequest>>
+[1772869844] INFO System.out : [OkHttp] sendRequest<<
+[1772869845] INFO ActivityManager : Killing 6755:com.google.process.gapps/u0a78 (adj 906): empty #4
+[1772869845] DEBUG HiddenRadioPlayer : setMute(true) ejecutado.
+[1772869845] DEBUG PlaybackManager : Mute state: MUTED
+[1772869846] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869846] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869846] DEBUG PlaybackManager : Mute state: UNMUTED
+[1772869846] DEBUG HiddenRadioPlayer : setMute(true) ejecutado.
+[1772869846] DEBUG PlaybackManager : Mute state: MUTED
+[1772869847] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869847] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869847] DEBUG PlaybackManager : Mute state: UNMUTED
+[1772869848] DEBUG HiddenRadioPlayer : setMute(true) ejecutado.
+[1772869848] DEBUG PlaybackManager : Mute state: MUTED
+[1772869849] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869849] DEBUG HiddenRadioPlayer : setMute(false) ejecutado.
+[1772869849] DEBUG PlaybackManager : Mute state: UNMUTED
+[1772869851] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869851] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869851] INFO System.out : [OkHttp] sendRequest>>
+[1772869851] INFO System.out : [OkHttp] sendRequest<<
+[1772869851] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869851] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869851] INFO System.out : [OkHttp] sendRequest>>
+[1772869851] INFO System.out : [OkHttp] sendRequest<<
+[1772869851] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869851] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869851] INFO System.out : [OkHttp] sendRequest>>
+[1772869851] INFO System.out : [OkHttp] sendRequest<<
+[1772869851] DEBUG MediaSessionManager : Metadata updated:  - 0.00 MHz
+[1772869851] WARN System.err : android.os.DeadObjectException
+[1772869851] WARN System.err : 	at android.os.BinderProxy.transactNative(Native Method)
+[1772869851] WARN System.err : 	at android.os.BinderProxy.transact(Binder.java:1129)
+[1772869851] WARN System.err : 	at com.hcn.autoradio.IRadioServiceAPI$Stub$Proxy.gotoFreq(IRadioServiceAPI.java:583)
+[1772869851] WARN System.err : 	at com.example.openradiofm.data.source.MT8163Engine.tune(MT8163Engine.java:210)
+[1772869851] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.stepFreqUp(MainActivity.java:2022)
+[1772869851] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.lambda$setupSeekButtons$47(MainActivity.java:1568)
+[1772869851] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.$r8$lambda$GQ21V83ddnXxoz-1MPELQk3cEuw(Unknown Source:0)
+[1772869851] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity$$ExternalSyntheticLambda52.onClick(D8$$SyntheticClass:0)
+[1772869851] WARN System.err : 	at android.view.View.performClick(View.java:6610)
+[1772869851] WARN System.err : 	at android.view.View.performClickInternal(View.java:6583)
+[1772869851] WARN System.err : 	at android.view.View.access$3100(View.java:780)
+[1772869851] WARN System.err : 	at android.view.View$PerformClick.run(View.java:26076)
+[1772869851] WARN System.err : 	at android.os.Handler.handleCallback(Handler.java:873)
+[1772869851] WARN System.err : 	at android.os.Handler.dispatchMessage(Handler.java:99)
+[1772869851] WARN System.err : 	at android.os.Looper.loop(Looper.java:193)
+[1772869851] WARN System.err : 	at android.app.ActivityThread.main(ActivityThread.java:6702)
+[1772869851] WARN System.err : 	at java.lang.reflect.Method.invoke(Native Method)
+[1772869851] WARN System.err : 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+[1772869851] WARN System.err : 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:911)
+[1772869852] DEBUG MediaSessionManager : Metadata updated:  - 0.00 MHz
+[1772869852] WARN System.err : android.os.DeadObjectException
+[1772869852] WARN System.err : 	at android.os.BinderProxy.transactNative(Native Method)
+[1772869852] WARN System.err : 	at android.os.BinderProxy.transact(Binder.java:1129)
+[1772869852] WARN System.err : 	at com.hcn.autoradio.IRadioServiceAPI$Stub$Proxy.gotoFreq(IRadioServiceAPI.java:583)
+[1772869852] WARN System.err : 	at com.example.openradiofm.data.source.MT8163Engine.tune(MT8163Engine.java:210)
+[1772869852] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.stepFreqDown(MainActivity.java:2044)
+[1772869852] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.lambda$setupSeekButtons$45(MainActivity.java:1554)
+[1772869852] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity.$r8$lambda$tzZGtb-thGmObuzneb0L82CApes(Unknown Source:0)
+[1772869852] WARN System.err : 	at com.example.openradiofm.ui.main.MainActivity$$ExternalSyntheticLambda50.onClick(D8$$SyntheticClass:0)
+[1772869852] WARN System.err : 	at android.view.View.performClick(View.java:6610)
+[1772869852] WARN System.err : 	at android.view.View.performClickInternal(View.java:6583)
+[1772869852] WARN System.err : 	at android.view.View.access$3100(View.java:780)
+[1772869852] WARN System.err : 	at android.view.View$PerformClick.run(View.java:26076)
+[1772869852] WARN System.err : 	at android.os.Handler.handleCallback(Handler.java:873)
+[1772869852] WARN System.err : 	at android.os.Handler.dispatchMessage(Handler.java:99)
+[1772869852] WARN System.err : 	at android.os.Looper.loop(Looper.java:193)
+[1772869852] WARN System.err : 	at android.app.ActivityThread.main(ActivityThread.java:6702)
+[1772869852] WARN System.err : 	at java.lang.reflect.Method.invoke(Native Method)
+[1772869852] WARN System.err : 	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)
+[1772869852] WARN System.err : 	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:911)
+[1772869855] INFO ActivityManager : Killing 5392:com.google.process.gservices/u0a78 (adj 906): empty #4
+[1772869857] DEBUG DeviceManager : Power Off: Cerrando dispositivo y finalizando aplicación
+[1772869857] DEBUG MT8163Engine : release: Soltando recursos MT8163
+[1772869857] DEBUG MT8163Engine : switchToAndroidAudio (MT8163) - Liberando canal para sistema
+[1772869857] DEBUG HiddenRadioPlayer : setMute(true) ejecutado.
+[1772869857] DEBUG AudioSystem : +setParameters(): fm_radio_on=0;fm_mute=1 
+[1772869858] DEBUG Surface : Surface::disconnect(this=0x8fc0c000,api=1)
+[1772869858] DEBUG Surface : Surface::disconnect(this=0x8fc0c000,api=1)
+[1772869858] WARN libEGL : EGLNativeWindowType 0x8fc0c008 disconnect failed
+[1772869858] VERBOSE PhoneWindow : DecorView setVisiblity: visibility = 4, Parent = android.view.ViewRootImpl@8aa045f, this = DecorView@e32feac[MainActivity]
+[1772869858] DEBUG DeviceManager : Liberando todos los recursos...
+[1772869858] DEBUG PlaybackManager : MediaControlReceiver desregistrado
+[1772869858] DEBUG MT8163Engine : release: Soltando recursos MT8163
+[1772869858] DEBUG MT8163Engine : switchToAndroidAudio (MT8163) - Liberando canal para sistema
+[1772869858] DEBUG AudioSystem : +setParameters(): fm_radio_on=0;fm_mute=1 
+[1772869858] DEBUG RadioRepository : ExecutorService de logos cerrado.
+[1772869858] DEBUG DeviceManager : Todos los recursos liberados correctamente
+[1772869858] DEBUG AudioTrack : pause(): 0x8bf10980, mState = 0
+[1772869858] INFO ExoPlayerImpl : Release a4dd24e [AndroidXMedia3/1.3.1] [tb8163p3_bsp, tb8163p3_bsp, alps, 28] [media3.common, media3.exoplayer, media3.decoder, media3.exoplayer.hls, media3.datasource, media3.extractor]
+[1772869858] DEBUG AudioTrack : stop(): 0x8bf10980, mState = 4
+[1772869858] DEBUG AudioTrack : ~AudioTrack(): 0x8bf10980
+[1772869858] DEBUG AudioTrack : stop(): 0x8bf10980, mState = 4
+[1772869858] WARN MediaAnalyticsItem : Unable to record: [1:audiotrack:0:-1::0:-1:1:0:5:android.media.audiotrack.streamtype=3:android.media.audiotrack.type=AUDIO_CONTENT_TYPE_MUSIC:android.media.audiotrack.usage=AUDIO_USAGE_MEDIA:android.media.audiotrack.samplerate=48000:android.media.audiotrack.channelmask=3:] [forcenew=0]
+[1772869858] WARN MediaAnalyticsItem : Unable to record: [1:codec:0:-1::0:-1:1:0:9:android.media.mediacodec.codec=OMX.google.aac.decoder:android.media.mediacodec.mode=audio:android.media.mediacodec.secure=0:android.media.mediacodec.encoder=0:android.media.mediacodec.mime=audio/mp4a-latm:android.media.mediacodec.latency.max=419398:android.media.mediacodec.latency.min=62215:android.media.mediacodec.latency.avg=373924:android.media.mediacodec.latency.n=1453:] [forcenew=0]
+[1772869858] DEBUG PlaybackManager : Mute state: UNMUTED
+[1772869858] DEBUG MT8163Engine : setOnlineStreamingActive: false
+[1772869858] DEBUG MT8163Engine : switchToFmAudio (MT8163)
+[1772869858] WARN AudioManager : Use of stream types is deprecated for operations other than volume control
+[1772869858] WARN AudioManager : See the documentation of requestAudioFocus() for what to use instead with android.media.AudioAttributes to qualify your playback use case
+[1772869858] DEBUG AudioSystem : +setParameters(): fm_radio_on=1;fm_mute=0 
+[1772869858] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869858] DEBUG OnlineStreamManager : Streaming detenido por completo.
+[1772869858] DEBUG View : [Warning] assignParent to null: this = DecorView@e32feac[MainActivity]
+[1772869858] WARN ActivityManager : Unbind failed: could not find connection for android.os.BinderProxy@96d75cc
+[1772869861] INFO ActivityManager : START u0 {act=android.intent.action.MAIN cmp=com.example.openradiofm/.ui.main.MainActivity} from uid 10105
+[1772869861] DEBUG ViewRootImpl[openradiofm] : hardware acceleration = false , fakeHwAccelerated = true, sRendererDisabled = false, forceHwAccelerated = false, sSystemRendererDisabled = false
+[1772869861] WARN ActivityThread : handleWindowVisibility: no activity for token android.os.BinderProxy@10675d7
+[1772869861] DEBUG MediaBrowserCompat : Connecting to a MediaBrowserService.
+[1772869861] DEBUG PlaybackManager : MediaControlReceiver registrado
+[1772869861] ERROR RadioServiceController : => START() INVOCADO. MODO DETECTADO: FM_MT8163
+[1772869861] DEBUG OpenRadioFm : Modo de funcionamiento detectado: FM_MT8163
+[1772869861] DEBUG PredefinedStationSource : Cargadas 58 emisoras predefinidas.
+[1772869861] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869861] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/87600.png
+[1772869861] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869861] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869861] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869861] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/91300.png
+[1772869861] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869861] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869861] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869861] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/89100.png
+[1772869861] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869861] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869861] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869862] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/93500.png
+[1772869862] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/96900.png
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869862] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/100800.png
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869862] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/104800.png
+[1772869862] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/105500.png
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869862] ERROR RadioServiceController : => RAMA MT8163/Hcn ALCANZADA. LLAMANDO A conectarRadio().
+[1772869862] DEBUG RadioServiceController : Vinculando a proveedor: com.hcn.autoradio
+[1772869862] INFO ActivityManager : Start proc 7317:com.hcn.autoradio/u0a9 for service com.hcn.autoradio/.service.FMPlugService
+[1772869862] VERBOSE PhoneWindow : DecorView setVisiblity: visibility = 4, Parent = null, this = DecorView@a189325[]
+[1772869862] DEBUG ViewRootImpl[MainActivity] : hardware acceleration = true , fakeHwAccelerated = false, sRendererDisabled = false, forceHwAccelerated = false, sSystemRendererDisabled = false
+[1772869862] VERBOSE PhoneWindow : DecorView setVisiblity: visibility = 0, Parent = android.view.ViewRootImpl@f845d08, this = DecorView@a189325[MainActivity]
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=1
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=2
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=3
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=4
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=5
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=6
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=7
+[1772869862] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=8
+[1772869862] DEBUG Surface : Surface::connect(this=0x8fc0c000,api=1)
+[1772869862] DEBUG Surface : Surface::allocateBuffers(this=0x8fc0c000)
+[1772869862] DEBUG mali_winsys : EGLint new_window_surface(egl_winsys_display *, void *, EGLSurface, EGLConfig, egl_winsys_surface **, EGLBoolean) returns 0x3000
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN System : ClassLoader referenced unknown path: system/framework/mediatek-cta.jar
+[1772869862] INFO System.out : e:java.lang.ClassNotFoundException: com.mediatek.cta.CtaHttp
+[1772869862] WARN MediaSessionCompat : Couldn't find a unique registered media button receiver in the given context.
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] INFO chatty : uid=10141(com.example.openradiofm) Thread-22 identical 1 line
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] INFO chatty : uid=10141(com.example.openradiofm) Thread-23 identical 1 line
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] INFO ActivityManager : Displayed com.example.openradiofm/.ui.main.MainActivity: +847ms
+[1772869862] DEBUG MediaSessionManager : MediaSession Connected Successfully
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] INFO chatty : uid=10141(com.example.openradiofm) Thread-20 identical 1 line
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] INFO chatty : uid=10141(com.example.openradiofm) Thread-19 identical 1 line
+[1772869862] DEBUG OpenSSLLib : OpensslErr:Module:12(177:); file:external/boringssl/src/crypto/asn1/asn1_lib.c ;Line:168;Function:ASN1_get_object
+[1772869862] DEBUG RadioServiceController : Servicio conectado: com.hcn.autoradio/.service.FMPlugService
+[1772869862] DEBUG OpenRadioFm : Modo de funcionamiento detectado: FM_MT8163
+[1772869862] DEBUG PredefinedStationSource : Cargadas 58 emisoras predefinidas.
+[1772869862] DEBUG OpenRadioFm : onServiceConnected: Servicio AIDL legado (HCN) recibido. Inicializando motor...
+[1772869862] DEBUG HiddenRadioPlayer : RadioPlayer obtenido vía getRadioPlayer().
+[1772869862] DEBUG HiddenRadioPlayer : Listener registrado con éxito.
+[1772869862] DEBUG HiddenRadioPlayer : setStereo(true) ejecutado.
+[1772869862] DEBUG MT8163Engine : HiddenRadioPlayer init: OK
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] DEBUG AndroidRuntime : >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869862] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] INFO chatty : uid=10141(com.example.openradiofm) identical 2 lines
+[1772869863] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] DEBUG AndroidRuntime : Calling main entry com.android.commands.content.Content
+[1772869863] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=8
+[1772869863] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] INFO ActivityManager : Start proc 7411:com.topjohnwu.magisk/u0a123 for content provider com.topjohnwu.magisk/.core.Provider
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] DEBUG RadioLogos : FOUND: /sdcard/RadioLogos/87600.png
+[1772869863] WARN RadioRepository : WARNING: getStationInfo() llamado desde UI thread. Esto puede causar lag en la interfaz. Considera ejecutarlo en un hilo de fondo.
+[1772869863] DEBUG ActivityManager : Raise procstate to external provider: ProcessRecord{da078e3 7411:com.topjohnwu.magisk/u0a123}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=true
+[1772869863] DEBUG ViewRootImpl[Toast] : hardware acceleration = true , fakeHwAccelerated = false, sRendererDisabled = false, forceHwAccelerated = false, sSystemRendererDisabled = false
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=7
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=6
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=5
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=4
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=3
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=2
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=1
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=1
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=1
+[1772869863] DEBUG Surface : Surface::connect(this=0x8faff800,api=1)
+[1772869863] DEBUG Surface : Surface::allocateBuffers(this=0x8faff800)
+[1772869863] DEBUG mali_winsys : EGLint new_window_surface(egl_winsys_display *, void *, EGLSurface, EGLConfig, egl_winsys_surface **, EGLBoolean) returns 0x3000
+[1772869863] DEBUG ActivityManager : Raise procstate to external provider: ProcessRecord{da078e3 7411:com.topjohnwu.magisk/u0a123}
+[1772869863] ERROR SupabaseLogoSource : UPSERT FAILED: Code=400 Message=
+[1772869863] ERROR SupabaseLogoSource : Error Body: {"code":"42P10","details":null,"hint":null,"message":"there is no unique or exclusion constraint matching the ON CONFLICT specification"}
+[1772869863] DEBUG SupabaseLogoSource : notifyActivity: active=false
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869863] DEBUG ActivityManager : Raise procstate to external provider: ProcessRecord{da078e3 7411:com.topjohnwu.magisk/u0a123}
+[1772869863] DEBUG OpenRadioFm : updateDataActivityUI: onlineEnabled=true, isConnected=true, mActiveDataOps=0
+[1772869863] DEBUG AndroidRuntime : Shutting down VM
+[1772869863] DEBUG AndroidRuntime : >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+[1772869864] DEBUG AndroidRuntime : Calling main entry com.android.commands.content.Content
+[1772869864] DEBUG ActivityManager : Raise procstate to external provider: ProcessRecord{da078e3 7411:com.topjohnwu.magisk/u0a123}
+[1772869864] DEBUG AndroidRuntime : Shutting down VM
+[1772869864] DEBUG ActivityManager : Raise procstate to external provider: ProcessRecord{da078e3 7411:com.topjohnwu.magisk/u0a123}
+[1772869864] INFO ActivityManager : Force stopping com.example.openradiofm appid=10141 user=0: from pid 615
+[1772869864] INFO ActivityManager : Killing 3400:com.example.openradiofm/u0a141 (adj 0): stop com.example.openradiofm
+[1772869864] WARN ActivityManager : Force removing ActivityRecord{9ebbd16 u0 com.example.openradiofm/.ui.main.MainActivity t7233}: app died, no saved state
+[1772869864] INFO AndroidRuntime : VM exiting with result code 0, cleanup skipped.
+[1772869864] DEBUG AndroidRuntime : >>>>>> START com.android.internal.os.RuntimeInit uid 0 <<<<<<
+[1772869864] INFO ActivityManager : Process com.hcn.autoradio (pid 7317) has died: fore SVC 
+[1772869864] DEBUG AndroidRuntime : Calling main entry com.topjohnwu.superuser.internal.RootServerMain
+[1772869864] WARN ActivityManager : setHasOverlayUi called on unknown pid: 3400
+[1772869874] INFO ActivityManager : Killing 6974:com.android.vending/u0a14 (adj 906): empty #4

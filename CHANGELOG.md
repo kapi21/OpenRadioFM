@@ -1,4 +1,12 @@
-# Changelog
+## [18.5.1] - 2026-03-07
+### Added
+- **Secuencia de Apagado QS6 (V18.4)**: Implementada desvinculación proactiva de callbacks AIDL, `ACTION_REQUEST_CHANGE_SOURCE` y sincronización de iconos de barra de estado.
+- **Optimización AM**: Bloqueo de búsquedas en Supabase para banda AM para mejorar el rendimiento.
+- **Limpieza Proactiva**: Cierre forzado de hilos de red en `RadioRepository` durante el ciclo de vida de cierre.
+
+### Fixed
+- **QS6 Tuning**: Corregida la sintonización Seek y Fine para que coincida con los pasos de frecuencia del hardware NWD.
+- **Syntax Fixes**: Corregidos errores de llaves y bloques try-catch introducidos durante la refactorización de apagado.
 
 ## [5.2.0] - 2026-03-03
 ### Added

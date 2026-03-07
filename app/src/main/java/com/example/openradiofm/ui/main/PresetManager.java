@@ -97,17 +97,32 @@ public class PresetManager {
             return;
         }
         if (tvPresets[index] != null) {
-            RadioStation s = null;
-            if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
-                s = mRepository.getStationInfo(freq, null);
-            }
-            String displayName = (s != null) ? s.getName() : "";
-            if (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+")) {
-                tvPresets[index].setText(displayName);
-            } else {
-                tvPresets[index].setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
-            }
-            tvPresets[index].setVisibility(View.VISIBLE);
+            final int fIndex = index;
+            final int fFreq = freq;
+            final int fBand = currentBand;
+
+            // V18.2: Mover la obtención de info a hilo secundario para evitar congelar la UI
+            new Thread(() -> {
+                RadioStation s = null;
+                if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
+                    s = mRepository.getStationInfo(fFreq, null);
+                }
+                final String displayName = (s != null) ? s.getName() : "";
+                
+                mActivity.runOnUiThread(() -> {
+                    if (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+")) {
+                        tvPresets[fIndex].setText(displayName);
+                    } else {
+                        // V18.2: Formateo dinámico según banda (AM en kHz sin decimales)
+                        if (fBand >= 3) { // BAND_AM1 o BAND_AM2 (o SW)
+                            tvPresets[fIndex].setText(String.valueOf(fFreq));
+                        } else {
+                            tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                        }
+                    }
+                    tvPresets[fIndex].setVisibility(View.VISIBLE);
+                });
+            }).start();
         }
 
         final int fIndex = index;

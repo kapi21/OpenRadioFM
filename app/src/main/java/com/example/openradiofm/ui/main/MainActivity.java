@@ -1858,30 +1858,34 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (tvFrequency != null) {
             // V5.5: Resolución de nombre delegada al RDSManager (RDS live > customName > frecuencia)
             // V13.9: Durante el escaneo, NO buscamos nombres en DB para ganar fluidez
-            String displayName = null;
-            if (!mIsScanning && mRdsManager != null) {
-                displayName = mRdsManager.getDisplayName(freq);
-            }
-            
-            // V17.4: Fallback adicional al repositorio si el RDSManager no reconoce el nombre (ej: al volver a sintonizar)
-            if ((displayName == null || displayName.isEmpty()) && mRepository != null && !mIsScanning) {
-                com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
-                if (station != null) {
-                    displayName = station.getName();
+            // V18.2: Mover resolución de nombres lenta a hilo secundario
+            new Thread(() -> {
+                String finalDisplayName = null;
+                if (!mIsScanning && mRdsManager != null) {
+                    finalDisplayName = mRdsManager.getDisplayName(freq);
                 }
-            }
-            
-            if (displayName != null && !displayName.isEmpty()) {
-                tvFrequency.setText(displayName);
-                // V16.4: Forzar un re-layout para asegurar que el auto-sizing se active correctamente
-                // si el nombre es largo, evitando que se vea entrecortado en Layout 2.
-                tvFrequency.requestLayout();
-            } else if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
-                tvFrequency.setText(String.valueOf(freq));
-            } else {
-                // V12.3: Usar double para evitar errores de precisión de punto flotante (+/- 0.05)
-                tvFrequency.setText(String.format(java.util.Locale.US, "%.2f", (double) freq / 1000.0));
-            }
+                
+                // Fallback al repositorio si el RDSManager no reconoce el nombre
+                if ((finalDisplayName == null || finalDisplayName.isEmpty()) && mRepository != null && !mIsScanning) {
+                    com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+                    if (station != null) {
+                        finalDisplayName = station.getName();
+                    }
+                }
+                
+                final String resultName = finalDisplayName;
+                runOnUiThread(() -> {
+                    if (resultName != null && !resultName.isEmpty()) {
+                        tvFrequency.setText(resultName);
+                        tvFrequency.requestLayout();
+                    } else if (mCurrentBand >= 3) { // AM1, AM2, SW
+                        tvFrequency.setText(String.valueOf(freq));
+                    } else {
+                        // FM: Formatear a MHz (ej: 96.9)
+                        tvFrequency.setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
+                    }
+                });
+            }).start();
 
             // Get State
             boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
