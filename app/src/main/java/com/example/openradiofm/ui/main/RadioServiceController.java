@@ -144,9 +144,16 @@ public class RadioServiceController {
                 case 6:
                     targetIdx = 2;
                     break; // Standard
+                case 7:
+                    targetIdx = 7;
+                    break; // Mediatek 8259/8667
             }
 
             if (targetIdx >= 0 && targetIdx < allProviders.length) {
+                if (targetIdx == 7) {
+                   tryStartTsEngine();
+                   return;
+                }
                 if (bindToProvider(allProviders[targetIdx])) {
                     Log.d(TAG, "Forzando motor manual índice: " + engineIdx + " (Provider " + targetIdx + ")");
                     return;
@@ -192,8 +199,12 @@ public class RadioServiceController {
             return MainActivity.FmMode.FM_MT8163;
         if (engineIdx == 6)
             return MainActivity.FmMode.FM_BASICO;
+        if (engineIdx == 7)
+            return MainActivity.FmMode.FM_8259_8667;
 
         // Si es Automático (0), intentamos detectar el hardware
+        if (isTS8259())
+            return MainActivity.FmMode.FM_8259_8667;
         if (isQS6())
             return MainActivity.FmMode.FM_QS6;
         if (isK706())
@@ -201,6 +212,15 @@ public class RadioServiceController {
         if (hasCarRadioService())
             return MainActivity.FmMode.FM_MT8163;
         return MainActivity.FmMode.FM_BASICO;
+    }
+
+    private boolean isTS8259() {
+        try {
+            mContext.getPackageManager().getPackageInfo("com.ts.mainui", 0);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private boolean isK706() {
@@ -259,8 +279,62 @@ public class RadioServiceController {
                 { "com.android.fmradio", "com.android.fmradio.FmRadioService" }, // 3: Standard (Alt)
                 { "com.ts.mainui", "com.ts.mainui.radio.IRadioService" }, // 4: TopWay (TS)
                 { "com.syu.radio", "com.syu.radio.IRadioService" }, // 5: SYU
-                { "com.nwd.radio.service", "com.nwd.radio.service.ACTION_RADIO_SERVICE" } // 6: QS6 (NWD)
+                { "com.nwd.radio.service", "com.nwd.radio.service.ACTION_RADIO_SERVICE" }, // 6: QS6 (NWD)
+                { "com.ts.mainui", "com.ts.tsspeechlib.radio.TsRadioService" } // 7: Mediatek 8259/8667 (Speech/TS)
         };
+    }
+
+    // --- Lógica específica para Mediatek 8259/8667 (Doble vínculo AIDL) ---
+
+    private com.ts.main.common.ITsCommon mTsCommon;
+    private com.ts.tsspeechlib.radio.ITsSpeechRadio mTsSpeechRadio;
+
+    private void tryStartTsEngine() {
+        Log.e(TAG, "tryStartTsEngine(): Iniciando vínculo doble TS...");
+        conectarTsCommon();
+        conectarTsSpeechRadio();
+    }
+
+    private void conectarTsCommon() {
+        Intent intent = new Intent("com.ts.mainui.common.ITsCommon");
+        intent.setPackage("com.ts.mainui");
+        mContext.bindService(intent, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                mTsCommon = com.ts.main.common.ITsCommon.Stub.asInterface(service);
+                checkAndStartTsEngine();
+            }
+            @Override
+            public void onServiceDisconnected(ComponentName name) { mTsCommon = null; }
+        }, Context.BIND_AUTO_CREATE);
+    }
+
+    private void conectarTsSpeechRadio() {
+        Intent intent = new Intent("com.ts.tsspeechlib.radio.TsRadioService");
+        intent.setPackage("com.ts.mainui");
+        mContext.bindService(intent, new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                mTsSpeechRadio = com.ts.tsspeechlib.radio.ITsSpeechRadio.Stub.asInterface(service);
+                checkAndStartTsEngine();
+            }
+            @Override
+            public void onServiceDisconnected(ComponentName name) { mTsSpeechRadio = null; }
+        }, Context.BIND_AUTO_CREATE);
+    }
+
+    private void checkAndStartTsEngine() {
+        if (mTsCommon != null && mTsSpeechRadio != null) {
+            try {
+                com.example.openradiofm.data.source.MTK8259_8667Engine engine = 
+                    new com.example.openradiofm.data.source.MTK8259_8667Engine(mTsCommon, mTsSpeechRadio);
+                if (engine.init(mContext)) {
+                    if (mListener != null) mListener.onEngineReady(engine);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error iniciando MTK8259_8667Engine", e);
+            }
+        }
     }
 
     public void release() {

@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         FM_BASICO,
         FM_K706,
         FM_QS6,
+        FM_8259_8667,
         AM
     }
 
@@ -1206,6 +1207,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     showToast("Motor de radio no iniciado");
                 }
             });
+
+            // V18.5: Sugerencia de GDUCK - LongClick para alternar AM/FM en Mediatek
+            btnBand.setOnLongClickListener(v -> {
+                if (mEngine != null && mEngine.getEngineName().equals("MTK8259_8667")) {
+                    animateButton(v);
+                    mEngine.toggleRdsFeature(99); 
+                    return true;
+                }
+                return false;
+            });
         }
 
         // LOC/DX Switch — V5.0: Via RadioEngine
@@ -1598,8 +1609,19 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // Loop Band Logic
         if (btnBand != null) {
             btnBand.setOnClickListener(v -> {
-                if (mEngine != null)
+                if (mEngine != null) {
                     mEngine.bandCycle();
+                }
+            });
+
+            // V18.5: Sugerencia de GDUCK - LongClick para alternar AM/FM en Mediatek
+            btnBand.setOnLongClickListener(v -> {
+                if (mEngine != null && mEngine.getEngineName().equals("MTK8259_8667")) {
+                    animateButton(v);
+                    mEngine.toggleRdsFeature(99); 
+                    return true;
+                }
+                return false;
             });
         }
     }

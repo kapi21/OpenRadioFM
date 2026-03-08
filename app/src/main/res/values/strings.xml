@@ -98,6 +98,7 @@
     <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
     <string name="engine_mtk">MediaTek Genérico</string>
     <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">Mediatek 8259/8667 (TS)</string>
     <string name="engine_standard">Android Estándar</string>
     <string name="am_band_enabled">✅ Banda AM habilitada</string>
     <string name="am_band_disabled">❌ Banda AM deshabilitada</string>
