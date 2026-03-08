@@ -114,7 +114,6 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
         androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
-        androidx.appcompat.widget.SwitchCompat swGestures = dialog.findViewById(R.id.switchSwipeGestures);
         androidx.appcompat.widget.SwitchCompat swStatusBarV2 = dialog.findViewById(R.id.switchStatusBarV2);
         androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm);
 
@@ -222,11 +221,17 @@ public class DialogManager {
             });
         }
 
-        if (swGestures != null) {
-            swGestures.setChecked(mActivity.mPrefs.getBoolean("pref_enable_gestures", false));
-            swGestures.setOnCheckedChangeListener((bv, checked) -> {
-                mActivity.mPrefs.edit().putBoolean("pref_enable_gestures", checked).apply();
-                mActivity.showToast(checked ? "Gestos (Beta): Activados" : "Gestos: Desactivados");
+        // Logo Mode Row (V18.5)
+        View rowLogoMode = dialog.findViewById(R.id.rowLogoMode);
+        TextView tvCurrentLogoMode = dialog.findViewById(R.id.tvCurrentLogoMode);
+        if (tvCurrentLogoMode != null) {
+            int logoMode = mActivity.mPrefs.getInt("pref_logo_mode", 0); // 0=Car, 1=Clock
+            tvCurrentLogoMode.setText(logoMode == 0 ? mActivity.getString(R.string.logo_mode_car) : mActivity.getString(R.string.logo_mode_clock));
+        }
+        if (rowLogoMode != null) {
+            rowLogoMode.setOnClickListener(v -> {
+                showLogoModeSelector();
+                dialog.dismiss();
             });
         }
 
@@ -421,6 +426,28 @@ public class DialogManager {
                     mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
                     mActivity.showToast("Motor cambiado: " + options[which]);
                     mActivity.mServiceController.start();
+                }).create();
+        applyPremiumListStyle(dialog);
+        dialog.show();
+    }
+
+    public void showLogoModeSelector() {
+        String[] options = {
+                mActivity.getString(R.string.logo_mode_car),
+                mActivity.getString(R.string.logo_mode_clock)
+        };
+
+        AlertDialog dialog = new AlertDialog.Builder(mActivity)
+                .setTitle(R.string.logo_mode_label)
+                .setItems(options, (d, which) -> {
+                    mActivity.mPrefs.edit().putInt("pref_logo_mode", which).apply();
+                    mActivity.showToast("Modo de logo: " + options[which]);
+                    
+                    // V18.5: Aplicar cambio inmediatamente
+                    mActivity.applyLogoModePreference();
+                    
+                    // Reabrir ajustes
+                    showPremiumSettingsDialog();
                 }).create();
         applyPremiumListStyle(dialog);
         dialog.show();

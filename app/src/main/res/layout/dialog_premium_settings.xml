@@ -359,18 +359,38 @@
                 android:textSize="20sp"/>
         </LinearLayout>
 
-        <!-- Option: Swipe Gestures -->
-        <LinearLayout style="@style/SettingsRowStyle">
+        <!-- Submenu Box: Modo Logo Superior (V18.5) -->
+        <LinearLayout
+            android:id="@+id/rowLogoMode"
+            style="@style/DialogBoxStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp"
+            android:layout_marginBottom="8dp">
+
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/enable_gestures_beta"
-                android:textColor="@color/white"/>
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchSwipeGestures"
+                android:text="@string/logo_mode_label"
+                android:textColor="@color/white"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:id="@+id/tvCurrentLogoMode"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:text="@string/logo_mode_car"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
         </LinearLayout>
 
         <!-- About Button (NEW for V4.1) -->

@@ -131,6 +131,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public MediaSessionManager mMediaSessionManager;
     public ThemeManager mThemeManager; // V16.2: Skin manager
 
+    // V18.5: Reloj Digital
+    private android.os.Handler mClockHandler;
+    private Runnable mClockRunnable;
+    private TextView tvDigitalClock;
+
     // V5.5: Managers de Audio y Dispositivo
     public PlaybackManager mPlaybackManager;
     public DeviceManager mDeviceManager;
@@ -998,6 +1003,23 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
         ivUnitLabel = findViewById(R.id.ivUnitLabel);
+        tvDigitalClock = findViewById(R.id.tvDigitalClock);
+
+        // V18.5: Inicializar Reloj Digital
+        mClockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mClockRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (tvDigitalClock != null && tvDigitalClock.getVisibility() == View.VISIBLE) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+                    tvDigitalClock.setText(sdf.format(new java.util.Date()));
+                }
+                mClockHandler.postDelayed(this, 10000); // 10 segs (suficiente para HH:mm)
+            }
+        };
+
+        // Aplicar preferencias iniciales
+        applyLogoModePreference();
         ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
         ivStereoIcon = findViewById(R.id.ivStereoIcon);
         ivAfIcon = findViewById(R.id.ivAfIcon);
@@ -1308,6 +1330,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mDeviceManager.releaseAllResources();
         }
 
+        // V18.5: Limpiar reloj
+        if (mClockHandler != null) {
+            mClockHandler.removeCallbacks(mClockRunnable);
+        }
+
         // Recursos no gestionados por DeviceManager (legacy específico)
         try {
             unregisterReceiver(mBtStateReceiver);
@@ -1374,6 +1401,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V2.1: Especial para mPresetManager que maneja sus propios arrays
         if (mPresetManager != null) {
             mPresetManager.applyFonts(typeface);
+        }
+
+        // V18.5: Reloj Digital
+        TextView tvDigitalClock = findViewById(R.id.tvDigitalClock);
+        if (tvDigitalClock != null) {
+            tvDigitalClock.setTypeface(typeface);
         }
     }
 
@@ -2388,10 +2421,36 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mPrefs == null) return;
         boolean showStatusBarV2 = mPrefs.getBoolean("pref_show_status_bar_v2", false);
         runOnUiThread(() -> {
-            if (mIsV3 || (!mIsV3 && showStatusBarV2)) {
+            if (showStatusBarV2) {
                 getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
             } else {
                 getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
+        });
+    }
+
+    /**
+     * V18.5: Alterna entre el logo del coche y el reloj digital.
+     */
+    public void applyLogoModePreference() {
+        if (mPrefs == null) return;
+        int logoMode = mPrefs.getInt("pref_logo_mode", 0); // 0=Car, 1=Clock
+        runOnUiThread(() -> {
+            ImageView ivCarLogo = findViewById(R.id.ivCarLogo);
+            if (tvDigitalClock != null) {
+                if (logoMode == 1) {
+                    tvDigitalClock.setVisibility(View.VISIBLE);
+                    if (ivCarLogo != null) ivCarLogo.setVisibility(View.GONE);
+                    mClockHandler.removeCallbacks(mClockRunnable);
+                    mClockHandler.post(mClockRunnable);
+                } else {
+                    tvDigitalClock.setVisibility(View.GONE);
+                    if (ivCarLogo != null) {
+                        ivCarLogo.setVisibility(View.VISIBLE);
+                        mLogoManager.loadCarLogo();
+                    }
+                    mClockHandler.removeCallbacks(mClockRunnable);
+                }
             }
         });
     }

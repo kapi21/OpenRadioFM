@@ -32,19 +32,19 @@
     <string name="app_options">Opciones de la App</string>
     <string name="night_mode_auto">Modo Noche Automático</string>
     <string name="save_history">Guardar Historial de Emisoras</string>
-    <string name="enable_gestures_beta">Habilitar Gestos (Swipe) (beta)</string>
+    <string name="enable_gestures_beta" translatable="false">Gestos (Obsoleto)</string>
     <string name="online_logos">Logos Online</string>
-    <string name="status_bar_v2">Barra de Estado (Layout 2)</string>
-    <string name="status_bar_enabled">✅ Barra de estado activada (Layout 2)</string>
-    <string name="status_bar_disabled">❌ Barra de estado desactivada (Layout 2)</string>
+    <string name="status_bar_v2">Mostrar Barra de Estado</string>
+    <string name="status_bar_enabled">✅ Barra de estado activada</string>
+    <string name="status_bar_disabled">❌ Barra de estado desactivada</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Modo Noche Automático activado</string>
     <string name="night_mode_disabled">❌ Modo Noche Automático desactivado</string>
     <string name="history_enabled">✅ Historial de emisoras activado</string>
     <string name="history_disabled">❌ Historial de emisoras desactivado</string>
-    <string name="gestures_enabled">✅ Gestos de deslizamiento activados</string>
-    <string name="gestures_disabled">❌ Gestos de deslizamiento desactivados</string>
+    <string name="gestures_enabled" translatable="false">Gestos desactivados</string>
+    <string name="gestures_disabled" translatable="false">Gestos desactivados</string>
     <string name="logos_online_enabled">✅ Logos online activados</string>
     <string name="logos_online_disabled">❌ Logos online desactivados</string>
     <string name="night_mode_manual_blocked">Desactiva Modo Noche Automático para elegir skin manualmente</string>
@@ -170,6 +170,9 @@
     <string name="af_list_scanning">AF_LIST.......: [SCANNING]</string>
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favoritos restablecidos correctamente</string>
+    <string name="logo_mode_label">Modo Logo Superior</string>
+    <string name="logo_mode_car">Logo del Coche</string>
+    <string name="logo_mode_clock">Reloj Digital</string>
     <string name="history_cleared">Historial borrado</string>
     <string name="my_favorites">Mis Favoritos</string>
 </resources>

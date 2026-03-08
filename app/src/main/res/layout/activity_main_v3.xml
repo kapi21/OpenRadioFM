@@ -167,7 +167,25 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:scaleType="fitCenter"
-        android:visibility="invisible"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvDigitalClock"
+        android:layout_width="180dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center"
+        android:text="12:00"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="24sp"
+        app:autoSizeMaxTextSize="120sp"
+        app:autoSizeStepGranularity="2sp"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
