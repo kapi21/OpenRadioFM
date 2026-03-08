@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-18.5.0_Universal_Streaming-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-18.6.0_Universal_Cloud-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -97,6 +97,7 @@ graph TB
 |---|---|---|---|
 | HCN AutoRadio (ESSGO, JUNSU) | MediaTek MT8163 | `FM_MT8163` | ✅ Completo |
 | Radio K706 | K706 + MCU | `FM_K706` | ✅ Completo |
+| Radio MTK8259 / 8667 | MT8259 + MCU | `FM_MT8259` | 🛠️ En desarrollo |
 | Radio NWD G5 | NWD Platform | `FM_QS6` | ✅ Beta |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
@@ -148,6 +149,14 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v18.6.0 "Advanced Cloud & UI Customization" (Marzo 2026)
+- **Supabase Storage Integration**: Ahora la app sube los archivos de imagen locales (`.png`/`.jpg`) directamente al almacenamiento de Supabase, garantizando que otros usuarios puedan ver el logo compartido.
+- **Identificación de Dispositivo**: Implementado `user_id` basado en el `ANDROID_ID` para trazar las contribuciones a la nube y evitar colisiones de datos.
+- **Reloj Digital Premium**: Nueva opción en Layout 3 para alternar entre el logo del coche y un reloj digital de gran formato con auto-dimensionado.
+- **Soporte MTK8259_8667 (Alfa)**: Iniciada la integración para unidades 8259/8667 con soporte para RDS y cambio de bandas mediante pulsación larga.
+- **Reorganización Pro**: Limpieza masiva del repositorio. Logs y scripts movidos a carpetas locales excluidas de Git para un mantenimiento profesional.
+- **UI Fix**: Implementación de `Barrier` en Layout 3 para evitar solapamientos entre el icono de nube y el nuevo reloj.
 
 ### v4.7.5 "Cloud Intelligence & UI Perfection" (Marzo 2026)
 - **Crowdsourcing (Contribución Cloud)**: Los usuarios ahora pueden alimentar la base de datos de logos enviando RDS PS y PI Code automáticamente.
