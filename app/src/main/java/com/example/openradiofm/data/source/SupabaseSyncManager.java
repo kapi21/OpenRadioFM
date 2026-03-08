@@ -108,6 +108,6 @@ public class SupabaseSyncManager {
         
         // El M3U no tiene PI ni Frecuencia, pero Supabase hace upsert por rds_name
         // Pasamos frecuencia 0 para indicar que es un registro maestro sin frecuencia fija
-        mSupabaseSource.upsertLogoData(null, rdsName, 0, logo, stream);
+        mSupabaseSource.upsertLogoData(mContext, null, rdsName, 0, logo, stream);
     }
 }

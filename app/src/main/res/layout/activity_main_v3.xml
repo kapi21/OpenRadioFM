@@ -146,7 +146,7 @@
         android:translationZ="10dp"
         android:visibility="invisible"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
-        app:layout_constraintEnd_toStartOf="@+id/ivCarLogo"
+        app:layout_constraintEnd_toStartOf="@+id/barrier_right_widgets"
         app:layout_constraintTop_toTopOf="parent">
         
         <ImageView
@@ -159,6 +159,13 @@
     </FrameLayout>
 
 
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_right_widgets"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="start"
+        app:constraint_referenced_ids="ivCarLogo,tvDigitalClock" />
 
     <ImageView
         android:id="@+id/ivCarLogo"

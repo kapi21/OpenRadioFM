@@ -337,7 +337,7 @@ public class RadioRepository {
                 final String fName = finalName;
                 final String fPath = logoPath;
                 // Intentamos subir si es un logo de archivo (no nulo) o al menos tenemos la info RDS
-                logoExecutor.submit(() -> supabaseSource.upsertLogoData(fPi, fName, freqKHz, "file://" + fPath, null));
+                logoExecutor.submit(() -> supabaseSource.upsertLogoData(mContext, fPi, fName, freqKHz, "file://" + fPath, null));
             }
         } else {
             android.util.Log.d("RadioLogos", "NOT FOUND LOCAL");
@@ -539,7 +539,7 @@ public class RadioRepository {
                     .getBoolean("pref_logos_online", false);
             if (onlineAfterDownload) {
                 String pi = mPrefs.getString("PI_" + freqKHz, null);
-                supabaseSource.upsertLogoData(pi, rdsName, freqKHz, urlString, null);
+                supabaseSource.upsertLogoData(mContext, pi, rdsName, freqKHz, urlString, null);
             }
 
             return destFile.getAbsolutePath();
