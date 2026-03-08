@@ -31,22 +31,15 @@ debug_logs*.bat
 massive_upload.py
 *.ps1
 
-# === Estudios, Documentación Interna y Research (LOCAL - NO SUBIR) ===
-_DOCS/research/
-_DOCS/brain_records/
-_DOCS/keys/
-_DOCS/logs/
-_DOCS/*HANDOFF*
-_DOCS/TODO.md
-_DOCS/roadmap.md
-_DOCS/INFORME_DANOS.md
-_DOCS/LAYOUT_PROPOSAL.md
-_DOCS/PROJECT_SUMMARY*
-HANDOFF_ROADMAP.md
-REFAC_README.md
+# === Documentación y Estudios (LOCAL - NO SUBIR) ===
+_DOCS/*
+!_DOCS/manual_*.md
+!_DOCS/manual_usuario.md
 v5/
 .gemini/
 .antigravity/
+HANDOFF_ROADMAP.md
+REFAC_README.md
 
 # === APKs y binarios compilados ===
 _RELEASES/
