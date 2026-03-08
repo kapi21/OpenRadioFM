@@ -247,6 +247,7 @@ public class DialogManager {
                     mActivity.getString(R.string.engine_mt8163),
                     mActivity.getString(R.string.engine_mtk),
                     mActivity.getString(R.string.engine_ts),
+                    mActivity.getString(R.string.engine_mtk8259), // V18.6
                     mActivity.getString(R.string.engine_standard)
             };
             if (engineIdx >= 0 && engineIdx < engineNames.length) {
@@ -417,6 +418,7 @@ public class DialogManager {
                 mActivity.getString(R.string.engine_mt8163),
                 mActivity.getString(R.string.engine_mtk),
                 mActivity.getString(R.string.engine_ts),
+                mActivity.getString(R.string.engine_mtk8259),
                 mActivity.getString(R.string.engine_standard)
         };
 

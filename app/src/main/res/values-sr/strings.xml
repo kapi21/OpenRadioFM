@@ -85,11 +85,12 @@
     <string name="enable_am_band">Omogući AM Opseg</string>
     <string name="radio_engine">Radio Motor</string>
     <string name="engine_auto">Automatski (Preporučeno)</string>
-    <string name="engine_k706">Vento / HCN (K706)</string>
+    <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
     <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
     <string name="engine_mtk">MediaTek Generic</string>
     <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">MediaTek 8259 / 8667</string>
     <string name="engine_standard">Standardni Android</string>
     <string name="am_band_enabled">✅ AM opseg omogućen</string>
     <string name="am_band_disabled">❌ AM opseg onemogućen</string>

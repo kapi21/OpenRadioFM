@@ -2218,6 +2218,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             case "sr":
                 langName = getString(R.string.language_serbian);
                 break;
+            case "fr":
+                langName = getString(R.string.language_french);
+                break;
+            case "de":
+                langName = getString(R.string.language_german);
+                break;
+            case "pt":
+                langName = getString(R.string.language_portuguese);
+                break;
+            case "it":
+                langName = getString(R.string.language_italian);
+                break;
+            case "zh":
+                langName = getString(R.string.language_chinese);
+                break;
+            case "ja":
+                langName = getString(R.string.language_japanese);
+                break;
             default:
                 langName = getString(R.string.language_spanish);
                 break;

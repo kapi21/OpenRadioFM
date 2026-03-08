@@ -21,54 +21,47 @@
                 android:text="@string/premium_customization"/>
         </LinearLayout>
 
-        <!-- SECTION: PERSONALIZACIÓN -->
+        <!-- SECTION: PERSONALIZACIÓN PREMIUM -->
         <TextView
             style="@style/DialogSubheaderText"
             android:text="@string/premium_customization"/>
 
-        <!-- Submenu Box: Seleccionar Tema -->
+        <!-- Tema -->
         <LinearLayout
             android:id="@+id/cardTheme"
             style="@style/DialogBoxStyle">
-            
             <TextView
                 style="@style/DialogBoxTitle"
                 android:text="@string/select_skin"/>
-            
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
-                
                 <View
                     android:id="@+id/viewColorPreview"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:background="@drawable/radio_icon_p01"
                     android:layout_marginEnd="12dp"/>
-                
                 <TextView
                     style="@style/DialogBoxDesc"
                     android:text="@string/touch_to_change"/>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Submenu Box: Seleccionar Tipografía -->
+        <!-- Tipografía -->
         <LinearLayout
             android:id="@+id/cardFonts"
             style="@style/DialogBoxStyle">
-            
             <TextView
                 style="@style/DialogBoxTitle"
                 android:text="@string/select_font"/>
-            
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
-                
                 <TextView
                     android:id="@+id/tvFontPreview"
                     android:layout_width="wrap_content"
@@ -77,34 +70,29 @@
                     android:textColor="@color/white"
                     android:textSize="20sp"
                     android:layout_marginEnd="12dp"/>
-                
                 <TextView
                     style="@style/DialogBoxDesc"
                     android:text="@string/touch_to_change"/>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Submenu Box: Modo de Fondo -->
+        <!-- Modo de Fondo -->
         <LinearLayout
             android:id="@+id/cardBackground"
             style="@style/DialogBoxStyle">
-            
             <TextView
                 style="@style/DialogBoxTitle"
                 android:text="@string/background_mode"/>
-            
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
-                
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@mipmap/ic_launcher"
                     android:layout_marginEnd="12dp"/>
-                
                 <TextView
                     android:id="@+id/tvBackgroundStatus"
                     style="@style/DialogBoxDesc"
@@ -112,109 +100,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- App Options Header -->
-        <TextView
-            style="@style/DialogSubheaderText"
-            android:text="@string/app_options"
-            android:layout_marginTop="16dp"/>
-        
-        <!-- V4.0: Language Selector Row -->
-        <LinearLayout
-            android:id="@+id/rowLanguage"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="8dp">
-            
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/app_language"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-            
-            <TextView
-                android:id="@+id/tvCurrentLanguage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/language_spanish"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-            
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
-        </LinearLayout>
-
-        <!-- Option: Logos Online -->
-        <LinearLayout style="@style/SettingsRowStyle">
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/online_logos"
-                android:textColor="@color/white"/>
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchLogosOnline"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
-
-        <!-- V16.2: Logo Provider Selector -->
-        <LinearLayout
-            android:id="@+id/rowLogoProvider"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/logo_provider"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/tvCurrentLogoProvider"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/provider_supabase"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
-        </LinearLayout>
-
-        <!-- Option: Status Bar V2 -->
-        <LinearLayout style="@style/SettingsRowStyle">
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/status_bar_v2"
-                android:textColor="@color/white"/>
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchStatusBarV2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
-
-        <!-- Option: Night Mode -->
+        <!-- Modo Noche Automático -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView
                 android:layout_width="0dp"
@@ -228,7 +114,7 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
-        <!-- V4.5: Night Mode Schedule -->
+        <!-- Horario Modo Noche -->
         <LinearLayout
             android:id="@+id/rowNightSchedule"
             style="@style/SettingsRowStyle"
@@ -246,8 +132,7 @@
                 android:text="19:00"
                 android:textColor="#AAAAAA"
                 android:textSize="14sp"
-                android:padding="8dp"
-                android:background="?android:attr/selectableItemBackground"/>
+                android:padding="8dp"/>
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -261,25 +146,105 @@
                 android:text="07:00"
                 android:textColor="#AAAAAA"
                 android:textSize="14sp"
-                android:padding="8dp"
-                android:background="?android:attr/selectableItemBackground"/>
+                android:padding="8dp"/>
         </LinearLayout>
 
-        <!-- Option: History -->
+        <!-- Mostrar Barra de Estado -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/save_history"
+                android:text="@string/status_bar_v2"
                 android:textColor="@color/white"/>
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchSaveHistory"
+                android:id="@+id/switchStatusBarV2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
-        <!-- Option: Cloud Contribution -->
+
+        <!-- SECTION: OPCIONES DE LA APP -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:text="@string/app_options"
+            android:layout_marginTop="16dp"/>
+
+        <!-- Idioma -->
+        <LinearLayout
+            android:id="@+id/rowLanguage"
+            style="@style/DialogBoxStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/app_language"
+                android:textColor="@color/white"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/tvCurrentLanguage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/language_spanish"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
+        <!-- Logos Online -->
+        <LinearLayout style="@style/SettingsRowStyle">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/online_logos"
+                android:textColor="@color/white"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchLogosOnline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Proveedor de Logos -->
+        <LinearLayout
+            android:id="@+id/rowLogoProvider"
+            style="@style/DialogBoxStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/logo_provider"
+                android:textColor="@color/white"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/tvCurrentLogoProvider"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/provider_supabase"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
+        <!-- Contribuir a la Comunidad -->
         <LinearLayout style="@style/SettingsRowStyle">
             <LinearLayout
                 android:layout_width="0dp"
@@ -303,15 +268,89 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>
-        
 
-        <!-- SECTION: HARDWARE -->
+        <!-- Modo Logo Superior -->
+        <LinearLayout
+            android:id="@+id/rowLogoMode"
+            style="@style/DialogBoxStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/logo_mode_label"
+                android:textColor="@color/white"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/tvCurrentLogoMode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/logo_mode_car"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
+        <!-- Guardar Historial -->
+        <LinearLayout style="@style/SettingsRowStyle">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/save_history"
+                android:textColor="@color/white"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchSaveHistory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+
+        <!-- SECTION: AJUSTES DE HARDWARE -->
         <TextView
             style="@style/DialogSubheaderText"
             android:text="@string/hardware_settings"
             android:layout_marginTop="16dp"/>
 
-        <!-- Option: Enable AM Band -->
+        <!-- Forzar Motor de Radio -->
+        <LinearLayout
+            android:id="@+id/rowEngine"
+            style="@style/DialogBoxStyle"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="16dp">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/radio_engine"
+                android:textColor="@color/white"
+                android:textSize="16sp"/>
+            <TextView
+                android:id="@+id/tvCurrentEngine"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/engine_auto"
+                android:textColor="#AAAAAA"
+                android:textSize="14sp"
+                android:layout_marginEnd="8dp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
+        <!-- Habilitar AM -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView
                 android:layout_width="0dp"
@@ -325,78 +364,12 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
-        <!-- Submenu Box: Radio Engine -->
-        <LinearLayout
-            android:id="@+id/rowEngine"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="8dp">
 
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/radio_engine"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/tvCurrentEngine"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/engine_auto"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
-        </LinearLayout>
-
-        <!-- Submenu Box: Modo Logo Superior (V18.5) -->
-        <LinearLayout
-            android:id="@+id/rowLogoMode"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp"
-            android:layout_marginBottom="8dp">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/logo_mode_label"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-
-            <TextView
-                android:id="@+id/tvCurrentLogoMode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/logo_mode_car"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
-        </LinearLayout>
-
-        <!-- About Button (NEW for V4.1) -->
+        <!-- SECTION: ACERCA DE -->
         <LinearLayout
             android:id="@+id/btnAbout"
             style="@style/SettingsRowStyle"
+            android:layout_marginTop="16dp"
             android:clickable="true"
             android:focusable="true">
             <TextView
