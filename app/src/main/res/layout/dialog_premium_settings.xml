@@ -103,11 +103,8 @@
         <!-- Modo Noche Automático -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/night_mode_auto"
-                android:textColor="@color/white"/>
+                style="@style/SettingsLabelStyle"
+                android:text="@string/night_mode_auto"/>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchNightMode"
                 android:layout_width="wrap_content"
@@ -149,16 +146,26 @@
                 android:padding="8dp"/>
         </LinearLayout>
 
-        <!-- Mostrar Barra de Estado -->
-        <LinearLayout style="@style/SettingsRowStyle">
+        <!-- Barra de Estado -->
+        <LinearLayout
+            style="@style/SettingsRowStyle">
             <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/status_bar_v2"
-                android:textColor="@color/white"/>
+                style="@style/SettingsLabelStyle"
+                android:text="@string/status_bar_v2"/>
             <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/switchStatusBarV2"
+                android:id="@+id/swStatusBar"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
+        <!-- Ocultar Controles Auto -->
+        <LinearLayout
+            style="@style/SettingsRowStyle">
+            <TextView
+                style="@style/SettingsLabelStyle"
+                android:text="@string/auto_hide_controls"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swAutoHideControls"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>

@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-18.6.0_Universal_Cloud-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.8_Beta_Cloud_Server-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -40,7 +40,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | 18 favoritos × 3 bandas | ✅ | ✅ |
 | Nav. Hardware Favoritos | ✅ | ✅ |
 | Soporte Android Auto | ✅ | ✅ |
-| Multilingüe (ES/EN/RU/RO/UK/SR) | ✅ | ✅ |
+| Multilingüe (ES/EN/RU/RO/UK/SR/FR/DE) | ✅ | ✅ |
 | Streaming Online (MP3/HLS/AAC) | ✅ | ✅ |
 
 
@@ -131,7 +131,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## ⚠️ Problemas Conocidos (Marzo 2026)
-- **Audio Online (K706)**: ✅ Resuelto mediante gestión robusta de AudioFocus y conmutación de canales (Channel 4/2).
+- **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas por otros elementos de la UI.
 
@@ -157,6 +157,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Soporte MTK8259_8667 (Alfa)**: Iniciada la integración para unidades 8259/8667 con soporte para RDS y cambio de bandas mediante pulsación larga.
 - **Reorganización Pro**: Limpieza masiva del repositorio. Logs y scripts movidos a carpetas locales excluidas de Git para un mantenimiento profesional.
 - **UI Fix**: Implementación de `Barrier` en Layout 3 para evitar solapamientos entre el icono de nube y el nuevo reloj.
+
+### v4.8 "Cloud Server Release" (Marzo 2026) - BETA
+- **Audio Focus Inteligente (K706)**: Centralizada la gestión de foco en el hardware para evitar que el MCU apague la FM al detectar sonido de Android.
+- **Internacionalización**: Añadidos **Francés (FR)**, **Alemán (DE)** y **Rumano (RO)**.
+- **Fix de Frecuencia**: Eliminado el mensaje "Buscando..." en favoritos al cambiar de emisora.
+- **Identidad v4.8**: Actualizados todos los nombres de versión a "Cloud_Server".
+- **Recuperación de canal**: `MainActivity` ahora fuerza la restauración del canal FM al volver del segundo plano.
 
 ### v4.7.5 "Cloud Intelligence & UI Perfection" (Marzo 2026)
 - **Crowdsourcing (Contribución Cloud)**: Los usuarios ahora pueden alimentar la base de datos de logos enviando RDS PS y PI Code automáticamente.

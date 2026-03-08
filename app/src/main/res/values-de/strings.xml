@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium-Anpassung</string>
@@ -34,9 +34,9 @@
     <string name="save_history">Senderverlauf speichern</string>
     <string name="enable_gestures_beta">Gesten aktivieren (Swipe) (beta)</string>
     <string name="online_logos">Online-Logos</string>
-    <string name="status_bar_v2">Statusleiste (Layout 2)</string>
-    <string name="status_bar_enabled">✅ Statusleiste aktiviert (Layout 2)</string>
-    <string name="status_bar_disabled">❌ Statusleiste deaktiviert (Layout 2)</string>
+    <string name="status_bar_v2">Statusleiste anzeigen</string>
+    <string name="status_bar_enabled">✅ Statusleiste aktiviert</string>
+    <string name="status_bar_disabled">❌ Statusleiste deaktiviert</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Automatischer Nachtmodus aktiviert</string>
@@ -48,6 +48,9 @@
     <string name="logos_online_enabled">✅ Online-Logos aktiviert</string>
     <string name="logos_online_disabled">❌ Online-Logos deaktiviert</string>
     <string name="night_mode_manual_blocked">Nachtmodus deaktivieren, um Design manuell zu wählen</string>
+    <string name="auto_hide_controls">Steuerelemente automatisch ausblenden</string>
+    <string name="auto_hide_enabled">✅ Automatisches Ausblenden aktiviert</string>
+    <string name="auto_hide_disabled">❌ Automatisches Ausblenden deaktiviert</string>
     
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">💾 Favoriten Speichern/Laden</string>
@@ -81,6 +84,9 @@
     <string name="language_french">Français</string>
     <string name="language_chinese">中文 (简体)</string>
     <string name="language_japanese">日本語</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_italian">Italiano</string>
     <string name="language_changed">✅ Sprache in %s geändert</string>
     <string name="about_openradio">ℹ️ Über OpenRadioFM</string>
     <string name="about_info_header">INFORMATION</string>
@@ -98,6 +104,8 @@
     <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
     <string name="engine_mtk">MediaTek Allgemein</string>
     <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_k706_can">K706 CAN-Bus</string>
     <string name="engine_standard">Android Standard</string>
     <string name="am_band_enabled">✅ AM-Band aktiviert</string>
     <string name="am_band_disabled">❌ AM-Band deaktiviert</string>
@@ -170,5 +178,8 @@
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favoriten erfolgreich zurückgesetzt</string>
     <string name="history_cleared">Verlauf gelöscht</string>
+    <string name="logo_mode_label">Oberer Logo-Modus</string>
+    <string name="logo_mode_car">Auto-Logo</string>
+    <string name="logo_mode_clock">Digitaluhr</string>
     <string name="my_favorites">Meine Favoriten</string>
 </resources>

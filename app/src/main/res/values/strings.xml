@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalización Premium</string>
@@ -47,7 +47,10 @@
     <string name="gestures_disabled" translatable="false">Gestos desactivados</string>
     <string name="logos_online_enabled">✅ Logos online activados</string>
     <string name="logos_online_disabled">❌ Logos online desactivados</string>
-    <string name="night_mode_manual_blocked">Desactiva Modo Noche Automático para elegir skin manualmente</string>
+    <string name="night_mode_manual_blocked">Desactiva el Modo Noche Automático para elegir skin manualmente</string>
+    <string name="auto_hide_controls">Ocultar controles automáticamente</string>
+    <string name="auto_hide_enabled">✅ Ocultar controles activado</string>
+    <string name="auto_hide_disabled">❌ Ocultar controles desactivado</string>
     
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">💾 Guardar/Cargar Favoritos</string>

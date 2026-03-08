@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.media.AudioManager;
 import android.util.Log;
 
 import com.example.openradiofm.data.source.RadioEngine;
@@ -20,8 +21,10 @@ public class PlaybackManager {
     public static final String ACTION_MEDIA_CONTROL = "com.example.openradiofm.MEDIA_CONTROL";
 
     private final Context mContext;
+    private final AudioManager mAudioManager;
     private RadioEngine mEngine;
     private boolean mMuteState = false;
+    private boolean mIsMutedBySystem = false; // V4.8: Track if mute was automatic
     private PlaybackListener mListener;
 
     /**
@@ -34,6 +37,7 @@ public class PlaybackManager {
 
     public PlaybackManager(Context context) {
         this.mContext = context;
+        this.mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
     }
 
     /**
@@ -104,8 +108,33 @@ public class PlaybackManager {
             mListener.onMuteStateChanged(mute);
         }
 
-        Log.d(TAG, "Mute state: " + (mute ? "MUTED" : "UNMUTED"));
+        // V4.8: Gestión de AudioFocus delegada al Engine (K706RadioManager)
+        // No solicitamos focus aquí para evitar que el MCU conmute al canal Android y silencie la radio FM.
+        if (mute) {
+            // Solo notificamos al engine
+        } else {
+            mIsMutedBySystem = false;
+        }
+
+        Log.d(TAG, "Mute state: " + (mute ? "MUTED" : "UNMUTED") + " (System: " + mIsMutedBySystem + ")");
     }
+
+    /**
+     * V4.8: Desmudea solo si el estado de mute fue provocado por el sistema.
+     */
+    public void resumeIfMutedBySystem() {
+        if (mIsMutedBySystem) {
+            Log.d(TAG, "resumeIfMutedBySystem: Recuperando audio automático");
+            setMute(false);
+        }
+    }
+
+    // V4.8: La gestión de AudioFocus se ha movido al RadioEngine (K706RadioManager)
+    // para asegurar que el canal del MCU (SetChannel 2) se recupere correctamente.
+
+    /**
+     * V4.8: Listener para reaccionar cuando otra app pide el audio.
+     */
 
     public boolean isMuted() {
         return mMuteState;

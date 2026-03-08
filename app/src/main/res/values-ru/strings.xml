@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     
     <string name="premium_customization">Премиум Настройки</string>
@@ -46,6 +46,9 @@
     <string name="logos_online_enabled">✅ Онлайн логотипы включены</string>
     <string name="logos_online_disabled">❌ Онлайн логотипы выключены</string>
     <string name="night_mode_manual_blocked">Отключите автоматический ночной режим для выбора темы вручную</string>
+    <string name="auto_hide_controls">Автоматическое скрытие управления</string>
+    <string name="auto_hide_enabled">✅ Авто-скрытие включено</string>
+    <string name="auto_hide_disabled">❌ Авто-скрытие выключено</string>
     
     
     <string name="save_load_favorites">💾 Сохранить/Загрузить Избранное</string>
@@ -73,6 +76,15 @@
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
+    <string name="language_romanian">Română</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_serbian">Srpski</string>
+    <string name="language_french">Français</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_chinese">中文 (简体)</string>
+    <string name="language_japanese">日本語</string>
     <string name="language_changed">✅ Язык изменён на %s</string>
     <string name="about_openradio">ℹ️ О приложении OpenRadioFM</string>
     <string name="about_info_header">ИНФОРМАЦИЯ</string>
@@ -143,4 +155,5 @@
     <string name="provider_both">Комбинированный (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Внести вклад в сообщество (логотипы HD)</string>
     <string name="contrib_cloud_desc">Автоматически отправлять частоту и PI-код местных станций для улучшения глобальной базы данных.</string>
-<string name="status_bar_v2">Строка состояния (Layout 2)</string><string name="status_bar_enabled">✅ Строка состояния включена</string><string name="status_bar_disabled">❌ Строка состояния отключена</string><string name="edit_station_name">Изменить название радиостанции</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Поиск следующей...</string><string name="scanning">Сканирование...</string><string name="scan_completed">Сканирование завершено</string><string name="identifying_rds">Определение радиостанции (RDS)...</string><string name="version">Версия %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДИО : %1$s</string><string name="freq_no_service">FREQ: НЕТ_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ОШИБКА_ЧТЕНИЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕТ_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ОШИБКА_ЧТЕНИЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНИРОВАНИЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Избранное успешно сброшено</string><string name="history_cleared">История очищена</string><string name="my_favorites">Мое избранное</string></resources>
+<string name="status_bar_v2">Показать строку состояния</string>
+<string name="status_bar_enabled">✅ Строка состояния включена</string><string name="status_bar_disabled">❌ Строка состояния отключена</string><string name="edit_station_name">Изменить название радиостанции</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Поиск следующей...</string><string name="scanning">Сканирование...</string><string name="scan_completed">Сканирование завершено</string><string name="identifying_rds">Определение радиостанции (RDS)...</string><string name="version">Версия %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДИО : %1$s</string><string name="freq_no_service">FREQ: НЕТ_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ОШИБКА_ЧТЕНИЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕТ_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ОШИБКА_ЧТЕНИЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНИРОВАНИЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Избранное успешно сброшено</string><string name="history_cleared">История очищена</string><string name="my_favorites">Мое избранное</string></resources>

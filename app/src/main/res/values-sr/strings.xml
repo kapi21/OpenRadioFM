@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     
     <string name="premium_customization">Premium Prilagođavanje</string>
@@ -46,6 +46,9 @@
     <string name="logos_online_enabled">✅ Logotipi na mreži omogućeni</string>
     <string name="logos_online_disabled">❌ Logotipi na mreži onemogućeni</string>
     <string name="night_mode_manual_blocked">Onemogućite automatski noćni režim da biste ručno izabrali temu</string>
+    <string name="auto_hide_controls">Automatsko sakrivanje kontrola</string>
+    <string name="auto_hide_enabled">✅ Automatsko sakrivanje omogućeno</string>
+    <string name="auto_hide_disabled">❌ Automatsko sakrivanje onemogućeno</string>
     
     
     <string name="save_load_favorites">💾 Sačuvaj/Učitaj Omiljeno</string>
@@ -74,8 +77,13 @@
     <string name="language_english">Engleski</string>
     <string name="language_russian">Ruski</string>
     <string name="language_romanian">Rumunski</string>
-    <string name="language_ukrainian">Ukrajinski</string>
     <string name="language_serbian">Srpski</string>
+    <string name="language_french">Français</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_chinese">中文 (简体)</string>
+    <string name="language_japanese">日本語</string>
     <string name="language_changed">✅ Jezik promenjen na %s</string>
     <string name="about_openradio">ℹ️ O OpenRadioFM</string>
     <string name="touch_to_change">Dodirnite da biste promenili</string>
@@ -143,4 +151,5 @@
     <string name="provider_both">Kombinovano (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Doprinesi zajednici (HD logotipi)</string>
     <string name="contrib_cloud_desc">Automatski šalji frekvenciju i PI kod lokalnih stanica radi poboljšanja globalne baze podataka.</string>
-<string name="status_bar_v2">Статусна трака (Layout 2)</string><string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string></resources>
+<string name="status_bar_v2">Prikaži statusnu traku</string>
+<string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string></resources>

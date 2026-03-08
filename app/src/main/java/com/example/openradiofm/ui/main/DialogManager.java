@@ -114,7 +114,8 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
         androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
-        androidx.appcompat.widget.SwitchCompat swStatusBarV2 = dialog.findViewById(R.id.switchStatusBarV2);
+        androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
+        androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
         androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm);
 
         // Language Row
@@ -173,14 +174,25 @@ public class DialogManager {
             });
         }
 
-        if (swStatusBarV2 != null) {
-            swStatusBarV2.setChecked(mActivity.mPrefs.getBoolean("pref_show_status_bar_v2", false));
-            swStatusBarV2.setOnCheckedChangeListener((bv, checked) -> {
+        if (swStatusBar != null) {
+            swStatusBar.setChecked(mActivity.mPrefs.getBoolean("pref_show_status_bar_v2", false));
+            swStatusBar.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_show_status_bar_v2", checked).apply();
                 mActivity.showToast(checked ? mActivity.getString(R.string.status_bar_enabled)
                         : mActivity.getString(R.string.status_bar_disabled));
-                // V13.9: Aplicar visibilidad inmediatamente sin reiniciar
                 mActivity.applyStatusBarVisibility();
+            });
+        }
+
+        if (swAutoHide != null) {
+            swAutoHide.setChecked(mActivity.mPrefs.getBoolean("pref_auto_hide_controls", false));
+            swAutoHide.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_auto_hide_controls", checked).apply();
+                mActivity.showToast(checked ? mActivity.getString(R.string.auto_hide_enabled)
+                        : mActivity.getString(R.string.auto_hide_disabled));
+                // V18.6: Reiniciar el temporizador si se activa
+                if (checked) mActivity.resetAutoHideTimer();
+                else mActivity.showBottomControls();
             });
         }
 

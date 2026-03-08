@@ -197,6 +197,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     public boolean mIsV3 = false; // V5.4: Track Layout 3 active
+    
+    // V18.6: Auto-hide bottom controls
+    private android.os.Handler mAutoHideHandler;
+    private Runnable mAutoHideRunnable;
+    private boolean mControlsHidden = false;
+    private View bottomControls;
 
     // --- Clases de Soporte para Escaneo Selectivo (V12.1: Reubicadas para
     // estabilidad) ---
@@ -916,7 +922,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
         mIsV3 = mPrefs.getBoolean("pref_layout_v3", false);
 
-        // V4.7: Manejo de Barra de Estado (Fullscreen condicional)
+        // V4.8: Manejo de Barra de Estado (Fullscreen condicional)
         applyStatusBarVisibility();
 
         setContentView(mIsV3 ? R.layout.activity_main_v3 : R.layout.activity_main);
@@ -1093,6 +1099,29 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         applySkin(mThemeManager.getCurrentSkin());
         checkAndApplyNightMode(); // V4: Automatic Night Mode
 
+        // V18.6: Auto-hide bottom controls initialization
+        bottomControls = findViewById(R.id.bottomControls);
+        mAutoHideHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mAutoHideRunnable = () -> hideBottomControls();
+
+        // En Layout V3, interceptar toques en el fondo para mostrar controles
+        if (mIsV3) {
+            android.view.View root = findViewById(R.id.rootLayout);
+            if (root != null) {
+                root.setOnTouchListener((v, event) -> {
+                    if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                        if (mControlsHidden) {
+                            showBottomControls();
+                        } else {
+                            resetAutoHideTimer();
+                        }
+                    }
+                    return false; // Permitir que otros elementos reciban el toque
+                });
+            }
+            resetAutoHideTimer();
+        }
+    
         // Seeking Logic
         setupSeekButtons();
 
@@ -1106,9 +1135,28 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        android.util.Log.d(TAG, "onResume: Restaurando hardware de audio");
+        
+        // V4.8: En K706, es mejor dejar que el Engine gestione el foco y el canal.
+        if (mPlaybackManager != null) {
+            mPlaybackManager.resumeIfMutedBySystem();
+            
+            // Si NO está muteado, nos aseguramos de que el canal FM esté activo en el MCU
+            if (!mPlaybackManager.isMuted() && mEngine != null) {
+                mEngine.switchToFmAudio();
+            }
+        }
+    }
+
+    @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Log.d(TAG, "onConfigurationChanged: Nueva configuración detectada");
+        android.util.Log.d(TAG, "onConfigurationChanged: Nueva configuración detectada");
+        if (mPresetManager != null) {
+            mPresetManager.refreshButtons(mCurrentBand);
+        }
 
         // V10: Manejar cambio de modo noche sin recrear la Activity
         if (mPrefs != null && mPrefs.getBoolean("pref_night_mode_auto", false)) {
@@ -1316,6 +1364,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // Long click: Historial
             ivMainLogo.setOnLongClickListener(v -> {
                 mDialogManager.showHistoryDialog();
+                return true;
+            });
+        }
+
+        // V18.6: Reloj Digital también permite ciclar skin
+        tvDigitalClock = findViewById(R.id.tvDigitalClock);
+        if (tvDigitalClock != null) {
+            tvDigitalClock.setOnClickListener(v -> {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
+                applySkin(next);
+                showToast("Skin: " + next.displayName);
+            });
+            // Long click: Mostrar diálogo de personalización directamente
+            tvDigitalClock.setOnLongClickListener(v -> {
+                mDialogManager.showPremiumSettingsDialog();
                 return true;
             });
         }
@@ -2543,7 +2606,49 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
-    // V5.5: mMediaControlReceiver migrado a PlaybackManager (ver PlaybackManager.java)
+    // V18.6: Métodos para ocultación automática de controles
+    public void resetAutoHideTimer() {
+        if (mAutoHideHandler == null || mAutoHideRunnable == null) return;
+        mAutoHideHandler.removeCallbacks(mAutoHideRunnable);
+        if (mPrefs.getBoolean("pref_auto_hide_controls", false) && mIsV3) {
+            mAutoHideHandler.postDelayed(mAutoHideRunnable, 5000); // 5 segundos
+        }
+    }
+
+    public void showBottomControls() {
+        if (bottomControls == null) return;
+        if (mControlsHidden) {
+            mControlsHidden = false;
+            bottomControls.animate()
+                    .translationY(0)
+                    .setDuration(500)
+                    .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                    .start();
+        }
+        resetAutoHideTimer();
+    }
+
+    public void hideBottomControls() {
+        if (bottomControls == null || mControlsHidden) return;
+        if (!mPrefs.getBoolean("pref_auto_hide_controls", false)) return;
+        
+        mControlsHidden = true;
+        bottomControls.animate()
+                .translationY(bottomControls.getHeight() + 100)
+                .setDuration(500)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .start();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+        if (mIsV3 && mPrefs.getBoolean("pref_auto_hide_controls", false)) {
+            if (ev.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                showBottomControls();
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
 }
 
 
