@@ -360,7 +360,12 @@ public class RadioRepository {
             }
             pendingRequests.add(cacheKey);
 
-            // V16.3: Evitar colas infinitas si ya tenemos 3 hilos en curso para esta frecuencia
+            // V18.6: Guarda de seguridad para evitar RejectedExecutionException si el executor ya se cerró
+            if (logoExecutor == null || logoExecutor.isShutdown()) {
+                pendingRequests.remove(cacheKey);
+                return station;
+            }
+
             logoExecutor.submit(() -> {
                 try {
                     String country = getCountryCode();
@@ -585,6 +590,12 @@ public class RadioRepository {
         if (pendingRequests.contains(streamCacheKey)) return;
         pendingRequests.add(streamCacheKey);
         
+        // V18.6: Guarda de seguridad para evitar crash si el executor se cierra en mitad de la petición
+        if (logoExecutor == null || logoExecutor.isShutdown()) {
+            pendingRequests.remove(streamCacheKey);
+            return;
+        }
+
         final String stationNameForLambda = finalName;
         logoExecutor.submit(() -> {
             try {

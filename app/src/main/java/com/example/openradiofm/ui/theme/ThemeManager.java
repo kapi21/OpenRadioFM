@@ -157,11 +157,13 @@ public class ThemeManager {
 
         // Detectar layout activo
         boolean isLayoutV3 = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_v3", false);
+        boolean isSimpleLayout = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_simple", false);
 
-        // Aplicar bordes del skin SOLO en Layout V2
-        if (!isLayoutV3) {
+        // Aplicar bordes del skin SOLO en Layout V2 (Vertical estándar)
+        if (!isLayoutV3 && !isSimpleLayout) {
             int[] viewIds = {
-                    R.id.boxFrequency, R.id.btnSeekUp, R.id.btnSeekDown,
+                    R.id.boxFrequency, R.id.boxIconsTopLayout2, 
+                    R.id.btnSeekUp, R.id.btnSeekDown,
                     R.id.btnFavPrev, R.id.btnFavNext,
                     R.id.tvRdsName, R.id.tvRdsInfo,
                     R.id.btnBand, R.id.btnAutoScan,

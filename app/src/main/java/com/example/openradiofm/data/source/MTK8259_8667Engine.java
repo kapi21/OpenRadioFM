@@ -177,7 +177,8 @@ public class MTK8259_8667Engine implements RadioEngine {
 
     @Override
     public boolean isStereo() {
-        return false; // No hay API clara
+        // Usar GetRadioSTState sugerido por Csaba a través del manager
+        return mManager != null && mManager.isStereo();
     }
 
     @Override
@@ -271,15 +272,33 @@ public class MTK8259_8667Engine implements RadioEngine {
     private void pollRdsAndDispatch() {
         if (mManager == null || mCallback == null) return;
 
+        // RDS Safety Check (Csaba suggestion): Query PS once or handle NULL
+        // If the MainUI doesn't support the GDUCK methods, they catch errors and return null.
+        
         // PS Name
         String ps = mManager.getPsNameSafe();
         if (ps != null) ps = ps.trim();
-        if (ps != null && !ps.isEmpty() && !ps.equals(mLastPs)) {
+        
+        // Si ps es nulo, significa que el hardware/MainUI no responde o no tiene el MOD.
+        // Csaba sugiere no activar RDS si es NULL.
+        if (ps == null) {
+            return;
+        }
+
+        if (!ps.isEmpty() && !ps.equals(mLastPs)) {
             mLastPs = ps;
             mCallback.onRdsName(ps);
         }
 
-        // RT / PTY Text
+        // PTY / Category Text (Csaba suggestion: use GetCategory())
+        String cat = mManager.getCategorySafe();
+        if (cat != null) cat = cat.trim();
+        
+        if (cat != null && !cat.isEmpty()) {
+            mCallback.onRdsPty(cat);
+        }
+        
+        // RT Tradicional
         String rt = mManager.getPtyStrSafe();
         if (rt != null) rt = rt.trim();
         if (rt != null && !rt.isEmpty() && !rt.equals(mLastRt)) {

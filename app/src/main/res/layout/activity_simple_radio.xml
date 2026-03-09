@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayoutSimple"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000">
+
+    <!-- Fondo Dinámico 1 (Para Cross-fade) -->
+    <ImageView
+        android:id="@+id/ivDynamicBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0.0" />
+
+    <!-- Fondo Dinámico 2 (Para Cross-fade) -->
+    <ImageView
+        android:id="@+id/ivDynamicBackgroundExtra"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:alpha="0.0" />
+
+    <!-- Guideline al 40% según sugerencia del usuario -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_split"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.46" />
+
+    <!-- Icono Cloud / Data Activity (Top Right) - Tamaño aumentado por usuario -->
+    <FrameLayout
+        android:id="@+id/ivDataActivity"
+        android:layout_width="135dp"
+        android:layout_height="91dp"
+        android:layout_margin="16dp"
+        android:clickable="true"
+        android:focusable="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ivDataActivityIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:alpha="0.7"
+            android:src="@drawable/cloud" />
+    </FrameLayout>
+
+    <!-- IZQUIERDA: Logo Centrado en Marco 1:1 -->
+    <FrameLayout
+        android:id="@+id/boxLogoSimple"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_margin="32dp"
+        android:background="@drawable/bg_simple_glass_logo_box"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guideline_split">
+
+        <ImageView
+            android:id="@+id/ivMainLogo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="24dp"
+            android:src="@mipmap/ic_launcher"
+            android:scaleType="fitCenter"
+            android:clickable="true"
+            android:focusable="true"
+            android:longClickable="true" />
+    </FrameLayout>
+
+    <!-- DERECHA: Info Layer + Botonera -->
+    <LinearLayout
+        android:id="@+id/rightPane"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingHorizontal="10dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toEndOf="@+id/guideline_split"
+        tools:layout_editor_absoluteY="0dp">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/tvFrequency"
+            android:layout_width="match_parent"
+            android:layout_height="185dp"
+            android:background="@null"
+            android:backgroundTint="@android:color/transparent"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:maxLines="1"
+            android:lines="1"
+            android:ellipsize="none"
+            android:scrollHorizontally="false"
+            android:text="100.0"
+            android:textColor="#BBFFFFFF"
+            android:textSize="100sp"
+            app:autoSizeMaxTextSize="130sp"
+            app:autoSizeMinTextSize="20sp"
+            app:autoSizeStepGranularity="2sp"
+            app:autoSizeTextType="uniform" />
+
+        <!-- RDS Radio Text (Marquee) - Más grande y sin bordes -->
+
+        <!-- Botonera Cuadrada (Fondos quitados/transparentes) -->
+        <TextView
+            android:id="@+id/tvRdsInfo"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="4dp"
+            android:background="@null"
+            android:backgroundTint="@android:color/transparent"
+            android:elevation="0dp"
+            android:outlineProvider="none"
+            android:stateListAnimator="@null"
+            android:ellipsize="marquee"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:gravity="center"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:padding="0dp"
+            android:singleLine="true"
+            android:text=""
+            android:textColor="#BBFFFFFF"
+            android:textSize="40sp" />
+
+        <LinearLayout
+            android:id="@+id/buttonsContainer"
+            android:layout_width="604dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/btnSeekDown"
+                android:layout_width="173dp"
+                android:layout_height="114dp"
+                android:layout_margin="15dp"
+                android:background="@null"
+                android:elevation="0dp"
+                android:outlineProvider="none"
+                android:stateListAnimator="@null"
+                android:padding="0dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/seek_down" />
+
+            <ImageButton
+                android:id="@+id/btnMute"
+                android:layout_width="105dp"
+                android:layout_height="105dp"
+                android:layout_margin="30dp"
+                android:background="@null"
+                android:elevation="0dp"
+                android:outlineProvider="none"
+                android:stateListAnimator="@null"
+                android:padding="0dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/radio_mute_n" />
+
+            <ImageButton
+                android:id="@+id/btnSeekUp"
+                android:layout_width="151dp"
+                android:layout_height="114dp"
+                android:layout_margin="15dp"
+                android:background="@null"
+                android:elevation="0dp"
+                android:outlineProvider="none"
+                android:stateListAnimator="@null"
+                android:padding="0dp"
+                android:scaleType="fitCenter"
+                android:src="@drawable/seek_up" />
+        </LinearLayout>
+
+        <!-- RDS PS Name (Oculto) -->
+        <TextView
+            android:id="@+id/tvRdsName"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

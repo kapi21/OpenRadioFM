@@ -142,11 +142,14 @@ public class RadioServiceController {
                     targetIdx = 4;
                     break; // TopWay TS
                 case 6:
-                    targetIdx = 2;
-                    break; // Standard
+                    targetIdx = 2; // Standard
+                    break; 
                 case 7:
                     targetIdx = 7;
                     break; // Mediatek 8259/8667
+                default:
+                    targetIdx = -1;
+                    break;
             }
 
             if (targetIdx >= 0 && targetIdx < allProviders.length) {
@@ -158,6 +161,13 @@ public class RadioServiceController {
                     Log.d(TAG, "Forzando motor manual índice: " + engineIdx + " (Provider " + targetIdx + ")");
                     return;
                 }
+            }
+        } else if (engineIdx == 0) {
+            // Automatic detection logic
+            MainActivity.FmMode detectedMode = detectMode();
+            if (detectedMode == MainActivity.FmMode.FM_8259_8667) {
+                tryStartTsEngine();
+                return;
             }
         }
 
@@ -192,31 +202,24 @@ public class RadioServiceController {
 
         // Prioridad: Selección manual del usuario
         if (engineIdx == 1)
-            return MainActivity.FmMode.FM_K706;
-        if (engineIdx == 2)
-            return MainActivity.FmMode.FM_QS6;
-        if (engineIdx >= 3 && engineIdx <= 5)
-            return MainActivity.FmMode.FM_MT8163;
-        if (engineIdx == 6)
-            return MainActivity.FmMode.FM_BASICO;
-        if (engineIdx == 7)
-            return MainActivity.FmMode.FM_8259_8667;
+        if (engineIdx == 1) return MainActivity.FmMode.FM_K706;
+        if (engineIdx == 2) return MainActivity.FmMode.FM_QS6;
+        if (engineIdx >= 3 && engineIdx <= 5) return MainActivity.FmMode.FM_MT8163;
+        if (engineIdx == 6) return MainActivity.FmMode.FM_BASICO;
+        if (engineIdx == 7) return MainActivity.FmMode.FM_8259_8667;
 
         // Si es Automático (0), intentamos detectar el hardware
-        if (isTS8259())
-            return MainActivity.FmMode.FM_8259_8667;
-        if (isQS6())
-            return MainActivity.FmMode.FM_QS6;
-        if (isK706())
-            return MainActivity.FmMode.FM_K706;
-        if (hasCarRadioService())
-            return MainActivity.FmMode.FM_MT8163;
+        if (isTS8259()) return MainActivity.FmMode.FM_8259_8667;
+        if (isQS6()) return MainActivity.FmMode.FM_QS6;
+        if (isK706()) return MainActivity.FmMode.FM_K706;
+        if (hasCarRadioService()) return MainActivity.FmMode.FM_MT8163;
         return MainActivity.FmMode.FM_BASICO;
     }
 
     private boolean isTS8259() {
         try {
-            mContext.getPackageManager().getPackageInfo("com.ts.mainui", 0);
+            // El colaborador indica que el nombre correcto es com.ts.MainUI (mayúsculas importan)
+            mContext.getPackageManager().getPackageInfo("com.ts.MainUI", 0);
             return true;
         } catch (Exception e) {
             return false;
@@ -277,10 +280,11 @@ public class RadioServiceController {
                 { "com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService" }, // 1: MediaTek
                 { "com.android.fmradio", "com.android.fmradio.IFmRadioService" }, // 2: Standard
                 { "com.android.fmradio", "com.android.fmradio.FmRadioService" }, // 3: Standard (Alt)
-                { "com.ts.mainui", "com.ts.mainui.radio.IRadioService" }, // 4: TopWay (TS)
+                { "com.ts.MainUI", "com.ts.MainUI.radio.IRadioService" }, // 4: TopWay (TS) - Estandarizado MainUI
                 { "com.syu.radio", "com.syu.radio.IRadioService" }, // 5: SYU
                 { "com.nwd.radio.service", "com.nwd.radio.service.ACTION_RADIO_SERVICE" }, // 6: QS6 (NWD)
-                { "com.ts.mainui", "com.ts.tsspeechlib.radio.TsRadioService" } // 7: Mediatek 8259/8667 (Speech/TS)
+                { "com.ts.MainUI", "com.ts.main.common.MainUI" }, // 7: Mediatek 8259/8667 (Speech/TS)
+                { "com.ts.MainUI", "com.ts.tsspeechlib.radio.TsRadioService" } // 8: Mediatek 8259/8667 Additional
         };
     }
 
@@ -296,11 +300,13 @@ public class RadioServiceController {
     }
 
     private void conectarTsCommon() {
-        Intent intent = new Intent("com.ts.mainui.common.ITsCommon");
-        intent.setPackage("com.ts.mainui");
+        Log.d(TAG, "conectarTsCommon() ENTER");
+        Intent intent = new Intent();
+        intent.setClassName("com.ts.MainUI", "com.ts.main.common.MainUI");
         mContext.bindService(intent, new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
+                Log.d(TAG, "TsCommon Connected");
                 mTsCommon = com.ts.main.common.ITsCommon.Stub.asInterface(service);
                 checkAndStartTsEngine();
             }
@@ -310,8 +316,9 @@ public class RadioServiceController {
     }
 
     private void conectarTsSpeechRadio() {
-        Intent intent = new Intent("com.ts.tsspeechlib.radio.TsRadioService");
-        intent.setPackage("com.ts.mainui");
+        Log.d(TAG, "conectarTsSpeechRadio() ENTER");
+        Intent intent = new Intent();
+        intent.setClassName("com.ts.MainUI", "com.ts.tsspeechlib.radio.TsRadioService");
         mContext.bindService(intent, new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {

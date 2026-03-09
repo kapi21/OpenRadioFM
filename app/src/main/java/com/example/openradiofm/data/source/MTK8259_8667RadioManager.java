@@ -48,24 +48,43 @@ public class MTK8259_8667RadioManager {
     public int getCurrentBand() throws RemoteException {
         if (mTsSpeechRadio == null) return 0;
         int band = mTsSpeechRadio.getRadioBand();
-        // Mapeo: 0,1,2 = FM, 4,5 = AM. 
-        // Para compatibilidad con OpenRadioFM devolvemos la banda cruda.
+        // Mapeo: 0,1,2 = FM, 4 = AM1, 5 = AM2. 
+        // Csaba sugiere mapear 4->3 y 5->4 para evitar huecos en la UI.
+        if (band == 4) return 3;
+        if (band == 5) return 4;
         return band;
     }
 
     public boolean isAmBand() throws RemoteException {
         if (mTsSpeechRadio == null) return false;
-        return mTsSpeechRadio.getRadioBand() >= 4;
+        int band = mTsSpeechRadio.getRadioBand();
+        // Hardware bands: 4=AM1, 5=AM2.
+        return band == 4 || band == 5;
+    }
+
+    public boolean isStereo() {
+        try {
+            if (mTsCommon != null) {
+                return mTsCommon.GetRadioSTState();
+            }
+        } catch (Throwable t) {
+            Log.e(TAG, "isStereo failed", t);
+        }
+        return false;
     }
 
     public void gotoFreq(int freqKhz) throws RemoteException {
         if (mTsSpeechRadio == null) return;
 
-        int tsBand = isAmBand() ? 4 : 0;
+        // Bandas en HW: FM=0,1,2, AM=4,5. 
+        // Usamos la banda actual del hardware para no saltar de grupo (AM1->AM2)
+        int tsBand = mTsSpeechRadio.getRadioBand();
+        if (tsBand < 0) tsBand = 0;
+        
         int tsFreq = freqKhz;
-
-        if (tsBand == 0 && tsFreq > 20000) {
-            tsFreq = tsFreq / 10; // FM: 87.50 -> 8750
+        // Si estamos en banda FM (0-2), la frecuencia se divide por 10 para el HW (ej: 8750)
+        if (tsBand <= 2 && tsFreq > 20000) {
+            tsFreq = tsFreq / 10;
         }
 
         Log.d(TAG, "gotoFreq(): input=" + freqKhz + ", tsBand=" + tsBand + ", tsFreq=" + tsFreq);
@@ -158,13 +177,21 @@ public class MTK8259_8667RadioManager {
         }
     }
 
+    public String getCategorySafe() {
+        if (mTsCommon == null) return null;
+        try {
+            return mTsCommon.GetCategory();
+        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return null;
+        }
+    }
+
     public void setMute(boolean mute) {
         try {
             if (mTsCommon != null) {
-                if (mute && !mTsCommon.IsMute()) {
+                // Csaba sugiere usar Mute() y IsMute()
+                if (mute != mTsCommon.IsMute()) {
                     mTsCommon.Mute();
-                } else if (!mute && mTsCommon.IsMute()) {
-                    mTsCommon.Mute(); // El comando es un toggle en TS
                 }
             }
         } catch (Throwable t) {

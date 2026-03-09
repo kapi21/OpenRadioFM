@@ -1,0 +1,200 @@
+package com.example.openradiofm.ui.main;
+
+import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.example.openradiofm.R;
+
+public class StandardLayoutManager {
+
+    private final MainActivity mActivity;
+
+    // UI Elements
+    public TextView tvFrequency;
+    public TextView tvRdsName;
+    public TextView tvRdsInfo;
+    public TextView tvPty;
+    public ImageView ivBandIndicator;
+    public ImageView ivUnitLabel;
+    public ImageView ivSignalLevel;
+    public ImageView ivAfIcon, ivTaIcon, ivTpIcon;
+    public ImageView ivFavoriteIndicator;
+    public ImageView ivStereoIcon;
+    public ImageButton btnPowerOff; // Actually ImageView/ImageButton
+
+    public StandardLayoutManager(MainActivity activity) {
+        this.mActivity = activity;
+    }
+
+    public void initViews(View root) {
+        tvFrequency = root.findViewById(R.id.tvFrequency);
+        tvRdsName = root.findViewById(R.id.tvRdsName);
+        tvRdsInfo = root.findViewById(R.id.tvRdsInfo);
+        tvPty = root.findViewById(R.id.tvPty);
+
+        ivBandIndicator = root.findViewById(R.id.ivBandIndicator);
+        ivUnitLabel = root.findViewById(R.id.ivUnitLabel);
+        ivSignalLevel = root.findViewById(R.id.ivSignalLevel);
+        
+        ivAfIcon = root.findViewById(R.id.ivAfIcon);
+        ivTaIcon = root.findViewById(R.id.ivTaIcon);
+        ivTpIcon = root.findViewById(R.id.ivTpIcon);
+
+        ivFavoriteIndicator = root.findViewById(R.id.ivFavoriteIndicator);
+        ivStereoIcon = root.findViewById(R.id.ivStereoIcon);
+        btnPowerOff = root.findViewById(R.id.btnPowerOff);
+        
+        setupRdsIcons();
+    }
+
+    private void setupRdsIcons() {
+        if (ivAfIcon != null) {
+            ivAfIcon.setAlpha(0.2f);
+            ivAfIcon.setOnClickListener(v -> {
+                mActivity.animateButton(ivAfIcon);
+                if (mActivity.mEngine != null) mActivity.mEngine.toggleRdsFeature(1);
+            });
+        }
+        if (ivTaIcon != null) {
+            ivTaIcon.setAlpha(0.2f);
+            ivTaIcon.setOnClickListener(v -> {
+                mActivity.animateButton(ivTaIcon);
+                if (mActivity.mEngine != null) mActivity.mEngine.toggleRdsFeature(2);
+            });
+        }
+        if (ivTpIcon != null) {
+            ivTpIcon.setAlpha(0.2f);
+            ivTpIcon.setOnClickListener(v -> {
+                mActivity.animateButton(ivTpIcon);
+                if (mActivity.mEngine != null) mActivity.mEngine.toggleRdsFeature(0);
+            });
+        }
+    }
+
+    public void updateFrequencyDisplay(int freq, boolean isNight, boolean isFavorite, int presetIdx, String currentBandStr, int currentBandInt) {
+        if (freq <= 0) return;
+
+        applyColors(isNight);
+        updateFavoriteIndicator(isFavorite, presetIdx, isNight);
+        updateSignalLevel(currentBandInt);
+        updateStereoIcon();
+    }
+
+    public void setFrequencyText(int freq, String text, int currentBandInt) {
+        if (tvFrequency != null) {
+            if (text != null && !text.isEmpty()) {
+                tvFrequency.setText(text);
+                tvFrequency.requestLayout();
+            } else if (currentBandInt >= 3) { // AM
+                tvFrequency.setText(String.valueOf(freq));
+            } else {
+                tvFrequency.setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
+            }
+        }
+    }
+
+    public void applyColors(boolean isNight) {
+        int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
+        int white = Color.WHITE;
+
+        if (isNight) {
+            if (tvFrequency != null) tvFrequency.setTextColor(nightBlue);
+            if (ivUnitLabel != null) ivUnitLabel.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
+            if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
+            if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
+            if (tvPty != null) tvPty.setTextColor(nightBlue);
+            if (btnPowerOff != null) btnPowerOff.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
+        } else {
+            if (tvFrequency != null) tvFrequency.setTextColor(white);
+            if (ivUnitLabel != null) ivUnitLabel.clearColorFilter();
+            if (tvRdsName != null) tvRdsName.setTextColor(white);
+            if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
+            if (tvPty != null) tvPty.setTextColor(white);
+            if (btnPowerOff != null) btnPowerOff.clearColorFilter();
+        }
+    }
+
+    private void updateFavoriteIndicator(boolean isFavorite, int idx, boolean isNight) {
+        if (ivFavoriteIndicator != null) {
+            if (isFavorite && idx > 0) {
+                ivFavoriteIndicator.setVisibility(View.VISIBLE);
+                int resId = mActivity.getResources().getIdentifier("radio_icon_p" + String.format("%02d", idx), "drawable", mActivity.getPackageName());
+                ivFavoriteIndicator.setImageResource(resId != 0 ? resId : R.drawable.radio_icon_p01);
+
+                int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
+                if (isNight) {
+                    ivFavoriteIndicator.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
+                } else {
+                    ivFavoriteIndicator.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+                }
+            } else {
+                ivFavoriteIndicator.setVisibility(View.GONE);
+            }
+        }
+    }
+
+    public void updateSignalLevel(int currentBand) {
+        if (ivSignalLevel != null) {
+            int signalColor;
+            boolean hasStereo = mActivity.mEngine != null && mActivity.mEngine.isStereo();
+            boolean hasRdsLock = mActivity.mHasRdsLock;
+
+            if (hasRdsLock && hasStereo) {
+                signalColor = Color.parseColor("#00E676"); // Green
+            } else if (hasStereo || currentBand >= 3) {
+                signalColor = Color.parseColor("#FFD600"); // Yellow
+            } else {
+                signalColor = Color.parseColor("#FF5252"); // Red
+            }
+            ivSignalLevel.setColorFilter(signalColor, PorterDuff.Mode.SRC_IN);
+        }
+    }
+
+    public void updateStereoIcon() {
+        if (ivStereoIcon != null) {
+            boolean hasStereo = mActivity.mEngine != null && mActivity.mEngine.isStereo();
+            ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.INVISIBLE);
+        }
+    }
+
+    public void updateBandImage(int band) {
+        if (ivBandIndicator == null) return;
+        
+        int drawId;
+        switch (band) {
+            case 0: drawId = R.drawable.radio_fm1; break;
+            case 1: drawId = R.drawable.radio_fm2; break;
+            case 2: drawId = R.drawable.radio_fm3; break;
+            case 3: 
+                drawId = mActivity.getResources().getIdentifier("radio_am1", "drawable", mActivity.getPackageName());
+                if (drawId == 0) drawId = R.drawable.radio_fm1;
+                break;
+            case 4: 
+                drawId = mActivity.getResources().getIdentifier("radio_am2", "drawable", mActivity.getPackageName());
+                if (drawId == 0) drawId = R.drawable.radio_fm2;
+                break;
+            default: drawId = R.drawable.radio_fm1; break;
+        }
+
+        // Night mode tinting
+        boolean isNight = (mActivity.mThemeManager != null && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+        if (isNight) {
+            ivBandIndicator.setImageResource(drawId);
+            int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
+            ivBandIndicator.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
+        } else {
+            ivBandIndicator.setImageResource(drawId);
+            ivBandIndicator.clearColorFilter();
+        }
+    }
+
+    public void updateStatusIndicator(boolean active, String type) {
+        // En lugar de pasar el TextView directamente desde MainActivity,
+        // lo buscamos aquí si necesitamos
+        // Add others if needed like TA, TP text
+    }
+}

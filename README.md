@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v4.8_Beta_Cloud_Server-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v18.6_Architecture_Update-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -150,7 +150,17 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v18.6.0 "Advanced Cloud & UI Customization" (Marzo 2026)
+### v18.6.0 "The Great Decoupling" (9 de Marzo 2026)
+- **Refactorización Arquitectónica Total**: `MainActivity` ahora es ligera, delegando responsabilidades en:
+    - `HardwareManager`: Gestión de comandos MCU y estado de hardware.
+    - `ControlPanelManager`: Control de botones físicos y utilidades.
+    - `StandardLayoutManager`: Gestión de los layouts tradicionales V1, V2 y V3.
+    - `StationAdapter`: Lógica independiente para listas de estaciones.
+- **Modo Noche Premium (Simple Layout)**: Implementación exhaustiva del **Azul Noche** (`#1A237E`) en todos los elementos visuales (frecuencia, RDS, botones, reloj e icono cloud).
+- **Reparación de Sintaxis**: Solucionados errores de compilación críticos y referencias rotas entre managers y diálogos.
+- **Estandarización de Servicios**: Actualizado el motor MTK8259 a `MainUI` para compatibilidad según requerimientos de Csaba.
+
+### v18.5.2 "Advanced Cloud & UI Customization" (Marzo 2026)
 - **Supabase Storage Integration**: Ahora la app sube los archivos de imagen locales (`.png`/`.jpg`) directamente al almacenamiento de Supabase, garantizando que otros usuarios puedan ver el logo compartido.
 - **Identificación de Dispositivo**: Implementado `user_id` basado en el `ANDROID_ID` para trazar las contribuciones a la nube y evitar colisiones de datos.
 - **Reloj Digital Premium**: Nueva opción en Layout 3 para alternar entre el logo del coche y un reloj digital de gran formato con auto-dimensionado.

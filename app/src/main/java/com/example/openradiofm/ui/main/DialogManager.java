@@ -215,8 +215,15 @@ public class DialogManager {
 
         if (swAm != null) {
             swAm.setChecked(mActivity.mPrefs.getBoolean("pref_enable_am", true));
-            swAm.setOnCheckedChangeListener(
-                    (bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_enable_am", checked).apply());
+            swAm.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_enable_am", checked).apply();
+                // Csaba: Si se desactiva AM estando en AM, saltar a FM para evitar cuelgues
+                if (!checked && (mActivity.mCurrentBand == 3 || mActivity.mCurrentBand == 4)) {
+                    if (mActivity.mEngine != null) {
+                        mActivity.mEngine.bandCycle(); // Forzar salto fuera de AM
+                    }
+                }
+            });
         }
 
         if (swHistory != null) {
@@ -595,7 +602,7 @@ public class DialogManager {
         });
 
         mActivity.mCapturedList.clear();
-        mActivity.mStationAdapter = mActivity.new StationAdapter();
+        mActivity.mStationAdapter = new StationAdapter(mActivity, mActivity.mCapturedList);
         rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(mActivity));
         rv.setAdapter(mActivity.mStationAdapter);
 
@@ -666,12 +673,12 @@ public class DialogManager {
                         tvStatus.setText(mActivity.getString(R.string.scan_completed));
                         if (lastFreqReported > 0) {
                             boolean alreadyInList = false;
-                            for (MainActivity.ScannedStation s : mActivity.mCapturedList) {
+                            for (StationAdapter.ScannedStation s : mActivity.mCapturedList) {
                                 if (Math.abs(s.frequency - lastFreqReported) < 50)
                                     alreadyInList = true;
                             }
                             if (!alreadyInList) {
-                                MainActivity.ScannedStation newStation = new MainActivity.ScannedStation(
+                                StationAdapter.ScannedStation newStation = new StationAdapter.ScannedStation(
                                         lastFreqReported);
                                 mActivity.mCapturedList.add(0, newStation);
                                 if (mActivity.mStationAdapter != null)

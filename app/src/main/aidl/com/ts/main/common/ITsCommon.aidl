@@ -41,11 +41,6 @@ interface ITsCommon {
 	String GetBand();	
 	String GetFreq();	
 	
-	// GDUCK MOD BEGIN NOT INCLUDED IN FACTORY VERSION!
-	String GetPsName();
-	String GetPtyStr();
-	String GetCategory();
-	// GDUCK MOD END
 	
 	int GetSDCard();
 	
@@ -114,6 +109,7 @@ interface ITsCommon {
 	
 	void EnterAutoLink();
 	
-	
-	
+	String GetPsName();
+	String GetPtyStr();
+	String GetCategory();
 }

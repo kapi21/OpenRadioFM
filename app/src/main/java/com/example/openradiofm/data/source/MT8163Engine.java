@@ -435,6 +435,15 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public void setMute(boolean mute) {
         if (mHiddenPlayer != null) mHiddenPlayer.setMute(mute);
+        
+        // V18.6: Fallback para MT8163 enviando par\u00e1metros directos al AudioManager
+        if (mAudioManager != null) {
+            try {
+                mAudioManager.setParameters("fm_radio_on=1;fm_mute=" + (mute ? "1" : "0"));
+            } catch (Exception e) {
+                Log.e(TAG, "Error setMute (AudiorManager fallback)", e);
+            }
+        }
     }
 
     @Override
