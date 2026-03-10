@@ -12,8 +12,13 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 <div align="center">
   <img src="docs/img/app_icon.png" width="150" alt="OpenRadioFM Logo">
   <br>
-  <img src="docs/img/screenshot1.png" width="45%" alt="Layout V2">
-  <img src="docs/img/screenshot2.png" width="45%" alt="Layout V3">
+  <p><i>Capturas de la versión 4.7:</i></p>
+  <img src="docs/img/screenshot1.png" width="45%" alt="Layout V2 (v4.7)">
+  <img src="docs/img/screenshot2.png" width="45%" alt="Layout V3 (v4.7)">
+  <br><br>
+  <p><i>Capturas de la arquitectura V18.6:</i></p>
+  <img src="_ASSETS/v18_layout1.png" width="45%" alt="Simple Layout Night Mode">
+  <img src="_ASSETS/v18_layout2.png" width="45%" alt="Standard Layout Premium">
 </div>
 
 ---
@@ -52,14 +57,15 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 graph TB
     subgraph "UI Layer"
         MA[MainActivity]
-        L2[Layout V2 - Vertical]
-        L3[Layout V3 - Horizontal]
+        STM[Standard Layouts]
+        SLM[Simple Layout]
+        CPM[Control Panels]
     end
 
-    subgraph "Manager Layer"
-        PM[PlaybackManager<br/>Audio & Controls]
-        DM[DeviceManager<br/>Power & Lifecycle]
-        RM[RDSManager<br/>Metadata & PTY]
+    subgraph "Logic & State Managers"
+        PM[Playback & Focus]
+        DM[Dialogs & Settings]
+        NM[NightMode & Themes]
     end
 
     subgraph "Hardware Abstraction"
@@ -67,26 +73,28 @@ graph TB
         RE[RadioEngine Interface]
     end
 
-    subgraph "Hardware Engines"
+    subgraph "Radio Engines"
         K706[K706Engine]
         MT[MT8163Engine]
         QS[QS6Engine]
+        MTK[MTK8259_8667Engine]
     end
 
+    MA --> STM
+    MA --> SLM
+    MA --> CPM
     MA --> PM
-    MA --> DM
-    MA --> RM
     PM --> RS
-    DM --> RS
+    CPM --> RS
     RS --> RE
     RE --> K706
     RE --> MT
     RE --> QS
+    RE --> MTK
 
     style MA fill:#1a1a2e,stroke:#e94560,color:#fff
     style PM fill:#16213e,stroke:#0f3460,color:#fff
-    style DM fill:#16213e,stroke:#0f3460,color:#fff
-    style RM fill:#16213e,stroke:#0f3460,color:#fff
+    style RS fill:#16213e,stroke:#0f3460,color:#fff
 ```
 
 ---
@@ -98,7 +106,7 @@ graph TB
 | HCN AutoRadio (ESSGO, JUNSU) | MediaTek MT8163 | `FM_MT8163` | ✅ Completo |
 | Radio K706 | K706 + MCU | `FM_K706` | ✅ Completo |
 | Radio MTK8259 / 8667 | MT8259 + MCU | `FM_MT8259` | 🛠️ En desarrollo |
-| Radio NWD G5 | NWD Platform | `FM_QS6` | ✅ Beta |
+| Radio NWD G5 | NWD Platform | `FM_QS6` | 🛠️ En desarrollo |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
 ---
