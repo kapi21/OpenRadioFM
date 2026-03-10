@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         FM_BASICO,
         FM_K706,
         FM_QS6,
+        FM_8259_8667,
         AM
     }
 
@@ -116,13 +117,23 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     // V5.0: Capa de abstracción de hardware
     public RadioEngine mEngine;
-    boolean mIsScanning = false;
-    public java.util.List<ScannedStation> mCapturedList = new java.util.ArrayList<>();
+    public boolean mIsScanning = false;
+    public java.util.List<StationAdapter.ScannedStation> mCapturedList = new java.util.ArrayList<>();
     public StationAdapter mStationAdapter;
     public DialogManager mDialogManager;
     public LogoManager mLogoManager;
     public RadioServiceController mServiceController;
     public RDSManager mRdsManager;
+    public StandardLayoutManager mStandardLayoutManager;
+    public SimpleLayoutManager mSimpleLayoutManager;
+    public ControlPanelManager mControlPanelManager;
+
+    public boolean mIsSimpleLayout = false;
+    public boolean mIsV3 = false;
+    public boolean mControlsHidden = false;
+    private android.view.View bottomControls;
+    private android.os.Handler mAutoHideHandler;
+    private Runnable mAutoHideRunnable;
 
     // V16: Managers de Modo Nocturno e Historial
     public NightModeManager mNightModeManager;
@@ -130,9 +141,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public MediaSessionManager mMediaSessionManager;
     public ThemeManager mThemeManager; // V16.2: Skin manager
 
+    // V18.5: Reloj Digital
+    private android.os.Handler mClockHandler;
+    private Runnable mClockRunnable;
+    private TextView tvDigitalClock;
+
     // V5.5: Managers de Audio y Dispositivo
     public PlaybackManager mPlaybackManager;
     public DeviceManager mDeviceManager;
+    public HardwareManager mHardwareManager;
 
 
     // V11: RDS PI Database Identification
@@ -190,63 +207,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         return mCurrentBand;
     }
 
-    public boolean mIsV3 = false; // V5.4: Track Layout 3 active
 
-    // --- Clases de Soporte para Escaneo Selectivo (V12.1: Reubicadas para
-    // estabilidad) ---
-    public static class ScannedStation {
-        public int frequency;
-        public String name = "Buscando RDS...";
 
-        public ScannedStation(int f) {
-            this.frequency = f;
-        }
-    }
-
-    public class StationViewHolder extends androidx.recyclerview.widget.RecyclerView.ViewHolder {
-        TextView freq, name;
-        android.widget.Button[] presets = new android.widget.Button[12];
-
-        StationViewHolder(android.view.View root) {
-            super(root);
-            freq = root.findViewById(R.id.tvFreq);
-            name = root.findViewById(R.id.tvName);
-            for (int i = 0; i < 12; i++) {
-                int resId = getResources().getIdentifier("btnP" + (i + 1), "id", getPackageName());
-                presets[i] = root.findViewById(resId);
-            }
-        }
-    }
-
-    public class StationAdapter extends androidx.recyclerview.widget.RecyclerView.Adapter<StationViewHolder> {
-        @Override
-        public StationViewHolder onCreateViewHolder(android.view.ViewGroup p, int t) {
-            return new StationViewHolder(getLayoutInflater().inflate(R.layout.item_scanned_station, p, false));
-        }
-
-        @Override
-        public void onBindViewHolder(StationViewHolder h, int p) {
-            ScannedStation s = mCapturedList.get(p);
-            h.freq.setText(String.format("%.2f MHz", s.frequency / 1000.0f));
-            h.name.setText(s.name);
-            for (int i = 0; i < 12; i++) {
-                final int slot = i;
-                h.presets[i].setOnClickListener(v -> {
-                    if (mPresetManager != null) {
-                        mPresetManager.savePreset(mCurrentBand, slot, s.frequency,
-                                s.name.equals("Buscando RDS...") ? "" : s.name);
-                        showToast("Guardado en Slot " + (slot + 1));
-                        refreshPresetButtons();
-                    }
-                });
-            }
-        }
-
-        @Override
-        public int getItemCount() {
-            return mCapturedList.size();
-        }
-    }
+    // V18.6: StationAdapter and ScannedStation moved to separate files
 
     // Métodos delegados al PresetManager para compatibilidad con código existente
     public void gotoPreset(int index) {
@@ -280,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * V14.0: Salta al siguiente favorito guardado en la banda actual.
      * V14.1: Prioriza el comando de hardware del motor.
      */
-    private void gotoNextFavorite() {
+    public void gotoNextFavorite() {
         if (mEngine == null || mPresetManager == null)
             return;
 
@@ -299,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * V14.0: Salta al favorito anterior guardado en la banda actual.
      * V14.1: Prioriza el comando de hardware del motor.
      */
-    private void gotoPreviousFavorite() {
+    public void gotoPreviousFavorite() {
         if (mEngine == null || mPresetManager == null)
             return;
 
@@ -324,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     // UI Arrays for Presets - REMOVED (Managed by PresetManager)
 
-    private void animateButton(View v) {
+    public void animateButton(View v) {
         ObjectAnimator scaleX = ObjectAnimator.ofFloat(v, "scaleX", 1.0f, 0.9f, 1.0f);
         ObjectAnimator scaleY = ObjectAnimator.ofFloat(v, "scaleY", 1.0f, 0.9f, 1.0f);
         scaleX.setDuration(150);
@@ -335,46 +298,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         scaleY.start();
     }
 
-    // V9.9: Hack para el problema del K706 donde MediaFocusControl "roba"
-    // el canal pero no nos envía OnAudioFocusChange (solo abandona
-    // customAudioFocus).
-    private BroadcastReceiver mBtStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if ("com.qf.action.BT_STATE".equals(intent.getAction())) {
-                // state=0 (Desconectado), state=1 (Conectando), state=2 (Conectado)
-                int state = intent.getIntExtra("state", -1);
-                Log.d(TAG, "BT_STATE Broadcast Received: " + state);
-
-                if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
-                    com.example.openradiofm.data.source.K706RadioManager k706Manager = ((com.example.openradiofm.data.source.K706Engine) mEngine)
-                            .getManager();
-
-                    if (state == 0) {
-                        Log.d(TAG, "Bluetooth Desconectado: Forzando recuperación de audio FM (SetChannel 2)");
-                        // Tras unos milisegundos para dejar que el sistema asimile la desconexión
-                        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                            try {
-                                k706Manager.enforceAudioChannelRecovery(); // Need to add this helper in
-                                                                           // K706RadioManager
-                                showToast("Recuperando Audio FM...");
-                            } catch (Exception e) {
-                                Log.e(TAG, "Error recuperando canal FM tras BT", e);
-                            }
-                        }, 500);
-                    } else if (state == 2) {
-                        Log.d(TAG, "Bluetooth Conectado: Nos silenciamos preventivamente");
-                        try {
-                            k706Manager.setMute(true);
-                            k706Manager.returnAudioChannel(); // Helper para RPC_SetChannel(4)
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error cediendo canal FM tras BT connect", e);
-                        }
-                    }
-                }
-            }
-        }
-    };
+    // V18.6: MCU and BT logic moved to HardwareManager
 
     // ScheduledExecutorService para sondear el estado de la radio en segundo plano.
     // Más robusto que Timer y evita fugas de memoria.
@@ -753,25 +677,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private int mCreditsClickCount = 0;
     private long mCreditsStartTime = 0;
 
-    /**
-     * Envía una tecla al MCU del coche usando la API interna
-     * android.carsource.McuManager.
-     * Todo el acceso va envuelto en try/catch para que en dispositivos sin esta
-     * clase
-     * simplemente se muestre un Toast y no se cierre la app.
-     */
     private void sendMcuKey(int key) {
-        try {
-            Class<?> mcuClass = Class.forName("android.carsource.McuManager");
-            java.lang.reflect.Method getInstance = mcuClass.getMethod("getsInstance");
-            Object instance = getInstance.invoke(null);
-            java.lang.reflect.Method injectKey = mcuClass.getMethod("injectKeyEventTimeout", int.class, int.class);
-            injectKey.invoke(instance, key, 0x32);
-            Log.d(TAG, "MCU Key injected: " + key);
-        } catch (Exception e) {
-            Log.e(TAG, "Error injecting MCU key: " + e.getMessage());
-            showToast("Hardware EQ no soportado en este dispositivo");
-        }
+        if (mHardwareManager != null) mHardwareManager.sendMcuKey(key);
     }
 
     private ImageView ivDynamicBackground;
@@ -902,18 +809,23 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             Log.d(TAG, "State Restored: Freq=" + mLastFreq);
         }
 
-        // Registrar receiver para las desconexiones Bluetooth de la placa QF (K706)
-        IntentFilter filter = new IntentFilter("com.qf.action.BT_STATE");
-        registerReceiver(mBtStateReceiver, filter);
+        // V18.6: MCU and BT logic controlled by HardwareManager
+        mHardwareManager = new HardwareManager(this);
+        mHardwareManager.registerReceivers();
 
         // V3.0: Layout Selection
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
         mIsV3 = mPrefs.getBoolean("pref_layout_v3", false);
+        mIsSimpleLayout = mPrefs.getBoolean("pref_layout_simple", false);
 
-        // V4.7: Manejo de Barra de Estado (Fullscreen condicional)
+        // V4.8: Manejo de Barra de Estado (Fullscreen condicional)
         applyStatusBarVisibility();
 
-        setContentView(mIsV3 ? R.layout.activity_main_v3 : R.layout.activity_main);
+        if (mIsSimpleLayout) {
+            setContentView(R.layout.activity_simple_radio);
+        } else {
+            setContentView(mIsV3 ? R.layout.activity_main_v3 : R.layout.activity_main);
+        }
 
         // V15.6: Aplicar tipografía global inmediatamente tras cargar el layout
         applyFonts();
@@ -938,6 +850,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mHistoryManager = new HistoryManager(this, mPrefs);
         mMediaSessionManager = new MediaSessionManager(this);
         mMediaSessionManager.connect();
+        
+        mControlPanelManager = new ControlPanelManager(this);
 
         // V5.5: Inicializar PlaybackManager y DeviceManager
         mPlaybackManager = new PlaybackManager(this);
@@ -977,9 +891,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mLogoManager.loadCustomBackground();
         mLogoManager.loadCarLogo();
 
+        mSimpleLayoutManager = new SimpleLayoutManager(this);
+
         // V13: Cargar última frecuencia guardada
         if (mLastFreq == -1) {
             mLastFreq = mPrefs.getInt("pref_last_freq", 87500);
+        }
+
+        if (mIsSimpleLayout) {
+            mSimpleLayoutManager.initViews(findViewById(android.R.id.content));
         }
 
         // Bind Views
@@ -997,6 +917,23 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         ivBandIndicator = findViewById(R.id.ivBandIndicator);
         ivUnitLabel = findViewById(R.id.ivUnitLabel);
+        tvDigitalClock = findViewById(R.id.tvDigitalClock);
+
+        // V18.5: Inicializar Reloj Digital
+        mClockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mClockRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (tvDigitalClock != null && tvDigitalClock.getVisibility() == View.VISIBLE) {
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
+                    tvDigitalClock.setText(sdf.format(new java.util.Date()));
+                }
+                mClockHandler.postDelayed(this, 10000); // 10 segs (suficiente para HH:mm)
+            }
+        };
+
+        // Aplicar preferencias iniciales
+        applyLogoModePreference();
         ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
         ivStereoIcon = findViewById(R.id.ivStereoIcon);
         ivAfIcon = findViewById(R.id.ivAfIcon);
@@ -1051,8 +988,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // Indicators Binding - REMOVED
 
-        // Configurar controles (EQ, Mute, Test, AutoScan, LOC/DX)
-        setupControlButtons();
+        // Configurar controles (Delegados a ControlPanelManager)
+        if (mControlPanelManager != null) mControlPanelManager.initViews();
 
         // Configurar indicadores de estado (Eliminados)
         // setupIndicators();
@@ -1070,8 +1007,30 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         applySkin(mThemeManager.getCurrentSkin());
         checkAndApplyNightMode(); // V4: Automatic Night Mode
 
-        // Seeking Logic
-        setupSeekButtons();
+        // V18.6: Auto-hide bottom controls initialization
+        bottomControls = findViewById(R.id.bottomControls);
+        mAutoHideHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+        mAutoHideRunnable = () -> hideBottomControls();
+
+        // En Layout V3, interceptar toques en el fondo para mostrar controles
+        if (mIsV3) {
+            android.view.View root = findViewById(R.id.rootLayout);
+            if (root != null) {
+                root.setOnTouchListener((v, event) -> {
+                    if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                        if (mControlsHidden) {
+                            showBottomControls();
+                        } else {
+                            resetAutoHideTimer();
+                        }
+                    }
+                    return false; // Permitir que otros elementos reciban el toque
+                });
+            }
+            resetAutoHideTimer();
+        }
+    
+        // Seeking Logic (Delegated to ControlPanelManager)
 
         applyFonts();
 
@@ -1083,9 +1042,28 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        android.util.Log.d(TAG, "onResume: Restaurando hardware de audio");
+        
+        // V4.8: En K706, es mejor dejar que el Engine gestione el foco y el canal.
+        if (mPlaybackManager != null) {
+            mPlaybackManager.resumeIfMutedBySystem();
+            
+            // Si NO está muteado, nos aseguramos de que el canal FM esté activo en el MCU
+            if (!mPlaybackManager.isMuted() && mEngine != null) {
+                mEngine.switchToFmAudio();
+            }
+        }
+    }
+
+    @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        Log.d(TAG, "onConfigurationChanged: Nueva configuración detectada");
+        android.util.Log.d(TAG, "onConfigurationChanged: Nueva configuración detectada");
+        if (mPresetManager != null) {
+            mPresetManager.refreshButtons(mCurrentBand);
+        }
 
         // V10: Manejar cambio de modo noche sin recrear la Activity
         if (mPrefs != null && mPrefs.getBoolean("pref_night_mode_auto", false)) {
@@ -1093,169 +1071,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
-    /**
-     * Configura los botones de control (EQ, Mute, Test, AutoScan, LOC/DX).
-     */
-    private void setupControlButtons() {
-        // EQ Logic (V10: Delegated to RadioEngine)
-        ImageButton btnEq = findViewById(R.id.btnSettings);
-        if (btnEq != null) {
-            btnEq.setOnClickListener(v -> {
-                if (mEngine != null) {
-                    mEngine.openEq(MainActivity.this);
-                } else {
-                    // Fallback para modo básico o inicio temprano
-                    showToast("Ecualizador no disponible (Motor no iniciado)");
-                }
-            });
-            // V4.6: Se elimina la pulsación larga para el menú premium aquí, ahora está en
-            // btnExtra1
-        }
-
-        // V5.5: Mute Logic delegada a PlaybackManager
-        ImageButton btnMute = findViewById(R.id.btnMute);
-        if (btnMute != null) {
-            btnMute.setOnClickListener(v -> {
-                if (mPlaybackManager != null) {
-                    mPlaybackManager.setMute(!mMuteState);
-                }
-            });
-        }
-
-        // V3.8: GPS Button with Hidden Test Menu
-        android.view.View btnGps = findViewById(R.id.btnGps);
-        if (btnGps != null) {
-            btnGps.setOnClickListener(v -> {
-                long now = System.currentTimeMillis();
-
-                // Track clicks for hidden menu
-                if (mTestClickCount == 0 || (now - mTestStartTime) > 3000) {
-                    mTestClickCount = 1;
-                    mTestStartTime = now;
-                } else {
-                    mTestClickCount++;
-                }
-
-                if (mTestClickCount >= 5) {
-                    mTestClickCount = 0; // Reset
-                    // V9.5: Abrir menú de desarrollo correcto según hardware
-                    if (mMode == FmMode.FM_K706) {
-                        mEngineeringDialog = new K706EngineeringDialog(MainActivity.this);
-                        mEngineeringDialog.setOnDismissListener(dialog -> mEngineeringDialog = null);
-                        mEngineeringDialog.show();
-                    } else if (mMode == FmMode.FM_MT8163) {
-                        new EngineeringModeDialog(MainActivity.this).show();
-                    } else {
-                        showToast("Modo básico: Menú de ingeniería no disponible");
-                    }
-                } else {
-                    // Single click action: Open GPS
-                    // If it's the first click or still haven't reached 5
-                    if (mTestClickCount == 1) {
-                        try {
-                            // Try to open Google Maps as default, or any maps app
-                            Intent mapIntent = new Intent(Intent.ACTION_VIEW, android.net.Uri.parse("geo:0,0?q="));
-                            mapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            startActivity(mapIntent);
-                        } catch (Exception e) {
-                            showToast("No se encontró aplicación de GPS");
-                        }
-                    }
-                }
-            });
-        }
-
-        ImageButton btnAutoScan = findViewById(R.id.btnAutoScan);
-        if (btnAutoScan != null) {
-            btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f); // V4.3 Corrected to _f
-            btnAutoScan.setOnClickListener(v -> toggleAutoScan(btnAutoScan));
-
-            // V11.7: Auto Store Selectivo (Solo K706) en Pulsación Larga
-            // Deshabilitado por petición, causaba problemas
-            /*
-             * btnAutoScan.setOnLongClickListener(v -> {
-             * if (mMode == FmMode.FM_K706) {
-             * mDialogManager.showSelectiveScanDialog();
-             * return true;
-             * } else {
-             * showToast("Escaneo selectivo solo disponible en motor K706");
-             * return false;
-             * }
-             * });
-             */
-        }
-
-
-        // V5.5: Power Off delegado a DeviceManager
-        if (btnPowerOff != null) {
-            btnPowerOff.setOnClickListener(v -> {
-                animateButton(btnPowerOff);
-                if (mDeviceManager != null) {
-                    mDeviceManager.powerOff();
-                }
-            });
-        }
-
-        // BAND Switch — V5.0: Via RadioEngine
-        btnBand = findViewById(R.id.btnBand);
-        if (btnBand != null) {
-            btnBand.setOnClickListener(v -> {
-                if (mEngine != null) {
-                    mEngine.bandCycle();
-                } else {
-                    showToast("Motor de radio no iniciado");
-                }
-            });
-        }
-
-        // LOC/DX Switch — V5.0: Via RadioEngine
-        btnLocDx = findViewById(R.id.btnLocDx);
-        if (btnLocDx != null) {
-            btnLocDx.setOnClickListener(v -> {
-                if (mEngine != null) {
-                    mEngine.toggleDxLocal();
-                }
-            });
-
-            // V3.5: Layout Toggle on Long Press
-            btnLocDx.setOnLongClickListener(v -> {
-                boolean current = mPrefs.getBoolean("pref_layout_v3", false);
-                mPrefs.edit().putBoolean("pref_layout_v3", !current).apply();
-                showToast("Layout: " + (!current ? "V3 (Horizontal)" : "V2 (Vertical)"));
-                recreate();
-                return true;
-            });
-        }
-
-        // V4.0: Extra Button 1 - Android Settings (V4.6: Now opens Premium Menu on
-        // short click)
-        ImageButton btnExtra1 = findViewById(R.id.btnExtra1);
-        if (btnExtra1 != null) {
-            btnExtra1.setOnClickListener(v -> {
-                mDialogManager.showPremiumSettingsDialog();
-            });
-
-            // V4.6: Long click opens Android Settings
-            btnExtra1.setOnLongClickListener(v -> {
-                try {
-                    Intent settingsIntent = new Intent(android.provider.Settings.ACTION_SETTINGS);
-                    settingsIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    startActivity(settingsIntent);
-                } catch (Exception e) {
-                    showStyledToast(getString(R.string.error_opening_settings));
-                }
-                return true;
-            });
-        }
-
-        // V4.0: Extra Button 2 - Save/Load Favorites
-        ImageButton btnExtra2 = findViewById(R.id.btnExtra2);
-        if (btnExtra2 != null) {
-            btnExtra2.setOnClickListener(v -> {
-                mDialogManager.showSaveLoadFavoritesDialog();
-            });
-        }
-    }
+    // setupControlButtons and setupSeekButtons moved to ControlPanelManager
 
     private void setupCustomNameEditing() {
         // Permitir editar el nombre al mantener pulsado el texto del nombre RDS
@@ -1272,7 +1088,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // También en el logo principal, por si tvRdsName está vacío
         android.view.View ivMainLogo = findViewById(R.id.ivMainLogo);
-        if (ivMainLogo != null) {
+        if (ivMainLogo != null && !mIsSimpleLayout) {
             // Click normal: Cambiar Color (Ciclar Skin)
             ivMainLogo.setOnClickListener(v -> {
                 com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
@@ -1283,6 +1099,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // Long click: Historial
             ivMainLogo.setOnLongClickListener(v -> {
                 mDialogManager.showHistoryDialog();
+                return true;
+            });
+        }
+
+        // V18.6: Reloj Digital también permite ciclar skin
+        tvDigitalClock = findViewById(R.id.tvDigitalClock);
+        if (tvDigitalClock != null) {
+            tvDigitalClock.setOnClickListener(v -> {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
+                applySkin(next);
+                showToast("Skin: " + next.displayName);
+            });
+            // Long click: Mostrar diálogo de personalización directamente
+            tvDigitalClock.setOnLongClickListener(v -> {
+                mDialogManager.showPremiumSettingsDialog();
                 return true;
             });
         }
@@ -1297,9 +1128,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mDeviceManager.releaseAllResources();
         }
 
+        // V18.5: Limpiar reloj
+        if (mClockHandler != null) {
+            mClockHandler.removeCallbacks(mClockRunnable);
+        }
+
         // Recursos no gestionados por DeviceManager (legacy específico)
         try {
-            unregisterReceiver(mBtStateReceiver);
+        if (mHardwareManager != null) {
+            mHardwareManager.unregisterReceivers();
+        }
         } catch (Exception e) {}
 
 
@@ -1363,6 +1201,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V2.1: Especial para mPresetManager que maneja sus propios arrays
         if (mPresetManager != null) {
             mPresetManager.applyFonts(typeface);
+        }
+
+        // V18.5: Reloj Digital
+        TextView tvDigitalClock = findViewById(R.id.tvDigitalClock);
+        if (tvDigitalClock != null) {
+            tvDigitalClock.setTypeface(typeface);
         }
     }
 
@@ -1445,17 +1289,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V16.2: También en el contenedor para facilitar la interacción
         android.view.View boxFrequency = findViewById(R.id.boxFrequency);
-        if (boxFrequency != null) {
-            // Click normal: Historial (y contador de créditos)
-            boxFrequency.setOnClickListener(v -> handleCreditsClick());
+        android.view.View boxIconsTop = findViewById(R.id.boxIconsTopLayout2);
+        
+        View.OnClickListener clickListener = v -> handleCreditsClick();
+        View.OnLongClickListener longClickListener = v -> {
+            if (mDialogManager != null) {
+                mDialogManager.showEditNameDialog();
+                return true;
+            }
+            return false;
+        };
 
-            boxFrequency.setOnLongClickListener(v -> {
-                if (mDialogManager != null) {
-                    mDialogManager.showEditNameDialog();
-                    return true;
-                }
-                return false;
-            });
+        if (boxFrequency != null) {
+            boxFrequency.setOnClickListener(clickListener);
+            boxFrequency.setOnLongClickListener(longClickListener);
+        }
+        if (boxIconsTop != null) {
+            boxIconsTop.setOnClickListener(clickListener);
+            boxIconsTop.setOnLongClickListener(longClickListener);
         }
     }
 
@@ -1529,78 +1380,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // ivDynamicBackground)
             root.setBackgroundColor(android.graphics.Color.BLACK);
             // El refresco real ocurre en updateDynamicBackground
-        }
-    }
-
-    /**
-     * Configura los botones de búsqueda manual y automática de frecuencias.
-     *
-     * - Los pasos manuales (+/- 0.1 MHz) se hacen mediante llamadas AIDL al
-     * servicio,
-     * que se ejecutan fuera del hilo principal cuando es posible.
-     * - Las búsquedas largas (seek up/down) usan los eventos específicos del
-     * servicio.
-     */
-    private void setupSeekButtons() {
-        ImageButton btnSeekDown = findViewById(R.id.btnSeekDown); // LEFT (<)
-        ImageButton btnSeekUp = findViewById(R.id.btnSeekUp); // RIGHT (>)
-        ImageButton btnFavPrev = findViewById(R.id.btnFavPrev);
-        ImageButton btnFavNext = findViewById(R.id.btnFavNext);
-
-        // Left Button (<) -> Step Down / Seek Down (Long Press)
-        if (btnSeekDown != null) {
-            btnSeekDown.setOnClickListener(v -> {
-                animateButton(btnSeekDown);
-                stepFreqDown();
-            });
-            // Standard: Long Left = Seek Down
-            btnSeekDown.setOnLongClickListener(v -> {
-                Log.d(TAG, "Seek Down (Long Click) triggered");
-                onSeekDownEvent();
-                return true;
-            });
-        }
-
-        // Right Button (>) -> Step Up / Seek Up (Long Press)
-        if (btnSeekUp != null) {
-            btnSeekUp.setOnClickListener(v -> {
-                animateButton(btnSeekUp);
-                stepFreqUp();
-            });
-            // Standard: Long Right = Seek Up
-            btnSeekUp.setOnLongClickListener(v -> {
-                Log.d(TAG, "Seek Up (Long Click) triggered");
-                onSeekUpEvent();
-                return true;
-            });
-        }
-
-        // Navigation Buttons (Fav Prev / Fav Next)
-        if (btnFavPrev != null) {
-            btnFavPrev.setOnClickListener(v -> {
-                animateButton(btnFavPrev);
-                gotoPreviousFavorite();
-            });
-        }
-
-        if (btnFavNext != null) {
-            btnFavNext.setOnClickListener(v -> {
-                animateButton(btnFavNext);
-                gotoNextFavorite();
-            });
-        }
-
-        // V4: Bind Frequency Box for gestures (Fluid Drag) - ELIMINADO para simplificar
-        if (tvFrequency != null) {
-            tvFrequency.setClickable(true); 
-        }
-
-        // Loop Band Logic
-        if (btnBand != null) {
-            btnBand.setOnClickListener(v -> {
-                if (mEngine != null)
-                    mEngine.bandCycle();
-            });
         }
     }
 
@@ -2007,12 +1786,28 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
     public void applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
         if (mThemeManager != null) mThemeManager.applySkin(skin);
+        
+        boolean isNight = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+
+        // V18.6: Propagate skin change to SimpleLayoutManager
+        if (mIsSimpleLayout && mSimpleLayoutManager != null) {
+            mSimpleLayoutManager.applyColors(isNight);
+            
+            // Tint tvDigitalClock in Simple Layout Night Mode
+            if (tvDigitalClock != null) {
+                if (isNight) {
+                    tvDigitalClock.setTextColor(getResources().getColor(R.color.night_blue_primary, null));
+                } else {
+                    tvDigitalClock.setTextColor(android.graphics.Color.WHITE);
+                }
+            }
+        }
     }
 
     // V16: applyNightModeColors() y resetNightModeColors() movidos a NightModeManager
 
     // V4: Frequency Step Helpers (Manual Tuning)
-    private void stepFreqUp() {
+    public void stepFreqUp() {
         mCurrentPty = null;
         if (mEngine == null)
             return;
@@ -2035,7 +1830,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mEngine.tune(newFreq);
     }
 
-    private void stepFreqDown() {
+    public void stepFreqDown() {
         mCurrentPty = null;
         if (mEngine == null)
             return;
@@ -2163,6 +1958,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             case "sr":
                 langName = getString(R.string.language_serbian);
                 break;
+            case "fr":
+                langName = getString(R.string.language_french);
+                break;
+            case "de":
+                langName = getString(R.string.language_german);
+                break;
+            case "pt":
+                langName = getString(R.string.language_portuguese);
+                break;
+            case "it":
+                langName = getString(R.string.language_italian);
+                break;
+            case "zh":
+                langName = getString(R.string.language_chinese);
+                break;
+            case "ja":
+                langName = getString(R.string.language_japanese);
+                break;
             default:
                 langName = getString(R.string.language_spanish);
                 break;
@@ -2217,13 +2030,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
-    private void onSeekUpEvent() {
+    public void onSeekUpEvent() {
         Log.d(TAG, "onSeekUpEvent call");
         if (mEngine != null)
             mEngine.seekUp();
     }
 
-    private void onSeekDownEvent() {
+    public void onSeekDownEvent() {
         Log.d(TAG, "onSeekDownEvent call");
         if (mEngine != null)
             mEngine.seekDown();
@@ -2270,7 +2083,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     /**
      * V9.5: AutoScan Toggle — click 1 inicia, click 2 detiene.
      */
-    private void toggleAutoScan(ImageButton btn) {
+    public void toggleAutoScan(ImageButton btn) {
         if (mEngine == null)
             return;
         if (!mIsScanning) {
@@ -2342,21 +2155,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     private void sendMcuTunerCmd(byte subCmd, byte param1, byte param2) {
-        if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
-            com.example.openradiofm.data.source.K706RadioManager mgr = ((com.example.openradiofm.data.source.K706Engine) mEngine)
-                    .getManager();
-            if (mgr != null) {
-                try {
-                    java.lang.reflect.Method sendCmd = com.example.openradiofm.data.source.K706RadioManager.class
-                            .getDeclaredMethod(
-                                    "sendCmd", byte.class, byte.class, byte.class);
-                    sendCmd.setAccessible(true);
-                    sendCmd.invoke(mgr, subCmd, param1, param2);
-                } catch (Exception e) {
-                    android.util.Log.e("MainActivity", "sendMcuTunerCmd error", e);
-                }
-            }
-        }
+        if (mHardwareManager != null) mHardwareManager.sendMcuTunerCmd(subCmd, param1, param2);
     }
 
     /**
@@ -2366,10 +2165,36 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mPrefs == null) return;
         boolean showStatusBarV2 = mPrefs.getBoolean("pref_show_status_bar_v2", false);
         runOnUiThread(() -> {
-            if (mIsV3 || (!mIsV3 && showStatusBarV2)) {
+            if (showStatusBarV2) {
                 getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
             } else {
                 getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
+        });
+    }
+
+    /**
+     * V18.5: Alterna entre el logo del coche y el reloj digital.
+     */
+    public void applyLogoModePreference() {
+        if (mPrefs == null) return;
+        int logoMode = mPrefs.getInt("pref_logo_mode", 0); // 0=Car, 1=Clock
+        runOnUiThread(() -> {
+            ImageView ivCarLogo = findViewById(R.id.ivCarLogo);
+            if (tvDigitalClock != null) {
+                if (logoMode == 1) {
+                    tvDigitalClock.setVisibility(View.VISIBLE);
+                    if (ivCarLogo != null) ivCarLogo.setVisibility(View.GONE);
+                    mClockHandler.removeCallbacks(mClockRunnable);
+                    mClockHandler.post(mClockRunnable);
+                } else {
+                    tvDigitalClock.setVisibility(View.GONE);
+                    if (ivCarLogo != null) {
+                        ivCarLogo.setVisibility(View.VISIBLE);
+                        mLogoManager.loadCarLogo();
+                    }
+                    mClockHandler.removeCallbacks(mClockRunnable);
+                }
             }
         });
     }
@@ -2444,7 +2269,66 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
-    // V5.5: mMediaControlReceiver migrado a PlaybackManager (ver PlaybackManager.java)
+    // V18.6: Métodos para ocultación automática de controles
+    public void resetAutoHideTimer() {
+        if (mAutoHideHandler == null || mAutoHideRunnable == null) return;
+        mAutoHideHandler.removeCallbacks(mAutoHideRunnable);
+        if (mPrefs.getBoolean("pref_auto_hide_controls", false) && mIsV3) {
+            mAutoHideHandler.postDelayed(mAutoHideRunnable, 5000); // 5 segundos
+        }
+    }
+
+    public void showBottomControls() {
+        if (bottomControls == null) return;
+        if (mControlsHidden) {
+            mControlsHidden = false;
+            bottomControls.animate()
+                    .translationY(0)
+                    .setDuration(500)
+                    .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                    .start();
+        }
+        resetAutoHideTimer();
+    }
+
+    public void hideBottomControls() {
+        if (bottomControls == null || mControlsHidden) return;
+        if (!mPrefs.getBoolean("pref_auto_hide_controls", false)) return;
+        
+        mControlsHidden = true;
+        bottomControls.animate()
+                .translationY(bottomControls.getHeight() + 100)
+                .setDuration(500)
+                .setInterpolator(new android.view.animation.AccelerateDecelerateInterpolator())
+                .start();
+    }
+
+    @Override
+    public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
+        if (mIsV3 && mPrefs.getBoolean("pref_auto_hide_controls", false)) {
+            if (ev.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                showBottomControls();
+            }
+        }
+        return super.dispatchTouchEvent(ev);
+    }
+
+    /**
+     * V18.6: Centraliza el cambio de layout (V2 -> V3 -> Simple)
+     */
+    public void toggleLayoutMode() {
+        if (!mIsV3 && !mIsSimpleLayout) { // Estamos en V2 -> Ir a V3
+            mPrefs.edit().putBoolean("pref_layout_v3", true).putBoolean("pref_layout_simple", false).apply();
+            showToast("Layout: V3 (Horizontal)");
+        } else if (mIsV3) { // Estamos en V3 -> Ir a Simple
+            mPrefs.edit().putBoolean("pref_layout_v3", false).putBoolean("pref_layout_simple", true).apply();
+            showToast("Layout: Simple (Minimalista)");
+        } else { // Estamos en Simple -> Ir a V2
+            mPrefs.edit().putBoolean("pref_layout_v3", false).putBoolean("pref_layout_simple", false).apply();
+            showToast("Layout: V2 (Vertical)");
+        }
+        recreate();
+    }
 }
 
 

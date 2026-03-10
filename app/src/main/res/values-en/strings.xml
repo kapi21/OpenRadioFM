@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium Customization</string>
@@ -45,6 +45,9 @@
     <string name="logos_online_enabled">✅ Online logos enabled</string>
     <string name="logos_online_disabled">❌ Online logos disabled</string>
     <string name="night_mode_manual_blocked">Disable Automatic Night Mode to choose skin manually</string>
+    <string name="auto_hide_controls">Auto-hide controls</string>
+    <string name="auto_hide_enabled">✅ Auto-hide controls enabled</string>
+    <string name="auto_hide_disabled">❌ Auto-hide controls disabled</string>
     
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">💾 Save/Load Favorites</string>
@@ -73,8 +76,11 @@
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
     <string name="language_french">French</string>
-    <string name="language_chinese">Chinese</string>
-    <string name="language_japanese">Japanese</string>
+    <string name="language_chinese">中文 (简体)</string>
+    <string name="language_japanese">日本語</string>
+    <string name="language_german">German</string>
+    <string name="language_portuguese">Portuguese</string>
+    <string name="language_italian">Italian</string>
     <string name="language_changed">✅ Language changed to %s</string>
     <string name="about_openradio">ℹ️ About OpenRadioFM</string>
     <string name="about_info_header">INFORMATION</string>
@@ -87,11 +93,13 @@
     <string name="enable_am_band">Enable AM Band</string>
     <string name="radio_engine">Radio Engine</string>
     <string name="engine_auto">Automatic (Recommended)</string>
-    <string name="engine_k706">Vento / HCN (K706)</string>
+    <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
     <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
     <string name="engine_mtk">Generic MediaTek</string>
     <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_k706_can">K706 CAN-Bus</string>
     <string name="engine_standard">Android Standard</string>
     <string name="am_band_enabled">✅ AM Band enabled</string>
     <string name="am_band_disabled">❌ AM Band disabled</string>
@@ -145,9 +153,9 @@
     <string name="contrib_cloud">Contribute to Community (HD Logos)</string>
     <string name="contrib_cloud_desc">Automatically send Frequency and PI Code of local stations to improve the global database.</string>
 
-    <string name="status_bar_v2">Status Bar (Layout 2)</string>
-    <string name="status_bar_enabled">✅ Status bar enabled (Layout 2)</string>
-    <string name="status_bar_disabled">❌ Status bar disabled (Layout 2)</string>
+    <string name="status_bar_v2">Show status bar</string>
+    <string name="status_bar_enabled">✅ Status bar enabled</string>
+    <string name="status_bar_disabled">❌ Status bar disabled</string>
     <string name="language_romanian">Română</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_serbian">Srpski</string>
@@ -171,5 +179,12 @@
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favorites reset correctly</string>
     <string name="history_cleared">History cleared</string>
+    <string name="logo_mode_label">Top Logo Mode</string>
+    <string name="logo_mode_car">Car Logo</string>
+    <string name="logo_mode_clock">Digital Clock</string>
     <string name="my_favorites">My Favorites</string>
+    
+    <!-- Settings Categories -->
+    <string name="category_premium">Premium Customization</string>
+    <string name="category_app_options">App Options</string>
 </resources>

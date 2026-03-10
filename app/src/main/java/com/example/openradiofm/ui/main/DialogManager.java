@@ -114,8 +114,8 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
         androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
-        androidx.appcompat.widget.SwitchCompat swGestures = dialog.findViewById(R.id.switchSwipeGestures);
-        androidx.appcompat.widget.SwitchCompat swStatusBarV2 = dialog.findViewById(R.id.switchStatusBarV2);
+        androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
+        androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
         androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm);
 
         // Language Row
@@ -174,14 +174,25 @@ public class DialogManager {
             });
         }
 
-        if (swStatusBarV2 != null) {
-            swStatusBarV2.setChecked(mActivity.mPrefs.getBoolean("pref_show_status_bar_v2", false));
-            swStatusBarV2.setOnCheckedChangeListener((bv, checked) -> {
+        if (swStatusBar != null) {
+            swStatusBar.setChecked(mActivity.mPrefs.getBoolean("pref_show_status_bar_v2", false));
+            swStatusBar.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_show_status_bar_v2", checked).apply();
                 mActivity.showToast(checked ? mActivity.getString(R.string.status_bar_enabled)
                         : mActivity.getString(R.string.status_bar_disabled));
-                // V13.9: Aplicar visibilidad inmediatamente sin reiniciar
                 mActivity.applyStatusBarVisibility();
+            });
+        }
+
+        if (swAutoHide != null) {
+            swAutoHide.setChecked(mActivity.mPrefs.getBoolean("pref_auto_hide_controls", false));
+            swAutoHide.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_auto_hide_controls", checked).apply();
+                mActivity.showToast(checked ? mActivity.getString(R.string.auto_hide_enabled)
+                        : mActivity.getString(R.string.auto_hide_disabled));
+                // V18.6: Reiniciar el temporizador si se activa
+                if (checked) mActivity.resetAutoHideTimer();
+                else mActivity.showBottomControls();
             });
         }
 
@@ -204,8 +215,19 @@ public class DialogManager {
 
         if (swAm != null) {
             swAm.setChecked(mActivity.mPrefs.getBoolean("pref_enable_am", true));
-            swAm.setOnCheckedChangeListener(
-                    (bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_enable_am", checked).apply());
+            swAm.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_enable_am", checked).apply();
+                // Csaba: Si se desactiva AM estando en AM, saltar a FM para evitar cuelgues
+                if (!checked && (mActivity.mCurrentBand == 3 || mActivity.mCurrentBand == 4)) {
+                    if (mActivity.mEngine != null) {
+                        if (mActivity.mEngine.getEngineName().equals("MTK8259_8667")) {
+                            mActivity.mEngine.toggleRdsFeature(99);
+                        } else {
+                            mActivity.mEngine.bandCycle(); // Forzar salto fuera de AM
+                        }
+                    }
+                }
+            });
         }
 
         if (swHistory != null) {
@@ -222,11 +244,17 @@ public class DialogManager {
             });
         }
 
-        if (swGestures != null) {
-            swGestures.setChecked(mActivity.mPrefs.getBoolean("pref_enable_gestures", false));
-            swGestures.setOnCheckedChangeListener((bv, checked) -> {
-                mActivity.mPrefs.edit().putBoolean("pref_enable_gestures", checked).apply();
-                mActivity.showToast(checked ? "Gestos (Beta): Activados" : "Gestos: Desactivados");
+        // Logo Mode Row (V18.5)
+        View rowLogoMode = dialog.findViewById(R.id.rowLogoMode);
+        TextView tvCurrentLogoMode = dialog.findViewById(R.id.tvCurrentLogoMode);
+        if (tvCurrentLogoMode != null) {
+            int logoMode = mActivity.mPrefs.getInt("pref_logo_mode", 0); // 0=Car, 1=Clock
+            tvCurrentLogoMode.setText(logoMode == 0 ? mActivity.getString(R.string.logo_mode_car) : mActivity.getString(R.string.logo_mode_clock));
+        }
+        if (rowLogoMode != null) {
+            rowLogoMode.setOnClickListener(v -> {
+                showLogoModeSelector();
+                dialog.dismiss();
             });
         }
 
@@ -242,6 +270,7 @@ public class DialogManager {
                     mActivity.getString(R.string.engine_mt8163),
                     mActivity.getString(R.string.engine_mtk),
                     mActivity.getString(R.string.engine_ts),
+                    mActivity.getString(R.string.engine_mtk8259), // V18.6
                     mActivity.getString(R.string.engine_standard)
             };
             if (engineIdx >= 0 && engineIdx < engineNames.length) {
@@ -412,6 +441,7 @@ public class DialogManager {
                 mActivity.getString(R.string.engine_mt8163),
                 mActivity.getString(R.string.engine_mtk),
                 mActivity.getString(R.string.engine_ts),
+                mActivity.getString(R.string.engine_mtk8259),
                 mActivity.getString(R.string.engine_standard)
         };
 
@@ -421,6 +451,28 @@ public class DialogManager {
                     mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
                     mActivity.showToast("Motor cambiado: " + options[which]);
                     mActivity.mServiceController.start();
+                }).create();
+        applyPremiumListStyle(dialog);
+        dialog.show();
+    }
+
+    public void showLogoModeSelector() {
+        String[] options = {
+                mActivity.getString(R.string.logo_mode_car),
+                mActivity.getString(R.string.logo_mode_clock)
+        };
+
+        AlertDialog dialog = new AlertDialog.Builder(mActivity)
+                .setTitle(R.string.logo_mode_label)
+                .setItems(options, (d, which) -> {
+                    mActivity.mPrefs.edit().putInt("pref_logo_mode", which).apply();
+                    mActivity.showToast("Modo de logo: " + options[which]);
+                    
+                    // V18.5: Aplicar cambio inmediatamente
+                    mActivity.applyLogoModePreference();
+                    
+                    // Reabrir ajustes
+                    showPremiumSettingsDialog();
                 }).create();
         applyPremiumListStyle(dialog);
         dialog.show();
@@ -554,7 +606,7 @@ public class DialogManager {
         });
 
         mActivity.mCapturedList.clear();
-        mActivity.mStationAdapter = mActivity.new StationAdapter();
+        mActivity.mStationAdapter = new StationAdapter(mActivity, mActivity.mCapturedList);
         rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(mActivity));
         rv.setAdapter(mActivity.mStationAdapter);
 
@@ -625,12 +677,12 @@ public class DialogManager {
                         tvStatus.setText(mActivity.getString(R.string.scan_completed));
                         if (lastFreqReported > 0) {
                             boolean alreadyInList = false;
-                            for (MainActivity.ScannedStation s : mActivity.mCapturedList) {
+                            for (StationAdapter.ScannedStation s : mActivity.mCapturedList) {
                                 if (Math.abs(s.frequency - lastFreqReported) < 50)
                                     alreadyInList = true;
                             }
                             if (!alreadyInList) {
-                                MainActivity.ScannedStation newStation = new MainActivity.ScannedStation(
+                                StationAdapter.ScannedStation newStation = new StationAdapter.ScannedStation(
                                         lastFreqReported);
                                 mActivity.mCapturedList.add(0, newStation);
                                 if (mActivity.mStationAdapter != null)

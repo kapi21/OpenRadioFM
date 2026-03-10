@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalização Premium</string>
@@ -34,9 +34,9 @@
     <string name="save_history">Salvar Histórico de Estações</string>
     <string name="enable_gestures_beta">Ativar Gestos (Deslizar) (beta)</string>
     <string name="online_logos">Logos Online</string>
-    <string name="status_bar_v2">Barra de status (Layout 2)</string>
-    <string name="status_bar_enabled">✅ Barra de status ativada (Layout 2)</string>
-    <string name="status_bar_disabled">❌ Barra de status desativada (Layout 2)</string>
+    <string name="status_bar_v2">Mostrar barra de estado</string>
+    <string name="status_bar_enabled">✅ Barra de estado ativada</string>
+    <string name="status_bar_disabled">❌ Barra de estado desativada</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Modo Noturno Automático ativado</string>
@@ -48,6 +48,9 @@
     <string name="logos_online_enabled">✅ Logos online ativados</string>
     <string name="logos_online_disabled">❌ Logos online desativados</string>
     <string name="night_mode_manual_blocked">Desative o Modo Noturno automático para escolher o tema manualmente</string>
+    <string name="auto_hide_controls">Ocultar controlos automaticamente</string>
+    <string name="auto_hide_enabled">✅ Ocultar controlos ativado</string>
+    <string name="auto_hide_disabled">❌ Ocultar controlos desativado</string>
     
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">💾 Salvar/Carregar Favoritos</string>
@@ -98,6 +101,8 @@
     <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
     <string name="engine_mtk">MediaTek Genérico</string>
     <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_k706_can">K706 CAN-Bus</string>
     <string name="engine_standard">Android Padrão</string>
     <string name="am_band_enabled">✅ Banda AM ativada</string>
     <string name="am_band_disabled">❌ Banda AM desativada</string>
@@ -170,5 +175,8 @@
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favoritos redefinidos com sucesso</string>
     <string name="history_cleared">Histórico apagado</string>
+    <string name="logo_mode_label">Modo Logo Superior</string>
+    <string name="logo_mode_car">Logo do Carro</string>
+    <string name="logo_mode_clock">Relógio Digital</string>
     <string name="my_favorites">Meus Favoritos</string>
 </resources>

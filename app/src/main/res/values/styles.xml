@@ -93,6 +93,14 @@
         <item name="android:background">@drawable/bg_glass_card_classic</item>
     </style>
 
+    <style name="SettingsLabelStyle">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+    </style>
+
     <!-- UNIFIED PREMIUM DIALOG STYLES (V4.1) -->
     <style name="DialogContainerStyle">
         <item name="android:layout_width">match_parent</item>

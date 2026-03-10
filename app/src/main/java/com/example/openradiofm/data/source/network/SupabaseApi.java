@@ -43,4 +43,13 @@ public interface SupabaseApi {
             @Query("on_conflict") String onConflict,
             @retrofit2.http.Body SupabaseLogoResponse data
     );
+
+    @Headers({"x-upsert: true"})
+    @POST("storage/v1/object/logos/{path}")
+    Call<Void> uploadLogoFile(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @retrofit2.http.Path("path") String fileName,
+            @retrofit2.http.Body okhttp3.RequestBody file
+    );
 }

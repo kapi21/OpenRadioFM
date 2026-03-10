@@ -106,6 +106,10 @@ public class NightModeManager {
         if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
         if (tvPty != null) tvPty.setTextColor(nightBlue);
 
+        // V18.6: Reloj Digital en azul noche
+        TextView tvClock = mActivity.findViewById(R.id.tvDigitalClock);
+        if (tvClock != null) tvClock.setTextColor(nightBlue);
+
         // Icono de banda FM
         ImageView ivBandIndicator = mActivity.findViewById(R.id.ivBandIndicator);
         if (ivBandIndicator != null) {
@@ -166,6 +170,10 @@ public class NightModeManager {
         if (tvRdsName != null) tvRdsName.setTextColor(white);
         if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
         if (tvPty != null) tvPty.setTextColor(white);
+
+        // V18.6: Restaurar reloj a blanco
+        TextView tvClock = mActivity.findViewById(R.id.tvDigitalClock);
+        if (tvClock != null) tvClock.setTextColor(white);
 
         // Restaurar iconos
         ImageView ivBandIndicator = mActivity.findViewById(R.id.ivBandIndicator);

@@ -1870,6 +1870,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
+    public void switchToFmAudio() {
+        Log.d(TAG, "switchToFmAudio requested");
+        enforceAudioChannelRecovery();
+    }
+
+    public void switchToAndroidAudio() {
+        Log.d(TAG, "switchToAndroidAudio requested");
+        returnAudioChannel();
+    }
+
     public boolean isOnlineStreamingActive() {
         return mIsOnlineStreamingActive;
     }

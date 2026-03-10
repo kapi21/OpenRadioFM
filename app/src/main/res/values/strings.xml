@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalización Premium</string>
@@ -32,22 +32,25 @@
     <string name="app_options">Opciones de la App</string>
     <string name="night_mode_auto">Modo Noche Automático</string>
     <string name="save_history">Guardar Historial de Emisoras</string>
-    <string name="enable_gestures_beta">Habilitar Gestos (Swipe) (beta)</string>
+    <string name="enable_gestures_beta" translatable="false">Gestos (Obsoleto)</string>
     <string name="online_logos">Logos Online</string>
-    <string name="status_bar_v2">Barra de Estado (Layout 2)</string>
-    <string name="status_bar_enabled">✅ Barra de estado activada (Layout 2)</string>
-    <string name="status_bar_disabled">❌ Barra de estado desactivada (Layout 2)</string>
+    <string name="status_bar_v2">Mostrar Barra de Estado</string>
+    <string name="status_bar_enabled">✅ Barra de estado activada</string>
+    <string name="status_bar_disabled">❌ Barra de estado desactivada</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Modo Noche Automático activado</string>
     <string name="night_mode_disabled">❌ Modo Noche Automático desactivado</string>
     <string name="history_enabled">✅ Historial de emisoras activado</string>
     <string name="history_disabled">❌ Historial de emisoras desactivado</string>
-    <string name="gestures_enabled">✅ Gestos de deslizamiento activados</string>
-    <string name="gestures_disabled">❌ Gestos de deslizamiento desactivados</string>
+    <string name="gestures_enabled" translatable="false">Gestos desactivados</string>
+    <string name="gestures_disabled" translatable="false">Gestos desactivados</string>
     <string name="logos_online_enabled">✅ Logos online activados</string>
     <string name="logos_online_disabled">❌ Logos online desactivados</string>
-    <string name="night_mode_manual_blocked">Desactiva Modo Noche Automático para elegir skin manualmente</string>
+    <string name="night_mode_manual_blocked">Desactiva el Modo Noche Automático para elegir skin manualmente</string>
+    <string name="auto_hide_controls">Ocultar controles automáticamente</string>
+    <string name="auto_hide_enabled">✅ Ocultar controles activado</string>
+    <string name="auto_hide_disabled">❌ Ocultar controles desactivado</string>
     
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">💾 Guardar/Cargar Favoritos</string>
@@ -79,6 +82,9 @@
     <string name="language_ukrainian">Українська</string>
     <string name="language_serbian">Srpski</string>
     <string name="language_french">Français</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_italian">Italiano</string>
     <string name="language_chinese">中文 (简体)</string>
     <string name="language_japanese">日本語</string>
     <string name="language_changed">✅ Idioma cambiado a %s</string>
@@ -93,11 +99,12 @@
     <string name="enable_am_band">Habilitar Banda AM</string>
     <string name="radio_engine">Motor de Radio</string>
     <string name="engine_auto">Automático (Recomendado)</string>
-    <string name="engine_k706">Vento / HCN (K706)</string>
+    <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
     <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
     <string name="engine_mtk">MediaTek Genérico</string>
     <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">MediaTek 8259 / 8667</string>
     <string name="engine_standard">Android Estándar</string>
     <string name="am_band_enabled">✅ Banda AM habilitada</string>
     <string name="am_band_disabled">❌ Banda AM deshabilitada</string>
@@ -169,6 +176,9 @@
     <string name="af_list_scanning">AF_LIST.......: [SCANNING]</string>
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favoritos restablecidos correctamente</string>
+    <string name="logo_mode_label">Modo Logo Superior</string>
+    <string name="logo_mode_car">Logo del Coche</string>
+    <string name="logo_mode_clock">Reloj Digital</string>
     <string name="history_cleared">Historial borrado</string>
     <string name="my_favorites">Mis Favoritos</string>
 </resources>

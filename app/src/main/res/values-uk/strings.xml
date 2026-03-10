@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenRadioFM v.4.7 Beta Server</string>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
     
     
     <string name="premium_customization">Преміум Кастомізація</string>
@@ -46,6 +46,9 @@
     <string name="logos_online_enabled">✅ Онлайн логотипи увімкнено</string>
     <string name="logos_online_disabled">❌ Онлайн логотипи вимкнено</string>
     <string name="night_mode_manual_blocked">Вимкніть автоматичний нічний режим, щоб вибрати тему вручну</string>
+    <string name="auto_hide_controls">Автоматичне приховування керування</string>
+    <string name="auto_hide_enabled">✅ Авто-приховування увімкнено</string>
+    <string name="auto_hide_disabled">❌ Авто-приховування вимкнено</string>
     
     
     <string name="save_load_favorites">💾 Зберегти/Завантажити Вибране</string>
@@ -75,6 +78,13 @@
     <string name="language_russian">Російська</string>
     <string name="language_romanian">Румунська</string>
     <string name="language_ukrainian">Українська</string>
+    <string name="language_serbian">Srpski</string>
+    <string name="language_french">Français</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_chinese">中文 (简体)</string>
+    <string name="language_japanese">日本語</string>
     <string name="language_changed">✅ Мову змінено на %s</string>
     <string name="about_openradio">ℹ️ Про OpenRadioFM</string>
     <string name="touch_to_change">Торкніться, щоб змінити</string>
@@ -84,11 +94,12 @@
     <string name="enable_am_band">Увімкнути АМ Діапазон</string>
     <string name="radio_engine">Двигун Радіо</string>
     <string name="engine_auto">Автоматично (Рекомендовано)</string>
-    <string name="engine_k706">Vento / HCN (K706)</string>
+    <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
     <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
     <string name="engine_mtk">MediaTek (Загальний)</string>
     <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">MediaTek 8259 / 8667</string>
     <string name="engine_standard">Android Стандарт</string>
     <string name="am_band_enabled">✅ АМ діапазон увімкнено</string>
     <string name="am_band_disabled">❌ АМ діапазон вимкнено</string>
@@ -141,4 +152,4 @@
     <string name="provider_both">Комбінований (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Зробити внесок у спільноту (HD логотипи)</string>
     <string name="contrib_cloud_desc">Автоматично надсилати частоту та PI-код місцевих станцій для покращення глобальної бази даних.</string>
-<string name="status_bar_v2">Рядок стану (Layout 2)</string><string name="status_bar_enabled">✅ Рядок стану увімкнено</string><string name="status_bar_disabled">❌ Рядок стану вимкнено</string><string name="edit_station_name">Змінити назву радіостанції</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Пошук наступної...</string><string name="scanning">Сканування...</string><string name="scan_completed">Сканування завершено</string><string name="identifying_rds">Визначення радіостанції (RDS)...</string><string name="version">Версія %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДІО : %1$s</string><string name="freq_no_service">FREQ: НЕМАЄ_СЕРВІСУ\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ПОМИЛКА_ЧИТАННЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМАЄ_СЕРВІСУ</string><string name="sqi_error_read">SQI_INDEX.....: ПОМИЛКА_ЧИТАННЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНУВАННЯ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Вибране успішно скинуто</string><string name="history_cleared">Історію очищено</string><string name="my_favorites">Моє вибране</string></resources>
+<string name="status_bar_v2">Показати рядок стану</string><string name="status_bar_enabled">✅ Рядок стану увімкнено</string><string name="status_bar_disabled">❌ Рядок стану вимкнено</string><string name="edit_station_name">Змінити назву радіостанції</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Пошук наступної...</string><string name="scanning">Сканування...</string><string name="scan_completed">Сканування завершено</string><string name="identifying_rds">Визначення радіостанції (RDS)...</string><string name="version">Версія %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДІО : %1$s</string><string name="freq_no_service">FREQ: НЕМАЄ_СЕРВІСУ\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ПОМИЛКА_ЧИТАННЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМАЄ_СЕРВІСУ</string><string name="sqi_error_read">SQI_INDEX.....: ПОМИЛКА_ЧИТАННЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНУВАННЯ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Вибране успішно скинуто</string><string name="history_cleared">Історію очищено</string><string name="my_favorites">Моє вибране</string></resources>

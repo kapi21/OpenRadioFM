@@ -13,7 +13,10 @@ import android.widget.ImageView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions;
 import com.example.openradiofm.R;
+import com.bumptech.glide.request.target.CustomTarget;
+import com.bumptech.glide.request.transition.Transition;
 
 import java.io.File;
 
@@ -179,11 +182,23 @@ public class LogoManager {
                         ivMainLogo.setVisibility(View.GONE);
                     } else {
                         ivMainLogo.setVisibility(View.VISIBLE);
-                        Glide.with(mActivity)
-                                .load(cachedUrl)
-                                .transition(DrawableTransitionOptions.withCrossFade())
-                                .into(ivMainLogo);
                     }
+                    
+                    Glide.with(mActivity)
+                            .asBitmap()
+                            .load(cachedUrl)
+                            .transition(BitmapTransitionOptions.withCrossFade())
+                            .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
+                                @Override
+                                public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                                    if (ivMainLogo != null) ivMainLogo.setImageBitmap(resource);
+                                    if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
+                                        mActivity.mSimpleLayoutManager.updateLogo(resource);
+                                    }
+                                }
+                                @Override
+                                public void onLoadCleared(android.graphics.drawable.Drawable placeholder) {}
+                            });
                 }
                 updateDynamicBackground(cachedUrl);
             }
@@ -200,11 +215,23 @@ public class LogoManager {
                                     ivMainLogo.setVisibility(View.GONE);
                                 } else {
                                     ivMainLogo.setVisibility(View.VISIBLE);
-                                    Glide.with(mActivity)
-                                            .load(url)
-                                            .transition(DrawableTransitionOptions.withCrossFade())
-                                            .into(ivMainLogo);
                                 }
+                                
+                                Glide.with(mActivity)
+                                        .asBitmap()
+                                        .load(url)
+                                        .transition(BitmapTransitionOptions.withCrossFade())
+                                        .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
+                                            @Override
+                                            public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                                                if (ivMainLogo != null) ivMainLogo.setImageBitmap(resource);
+                                                if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
+                                                    mActivity.mSimpleLayoutManager.updateLogo(resource);
+                                                }
+                                            }
+                                            @Override
+                                            public void onLoadCleared(android.graphics.drawable.Drawable placeholder) {}
+                                        });
                             }
                             updateDynamicBackground(url);
                         }
@@ -214,6 +241,9 @@ public class LogoManager {
                         if (ivMainLogo != null) {
                             applyFallbackLogo(ivMainLogo);
                             if (mActivity.mIsV3) ivMainLogo.setVisibility(View.GONE);
+                            if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
+                                mActivity.mSimpleLayoutManager.setDefaultState();
+                            }
                         }
                         updateDynamicBackground(null);
                     }

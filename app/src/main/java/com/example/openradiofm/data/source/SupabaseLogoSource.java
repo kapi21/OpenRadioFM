@@ -3,7 +3,11 @@ package com.example.openradiofm.data.source;
 import com.example.openradiofm.data.source.network.SupabaseApi;
 import com.example.openradiofm.data.source.network.SupabaseClient;
 import com.example.openradiofm.data.source.network.model.SupabaseLogoResponse;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -13,6 +17,7 @@ import retrofit2.Response;
 public class SupabaseLogoSource {
     private final SupabaseApi api;
     private final String apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjaXF4dmZ2b2hjYWlhcXFydmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MjExNDcsImV4cCI6MjA4ODE5NzE0N30.kE5W3_qHMWMc1nKQQQn_lMb9NXOu6kFjEL5glpIhswM";
+    private final String storageUrl = "https://hciqxvfvohcaiaqqrvdq.supabase.co/storage/v1/object/public/logos/";
 
     public SupabaseLogoSource() {
         this.api = SupabaseClient.getApi();
@@ -86,14 +91,40 @@ public class SupabaseLogoSource {
 
     /**
      * V16.2: Envía o actualiza los datos de una emisora en el servidor centralizado.
+     * V18.5: Añadido soporte para Storage y UserId.
      */
-    public void upsertLogoData(String piCode, String rdsName, int freqKHz, String logoUrl, String streamUrl) {
+    public void upsertLogoData(android.content.Context context, String piCode, String rdsName, int freqKHz, String logoUrl, String streamUrl) {
         if (logoUrl == null || logoUrl.isEmpty()) return;
 
         new Thread(() -> {
             notifyActivity(true);
             try {
-                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqKHz, logoUrl, streamUrl);
+                String finalLogoUrl = logoUrl;
+                String deviceId = android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+
+                // Si el logo es local, primero lo subimos al Storage de Supabase
+                if (logoUrl.startsWith("file://")) {
+                    String localPath = logoUrl.substring(7);
+                    File file = new File(localPath);
+                    if (file.exists()) {
+                        String fileName = (piCode != null ? piCode : (rdsName != null ? rdsName.replaceAll("[^a-zA-Z0-9]", "") : "station")) 
+                                + "_" + freqKHz + ".png";
+                        
+                        RequestBody requestBody = RequestBody.create(MediaType.parse("image/png"), file);
+                        Call<Void> uploadCall = api.uploadLogoFile(apiKey, "Bearer " + apiKey, fileName, requestBody);
+                        Response<Void> uploadRes = uploadCall.execute();
+                        
+                        if (uploadRes.isSuccessful() || uploadRes.code() == 409) { // 409 duplicated is okay for us
+                            finalLogoUrl = storageUrl + fileName;
+                            android.util.Log.d("SupabaseLogoSource", "UPLOAD SUCCESS: " + finalLogoUrl);
+                        } else {
+                            android.util.Log.e("SupabaseLogoSource", "UPLOAD FAILED: " + uploadRes.code());
+                            return; // No seguimos si falla la subida de la imagen
+                        }
+                    }
+                }
+
+                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqKHz, finalLogoUrl, streamUrl, deviceId);
                 // V16.2: Añadido on_conflict para evitar duplicados. Preferimos ps_name si PI es nulo.
                 // V17.5: Evitar subir nombres genéricos o demasiado cortos que ensucian la base
                 if (piCode == null && (rdsName == null || rdsName.length() < 3 || rdsName.equals("BUSCANDO") || rdsName.contains("..."))) {
@@ -109,9 +140,6 @@ public class SupabaseLogoSource {
                     android.util.Log.d("SupabaseLogoSource", "UPSERT SUCCESS: " + rdsName + " (" + freqKHz + ")");
                 } else {
                     android.util.Log.e("SupabaseLogoSource", "UPSERT FAILED: Code=" + response.code() + " Message=" + response.message());
-                    if (response.errorBody() != null) {
-                        android.util.Log.e("SupabaseLogoSource", "Error Body: " + response.errorBody().string());
-                    }
                 }
             } catch (Exception e) {
                 android.util.Log.e("SupabaseLogoSource", "Error upserting logo: " + e.getMessage());

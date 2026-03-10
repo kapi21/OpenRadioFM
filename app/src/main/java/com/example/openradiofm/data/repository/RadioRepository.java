@@ -337,7 +337,7 @@ public class RadioRepository {
                 final String fName = finalName;
                 final String fPath = logoPath;
                 // Intentamos subir si es un logo de archivo (no nulo) o al menos tenemos la info RDS
-                logoExecutor.submit(() -> supabaseSource.upsertLogoData(fPi, fName, freqKHz, "file://" + fPath, null));
+                logoExecutor.submit(() -> supabaseSource.upsertLogoData(mContext, fPi, fName, freqKHz, "file://" + fPath, null));
             }
         } else {
             android.util.Log.d("RadioLogos", "NOT FOUND LOCAL");
@@ -360,7 +360,12 @@ public class RadioRepository {
             }
             pendingRequests.add(cacheKey);
 
-            // V16.3: Evitar colas infinitas si ya tenemos 3 hilos en curso para esta frecuencia
+            // V18.6: Guarda de seguridad para evitar RejectedExecutionException si el executor ya se cerró
+            if (logoExecutor == null || logoExecutor.isShutdown()) {
+                pendingRequests.remove(cacheKey);
+                return station;
+            }
+
             logoExecutor.submit(() -> {
                 try {
                     String country = getCountryCode();
@@ -539,7 +544,7 @@ public class RadioRepository {
                     .getBoolean("pref_logos_online", false);
             if (onlineAfterDownload) {
                 String pi = mPrefs.getString("PI_" + freqKHz, null);
-                supabaseSource.upsertLogoData(pi, rdsName, freqKHz, urlString, null);
+                supabaseSource.upsertLogoData(mContext, pi, rdsName, freqKHz, urlString, null);
             }
 
             return destFile.getAbsolutePath();
@@ -585,6 +590,12 @@ public class RadioRepository {
         if (pendingRequests.contains(streamCacheKey)) return;
         pendingRequests.add(streamCacheKey);
         
+        // V18.6: Guarda de seguridad para evitar crash si el executor se cierra en mitad de la petición
+        if (logoExecutor == null || logoExecutor.isShutdown()) {
+            pendingRequests.remove(streamCacheKey);
+            return;
+        }
+
         final String stationNameForLambda = finalName;
         logoExecutor.submit(() -> {
             try {
