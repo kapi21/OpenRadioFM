@@ -1917,7 +1917,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 TextView tv = (TextView) super.getView(position, convertView, parent);
                 String currentLang = mPrefs.getString("app_language", "es");
                 if (languageCodes[position].equals(currentLang)) {
-                    tv.setBackgroundResource(R.drawable.bg_preset_card_p); // Resaltar actual
+                    tv.setBackgroundResource(R.drawable.bg_glass_card_blue); // Resaltar actual
                     tv.setTextColor(android.graphics.Color.WHITE);
                 }
                 return tv;
