@@ -440,6 +440,12 @@ public class MT8163Engine implements RadioEngine {
         if (mAudioManager != null) {
             try {
                 mAudioManager.setParameters("fm_radio_on=1;fm_mute=" + (mute ? "1" : "0"));
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    mAudioManager.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC,
+                            mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
+                } else {
+                    mAudioManager.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Error setMute (AudiorManager fallback)", e);
             }
