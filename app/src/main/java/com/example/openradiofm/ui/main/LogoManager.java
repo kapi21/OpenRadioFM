@@ -17,8 +17,9 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions;
 import com.example.openradiofm.R;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
-
-import com.bumptech.glide.load.resource.bitmap.RoundedCorners;\r\nimport com.bumptech.glide.request.RequestOptions;\r\nimport java.io.File;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
+import java.io.File;
 
 /**
  * V1: Gestor de Logos y Fondos para OpenRadioFM.
@@ -96,6 +97,7 @@ public class LogoManager {
             return;
         }
 
+        File logoFile = new File(LOGO_DIR + "car_logo.png");
         if (logoFile.exists()) {
             iv.setVisibility(View.VISIBLE);
             iv.setImageDrawable(null); // Clear to avoid overlapping during load
@@ -187,7 +189,7 @@ public class LogoManager {
                 if (ivMainLogo != null) {
                     if (mActivity.mIsV3) {
                         ivMainLogo.setVisibility(View.GONE);
-                    if (!mActivity.mIsV3) {
+                    } else {
                         ivMainLogo.setVisibility(View.VISIBLE);
                         ivMainLogo.setImageDrawable(null); // Clear overlap
                     }
@@ -222,7 +224,7 @@ public class LogoManager {
                             if (ivMainLogo != null) {
                                 if (mActivity.mIsV3) {
                                     ivMainLogo.setVisibility(View.GONE);
-                                if (!mActivity.mIsV3) {
+                                } else {
                                     ivMainLogo.setVisibility(View.VISIBLE);
                                     ivMainLogo.setImageDrawable(null); // Clear overlap
                                 }
@@ -261,7 +263,5 @@ public class LogoManager {
                 });
             });
         }
-
-        // V3 ya permite la visualización del logo. Sin restricción aquí.
     }
 }
