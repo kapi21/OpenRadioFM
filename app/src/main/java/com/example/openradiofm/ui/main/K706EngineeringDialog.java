@@ -227,6 +227,10 @@ public class K706EngineeringDialog extends Dialog {
         logEvent("MCU_RDS", msg);
     }
 
+    public void updateSignalQuality(int rssi, int snr) {
+        logEvent("SIG", String.format(Locale.US, "UPDATE_RSSI: %d, SNR: %d", rssi, snr));
+    }
+
     @Override
     public void dismiss() {
         mIsRunning = false;
