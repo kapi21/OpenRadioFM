@@ -358,20 +358,56 @@ public class DialogManager {
         String[] languages = {
                 "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)",
                 "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)",
-                "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)"
+                "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)", "Magyar (HU)"
         };
-        String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr", "zh", "ja" };
+        String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr", "zh", "ja", "hu" };
 
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(R.string.select_language)
-                .setItems(languages, (d, w) -> {
-                    if (w < codes.length) {
-                        mActivity.mPrefs.edit().putString("app_language", codes[w]).apply();
-                        // Almacenamos el cambio de idioma y forzamos el reinicio dinámico de la interfaz
-                        mActivity.recreate();
-                    }
-                }).create();
-        applyPremiumListStyle(dialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        LayoutInflater inflater = LayoutInflater.from(mActivity);
+        View dialogView = inflater.inflate(R.layout.dialog_language_selector, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        android.widget.GridView gvLanguages = dialogView.findViewById(R.id.gvLanguages);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelLanguage);
+
+        // Adaptador simple (V18.6: 2 columnas)
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(mActivity, R.layout.item_language, languages) {
+            @Override
+            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                TextView tv = (TextView) super.getView(position, convertView, parent);
+                String currentLang = mActivity.mPrefs.getString("app_language", "es");
+                if (codes[position].equals(currentLang)) {
+                    tv.setBackgroundResource(R.drawable.bg_glass_card_blue);
+                    tv.setTextColor(Color.WHITE);
+                }
+                return tv;
+            }
+        };
+
+        gvLanguages.setAdapter(adapter);
+        gvLanguages.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedLang = codes[position];
+            String selectedLangName = languages[position];
+
+            mActivity.mPrefs.edit().putString("app_language", selectedLang).apply();
+            mActivity.showStyledToast(String.format(mActivity.getString(R.string.language_changed), selectedLangName));
+
+            dialog.dismiss();
+            mActivity.recreate();
+        });
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.8f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
         dialog.show();
     }
 
