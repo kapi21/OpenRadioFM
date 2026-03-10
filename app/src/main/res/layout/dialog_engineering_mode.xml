@@ -1,37 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#D9000000"
-    android:padding="16dp">
+    android:background="#E6000000"
+    android:padding="24dp">
 
-    <!-- Header: TERMINAL STYLE -->
+    <!-- HEADER: TERMINAL STYLE -->
     <TextView
         android:id="@+id/tvHeader"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="monospace"
-        android:text="> ENGINEERING_MODE_V5.0"
+        android:text="> ENGINEERING_MODE_MATRIX_V5.1"
         android:textColor="#00FF00"
         android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/tvSubHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="monospace"
-        android:text="> ACCESS_GRANTED: ROOT_LEVEL_METRICS"
-        android:textColor="#00FF00"
-        android:textSize="12sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvHeader" />
-
-    <!-- Close Button (X) -->
+    <!-- Close Button -->
     <ImageButton
         android:id="@+id/btnCloseEng"
         android:layout_width="48dp"
@@ -42,388 +30,196 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ====================================================================================== -->
-    <!-- MAIN CONTENT SCROLL VIEW (Metrics & Controls) -->
-    <!-- ====================================================================================== -->
+    <!-- MAIN SCROLLABLE CONTENT -->
     <ScrollView
-        android:id="@+id/scrollMainContent"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        app:layout_constraintTop_toBottomOf="@id/tvSubHeader"
-        app:layout_constraintBottom_toTopOf="@id/tvLogHeader"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@+id/scrollLog"
+        app:layout_constraintTop_toBottomOf="@id/tvHeader">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
-            <!-- GuideLine for 2 Columns -->
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline_vertical_50"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintGuide_percent="0.5" />
-
-            <!-- SECTION 1: RF & SIGNAL (Top Left) -->
+            <!-- SECTION: RADIO TUNER DATA -->
             <TextView
-                android:id="@+id/tvSectionRf"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="monospace"
-                android:text="[ RF_TELEMETRY ]"
-                android:textColor="#FF8E00"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <LinearLayout
-                android:id="@+id/containerRf"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="vertical"
-                app:layout_constraintEnd_toStartOf="@+id/guideline_vertical_50"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvSectionRf">
-
-                <TextView
-                    android:id="@+id/tvSignalQualityIndex"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="SQI_INDEX.....: 100%"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvStereoPilot"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="STEREO_PILOT..: LOCKED (19kHz)"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvTunerMode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="TUNER_MODE....: DX (DISTANT)"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvRssiBar"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:fontFamily="monospace"
-                    android:text="RSSI: [████████░░] -54dBm"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-
-                <!-- Tuner Controls -->
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="8dp">
-
-                    <Button
-                        android:id="@+id/btnTuneDown"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:text="&lt; TUNE"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#000000"
-                        android:backgroundTint="#00FF00" />
-
-                    <Button
-                        android:id="@+id/btnTuneUp"
-                        android:layout_width="0dp"
-                        android:layout_height="40dp"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:text="TUNE &gt;"
-                        android:textSize="12sp"
-                        android:textStyle="bold"
-                        android:textColor="#000000"
-                        android:backgroundTint="#00FF00" />
-                </LinearLayout>
-            </LinearLayout>
-
-            <!-- SECTION 2: RDS DEBUG (Top Right) -->
-            <TextView
-                android:id="@+id/tvSectionRds"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:fontFamily="monospace"
-                android:text="[ RDS_DECODER_RAW ]"
-                android:textColor="#FF8E00"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="@+id/guideline_vertical_50"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <LinearLayout
-                android:id="@+id/containerRds"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="vertical"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="@+id/guideline_vertical_50"
-                app:layout_constraintTop_toBottomOf="@id/tvSectionRds">
-
-                <TextView
-                    android:id="@+id/tvPiCode"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="PI_CODE.......: E230 (HEX)"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvPtyRaw"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="PTY_RAW.......: 10 (POP_MUSIC)"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvRdsSync"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="RDS_SYNC......: STABLE"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-
-                <TextView
-                    android:id="@+id/tvAfList"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="AF_LIST.......: [104.5, 98.2]"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
-            </LinearLayout>
-
-            <!-- SECTION 3: SYSTEM HEALTH (Bottom Full Width) -->
-            <TextView
-                android:id="@+id/tvSectionSys"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:fontFamily="monospace"
-                android:text="[ KAPI_SYSTEM_DIAGNOSTICS ]"
-                android:textColor="#FF8E00"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/containerRf" />
-
-            <LinearLayout
-                android:id="@+id/containerSys"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="vertical"
-                android:background="#1A00FF00"
-                android:padding="8dp"
-                app:layout_constraintTop_toBottomOf="@id/tvSectionSys">
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ RADIO_TUNER_DATA_RAW ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
 
-                <TextView
-                    android:id="@+id/tvServiceLatency"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="SERVICE_LATENCY...: 12ms (OPTIMAL)"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
 
-                <TextView
-                    android:id="@+id/tvMemoryUsage"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="HEAP_MEMORY.......: 14MB / 256MB"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
+                <TextView android:text="SIGNAL_STRENGTH" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvRssiBar" android:text="[-90dBm] ░░░░░░░░░░" style="@style/EngValueStyle"/>
 
-                <TextView
-                    android:id="@+id/tvChipset"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="DETECTED_CHIPSET..: MTK8163_CONSYS_V2"
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
+                <TextView android:text="SIGNAL_QUALITY" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvSignalQualityIndex" android:text="0%" style="@style/EngValueStyle"/>
 
-                <TextView
-                    android:id="@+id/tvDeviceInfo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="DEVICE_INFO.......: ..."
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
+                <TextView android:text="STEREO_STATUS" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvStereoPilot" android:text="MONO" style="@style/EngValueStyle"/>
 
-                <TextView
-                    android:id="@+id/tvRootStatus"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:fontFamily="monospace"
-                    android:text="ROOT_ACCESS.......: CHECKING..."
-                    android:textColor="#00FF00"
-                    android:textSize="12sp" />
+                <TextView android:text="TUNER_MODE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvTunerMode" android:text="DX" style="@style/EngValueStyle"/>
+                
+                <TextView android:text="RADIO_ENGINE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvChipset" android:text="DETECTING..." style="@style/EngValueStyle"/>
+            </GridLayout>
 
-                <!-- FILE SYSTEM & ASSETS -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="--- ASSETS &amp; FILES ---"
-                    android:textColor="#33B5E5"
-                    android:textStyle="bold"
-                    android:typeface="monospace" />
+            <!-- SECTION: RDS DECODER DATA -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ RDS_DECODER_RAW_METRICS ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
 
-                <TextView
-                    android:id="@+id/tvAssetsInfo"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="8dp"
-                    android:text="DIR: ...\nBG: ...\nLOGO: ...\nFAVS: ..."
-                    android:textColor="#99CC00"
-                    android:textSize="12sp"
-                    android:typeface="monospace" />
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
 
-                <!-- DATA MANAGEMENT -->
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:text="--- DATA MANAGEMENT ---"
-                    android:textColor="#FF4444"
-                    android:textStyle="bold"
-                    android:typeface="monospace" />
+                <TextView android:text="PROGRAM_SERVICE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvPsName" android:text="NONE" style="@style/EngValueStyle"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="8dp">
+                <TextView android:text="RADIO_TEXT" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvRtText" android:text="WAITING DATA..." style="@style/EngValueStyle"/>
 
-                    <Button
-                        android:id="@+id/btnResetFavs"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="4dp"
-                        android:text="RESET FAVS"
-                        android:textSize="11sp"
-                        android:textColor="@android:color/black"
-                        android:backgroundTint="#FF8800" />
+                <TextView android:text="PI_CODE (HEX)" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvPiCode" android:text="0000" style="@style/EngValueStyle"/>
 
-                    <Button
-                        android:id="@+id/btnResetHistory"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="4dp"
-                        android:text="RESET HIST"
-                        android:textSize="11sp"
-                        android:textColor="@android:color/black"
-                        android:backgroundTint="#CC0000" />
+                <TextView android:text="PTY_CODE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvPtyRaw" android:text="00" style="@style/EngValueStyle"/>
 
-                </LinearLayout>
-            </LinearLayout>
+                <TextView android:text="SYNC_STATUS" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvRdsSync" android:text="NO_SYNC" style="@style/EngValueStyle"/>
+
+                <TextView android:text="AF_LIST" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvAfList" android:text="EMPTY" style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <!-- SECTION: FILE SYSTEM & ASSETS -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ FILE_SYSTEM_INTEGRITY ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
 
             <TextView
-                android:id="@+id/tvSectionWeb"
-                android:layout_width="wrap_content"
+                android:id="@+id/tvAssetsInfo"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:text="CHECKING /sdcard/RadioLogos..."/>
+
+            <!-- SECTION: SYSTEM METRICS -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ ANDROID_OS_DIAGNOSTICS ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="SERVICE_LATENCY" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvServiceLatency" android:text="0.00ms" style="@style/EngValueStyle"/>
+
+                <TextView android:text="MEMORY_HEAP" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvMemoryUsage" android:text="0MB / 0MB" style="@style/EngValueStyle"/>
+
+                <TextView android:text="DEVICE_MODEL" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvDeviceInfo" android:text="UNKNOWN" style="@style/EngValueStyle"/>
+
+                <TextView android:text="ROOT_LEVEL" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvRootStatus" android:text="CHECKING..." style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <!-- TUNER CONTROLS (MINIMAL) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:layout_marginTop="16dp"
-                android:fontFamily="monospace"
-                android:text="[ WEB_DATA_SERVICES ]"
-                android:textColor="#FF8E00"
-                android:textSize="14sp"
-                android:textStyle="bold"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/containerSys" />
-
-            <LinearLayout
-                android:id="@+id/containerWeb"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:orientation="vertical"
-                android:background="#1A00FF00"
-                android:padding="8dp"
-                app:layout_constraintTop_toBottomOf="@id/tvSectionWeb">
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swLogosOnlineEng"
-                    android:layout_width="match_parent"
+                android:gravity="center">
+                
+                <Button
+                    android:id="@+id/btnTuneDown"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="ONLINE_LOGOS_SYSTEM"
-                    android:textColor="#00FF00"
+                    android:text="&lt;&lt; TUNE"
                     android:fontFamily="monospace"
-                    android:textSize="12sp"
-                    android:thumbTint="#00FF00"
-                    app:trackTint="#3300FF00" />
+                    android:backgroundTint="#003300"
+                    android:textColor="#00FF00"
+                    android:layout_marginEnd="8dp"/>
+
+                <Button
+                    android:id="@+id/btnTuneUp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="TUNE &gt;&gt;"
+                    android:fontFamily="monospace"
+                    android:backgroundTint="#003300"
+                    android:textColor="#00FF00"/>
             </LinearLayout>
-        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </LinearLayout>
     </ScrollView>
-    
 
-    <TextView
-        android:id="@+id/tvLogHeader"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:fontFamily="monospace"
-        android:text="> KERNEL_LOG / LIVE_EVENTS"
-        android:textColor="#00FF00"
-        android:textSize="12sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/scrollLog" />
-
+    <!-- LIVE TERMINAL LOG -->
     <ScrollView
         android:id="@+id/scrollLog"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:background="#33000000"
-        android:padding="4dp"
-        app:layout_constraintBottom_toTopOf="@id/btnExitSystem"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
-
+        android:layout_height="100dp"
+        android:background="#2200FF00"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnExitSystem">
         <TextView
             android:id="@+id/tvTerminalLog"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:text="[INIT] TERMINAL READY..."
+            android:padding="4dp"
             android:textColor="#00FF00"
-            android:textSize="11sp" />
+            android:textSize="10sp"
+            android:fontFamily="monospace"
+            android:text="[KERNEL] SYNC..."/>
     </ScrollView>
 
     <!-- EXIT BUTTON -->
@@ -431,29 +227,10 @@
         android:id="@+id/btnExitSystem"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="[ EXIT SYSTEM ]"
+        android:text="[ TERMINATE_ENGINEERING_SESSION ]"
         android:fontFamily="monospace"
-        android:textStyle="bold"
         android:textColor="#FF0000"
-        android:backgroundTint="#220000" 
-        app:layout_constraintBottom_toTopOf="@+id/tvFooter"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- Footer -->
-    <TextView
-        android:id="@+id/tvFooter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="4dp"
-        android:fontFamily="monospace"
-        android:text="> END_OF_LINE_"
-        android:textColor="#00FF00"
-        android:textSize="10sp"
-        android:alpha="0.5"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" 
-        app:layout_constraintStart_toStartOf="parent"/>
+        android:backgroundTint="#220000"
+        app:layout_constraintBottom_toBottomOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

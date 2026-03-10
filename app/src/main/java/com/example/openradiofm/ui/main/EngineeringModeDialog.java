@@ -1,27 +1,19 @@
 package com.example.openradiofm.ui.main;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.ImageView; 
-import androidx.appcompat.widget.SwitchCompat;
 import android.view.Window;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 
 import com.example.openradiofm.R;
-import com.example.openradiofm.data.model.RadioStation;
-import com.hcn.autoradio.IRadioServiceAPI;
-
 import java.util.Locale;
 import java.io.File;
 import android.widget.Button;
-import android.app.AlertDialog;
-import android.widget.Toast;
 import android.widget.ScrollView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -33,28 +25,24 @@ public class EngineeringModeDialog extends Dialog {
     private Runnable mUpdateRunnable;
     private boolean mIsRunning = false;
 
-    // UI Elements
-    private TextView tvSignalQualityIndex, tvStereoPilot, tvTunerMode, tvRssiBar;
-    private TextView tvPiCode, tvPtyRaw, tvRdsSync, tvAfList;
-    private TextView tvServiceLatency, tvMemoryUsage, tvChipset;
-    private TextView tvDeviceInfo, tvRootStatus;
+    // UI Elements - RF
+    private TextView tvSignalQualityIndex, tvStereoPilot, tvTunerMode, tvRssiBar, tvChipset;
     
-    // File System & Assets
+    // UI Elements - RDS
+    private TextView tvPsName, tvRtText, tvPiCode, tvPtyRaw, tvRdsSync, tvAfList;
+    
+    // UI Elements - System
+    private TextView tvServiceLatency, tvMemoryUsage, tvDeviceInfo, tvRootStatus;
+    
+    // UI Elements - Assets
     private TextView tvAssetsInfo;
-    private Button btnResetFavs, btnResetHistory;
-    private SwitchCompat swLogosOnline;
 
-    // Tuner & Log
-    private Button btnTuneDown, btnTuneUp, btnExitSystem;
+    // Log & Controls
     private TextView tvTerminalLog;
     private ScrollView scrollLog;
     private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
     
-    // State Tracking for Logging
     private int mLastFreq = -1;
-    private String mLastPty = "";
-    private String mLastPi = "";
-    private boolean mLastStereo = false;
 
     public EngineeringModeDialog(MainActivity activity) {
         super(activity);
@@ -73,69 +61,61 @@ public class EngineeringModeDialog extends Dialog {
         }
 
         bindViews();
-        setupCloseButton();
+        setupControls();
         
-        // Start updating
         mIsRunning = true;
-        logEvent("SYS", "ENGINEERING MODE INITIALIZED");
-        logEvent("SYS", "KERNEL ACCESS GRANTED [ROOT_LEVEL]");
+        logEvent("SYS", "ENGINEERING MATRIC INITIALIZED");
+        logEvent("SYS", "MODE: MT8163_DIAGNOSTIC_CLONE");
         startUpdateLoop();
     }
 
     private void bindViews() {
-        // RF Section
+        // RF
         tvSignalQualityIndex = findViewById(R.id.tvSignalQualityIndex);
         tvStereoPilot = findViewById(R.id.tvStereoPilot);
         tvTunerMode = findViewById(R.id.tvTunerMode);
         tvRssiBar = findViewById(R.id.tvRssiBar);
+        tvChipset = findViewById(R.id.tvChipset);
 
-        // RDS Section
+        // RDS
+        tvPsName = findViewById(R.id.tvPsName);
+        tvRtText = findViewById(R.id.tvRtText);
         tvPiCode = findViewById(R.id.tvPiCode);
         tvPtyRaw = findViewById(R.id.tvPtyRaw);
         tvRdsSync = findViewById(R.id.tvRdsSync);
         tvAfList = findViewById(R.id.tvAfList);
 
-        // System Section
+        // System
         tvServiceLatency = findViewById(R.id.tvServiceLatency);
         tvMemoryUsage = findViewById(R.id.tvMemoryUsage);
-        tvChipset = findViewById(R.id.tvChipset);
         tvDeviceInfo = findViewById(R.id.tvDeviceInfo);
         tvRootStatus = findViewById(R.id.tvRootStatus);
         
-        // Assets & Data
+        // Assets
         tvAssetsInfo = findViewById(R.id.tvAssetsInfo);
-        btnResetFavs = findViewById(R.id.btnResetFavs);
-        btnResetHistory = findViewById(R.id.btnResetHistory);
         
-        // Tuner & Log
-        btnTuneDown = findViewById(R.id.btnTuneDown);
-        btnTuneUp = findViewById(R.id.btnTuneUp);
-        btnExitSystem = findViewById(R.id.btnExitSystem);
+        // Log
         tvTerminalLog = findViewById(R.id.tvTerminalLog);
         scrollLog = findViewById(R.id.scrollLog);
-        swLogosOnline = findViewById(R.id.swLogosOnlineEng);
-
-        if (swLogosOnline != null) {
-            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", false));
-            swLogosOnline.setOnCheckedChangeListener((v, checked) -> {
-                mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
-                logEvent("SET", "LOGOS_ONLINE > " + (checked ? "ON" : "OFF"));
-            });
-        }
-
-        setupDataButtons();
-        setupTunerButtons();
-        setupExitButton();
-
-        // V4.6: Selector de motor de radio (movido desde Settings)
-        setupEngineSelector();
     }
 
-    private void setupCloseButton() {
-        View btnClose = findViewById(R.id.btnCloseEng);
-        if (btnClose != null) {
-            btnClose.setOnClickListener(v -> dismiss());
-        }
+    private void setupControls() {
+        findViewById(R.id.btnCloseEng).setOnClickListener(v -> dismiss());
+        findViewById(R.id.btnExitSystem).setOnClickListener(v -> dismiss());
+        
+        findViewById(R.id.btnTuneDown).setOnClickListener(v -> {
+            if (mActivity.mEngine != null) {
+                mActivity.mEngine.stepDown();
+                logEvent("RF", "STEP_DOWN_CMD");
+            }
+        });
+        
+        findViewById(R.id.btnTuneUp).setOnClickListener(v -> {
+            if (mActivity.mEngine != null) {
+                mActivity.mEngine.stepUp();
+                logEvent("RF", "STEP_UP_CMD");
+            }
+        });
     }
 
     private void startUpdateLoop() {
@@ -143,282 +123,99 @@ public class EngineeringModeDialog extends Dialog {
             @Override
             public void run() {
                 if (!mIsRunning || !isShowing()) return;
-
                 updateMetrics();
-                checkAssets(); // V5.0: Check Files
-                mHandler.postDelayed(this, 1000); // 1Hz refresh for files is enough
+                checkAssets();
+                mHandler.postDelayed(this, 1000);
             }
         };
         mHandler.post(mUpdateRunnable);
     }
 
     private void updateMetrics() {
-        if (mActivity == null || mActivity.mRadioService == null) {
-            tvSignalQualityIndex.setText(getContext().getString(R.string.sqi_no_service));
-            return;
-        }
+        if (mActivity == null) return;
 
         try {
-            // 1. RF Telemetry
-            int currentFreq = mActivity.mRadioService.getCurrentFreq();
-            if (currentFreq != mLastFreq) {
-                logEvent("RF", String.format(Locale.US, "TUNED > %.2f MHz", currentFreq / 1000.0f));
-                mLastFreq = currentFreq;
+            // 1. RF
+            int freq = (mActivity.mEngine != null) ? mActivity.mEngine.getCurrentFreq() : 0;
+            if (freq != mLastFreq) {
+                logEvent("RF", String.format(Locale.US, "FREQ_CHANGED -> %.2f MHz", freq / 1000.0f));
+                mLastFreq = freq;
             }
 
-            boolean isStereo = mActivity.mRadioService.IsStereo();
-            if (isStereo != mLastStereo) {
-                logEvent("AUD", isStereo ? "STEREO PILOT DETECTED" : "MONO SIGNAL");
-                mLastStereo = isStereo;
-            }
-            boolean isLocal = mActivity.mRadioService.IsDxLocal();
-            // Note: RSSI/SNR are not exposed in IRadioServiceAPI publicly. 
-            // We infer them or use the calculated quality if available.
-            // Assuming we added calculateSignalQuality to MainActivity or have access to mHasRdsLock
-            boolean rdsLock = mActivity.mHasRdsLock;
-
-            // Inferred SQI (0-100%)
-            int sqi = 0;
-            if (rdsLock && isStereo) sqi = 100;
-            else if (rdsLock) sqi = 75;
-            else if (isStereo) sqi = 60;
-            else sqi = 30;
+            boolean isStereo = (mActivity.mEngine != null) && mActivity.mEngine.isStereo();
+            boolean isDx = (mActivity.mEngine != null) && !mActivity.mEngine.isDxLocal();
             
-            tvSignalQualityIndex.setText(String.format(Locale.US, "SQI_INDEX.....: %d%%", sqi));
-            tvStereoPilot.setText(String.format("STEREO_PILOT..: %s (%s)", isStereo ? "LOCKED" : "NO_PILOT", isStereo ? "19kHz" : "---"));
-            tvTunerMode.setText(String.format("TUNER_MODE....: %s", isLocal ? "LOC (LOCAL)" : "DX (DISTANT)"));
-
-            // Simulated RSSI Bar based on SQI
-            int bars = sqi / 10;
+            tvSignalQualityIndex.setText(mActivity.mHasRdsLock ? "85% (RDS_LOCK)" : "40% (LOW)");
+            tvStereoPilot.setText(isStereo ? "LOCKED (19kHz)" : "NO_PILOT");
+            tvTunerMode.setText(isDx ? "DX (DISTANT)" : "LOC (LOCAL)");
+            
+            // RSSI Simulado
+            int rssi = mActivity.mHasRdsLock ? -60 : -95;
             StringBuilder bar = new StringBuilder("[");
-            for (int i=0; i<10; i++) bar.append(i < bars ? "█" : "░");
+            int bars = (rssi + 110) / 10;
+            for(int i=0; i<10; i++) bar.append(i < bars ? "█" : "░");
             bar.append("]");
-            // Fake dBm estimate based on visual quality
-            int dbm = -100 + (sqi / 2); // -100 to -50 range approx
-            tvRssiBar.setText(String.format("RSSI: %s %ddBm (EST)", bar.toString(), dbm));
-
-            // 2. RDS Debug
-            // We need access to RDS data. Accessing HiddenRadioPlayer if possible.
-            String pty = mActivity.mCurrentPty;
-            if (pty != null && !pty.equals(mLastPty)) {
-                logEvent("RDS", "PTY UPDATE > " + pty);
-                mLastPty = pty;
-            }
+            tvRssiBar.setText(String.format(Locale.US, "[%ddBm] %s", rssi, bar.toString()));
             
-            tvPtyRaw.setText(String.format("PTY_RAW.......: %s", pty != null ? pty : "WAITING..."));
+            tvChipset.setText(mActivity.mEngine != null ? mActivity.mEngine.getEngineName().toUpperCase() : "N/A");
 
-            RadioStation s = mActivity.mRepository.getStationInfo(mActivity.mLastFreq, null);
-            String pi = "----"; 
-            if (rdsLock) pi = "SYNC_OK"; // SimplifiedPI
-            // Since we don't have raw PI easily accessible without deeper hooks, using Sync status changes
-             
-            tvPiCode.setText(String.format("PI_CODE.......: %s", pi));
-            tvRdsSync.setText(String.format("RDS_SYNC......: %s", rdsLock ? "LOCKED" : "SEARCHING"));
-            tvAfList.setText(getContext().getString(R.string.af_list_scanning));
+            // 2. RDS
+            TextView mainRdsName = mActivity.findViewById(R.id.tvRdsName);
+            TextView mainRdsInfo = mActivity.findViewById(R.id.tvRdsInfo);
+            
+            String ps = (mainRdsName != null) ? mainRdsName.getText().toString() : "N/A";
+            String rt = (mainRdsInfo != null) ? mainRdsInfo.getText().toString() : "WAITING...";
+            
+            tvPsName.setText(ps);
+            tvRtText.setText(rt.length() > 30 ? rt.substring(0, 27) + "..." : rt);
+            tvPiCode.setText("WAITING...");
+            tvPtyRaw.setText(mActivity.mCurrentPty != null ? mActivity.mCurrentPty : "00");
+            tvRdsSync.setText(mActivity.mHasRdsLock ? "LOCKED" : "SEARCHING");
+            tvAfList.setText("ENABLE: " + (mActivity.mEngine != null && mActivity.mEngine.isAfEnabled()));
 
-            // 3. System Diagnostics
-            long maxMem = Runtime.getRuntime().maxMemory();
-            long totalMem = Runtime.getRuntime().totalMemory();
-            long freeMem = Runtime.getRuntime().freeMemory();
-            long usedMem = (totalMem - freeMem) / 1024 / 1024;
-            
-            tvMemoryUsage.setText(String.format(Locale.US, "HEAP_MEMORY.......: %dMB / %dMB", usedMem, maxMem / 1024 / 1024));
-            
-            // Latency (Ping service)
+            // 3. System
             long start = System.nanoTime();
-            mActivity.mRadioService.getCurrentFreq();
-            long end = System.nanoTime();
-            double latency = (end - start) / 1000000.0;
-            
-            tvServiceLatency.setText(String.format(Locale.US, "SERVICE_LATENCY...: %.2fms", latency));
-            
-            // Chipset - hardcoded detection based on investigation
-            tvChipset.setText(getContext().getString(R.string.chipset_mtk));
+            if (mActivity.mEngine != null) mActivity.mEngine.getCurrentFreq();
+            double latency = (System.nanoTime() - start) / 1000000.0;
+            tvServiceLatency.setText(String.format(Locale.US, "%.2f ms", latency));
 
-            // 4. Extended System Info (User Request)
-            String device = android.os.Build.DEVICE; // e.g. 8163
-            String model = android.os.Build.MODEL;   // e.g. KAPI_21
-            String board = android.os.Build.BOARD;   // e.g. full_8163_pie_v2
+            long total = Runtime.getRuntime().totalMemory() / 1024 / 1024;
+            long used = (total - (Runtime.getRuntime().freeMemory() / 1024 / 1024));
+            tvMemoryUsage.setText(used + "MB / " + total + "MB");
             
-            tvDeviceInfo.setText(String.format("DEVICE_INFO.......: %s / %s (%s)", model.toUpperCase(), device.toUpperCase(), board.toUpperCase()));
-            
-            // Root Check
-            boolean isRooted = checkRootMethod1() || checkRootMethod2();
-            tvRootStatus.setText(String.format("ROOT_ACCESS.......: %s", isRooted ? "GRANTED (SU FOUND)" : "DENIED (NO SU)"));
-            if (isRooted) {
-                 tvRootStatus.setTextColor(Color.parseColor("#00FF00")); // Green
-            } else {
-                 tvRootStatus.setTextColor(Color.parseColor("#FF0000")); // Red
-            }
+            tvDeviceInfo.setText(android.os.Build.MODEL.toUpperCase());
+            tvRootStatus.setText(new File("/system/xbin/su").exists() ? "GRANTED" : "DENIED");
 
         } catch (Exception e) {
-            e.printStackTrace();
-            tvSignalQualityIndex.setText(getContext().getString(R.string.sqi_error_read));
+            logEvent("ERR", e.getMessage());
         }
     }
 
-    /**
-     * V5.0: Asset & File System Check
-     */
     private void checkAssets() {
-        if (tvAssetsInfo == null) return;
-        
-        File radioLogosDir = new File("/sdcard/RadioLogos");
-        File bgFilePng = new File(radioLogosDir, "background.png");
-        File bgFileJpg = new File(radioLogosDir, "background.jpg");
-        File carLogo = new File(radioLogosDir, "car_logo.png");
-        
-        // Count .fav files
-        int favCount = 0;
-        if (radioLogosDir.exists() && radioLogosDir.isDirectory()) {
-            File[] files = radioLogosDir.listFiles((dir, name) -> name.endsWith(".fav"));
-            if (files != null) favCount = files.length;
-        }
-
+        File dir = new File("/sdcard/RadioLogos");
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("DIR...........: %s\n", radioLogosDir.exists() ? "OK (/sdcard/RadioLogos)" : "MISSING"));
-        sb.append(String.format("BG_IMAGE......: %s\n", (bgFilePng.exists() || bgFileJpg.exists()) ? "FOUND" : "NOT_FOUND"));
-        sb.append(String.format("CAR_LOGO......: %s\n", carLogo.exists() ? "FOUND" : "NOT_FOUND"));
-        sb.append(String.format("SAVED_FAVS....: %d FILES", favCount));
+        sb.append("DIR_STATUS....: ").append(dir.exists() ? "OK" : "MISSING").append("\n");
+        
+        File bg = new File(dir, "background.png");
+        if (!bg.exists()) bg = new File(dir, "background.jpg");
+        sb.append("BG_FILE.......: ").append(bg.exists() ? "FOUND (" + (bg.length()/1024) + "KB)" : "NOT_FOUND").append("\n");
+        
+        File car = new File(dir, "car_logo.png");
+        sb.append("CAR_LOGO......: ").append(car.exists() ? "FOUND" : "NOT_FOUND").append("\n");
+        
+        File[] favs = dir.listFiles((d, name) -> name.endsWith(".fav"));
+        sb.append("FAV_OBJECTS...: ").append(favs != null ? favs.length : 0).append(" FILES");
         
         tvAssetsInfo.setText(sb.toString());
     }
 
-    /**
-     * V5.0: Data Management Buttons
-     */
-    private void setupDataButtons() {
-        if (btnResetFavs != null) {
-            btnResetFavs.setOnClickListener(v -> showConfirmationDialog(
-                "RESET FAVORITES", 
-                "Delete all saved .fav files and clear current presets?",
-                () -> resetFavorites()
-            ));
-        }
-        
-        if (btnResetHistory != null) {
-            btnResetHistory.setOnClickListener(v -> showConfirmationDialog(
-                "RESET HISTORY", 
-                "Clear station history?",
-                () -> resetHistory()
-            ));
-        }
-    }
-
-    /**
-     * V4.6: Selector de motor de radio (movido desde Settings al Engineering Menu)
-     */
-    private void setupEngineSelector() {
-        Button btnEngine = new Button(getContext());
-        int idx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
-        String[] engines = { "Auto", "HCN", "MTK", "Standard", "TS" };
-        String name = (idx >= 0 && idx < engines.length) ? engines[idx] : "Auto";
-        btnEngine.setText(getContext().getString(R.string.radio_engine_label, name));
-        btnEngine.setTextColor(Color.parseColor("#00FF00"));
-        btnEngine.setBackgroundColor(Color.parseColor("#1a1a2e"));
-        btnEngine.setAllCaps(false);
-        btnEngine.setTextSize(12);
-        btnEngine.setOnClickListener(v -> {
-            mActivity.showEngineSelector();
-            dismiss();
-        });
-
-        // Insertarlo antes del botón Exit
-        if (btnExitSystem != null && btnExitSystem.getParent() instanceof android.view.ViewGroup) {
-            android.view.ViewGroup parent = (android.view.ViewGroup) btnExitSystem.getParent();
-            int exitIdx = parent.indexOfChild(btnExitSystem);
-            parent.addView(btnEngine, exitIdx);
-        }
-    }
-
-    private void setupTunerButtons() {
-        if (btnTuneDown != null) {
-            btnTuneDown.setOnClickListener(v -> {
-                if (mActivity != null && mActivity.mRadioService != null) {
-                    try {
-                        mActivity.mRadioService.onManualDownEvent();
-                        logEvent("CMD", "STEP DOWN <");
-                    } catch (Exception e) { e.printStackTrace(); }
-                }
-            });
-        }
-        if (btnTuneUp != null) {
-            btnTuneUp.setOnClickListener(v -> {
-                if (mActivity != null && mActivity.mRadioService != null) {
-                    try {
-                        mActivity.mRadioService.onManualUpEvent();
-                        logEvent("CMD", "STEP UP >");
-                    } catch (Exception e) { e.printStackTrace(); }
-                }
-            });
-        }
-    }
-
-    private void setupExitButton() {
-        if (btnExitSystem != null) {
-            btnExitSystem.setOnClickListener(v -> dismiss());
-        }
-    }
-
     private void logEvent(String tag, String msg) {
         if (tvTerminalLog == null) return;
-        String time = timeFormat.format(new Date());
-        String entry = String.format("[%s] %s: %s\n", time, tag, msg);
-        
+        String entry = String.format("[%s] %s: %s\n", timeFormat.format(new Date()), tag, msg);
         mHandler.post(() -> {
             tvTerminalLog.append(entry);
             if (scrollLog != null) scrollLog.fullScroll(View.FOCUS_DOWN);
         });
-    }
-
-    private void resetFavorites() {
-        // 1. Delete .fav files
-        File radioLogosDir = new File("/sdcard/RadioLogos");
-        if (radioLogosDir.exists()) {
-            File[] files = radioLogosDir.listFiles((dir, name) -> name.endsWith(".fav"));
-            if (files != null) {
-                for (File f : files) f.delete();
-            }
-        }
-        
-        // 2. Clear Preferences (RadioPresets)
-        if (mActivity != null && mActivity.mPrefs != null) {
-            mActivity.mPrefs.edit().clear().apply();
-            mActivity.refreshPresetButtons(); // Reload UI
-            Toast.makeText(getContext(), getContext().getString(R.string.favorites_reset_complete), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void resetHistory() {
-        if (mActivity != null && mActivity.mPrefs != null) {
-            // Remove specific key "pref_station_history"
-            mActivity.mPrefs.edit().remove("pref_station_history").apply();
-            Toast.makeText(getContext(), getContext().getString(R.string.history_cleared), Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void showConfirmationDialog(String title, String message, Runnable onConfirm) {
-        new AlertDialog.Builder(getContext())
-            .setTitle(title)
-            .setMessage(message)
-            .setPositiveButton("YES", (d, w) -> onConfirm.run())
-            .setNegativeButton("NO", null)
-            .show();
-    }
-    
-    // Root Check Method 1: Check build tags
-    private boolean checkRootMethod1() {
-        String buildTags = android.os.Build.TAGS;
-        return buildTags != null && buildTags.contains("test-keys");
-    }
-
-    // Root Check Method 2: Check su binary
-    private boolean checkRootMethod2() {
-        String[] paths = { "/system/app/Superuser.apk", "/sbin/su", "/system/bin/su", "/system/xbin/su", "/data/local/xbin/su", "/data/local/bin/su", "/system/sd/xbin/su", "/system/bin/failsafe/su", "/data/local/su", "/su/bin/su" };
-        for (String path : paths) {
-            if (new File(path).exists()) return true;
-        }
-        return false;
     }
 
     @Override
