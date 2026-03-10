@@ -188,12 +188,26 @@ public class MTK8259_8667RadioManager {
 
     public void setMute(boolean mute) {
         try {
-            if (mTsCommon != null) {
-                // Csaba sugiere usar Mute() y IsMute()
-                if (mute != mTsCommon.IsMute()) {
-                    mTsCommon.Mute();
+            // V18.6: Usar AudioManager de Android para evitar que el MainUI de Topway
+            // bloquee la barra de volumen o deje el mute de hardware persistente.
+            android.media.AudioManager am = (android.media.AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, 
+                        mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
+                } else {
+                    am.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
                 }
+                Log.d(TAG, "Mute set to " + mute + " via AudioManager");
             }
+            
+            // Opcional: También avisamos al hardware sin forzar el Mute() de TsCommon si este falla
+            // pero lo dejamos comentado para seguir la recomendación del usuario de usar modo Android.
+            /* 
+            if (mTsCommon != null && mute != mTsCommon.IsMute()) {
+                mTsCommon.Mute();
+            }
+            */
         } catch (Throwable t) {
             Log.e(TAG, "Mute failed", t);
         }

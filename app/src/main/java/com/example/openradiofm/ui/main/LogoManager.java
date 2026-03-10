@@ -96,9 +96,9 @@ public class LogoManager {
             return;
         }
 
-        File logoFile = new File(LOGO_DIR + "car_logo.png");
         if (logoFile.exists()) {
             iv.setVisibility(View.VISIBLE);
+            iv.setImageDrawable(null); // Clear to avoid overlapping during load
             Glide.with(mActivity)
                     .load(logoFile)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -125,6 +125,7 @@ public class LogoManager {
         if (ivCarLogo != null) {
             if (logoExists) {
                 ivCarLogo.setVisibility(View.VISIBLE);
+                ivCarLogo.setImageDrawable(null); // Clear overlap
                 Glide.with(mActivity)
                         .load(logoFile)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
@@ -146,6 +147,10 @@ public class LogoManager {
      * Actualiza el fondo dinámico (difuminado).
      */
     public void updateDynamicBackground(String logoUrl) {
+        // V18.6: El Simple Layout gestiona su propio fondo dinámico basado en paletas.
+        // Evitamos que LogoManager interfiera para no mezclar diseños.
+        if (mActivity.mIsSimpleLayout) return;
+
         ImageView ivDynamicBackground = mActivity.findViewById(R.id.ivDynamicBackground);
         if (ivDynamicBackground == null) return;
 
@@ -182,8 +187,9 @@ public class LogoManager {
                 if (ivMainLogo != null) {
                     if (mActivity.mIsV3) {
                         ivMainLogo.setVisibility(View.GONE);
-                    } else {
+                    if (!mActivity.mIsV3) {
                         ivMainLogo.setVisibility(View.VISIBLE);
+                        ivMainLogo.setImageDrawable(null); // Clear overlap
                     }
                     
                     Glide.with(mActivity)
@@ -216,8 +222,9 @@ public class LogoManager {
                             if (ivMainLogo != null) {
                                 if (mActivity.mIsV3) {
                                     ivMainLogo.setVisibility(View.GONE);
-                                } else {
+                                if (!mActivity.mIsV3) {
                                     ivMainLogo.setVisibility(View.VISIBLE);
+                                    ivMainLogo.setImageDrawable(null); // Clear overlap
                                 }
                                 
                                 Glide.with(mActivity)

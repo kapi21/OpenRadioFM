@@ -290,20 +290,26 @@ public class MTK8259_8667Engine implements RadioEngine {
             mCallback.onRdsName(ps);
         }
 
-        // PTY / Category Text (Csaba suggestion: use GetCategory())
+        // PTY / Category Text (Csaba suggestion: swap or check all)
         String cat = mManager.getCategorySafe();
-        if (cat != null) cat = cat.trim();
+        String ptyStr = mManager.getPtyStrSafe();
         
-        if (cat != null && !cat.isEmpty()) {
+        if (cat != null) cat = cat.trim();
+        if (ptyStr != null) ptyStr = ptyStr.trim();
+        
+        // V18.6: En muchas unidades Topway, getPtyStr devuelve el tipo de programa (PTY) 
+        // y getCategory devuelve el texto dinámico o viceversa. Probamos ambos.
+        if (ptyStr != null && !ptyStr.isEmpty()) {
+            mCallback.onRdsPty(ptyStr);
+        } else if (cat != null && !cat.isEmpty()) {
             mCallback.onRdsPty(cat);
         }
         
-        // RT Tradicional
-        String rt = mManager.getPtyStrSafe();
-        if (rt != null) rt = rt.trim();
-        if (rt != null && !rt.isEmpty() && !rt.equals(mLastRt)) {
-            mLastRt = rt;
-            mCallback.onRdsText(rt);
+        // RT Tradicional (Usamos el que no sea PTY si es posible)
+        // Por ahora mantenemos cat como fallback si rt es nulo
+        if (cat != null && !cat.isEmpty() && !cat.equals(mLastRt) && !cat.equals(ptyStr)) {
+            mLastRt = cat;
+            mCallback.onRdsText(cat);
         }
     }
 }

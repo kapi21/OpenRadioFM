@@ -67,24 +67,26 @@ public class NightModeManager {
      * 2. Fallback: rango horario configurable (por defecto 19h-7h).
      */
     public boolean isNightTime() {
-        // 1. Check System UI Mode
-        int nightModeFlags = mActivity.getResources().getConfiguration().uiMode
-                & Configuration.UI_MODE_NIGHT_MASK;
-        if (nightModeFlags == Configuration.UI_MODE_NIGHT_YES) {
-            return true;
-        }
-
-        // 2. Fallback: Time Based (configurable, default 19h-7h)
+        // 1. Time Based (configurable, default 19h-7h) - HIGHER PRIORITY to follow user prefs
         int startHour = mPrefs.getInt("pref_night_start", 19);
         int endHour = mPrefs.getInt("pref_night_end", 7);
         int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
+        
+        boolean isTimeRangeNight;
         if (startHour > endHour) {
             // Overnight range (e.g. 19-7)
-            return (hour >= startHour || hour < endHour);
+            isTimeRangeNight = (hour >= startHour || hour < endHour);
         } else {
             // Same-day range (e.g. 22-23)
-            return (hour >= startHour && hour < endHour);
+            isTimeRangeNight = (hour >= startHour && hour < endHour);
         }
+        
+        if (isTimeRangeNight) return true;
+
+        // 2. Fallback: Check System UI Mode (ILL cable trigger)
+        int nightModeFlags = mActivity.getResources().getConfiguration().uiMode
+                & Configuration.UI_MODE_NIGHT_MASK;
+        return (nightModeFlags == Configuration.UI_MODE_NIGHT_YES);
     }
 
     /**
