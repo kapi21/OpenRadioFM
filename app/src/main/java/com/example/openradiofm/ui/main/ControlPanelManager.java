@@ -125,6 +125,10 @@ public class ControlPanelManager {
 
             btnBand.setOnLongClickListener(v -> {
                 if (mActivity.mEngine != null && mActivity.mEngine.getEngineName().equals("MTK8259_8667")) {
+                    boolean amEnabled = mActivity.mPrefs.getBoolean("pref_enable_am", true);
+                    if (!amEnabled) {
+                        return true;
+                    }
                     mActivity.animateButton(v);
                     mActivity.mEngine.toggleRdsFeature(99);
                     return true;

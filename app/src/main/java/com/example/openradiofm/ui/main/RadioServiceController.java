@@ -142,10 +142,10 @@ public class RadioServiceController {
                     targetIdx = 4;
                     break; // TopWay TS
                 case 6:
-                    targetIdx = 2; // Standard
+                    targetIdx = 7; // Mediatek 8259/8667
                     break; 
                 case 7:
-                    targetIdx = 7;
+                    targetIdx = 2; // Standard
                     break; // Mediatek 8259/8667
                 default:
                     targetIdx = -1;

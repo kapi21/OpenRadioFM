@@ -220,7 +220,11 @@ public class DialogManager {
                 // Csaba: Si se desactiva AM estando en AM, saltar a FM para evitar cuelgues
                 if (!checked && (mActivity.mCurrentBand == 3 || mActivity.mCurrentBand == 4)) {
                     if (mActivity.mEngine != null) {
-                        mActivity.mEngine.bandCycle(); // Forzar salto fuera de AM
+                        if (mActivity.mEngine.getEngineName().equals("MTK8259_8667")) {
+                            mActivity.mEngine.toggleRdsFeature(99);
+                        } else {
+                            mActivity.mEngine.bandCycle(); // Forzar salto fuera de AM
+                        }
                     }
                 }
             });
