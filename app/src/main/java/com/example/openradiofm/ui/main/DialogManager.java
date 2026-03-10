@@ -460,16 +460,18 @@ public class DialogManager {
         } catch (Exception ignored) {
         }
 
-        // Crédito Icons8 con Link
+        // Créditos con Links
         TextView tvIcons8 = dialog.findViewById(R.id.tvIcons8Credit);
+        TextView tvTdtchannels = dialog.findViewById(R.id.tvTdtchannelsCredit);
+
         if (tvIcons8 != null) {
             String text = "Icons by <a href='https://icons8.com/'>Icons8</a>";
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                tvIcons8.setText(Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY));
-            } else {
-                tvIcons8.setText(Html.fromHtml(text));
-            }
-            tvIcons8.setMovementMethod(LinkMovementMethod.getInstance());
+            applyHtmlLink(tvIcons8, text);
+        }
+
+        if (tvTdtchannels != null) {
+            String text = "Streaming & Logos by <a href='https://www.tdtchannels.com'>TDTchannels</a>";
+            applyHtmlLink(tvTdtchannels, text);
         }
 
         View btnClose = dialog.findViewById(R.id.btnClose);
@@ -480,6 +482,15 @@ public class DialogManager {
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
 
         dialog.show();
+    }
+
+    private void applyHtmlLink(TextView textView, String html) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            textView.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY));
+        } else {
+            textView.setText(Html.fromHtml(html));
+        }
+        textView.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
     public void showEngineSelector() {

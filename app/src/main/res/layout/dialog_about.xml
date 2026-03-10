@@ -127,11 +127,12 @@
                 android:layout_gravity="center_horizontal"/>
 
             <TextView
+                android:id="@+id/tvTdtchannelsCredit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textColor="#AAAAAA"
                 android:textSize="13sp"
-                android:text="Streaming by www.tdtchannels.com"
+                android:text="Streaming &amp; Logos by TDTchannels"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"/>
         </LinearLayout>

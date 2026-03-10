@@ -5,7 +5,7 @@
     <string name="premium_customization">Prémium Testreszabás</string>
     <string name="theme_colors">Téma Színek</string>
     <string name="typography">Tipográfia</string>
-    <string name="background_mode">Háttér Mód</string>
+    <string name="background_mode">🖼️ Háttér Mód</string>
     <string name="accent_color">Kiemelő Szín</string>
     <string name="select_typography">Tipográfia kiválasztása</string>
     <string name="select_bg_mode">Háttér Mód kiválasztása</string>
@@ -70,7 +70,7 @@
     <string name="station_history">📜 Adóelőzmények</string>
     
     <!-- V4.0: Language Selector -->
-    <string name="app_language">App Nyelve</string>
+    <string name="app_language">🌐 App Nyelve</string>
     <string name="select_language">Nyelv kiválasztása</string>
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
@@ -95,7 +95,7 @@
     <!-- V4.3: Hardware Settings -->
     <string name="hardware_settings">⚙️ Hardver Beállítások</string>
     <string name="enable_am_band">AM Sáv Engedélyezése</string>
-    <string name="radio_engine">Rádió Motor</string>
+    <string name="radio_engine">⚙️ Rádió Motor</string>
     <string name="engine_auto">Automatikus (Ajánlott)</string>
     <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -149,7 +149,7 @@
     <string name="pty_alarm">Riasztás</string>
 
     <!-- V16.2: Logo Providers -->
-    <string name="logo_provider">Logó Szolgáltató</string>
+    <string name="logo_provider">📡 Logó Szolgáltató</string>
     <string name="provider_supabase">Supabase (HD Közösség)</string>
     <string name="provider_radiobrowser">Radio-Browser (Tartalék)</string>
     <string name="provider_both">Kombinált (Supabase > Web)</string>
@@ -174,7 +174,7 @@
     <string name="af_list_scanning">AF_LIST.......: [SZKENNELÉS]</string>
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Kedvencek sikeresen alaphelyzetbe állítva</string>
-    <string name="logo_mode_label">Felső Logó Mód</string>
+    <string name="logo_mode_label">🏎️ Felső Logó Mód</string>
     <string name="logo_mode_car">Autó Logó</string>
     <string name="logo_mode_clock">Digitális Óra</string>
     <string name="history_cleared">Előzmények törölve</string>

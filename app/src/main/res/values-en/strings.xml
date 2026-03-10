@@ -5,7 +5,7 @@
     <string name="premium_customization">Premium Customization</string>
     <string name="theme_colors">Theme Colors</string>
     <string name="typography">Typography</string>
-    <string name="background_mode">Background Mode</string>
+    <string name="background_mode">🖼️ Background Mode</string>
     <string name="accent_color">Accent Color</string>
     <string name="select_typography">Select Typography</string>
     <string name="select_bg_mode">Select Background Mode</string>
@@ -70,7 +70,7 @@
     <string name="station_history">📜 Station History</string>
     
     <!-- V4.0: Language Selector -->
-    <string name="app_language">App Language</string>
+    <string name="app_language">🌐 App Language</string>
     <string name="select_language">Select Language</string>
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
@@ -92,7 +92,7 @@
     <!-- V4.3: Hardware Settings -->
     <string name="hardware_settings">⚙️ Hardware Settings</string>
     <string name="enable_am_band">Enable AM Band</string>
-    <string name="radio_engine">Radio Engine</string>
+    <string name="radio_engine">⚙️ Radio Engine</string>
     <string name="engine_auto">Automatic (Recommended)</string>
     <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -147,7 +147,7 @@
     <string name="pty_alarm">Alarm</string>
 
     <!-- V16.2: Logo Providers -->
-    <string name="logo_provider">Logo Provider</string>
+    <string name="logo_provider">📡 Logo Provider</string>
     <string name="provider_supabase">Supabase (HD Community)</string>
     <string name="provider_radiobrowser">Radio-Browser (Fallback)</string>
     <string name="provider_both">Combined (Supabase > Web)</string>
@@ -180,7 +180,7 @@
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favorites reset correctly</string>
     <string name="history_cleared">History cleared</string>
-    <string name="logo_mode_label">Top Logo Mode</string>
+    <string name="logo_mode_label">🏎️ Top Logo Mode</string>
     <string name="logo_mode_car">Car Logo</string>
     <string name="logo_mode_clock">Digital Clock</string>
     <string name="my_favorites">My Favorites</string>

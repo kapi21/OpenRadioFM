@@ -5,7 +5,7 @@
     <string name="premium_customization">Personalización Premium</string>
     <string name="theme_colors">Colores del Tema</string>
     <string name="typography">Tipografía</string>
-    <string name="background_mode">Modo de Fondo</string>
+    <string name="background_mode">🖼️ Modo de Fondo</string>
     <string name="accent_color">Color de Acento</string>
     <string name="select_typography">Seleccionar Tipografía</string>
     <string name="select_bg_mode">Modo de Fondo</string>
@@ -73,7 +73,7 @@
     <string name="station_history">📜 Historial de Emisoras</string>
     
     <!-- V4.0: Language Selector -->
-    <string name="app_language">Idioma de la App</string>
+    <string name="app_language">🌐 Idioma de la App</string>
     <string name="select_language">Seleccionar Idioma</string>
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
@@ -98,7 +98,7 @@
     <!-- V4.3: Hardware Settings -->
     <string name="hardware_settings">⚙️ Ajustes de Hardware</string>
     <string name="enable_am_band">Habilitar Banda AM</string>
-    <string name="radio_engine">Motor de Radio</string>
+    <string name="radio_engine">⚙️ Motor de Radio</string>
     <string name="engine_auto">Automático (Recomendado)</string>
     <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -152,7 +152,7 @@
     <string name="pty_alarm">Alarma</string>
 
     <!-- V16.2: Logo Providers -->
-    <string name="logo_provider">Proveedor de Logos</string>
+    <string name="logo_provider">📡 Proveedor de Logos</string>
     <string name="provider_supabase">Supabase (Comunidad HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Reserva)</string>
     <string name="provider_both">Combinado (Supabase > Web)</string>
@@ -177,7 +177,7 @@
     <string name="af_list_scanning">AF_LIST.......: [SCANNING]</string>
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favoritos restablecidos correctamente</string>
-    <string name="logo_mode_label">Modo Logo Superior</string>
+    <string name="logo_mode_label">🏎️ Modo Logo Superior</string>
     <string name="logo_mode_car">Logo del Coche</string>
     <string name="logo_mode_clock">Reloj Digital</string>
     <string name="history_cleared">Historial borrado</string>

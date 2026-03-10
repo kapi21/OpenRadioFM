@@ -4,7 +4,7 @@
     <string name="premium_customization">Personnalisation Premium</string>
     <string name="theme_colors">Couleurs du Thème</string>
     <string name="typography">Typographie</string>
-    <string name="background_mode">Mode Arrière-plan</string>
+    <string name="background_mode">🖼️ Mode Arrière-plan</string>
     <string name="accent_color">Couleur d\'Accentuation</string>
     <string name="select_typography">Sélectionner Typographie</string>
     <string name="select_bg_mode">Sélectionner Mode Arrière-plan</string>
@@ -53,7 +53,7 @@
     <string name="error_opening_settings">Impossible d\'ouvrir les Paramètres</string>
     <string name="history_empty">Historique vide</string>
     <string name="station_history">📜 Historique des Stations</string>
-    <string name="app_language">Langue de l\'App</string>
+    <string name="app_language">🌐 Langue de l\'App</string>
     <string name="select_language">Sélectionner la Langue</string>
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
@@ -75,7 +75,7 @@
     <string name="touch_to_change">Appuyer pour changer</string>
     <string name="hardware_settings">⚙️ Paramètres Matériels</string>
     <string name="enable_am_band">Activer la Bande AM</string>
-    <string name="radio_engine">Moteur Radio</string>
+    <string name="radio_engine">⚙️ Moteur Radio</string>
     <string name="engine_auto">Automatique (Recommandé)</string>
     <string name="engine_k706">Vento / HCN (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -94,7 +94,7 @@
     <string name="night_schedule_updated">✅ Horaire mis à jour: %1$s - %2$s</string>
 
     
-    <string name="logo_provider">Fournisseur de Logos</string>
+    <string name="logo_provider">📡 Fournisseur de Logos</string>
     <string name="provider_supabase">Supabase (Communauté HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Réserve)</string>
     <string name="provider_both">Combiné (Supabase &gt; Web)</string>
@@ -105,7 +105,7 @@
     <string name="status_bar_disabled">❌ Barre d\'état désactivée</string>
 <string name="pty_none">Aucun PTY</string><string name="pty_news">Nouvelles</string><string name="pty_current_affairs">Actualités</string><string name="pty_information">Information</string><string name="pty_sport">Sports</string><string name="pty_education">Éducation</string><string name="pty_drama">Drame</string><string name="pty_culture">Culture</string><string name="pty_science">Science</string><string name="pty_varied">Varié</string><string name="pty_pop">Musique Pop</string><string name="pty_rock">Musique Rock</string><string name="pty_easy_listening">Écoute Facile</string><string name="pty_light_classical">Classique Légère</string><string name="pty_serious_classical">Classique Sérieuse</string><string name="pty_other_music">Autre Musique</string><string name="pty_weather">Météo</string><string name="pty_finance">Finances</string><string name="pty_children">Enfants</string><string name="pty_social">Social</string><string name="pty_religion">Religion</string><string name="pty_phone_in">Appels entrants</string><string name="pty_travel">Voyages</string><string name="pty_leisure">Loisirs</string><string name="pty_jazz">Jazz</string><string name="pty_country">Country</string><string name="pty_national">National</string><string name="pty_oldies">Vieux succès</string><string name="pty_folk">Folk</string><string name="pty_documentary">Documentaire</string><string name="pty_alarm_test">Test d\'alarme</string><string name="pty_alarm">Alarme</string><string name="edit_station_name">Modifier le nom de la station</string><string name="frequency_label">Fréquence : %1$s MHz</string><string name="searching_next">Recherche du suivant...</string><string name="scanning">Numérisation...</string><string name="scan_completed">Numérisation terminée</string><string name="identifying_rds">Identification de la station (RDS)...</string><string name="version">Version %1$s</string><string name="radio_engine_label">⚙ MOTEUR RADIO : %1$s</string><string name="freq_no_service">FREQ: AUCUN_SERVICE\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ERREUR_LECTURE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: AUCUN_SERVICE</string><string name="sqi_error_read">SQI_INDEX.....: ERREUR_LECTURE</string><string name="af_list_scanning">AF_LIST.......: [NUMÉRISATION]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoris réinitialisés correctement</string>
     <string name="history_cleared">Historique effacé</string>
-    <string name="logo_mode_label">Mode Logo Supérieur</string>
+    <string name="logo_mode_label">🏎️ Mode Logo Supérieur</string>
     <string name="logo_mode_car">Logo de la Voiture</string>
     <string name="logo_mode_clock">Horloge Numérique</string>
     <string name="my_favorites">Mes Favoris</string>
