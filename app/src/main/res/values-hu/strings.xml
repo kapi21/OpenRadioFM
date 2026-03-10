@@ -1,0 +1,182 @@
+<resources>
+    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
+    
+    <!-- Premium Menu Strings -->
+    <string name="premium_customization">Prémium Testreszabás</string>
+    <string name="theme_colors">Téma Színek</string>
+    <string name="typography">Tipográfia</string>
+    <string name="background_mode">Háttér Mód</string>
+    <string name="accent_color">Kiemelő Szín</string>
+    <string name="select_typography">Tipográfia kiválasztása</string>
+    <string name="select_bg_mode">Háttér Mód kiválasztása</string>
+    <string name="close">Bezárás</string>
+    <string name="select_skin">🎨 Téma kiválasztása</string>
+    <string name="select_font">🔤 Tipográfia kiválasztása</string>
+    <string name="font_applied">Betűtípus alkalmazva</string>
+    <string name="bg_mode_updated">Háttér mód frissítve</string>
+    
+    <!-- Background Modes -->
+    <string name="bg_pure_black">Tiszta Fekete</string>
+    <string name="bg_fixed_image">Rögzített kép (background.png)</string>
+    <string name="bg_dynamic_logo">Adó logója (Dinamikus)</string>
+
+    <!-- Font Names -->
+    <string name="font_default">Alapértelmezett (Rendszer)</string>
+    <string name="font_bebas">Robotikus (Bebas)</string>
+    <string name="font_digital">Digitális (LED)</string>
+    <string name="font_modern">Modern (Inter)</string>
+    <string name="font_orbitron">Futurisztikus (Orbitron)</string>
+    <string name="font_formula1">Verseny (Formula 1)</string>
+    
+    <!-- V4.0: App Options -->
+    <string name="app_options">App Opciók</string>
+    <string name="night_mode_auto">Automatikus Éjszakai Mód</string>
+    <string name="save_history">Adóelőzmények mentése</string>
+    <string name="online_logos">Online Logók</string>
+    <string name="status_bar_v2">Állapotsor megjelenítése</string>
+    <string name="status_bar_enabled">✅ Állapotsor engedélyezve</string>
+    <string name="status_bar_disabled">❌ Állapotsor letiltva</string>
+    
+    <!-- V4.0: Feedback Messages -->
+    <string name="night_mode_enabled">✅ Automatikus Éjszakai Mód engedélyezve</string>
+    <string name="night_mode_disabled">❌ Automatikus Éjszakai Mód letiltva</string>
+    <string name="history_enabled">✅ Adóelőzmények engedélyezve</string>
+    <string name="history_disabled">❌ Adóelőzmények letiltva</string>
+    <string name="logos_online_enabled">✅ Online logók engedélyezve</string>
+    <string name="logos_online_disabled">❌ Online logók letiltva</string>
+    <string name="night_mode_manual_blocked">Deaktiválja az automatikus éjszakai módot a téma manuális kiválasztásához</string>
+    <string name="auto_hide_controls">Vezérlők automatikus elrejtése</string>
+    <string name="auto_hide_enabled">✅ Automatikus elrejtés engedélyezve</string>
+    <string name="auto_hide_disabled">❌ Automatikus elrejtés letiltva</string>
+    
+    <!-- V4.0: Save/Load Favorites -->
+    <string name="save_load_favorites">💾 Kedvencek Mentése/Betöltése</string>
+    <string name="save_favorites">💾 Kedvencek Mentése</string>
+    <string name="load_favorites">📂 Kedvencek Betöltése</string>
+    <string name="select_favorites_file">📂 Kedvencek fájl kiválasztása</string>
+    <string name="cancel">Mégse</string>
+    <string name="favorites_saved">✅ Kedvencek mentve: %s</string>
+    <string name="favorites_loaded" formatted="false">✅ %d kedvenc betöltve innen: %s</string>
+    <string name="error_saving_favorites">❌ Hiba a mentéskor: %s</string>
+    <string name="error_loading_favorites">❌ Hiba a betöltéskor: %s</string>
+    <string name="folder_not_found">❌ RadioLogos mappa nem található</string>
+    <string name="no_favorites_files">❌ Nem található kedvencek fájl</string>
+    
+    <!-- V4.0: Android Settings -->
+    <string name="error_opening_settings">Beállítások megnyitása sikertelen</string>
+    
+    <!-- V4.0: History -->
+    <string name="history_empty">Előzmények üresek</string>
+    <string name="station_history">📜 Adóelőzmények</string>
+    
+    <!-- V4.0: Language Selector -->
+    <string name="app_language">App Nyelve</string>
+    <string name="select_language">Nyelv kiválasztása</string>
+    <string name="language_spanish">Español</string>
+    <string name="language_english">English</string>
+    <string name="language_russian">Русский</string>
+    <string name="language_romanian">Română</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="language_serbian">Srpski</string>
+    <string name="language_french">Français</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_portuguese">Português</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_chinese">中文 (简体)</string>
+    <string name="language_japanese">日本語</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="language_changed">✅ Nyelv átállítva: %s</string>
+    <string name="about_openradio">ℹ️ OpenRadioFM névjegye</string>
+    <string name="about_info_header">INFORMÁCIÓ</string>
+    <string name="about_dev_by">Fejlesztette</string>
+    <string name="about_tech_details">Technikai Részletek</string>
+    <string name="touch_to_change">Érintse meg a változtatáshoz</string>
+
+    <!-- V4.3: Hardware Settings -->
+    <string name="hardware_settings">⚙️ Hardver Beállítások</string>
+    <string name="enable_am_band">AM Sáv Engedélyezése</string>
+    <string name="radio_engine">Rádió Motor</string>
+    <string name="engine_auto">Automatikus (Ajánlott)</string>
+    <string name="engine_k706">HCN / Vento (K706)</string>
+    <string name="engine_qs6">NWD / Nanis (QS6)</string>
+    <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
+    <string name="engine_mtk">Általános MediaTek</string>
+    <string name="engine_ts">TopWay (MainUI)</string>
+    <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_standard">Android Standard</string>
+    <string name="am_band_enabled">✅ AM sáv engedélyezve</string>
+    <string name="am_band_disabled">❌ AM sáv letiltva</string>
+    <string name="engine_changed">✅ Rádió motor átállítva: %s</string>
+
+    <!-- V4.5: Night Mode Schedule -->
+    <string name="night_schedule">Éjszakai Mód Időbeosztás</string>
+    <string name="night_start">Kezdés</string>
+    <string name="night_end">Vége</string>
+    <string name="night_schedule_updated">✅ Időbeosztás frissítve: %1$s - %2$s</string>
+
+    <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
+    <string name="pty_none">Nincs PTY</string>
+    <string name="pty_news">Hírek</string>
+    <string name="pty_current_affairs">Aktuális ügyek</string>
+    <string name="pty_information">Információ</string>
+    <string name="pty_sport">Sport</string>
+    <string name="pty_education">Oktatás</string>
+    <string name="pty_drama">Dráma</string>
+    <string name="pty_culture">Kultúra</string>
+    <string name="pty_science">Tudomány</string>
+    <string name="pty_varied">Vegyes</string>
+    <string name="pty_pop">Pop zene</string>
+    <string name="pty_rock">Rock zene</string>
+    <string name="pty_easy_listening">Könnyűzene</string>
+    <string name="pty_light_classical">Könnyű klasszikus</string>
+    <string name="pty_serious_classical">Komolyzene</string>
+    <string name="pty_other_music">Egyéb zene</string>
+    <string name="pty_weather">Időjárás</string>
+    <string name="pty_finance">Pénzügyek</string>
+    <string name="pty_children">Gyermekműsorok</string>
+    <string name="pty_social">Társadalmi</string>
+    <string name="pty_religion">Vallás</string>
+    <string name="pty_phone_in">Betelefonálós</string>
+    <string name="pty_travel">Utazás</string>
+    <string name="pty_leisure">Szabadidő</string>
+    <string name="pty_jazz">Jazz</string>
+    <string name="pty_country">Country</string>
+    <string name="pty_national">Nemzeti</string>
+    <string name="pty_oldies">Nosztalgia</string>
+    <string name="pty_folk">Folk</string>
+    <string name="pty_documentary">Dokumentumfilm</string>
+    <string name="pty_alarm_test">Riasztás teszt</string>
+    <string name="pty_alarm">Riasztás</string>
+
+    <!-- V16.2: Logo Providers -->
+    <string name="logo_provider">Logó Szolgáltató</string>
+    <string name="provider_supabase">Supabase (HD Közösség)</string>
+    <string name="provider_radiobrowser">Radio-Browser (Tartalék)</string>
+    <string name="provider_both">Kombinált (Supabase > Web)</string>
+    <string name="contrib_cloud">Közösségi Hozzájárulás (HD Logók)</string>
+    <string name="contrib_cloud_desc">Automatikus frekvencia és PI kód küldése az adatbázis javítása érdekében.</string>
+
+    <!-- App Status & Dialogs -->
+    <string name="edit_station_name">Állomásnév szerkesztése</string>
+    <string name="frequency_label">Frekvencia: %1$s MHz</string>
+    <string name="searching_next">Következő keresése...</string>
+    <string name="scanning">Szkennelés...</string>
+    <string name="scan_completed">Szkennelés szüneteltetve / befejezve</string>
+    <string name="identifying_rds">Állomás azonosítása (RDS)...</string>
+    <string name="version">Verzió %1$s</string>
+    
+    <!-- Engineering Mode -->
+    <string name="radio_engine_label">⚙ RÁDIÓ MOTOR: %1$s</string>
+    <string name="freq_no_service">FREQ: NINCS_SZERVIZ\nBAND: ---\nFLAGS: ---</string>
+    <string name="freq_error_read">FREQ: HIBA_OLVASÁSKOR\nBAND: ---\n%1$s</string>
+    <string name="sqi_no_service">SQI_INDEX.....: NINCS_SZERVIZ</string>
+    <string name="sqi_error_read">SQI_INDEX.....: HIBA_OLVASÁSKOR</string>
+    <string name="af_list_scanning">AF_LIST.......: [SZKENNELÉS]</string>
+    <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
+    <string name="favorites_reset_complete">Kedvencek sikeresen alaphelyzetbe állítva</string>
+    <string name="logo_mode_label">Felső Logó Mód</string>
+    <string name="logo_mode_car">Autó Logó</string>
+    <string name="logo_mode_clock">Digitális Óra</string>
+    <string name="history_cleared">Előzmények törölve</string>
+    <string name="my_favorites">Kedvenceim</string>
+</resources>

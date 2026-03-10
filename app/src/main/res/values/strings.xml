@@ -87,6 +87,7 @@
     <string name="language_italian">Italiano</string>
     <string name="language_chinese">中文 (简体)</string>
     <string name="language_japanese">日本語</string>
+    <string name="language_hungarian">Magyar</string>
     <string name="language_changed">✅ Idioma cambiado a %s</string>
     <string name="about_openradio">ℹ️ Acerca de OpenRadioFM</string>
     <string name="about_info_header">INFORMACIÓN</string>

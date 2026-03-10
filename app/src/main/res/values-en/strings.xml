@@ -81,6 +81,7 @@
     <string name="language_german">German</string>
     <string name="language_portuguese">Portuguese</string>
     <string name="language_italian">Italian</string>
+    <string name="language_hungarian">Magyar</string>
     <string name="language_changed">✅ Language changed to %s</string>
     <string name="about_openradio">ℹ️ About OpenRadioFM</string>
     <string name="about_info_header">INFORMATION</string>

@@ -1892,12 +1892,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 getString(R.string.language_romanian),
                 getString(R.string.language_ukrainian),
                 getString(R.string.language_serbian),
-                getString(R.string.language_french),
                 getString(R.string.language_chinese),
-                getString(R.string.language_japanese)
+                getString(R.string.language_japanese),
+                getString(R.string.language_hungarian)
         };
 
-        String[] languageCodes = { "es", "en", "ru", "ro", "uk", "sr", "fr", "zh", "ja" };
+        String[] languageCodes = { "es", "en", "ru", "ro", "uk", "sr", "fr", "zh", "ja", "hu" };
         String currentLang = mPrefs.getString("app_language", "es");
 
         int selectedIndex = 0;
@@ -1969,6 +1969,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 break;
             case "it":
                 langName = getString(R.string.language_italian);
+                break;
+            case "hu":
+                langName = getString(R.string.language_hungarian);
                 break;
             case "zh":
                 langName = getString(R.string.language_chinese);
