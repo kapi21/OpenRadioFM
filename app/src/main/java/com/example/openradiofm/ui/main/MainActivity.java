@@ -1892,6 +1892,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 getString(R.string.language_romanian),
                 getString(R.string.language_ukrainian),
                 getString(R.string.language_serbian),
+                getString(R.string.language_french),
                 getString(R.string.language_chinese),
                 getString(R.string.language_japanese),
                 getString(R.string.language_hungarian)
