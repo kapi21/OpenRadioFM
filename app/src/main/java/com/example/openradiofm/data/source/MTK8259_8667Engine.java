@@ -299,17 +299,31 @@ public class MTK8259_8667Engine implements RadioEngine {
         
         // V18.6: En muchas unidades Topway, getPtyStr devuelve el tipo de programa (PTY) 
         // y getCategory devuelve el texto dinámico o viceversa. Probamos ambos.
+        String finalPty = null;
         if (ptyStr != null && !ptyStr.isEmpty()) {
-            mCallback.onRdsPty(ptyStr);
+            finalPty = ptyStr;
         } else if (cat != null && !cat.isEmpty()) {
-            mCallback.onRdsPty(cat);
+            finalPty = cat;
+        }
+
+        if (finalPty != null) {
+            mCallback.onRdsPty(finalPty);
         }
         
-        // RT Tradicional (Usamos el que no sea PTY si es posible)
-        // Por ahora mantenemos cat como fallback si rt es nulo
-        if (cat != null && !cat.isEmpty() && !cat.equals(mLastRt) && !cat.equals(ptyStr)) {
-            mLastRt = cat;
-            mCallback.onRdsText(cat);
+        // RT Tradicional (Evitar mostrar el PTY en el campo de texto RDS)
+        // Solo enviamos 'cat' a onRdsText si es diferente del PTY detectado.
+        String rt = null;
+        if (cat != null && !cat.isEmpty() && !cat.equals(finalPty)) {
+            rt = cat;
+        }
+
+        if (rt != null && !rt.equals(mLastRt)) {
+            mLastRt = rt;
+            mCallback.onRdsText(rt);
+        } else if (rt == null && mLastRt != null) {
+            // Si el texto ha desaparecido, limpiar la UI
+            mLastRt = null;
+            mCallback.onRdsText("");
         }
     }
 }

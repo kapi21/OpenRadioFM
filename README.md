@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v18.6_Architecture_Update-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v18.7.0_Engineering_Matrix-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -157,6 +157,18 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v18.7.0 "The Technical Matrix & MTK Polish" (10 de Marzo 2026)
+- **Unificación del Menú de Ingeniería**: Rediseño masivo de los diálogos de diagnóstico para K706 y MTK8259, adoptando un estilo **"Technical Matrix"** unificado con secciones categorizadas por hardware, RDS y SO.
+- **Correcciones Críticas MTK8259 (Feedback de Csaba)**: 
+    - **RDS PTY/RT Separation**: Corregida la lógica de filtrado para evitar que el género de música (PTY) se muestre duplicado en el campo de Radio Text.
+    - **Smart Mute Sync**: Implementada sincronización activa del icono de Mute. El botón se desmarca automáticamente si el usuario desmutea la radio mediante mandos al volante o el sistema Android.
+    - **Hardware Mute Restore**: Restaurado el comando de silencio por HW (`TsCommon.Mute`) para garantizar fiabilidad en todas las variantes de unidades Topway.
+- **Build & Quality**: 
+    - Solucionados errores de parseo XML por caracteres ilegales (`<`, `>`) en etiquetas de botones.
+    - Restaurado el método `updateSignalQuality` en el diálogo K706 para corregir fallos de compilación en `MainActivity`.
+- **UI Refinements**: Eliminación definitiva de bordes y mejora de fondos en el **Simple Layout**.
+- **Internacionalización**: Verificación y soporte completo para el idioma **Húngaro (Magyar)**.
 
 ### v18.6.0 "The Great Decoupling" (9 de Marzo 2026)
 - **Refactorización Arquitectónica Total**: `MainActivity` ahora es ligera, delegando responsabilidades en:

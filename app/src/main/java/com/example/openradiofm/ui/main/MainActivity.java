@@ -1408,6 +1408,26 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
         boolean isStreaming = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
 
+        // V18.6: Sincronizar estado visual del Mute con el sistema real
+        if (mPlaybackManager != null) {
+            android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                boolean isSystemMuted;
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    isSystemMuted = am.isStreamMute(android.media.AudioManager.STREAM_MUSIC);
+                } else {
+                    // Fallback para versiones antiguas o checking volume
+                    isSystemMuted = am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) == 0;
+                }
+                
+                // Si el sistema NO está muteado pero nuestra UI SI, sincronizamos hacia DESMUTEADO
+                if (!isSystemMuted && mPlaybackManager.isMuted()) {
+                    Log.d(TAG, "Mute sync: System unmuted, updating UI/Engine");
+                    mPlaybackManager.setMute(false);
+                }
+            }
+        }
+
         int freq = isStreaming ? mLastFreq : mEngine.getCurrentFreq();
         if (freq <= 0)
             return;

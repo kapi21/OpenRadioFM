@@ -201,13 +201,12 @@ public class MTK8259_8667RadioManager {
                 Log.d(TAG, "Mute set to " + mute + " via AudioManager");
             }
             
-            // Opcional: También avisamos al hardware sin forzar el Mute() de TsCommon si este falla
-            // pero lo dejamos comentado para seguir la recomendación del usuario de usar modo Android.
-            /* 
+            // V18.6: Usar tanto AudioManager como mTsCommon para asegurar el mute.
+            // Csaba reporta que solo AudioManager no es suficiente en algunas unidades.
             if (mTsCommon != null && mute != mTsCommon.IsMute()) {
                 mTsCommon.Mute();
+                Log.d(TAG, "Hardware Mute toggled via TsCommon");
             }
-            */
         } catch (Throwable t) {
             Log.e(TAG, "Mute failed", t);
         }
