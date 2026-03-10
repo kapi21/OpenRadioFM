@@ -6,7 +6,7 @@
     <string name="premium_customization">Преміум Кастомізація</string>
     <string name="theme_colors">Кольори Теми</string>
     <string name="typography">Типографіка</string>
-    <string name="background_mode">Режим Фону</string>
+    <string name="background_mode">🖼️ Режим Фону</string>
     <string name="accent_color">Акцентний Колір</string>
     <string name="select_typography">Вибрати Типографіку</string>
     <string name="select_bg_mode">Режим Фону</string>
@@ -71,7 +71,7 @@
     <string name="station_history">📜 Історія Станцій</string>
     
     
-    <string name="app_language">Мова Додатка</string>
+    <string name="app_language">🌐 Мова Додатка</string>
     <string name="select_language">Вибрати Мову</string>
     <string name="language_spanish">Іспанська</string>
     <string name="language_english">Англійська</string>
@@ -92,7 +92,7 @@
     
     <string name="hardware_settings">⚙️ Налаштування Обладнання</string>
     <string name="enable_am_band">Увімкнути АМ Діапазон</string>
-    <string name="radio_engine">Двигун Радіо</string>
+    <string name="radio_engine">⚙️ Двигун Радіо</string>
     <string name="engine_auto">Автоматично (Рекомендовано)</string>
     <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -146,10 +146,13 @@
     <string name="pty_alarm">Тривога</string>
 
     
-    <string name="logo_provider">Постачальник логотипів</string>
+    <string name="logo_provider">📡 Постачальник логотипів</string>
     <string name="provider_supabase">Supabase (HD Спільнота)</string>
     <string name="provider_radiobrowser">Radio-Browser (Резерв)</string>
     <string name="provider_both">Комбінований (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Зробити внесок у спільноту (HD логотипи)</string>
     <string name="contrib_cloud_desc">Автоматично надсилати частоту та PI-код місцевих станцій для покращення глобальної бази даних.</string>
-<string name="status_bar_v2">Показати рядок стану</string><string name="status_bar_enabled">✅ Рядок стану увімкнено</string><string name="status_bar_disabled">❌ Рядок стану вимкнено</string><string name="edit_station_name">Змінити назву радіостанції</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Пошук наступної...</string><string name="scanning">Сканування...</string><string name="scan_completed">Сканування завершено</string><string name="identifying_rds">Визначення радіостанції (RDS)...</string><string name="version">Версія %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДІО : %1$s</string><string name="freq_no_service">FREQ: НЕМАЄ_СЕРВІСУ\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ПОМИЛКА_ЧИТАННЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМАЄ_СЕРВІСУ</string><string name="sqi_error_read">SQI_INDEX.....: ПОМИЛКА_ЧИТАННЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНУВАННЯ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Вибране успішно скинуто</string><string name="history_cleared">Історію очищено</string><string name="my_favorites">Моє вибране</string></resources>
+<string name="status_bar_v2">Показати рядок стану</string><string name="status_bar_enabled">✅ Рядок стану увімкнено</string><string name="status_bar_disabled">❌ Рядок стану вимкнено</string><string name="edit_station_name">Змінити назву радіостанції</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Пошук наступної...</string><string name="scanning">Сканування...</string><string name="scan_completed">Сканування завершено</string><string name="identifying_rds">Визначення радіостанції (RDS)...</string><string name="version">Версія %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДІО : %1$s</string><string name="freq_no_service">FREQ: НЕМАЄ_СЕРВІСУ\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ПОМИЛКА_ЧИТАННЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМАЄ_СЕРВІСУ</string><string name="sqi_error_read">SQI_INDEX.....: ПОМИЛКА_ЧИТАННЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНУВАННЯ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Вибране успішно скинуто</string><string name="history_cleared">Історію очищено</string><string name="my_favorites">Моє вибране</string>    <string name="logo_mode_label">🏎️ Режим Верхнього Логотипу</string>
+    <string name="logo_mode_car">Логотип Автомобіля</string>
+    <string name="logo_mode_clock">Цифровий Годинник</string>
+</resources>

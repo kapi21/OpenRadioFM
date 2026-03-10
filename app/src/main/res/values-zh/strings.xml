@@ -4,7 +4,7 @@
     <string name="premium_customization">高级个性化</string>
     <string name="theme_colors">主题颜色</string>
     <string name="typography">字体设置</string>
-    <string name="background_mode">背景模式</string>
+    <string name="background_mode">🖼️ 背景模式</string>
     <string name="accent_color">强调色</string>
     <string name="select_typography">选择字体</string>
     <string name="select_bg_mode">选择背景模式</string>
@@ -53,7 +53,7 @@
     <string name="error_opening_settings">无法打开设置</string>
     <string name="history_empty">历史记录为空</string>
     <string name="station_history">📜 电台历史</string>
-    <string name="app_language">应用语言</string>
+    <string name="app_language">🌐 应用语言</string>
     <string name="select_language">选择语言</string>
     <string name="language_spanish">西班牙语</string>
     <string name="language_english">英语</string>
@@ -69,7 +69,7 @@
     <string name="touch_to_change">点击更改</string>
     <string name="hardware_settings">⚙️ 硬件设置</string>
     <string name="enable_am_band">启用 AM 波段</string>
-    <string name="radio_engine">收音机引擎</string>
+    <string name="radio_engine">⚙️ 收音机引擎</string>
     <string name="engine_auto">自动 (推荐)</string>
     <string name="engine_k706">Vento / HCN (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -88,7 +88,7 @@
     <string name="night_schedule_updated">✅ 计划已更新: %1$s - %2$s</string>
 
     
-    <string name="logo_provider">徽标提供者</string>
+    <string name="logo_provider">📡 徽标提供者</string>
     <string name="provider_supabase">Supabase (高清社区)</string>
     <string name="provider_radiobrowser">Radio-Browser (备用)</string>
     <string name="provider_both">组合 (Supabase &gt; 网页)</string>
@@ -99,7 +99,7 @@
     <string name="status_bar_disabled">❌ 状态栏已禁用</string>
 <string name="pty_none">无 PTY</string><string name="pty_news">新闻</string><string name="pty_current_affairs">时事</string><string name="pty_information">信息</string><string name="pty_sport">体育</string><string name="pty_education">教育</string><string name="pty_drama">剧情</string><string name="pty_culture">文化</string><string name="pty_science">科学</string><string name="pty_varied">杂项</string><string name="pty_pop">流行音乐</string><string name="pty_rock">摇滚音乐</string><string name="pty_easy_listening">轻音乐</string><string name="pty_light_classical">轻古典</string><string name="pty_serious_classical">古典音乐</string><string name="pty_other_music">其他音乐</string><string name="pty_weather">天气</string><string name="pty_finance">金融</string><string name="pty_children">儿童</string><string name="pty_social">社会</string><string name="pty_religion">宗教</string><string name="pty_phone_in">热线</string><string name="pty_travel">旅游</string><string name="pty_leisure">休闲</string><string name="pty_jazz">爵士</string><string name="pty_country">乡村</string><string name="pty_national">国家</string><string name="pty_oldies">怀旧</string><string name="pty_folk">民谣</string><string name="pty_documentary">纪录片</string><string name="pty_alarm_test">报警测试</string><string name="pty_alarm">报警</string><string name="edit_station_name">编辑电台名称</string><string name="frequency_label">频率: %1$s MHz</string><string name="searching_next">正在搜索下一个...</string><string name="scanning">扫描中...</string><string name="scan_completed">扫描完成</string><string name="identifying_rds">正在识别电台 (RDS)...</string><string name="version">版本 %1$s</string><string name="radio_engine_label">⚙ 广播引擎 : %1$s</string><string name="freq_no_service">FREQ: 无服务\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: 读取错误\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: 无服务</string><string name="sqi_error_read">SQI_INDEX.....: 读取错误</string><string name="af_list_scanning">AF_LIST.......: [扫描中]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">已成功重置收藏夹</string>
     <string name="history_cleared">历史记录已清除</string>
-    <string name="logo_mode_label">顶部徽标模式</string>
+    <string name="logo_mode_label">🏎️ 顶部徽标模式</string>
     <string name="logo_mode_car">汽车徽标</string>
     <string name="logo_mode_clock">数字时钟</string>
     <string name="my_favorites">我的收藏</string>

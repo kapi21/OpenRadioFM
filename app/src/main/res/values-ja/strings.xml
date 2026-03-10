@@ -4,7 +4,7 @@
     <string name="premium_customization">プレミアムカスタマイズ</string>
     <string name="theme_colors">テーマカラー</string>
     <string name="typography">タイポグラフィ</string>
-    <string name="background_mode">背景モード</string>
+    <string name="background_mode">🖼️ 背景モード</string>
     <string name="accent_color">アクセントカラー</string>
     <string name="select_typography">フォントを選択</string>
     <string name="select_bg_mode">背景モードを選択</string>
@@ -53,7 +53,7 @@
     <string name="error_opening_settings">設定を開けませんでした</string>
     <string name="history_empty">履歴はありません</string>
     <string name="station_history">📜 放送局の履歴</string>
-    <string name="app_language">アプリの言語</string>
+    <string name="app_language">🌐 アプリの言語</string>
     <string name="select_language">言語を選択</string>
     <string name="language_spanish">スペイン語</string>
     <string name="language_english">英語</string>
@@ -69,7 +69,7 @@
     <string name="touch_to_change">タッチして変更</string>
     <string name="hardware_settings">⚙️ ハードウェア設定</string>
     <string name="enable_am_band">AM バンドを有効にする</string>
-    <string name="radio_engine">ラジオエンジン</string>
+    <string name="radio_engine">⚙️ ラジオエンジン</string>
     <string name="engine_auto">自動 (推奨)</string>
     <string name="engine_k706">ヴェント / HCN (K706)</string>
     <string name="engine_qs6">NWD / ナニス (QS6)</string>
@@ -88,7 +88,7 @@
     <string name="night_schedule_updated">✅ スケジュールを更新しました: %1$s - %2$s</string>
 
     
-    <string name="logo_provider">ロゴプロバイダー</string>
+    <string name="logo_provider">📡 ロゴプロバイダー</string>
     <string name="provider_supabase">Supabase (HDコミュニティ)</string>
     <string name="provider_radiobrowser">Radio-Browser (フォールバック)</string>
     <string name="provider_both">組み合わせ (Supabase &gt; Web)</string>
@@ -99,7 +99,7 @@
     <string name="status_bar_disabled">❌ ステータスバーを無効にしました</string>
 <string name="pty_none">PTYなし</string><string name="pty_news">ニュース</string><string name="pty_current_affairs">時事問題</string><string name="pty_information">情報</string><string name="pty_sport">スポーツ</string><string name="pty_education">教育</string><string name="pty_drama">ドラマ</string><string name="pty_culture">文化</string><string name="pty_science">科学</string><string name="pty_varied">その他</string><string name="pty_pop">ポップミュージック</string><string name="pty_rock">ロックミュージック</string><string name="pty_easy_listening">ライトミュージック</string><string name="pty_light_classical">ライトクラシック</string><string name="pty_serious_classical">クラシック</string><string name="pty_other_music">その他の音楽</string><string name="pty_weather">天気</string><string name="pty_finance">金融</string><string name="pty_children">子供</string><string name="pty_social">社会</string><string name="pty_religion">宗教</string><string name="pty_phone_in">電話参加</string><string name="pty_travel">旅行</string><string name="pty_leisure">レジャー</string><string name="pty_jazz">ジャズ</string><string name="pty_country">カントリー</string><string name="pty_national">国内</string><string name="pty_oldies">オールディーズ</string><string name="pty_folk">フォーク</string><string name="pty_documentary">ドキュメンタリー</string><string name="pty_alarm_test">アラームテスト</string><string name="pty_alarm">アラーム</string><string name="edit_station_name">放送局名を編集</string><string name="frequency_label">周波数: %1$s MHz</string><string name="searching_next">次を検索中...</string><string name="scanning">スキャン中...</string><string name="scan_completed">スキャン完了</string><string name="identifying_rds">放送局を識別中 (RDS)...</string><string name="version">バージョン %1$s</string><string name="radio_engine_label">⚙ ラジオエンジン : %1$s</string><string name="freq_no_service">FREQ: サービスなし\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: 読み取りエラー\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: サービスなし</string><string name="sqi_error_read">SQI_INDEX.....: 読み取りエラー</string><string name="af_list_scanning">AF_LIST.......: [スキャン中]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">お気に入りが正しくリセットされました</string>
     <string name="history_cleared">履歴がクリアされました</string>
-    <string name="logo_mode_label">上部ロゴモード</string>
+    <string name="logo_mode_label">🏎️ 上部ロゴモード</string>
     <string name="logo_mode_car">車ロゴ</string>
     <string name="logo_mode_clock">デジタル時計</string>
     <string name="my_favorites">私のお気に入り</string>

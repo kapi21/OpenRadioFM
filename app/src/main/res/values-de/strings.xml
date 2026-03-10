@@ -5,7 +5,7 @@
     <string name="premium_customization">Premium-Anpassung</string>
     <string name="theme_colors">Themenfarben</string>
     <string name="typography">Typografie</string>
-    <string name="background_mode">Hintergrundmodus</string>
+    <string name="background_mode">🖼️ Hintergrundmodus</string>
     <string name="accent_color">Akzentfarbe</string>
     <string name="select_typography">Typografie auswählen</string>
     <string name="select_bg_mode">Hintergrundmodus</string>
@@ -73,7 +73,7 @@
     <string name="station_history">📜 Senderverlauf</string>
     
     <!-- V4.0: Language Selector -->
-    <string name="app_language">App-Sprache</string>
+    <string name="app_language">🌐 App-Sprache</string>
     <string name="select_language">Sprache auswählen</string>
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
@@ -97,7 +97,7 @@
     <!-- V4.3: Hardware Settings -->
     <string name="hardware_settings">⚙️ Hardware-Einstellungen</string>
     <string name="enable_am_band">AM-Band aktivieren</string>
-    <string name="radio_engine">Radio-Motor</string>
+    <string name="radio_engine">⚙️ Radio-Motor</string>
     <string name="engine_auto">Automatisch (Empfohlen)</string>
     <string name="engine_k706">Vento / HCN (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -152,7 +152,7 @@
     <string name="pty_alarm">Alarm</string>
 
     <!-- V16.2: Logo Providers -->
-    <string name="logo_provider">Logo-Anbieter</string>
+    <string name="logo_provider">📡 Logo-Anbieter</string>
     <string name="provider_supabase">Supabase (HD-Community)</string>
     <string name="provider_radiobrowser">Radio-Browser (Ersatz)</string>
     <string name="provider_both">Kombiniert (Supabase > Web)</string>
@@ -178,7 +178,7 @@
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Favoriten erfolgreich zurückgesetzt</string>
     <string name="history_cleared">Verlauf gelöscht</string>
-    <string name="logo_mode_label">Oberer Logo-Modus</string>
+    <string name="logo_mode_label">🏎️ Oberer Logo-Modus</string>
     <string name="logo_mode_car">Auto-Logo</string>
     <string name="logo_mode_clock">Digitaluhr</string>
     <string name="my_favorites">Meine Favoriten</string>

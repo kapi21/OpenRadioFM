@@ -5,7 +5,7 @@
     <string name="premium_customization">Personalizzazione Premium</string>
     <string name="theme_colors">Colori del Tema</string>
     <string name="typography">Tipografia</string>
-    <string name="background_mode">Modalità Sfondo</string>
+    <string name="background_mode">🖼️ Modalità Sfondo</string>
     <string name="accent_color">Colore Caratteristico</string>
     <string name="select_typography">Seleziona Tipografia</string>
     <string name="select_bg_mode">Modalità Sfondo</string>
@@ -73,7 +73,7 @@
     <string name="station_history">📜 Cronologia Stazioni</string>
     
     <!-- V4.0: Language Selector -->
-    <string name="app_language">Lingua dell\'App</string>
+    <string name="app_language">🌐 Lingua dell\'App</string>
     <string name="select_language">Seleziona Lingua</string>
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
@@ -94,7 +94,7 @@
     <!-- V4.3: Hardware Settings -->
     <string name="hardware_settings">⚙️ Impostazioni Hardware</string>
     <string name="enable_am_band">Abilita Banda AM</string>
-    <string name="radio_engine">Motore Radio</string>
+    <string name="radio_engine">⚙️ Motore Radio</string>
     <string name="engine_auto">Automatico (Consigliato)</string>
     <string name="engine_k706">Vento / HCN (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -149,7 +149,7 @@
     <string name="pty_alarm">Allarme</string>
 
     <!-- V16.2: Logo Providers -->
-    <string name="logo_provider">Provider di Loghi</string>
+    <string name="logo_provider">📡 Provider di Loghi</string>
     <string name="provider_supabase">Supabase (Community HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Riserva)</string>
     <string name="provider_both">Combinato (Supabase > Web)</string>
@@ -175,7 +175,7 @@
     <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
     <string name="favorites_reset_complete">Preferiti ripristinati correttamente</string>
     <string name="history_cleared">Cronologia cancellata</string>
-    <string name="logo_mode_label">Modalità Logo Superiore</string>
+    <string name="logo_mode_label">🏎️ Modalità Logo Superiore</string>
     <string name="logo_mode_car">Logo dell\'Auto</string>
     <string name="logo_mode_clock">Orologio Digitale</string>
     <string name="my_favorites">I Miei Preferiti</string>

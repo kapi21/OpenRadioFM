@@ -6,7 +6,7 @@
     <string name="premium_customization">Premium Prilagođavanje</string>
     <string name="theme_colors">Boje Teme</string>
     <string name="typography">Tipografija</string>
-    <string name="background_mode">Režim Pozadine</string>
+    <string name="background_mode">🖼️ Režim Pozadine</string>
     <string name="accent_color">Boja Akcenta</string>
     <string name="select_typography">Izaberi Tipografiju</string>
     <string name="select_bg_mode">Režim Pozadine</string>
@@ -71,7 +71,7 @@
     <string name="station_history">📜 Istorija Stanica</string>
     
     
-    <string name="app_language">Jezik Aplikacije</string>
+    <string name="app_language">🌐 Jezik Aplikacije</string>
     <string name="select_language">Izaberi Jezik</string>
     <string name="language_spanish">Španski</string>
     <string name="language_english">Engleski</string>
@@ -91,7 +91,7 @@
     
     <string name="hardware_settings">⚙️ Hardverska Podešavanja</string>
     <string name="enable_am_band">Omogući AM Opseg</string>
-    <string name="radio_engine">Radio Motor</string>
+    <string name="radio_engine">⚙️ Radio Motor</string>
     <string name="engine_auto">Automatski (Preporučeno)</string>
     <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -145,11 +145,14 @@
     <string name="pty_alarm">Alarm</string>
 
     
-    <string name="logo_provider">Добављач логотипа</string>
+    <string name="logo_provider">📡 Добављач логотипа</string>
     <string name="provider_supabase">Supabase (HD заједница)</string>
     <string name="provider_radiobrowser">Radio-Browser (Резерва)</string>
     <string name="provider_both">Kombinovano (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Doprinesi zajednici (HD logotipi)</string>
     <string name="contrib_cloud_desc">Automatski šalji frekvenciju i PI kod lokalnih stanica radi poboljšanja globalne baze podataka.</string>
 <string name="status_bar_v2">Prikaži statusnu traku</string>
-<string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string></resources>
+<string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string>    <string name="logo_mode_label">🏎️ Režim Gornjeg Logotipa</string>
+    <string name="logo_mode_car">Logo Automobila</string>
+    <string name="logo_mode_clock">Digitalni Sat</string>
+</resources>

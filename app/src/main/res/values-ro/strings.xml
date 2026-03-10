@@ -6,7 +6,7 @@
     <string name="premium_customization">Personalizare Premium</string>
     <string name="theme_colors">Culori Temă</string>
     <string name="typography">Tipografie</string>
-    <string name="background_mode">Mod Fundal</string>
+    <string name="background_mode">🖼️ Mod Fundal</string>
     <string name="accent_color">Culoare Accent</string>
     <string name="select_typography">Selectează Tipografia</string>
     <string name="select_bg_mode">Mod Fundal</string>
@@ -71,7 +71,7 @@
     <string name="station_history">📜 Istoric Stații</string>
     
     
-    <string name="app_language">Limba Aplicației</string>
+    <string name="app_language">🌐 Limba Aplicației</string>
     <string name="select_language">Selectează Limba</string>
     <string name="language_spanish">Spaniolă</string>
     <string name="language_english">Engleză</string>
@@ -95,7 +95,7 @@
     
     <string name="hardware_settings">⚙️ Setări Hardware</string>
     <string name="enable_am_band">Activează Banda AM</string>
-    <string name="radio_engine">Motor Radio</string>
+    <string name="radio_engine">⚙️ Motor Radio</string>
     <string name="engine_auto">Automat (Recomandat)</string>
     <string name="engine_k706">HCN / Vento (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
@@ -149,11 +149,14 @@
     <string name="pty_alarm">Alarmă</string>
 
     
-    <string name="logo_provider">Furnizor de Logo-uri</string>
+    <string name="logo_provider">📡 Furnizor de Logo-uri</string>
     <string name="provider_supabase">Supabase (Comunitate HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Rezervă)</string>
     <string name="provider_both">Combinat (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Contribuie la Comunitate (Logouri HD)</string>
     <string name="contrib_cloud_desc">Trimite automat frecvența și codul PI al stațiilor locale pentru a îmbunătăți baza de date globală.</string>
 <string name="status_bar_v2">Arată bara de stare</string>
-<string name="status_bar_enabled">✅ Bara de stare activată</string><string name="status_bar_disabled">❌ Bara de stare dezactivată</string><string name="edit_station_name">Editează numele stației</string><string name="frequency_label">Frecvență: %1$s MHz</string><string name="searching_next">Căutare următoarea...</string><string name="scanning">Scanare...</string><string name="scan_completed">Scanare completă</string><string name="identifying_rds">Identificare stație (RDS)...</string><string name="version">Versiunea %1$s</string><string name="radio_engine_label">⚙ MOTOR RADIO : %1$s</string><string name="freq_no_service">FREQ: FĂRĂ_SERVICIU\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: EROARE_CITIRE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: FĂRĂ_SERVICIU</string><string name="sqi_error_read">SQI_INDEX.....: EROARE_CITIRE</string><string name="af_list_scanning">AF_LIST.......: [SCANARE]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoritele au fost resetate cu succes</string><string name="history_cleared">Istoric șters</string><string name="my_favorites">Favoritele mele</string></resources>
+<string name="status_bar_enabled">✅ Bara de stare activată</string><string name="status_bar_disabled">❌ Bara de stare dezactivată</string><string name="edit_station_name">Editează numele stației</string><string name="frequency_label">Frecvență: %1$s MHz</string><string name="searching_next">Căutare următoarea...</string><string name="scanning">Scanare...</string><string name="scan_completed">Scanare completă</string><string name="identifying_rds">Identificare stație (RDS)...</string><string name="version">Versiunea %1$s</string><string name="radio_engine_label">⚙ MOTOR RADIO : %1$s</string><string name="freq_no_service">FREQ: FĂRĂ_SERVICIU\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: EROARE_CITIRE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: FĂRĂ_SERVICIU</string><string name="sqi_error_read">SQI_INDEX.....: EROARE_CITIRE</string><string name="af_list_scanning">AF_LIST.......: [SCANARE]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoritele au fost resetate cu succes</string><string name="history_cleared">Istoric șters</string><string name="my_favorites">Favoritele mele</string>    <string name="logo_mode_label">🏎️ Mod Logo Superior</string>
+    <string name="logo_mode_car">Logo Mașină</string>
+    <string name="logo_mode_clock">Ceas Digital</string>
+</resources>
