@@ -180,31 +180,27 @@
         <!-- Idioma -->
         <LinearLayout
             android:id="@+id/rowLanguage"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
+            style="@style/DialogBoxStyle">
             <TextView
-                android:layout_width="0dp"
+                style="@style/DialogBoxTitle"
+                android:text="@string/app_language"/>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/app_language"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-            <TextView
-                android:id="@+id/tvCurrentLanguage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/language_spanish"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentLanguage"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/language_spanish"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Logos Online -->
@@ -224,31 +220,27 @@
         <!-- Proveedor de Logos -->
         <LinearLayout
             android:id="@+id/rowLogoProvider"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
+            style="@style/DialogBoxStyle">
             <TextView
-                android:layout_width="0dp"
+                style="@style/DialogBoxTitle"
+                android:text="@string/logo_provider"/>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/logo_provider"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-            <TextView
-                android:id="@+id/tvCurrentLogoProvider"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/provider_supabase"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentLogoProvider"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/provider_supabase"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Contribuir a la Comunidad -->
@@ -279,31 +271,27 @@
         <!-- Modo Logo Superior -->
         <LinearLayout
             android:id="@+id/rowLogoMode"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
+            style="@style/DialogBoxStyle">
             <TextView
-                android:layout_width="0dp"
+                style="@style/DialogBoxTitle"
+                android:text="@string/logo_mode_label"/>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/logo_mode_label"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-            <TextView
-                android:id="@+id/tvCurrentLogoMode"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/logo_mode_car"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentLogoMode"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/logo_mode_car"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Guardar Historial -->
@@ -330,31 +318,27 @@
         <!-- Forzar Motor de Radio -->
         <LinearLayout
             android:id="@+id/rowEngine"
-            style="@style/DialogBoxStyle"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:padding="16dp">
+            style="@style/DialogBoxStyle">
             <TextView
-                android:layout_width="0dp"
+                style="@style/DialogBoxTitle"
+                android:text="@string/radio_engine"/>
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/radio_engine"
-                android:textColor="@color/white"
-                android:textSize="16sp"/>
-            <TextView
-                android:id="@+id/tvCurrentEngine"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/engine_auto"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:layout_marginEnd="8dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="›"
-                android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentEngine"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/engine_auto"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Habilitar AM -->
