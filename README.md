@@ -12,11 +12,11 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 <div align="center">
   <img src="docs/img/app_icon.png" width="150" alt="OpenRadioFM Logo">
   <br>
-  <p><i>Capturas de la versión 4.7:</i></p>
+  <p><i>Capturas de la versión 4.0:</i></p>
   <img src="docs/img/screenshot1.png" width="45%" alt="Layout V2 (v4.7)">
   <img src="docs/img/screenshot2.png" width="45%" alt="Layout V3 (v4.7)">
   <br><br>
-  <p><i>Capturas de la arquitectura V18.6:</i></p>
+  <p><i>Capturas de la version 4.7:</i></p>
   <img src="_ASSETS/v18_layout1.png" width="45%" alt="Simple Layout Night Mode">
   <img src="_ASSETS/v18_layout2.png" width="45%" alt="Standard Layout Premium">
 </div>
