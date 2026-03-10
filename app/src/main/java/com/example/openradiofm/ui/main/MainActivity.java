@@ -1907,8 +1907,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         android.app.AlertDialog dialog = builder.create();
         
-        android.widget.GridView gvLanguages = dialogView.findViewById(R.id.gvLanguages);
-        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelLanguage);
+        android.widget.GridView gvLanguages = dialogView.findViewById(R.id.gvOptions);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelSelect);
 
         // Adaptador simple para el GridView
         android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(this, R.layout.item_language, languages) {
