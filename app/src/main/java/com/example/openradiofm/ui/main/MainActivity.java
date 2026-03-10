@@ -1899,21 +1899,35 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         };
 
         String[] languageCodes = { "es", "en", "ru", "ro", "uk", "sr", "fr", "zh", "ja", "hu" };
-        String currentLang = mPrefs.getString("app_language", "es");
-
-        int selectedIndex = 0;
-        for (int i = 0; i < languageCodes.length; i++) {
-            if (languageCodes[i].equals(currentLang)) {
-                selectedIndex = i;
-                break;
-            }
-        }
-
+        
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        builder.setTitle(getString(R.string.select_language));
-        builder.setSingleChoiceItems(languages, selectedIndex, (dialog, which) -> {
-            String selectedLang = languageCodes[which];
-            String selectedLangName = languages[which];
+        android.view.LayoutInflater inflater = getLayoutInflater();
+        android.view.View dialogView = inflater.inflate(R.layout.dialog_language_selector, null);
+        builder.setView(dialogView);
+
+        android.app.AlertDialog dialog = builder.create();
+        
+        android.widget.GridView gvLanguages = dialogView.findViewById(R.id.gvLanguages);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelLanguage);
+
+        // Adaptador simple para el GridView
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(this, R.layout.item_language, languages) {
+            @Override
+            public android.view.View getView(int position, android.view.View convertView, android.view.ViewGroup parent) {
+                TextView tv = (TextView) super.getView(position, convertView, parent);
+                String currentLang = mPrefs.getString("app_language", "es");
+                if (languageCodes[position].equals(currentLang)) {
+                    tv.setBackgroundResource(R.drawable.bg_preset_card_p); // Resaltar actual
+                    tv.setTextColor(android.graphics.Color.WHITE);
+                }
+                return tv;
+            }
+        };
+
+        gvLanguages.setAdapter(adapter);
+        gvLanguages.setOnItemClickListener((parent, view, position, id) -> {
+            String selectedLang = languageCodes[position];
+            String selectedLangName = languages[position];
 
             setLocale(selectedLang);
             showStyledToast(String.format(getString(R.string.language_changed), selectedLangName));
@@ -1921,15 +1935,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             dialog.dismiss();
             recreate();
         });
-        builder.setNegativeButton(getString(R.string.cancel), null);
 
-        android.app.AlertDialog dialog = builder.create();
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
         android.view.Window window = dialog.getWindow();
         if (window != null) {
-            window.setDimAmount(0.7f);
-            window.setBackgroundDrawable(
-                    new android.graphics.drawable.ColorDrawable(android.graphics.Color.parseColor("#E6121212")));
+            window.setDimAmount(0.8f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
         }
+        
         dialog.show();
     }
 
