@@ -18,7 +18,7 @@ import com.example.openradiofm.R;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
 
-import java.io.File;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;\r\nimport com.bumptech.glide.request.RequestOptions;\r\nimport java.io.File;
 
 /**
  * V1: Gestor de Logos y Fondos para OpenRadioFM.
@@ -103,6 +103,7 @@ public class LogoManager {
                     .load(logoFile)
                     .diskCacheStrategy(DiskCacheStrategy.NONE)
                     .skipMemoryCache(true)
+                    .transform(new RoundedCorners(24))
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(iv);
         } else {
@@ -128,6 +129,7 @@ public class LogoManager {
                         .load(logoFile)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
+                        .transform(new RoundedCorners(24))
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(ivCarLogo);
             } else {
@@ -187,6 +189,7 @@ public class LogoManager {
                     Glide.with(mActivity)
                             .asBitmap()
                             .load(cachedUrl)
+                            .transform(new RoundedCorners(24))
                             .transition(BitmapTransitionOptions.withCrossFade())
                             .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
                                 @Override
@@ -220,6 +223,7 @@ public class LogoManager {
                                 Glide.with(mActivity)
                                         .asBitmap()
                                         .load(url)
+                                        .transform(new RoundedCorners(24))
                                         .transition(BitmapTransitionOptions.withCrossFade())
                                         .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
                                             @Override

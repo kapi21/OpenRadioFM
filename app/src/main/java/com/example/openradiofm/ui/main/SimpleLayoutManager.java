@@ -100,6 +100,18 @@ public class SimpleLayoutManager {
             ivMainLogo.setImageBitmap(bitmap);
             ivMainLogo.setColorFilter(null);
             ivMainLogo.setAlpha(1.0f);
+
+            // V18.6: Si el fondo dinámico está activo (bgMode == 2), ocultamos el box para evitar mezclas
+            // Accedemos a las SharedPreferences de la actividad directamente
+            android.content.SharedPreferences prefs = mActivity.getSharedPreferences("LayoutPrefs", android.content.Context.MODE_PRIVATE);
+            int bgMode = prefs.getInt("pref_bg_mode", 1);
+            
+            if (bgMode == 2 && boxLogoSimple != null) {
+                boxLogoSimple.setVisibility(View.GONE);
+            } else if (boxLogoSimple != null) {
+                boxLogoSimple.setVisibility(View.VISIBLE);
+            }
+
             applyPaletteToBackground(bitmap);
         }
     }

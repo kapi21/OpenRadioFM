@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.repository.RadioRepository;
@@ -132,6 +133,7 @@ public class PresetManager {
                     if (logoUrl != null && ivPresets[fIndex] != null) {
                         Glide.with(mActivity)
                                 .load(logoUrl)
+                                .transform(new RoundedCorners(20))
                                 .transition(DrawableTransitionOptions.withCrossFade())
                                 .into(ivPresets[fIndex]);
                     } else if (ivPresets[fIndex] != null) {
