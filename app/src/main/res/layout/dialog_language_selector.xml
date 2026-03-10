@@ -7,10 +7,9 @@
     android:background="#E6121212">
 
     <TextView
-        android:id="@+id/tvSelectLanguageTitle"
+        android:id="@+id/tvSelectTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/select_language"
         android:textColor="#FFFFFF"
         android:textSize="24sp"
         android:textStyle="bold"
@@ -18,17 +17,18 @@
         android:gravity="center_horizontal" />
 
     <GridView
-        android:id="@+id/gvLanguages"
+        android:id="@+id/gvOptions"
         android:layout_width="match_parent"
-        android:layout_height="300dp"
+        android:layout_height="wrap_content"
         android:numColumns="2"
         android:verticalSpacing="12dp"
         android:horizontalSpacing="12dp"
         android:stretchMode="columnWidth"
-        android:gravity="center" />
+        android:gravity="center"
+        android:minHeight="200dp" />
 
     <Button
-        android:id="@+id/btnCancelLanguage"
+        android:id="@+id/btnCancelSelect"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"

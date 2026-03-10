@@ -304,64 +304,10 @@ public class DialogManager {
         dialog.show();
     }
 
-    public void showThemeSelector(Dialog parentDialog, View colorPreview, TextView fontPreview) {
-        String[] skins = { "Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan",
-                "Pink", "White", "Grey" };
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(R.string.select_skin)
-                .setItems(skins, (d, w) -> {
-                    com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin
-                            .values();
-                    if (w < skinValues.length) {
-                        mActivity.mThemeManager.setSkin(skinValues[w]);
-                        mActivity.applySkin(skinValues[w]);
-                        updateSettingsPreviews(colorPreview, fontPreview);
-                    }
-                }).create();
-        applyPremiumListStyle(dialog);
-        dialog.show();
-    }
-
-    public void showFontSelector(Dialog parentDialog, TextView fontPreview) {
-        String[] fonts = { mActivity.getString(R.string.font_default), mActivity.getString(R.string.font_bebas),
-                mActivity.getString(R.string.font_digital), mActivity.getString(R.string.font_modern),
-                mActivity.getString(R.string.font_orbitron), mActivity.getString(R.string.font_formula1) };
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(R.string.select_typography)
-                .setItems(fonts, (d, w) -> {
-                    mActivity.mPrefs.edit().putInt("pref_font_type", w).apply();
-                    mActivity.applyFonts();
-                    updateSettingsPreviews(null, fontPreview);
-                }).create();
-        applyPremiumListStyle(dialog);
-        dialog.show();
-    }
-
-    public void showBackgroundSelector(Dialog parentDialog, TextView tvStatus) {
-        String[] modes = { mActivity.getString(R.string.bg_pure_black), mActivity.getString(R.string.bg_fixed_image),
-                mActivity.getString(R.string.bg_dynamic_logo) };
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(R.string.select_bg_mode)
-                .setItems(modes, (d, w) -> {
-                    mActivity.mPrefs.edit().putInt("pref_bg_mode", w).apply();
-                    mActivity.mLogoManager.loadCustomBackground();
-                    mActivity.mLogoManager.loadCarLogo();
-                    mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
-                    if (tvStatus != null)
-                        tvStatus.setText(modes[w]);
-                }).create();
-        applyPremiumListStyle(dialog);
-        dialog.show();
-    }
-
-    public void showNewLanguageSelector() {
-        String[] languages = {
-                "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)",
-                "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)",
-                "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)", "Magyar (HU)"
-        };
-        String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr", "zh", "ja", "hu" };
-
+    /**
+     * V18.6: Selector genérico en cuadrícula de 2 columnas para unificar la UI
+     */
+    private void showGridSelector(String title, String[] options, int currentIndex, java.util.function.Consumer<Integer> onSelect) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
         LayoutInflater inflater = LayoutInflater.from(mActivity);
         View dialogView = inflater.inflate(R.layout.dialog_language_selector, null);
@@ -369,34 +315,33 @@ public class DialogManager {
 
         AlertDialog dialog = builder.create();
 
-        android.widget.GridView gvLanguages = dialogView.findViewById(R.id.gvLanguages);
-        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelLanguage);
+        TextView tvTitle = dialogView.findViewById(R.id.tvSelectTitle);
+        if (tvTitle != null) tvTitle.setText(title);
 
-        // Adaptador simple (V18.6: 2 columnas)
-        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(mActivity, R.layout.item_language, languages) {
+        android.widget.GridView gvOptions = dialogView.findViewById(R.id.gvOptions);
+        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelSelect);
+
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(mActivity, R.layout.item_language, options) {
             @Override
             public View getView(int position, View convertView, android.view.ViewGroup parent) {
                 TextView tv = (TextView) super.getView(position, convertView, parent);
-                String currentLang = mActivity.mPrefs.getString("app_language", "es");
-                if (codes[position].equals(currentLang)) {
+                if (position == currentIndex) {
                     tv.setBackgroundResource(R.drawable.bg_glass_card_blue);
                     tv.setTextColor(Color.WHITE);
+                } else {
+                    tv.setTextColor(Color.parseColor("#BBFFFFFF"));
                 }
                 return tv;
             }
         };
 
-        gvLanguages.setAdapter(adapter);
-        gvLanguages.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedLang = codes[position];
-            String selectedLangName = languages[position];
-
-            mActivity.mPrefs.edit().putString("app_language", selectedLang).apply();
-            mActivity.showStyledToast(String.format(mActivity.getString(R.string.language_changed), selectedLangName));
-
-            dialog.dismiss();
-            mActivity.recreate();
-        });
+        if (gvOptions != null) {
+            gvOptions.setAdapter(adapter);
+            gvOptions.setOnItemClickListener((parent, view, position, id) -> {
+                onSelect.accept(position);
+                dialog.dismiss();
+            });
+        }
 
         if (btnCancel != null) {
             btnCancel.setOnClickListener(v -> dialog.dismiss());
@@ -409,6 +354,74 @@ public class DialogManager {
         }
 
         dialog.show();
+    }
+
+    public void showThemeSelector(android.app.Dialog parentDialog, View colorPreview, TextView fontPreview) {
+        String[] skins = { "Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan",
+                "Pink", "White", "Grey" };
+        int currentSkinIdx = mActivity.mThemeManager.getCurrentSkin().ordinal();
+
+        showGridSelector(mActivity.getString(R.string.select_skin), skins, currentSkinIdx, w -> {
+            com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
+            if (w < skinValues.length) {
+                mActivity.mThemeManager.setSkin(skinValues[w]);
+                mActivity.applySkin(skinValues[w]);
+                updateSettingsPreviews(colorPreview, fontPreview);
+            }
+        });
+    }
+
+    public void showFontSelector(android.app.Dialog parentDialog, TextView fontPreview) {
+        String[] fonts = { mActivity.getString(R.string.font_default), mActivity.getString(R.string.font_bebas),
+                mActivity.getString(R.string.font_digital), mActivity.getString(R.string.font_modern),
+                mActivity.getString(R.string.font_orbitron), mActivity.getString(R.string.font_formula1) };
+        int currentFontIdx = mActivity.mPrefs.getInt("pref_font_type", 0);
+
+        showGridSelector(mActivity.getString(R.string.select_typography), fonts, currentFontIdx, w -> {
+            mActivity.mPrefs.edit().putInt("pref_font_type", w).apply();
+            mActivity.applyFonts();
+            updateSettingsPreviews(null, fontPreview);
+        });
+    }
+
+    public void showBackgroundSelector(android.app.Dialog parentDialog, TextView tvStatus) {
+        String[] modes = { mActivity.getString(R.string.bg_pure_black), mActivity.getString(R.string.bg_fixed_image),
+                mActivity.getString(R.string.bg_dynamic_logo) };
+        int currentBgIdx = mActivity.mPrefs.getInt("pref_bg_mode", 1);
+
+        showGridSelector(mActivity.getString(R.string.select_bg_mode), modes, currentBgIdx, w -> {
+            mActivity.mPrefs.edit().putInt("pref_bg_mode", w).apply();
+            mActivity.mLogoManager.loadCustomBackground();
+            mActivity.mLogoManager.loadCarLogo();
+            mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
+            if (tvStatus != null)
+                tvStatus.setText(modes[w]);
+        });
+    }
+
+    public void showNewLanguageSelector() {
+        String[] languages = {
+                "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)",
+                "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)",
+                "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)", "Magyar (HU)"
+        };
+        String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr", "zh", "ja", "hu" };
+        String currentLang = mActivity.mPrefs.getString("app_language", "es");
+        int currentIndex = 0;
+        for (int i = 0; i < codes.length; i++) {
+            if (codes[i].equals(currentLang)) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        showGridSelector(mActivity.getString(R.string.select_language), languages, currentIndex, w -> {
+            String selectedLang = codes[w];
+            String selectedLangName = languages[w];
+            mActivity.mPrefs.edit().putString("app_language", selectedLang).apply();
+            mActivity.showStyledToast(String.format(mActivity.getString(R.string.language_changed), selectedLangName));
+            mActivity.recreate();
+        });
     }
 
     private void applyPremiumListStyle(AlertDialog dialog) {
@@ -480,16 +493,13 @@ public class DialogManager {
                 mActivity.getString(R.string.engine_mtk8259),
                 mActivity.getString(R.string.engine_standard)
         };
+        int currentIdx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
 
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(R.string.radio_engine)
-                .setItems(options, (d, which) -> {
-                    mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
-                    mActivity.showToast("Motor cambiado: " + options[which]);
-                    mActivity.mServiceController.start();
-                }).create();
-        applyPremiumListStyle(dialog);
-        dialog.show();
+        showGridSelector(mActivity.getString(R.string.radio_engine), options, currentIdx, which -> {
+            mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
+            mActivity.showToast("Motor cambiado: " + options[which]);
+            mActivity.mServiceController.start();
+        });
     }
 
     public void showLogoModeSelector() {
@@ -497,21 +507,18 @@ public class DialogManager {
                 mActivity.getString(R.string.logo_mode_car),
                 mActivity.getString(R.string.logo_mode_clock)
         };
+        int currentIdx = mActivity.mPrefs.getInt("pref_logo_mode", 0);
 
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(R.string.logo_mode_label)
-                .setItems(options, (d, which) -> {
-                    mActivity.mPrefs.edit().putInt("pref_logo_mode", which).apply();
-                    mActivity.showToast("Modo de logo: " + options[which]);
-                    
-                    // V18.5: Aplicar cambio inmediatamente
-                    mActivity.applyLogoModePreference();
-                    
-                    // Reabrir ajustes
-                    showPremiumSettingsDialog();
-                }).create();
-        applyPremiumListStyle(dialog);
-        dialog.show();
+        showGridSelector(mActivity.getString(R.string.logo_mode_label), options, currentIdx, which -> {
+            mActivity.mPrefs.edit().putInt("pref_logo_mode", which).apply();
+            mActivity.showToast("Modo de logo: " + options[which]);
+            
+            // V18.5: Aplicar cambio inmediatamente
+            mActivity.applyLogoModePreference();
+            
+            // Reabrir ajustes
+            showPremiumSettingsDialog();
+        });
     }
 
     public void showLogoProviderSelector() {
@@ -520,17 +527,14 @@ public class DialogManager {
                 mActivity.getString(R.string.provider_radiobrowser),
                 mActivity.getString(R.string.provider_both)
         };
+        int currentIdx = mActivity.mPrefs.getInt("pref_logo_provider", 0);
 
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(R.string.logo_provider)
-                .setItems(options, (d, which) -> {
-                    mActivity.mPrefs.edit().putInt("pref_logo_provider", which).apply();
-                    mActivity.showToast("Proveedor de logos: " + options[which]);
-                    // Reabrir ajustes para ver el cambio (opcional)
-                    showPremiumSettingsDialog();
-                }).create();
-        applyPremiumListStyle(dialog);
-        dialog.show();
+        showGridSelector(mActivity.getString(R.string.logo_provider), options, currentIdx, which -> {
+            mActivity.mPrefs.edit().putInt("pref_logo_provider", which).apply();
+            mActivity.showToast("Proveedor de logos: " + options[which]);
+            // Reabrir ajustes para ver el cambio (opcional)
+            showPremiumSettingsDialog();
+        });
     }
 
     public void showHistoryDialog() {
