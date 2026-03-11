@@ -108,6 +108,16 @@ public class PlaybackManager {
             mListener.onMuteStateChanged(mute);
         }
 
+        // V18.6: Iniciar el Foreground Service cuando la radio está activa
+        if (!mute) {
+            Intent serviceIntent = new Intent(mContext, com.example.openradiofm.service.RadioMediaService.class);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                mContext.startForegroundService(serviceIntent);
+            } else {
+                mContext.startService(serviceIntent);
+            }
+        }
+
         // V4.8: Gestión de AudioFocus delegada al Engine (K706RadioManager)
         // No solicitamos focus aquí para evitar que el MCU conmute al canal Android y silencie la radio FM.
         if (mute) {

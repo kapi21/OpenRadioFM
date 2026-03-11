@@ -25,6 +25,12 @@ public class MediaSessionManager {
     private MediaBrowserCompat mMediaBrowser;
     private MediaControllerCompat mMediaController;
 
+    // V2.4: State guards to avoid redundant system updates
+    private String mLastTitle = "";
+    private String mLastSubtitle = "";
+    private Bitmap mLastLogo = null;
+    private String mLastRds = "";
+
     public MediaSessionManager(MainActivity activity) {
         this.mActivity = activity;
     }
@@ -58,9 +64,22 @@ public class MediaSessionManager {
     public void updateMetadata(String title, String subtitle, Bitmap logo) {
         if (mMediaController == null) return;
 
+        // V2.4: Guard against identical updates to prevent notification flickering
+        if (title != null && title.equals(mLastTitle) && 
+            subtitle != null && subtitle.equals(mLastSubtitle) && 
+            ((logo == null && mLastLogo == null) || (logo != null && logo.sameAs(mLastLogo)))) {
+            return;
+        }
+
+        mLastTitle = title;
+        mLastSubtitle = subtitle;
+        mLastLogo = logo;
+
         MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, subtitle);
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, subtitle)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
+                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, subtitle);
 
         if (logo != null) {
             builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, logo);
@@ -68,11 +87,16 @@ public class MediaSessionManager {
         }
 
         mMediaController.getTransportControls().sendCustomAction("ACTION_UPDATE_METADATA", builder.build().getBundle());
-        Log.d(TAG, "Metadata updated: " + title + " - " + subtitle);
+        Log.d(TAG, "Metadata update sent: " + title + " (" + subtitle + ")");
     }
 
     public void updateRds(String rdsText) {
-        if (mMediaController == null) return;
+        if (mMediaController == null || rdsText == null) return;
+        
+        // V2.4: Guard
+        if (rdsText.equals(mLastRds)) return;
+        mLastRds = rdsText;
+
         // El RDS se suele mapear al álbum o subtítulo en Android Auto
         MediaMetadataCompat current = mMediaController.getMetadata();
         MediaMetadataCompat.Builder builder = (current != null) 

@@ -86,14 +86,15 @@ public class StandardLayoutManager {
 
     public void setFrequencyText(int freq, String text, int currentBandInt) {
         if (tvFrequency != null) {
+            String targetText;
             if (text != null && !text.isEmpty()) {
-                tvFrequency.setText(text);
-                tvFrequency.requestLayout();
+                targetText = text;
             } else if (currentBandInt >= 3) { // AM
-                tvFrequency.setText(String.valueOf(freq));
+                targetText = String.valueOf(freq);
             } else {
-                tvFrequency.setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
+                targetText = String.format(java.util.Locale.US, "%.1f", freq / 1000.0);
             }
+            MainActivity.setTextIfChanged(tvFrequency, targetText);
         }
     }
 

@@ -77,11 +77,13 @@ public class SimpleLayoutManager {
 
     public void updateFrequency(int freqKhz, String stationName) {
         if (tvFrequency != null) {
+            String targetText;
             if (stationName != null && !stationName.isEmpty()) {
-                tvFrequency.setText(stationName);
+                targetText = stationName;
             } else {
-                tvFrequency.setText(String.format(java.util.Locale.US, "%.1f", freqKhz / 1000.0f));
+                targetText = String.format(java.util.Locale.US, "%.1f", freqKhz / 1000.0f);
             }
+            MainActivity.setTextIfChanged(tvFrequency, targetText);
             // V18.6: Aplicar gradiente tras actualizar texto
             applyGradientToTexts();
         }
@@ -89,7 +91,7 @@ public class SimpleLayoutManager {
 
     public void updateRds(String text) {
         if (tvRdsInfo != null) {
-            tvRdsInfo.setText(text);
+            MainActivity.setTextIfChanged(tvRdsInfo, text);
             tvRdsInfo.setSelected(true); 
             applyGradientToTexts();
         }

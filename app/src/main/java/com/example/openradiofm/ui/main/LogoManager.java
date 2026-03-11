@@ -30,6 +30,11 @@ public class LogoManager {
     private final MainActivity mActivity;
     private final String LOGO_DIR = "/sdcard/RadioLogos/";
 
+    // V2.4: State guards to avoid redundant reloads/flicker
+    private int mLastFallbackResId = -1;
+    private String mLastDynamicBgUrl = null;
+    private String mLastStationLogoUrl = null;
+
     public LogoManager(MainActivity activity) {
         this.mActivity = activity;
         createRadioLogosFolder();
@@ -100,17 +105,23 @@ public class LogoManager {
         File logoFile = new File(LOGO_DIR + "car_logo.png");
         if (logoFile.exists()) {
             iv.setVisibility(View.VISIBLE);
-            iv.setImageDrawable(null); // Clear to avoid overlapping during load
-            Glide.with(mActivity)
-                    .load(logoFile)
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
-                    .transform(new RoundedCorners(24))
-                    .transition(DrawableTransitionOptions.withCrossFade())
-                    .into(iv);
+            // V2.4: Only reload if needed
+            String path = logoFile.getAbsolutePath();
+            Object lastTag = iv.getTag(R.id.tag_image_res);
+            if (lastTag == null || !path.equals(lastTag)) {
+                iv.setImageDrawable(null); // Clear to avoid overlapping during load
+                Glide.with(mActivity)
+                        .load(logoFile)
+                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                        .skipMemoryCache(true)
+                        .transform(new RoundedCorners(24))
+                        .transition(DrawableTransitionOptions.withCrossFade())
+                        .into(iv);
+                iv.setTag(R.id.tag_image_res, path);
+            }
         } else {
-            iv.setImageResource(R.mipmap.ic_launcher);
-            iv.setVisibility(View.VISIBLE);
+            MainActivity.setImageResourceIfChanged(iv, R.mipmap.ic_launcher);
+            MainActivity.setVisibilityIfChanged(iv, View.VISIBLE);
         }
     }
 
@@ -159,20 +170,29 @@ public class LogoManager {
         int bgMode = mActivity.mPrefs.getInt("pref_bg_mode", 1);
         if (bgMode == 2) {
             if (logoUrl != null && !logoUrl.isEmpty()) {
-                ivDynamicBackground.setVisibility(View.VISIBLE);
-                Glide.with(mActivity)
-                        .load(logoUrl)
-                        .centerCrop()
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .into(ivDynamicBackground);
+                if (!logoUrl.equals(mLastDynamicBgUrl)) {
+                    mLastDynamicBgUrl = logoUrl;
+                    MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
+                    Glide.with(mActivity)
+                            .load(logoUrl)
+                            .centerCrop()
+                            .transition(DrawableTransitionOptions.withCrossFade())
+                            .into(ivDynamicBackground);
+                }
             } else {
-                ivDynamicBackground.setVisibility(View.GONE);
-                Glide.with(mActivity).clear(ivDynamicBackground);
-                loadCustomBackground();
+                if (mLastDynamicBgUrl != null) {
+                    mLastDynamicBgUrl = null;
+                    MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
+                    Glide.with(mActivity).clear(ivDynamicBackground);
+                    loadCustomBackground();
+                }
             }
         } else {
-            ivDynamicBackground.setVisibility(View.GONE);
-            loadCustomBackground();
+            if (mLastDynamicBgUrl != null || ivDynamicBackground.getVisibility() == View.VISIBLE) {
+                mLastDynamicBgUrl = null;
+                MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
+                loadCustomBackground();
+            }
         }
     }
 
@@ -205,6 +225,11 @@ public class LogoManager {
                                     if (ivMainLogo != null) ivMainLogo.setImageBitmap(resource);
                                     if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
                                         mActivity.mSimpleLayoutManager.updateLogo(resource);
+                                    }
+                                    if (mActivity.mMediaSessionManager != null) {
+                                        String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
+                                        String freqStr = String.format("%.1f MHz", freq / 1000.0f);
+                                        mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
                                     }
                                 }
                                 @Override
@@ -240,6 +265,11 @@ public class LogoManager {
                                                 if (ivMainLogo != null) ivMainLogo.setImageBitmap(resource);
                                                 if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
                                                     mActivity.mSimpleLayoutManager.updateLogo(resource);
+                                                }
+                                                if (mActivity.mMediaSessionManager != null) {
+                                                    String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
+                                                    String freqStr = String.format("%.1f MHz", freq / 1000.0f);
+                                                    mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
                                                 }
                                             }
                                             @Override

@@ -141,9 +141,11 @@ public class NightModeManager {
                 R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff // V16.1: PowerOff night
         };
         for (int id : buttonIds) {
-            ImageButton btn = mActivity.findViewById(id);
-            if (btn != null) {
-                btn.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+            android.view.View btn = mActivity.findViewById(id);
+            if (btn instanceof ImageView && mActivity instanceof MainActivity) {
+                ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) btn, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+            } else if (btn instanceof ImageButton) {
+                ((ImageButton) btn).setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
             }
         }
 
@@ -208,8 +210,12 @@ public class NightModeManager {
                 R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff // V16.1: PowerOff night
         };
         for (int id : buttonIds) {
-            ImageButton btn = mActivity.findViewById(id);
-            if (btn != null) btn.clearColorFilter();
+            android.view.View btn = mActivity.findViewById(id);
+            if (btn instanceof ImageView && mActivity instanceof MainActivity) {
+                ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) btn, null, null);
+            } else if (btn instanceof ImageButton) {
+                ((ImageButton) btn).clearColorFilter();
+            }
         }
 
         // Restaurar presets a blanco
@@ -224,14 +230,18 @@ public class NightModeManager {
 
     private void tintImageView(int resId, int color) {
         android.view.View v = mActivity.findViewById(resId);
-        if (v instanceof ImageView) {
+        if (v instanceof ImageView && mActivity instanceof MainActivity) {
+            ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) v, color, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else if (v instanceof ImageView) {
             ((ImageView) v).setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
         }
     }
 
     private void clearImageViewFilter(int resId) {
         android.view.View v = mActivity.findViewById(resId);
-        if (v instanceof ImageView) {
+        if (v instanceof ImageView && mActivity instanceof MainActivity) {
+            ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) v, null, null);
+        } else if (v instanceof ImageView) {
             ((ImageView) v).clearColorFilter();
         }
     }

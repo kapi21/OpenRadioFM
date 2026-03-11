@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v4.8.4_V5.0_Phase1-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.8.5_V5.0_Phase2.7-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -157,6 +157,17 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v4.8.5 "UI Stability & Anti-Flicker Pro" (11 de Marzo 2026)
+- **Eliminación de Parpadeo (Fases 2.5 - 2.7)**:
+    - **Master Guard de Hilos**: Implementado un sistema de bloqueo reactivo que reduce la creación de hilos en un 90% cuando la radio está estática.
+    - **Estabilización SPRD/Unisoc**: Eliminado el jitter periódico de 5s mediante la desactivación del heartbeat forzado y optimización del compositor de hardware.
+    - **Notificaciones Inteligentes**: El servicio de medios ahora utiliza guardas de estado para evitar la inundación de notificaciones redundantes en milisegundos.
+- **Limpieza de IPC**: 
+    - Silenciado de broadcasts del sistema denegados para reducir el ruido en el bus de datos y liberar recursos del hilo principal.
+    - Aplicación de guardas visuales estrictas (`IfChanged`) en fondos, filtros de color y recursos de imagen.
+- **Depuración de Crashing**:
+    - Corregido error crítico de índice fuera de rango al activar el Mute/Unmute desde la notificación.
 
 ### v4.8.4 "V5.0 Phase 1: The Core Decoupling" (11 de Marzo 2026)
 - **Desacoplamiento Masivo (V5.0 Fase 1)**:

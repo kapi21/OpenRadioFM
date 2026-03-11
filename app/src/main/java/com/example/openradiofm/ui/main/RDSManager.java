@@ -50,7 +50,7 @@ public class RDSManager {
 
     public void onRdsName(String name) {
         if (tvRdsName != null && name != null && !name.isEmpty()) {
-            tvRdsName.setText(name);
+            MainActivity.setTextIfChanged(tvRdsName, name);
             tvRdsName.setVisibility(View.VISIBLE);
             mHasRdsLock = true;
 
@@ -89,7 +89,7 @@ public class RDSManager {
         if (mRdsDb != null) {
             String savedName = mRdsDb.getNameForPi(piCode);
             if (savedName != null && tvRdsName != null) {
-                tvRdsName.setText(savedName);
+                MainActivity.setTextIfChanged(tvRdsName, savedName);
                 tvRdsName.setVisibility(View.VISIBLE);
                 if (mListener != null) {
                     mLastConfirmedName = savedName; // V5.3: RDS PS Substitution
@@ -147,31 +147,28 @@ public class RDSManager {
         // 1. RDS Name (PS) - Aunque esté GONE en XML, mantenemos la lógica para retrocompatibilidad
         String displayName = getDisplayName(freqKhz);
         if (tvRdsName != null) {
-            if (displayName != null && !displayName.isEmpty()) {
-                tvRdsName.setText(displayName);
-                // No forzamos VISIBLE aquí porque el XML puede tenerlo GONE intencionadamente
-            } else {
-                tvRdsName.setText("");
-            }
-            tvRdsName.setTextColor(isNight ? nightBlue : white);
+            MainActivity.setTextIfChanged(tvRdsName, displayName != null ? displayName : "");
+            MainActivity.setTextColorIfChanged(tvRdsName, isNight ? nightBlue : white);
         }
 
         // 2. RDS Info (RT)
         if (tvRdsInfo != null) {
-            String rdsText = tvRdsInfo.getText().toString();
+            String currentText = tvRdsInfo.getText().toString();
             // Si el texto es el por defecto o está vacío, lo limpiamos
-            if (rdsText.isEmpty() || rdsText.equals("RDS TEXT INFO") || rdsText.equals("RDS Info Text")) {
-                tvRdsInfo.setText("");
+            if (currentText.isEmpty() || currentText.equals("RDS TEXT INFO") || currentText.equals("RDS Info Text")) {
+                MainActivity.setTextIfChanged(tvRdsInfo, "");
             }
-            tvRdsInfo.setVisibility(View.VISIBLE);
-            tvRdsInfo.setTextColor(isNight ? nightBlue : white);
-            tvRdsInfo.setSelected(true); // Forzar marquee
+            MainActivity.setVisibilityIfChanged(tvRdsInfo, View.VISIBLE);
+            MainActivity.setTextColorIfChanged(tvRdsInfo, isNight ? nightBlue : white);
+            if (!tvRdsInfo.isSelected()) {
+                tvRdsInfo.setSelected(true); // Forzar marquee solo una vez
+            }
         }
 
         // 3. PTY
         updatePtyUI(mCurrentPty);
         if (tvPty != null) {
-            tvPty.setTextColor(isNight ? nightBlue : white);
+            MainActivity.setTextColorIfChanged(tvPty, isNight ? nightBlue : white);
         }
     }
 

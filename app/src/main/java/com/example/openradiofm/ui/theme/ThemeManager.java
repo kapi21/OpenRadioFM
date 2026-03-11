@@ -151,9 +151,9 @@ public class ThemeManager {
      */
     public void applySkin(Skin skin) {
         if (mActivity == null) return;
-        if (this.mCurrentSkin == skin && skin != Skin.NIGHT_MODE) {
-            // V16.x: Optimización: si es el mismo skin, no re-aplicamos drawables.
-            // Excepción: NIGHT_MODE siempre se aplica para refrescar tintes dinámicos.
+        if (this.mCurrentSkin == skin) {
+            // V2.5: Ahora que NightModeManager usa guardu de estado en sus tintes, 
+            // ya no es necesario forzar el refresco del skin completo cada polling.
             return;
         }
 

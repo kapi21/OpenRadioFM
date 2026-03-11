@@ -158,6 +158,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V13: Gestor de Presets (Reducción de MainActivity)
     public PresetManager mPresetManager;
     public int mLastFreq = -1;
+    public String mLastPs = ""; // V18.6: Almacena el nombre RDS/Custom actual
     public boolean mHasRdsLock = false;
     public String mCurrentPty = null;
     public String mLastLogoUrl = "";
@@ -173,6 +174,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private ImageView ivDataActivityIcon; // El icono real que cambia de color
     private int mActiveDataOps = 0; // V16.2: Concurrent Supabase Operations
     private android.animation.ObjectAnimator mDataBlinkAnimator;
+    private long mLastInternetCheckTime = 0;
+    private boolean mLastInternetCache = false;
+
+    // V2.5: Broadcast guards
+    private int mLastBroadcastFreq = -1;
+    private int mLastBroadcastBand = -1;
+    private String mLastBroadcastPs = "";
+
+    // V2.6: Master Guard for refreshRadioStatus
+    private int mLastRefreshFreq = -1;
+    private int mLastRefreshBand = -1;
+    private long mLastFullRefreshTime = 0;
 
     public boolean mMuteState = false;
 
@@ -388,30 +401,28 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * - Parpadeando si hay actividad (download/upload).
      */
     private void updateDataActivityUI() {
-        if (ivDataActivity == null) {
-            Log.w(TAG, "updateDataActivityUI: ivDataActivity is NULL (not found in layout)");
-            return;
-        }
+        if (ivDataActivity == null) return;
 
         boolean onlineEnabled = mPrefs.getBoolean("pref_logos_online", false);
-        boolean isConnected = false;
-        try {
+        
+        // V2.5: Cache internet check for 10 seconds to avoid main thread jitter
+        long now = System.currentTimeMillis();
+        boolean isConnected;
+        if (now - mLastInternetCheckTime < 10000) {
+            isConnected = mLastInternetCache;
+        } else {
             isConnected = isInternetAvailable();
-        } catch (Exception e) {
-            // Error silenciado, se asume sin conexión para la lógica pero permitiendo visibilidad
+            mLastInternetCache = isConnected;
+            mLastInternetCheckTime = now;
         }
         
-        Log.d(TAG, "updateDataActivityUI: onlineEnabled=" + onlineEnabled + ", isConnected=" + isConnected + ", mActiveDataOps=" + mActiveDataOps);
-
         if (!onlineEnabled) {
-            ivDataActivity.setVisibility(View.INVISIBLE);
+            setVisibilityIfChanged(ivDataActivity, View.INVISIBLE);
             stopDataBlink();
             return;
         }
 
-        // V16.2: Siempre visible si está activado para indicar soporte nube.
-        ivDataActivity.setVisibility(View.VISIBLE);
-        
+        setVisibilityIfChanged(ivDataActivity, View.VISIBLE);
 
         if (mActiveDataOps > 0) {
             startDataBlink();
@@ -423,18 +434,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mOnlineStreamManager != null && ivDataActivityIcon != null) {
             if (mOnlineStreamManager.isPlaying()) {
                 // Streaming active -> RED
-                ivDataActivityIcon.setVisibility(View.VISIBLE);
-                ivDataActivityIcon.setColorFilter(android.graphics.Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
+                setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
+                setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
             } else if (mOnlineStreamManager.isLoading()) {
-                ivDataActivityIcon.setColorFilter(android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
+                setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
             } else {
                 // V17.4: Al limpiar filtros, respetar el color azul noche si el modo noche está activo
                 if (mNightModeManager != null && mNightModeManager.isNightTime() && 
                     mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
                     int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                    ivDataActivityIcon.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    setColorFilterIfChanged(ivDataActivityIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
                 } else {
-                    ivDataActivityIcon.clearColorFilter();
+                    setColorFilterIfChanged(ivDataActivityIcon, null, null);
                 }
             }
         }
@@ -1450,6 +1461,23 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         boolean isStereo = isStreaming || mEngine.isStereo();
         boolean isLocal = !isStreaming && mEngine.isDxLocal();
 
+        // V2.6: MASTER GUARD - Bloquear refresco pesado si no hay cambios externos
+        // V2.7: Desactivar timeout expired (SPRD jitter fix). Solo refrescar si cambia estado real.
+        boolean stateChanged = (freq != mLastRefreshFreq || band != mLastRefreshBand);
+
+        if (!stateChanged) {
+            // Solo actualizamos visibilidades inmediatas (Mute/Stream) y salimos
+            runOnUiThread(() -> {
+               if (ivStereoIcon != null) setVisibilityIfChanged(ivStereoIcon, isStereo ? View.VISIBLE : View.INVISIBLE);
+               if (btnLocDx != null) btnLocDx.setSelected(isLocal);
+            });
+            return;
+        }
+
+        mLastRefreshFreq = freq;
+        mLastRefreshBand = band;
+        mLastFullRefreshTime = System.currentTimeMillis();
+
         // Fix v4.5.1: SIEMPRE sincronizar mCurrentBand y refrescar presets
         if (band != mCurrentBand) {
             String logMsg = "Band shift detected: " + mCurrentBand + " -> " + band;
@@ -1487,21 +1515,31 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 station = mRepository.getStationInfo(fFreq, null);
             }
             final String rdsName = (station != null) ? station.getName() : "";
+            mLastPs = rdsName; // V18.6: Sincronizar campo para acceso externo
 
             runOnUiThread(() -> {
+                // Get State
+                boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+                int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+                int white = android.graphics.Color.WHITE;
+
                 // Sync color filters if in Night Mode
-                if (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                    int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                    if (ivUnitLabel != null)
-                        ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                    if (tvFrequency != null)
-                        tvFrequency.setTextColor(nightBlue);
+                if (isNight) {
+                    setColorFilterIfChanged(ivUnitLabel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    setTextColorIfChanged(tvFrequency, nightBlue);
                 } else {
-                    if (tvFrequency != null)
-                        tvFrequency.setTextColor(android.graphics.Color.WHITE);
+                    setColorFilterIfChanged(ivUnitLabel, null, null);
+                    setTextColorIfChanged(tvFrequency, white);
                 }
 
                 updateFrequencyDisplay(fFreq);
+
+                // V18.6: Actualizar metadatos de la sesión de medios inmediatamente
+                if (mMediaSessionManager != null) {
+                    float freqDisplay = fFreq / 1000.0f;
+                    String freqStr = String.format(java.util.Locale.US, "%.1f MHz", freqDisplay);
+                    mMediaSessionManager.updateMetadata(rdsName, freqStr, null);
+                }
 
                 // V4.0: Logo & Background (Always refresh logo in polling for consistency)
                 if (mLogoManager != null) {
@@ -1512,7 +1550,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 updateBandImage(fBand);
                 if (btnLocDx != null) {
                     btnLocDx.setSelected(fIsLocal);
-                    btnLocDx.setImageResource(fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                    setImageResourceIfChanged(btnLocDx, fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
                 }
             });
 
@@ -1527,6 +1565,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mMode == FmMode.FM_QS6) {
             return;
         }
+
+        // V2.5: Deep Guard to avoid "Permission Denial" Binder flood
+        if (freq == mLastBroadcastFreq && band == mLastBroadcastBand && 
+            ((rdsName == null && mLastBroadcastPs == null) || (rdsName != null && rdsName.equals(mLastBroadcastPs)))) {
+            return;
+        }
+
+        mLastBroadcastFreq = freq;
+        mLastBroadcastBand = band;
+        mLastBroadcastPs = rdsName;
 
         try {
             android.content.Intent intent = new android.content.Intent("com.qf.radio.update_action");
@@ -1566,9 +1614,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             sendBroadcast(intent);
         } catch (Exception ex) {
             // V16.2: Silenciar si es error de permisos (esperable en widgets de terceros)
-            if (ex.getMessage() == null || !ex.getMessage().contains("Permission Denial")) {
-                Log.e(TAG, "Error sending widget broadcast: " + ex.getMessage());
-            }
         }
     }
 
@@ -1587,21 +1632,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             resId = R.drawable.radio_fm3;
         else if (band == BAND_AM1) {
             // Placeholder until assets are provided, fallback to FM1 or a generic icon
-            resId = getResources().getIdentifier("radio_am1", "drawable", getPackageName());
-            if (resId == 0)
-                resId = R.drawable.radio_fm1;
+            resId = R.drawable.radio_fm1;
         } else if (band == BAND_AM2) {
-            resId = getResources().getIdentifier("radio_am2", "drawable", getPackageName());
             if (resId == 0)
                 resId = R.drawable.radio_fm2;
         }
 
         if (ivBandIndicator != null) {
-            ivBandIndicator.setImageResource(resId);
+            setImageResourceIfChanged(ivBandIndicator, resId);
             if (btnBand != null)
-                btnBand.setImageResource(R.drawable.radio_band_n);
+                setImageResourceIfChanged(btnBand, R.drawable.radio_band_n);
         } else if (btnBand != null) {
-            btnBand.setImageResource(resId);
+            setImageResourceIfChanged(btnBand, resId);
         }
     }
 
@@ -1669,8 +1711,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (freq <= 0)
             return; // V11.7: Evitar mostrar 00.0/0
         if (tvFrequency != null) {
-            // V5.5: Resolución de nombre delegada al RDSManager (RDS live > customName > frecuencia)
-            // V13.9: Durante el escaneo, NO buscamos nombres en DB para ganar fluidez
+            // V2.1: MOSTRAR FRECUENCIA NUMÉRICA INSTANTÁNEAMENTE
+            // V2.2: Solo si ha cambiado para evitar "jitter"
+            String freqStr;
+            if (mCurrentBand >= 3) { // AM1, AM2, SW
+                freqStr = String.valueOf(freq);
+            } else {
+                freqStr = String.format(java.util.Locale.US, "%.1f", freq / 1000.0);
+            }
+            setTextIfChanged(tvFrequency, freqStr);
+
             // V18.2: Mover resolución de nombres lenta a hilo secundario
             new Thread(() -> {
                 String finalDisplayName = null;
@@ -1687,17 +1737,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 }
                 
                 final String resultName = finalDisplayName;
-                runOnUiThread(() -> {
-                    if (resultName != null && !resultName.isEmpty()) {
-                        tvFrequency.setText(resultName);
-                        tvFrequency.requestLayout();
-                    } else if (mCurrentBand >= 3) { // AM1, AM2, SW
-                        tvFrequency.setText(String.valueOf(freq));
-                    } else {
-                        // FM: Formatear a MHz (ej: 96.9)
-                        tvFrequency.setText(String.format(java.util.Locale.US, "%.1f", freq / 1000.0));
-                    }
-                });
+                if (resultName != null && !resultName.isEmpty()) {
+                    runOnUiThread(() -> {
+                        setTextIfChanged(tvFrequency, resultName);
+                    });
+                }
             }).start();
 
             // Get State
@@ -1707,55 +1751,39 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             // Colors
             int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-            int gold = android.graphics.Color.parseColor("#FFD700");
             int white = android.graphics.Color.WHITE;
 
             // 1. Dial Color & Unit Label
             if (isNight) {
                 // V5.6: Always Night Blue in Night Mode as requested
-                tvFrequency.setTextColor(nightBlue);
-                if (ivUnitLabel != null)
-                    ivUnitLabel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                if (tvRdsName != null)
-                    tvRdsName.setTextColor(nightBlue);
-                if (tvRdsInfo != null)
-                    tvRdsInfo.setTextColor(nightBlue);
-                if (tvPty != null)
-                    tvPty.setTextColor(nightBlue);
-                if (btnPowerOff != null)
-                    btnPowerOff.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                setTextColorIfChanged(tvFrequency, nightBlue);
+                setColorFilterIfChanged(ivUnitLabel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                setTextColorIfChanged(tvRdsName, nightBlue);
+                setTextColorIfChanged(tvRdsInfo, nightBlue);
+                setTextColorIfChanged(tvPty, nightBlue);
+                setColorFilterIfChanged(btnPowerOff, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
             } else {
                 // Normal Mode -> Always White
-                tvFrequency.setTextColor(white);
-                if (ivUnitLabel != null)
-                    ivUnitLabel.clearColorFilter();
-                if (tvRdsName != null)
-                    tvRdsName.setTextColor(white);
-                if (tvRdsInfo != null)
-                    tvRdsInfo.setTextColor(white);
-                if (tvPty != null)
-                    tvPty.setTextColor(white);
-                if (btnPowerOff != null)
-                    btnPowerOff.clearColorFilter();
+                setTextColorIfChanged(tvFrequency, white);
+                setColorFilterIfChanged(ivUnitLabel, null, null);
+                setTextColorIfChanged(tvRdsName, white);
+                setTextColorIfChanged(tvRdsInfo, white);
+                setTextColorIfChanged(tvPty, white);
+                setColorFilterIfChanged(btnPowerOff, null, null);
             }
 
             // 2. Favorite Icon
             if (ivFavoriteIndicator != null) {
                 if (isFavorite && idx > 0) {
-                    ivFavoriteIndicator.setVisibility(View.VISIBLE);
+                    setVisibilityIfChanged(ivFavoriteIndicator, View.VISIBLE);
                     int resId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", idx), "drawable",
                             getPackageName());
-                    ivFavoriteIndicator.setImageResource(resId != 0 ? resId : R.drawable.radio_icon_p01);
+                    setImageResourceIfChanged(ivFavoriteIndicator, resId != 0 ? resId : R.drawable.radio_icon_p01);
 
                     // Tint logic
-                    if (isNight) {
-                        ivFavoriteIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                    } else {
-                        // Normal Mode: White
-                        ivFavoriteIndicator.setColorFilter(white, android.graphics.PorterDuff.Mode.SRC_IN);
-                    }
+                    setColorFilterIfChanged(ivFavoriteIndicator, isNight ? nightBlue : white, android.graphics.PorterDuff.Mode.SRC_IN);
                 } else {
-                    ivFavoriteIndicator.setVisibility(View.GONE);
+                    setVisibilityIfChanged(ivFavoriteIndicator, View.GONE);
                 }
             }
 
@@ -1785,16 +1813,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     signalColor = android.graphics.Color.parseColor("#FF5252"); // Red (No emisión reconocible)
                 }
                 if (!isNight) {
-                    ivSignalLevel.setColorFilter(signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
+                    setColorFilterIfChanged(ivSignalLevel, signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
                 } else {
-                    ivSignalLevel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    setColorFilterIfChanged(ivSignalLevel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
                 }
             }
 
             // Re-apply stereo visibility based on immediate hardware state
             if (ivStereoIcon != null) {
                 boolean hasStereo = mEngine != null && mEngine.isStereo();
-                ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.INVISIBLE);
+                setVisibilityIfChanged(ivStereoIcon, hasStereo ? View.VISIBLE : View.INVISIBLE);
             }
         }
     }
@@ -2382,6 +2410,58 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             showToast("Layout: V2 (Vertical)");
         }
         recreate();
+    }
+
+    /**
+     * V2.3: Helpers to avoid flicker by only updating views if values actually change.
+     */
+    public static boolean setTextIfChanged(android.widget.TextView tv, String text) {
+        if (tv == null || text == null) return false;
+        if (!tv.getText().toString().equals(text)) {
+            tv.setText(text);
+            return true;
+        }
+        return false;
+    }
+
+    public static void setTextColorIfChanged(android.widget.TextView tv, int color) {
+        if (tv == null) return;
+        if (tv.getCurrentTextColor() != color) {
+            tv.setTextColor(color);
+        }
+    }
+
+    public static void setVisibilityIfChanged(android.view.View v, int visibility) {
+        if (v == null) return;
+        if (v.getVisibility() != visibility) {
+            v.setVisibility(visibility);
+        }
+    }
+
+    public static void setColorFilterIfChanged(android.widget.ImageView iv, Integer color, android.graphics.PorterDuff.Mode mode) {
+        if (iv == null) return;
+        // Nota: No hay un getter directo y fiable para el filtro en APIs antiguas,
+        // pero setFilter con el mismo valor suele ser menos costoso que invalidate() total.
+        // Optamos por un tag para trackear el estado manual.
+        Object current = iv.getTag(R.id.tag_color_filter);
+        if (color == null) {
+            if (current != null) {
+                iv.clearColorFilter();
+                iv.setTag(R.id.tag_color_filter, null);
+            }
+        } else if (!color.equals(current)) {
+            iv.setColorFilter(color, mode);
+            iv.setTag(R.id.tag_color_filter, color);
+        }
+    }
+
+    public static void setImageResourceIfChanged(android.widget.ImageView iv, int resId) {
+        if (iv == null) return;
+        Object current = iv.getTag(R.id.tag_image_res);
+        if (current == null || (int)current != resId) {
+            iv.setImageResource(resId);
+            iv.setTag(R.id.tag_image_res, resId);
+        }
     }
 }
 
