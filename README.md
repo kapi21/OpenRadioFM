@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v19.7.0_Cloud_Robust-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.8.3_Cloud_Robust-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -158,7 +158,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v19.7.0 "The Cloud Robustness & Server Sync" (11 de Marzo 2026)
+### v4.8.3 "The Cloud Robustness & Server Sync" (11 de Marzo 2026)
 - **Capa de Datos de Supabase (Database)**: 
     - **Alineación de Columnas**: Sincronización total con el esquema de base de datos (`logo_url`, `hw_model`).
     - **Tipos de Datos**: Migración del campo frecuencia a `String` (MHz) para coherencia con reportes RDS.
@@ -171,7 +171,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
     - **Limpieza de Menús**: Eliminación del botón de prueba manual tras estabilizar la sincronización automática.
 - **Estabilidad de Red**: Integración de `HttpLoggingInterceptor` para depuración profesional de peticiones API.
 
-### v18.7.0 "The Technical Matrix & MTK Polish" (10 de Marzo 2026)
+### v4.8.2 "The Technical Matrix & MTK Polish" (10 de Marzo 2026)
 - **Unificación del Menú de Ingeniería**: Rediseño masivo de los diálogos de diagnóstico para K706 y MTK8259, adoptando un estilo **"Technical Matrix"** unificado con secciones categorizadas por hardware, RDS y SO.
 - **Correcciones Críticas MTK8259 (Feedback de Csaba)**: 
     - **RDS PTY/RT Separation**: Corregida la lógica de filtrado para evitar que el género de música (PTY) se muestre duplicado en el campo de Radio Text.
@@ -183,7 +183,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **UI Refinements**: Eliminación definitiva de bordes y mejora de fondos en el **Simple Layout**.
 - **Internacionalización**: Verificación y soporte completo para el idioma **Húngaro (Magyar)**.
 
-### v18.6.0 "The Great Decoupling" (9 de Marzo 2026)
+### v4.8.1 "The Great Decoupling" (9 de Marzo 2026)
 - **Refactorización Arquitectónica Total**: `MainActivity` ahora es ligera, delegando responsabilidades en:
     - `HardwareManager`: Gestión de comandos MCU y estado de hardware.
     - `ControlPanelManager`: Control de botones físicos y utilidades.
@@ -193,7 +193,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Reparación de Sintaxis**: Solucionados errores de compilación críticos y referencias rotas entre managers y diálogos.
 - **Estandarización de Servicios**: Actualizado el motor MTK8259 a `MainUI` para compatibilidad según requerimientos de Csaba.
 
-### v18.5.2 "Advanced Cloud & UI Customization" (Marzo 2026)
+### v4.8.0 "Advanced Cloud & UI Customization" (Marzo 2026)
 - **Supabase Storage Integration**: Ahora la app sube los archivos de imagen locales (`.png`/`.jpg`) directamente al almacenamiento de Supabase, garantizando que otros usuarios puedan ver el logo compartido.
 - **Identificación de Dispositivo**: Implementado `user_id` basado en el `ANDROID_ID` para trazar las contribuciones a la nube y evitar colisiones de datos.
 - **Reloj Digital Premium**: Nueva opción en Layout 3 para alternar entre el logo del coche y un reloj digital de gran formato con auto-dimensionado.
