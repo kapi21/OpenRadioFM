@@ -66,7 +66,15 @@ public class DialogManager {
                     mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
                 }
                 // V16.4: Forzar refresco de la frecuencia en pantalla
-                mActivity.runOnUiThread(() -> mActivity.updateFrequencyDisplay(currentFreq));
+                mActivity.runOnUiThread(() -> {
+                    // V18.6: Limpiar caché de logos de la Activity para que busque el nuevo nombre
+                    int band = mActivity.getCurrentBand();
+                    mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
+                    mActivity.mLastLogoUrl = ""; // Forzar que LogoManager no ignore el cambio
+                    
+                    mActivity.updateFrequencyDisplay(currentFreq);
+                    mActivity.refreshRadioStatus();
+                });
             }
         });
 
@@ -86,7 +94,15 @@ public class DialogManager {
                 mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
             }
             // V16.4: Forzar refresco
-            mActivity.runOnUiThread(() -> mActivity.updateFrequencyDisplay(currentFreq));
+            mActivity.runOnUiThread(() -> {
+                // V18.6: Limpiar caché al restaurar
+                int band = mActivity.getCurrentBand();
+                mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
+                mActivity.mLastLogoUrl = "";
+                
+                mActivity.updateFrequencyDisplay(currentFreq);
+                mActivity.refreshRadioStatus();
+            });
         });
 
         builder.show();
@@ -621,28 +637,17 @@ public class DialogManager {
         });
 
         dialog.findViewById(R.id.btnDeleteAllFavs).setOnClickListener(v -> {
-            // V16.2: Borrado selectivo para no perder la configuración (motor, modo noche, etc)
-            android.content.SharedPreferences.Editor editor = mActivity.mPrefs.edit();
-            for (int b = 0; b < 5; b++) { // Bandas FM1..FM5
-                for (int p = 1; p <= 20; p++) { // Presets P1..P20
-                    editor.remove("P" + p + "_B" + b);
-                }
+            if (mActivity.mHistoryManager != null) {
+                mActivity.mHistoryManager.deleteAllFavorites();
             }
-            editor.apply();
-
-            mActivity.showToast("Todos los favoritos han sido borrados");
-            
-            // Refrescar caché y botones inmediatamente (Sin reiniciar)
-            if (mActivity.mPresetManager != null) {
-                mActivity.mPresetManager.refreshPresetsCache(mActivity.getCurrentBand());
-            }
-            mActivity.refreshPresetButtons();
             dialog.dismiss();
         });
 
         dialog.findViewById(R.id.btnClearHistory).setOnClickListener(v -> {
-            mActivity.mPrefs.edit().remove("pref_station_history").apply();
-            mActivity.showToast("El historial ha sido borrado");
+            if (mActivity.mHistoryManager != null) {
+                mActivity.mHistoryManager.clearHistory();
+                mActivity.showToast("El historial ha sido borrado");
+            }
             dialog.dismiss();
         });
 
@@ -654,132 +659,6 @@ public class DialogManager {
         dialog.show();
     }
 
-    public void showSelectiveScanDialog() {
-        if (mActivity.mEngine == null || mActivity.mMode != MainActivity.FmMode.FM_K706)
-            return;
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        View view = LayoutInflater.from(mActivity).inflate(R.layout.dialog_selective_scan, null);
-        builder.setView(view);
-
-        AlertDialog dialog = builder.create();
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.parseColor("#E6121212")));
-        }
-
-        TextView tvFreq = view.findViewById(R.id.tvCurrentScanFreq);
-        TextView tvStatus = view.findViewById(R.id.tvScanStatus);
-        androidx.recyclerview.widget.RecyclerView rv = view.findViewById(R.id.rvCapturedStations);
-        view.findViewById(R.id.btnStopScan).setOnClickListener(v -> {
-            mActivity.mEngine.stopScan();
-            dialog.dismiss();
-        });
-
-        mActivity.mCapturedList.clear();
-        mActivity.mStationAdapter = new StationAdapter(mActivity, mActivity.mCapturedList);
-        rv.setLayoutManager(new androidx.recyclerview.widget.LinearLayoutManager(mActivity));
-        rv.setAdapter(mActivity.mStationAdapter);
-
-        view.findViewById(R.id.btnNextScan).setOnClickListener(v -> {
-            mActivity.mEngine.seekUp();
-            tvStatus.setText(mActivity.getString(R.string.searching_next));
-        });
-
-        dialog.setOnDismissListener(d -> mActivity.mEngine.setCallback(mActivity));
-
-        mActivity.mEngine.setCallback(new com.example.openradiofm.data.source.RadioEngineCallback() {
-            private int lastFreqReported = 0;
-
-            @Override
-            public void onFrequencyChanged(int freqKhz) {
-                lastFreqReported = freqKhz;
-                mActivity.runOnUiThread(() -> {
-                    if (tvFreq != null)
-                        tvFreq.setText(String.format("%.2f MHz", (double) freqKhz / 1000.0));
-                    tvStatus.setText(mActivity.getString(R.string.scanning));
-                });
-            }
-
-            @Override
-            public void onBandChanged(int band) {
-            }
-
-            @Override
-            public void onStereoChanged(boolean stereo) {
-            }
-
-            @Override
-            public void onRdsName(String name) {
-                mActivity.runOnUiThread(() -> {
-                    if (!mActivity.mCapturedList.isEmpty() && (mActivity.mCapturedList.get(0).name == null
-                            || mActivity.mCapturedList.get(0).name.equals("Buscando RDS..."))) {
-                        mActivity.mCapturedList.get(0).name = name;
-                        if (mActivity.mStationAdapter != null)
-                            mActivity.mStationAdapter.notifyItemChanged(0);
-                    }
-                });
-            }
-
-            @Override
-            public void onRdsText(String text) {
-            }
-
-            @Override
-            public void onRdsPty(String pty) {
-            }
-
-            @Override
-            public void onRdsStatus(boolean af, boolean ta, boolean tp) {
-            }
-
-            @Override
-            public void onRdsPi(String piCode) {
-            }
-
-            @Override
-            public void onDxLocalChanged(boolean isLocal) {
-            }
-
-            @Override
-            public void onScanStatusChanged(boolean scanning) {
-                mActivity.runOnUiThread(() -> {
-                    if (!scanning) {
-                        tvStatus.setText(mActivity.getString(R.string.scan_completed));
-                        if (lastFreqReported > 0) {
-                            boolean alreadyInList = false;
-                            for (StationAdapter.ScannedStation s : mActivity.mCapturedList) {
-                                if (Math.abs(s.frequency - lastFreqReported) < 50)
-                                    alreadyInList = true;
-                            }
-                            if (!alreadyInList) {
-                                StationAdapter.ScannedStation newStation = new StationAdapter.ScannedStation(
-                                        lastFreqReported);
-                                mActivity.mCapturedList.add(0, newStation);
-                                if (mActivity.mStationAdapter != null)
-                                    mActivity.mStationAdapter.notifyItemInserted(0);
-                                rv.scrollToPosition(0);
-                                tvStatus.setText(mActivity.getString(R.string.identifying_rds));
-                            }
-                        }
-                    } else {
-                        tvStatus.setText(mActivity.getString(R.string.searching_next));
-                    }
-                });
-            }
-
-            @Override
-            public void onRawEvent(int code, String data) {
-            }
-
-            @Override
-            public void onSignalUpdate(int rssi, int snr) {
-            }
-        });
-
-        dialog.show();
-        mActivity.mEngine.seekUp();
-    }
 
     public void showCreditsDialog() {
         android.app.Dialog dialog = new android.app.Dialog(mActivity);

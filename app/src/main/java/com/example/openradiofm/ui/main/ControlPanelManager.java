@@ -98,7 +98,11 @@ public class ControlPanelManager {
         ImageButton btnAutoScan = mActivity.findViewById(R.id.btnAutoScan);
         if (btnAutoScan != null) {
             btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f);
-            btnAutoScan.setOnClickListener(v -> mActivity.toggleAutoScan(btnAutoScan));
+            btnAutoScan.setOnClickListener(v -> {
+                if (mActivity.mScanManager != null) {
+                    mActivity.mScanManager.toggleAutoScan(btnAutoScan);
+                }
+            });
         }
 
         // Power Off delegada a DeviceManager

@@ -93,6 +93,26 @@ public class HistoryManager {
     // ====================================
 
     /**
+     * V16.5: Borra todos los favoritos de todas las bandas (FM1-5, AM1-2).
+     */
+    public void deleteAllFavorites() {
+        SharedPreferences.Editor editor = mPrefs.edit();
+        for (int b = 0; b < 5; b++) {
+            for (int p = 1; p <= 20; p++) {
+                editor.remove("P" + p + "_B" + b);
+            }
+        }
+        editor.apply();
+        
+        mActivity.showToast(mActivity.getString(R.string.all_favorites_deleted));
+        
+        if (mActivity.mPresetManager != null) {
+            mActivity.mPresetManager.refreshPresetsCache(mActivity.getCurrentBand());
+        }
+        mActivity.refreshPresetButtons();
+    }
+
+    /**
      * Guarda los favoritos actuales en un archivo .fav (JSON) en /sdcard/RadioLogos/.
      */
     public void saveFavoritesToFile() {
@@ -111,8 +131,9 @@ public class HistoryManager {
 
             RadioRepository repo = mActivity.mRepository;
 
-            for (int band = 0; band < 3; band++) {
-                for (int i = 1; i <= 12; i++) {
+            // V16.5: Sincronizado con loops de DialogManager (5 bandas, hasta 20 presets)
+            for (int band = 0; band < 5; band++) {
+                for (int i = 1; i <= 20; i++) {
                     String key = "P" + i + "_B" + band;
                     int freq = mPrefs.getInt(key, 0);
 
@@ -136,7 +157,7 @@ public class HistoryManager {
             }
 
             jsonRoot.put("presets", presetsArray);
-            jsonRoot.put("version", "1.0");
+            jsonRoot.put("version", "1.1");
             jsonRoot.put("timestamp", timestamp);
 
             FileWriter writer = new FileWriter(favFile);
@@ -211,8 +232,9 @@ public class HistoryManager {
             org.json.JSONArray presetsArray = jsonRoot.getJSONArray("presets");
 
             SharedPreferences.Editor editor = mPrefs.edit();
-            for (int band = 0; band < 3; band++) {
-                for (int i = 1; i <= 12; i++) {
+            // Limpiar favoritos existentes antes de cargar
+            for (int band = 0; band < 5; band++) {
+                for (int i = 1; i <= 20; i++) {
                     editor.remove("P" + i + "_B" + band);
                 }
             }

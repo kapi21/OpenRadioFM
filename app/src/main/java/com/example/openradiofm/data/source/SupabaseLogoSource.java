@@ -31,7 +31,7 @@ public class SupabaseLogoSource {
     };
 
     public static boolean isNameGeneric(String name) {
-        if (name == null || name.trim().length() < 3) return true;
+        if (name == null || name.trim().length() < 2) return true;
         String clean = name.trim().toUpperCase();
         for (String black : BLACKLIST_NAMES) {
             if (clean.equals(black)) return true;

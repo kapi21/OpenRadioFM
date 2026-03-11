@@ -56,6 +56,7 @@
     <string name="save_load_favorites">💾 Guardar/Cargar Favoritos</string>
     <string name="save_favorites">💾 Guardar Favoritos</string>
     <string name="load_favorites">📂 Cargar Favoritos</string>
+    <string name="all_favorites_deleted">✅ Todos los favoritos eliminados</string>
     <string name="select_favorites_file">📂 Seleccionar archivo de favoritos</string>
     <string name="cancel">Cancelar</string>
     <string name="favorites_saved">✅ Favoritos guardados: %s</string>

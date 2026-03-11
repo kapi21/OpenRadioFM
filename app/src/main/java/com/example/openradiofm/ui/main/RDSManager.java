@@ -111,7 +111,10 @@ public class RDSManager {
                 } else {
                     ptyCode = 0;
                 }
-            } catch (NumberFormatException ignored) {}
+            } catch (NumberFormatException e) {
+                // V18.6: Si no es un número, es una etiqueta directa (ej: "Música Pop")
+                displayLabel = pty;
+            }
         }
 
         if (tvPty != null) {

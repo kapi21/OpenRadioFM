@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v4.8.3_Cloud_Robust-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.8.4_V5.0_Phase1-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -157,6 +157,18 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v4.8.4 "V5.0 Phase 1: The Core Decoupling" (11 de Marzo 2026)
+- **Desacoplamiento Masivo (V5.0 Fase 1)**:
+    - **ScanManager**: Extracción completa de la lógica de búsqueda de emisoras de `MainActivity`. Centralización de estados de escaneo y diálogos manuales.
+    - **HistoryManager Pro**: Sistema unificado de persistencia con soporte para 5 bandas de FM y 2 de AM, con capacidad ampliada hasta 20 presets por banda.
+- **Refinamiento de Mute & Hardware**:
+    - **Aislamiento de Polling**: La sincronización forzada de mute con Android ahora solo actúa en motores MTK (Csaba Fix), garantizando la estabilidad total del hardware K706 original.
+    - **Mute Visual Fix**: Iconos de mute garantizados para sincronizarse instantáneamente al recuperar el audio desde cualquier fuente externa.
+- **Smart Logo & RDS Polish**:
+    - **Búsqueda por Nombres Cortos**: Reducción del filtro de seguridad a 2 caracteres para permitir la identificación de emisoras como "RR".
+    - **Invalidación de Caché Inteligente**: Al editar un nombre manualmente, la app ahora borra la caché visual y dispara una búsqueda inmediata en Supabase con el nuevo nombre.
+    - **RDS PTY Pro (MTK)**: Mejora en `RDSManager` para interpretar correctamente textos de categoría de programa en unidades Topway.
 
 ### v4.8.3 "The Cloud Robustness & Server Sync" (11 de Marzo 2026)
 - **Capa de Datos de Supabase (Database)**: 

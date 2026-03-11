@@ -53,6 +53,7 @@
     <string name="save_load_favorites">💾 Save/Load Favorites</string>
     <string name="save_favorites">💾 Save Favorites</string>
     <string name="load_favorites">📂 Load Favorites</string>
+    <string name="all_favorites_deleted">✅ All favorites deleted</string>
     <string name="select_favorites_file">📂 Select favorites file</string>
     <string name="cancel">Cancel</string>
     <string name="favorites_saved">✅ Favorites saved: %s</string>

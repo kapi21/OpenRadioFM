@@ -118,8 +118,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V5.0: Capa de abstracción de hardware
     public RadioEngine mEngine;
     public boolean mIsScanning = false;
-    public java.util.List<StationAdapter.ScannedStation> mCapturedList = new java.util.ArrayList<>();
-    public StationAdapter mStationAdapter;
+    public ScanManager mScanManager;
     public DialogManager mDialogManager;
     public LogoManager mLogoManager;
     public RadioServiceController mServiceController;
@@ -637,7 +636,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public void onScanStatusChanged(boolean scanning) {
         runOnUiThread(() -> {
             mIsScanning = scanning; // V13.9: Track global scanning state
-            if (!scanning && mStationAdapter != null) {
+            if (!scanning && mScanManager != null && mScanManager.getStationAdapter() != null) {
                 // Si el escaneo terminó automáticamente, podemos actualizar algún indicador si
                 // existiera
                 Log.d(TAG, "Scan finished callback received");
@@ -724,6 +723,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 if (mDialogManager == null) {
                     mDialogManager = new DialogManager(MainActivity.this);
                     setupCustomNameEditing();
+                }
+
+                if (mScanManager == null) {
+                    mScanManager = new ScanManager(MainActivity.this);
                 }
 
                 if (mRdsManager == null) {
@@ -863,7 +866,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     ImageButton btnMute = findViewById(R.id.btnMute);
                     if (btnMute != null) {
                         btnMute.setSelected(isMuted);
-                        btnMute.setImageResource(isMuted ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+                        // V18.6: Forzar actualización de imagen según el estado real
+                        if (isMuted) {
+                            btnMute.setImageResource(R.drawable.radio_mute_p);
+                            btnMute.setAlpha(1.0f);
+                        } else {
+                            btnMute.setImageResource(R.drawable.radio_mute_n);
+                            btnMute.setAlpha(1.0f);
+                            btnMute.setSelected(false); // Refuerzo
+                        }
                     }
                 });
             }
@@ -1411,8 +1422,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
         boolean isStreaming = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
 
-        // V18.6: Sincronizar estado visual del Mute con el sistema real
-        if (mPlaybackManager != null) {
+        // V18.6: Sincronizar estado visual del Mute con el sistema real (Solo MTK para evitar regresiones en K706)
+        if (mPlaybackManager != null && mEngine != null && "MTK8259_8667".equals(mEngine.getEngineName())) {
             android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
                 boolean isSystemMuted;
@@ -2128,31 +2139,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     /**
      * V9.5: AutoScan Toggle — click 1 inicia, click 2 detiene.
      */
-    public void toggleAutoScan(ImageButton btn) {
-        if (mEngine == null)
-            return;
-        if (!mIsScanning) {
-            mEngine.scan();
-            mIsScanning = true;
-            if (btn != null) {
-                btn.setColorFilter(android.graphics.Color.parseColor("#00E676"),
-                        android.graphics.PorterDuff.Mode.SRC_IN);
-            }
-            showToast("AutoScan iniciado...");
-        } else {
-            mEngine.stopScan();
-            mIsScanning = false;
-            if (btn != null) {
-                btn.clearColorFilter();
-            }
-            showToast("AutoScan detenido");
-        }
-    }
-
-    private void promptAutoScan() {
-        if (mEngine != null)
-            mEngine.scan();
-    }
 
     // === V4.5: QFTunerManager & MCU Helpers para Settings Premium ===
 
