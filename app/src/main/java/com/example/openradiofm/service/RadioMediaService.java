@@ -42,6 +42,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
         );
+        
+        // V18.x: Muy importante: Activar la sesión para que el sistema le envíe comandos
+        mMediaSession.setActive(true);
 
         // 3. Inicializar el estado de reproducción (Radio siempre "Playing" si está encendida)
         mStateBuilder = new PlaybackStateCompat.Builder()

@@ -1402,7 +1402,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             return;
 
         // V16.2: Refrescar estado de conectividad/datos del icono de Supabase
-        runOnUiThread(this::updateDataActivityUI);
+        runOnUiThread(() -> {
+            updateDataActivityUI();
+            checkAndApplyNightMode(); // V18.x: Forzar check de modo noche periódico (transiciones por tiempo)
+        });
 
         // V18.6: Si estamos reproduciendo streaming online, saltamos la interrogación síncrona al hardware.
         // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
@@ -1770,7 +1773,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 } else {
                     signalColor = android.graphics.Color.parseColor("#FF5252"); // Red (No emisión reconocible)
                 }
-                ivSignalLevel.setColorFilter(signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
+                if (!isNight) {
+                    ivSignalLevel.setColorFilter(signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
+                } else {
+                    ivSignalLevel.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                }
             }
 
             // Re-apply stereo visibility based on immediate hardware state
@@ -1812,8 +1819,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V18.6: Propagate skin change to SimpleLayoutManager
         if (mIsSimpleLayout && mSimpleLayoutManager != null) {
             mSimpleLayoutManager.applyColors(isNight);
-            
-            // Tint tvDigitalClock in Simple Layout Night Mode
             if (tvDigitalClock != null) {
                 if (isNight) {
                     tvDigitalClock.setTextColor(getResources().getColor(R.color.night_blue_primary, null));
@@ -2356,6 +2361,29 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     /**
      * V18.6: Centraliza el cambio de layout (V2 -> V3 -> Simple)
      */
+    @Override
+    public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        // V18.x: Interceptar teclas de medios de hardware (volante/unidad)
+        switch (keyCode) {
+            case android.view.KeyEvent.KEYCODE_MEDIA_NEXT:
+            case android.view.KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
+                Log.d(TAG, "Hardware Key detected: NEXT");
+                if (mPresetManager != null) mPresetManager.playNextPreset();
+                return true;
+            case android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+            case android.view.KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
+                Log.d(TAG, "Hardware Key detected: PREV");
+                if (mPresetManager != null) mPresetManager.playPrevPreset();
+                return true;
+            case android.view.KeyEvent.KEYCODE_MEDIA_PLAY:
+            case android.view.KeyEvent.KEYCODE_MEDIA_PAUSE:
+            case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+                setMute(!mMuteState);
+                return true;
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
     public void toggleLayoutMode() {
         if (!mIsV3 && !mIsSimpleLayout) { // Estamos en V2 -> Ir a V3
             mPrefs.edit().putBoolean("pref_layout_v3", true).putBoolean("pref_layout_simple", false).apply();

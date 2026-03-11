@@ -171,16 +171,61 @@ public class MTK8259_8667RadioManager {
     public String getPtyStrSafe() {
         if (mTsCommon == null) return null;
         try {
-            return mTsCommon.GetPtyStr();
+            String pty = mTsCommon.GetPtyStr();
+            if (pty == null) return null;
+            return mapPtyToId(pty.trim()); // V18.9: También mapear el PTY directo a ID
         } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
             return null;
+        }
+    }
+
+    private String mapPtyToId(String category) {
+        if (category == null) return null;
+
+        String clean = category.replace(",", "").trim();
+        String lower = clean.toLowerCase();
+
+        switch (lower) {
+            case "news": return "1";
+            case "current affairs": return "2";
+            case "information": return "3";
+            case "sport": return "4";
+            case "education": return "5";
+            case "drama": return "6";
+            case "culture":
+            case "cultures": return "7";
+            case "science": return "8";
+            case "varied": return "9";
+            case "pop music": return "10";
+            case "rock music": return "11";
+            case "easy listening": return "12";
+            case "light classical": return "13";
+            case "serious classical": return "14";
+            case "other music": return "15";
+            case "weather": return "16";
+            case "finance": return "17";
+            case "children": return "18";
+            case "social affairs": return "19";
+            case "religion": return "20";
+            case "phone in": return "21";
+            case "travel": return "22";
+            case "leisure": return "23";
+            case "jazz": return "24";
+            case "country": return "25";
+            case "national music": return "26";
+            case "oldies": return "27";
+            case "folk": return "28";
+            case "documentary": return "29";
+            default: return clean; // V18.9: Devolver el original si no es una categoría conocida
         }
     }
 
     public String getCategorySafe() {
         if (mTsCommon == null) return null;
         try {
-            return mTsCommon.GetCategory();
+            String category = mTsCommon.GetCategory();
+            if (category == null) return null;
+            return mapPtyToId(category.trim()); // V18.9: Usar el mapeador con fallback
         } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
             return null;
         }

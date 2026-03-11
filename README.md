@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v18.7.0_Engineering_Matrix-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v19.7.0_Cloud_Robust-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -157,6 +157,19 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v19.7.0 "The Cloud Robustness & Server Sync" (11 de Marzo 2026)
+- **Capa de Datos de Supabase (Database)**: 
+    - **Alineación de Columnas**: Sincronización total con el esquema de base de datos (`logo_url`, `hw_model`).
+    - **Tipos de Datos**: Migración del campo frecuencia a `String` (MHz) para coherencia con reportes RDS.
+    - **Deduplicación Automática**: Implementada lógica de servidor (PostgreSQL) para evitar emisoras repetidas mediante restricciones `UNIQUE` e `ilike`.
+- **Supabase Storage (Cloud Logos)**:
+    - **Path Fix**: Corrección del error 400 mediante la desactivación del encoding de Retrofit en las rutas del bucket (soporte para subcarpetas por país).
+    - **RLS Policies**: Apertura de permisos para permitir subidas anónimas (`anon`) y lectura pública desde la app.
+- **UI & UX Premium**:
+    - **Status Indicator**: Punto de estado dinámico (`• Online` / `• Offline`) en ajustes de logos que verifica la conexión con el servidor en tiempo real.
+    - **Limpieza de Menús**: Eliminación del botón de prueba manual tras estabilizar la sincronización automática.
+- **Estabilidad de Red**: Integración de `HttpLoggingInterceptor` para depuración profesional de peticiones API.
 
 ### v18.7.0 "The Technical Matrix & MTK Polish" (10 de Marzo 2026)
 - **Unificación del Menú de Ingeniería**: Rediseño masivo de los diálogos de diagnóstico para K706 y MTK8259, adoptando un estilo **"Technical Matrix"** unificado con secciones categorizadas por hardware, RDS y SO.

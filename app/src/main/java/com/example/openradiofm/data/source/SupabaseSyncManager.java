@@ -86,8 +86,8 @@ public class SupabaseSyncManager {
             } else if (line.startsWith("http")) {
                 currentStream = line.trim();
                 
-                // Tenemos un bloque completo
-                if (currentName != null && currentLogo != null) {
+                // Tenemos un bloque completo (V19.0: Logo ya no es obligatorio para sincronizar)
+                if (currentName != null && !currentName.isEmpty()) {
                     uploadToSupabase(currentName, currentLogo, currentGroup, currentStream);
                     count++;
                 }

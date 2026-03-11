@@ -151,6 +151,11 @@ public class ThemeManager {
      */
     public void applySkin(Skin skin) {
         if (mActivity == null) return;
+        if (this.mCurrentSkin == skin && skin != Skin.NIGHT_MODE) {
+            // V16.x: Optimización: si es el mismo skin, no re-aplicamos drawables.
+            // Excepción: NIGHT_MODE siempre se aplica para refrescar tintes dinámicos.
+            return;
+        }
 
         this.mCurrentSkin = skin;
         int drawableId = getSkinDrawableId();

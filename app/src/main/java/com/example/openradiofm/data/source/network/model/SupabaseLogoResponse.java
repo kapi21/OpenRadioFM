@@ -16,7 +16,7 @@ public class SupabaseLogoResponse {
     private String psName;
 
     @SerializedName("frequency")
-    private Integer frequency;
+    private String frequency;
 
     @SerializedName("logo_url")
     private String logoUrl;
@@ -24,33 +24,29 @@ public class SupabaseLogoResponse {
     @SerializedName("stream_url")
     private String streamUrl;
 
-    @SerializedName("user_id")
-    private String userId;
+    @SerializedName("hw_model")
+    private String hwModel;
 
     public SupabaseLogoResponse() {}
 
-    public SupabaseLogoResponse(String piCode, String psName, Integer frequency, String logoUrl) {
+    public SupabaseLogoResponse(String piCode, String psName, String frequency, String logoUrl) {
         this.piCode = piCode;
         this.psName = psName;
         this.frequency = frequency;
         this.logoUrl = logoUrl;
     }
 
-    public SupabaseLogoResponse(String piCode, String psName, Integer frequency, String logoUrl, String streamUrl) {
+    public SupabaseLogoResponse(String piCode, String psName, String frequency, String logoUrl, String streamUrl, String hwModel) {
         this(piCode, psName, frequency, logoUrl);
         this.streamUrl = streamUrl;
-    }
-
-    public SupabaseLogoResponse(String piCode, String psName, Integer frequency, String logoUrl, String streamUrl, String userId) {
-        this(piCode, psName, frequency, logoUrl, streamUrl);
-        this.userId = userId;
+        this.hwModel = hwModel;
     }
 
     // Getters
     public String getPiCode() { return piCode; }
     public String getPsName() { return psName; }
-    public Integer getFrequency() { return frequency; }
+    public String getFrequency() { return frequency; }
     public String getLogoUrl() { return logoUrl; }
     public String getStreamUrl() { return streamUrl; }
-    public String getUserId() { return userId; }
+    public String getHwModel() { return hwModel; }
 }

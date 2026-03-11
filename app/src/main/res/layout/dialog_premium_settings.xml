@@ -235,6 +235,15 @@
                     android:layout_weight="1"
                     android:text="@string/provider_supabase"/>
                 <TextView
+                    android:id="@+id/tvSupabaseStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="• Desconectado"
+                    android:textColor="#FF4444"
+                    android:textSize="11sp"
+                    android:layout_marginEnd="8dp"
+                    android:visibility="gone"/>
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
@@ -267,6 +276,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
         </LinearLayout>
+
 
         <!-- Modo Logo Superior -->
         <LinearLayout

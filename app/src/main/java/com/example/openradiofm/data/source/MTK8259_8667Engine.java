@@ -270,60 +270,47 @@ public class MTK8259_8667Engine implements RadioEngine {
     }
 
     private void pollRdsAndDispatch() {
-        if (mManager == null || mCallback == null) return;
-
-        // RDS Safety Check (Csaba suggestion): Query PS once or handle NULL
-        // If the MainUI doesn't support the GDUCK methods, they catch errors and return null.
-        
-        // PS Name
-        String ps = mManager.getPsNameSafe();
-        if (ps != null) ps = ps.trim();
-        
-        // Si ps es nulo, significa que el hardware/MainUI no responde o no tiene el MOD.
-        // Csaba sugiere no activar RDS si es NULL.
-        if (ps == null) {
+        MTK8259_8667RadioManager mTK8259_8667RadioManager = this.mManager;
+        if (mTK8259_8667RadioManager == null || this.mCallback == null) {
             return;
         }
-
-        if (!ps.isEmpty() && !ps.equals(mLastPs)) {
-            mLastPs = ps;
-            mCallback.onRdsName(ps);
+        String psNameSafe = mTK8259_8667RadioManager.getPsNameSafe();
+        if (psNameSafe != null) {
+            psNameSafe = psNameSafe.trim();
         }
-
-        // PTY / Category Text (Csaba suggestion: swap or check all)
-        String cat = mManager.getCategorySafe();
-        String ptyStr = mManager.getPtyStrSafe();
-        
-        if (cat != null) cat = cat.trim();
-        if (ptyStr != null) ptyStr = ptyStr.trim();
-        
-        // V18.6: En muchas unidades Topway, getPtyStr devuelve el tipo de programa (PTY) 
-        // y getCategory devuelve el texto dinámico o viceversa. Probamos ambos.
-        String finalPty = null;
-        if (ptyStr != null && !ptyStr.isEmpty()) {
-            finalPty = ptyStr;
-        } else if (cat != null && !cat.isEmpty()) {
-            finalPty = cat;
+        if (psNameSafe == null) {
+            return;
         }
-
-        if (finalPty != null) {
-            mCallback.onRdsPty(finalPty);
+        if (!psNameSafe.isEmpty() && !psNameSafe.equals(this.mLastPs)) {
+            this.mLastPs = psNameSafe;
+            this.mCallback.onRdsName(psNameSafe);
         }
-        
-        // RT Tradicional (Evitar mostrar el PTY en el campo de texto RDS)
-        // Solo enviamos 'cat' a onRdsText si es diferente del PTY detectado.
-        String rt = null;
-        if (cat != null && !cat.isEmpty() && !cat.equals(finalPty)) {
-            rt = cat;
+        String categorySafe = this.mManager.getCategorySafe();
+        String ptyStrSafe = this.mManager.getPtyStrSafe();
+        if (categorySafe != null) {
+            categorySafe = categorySafe.trim();
         }
-
-        if (rt != null && !rt.equals(mLastRt)) {
-            mLastRt = rt;
-            mCallback.onRdsText(rt);
-        } else if (rt == null && mLastRt != null) {
-            // Si el texto ha desaparecido, limpiar la UI
-            mLastRt = null;
-            mCallback.onRdsText("");
+        if (ptyStrSafe != null) {
+            ptyStrSafe = ptyStrSafe.trim();
+        }
+        if (ptyStrSafe == null || ptyStrSafe.isEmpty()) {
+            ptyStrSafe = (categorySafe == null || categorySafe.isEmpty()) ? null : categorySafe;
+        }
+        if (ptyStrSafe != null) {
+            this.mCallback.onRdsPty(ptyStrSafe);
+        }
+        if (categorySafe == null || categorySafe.isEmpty() || categorySafe.equals(ptyStrSafe)) {
+            categorySafe = null;
+        }
+        if (categorySafe != null && !categorySafe.equals(this.mLastRt)) {
+            this.mLastRt = categorySafe;
+            this.mCallback.onRdsText(categorySafe);
+        } else {
+            if (categorySafe != null || this.mLastRt == null) {
+                return;
+            }
+            this.mLastRt = null;
+            this.mCallback.onRdsText("");
         }
     }
 }

@@ -382,13 +382,16 @@ public class RadioRepository {
                             String pi = piCode != null ? piCode : "";
                             android.util.Log.d("RadioRepository", "SUPABASE FETCH START: PI=" + piCode + ", Name=" + stationNameForLambda);
 
+                            // V18.8: Prioridad absoluta al nombre personalizado si existe y no es genérico
                             String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
                             retrofit2.Call<java.util.List<SupabaseLogoResponse>> call = null;
-                            if (cName != null && !cName.isEmpty() && stationNameForLambda != null && stationNameForLambda.equals(cName)) {
+                            
+                            if (cName != null && !cName.isEmpty() && !SupabaseLogoSource.isNameGeneric(cName)) {
+                                android.util.Log.d("RadioRepository", "SUPABASE FETCH: Using Custom Name -> " + cName);
                                 call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "*");
                             } else if (piCode != null && !piCode.isEmpty()) {
                                 call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "*");
-                            } else if (stationNameForLambda != null && !stationNameForLambda.trim().isEmpty()) {
+                            } else if (stationNameForLambda != null && !SupabaseLogoSource.isNameGeneric(stationNameForLambda)) {
                                 call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "*");
                             }
 
@@ -605,11 +608,12 @@ public class RadioRepository {
                     try {
                         String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
                         retrofit2.Call<java.util.List<com.example.openradiofm.data.source.network.model.SupabaseLogoResponse>> call = null;
-                        if (cName != null && !cName.isEmpty() && stationNameForLambda != null && stationNameForLambda.equals(cName)) {
+                        
+                        if (cName != null && !cName.isEmpty() && !SupabaseLogoSource.isNameGeneric(cName)) {
                             call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "*");
                         } else if (piCode != null && !piCode.isEmpty()) {
                             call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "*");
-                        } else if (stationNameForLambda != null && !stationNameForLambda.trim().isEmpty()) {
+                        } else if (stationNameForLambda != null && !SupabaseLogoSource.isNameGeneric(stationNameForLambda)) {
                             call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "*");
                         }
 

@@ -131,6 +131,26 @@ public class DialogManager {
 
         // Previews
         updateSettingsPreviews(viewColorPreview, tvFontPreview);
+
+        // V19.7: Indicador de Conexión a Supabase (Automático)
+        TextView tvSupabaseStatus = dialog.findViewById(R.id.tvSupabaseStatus);
+        if (tvSupabaseStatus != null) {
+            tvSupabaseStatus.setVisibility(View.VISIBLE);
+            tvSupabaseStatus.setText("• Conectando...");
+            tvSupabaseStatus.setTextColor(Color.parseColor("#888888"));
+
+            mActivity.mRepository.getSupabaseSource().checkConnection(connected -> {
+                mActivity.runOnUiThread(() -> {
+                    if (connected) {
+                        tvSupabaseStatus.setText("• Online");
+                        tvSupabaseStatus.setTextColor(Color.parseColor("#44FF44")); // Verde
+                    } else {
+                        tvSupabaseStatus.setText("• Offline");
+                        tvSupabaseStatus.setTextColor(Color.parseColor("#FF4444")); // Rojo
+                    }
+                });
+            });
+        }
         if (tvBackgroundStatus != null) {
             int bgIdx = mActivity.mPrefs.getInt("pref_bg_mode", 1);
             String[] modes = { mActivity.getString(R.string.bg_pure_black),

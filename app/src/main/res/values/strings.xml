@@ -19,7 +19,7 @@
     <string name="bg_pure_black">Negro Puro</string>
     <string name="bg_fixed_image">Imagen background.png</string>
     <string name="bg_dynamic_logo">Logo Emisora (Dinámico)</string>
-
+    
     <!-- Font Names -->
     <string name="font_default">Defecto (System)</string>
     <string name="font_bebas">Robótica (Bebas)</string>
@@ -94,7 +94,7 @@
     <string name="about_dev_by">Desarrollado por</string>
     <string name="about_tech_details">Detalles Técnicos</string>
     <string name="touch_to_change">Toca para cambiar</string>
-
+    
     <!-- V4.3: Hardware Settings -->
     <string name="hardware_settings">⚙️ Ajustes de Hardware</string>
     <string name="enable_am_band">Habilitar Banda AM</string>
@@ -110,13 +110,13 @@
     <string name="am_band_enabled">✅ Banda AM habilitada</string>
     <string name="am_band_disabled">❌ Banda AM deshabilitada</string>
     <string name="engine_changed">✅ Motor de radio cambiado a %s</string>
-
+    
     <!-- V4.5: Night Mode Schedule -->
     <string name="night_schedule">Horario Modo Noche</string>
     <string name="night_start">Inicio</string>
     <string name="night_end">Fin</string>
     <string name="night_schedule_updated">✅ Horario actualizado: %1$s - %2$s</string>
-
+    
     <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
     <string name="pty_none">Sin PTY</string>
     <string name="pty_news">Noticias</string>
@@ -150,7 +150,7 @@
     <string name="pty_documentary">Documental</string>
     <string name="pty_alarm_test">Test Alarma</string>
     <string name="pty_alarm">Alarma</string>
-
+    
     <!-- V16.2: Logo Providers -->
     <string name="logo_provider">📡 Proveedor de Logos</string>
     <string name="provider_supabase">Supabase (Comunidad HD)</string>
@@ -158,7 +158,7 @@
     <string name="provider_both">Combinado (Supabase > Web)</string>
     <string name="contrib_cloud">Contribuir a la Comunidad (Logos HD)</string>
     <string name="contrib_cloud_desc">Envía automáticamente Frecuencia y PI Code de emisoras locales para mejorar la base de datos global.</string>
-
+    
     <!-- App Status & Dialogs -->
     <string name="edit_station_name">Editar nombre de emisora</string>
     <string name="frequency_label">Frecuencia: %1$s MHz</string>
@@ -182,4 +182,9 @@
     <string name="logo_mode_clock">Reloj Digital</string>
     <string name="history_cleared">Historial borrado</string>
     <string name="my_favorites">Mis Favoritos</string>
+    
+    <!-- Missing Default Values for Localized Strings -->
+    <string name="category_app_options">Opciones de la App</string>
+    <string name="category_premium">Ajustes Premium</string>
+    <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
 </resources>

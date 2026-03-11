@@ -17,10 +17,26 @@ import retrofit2.Response;
 public class SupabaseLogoSource {
     private final SupabaseApi api;
     private final String apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjaXF4dmZ2b2hjYWlhcXFydmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MjExNDcsImV4cCI6MjA4ODE5NzE0N30.kE5W3_qHMWMc1nKQQQn_lMb9NXOu6kFjEL5glpIhswM";
-    private final String storageUrl = "https://hciqxvfvohcaiaqqrvdq.supabase.co/storage/v1/object/public/logos/";
+    private final String storageUrl = "https://hciqxvfvohcaiaqqrvdq.supabase.co/storage/v1/object/public/station-logos/espana/";
 
     public SupabaseLogoSource() {
         this.api = SupabaseClient.getApi();
+    }
+
+    /**
+     * V18.8: Lista negra de nombres genéricos que ensucian la base de datos o causan búsquedas erróneas.
+     */
+    private static final String[] BLACKLIST_NAMES = {
+            "FM", "RADIO", "STEREO", "RDS", "BUSCANDO", "SCAN", "TUNING", "SINR", "NO RDS", "EMPTY", "WAITING", "SIGNAL"
+    };
+
+    public static boolean isNameGeneric(String name) {
+        if (name == null || name.trim().length() < 3) return true;
+        String clean = name.trim().toUpperCase();
+        for (String black : BLACKLIST_NAMES) {
+            if (clean.equals(black)) return true;
+        }
+        return false;
     }
 
     public SupabaseApi getSupabaseApi() {
@@ -66,10 +82,15 @@ public class SupabaseLogoSource {
 
             // 2. prioridad: RDS Name (exacto)
             if (rdsName != null && !rdsName.isEmpty()) {
-                String logo = queryByName(rdsName.trim());
-                if (logo != null) {
-                    android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (Name): " + logo);
-                    return logo;
+                String trimmedName = rdsName.trim();
+                if (!isNameGeneric(trimmedName)) {
+                    String logo = queryByName(trimmedName);
+                    if (logo != null) {
+                        android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (Name): " + logo);
+                        return logo;
+                    }
+                } else {
+                    android.util.Log.d("SupabaseLogoSource", "FETCH SKIP: Name '" + trimmedName + "' is generic.");
                 }
             }
 
@@ -94,52 +115,72 @@ public class SupabaseLogoSource {
      * V18.5: Añadido soporte para Storage y UserId.
      */
     public void upsertLogoData(android.content.Context context, String piCode, String rdsName, int freqKHz, String logoUrl, String streamUrl) {
-        if (logoUrl == null || logoUrl.isEmpty()) return;
+        // V19.0: Logo ya no es estrictamente obligatorio para el upsert (permite base de datos comunitaria)
+        // Pero necesitamos al menos PI o Nombre
+        if ((piCode == null || piCode.isEmpty()) && (rdsName == null || rdsName.isEmpty())) return;
 
         new Thread(() -> {
             notifyActivity(true);
             try {
                 String finalLogoUrl = logoUrl;
-                String deviceId = android.provider.Settings.Secure.getString(context.getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
+                // V19.4: Formatear frecuencia a String MHz (ej: 87.50) para coincidir con SQL
+                String freqStr = String.format(java.util.Locale.US, "%.2f", freqKHz / 1000.0);
 
-                // Si el logo es local, primero lo subimos al Storage de Supabase
-                if (logoUrl.startsWith("file://")) {
+                // Si el logo es local y existe, primero lo subimos al Storage de Supabase
+                if (logoUrl != null && logoUrl.startsWith("file://")) {
                     String localPath = logoUrl.substring(7);
                     File file = new File(localPath);
                     if (file.exists()) {
                         String fileName = (piCode != null ? piCode : (rdsName != null ? rdsName.replaceAll("[^a-zA-Z0-9]", "") : "station")) 
                                 + "_" + freqKHz + ".png";
                         
+                        // V19.4: Añadimos prefijo de carpeta 'espana/' según la estructura del bucket
+                        String storagePath = "espana/" + fileName;
+                        
                         RequestBody requestBody = RequestBody.create(MediaType.parse("image/png"), file);
-                        Call<Void> uploadCall = api.uploadLogoFile(apiKey, "Bearer " + apiKey, fileName, requestBody);
+                        Call<Void> uploadCall = api.uploadLogoFile(apiKey, "Bearer " + apiKey, storagePath, requestBody);
                         Response<Void> uploadRes = uploadCall.execute();
                         
                         if (uploadRes.isSuccessful() || uploadRes.code() == 409) { // 409 duplicated is okay for us
                             finalLogoUrl = storageUrl + fileName;
                             android.util.Log.d("SupabaseLogoSource", "UPLOAD SUCCESS: " + finalLogoUrl);
                         } else {
-                            android.util.Log.e("SupabaseLogoSource", "UPLOAD FAILED: " + uploadRes.code());
-                            return; // No seguimos si falla la subida de la imagen
+                            String errorBody = "";
+                            try {
+                                if (uploadRes.errorBody() != null) {
+                                    errorBody = uploadRes.errorBody().string();
+                                }
+                            } catch (Exception ignored) {}
+                            android.util.Log.e("SupabaseLogoSource", "UPLOAD FAILED: " + uploadRes.code() + " Error=" + errorBody);
                         }
                     }
                 }
 
-                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqKHz, finalLogoUrl, streamUrl, deviceId);
-                // V16.2: Añadido on_conflict para evitar duplicados. Preferimos ps_name si PI es nulo.
-                // V17.5: Evitar subir nombres genéricos o demasiado cortos que ensucian la base
-                if (piCode == null && (rdsName == null || rdsName.length() < 3 || rdsName.equals("BUSCANDO") || rdsName.contains("..."))) {
+                String hwModel = android.os.Build.MODEL; // Identificador del hardware (ej: K706, etc)
+                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqStr, finalLogoUrl, streamUrl, hwModel);
+                
+                // V18.8: Filtro mejorado con isNameGeneric para evitar basura en la DB
+                if (piCode == null && (rdsName == null || isNameGeneric(rdsName))) {
+                    android.util.Log.d("SupabaseLogoSource", "UPSERT ABORT: Name '" + rdsName + "' is generic or null and no PI Code.");
                     return;
                 }
 
                 String conflictColumns = (piCode != null && !piCode.isEmpty()) ? "pi_code" : "ps_name";
                 
-                Call<Void> call = api.upsertLogo(apiKey, "Bearer " + apiKey, "resolution=merge-duplicates", conflictColumns, data);
+                // V19.4: Cabecera 'return=minimal,resolution=merge-duplicates' para asegurar compatibilidad con PostgREST
+                Call<Void> call = api.upsertLogo(apiKey, "Bearer " + apiKey, "return=minimal,resolution=merge-duplicates", conflictColumns, data);
                 retrofit2.Response<Void> response = call.execute();
                 
                 if (response.isSuccessful()) {
-                    android.util.Log.d("SupabaseLogoSource", "UPSERT SUCCESS: " + rdsName + " (" + freqKHz + ")");
+                    android.util.Log.d("SupabaseLogoSource", "UPSERT SUCCESS: " + rdsName + " (" + freqStr + ")");
                 } else {
-                    android.util.Log.e("SupabaseLogoSource", "UPSERT FAILED: Code=" + response.code() + " Message=" + response.message());
+                    String errorBody = "";
+                    try {
+                        if (response.errorBody() != null) {
+                            errorBody = response.errorBody().string();
+                        }
+                    } catch (Exception ignored) {}
+                    android.util.Log.e("SupabaseLogoSource", "UPSERT FAILED: Code=" + response.code() + " Error=" + errorBody);
                 }
             } catch (Exception e) {
                 android.util.Log.e("SupabaseLogoSource", "Error upserting logo: " + e.getMessage());
@@ -180,5 +221,17 @@ public class SupabaseLogoSource {
             }
         } catch (Exception ignored) {}
         return null;
+    }
+
+    public void checkConnection(java.util.function.Consumer<Boolean> callback) {
+        new Thread(() -> {
+            try {
+                Call<Void> call = api.ping(apiKey, "Bearer " + apiKey);
+                retrofit2.Response<Void> res = call.execute();
+                callback.accept(res.isSuccessful());
+            } catch (Exception e) {
+                callback.accept(false);
+            }
+        }).start();
     }
 }

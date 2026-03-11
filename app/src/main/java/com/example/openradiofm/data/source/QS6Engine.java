@@ -49,11 +49,15 @@ public class QS6Engine implements RadioEngine {
     private final RadioCallback.Stub mNwdCallback = new RadioCallback.Stub() {
         @Override
         public void notifyCurrentFrequency(byte bandType, int frequency, String psName, int prefabIndex) {
-            // Nota: frequency viene en décimas de MHz (ej: 9690)
-            int freqKhz = frequency * 10;
-            
-            // V18.1: Se permite AM/SW (bandType >= 3) por petición del usuario.
-            // La UI ahora gestiona el filtrado o visualización según preferencias.
+            // V19.1: Refinamiento de frecuencia según banda (QS6). 
+            // - FM (band < 3): frequency viene en décimas de MHz (ej: 9690 -> 96900 kHz)
+            // - AM/SW (band >= 3): frequency suele venir en kHz directos (ej: 1080 -> 1080 kHz)
+            int freqKhz;
+            if (bandType < 3) {
+                freqKhz = frequency * 10;
+            } else {
+                freqKhz = frequency;
+            }
 
             mCurrentFreq = freqKhz;
             mCurrentBand = (int) bandType;
@@ -68,7 +72,7 @@ public class QS6Engine implements RadioEngine {
                 }
             });
             
-            Log.d(TAG, "NWD AIDL notifyCurrentFrequency -> Freq: " + freqKhz + ", Band: " + bandType + ", PS: " + psName);
+            Log.d(TAG, "NWD AIDL notifyCurrentFrequency -> FreqRaw: " + frequency + ", FreqKhz: " + freqKhz + ", Band: " + bandType + ", PS: " + psName);
         }
 
         @Override
@@ -325,10 +329,17 @@ public class QS6Engine implements RadioEngine {
         if (!mIsBound || mNwdService == null)
             return;
         try {
-            int nwdFreq = freqKhz / 10;
+            // V19.1: Escalar sintonía según banda para QS6
+            int nwdFreq;
+            if (mCurrentBand < 3) {
+                nwdFreq = freqKhz / 10;
+            } else {
+                nwdFreq = freqKhz;
+            }
+            
             // La firma de NWD es setCurrentFrequency(frequency, bandType, prefebIndex)
             mNwdService.setCurrentFrequency(nwdFreq, (byte) mCurrentBand, 0);
-            Log.d(TAG, "QS6 AIDL TUNE: " + freqKhz + " (" + nwdFreq + ")");
+            Log.d(TAG, "QS6 AIDL TUNE: " + freqKhz + " (" + nwdFreq + ") Band=" + mCurrentBand);
         } catch (RemoteException e) {
             Log.e(TAG, "tune remote error", e);
         }
@@ -368,12 +379,15 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void stepUp() {
-        tune(mCurrentFreq + 100);
+        // V19.1: Paso dinámico. 9 kHz para AM (zona EU), 100 kHz para FM.
+        int step = (mCurrentBand < 3) ? 100 : 9;
+        tune(mCurrentFreq + step);
     }
 
     @Override
     public void stepDown() {
-        tune(mCurrentFreq - 100);
+        int step = (mCurrentBand < 3) ? 100 : 9;
+        tune(mCurrentFreq - step);
     }
 
     @Override
