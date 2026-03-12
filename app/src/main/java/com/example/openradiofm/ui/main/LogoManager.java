@@ -107,7 +107,7 @@ public class LogoManager {
             iv.setVisibility(View.VISIBLE);
             // V2.4: Only reload if needed
             String path = logoFile.getAbsolutePath();
-            Object lastTag = iv.getTag(R.id.tag_image_res);
+            Object lastTag = iv.getTag(R.id.tag_logo_url);
             if (lastTag == null || !path.equals(lastTag)) {
                 iv.setImageDrawable(null); // Clear to avoid overlapping during load
                 Glide.with(mActivity)
@@ -117,7 +117,7 @@ public class LogoManager {
                         .transform(new RoundedCorners(24))
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(iv);
-                iv.setTag(R.id.tag_image_res, path);
+                iv.setTag(R.id.tag_logo_url, path);
             }
         } else {
             MainActivity.setImageResourceIfChanged(iv, R.mipmap.ic_launcher);
@@ -194,6 +194,20 @@ public class LogoManager {
                 loadCustomBackground();
             }
         }
+    }
+
+    /**
+     * Limpia el logo actual y restablece el estado visual.
+     * Útil al cambiar de frecuencia para evitar persistencia.
+     */
+    public void clearLogo() {
+        mLastStationLogoUrl = null;
+        ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
+        if (ivMainLogo != null) {
+            ivMainLogo.setTag(R.id.tag_logo_url, null);
+            applyFallbackLogo(ivMainLogo);
+        }
+        updateDynamicBackground(null);
     }
 
     /**

@@ -72,7 +72,7 @@ public class DialogManager {
                     mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
                     mActivity.mLastLogoUrl = ""; // Forzar que LogoManager no ignore el cambio
                     
-                    mActivity.updateFrequencyDisplay(currentFreq);
+                    mActivity.updateFrequencyDisplay(currentFreq, newName);
                     mActivity.refreshRadioStatus();
                 });
             }
@@ -100,7 +100,7 @@ public class DialogManager {
                 mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
                 mActivity.mLastLogoUrl = "";
                 
-                mActivity.updateFrequencyDisplay(currentFreq);
+                mActivity.updateFrequencyDisplay(currentFreq, null);
                 mActivity.refreshRadioStatus();
             });
         });

@@ -349,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     public void onFrequencyChanged(int freqKhz) {
         handleFrequencyChange(freqKhz);
-        runOnUiThread(() -> updateFrequencyDisplay(freqKhz));
+        runOnUiThread(() -> updateFrequencyDisplay(freqKhz, null));
     }
 
     @Override
@@ -502,9 +502,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     // Forzar recarga en segundo plano
                     new Thread(() -> {
                         mRepository.getStationInfo(freq, logoUrl -> {
-                            runOnUiThread(() -> updateFrequencyDisplay(freq));
+                            runOnUiThread(() -> updateFrequencyDisplay(freq, null));
                         });
-                        runOnUiThread(() -> updateFrequencyDisplay(freq));
+                        if (freq > 0) {
+                            runOnUiThread(() -> updateFrequencyDisplay(freq, null));
+                        }
                     }).start();
                 }
                 return true;
@@ -607,7 +609,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mRepository.saveRdsName(freq, name);
 
                 // V5.3: RDS PS Substitution (La variable reside en mRdsManager)
-                runOnUiThread(() -> updateFrequencyDisplay(freq));
+                runOnUiThread(() -> updateFrequencyDisplay(freq, name));
 
                 if (mPresetManager != null) {
                     mPresetManager.updateCardVisuals(-1, freq, mCurrentBand);
@@ -658,7 +660,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 int currentFreq = mEngine.getCurrentFreq();
                 mLastFreq = -1; // Force trigger
                 handleFrequencyChange(currentFreq);
-                updateFrequencyDisplay(currentFreq);
             }
         });
     }
@@ -860,7 +861,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mServiceController = new RadioServiceController(this, mPrefs, mServiceListener);
 
         // V16: NightMode y History Managers
-        mNightModeManager = new NightModeManager(this, mPrefs, freq -> updateFrequencyDisplay(freq));
+        mNightModeManager = new NightModeManager(this, mPrefs, freq -> updateFrequencyDisplay(freq, null));
         mHistoryManager = new HistoryManager(this, mPrefs);
         mMediaSessionManager = new MediaSessionManager(this);
         mMediaSessionManager.connect();
@@ -1474,6 +1475,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             return;
         }
 
+        // V4.8.6: Limpieza inmediata de UI al cambiar de sintonía (Sin esperar a carga asíncrona)
+        runOnUiThread(() -> {
+            if (mRdsManager != null) mRdsManager.reset(true);
+            if (mLogoManager != null) mLogoManager.clearLogo();
+        });
+
         mLastRefreshFreq = freq;
         mLastRefreshBand = band;
         mLastFullRefreshTime = System.currentTimeMillis();
@@ -1532,14 +1539,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     setTextColorIfChanged(tvFrequency, white);
                 }
 
-                updateFrequencyDisplay(fFreq);
-
                 // V18.6: Actualizar metadatos de la sesión de medios inmediatamente
                 if (mMediaSessionManager != null) {
                     float freqDisplay = fFreq / 1000.0f;
                     String freqStr = String.format(java.util.Locale.US, "%.1f MHz", freqDisplay);
                     mMediaSessionManager.updateMetadata(rdsName, freqStr, null);
                 }
+
+                updateFrequencyDisplay(fFreq, rdsName);
 
                 // V4.0: Logo & Background (Always refresh logo in polling for consistency)
                 if (mLogoManager != null) {
@@ -1707,7 +1714,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
-    void updateFrequencyDisplay(int freq) {
+    // V4.8.6: Ahora acepta rdsName para evitar hilos redundantes si ya se obtuvo antes.
+    void updateFrequencyDisplay(int freq, String rdsName) {
         if (freq <= 0)
             return; // V11.7: Evitar mostrar 00.0/0
         if (tvFrequency != null) {
@@ -1719,30 +1727,38 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } else {
                 freqStr = String.format(java.util.Locale.US, "%.1f", freq / 1000.0);
             }
-            setTextIfChanged(tvFrequency, freqStr);
-
-            // V18.2: Mover resolución de nombres lenta a hilo secundario
-            new Thread(() -> {
-                String finalDisplayName = null;
-                if (!mIsScanning && mRdsManager != null) {
-                    finalDisplayName = mRdsManager.getDisplayName(freq);
-                }
+            
+            // Si tenemos un nombre RDS pasado por argumento, lo usamos directamente si no es vacío.
+            // Si no lo tenemos, probamos a resolverlo.
+            if (rdsName != null && !rdsName.isEmpty()) {
+                setTextIfChanged(tvFrequency, rdsName);
+            } else {
+                setTextIfChanged(tvFrequency, freqStr);
                 
-                // Fallback al repositorio si el RDSManager no reconoce el nombre
-                if ((finalDisplayName == null || finalDisplayName.isEmpty()) && mRepository != null && !mIsScanning) {
-                    com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
-                    if (station != null) {
-                        finalDisplayName = station.getName();
+                // V18.2/V4.8.6: Solo lanzamos hilo si no nos han pasado el nombre ya resuelto.
+                // Esto reduce drásticamente el parpadeo y la carga de CPU.
+                new Thread(() -> {
+                    String finalDisplayName = null;
+                    if (!mIsScanning && mRdsManager != null) {
+                        finalDisplayName = mRdsManager.getDisplayName(freq);
                     }
-                }
-                
-                final String resultName = finalDisplayName;
-                if (resultName != null && !resultName.isEmpty()) {
-                    runOnUiThread(() -> {
-                        setTextIfChanged(tvFrequency, resultName);
-                    });
-                }
-            }).start();
+                    
+                    // Fallback al repositorio si el RDSManager no reconoce el nombre
+                    if ((finalDisplayName == null || finalDisplayName.isEmpty()) && mRepository != null && !mIsScanning) {
+                        com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+                        if (station != null) {
+                            finalDisplayName = station.getName();
+                        }
+                    }
+                    
+                    final String resultName = finalDisplayName;
+                    if (resultName != null && !resultName.isEmpty()) {
+                        runOnUiThread(() -> {
+                            setTextIfChanged(tvFrequency, resultName);
+                        });
+                    }
+                }).start();
+            }
 
             // Get State
             boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);

@@ -2,4 +2,5 @@
 <resources>
     <item name="tag_color_filter" type="id" />
     <item name="tag_image_res" type="id" />
+    <item name="tag_logo_url" type="id" />
 </resources>
