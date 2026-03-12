@@ -158,6 +158,18 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
+### v19.5 "Cloud ID & Premium Layout Refinement" (12 de Marzo 2026)
+- **Identificación Única (Cloud Sync)**:
+    - **Hardware ID Mapping**: Implementada la utilidad `DeviceMetadataUtils` para asignar un ID persistente a cada unidad (basado en Serial de HW para K706/MT8163 o Android ID/UUID).
+    - **Supabase Device Tracking**: La base de datos ahora registra el `device_id` en cada reporte de estación para mejorar la moderación de logos y métricas.
+- **Refinamiento Estético Premium**:
+    - **Layout V3 Transparency**: El contenedor de RDS RT ahora es 100% transparente, logrando un diseño más limpio integrado en el fondo.
+    - **Geometría de Interfaz**: Reducción del tamaño del icono de señal (44dp) y ajuste de altura de la frecuencia en V3 para evitar solapamientos.
+- **Estabilización de Motores**:
+    - **MT8163 Full Restore**: Recuperada la funcionalidad de RDS RT y nombres de emisora tras la regresión de la sesión anterior.
+    - **MTK8259 Polish**: Corregido el intercambio de datos entre PTY y Texto. Se ha fijado el icono de Mute a un estado estático profesional (`radio_mute_n`).
+    - **K706 Band Fix**: Resuelto el problema visual donde las bandas AM se mostraban con iconos de FM.
+
 ### v4.8.5 "UI Stability & Anti-Flicker Pro" (11 de Marzo 2026)
 - **Eliminación de Parpadeo (Fases 2.5 - 2.7)**:
     - **Master Guard de Hilos**: Implementado un sistema de bloqueo reactivo que reduce la creación de hilos en un 90% cuando la radio está estática.

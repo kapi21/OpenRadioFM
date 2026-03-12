@@ -142,6 +142,7 @@ public class MT8163Engine implements RadioEngine {
 
             @Override
             public void onRdsPty(String pty) {
+                // V18.6.3: Some AIDL sources are limited, restoring HiddenRadioPlayer as primary source
                 if (mCallback != null) mCallback.onRdsPty(pty);
             }
 

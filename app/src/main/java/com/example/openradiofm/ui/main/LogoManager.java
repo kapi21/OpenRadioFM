@@ -228,26 +228,33 @@ public class LogoManager {
                         ivMainLogo.setImageDrawable(null); // Clear overlap
                     }
                     
+                    // V18.6.2: Gestión Unificada de Glide para evitar solapamientos y suavizar transiciones
                     Glide.with(mActivity)
                             .asBitmap()
                             .load(cachedUrl)
                             .transform(new RoundedCorners(24))
-                            .transition(BitmapTransitionOptions.withCrossFade())
-                            .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
+                            // Animación más larga para sensación premium (800ms)
+                            .transition(BitmapTransitionOptions.withCrossFade(800))
+                            // Usamos el drawable actual como placeholder para un fundido limpio
+                            .placeholder(ivMainLogo.getDrawable())
+                            .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
                                 @Override
                                 public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
-                                    if (ivMainLogo != null) ivMainLogo.setImageBitmap(resource);
+                                    super.onResourceReady(resource, transition);
+                                    
+                                    // Notificar a otros componentes una vez el bitmap está listo
                                     if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
-                                        mActivity.mSimpleLayoutManager.updateLogo(resource);
+                                        // SimpleLayoutManager ya no necesita hacer su propio setImageBitmap
+                                        // pero sí necesita el bitmap para la paleta y el fondo.
+                                        mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
                                     }
+                                    
                                     if (mActivity.mMediaSessionManager != null) {
                                         String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
                                         String freqStr = String.format("%.1f MHz", freq / 1000.0f);
                                         mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
                                     }
                                 }
-                                @Override
-                                public void onLoadCleared(android.graphics.drawable.Drawable placeholder) {}
                             });
                 }
                 updateDynamicBackground(cachedUrl);
@@ -268,17 +275,19 @@ public class LogoManager {
                                     ivMainLogo.setImageDrawable(null); // Clear overlap
                                 }
                                 
+                                // V18.6.2: Aplicar la misma transición premium en la búsqueda asíncrona
                                 Glide.with(mActivity)
                                         .asBitmap()
                                         .load(url)
                                         .transform(new RoundedCorners(24))
-                                        .transition(BitmapTransitionOptions.withCrossFade())
-                                        .into(new com.bumptech.glide.request.target.CustomTarget<Bitmap>() {
+                                        .transition(BitmapTransitionOptions.withCrossFade(800))
+                                        .placeholder(ivMainLogo.getDrawable())
+                                        .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
                                             @Override
                                             public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
-                                                if (ivMainLogo != null) ivMainLogo.setImageBitmap(resource);
+                                                super.onResourceReady(resource, transition);
                                                 if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
-                                                    mActivity.mSimpleLayoutManager.updateLogo(resource);
+                                                    mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
                                                 }
                                                 if (mActivity.mMediaSessionManager != null) {
                                                     String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
@@ -286,8 +295,6 @@ public class LogoManager {
                                                     mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
                                                 }
                                             }
-                                            @Override
-                                            public void onLoadCleared(android.graphics.drawable.Drawable placeholder) {}
                                         });
                             }
                             updateDynamicBackground(url);

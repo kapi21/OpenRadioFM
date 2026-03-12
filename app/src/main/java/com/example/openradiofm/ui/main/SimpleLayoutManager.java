@@ -22,6 +22,7 @@ public class SimpleLayoutManager {
     private TextView tvRdsInfo;
     private View boxLogoSimple;
     private ImageButton btnSeekDown, btnMute, btnSeekUp;
+    private ImageView ivDataActivityIcon;
     
     // V18.6: Estado para el fundido cruzado (Cross-fade)
     private boolean useExtraBackground = false;
@@ -46,6 +47,7 @@ public class SimpleLayoutManager {
         btnSeekDown = root.findViewById(R.id.btnSeekDown);
         btnMute = root.findViewById(R.id.btnMute);
         btnSeekUp = root.findViewById(R.id.btnSeekUp);
+        ivDataActivityIcon = root.findViewById(R.id.ivDataActivityIcon);
 
         setupListeners();
         setDefaultState(); 
@@ -97,9 +99,8 @@ public class SimpleLayoutManager {
         }
     }
 
-    public void updateLogo(Bitmap bitmap) {
+    public void updateLogoPalette(Bitmap bitmap) {
         if (ivMainLogo != null && bitmap != null) {
-            ivMainLogo.setImageBitmap(bitmap);
             ivMainLogo.setColorFilter(null);
             ivMainLogo.setAlpha(1.0f);
 
@@ -227,9 +228,6 @@ public class SimpleLayoutManager {
             if (btnSeekDown != null) btnSeekDown.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
             if (btnSeekUp != null) btnSeekUp.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
             if (btnMute != null) btnMute.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-            
-            ImageView cloudIcon = mActivity.findViewById(R.id.ivDataActivityIcon);
-            if (cloudIcon != null) cloudIcon.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
         } else {
             // Normal mode
             if (tvFrequency != null) tvFrequency.setTextColor(white);
@@ -238,9 +236,6 @@ public class SimpleLayoutManager {
             if (btnSeekDown != null) btnSeekDown.clearColorFilter();
             if (btnSeekUp != null) btnSeekUp.clearColorFilter();
             if (btnMute != null) btnMute.clearColorFilter();
-            
-            ImageView cloudIcon = mActivity.findViewById(R.id.ivDataActivityIcon);
-            if (cloudIcon != null) cloudIcon.clearColorFilter();
             
             applyGradientToTexts(); // Re-apply gradient
         }
@@ -268,9 +263,8 @@ public class SimpleLayoutManager {
         if (btnSeekUp != null) btnSeekUp.setLayerType(View.LAYER_TYPE_SOFTWARE, glowPaint);
         if (btnMute != null) btnMute.setLayerType(View.LAYER_TYPE_SOFTWARE, glowPaint);
 
-        ImageView cloudIcon = mActivity.findViewById(R.id.ivDataActivityIcon);
-        if (cloudIcon != null) {
-            cloudIcon.setLayerType(View.LAYER_TYPE_SOFTWARE, glowPaint);
+        if (ivDataActivityIcon != null) {
+            ivDataActivityIcon.setLayerType(View.LAYER_TYPE_SOFTWARE, glowPaint);
         }
     }
 

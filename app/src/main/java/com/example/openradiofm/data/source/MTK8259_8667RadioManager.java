@@ -168,12 +168,11 @@ public class MTK8259_8667RadioManager {
         }
     }
 
-    public String getPtyStrSafe() {
+    public String getRtSafe() {
         if (mTsCommon == null) return null;
         try {
-            String pty = mTsCommon.GetPtyStr();
-            if (pty == null) return null;
-            return mapPtyToId(pty.trim()); // V18.9: También mapear el PTY directo a ID
+            // V18.9: El análisis de ingeniería inversa confirma que GetPtyStr() en Topway devuelve el Radio Text (RT).
+            return mTsCommon.GetPtyStr();
         } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
             return null;
         }
@@ -220,12 +219,13 @@ public class MTK8259_8667RadioManager {
         }
     }
 
-    public String getCategorySafe() {
+    public String getPtySafe() {
         if (mTsCommon == null) return null;
         try {
+            // V18.9: El análisis de ingeniería inversa confirma que GetCategory() devuelve el PTY.
             String category = mTsCommon.GetCategory();
             if (category == null) return null;
-            return mapPtyToId(category.trim()); // V18.9: Usar el mapeador con fallback
+            return mapPtyToId(category.trim());
         } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
             return null;
         }
@@ -267,5 +267,52 @@ public class MTK8259_8667RadioManager {
 
     public ITsSpeechRadio getRawService() {
         return mTsSpeechRadio;
+    }
+
+    // --- Nuevos métodos RDS Status (V18.9) ---
+
+    public boolean isAfActiveSafe() {
+        if (mTsCommon == null) return false;
+        try {
+            return mTsCommon.RdsAf();
+        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isTaActiveSafe() {
+        if (mTsCommon == null) return false;
+        try {
+            return mTsCommon.RdsTa();
+        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isTpActiveSafe() {
+        if (mTsCommon == null) return false;
+        try {
+            return mTsCommon.RdsTp();
+        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return false;
+        }
+    }
+
+    public void toggleAfSafe() {
+        if (mTsCommon == null) return;
+        try {
+            mTsCommon.RdsAfSwitch();
+        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            Log.e(TAG, "toggleAfSafe not supported", e);
+        }
+    }
+
+    public void toggleTaSafe() {
+        if (mTsCommon == null) return;
+        try {
+            mTsCommon.RdsTaSwitch();
+        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            Log.e(TAG, "toggleTaSafe not supported", e);
+        }
     }
 }

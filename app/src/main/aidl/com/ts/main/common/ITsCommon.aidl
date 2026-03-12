@@ -112,4 +112,9 @@ interface ITsCommon {
 	String GetPsName();
 	String GetPtyStr();
 	String GetCategory();
+	boolean RdsAf();
+	boolean RdsTa();
+	boolean RdsTp();
+	void RdsAfSwitch();
+	void RdsTaSwitch();
 }

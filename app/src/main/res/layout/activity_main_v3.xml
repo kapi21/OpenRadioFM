@@ -115,7 +115,7 @@
             android:id="@+id/tvRdsInfo"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@android:color/transparent"
             android:paddingHorizontal="16dp"
             android:paddingVertical="8dp"
             android:gravity="center"
@@ -240,14 +240,14 @@
         app:layout_constraintStart_toEndOf="@+id/btnFavPrev"
         app:layout_constraintTop_toBottomOf="@id/guideline_row1">
 
-        <!-- Layout vertical: Frecuencia arriba, info abajo -->
+        <!-- Layout vertical: Info contextual -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
             android:gravity="center">
 
-            <!-- Fila superior: Logo + Frecuencia -->
+            <!-- Fila superior: Reservada para Logo (si se muestra) -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
@@ -257,26 +257,10 @@
 
                 <ImageView
                     android:id="@+id/ivMainLogo"
-                    android:layout_width="60dp"
-                    android:layout_height="60dp"
-                    android:layout_marginEnd="8dp"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
                     android:scaleType="fitCenter"
                     android:visibility="gone" />
-
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tvFrequency"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:gravity="center"
-                    android:includeFontPadding="false"
-                    android:text="92.30"
-                    android:textColor="@color/white"
-                    app:autoSizeTextType="uniform"
-                    app:autoSizeMinTextSize="14sp"
-                    app:autoSizeMaxTextSize="@dimen/text_size_frequency_base_v3"
-                    app:autoSizeStepGranularity="2sp"
-                    android:maxLines="1" />
             </LinearLayout>
 
             <!-- Fila inferior: Signal + PTY + Unit -->
@@ -384,6 +368,26 @@
             android:visibility="gone"
             android:src="@drawable/radio_icon_p01" />
     </FrameLayout>
+
+    <!-- tvFrequency: Fuera del FrameLayout para forzar Autosizing por ConstraintLayout -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvFrequency"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="28dp"
+        android:gravity="center"
+        android:text="92.30"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="12sp"
+        app:autoSizeMaxTextSize="@dimen/text_size_frequency_base_v3"
+        app:autoSizeStepGranularity="2sp"
+        android:maxLines="1"
+        app:layout_constraintTop_toTopOf="@id/boxFrequency"
+        app:layout_constraintBottom_toBottomOf="@id/boxFrequency"
+        app:layout_constraintStart_toEndOf="@id/btnFavPrev"
+        app:layout_constraintEnd_toStartOf="@id/btnFavNext" />
 
     <ImageButton
         android:id="@+id/btnFavNext"

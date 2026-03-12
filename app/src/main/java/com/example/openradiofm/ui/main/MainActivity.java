@@ -431,17 +431,20 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
 
         // V17.0: Indicador visual de Streaming Online activo
-        if (mOnlineStreamManager != null && ivDataActivityIcon != null) {
+        if (ivDataActivityIcon == null) ivDataActivityIcon = findViewById(R.id.ivDataActivityIcon);
+        
+        if (mOnlineStreamManager != null && (ivDataActivityIcon != null)) {
             if (mOnlineStreamManager.isPlaying()) {
                 // Streaming active -> RED
                 setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
                 setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
             } else if (mOnlineStreamManager.isLoading()) {
+                // Loading -> YELLOW
+                setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
                 setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
             } else {
-                // V17.4: Al limpiar filtros, respetar el color azul noche si el modo noche está activo
-                if (mNightModeManager != null && mNightModeManager.isNightTime() && 
-                    mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                // Inactive -> Respect Night Mode or Clear
+                if (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
                     int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
                     setColorFilterIfChanged(ivDataActivityIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
                 } else {
@@ -769,6 +772,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
 
             mCurrentBand = mEngine.getCurrentBand();
+
+            // V18.6.3: Asegurar sintonización al arranque de cero
+            if (mEngine.getCurrentFreq() <= 0 && mLastFreq > 0) {
+                Log.d(TAG, "Startup: Tuning to last frequency " + mLastFreq);
+                mEngine.tune(mLastFreq);
+            }
+
             startStatusPolling();
 
             runOnUiThread(() -> {
@@ -878,15 +888,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     ImageButton btnMute = findViewById(R.id.btnMute);
                     if (btnMute != null) {
                         btnMute.setSelected(isMuted);
-                        // V18.6: Forzar actualización de imagen según el estado real
-                        if (isMuted) {
+                        // V18.9: Para el motor MTK, el usuario prefiere que el icono no cambie (siempre radio_mute_n)
+                        // aunque el hardware esté muteado. Para otros motores (K706, etc.) se mantiene el toggle.
+                        boolean isMTK = mEngine != null && mEngine.getEngineName().contains("MTK");
+
+                        if (isMuted && !isMTK) {
                             btnMute.setImageResource(R.drawable.radio_mute_p);
-                            btnMute.setAlpha(1.0f);
                         } else {
                             btnMute.setImageResource(R.drawable.radio_mute_n);
-                            btnMute.setAlpha(1.0f);
-                            btnMute.setSelected(false); // Refuerzo
                         }
+                        btnMute.setAlpha(1.0f);
+                        if (!isMuted) btnMute.setSelected(false);
                     }
                 });
             }
@@ -927,6 +939,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // Bind Views
         tvFrequency = findViewById(R.id.tvFrequency);
+        if (tvFrequency != null) {
+            tvFrequency.setEllipsize(null);
+            tvFrequency.setSingleLine(false); // Necesario para que el Autosizing no se confunda con ellipsize
+            tvFrequency.setMaxLines(1);
+        }
         tvRdsName = findViewById(R.id.tvRdsName); // V5
         tvRdsInfo = findViewById(R.id.tvRdsInfo);
 
@@ -1630,19 +1647,19 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
 
     private void updateBandImage(int band) {
-        int resId = R.drawable.radio_fm1;
-        if (band == BAND_FM1)
+        int resId;
+        if (band == BAND_FM1) {
             resId = R.drawable.radio_fm1;
-        else if (band == BAND_FM2)
+        } else if (band == BAND_FM2) {
             resId = R.drawable.radio_fm2;
-        else if (band == BAND_FM3)
+        } else if (band == BAND_FM3) {
             resId = R.drawable.radio_fm3;
-        else if (band == BAND_AM1) {
-            // Placeholder until assets are provided, fallback to FM1 or a generic icon
-            resId = R.drawable.radio_fm1;
+        } else if (band == BAND_AM1) {
+            resId = R.drawable.radio_am1;
         } else if (band == BAND_AM2) {
-            if (resId == 0)
-                resId = R.drawable.radio_fm2;
+            resId = R.drawable.radio_am2;
+        } else {
+            resId = R.drawable.radio_fm1; // Fallback
         }
 
         if (ivBandIndicator != null) {
@@ -1732,6 +1749,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // Si no lo tenemos, probamos a resolverlo.
             if (rdsName != null && !rdsName.isEmpty()) {
                 setTextIfChanged(tvFrequency, rdsName);
+            } else if (mLastPs != null && !mLastPs.isEmpty()) {
+                // V18.6.4: Use cached name instead of numbers during UI refreshes (avoid tremble/jitter)
+                setTextIfChanged(tvFrequency, mLastPs);
             } else {
                 setTextIfChanged(tvFrequency, freqStr);
                 
@@ -2285,6 +2305,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mLastLogoUrl = ""; // Force logo reload
         mCurrentPi = null;
         mCurrentPty = null;
+        mLastPs = ""; // V18.6.4: Clear cached RDS name to avoid stale display on new freq
         mHasRdsLock = false;
 
         if (mRdsManager != null) {

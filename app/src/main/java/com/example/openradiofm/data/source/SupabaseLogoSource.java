@@ -157,7 +157,8 @@ public class SupabaseLogoSource {
                 }
 
                 String hwModel = android.os.Build.MODEL; // Identificador del hardware (ej: K706, etc)
-                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqStr, finalLogoUrl, streamUrl, hwModel);
+                String deviceId = com.example.openradiofm.utils.DeviceMetadataUtils.getUniqueDeviceId(context);
+                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqStr, finalLogoUrl, streamUrl, hwModel, deviceId);
                 
                 // V18.8: Filtro mejorado con isNameGeneric para evitar basura en la DB
                 if (piCode == null && (rdsName == null || isNameGeneric(rdsName))) {

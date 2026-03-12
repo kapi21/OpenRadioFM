@@ -223,23 +223,38 @@ public class MTK8259_8667Engine implements RadioEngine {
 
     @Override
     public void toggleRdsFeature(int type) {
-        // En Topway es un intercambio entre AM/FM si detectamos el nuevo tipo de toggle
-        if (type == 99 && mManager != null) { // Código interno para AM/FM toggle
-            try {
-                mManager.toggleAmFm();
-                if (mCallback != null) mCallback.onBandChanged(getCurrentBand());
-            } catch (Exception ignored) {}
+        if (mManager == null) return;
+        
+        switch (type) {
+            case 1: // AF
+                mManager.toggleAfSafe();
+                break;
+            case 2: // TA
+                mManager.toggleTaSafe();
+                break;
+            case 99: // Código interno para AM/FM toggle (existente)
+                try {
+                    mManager.toggleAmFm();
+                    if (mCallback != null) mCallback.onBandChanged(getCurrentBand());
+                } catch (Exception ignored) {}
+                break;
         }
     }
 
     @Override
-    public boolean isAfEnabled() { return false; }
+    public boolean isAfEnabled() { 
+        return mManager != null && mManager.isAfActiveSafe(); 
+    }
 
     @Override
-    public boolean isTaEnabled() { return false; }
+    public boolean isTaEnabled() { 
+        return mManager != null && mManager.isTaActiveSafe(); 
+    }
 
     @Override
-    public boolean isTpEnabled() { return false; }
+    public boolean isTpEnabled() { 
+        return mManager != null && mManager.isTpActiveSafe(); 
+    }
 
     @Override
     public void toggleDxLocal() {}
@@ -274,43 +289,40 @@ public class MTK8259_8667Engine implements RadioEngine {
         if (mTK8259_8667RadioManager == null || this.mCallback == null) {
             return;
         }
+
+        // 1. RDS PS Name
         String psNameSafe = mTK8259_8667RadioManager.getPsNameSafe();
         if (psNameSafe != null) {
             psNameSafe = psNameSafe.trim();
         }
-        if (psNameSafe == null) {
-            return;
-        }
-        if (!psNameSafe.isEmpty() && !psNameSafe.equals(this.mLastPs)) {
+        if (psNameSafe != null && !psNameSafe.isEmpty() && !psNameSafe.equals(this.mLastPs)) {
             this.mLastPs = psNameSafe;
             this.mCallback.onRdsName(psNameSafe);
         }
-        String categorySafe = this.mManager.getCategorySafe();
-        String ptyStrSafe = this.mManager.getPtyStrSafe();
-        if (categorySafe != null) {
-            categorySafe = categorySafe.trim();
+
+        // 2. PTY (Program Type)
+        // V18.9: El análisis confirma que GetCategory() devuelve el PTY.
+        String ptySafe = mTK8259_8667RadioManager.getPtySafe();
+        if (ptySafe != null && !ptySafe.isEmpty()) {
+            this.mCallback.onRdsPty(ptySafe);
         }
-        if (ptyStrSafe != null) {
-            ptyStrSafe = ptyStrSafe.trim();
-        }
-        if (ptyStrSafe == null || ptyStrSafe.isEmpty()) {
-            ptyStrSafe = (categorySafe == null || categorySafe.isEmpty()) ? null : categorySafe;
-        }
-        if (ptyStrSafe != null) {
-            this.mCallback.onRdsPty(ptyStrSafe);
-        }
-        if (categorySafe == null || categorySafe.isEmpty() || categorySafe.equals(ptyStrSafe)) {
-            categorySafe = null;
-        }
-        if (categorySafe != null && !categorySafe.equals(this.mLastRt)) {
-            this.mLastRt = categorySafe;
-            this.mCallback.onRdsText(categorySafe);
+
+        // 3. RT (Radio Text)
+        // V18.9: El análisis confirma que GetPtyStr() devuelve el Radio Text (RT).
+        String rtSafe = mTK8259_8667RadioManager.getRtSafe();
+        if (rtSafe != null && !rtSafe.isEmpty() && !rtSafe.equals(this.mLastRt)) {
+            this.mLastRt = rtSafe;
+            this.mCallback.onRdsText(rtSafe);
         } else {
-            if (categorySafe != null || this.mLastRt == null) {
-                return;
-            }
             this.mLastRt = null;
             this.mCallback.onRdsText("");
         }
+
+        // 4. RDS Status (AF, TA, TP bits) - V18.9
+        this.mCallback.onRdsStatus(
+                mTK8259_8667RadioManager.isAfActiveSafe(),
+                mTK8259_8667RadioManager.isTaActiveSafe(),
+                mTK8259_8667RadioManager.isTpActiveSafe()
+        );
     }
 }
