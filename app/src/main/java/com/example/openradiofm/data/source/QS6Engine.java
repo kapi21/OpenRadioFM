@@ -28,6 +28,11 @@ public class QS6Engine implements RadioEngine {
     private int mCurrentBand = 0;
     private boolean mIsStereo = false;
     private boolean mIsMute = false;
+    private boolean mIsAfEnabled = false;
+    private boolean mIsTaEnabled = false;
+    private boolean mIsTpEnabled = false;
+    private boolean mIsScanning = false;
+    private boolean mIsDxLocal = false;
     private final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     // Intents de Emisión (Encendido/Apagado General del MCU)
@@ -77,6 +82,12 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyCurrentIsTA(boolean isTA) {
+            mIsTaEnabled = isTA;
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onRdsStatus(mIsAfEnabled, isTA, mIsTpEnabled);
+                }
+            });
         }
 
         @Override
@@ -97,6 +108,20 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyRDSStateChange() {
+            // V19.5: Consultar estados reales tras el cambio
+            if (mNwdService != null) {
+                try {
+                    mIsAfEnabled = mNwdService.getRDSState(1); // 1 = AF en NWD
+                    mIsTaEnabled = mNwdService.getRDSState(0); // 0 = TA en NWD
+                    mMainHandler.post(() -> {
+                        if (mCallback != null) {
+                            mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
+                        }
+                    });
+                } catch (RemoteException e) {
+                    Log.e(TAG, "Error consultando RDS state", e);
+                }
+            }
         }
 
         @Override
@@ -106,9 +131,10 @@ public class QS6Engine implements RadioEngine {
         @Override
         public void notifyRadioScanState(int state) {
             Log.d(TAG, "NWD AIDL ScanState -> " + state);
+            mIsScanning = (state != 0);
             mMainHandler.post(() -> {
                 if (mCallback != null) {
-                    mCallback.onScanStatusChanged(state != 0);
+                    mCallback.onScanStatusChanged(mIsScanning);
                 }
             });
         }
@@ -534,37 +560,37 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void toggleRdsFeature(int type) {
-        // En NWD: type 0=TA, type 1=AF u otra combinación... (Asumo 0 = TA)
         if (!mIsBound || mNwdService == null)
             return;
         try {
-            // Invertimos el estado (Toggle).
-            // Para ser 100% precisos habría que cachear el estado previo (mIsTA).
-            // Usaré getRDSState provisto en el AIDL.
-            boolean isTAOn = mNwdService.getRDSState(0);
-            mNwdService.setRDSState((byte) 0, !isTAOn);
+            // NWD mapea: 0=TA, 1=AF (visto en logs y AIDL)
+            byte rdsType = (type == 1) ? (byte) 1 : (byte) 0;
+            boolean currentState = mNwdService.getRDSState(rdsType);
+            mNwdService.setRDSState(rdsType, !currentState);
+            Log.d(TAG, "Toggle RDS Feature " + type + " (NWD Type " + rdsType + ") -> " + !currentState);
         } catch (RemoteException e) {
+            Log.e(TAG, "toggleRdsFeature error", e);
         }
     }
 
     @Override
     public boolean isAfEnabled() {
-        return false;
+        return mIsAfEnabled;
     }
 
     @Override
     public boolean isTaEnabled() {
-        return false;
+        return mIsTaEnabled;
     }
 
     @Override
     public boolean isTpEnabled() {
-        return false;
+        return mIsTpEnabled;
     }
 
     @Override
     public boolean isScanning() {
-        return false;
+        return mIsScanning;
     }
 
     @Override
@@ -580,7 +606,7 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public boolean isDxLocal() {
-        return false;
+        return mIsDxLocal;
     }
 
     @Override
