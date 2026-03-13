@@ -331,6 +331,31 @@ public class MTK8259_8667RadioManager {
         }
     }
 
+    /**
+     * V20.0: Fuerza un estado de sonido activo.
+     * Útil para solventar el bug de audio silenciado al arrancar en MTK8259.
+     */
+    public void forceUnmute() {
+        try {
+            android.media.AudioManager am = (android.media.AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+            if (am != null) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                    am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_UNMUTE, 0);
+                }
+            }
+            if (mTsCommon != null && mTsCommon.IsMute()) {
+                mTsCommon.Mute(); // El comando Mute() en Topway suele actuar como toggle o alternar estado
+                Log.d(TAG, "forceUnmute: Hardware Mute toggled to restore sound");
+            }
+            // Asegurar canal abierto
+            if (mTsSpeechRadio != null) {
+                mTsSpeechRadio.OpenRadioCh();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "forceUnmute failed", e);
+        }
+    }
+
     public void openEq() {
         try {
             if (mTsCommon != null) mTsCommon.GotoEq();

@@ -48,6 +48,7 @@ public class MTK8259_8667Engine implements RadioEngine {
             
             // Iniciar el bucle de RDS si el manager está conectado
             if (mManager.isConnected()) {
+                mManager.forceUnmute(); // V20.0: Asegurar sonido al arrancar
                 startRdsPolling();
                 return true;
             }
@@ -202,7 +203,7 @@ public class MTK8259_8667Engine implements RadioEngine {
     @Override
     public void enforceAudioRecovery() {
         if (mManager != null) {
-            try { mManager.getRawService().OpenRadioCh(); } catch (Exception ignored) {}
+            mManager.forceUnmute(); // V20.0: Forzar recuperación total del canal y volumen
         }
     }
 

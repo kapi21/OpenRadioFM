@@ -1083,6 +1083,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         if (mServiceController != null)
             mServiceController.start();
+
+        // V20.0: Ajuste automático por densidad (DPI)
+        adjustLayoutForDPI();
     }
 
     @Override
@@ -2502,6 +2505,55 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (current == null || (int)current != resId) {
             iv.setImageResource(resId);
             iv.setTag(R.id.tag_image_res, resId);
+        }
+    }
+    /**
+     * V20.0: Detecta automáticamente si la pantalla tiene una densidad alta (DPI)
+     * y ajusta las guías y el tamaño de los botones para que no se deformen.
+     */
+    private void adjustLayoutForDPI() {
+        if (!mIsV3) return; 
+        
+        android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
+        float density = metrics.density;
+        android.util.Log.d(TAG, "DPI Detection: density=" + density + " height=" + metrics.heightPixels);
+
+        if (density > 1.0f) {
+            // 1. Subir la guía del texto (0.36 -> 0.32) para dar mucho más espacio abajo
+            android.view.View guidelineView = findViewById(R.id.guideline_v3_freq_bottom);
+            if (guidelineView instanceof androidx.constraintlayout.widget.Guideline) {
+                ((androidx.constraintlayout.widget.Guideline) guidelineView).setGuidelinePercent(0.32f);
+            }
+            
+            // 2. Capar el tamaño de la fuente de la frecuencia
+            if (tvFrequency instanceof androidx.appcompat.widget.AppCompatTextView) {
+                ((androidx.appcompat.widget.AppCompatTextView)tvFrequency).setAutoSizeTextTypeUniformWithConfiguration(
+                    12, 72, 2, android.util.TypedValue.COMPLEX_UNIT_SP);
+            }
+
+            // 3. Achicar los iconos RDS (originalmente 56dp) para que no sean gigantes y permitan el clic
+            // 42dp es un tamaño excelente para que sigan siendo táctiles pero no estorben
+            int rdsSize = (int) (42 * density);
+            scaleView(findViewById(R.id.ivAfIcon), rdsSize, rdsSize);
+            scaleView(findViewById(R.id.ivTaIcon), rdsSize, rdsSize);
+            scaleView(findViewById(R.id.ivTpIcon), rdsSize, rdsSize);
+            
+            // 4. Achicar el logo principal (originalmente 64dp -> 48dp)
+            int logoSize = (int) (48 * density);
+            scaleView(findViewById(R.id.ivMainLogo), logoSize, logoSize);
+
+            android.util.Log.d(TAG, "DPI dynamic scaling applied to buttons and icons");
+        }
+    }
+
+    private void scaleView(android.view.View v, int w, int h) {
+        if (v != null) {
+            android.view.ViewGroup.LayoutParams params = v.getLayoutParams();
+            if (params != null) {
+                params.width = w;
+                params.height = h;
+                v.setLayoutParams(params);
+            }
         }
     }
 }
