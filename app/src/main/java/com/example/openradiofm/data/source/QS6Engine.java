@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.DeadObjectException;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -49,6 +50,8 @@ public class QS6Engine implements RadioEngine {
     // AIDL stubs
     private RadioFeature mNwdService;
     private boolean mIsBound = false;
+    private int mRetryCount = 0;
+    private static final int MAX_RETRIES = 3;
 
     // Implementación de la Callback del IPC hacia NWD
     private final RadioCallback.Stub mNwdCallback = new RadioCallback.Stub() {
@@ -109,19 +112,15 @@ public class QS6Engine implements RadioEngine {
         @Override
         public void notifyRDSStateChange() {
             // V19.5: Consultar estados reales tras el cambio
-            if (mNwdService != null) {
-                try {
-                    mIsAfEnabled = mNwdService.getRDSState(1); // 1 = AF en NWD
-                    mIsTaEnabled = mNwdService.getRDSState(0); // 0 = TA en NWD
-                    mMainHandler.post(() -> {
-                        if (mCallback != null) {
-                            mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
-                        }
-                    });
-                } catch (RemoteException e) {
-                    Log.e(TAG, "Error consultando RDS state", e);
-                }
-            }
+            performAidlCall("notifyRDSStateChange", () -> {
+                mIsAfEnabled = mNwdService.getRDSState(1); // 1 = AF en NWD
+                mIsTaEnabled = mNwdService.getRDSState(0); // 0 = TA en NWD
+                mMainHandler.post(() -> {
+                    if (mCallback != null) {
+                        mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
+                    }
+                });
+            });
         }
 
         @Override
@@ -180,19 +179,28 @@ public class QS6Engine implements RadioEngine {
             mIsBound = true;
             Log.d(TAG, "QS6 Service onServiceConnected -> Vinculado a NWD RadioService AIDL");
 
+            // V20.0: Registrar receptor de muerte del proceso para detectar caídas del sistema
+            try {
+                service.linkToDeath(() -> {
+                    Log.e(TAG, "!!! QS6 SERVICE DIED !!! El proceso com.nwd.radio.service ha muerto inesperadamente.");
+                    mNwdService = null;
+                    mIsBound = false;
+                    // Intentar recuperar audio si es posible
+                    if (mContext != null) {
+                        Log.w(TAG, "QS6: Intentando recuperación de emergencia...");
+                    }
+                }, 0);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error vinculando DeathRecipient en QS6", e);
+            }
+
             // V17.6: El registro de callbacks y configuración de fondo se hace en un hilo separado
             // para evitar congelar la UI si el servicio remoto está bloqueado inicializando.
             new Thread(() -> {
-                try {
-                    if (mNwdService != null) {
-                        Log.d(TAG, "QS6 (Background): Registrando callbacks y modo de fondo...");
-                        mNwdService.registCallback(mNwdCallback);
-                        mNwdService.setRadioBackServiceOn(true);
-                        Log.d(TAG, "QS6 (Background): Configuración completada.");
-                    }
-                } catch (RemoteException e) {
-                    Log.e(TAG, "Error en configuración asíncrona de QS6", e);
-                }
+                Log.d(TAG, "QS6 (Background): Registrando callbacks y modo de fondo...");
+                performAidlCall("registCallback", () -> mNwdService.registCallback(mNwdCallback));
+                performAidlCall("setRadioBackServiceOn", () -> mNwdService.setRadioBackServiceOn(true));
+                Log.d(TAG, "QS6 (Background): Configuración inicial completada.");
             }).start();
         }
 
@@ -203,6 +211,47 @@ public class QS6Engine implements RadioEngine {
             mIsBound = false;
         }
     };
+
+    /**
+     * V20.0: Helper para ejecutar llamadas AIDL con detección de muerte de objeto.
+     * Si detecta una DeadObjectException, intenta reiniciar el vínculo.
+     */
+    private interface AidlRunnable {
+        void run() throws RemoteException;
+    }
+
+    private synchronized void performAidlCall(String callName, AidlRunnable action) {
+        if (mNwdService == null) {
+            Log.w(TAG, "QS6: Intento de llamada '" + callName + "' con Servicio NWD nulo.");
+            return;
+        }
+
+        try {
+            action.run();
+            mRetryCount = 0; // Resetear contador si tiene éxito
+        } catch (DeadObjectException e) {
+            Log.e(TAG, "!!! QS6 DEAD OBJECT DETECTED en '" + callName + "' !!!");
+            handleServiceDeath();
+        } catch (RemoteException e) {
+            Log.e(TAG, "Error remoto en '" + callName + "'", e);
+        }
+    }
+
+    private void handleServiceDeath() {
+        mNwdService = null;
+        mIsBound = false;
+        
+        if (mRetryCount < MAX_RETRIES) {
+            mRetryCount++;
+            Log.w(TAG, "QS6: Re-vinculando servicio (Intento " + mRetryCount + "/" + MAX_RETRIES + ")...");
+            if (mContext != null) {
+                // Forzar un bindService limpio
+                init(mContext);
+            }
+        } else {
+            Log.e(TAG, "QS6: Se alcanzó el máximo de reintentos de reconexión. El hardware NWD no responde.");
+        }
+    }
 
     public QS6Engine() {
     }
@@ -257,14 +306,21 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void release() {
-        Log.d(TAG, "QS6: release() - Soltando recursos y desvinculando AIDL");
+        release(false); // Por defecto, liberación completa
+    }
+
+    @Override
+    public void release(boolean isChangingConfigurations) {
+        if (isChangingConfigurations) {
+            Log.d(TAG, "QS6: Recreación por cambio de configuración detectada. MANTENIENDO vínculo AIDL vivo.");
+            // En QS6, si mantenemos el vínculo (bind) y el callback registrado, 
+            // la radio sigue sonando y el hardware no se entera de que la Activity "murió" un instante.
+            return;
+        }
+
+        Log.d(TAG, "QS6: release() - Soltando recursos y desvinculando AIDL definitivamente");
         if (mIsBound && mNwdService != null) {
-            try {
-                // V18.4: Asegurar desvinculación de callback para evitar fugas y ruidos
-                mNwdService.unRegistCallback(mNwdCallback);
-            } catch (RemoteException e) {
-                Log.e(TAG, "Error al desvincular callback en release", e);
-            }
+            performAidlCall("unRegistCallback", () -> mNwdService.unRegistCallback(mNwdCallback));
             try {
                 mContext.unbindService(mConnection);
             } catch (Exception e) {
@@ -282,30 +338,20 @@ public class QS6Engine implements RadioEngine {
         
         // V18.4: Secuencia ultra-agresiva sincronizada
         try {
-            // 1. Desvincular callback AIDL INMEDIATAMENTE para que el hardware no nos mande
-            // eventos de actualización que puedan re-activar la UI o el audio durante el cierre.
+            // 1. Desvincular callback AIDL INMEDIATAMENTE
             if (mIsBound && mNwdService != null) {
-                try {
-                    Log.d(TAG, "QS6 (V18.4): Desvinculando Callback AIDL preventivamente...");
-                    mNwdService.unRegistCallback(mNwdCallback);
-                } catch (RemoteException e) {
-                    Log.e(TAG, "Error AIDL al desvincular callback", e);
-                }
+                Log.d(TAG, "QS6 (V18.4): Desvinculando Callback AIDL preventivamente...");
+                performAidlCall("unRegistCallback", () -> mNwdService.unRegistCallback(mNwdCallback));
             }
 
-            // 2. Muteo REDUNDANTE (Broadcast y AIDL si fuera posible)
-            // ACTION_SET_MUTE suele ser para volumen de sistema, ACTION_MUTE para hardware radio
+            // 2. Muteo REDUNDANTE
             setMute(true);
             mContext.sendBroadcast(new Intent("com.nwd.action.ACTION_MUTE")); 
 
             // 3. Detener servicio de audio en segundo plano (AIDL)
             if (mIsBound && mNwdService != null) {
-                try {
-                    Log.d(TAG, "QS6 (V18.4): Deteniendo RadioBackService...");
-                    mNwdService.setRadioBackServiceOn(false);
-                } catch (RemoteException e) {
-                    Log.e(TAG, "Error AIDL al desactivar BackService", e);
-                }
+                Log.d(TAG, "QS6 (V18.4): Deteniendo RadioBackService...");
+                performAidlCall("setRadioBackServiceOn", () -> mNwdService.setRadioBackServiceOn(false));
             }
 
             // 4. Cambiar fuente a ANDROID (0) - Indica al MCU que deje de rutear el chip de radio
@@ -352,23 +398,19 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void tune(int freqKhz) {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
-            // V19.1: Escalar sintonía según banda para QS6
-            int nwdFreq;
-            if (mCurrentBand < 3) {
-                nwdFreq = freqKhz / 10;
-            } else {
-                nwdFreq = freqKhz;
-            }
-            
+        // V19.1: Escalar sintonía según banda para QS6
+        int nwdFreq;
+        if (mCurrentFreq < 30000) { // Aproximación para AM
+            nwdFreq = freqKhz;
+        } else {
+            nwdFreq = freqKhz / 10;
+        }
+
+        performAidlCall("tune", () -> {
             // La firma de NWD es setCurrentFrequency(frequency, bandType, prefebIndex)
             mNwdService.setCurrentFrequency(nwdFreq, (byte) mCurrentBand, 0);
             Log.d(TAG, "QS6 AIDL TUNE: " + freqKhz + " (" + nwdFreq + ") Band=" + mCurrentBand);
-        } catch (RemoteException e) {
-            Log.e(TAG, "tune remote error", e);
-        }
+        });
     }
 
     @Override
@@ -383,24 +425,16 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void seekUp() {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
-            // V17.7: Cambiado de seek() a search() para realizar búsqueda real de emisora
-            mNwdService.search(true); // true = Increase
-        } catch (RemoteException e) {
-        }
+        performAidlCall("seekUp", () -> {
+            mNwdService.search(true);
+        });
     }
 
     @Override
     public void seekDown() {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
-            // V17.7: Cambiado de seek() a search() para realizar búsqueda real de emisora
-            mNwdService.search(false); // false = Decrease
-        } catch (RemoteException e) {
-        }
+        performAidlCall("seekDown", () -> {
+            mNwdService.search(false);
+        });
     }
 
     @Override
@@ -418,22 +452,16 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void scan() {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
-            mNwdService.AMS(); // Método original de Auto Memory Scan
-        } catch (RemoteException e) {
-        }
+        performAidlCall("scan", () -> {
+            mNwdService.AMS();
+        });
     }
 
     @Override
     public void stopScan() {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
-            mNwdService.changeBand(); // Cancelar scan cambiando de banda.
-        } catch (RemoteException e) {
-        }
+        performAidlCall("stopScan", () -> {
+            mNwdService.changeBand();
+        });
     }
 
     @Override
@@ -445,10 +473,9 @@ public class QS6Engine implements RadioEngine {
             mContext.sendBroadcast(intent);
             return;
         }
-        try {
+        performAidlCall("bandCycle", () -> {
             mNwdService.changeBand();
-        } catch (RemoteException e) {
-        }
+        });
     }
 
     @Override
@@ -458,12 +485,9 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void setStereo(boolean enable) {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
+        performAidlCall("setStereo", () -> {
             mNwdService.setStreroOn(enable);
-        } catch (RemoteException e) {
-        }
+        });
     }
 
     @Override
@@ -504,20 +528,21 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void enforceAudioRecovery() {
-        Log.d(TAG, "QS6: Forzando recuperación de audio (Recovery V17.8)");
-        // V17.8: Re-enviar wake-up y forzar un tune inmediato. 
-        // En QS6, a veces el hardware no retoma el audio hasta que no se le pide que sintonice de nuevo.
+        Log.d(TAG, "QS6: Forzando recuperación de audio (Recovery V20.0 - Robustness Focus)");
+        // V20.0: Incrementar retardos para dar margen al Kernel de Qualcomm (asíncrono)
         new Thread(() -> {
             try {
                 requestWakeUp();
-                Thread.sleep(300);
+                Thread.sleep(800); // Antes 300ms
                 requestPlayAudio();
-                Thread.sleep(200);
+                Thread.sleep(500); // Antes 200ms
                 // Forzar sintonía a la frecuencia actual para "enganchar" el tuner
                 tune(mCurrentFreq);
                 setMute(false);
                 Log.d(TAG, "QS6: Audio Recovery completado con re-tune a " + mCurrentFreq);
-            } catch (Exception e) {}
+            } catch (Exception e) {
+                Log.e(TAG, "Error en secuencia de recuperación de audio QS6", e);
+            }
         }).start();
     }
 
@@ -560,17 +585,13 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void toggleRdsFeature(int type) {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
+        performAidlCall("toggleRdsFeature", () -> {
             // NWD mapea: 0=TA, 1=AF (visto en logs y AIDL)
             byte rdsType = (type == 1) ? (byte) 1 : (byte) 0;
             boolean currentState = mNwdService.getRDSState(rdsType);
             mNwdService.setRDSState(rdsType, !currentState);
             Log.d(TAG, "Toggle RDS Feature " + type + " (NWD Type " + rdsType + ") -> " + !currentState);
-        } catch (RemoteException e) {
-            Log.e(TAG, "toggleRdsFeature error", e);
-        }
+        });
     }
 
     @Override
@@ -595,13 +616,10 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void toggleDxLocal() {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
+        performAidlCall("toggleDxLocal", () -> {
             boolean isNear = mNwdService.isNearOn();
             mNwdService.setNearOn(!isNear);
-        } catch (RemoteException e) {
-        }
+        });
     }
 
     @Override
@@ -616,22 +634,16 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void nextFavorite() {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
+        performAidlCall("nextFavorite", () -> {
             mNwdService.prefeb(true);
-        } catch (RemoteException e) {
-        }
+        });
     }
 
     @Override
     public void prevFavorite() {
-        if (!mIsBound || mNwdService == null)
-            return;
-        try {
+        performAidlCall("prevFavorite", () -> {
             mNwdService.prefeb(false);
-        } catch (RemoteException e) {
-        }
+        });
     }
 
     @Override

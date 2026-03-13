@@ -14,6 +14,16 @@ public interface RadioEngine {
     // === Lifecycle ===
     boolean init(Context context);
     void release();
+    
+    /**
+     * V20.0: Versión extendida de release que permite decidir si liberar recursos 
+     * basándose en si la Activity se está recreando por un cambio de configuración 
+     * (como un cambio de layout) o se está cerrando definitivamente.
+     */
+    default void release(boolean isChangingConfigurations) {
+        release();
+    }
+    
     void closeDevice();
     String getEngineName();
 

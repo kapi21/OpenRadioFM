@@ -78,9 +78,11 @@ public class DeviceManager {
     /**
      * Libera todos los recursos del sistema.
      * Debe llamarse desde onDestroy() de la Activity.
+     * @param isChangingConfigurations true si es una recreación por cambio de layout, 
+     *                                 false si es un cierre definitivo (atrás, exit).
      */
-    public void releaseAllResources() {
-        Log.d(TAG, "Liberando todos los recursos...");
+    public void releaseAllResources(boolean isChangingConfigurations) {
+        Log.d(TAG, "Liberando recursos... (isChangingConfigurations=" + isChangingConfigurations + ")");
 
         // 1. Desconectar MediaSession (Android Auto)
         if (mMediaSessionManager != null) {
@@ -92,29 +94,33 @@ public class DeviceManager {
             mPlaybackManager.unregisterMediaReceiver();
         }
 
-        // 3. Liberar motor de radio
+        // 3. Liberar motor de radio (Pasando flag de persistencia)
         if (mEngine != null) {
-            mEngine.release();
+            mEngine.release(isChangingConfigurations);
         }
 
-        // 4. Liberar servicio de radio
+        // 4. Liberar servicio de radio (ServiceController)
         if (mServiceController != null) {
-            mServiceController.release();
+            // V20.0: Podríamos silenciar el release del controller también si fuera necesario,
+            // pero mEngine.release(true) ya protege el vínculo principal de QS6.
+            if (!isChangingConfigurations) {
+                mServiceController.release();
+            }
         }
 
-        // 5. Limpiar RDS y repositorio
-        if (mRdsManager != null) {
-            mRdsManager.reset(true);
-        }
-        if (mRepository != null) {
-            mRepository.shutdown();
+        // 5. Limpiar RDS y repositorio (Solo si es cierre real)
+        if (!isChangingConfigurations) {
+            if (mRdsManager != null) {
+                mRdsManager.reset(true);
+            }
+            if (mRepository != null) {
+                mRepository.shutdown();
+            }
+            if (mPollingExecutor != null) {
+                mPollingExecutor.shutdown();
+            }
         }
 
-        // 6. Detener ejecutor de polling
-        if (mPollingExecutor != null) {
-            mPollingExecutor.shutdown();
-        }
-
-        Log.d(TAG, "Todos los recursos liberados correctamente");
+        Log.d(TAG, "Liberación de recursos finalizada.");
     }
 }

@@ -158,7 +158,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v20.0 Alpha "MTK Volume & UI Clearance" (13 de Marzo 2026)
+### v20.0 Alpha "QS6 Robustness & MTK Volume" (13 de Marzo 2026)
+- **Robustez Crítica Motor QS6 (NWD Platform)**:
+    - **AIDL Resilience**: Implementación de un wrapper `performAidlCall` que captura `DeadObjectException` y relanza la vinculación del servicio automáticamente.
+    - **Auto-Rebind Loop**: Sistema de 3 reintentos de conexión forzada ante fallos críticos del proceso remoto del sistema.
+    - **Estabilización de Arranque**: Introducción de un retardo táctico de 500ms en `onEngineReady` para evitar colisiones con el kernel durante la carga del layout.
+    - **Persistence Fix**: Gestión inteligente de `unbindService` para mantener el audio fluyendo durante la recreación de la Activity (cambios de orientación).
 - **Corrección de Volumen MTK 8259**: 
     - Implementación de `setVolumeControlStream` en `MainActivity` para forzar el control del stream de música por defecto.
     - Integración de gestión de **AudioFocus** en `MTK8259_8667RadioManager`.
@@ -169,6 +174,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Depuración de Layouts & Clics**:
     - **UI Clearance**: Reajuste de guidelines en el Layout Estándar y V3 (frecuencia al 48%) para evitar el solapamiento físico con botones de control.
     - **Fix de Interrupción**: Restaurados los clics inmediatos en botones AF/TA/TP que anteriormente quedaban bloqueados por el TextView de frecuencia.
+    - **Instant Logo Clear**: Los logos se limpian instantáneamente al iniciar una sintonía, eliminando el efecto de "logo pegado" del hardware lento.
 
 ### v19.5 "Cloud ID & Premium Layout Refinement" (12 de Marzo 2026)
 - **Identificación Única (Cloud Sync)**:

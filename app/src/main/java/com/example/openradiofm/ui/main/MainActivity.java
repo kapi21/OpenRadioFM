@@ -224,6 +224,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V18.6: StationAdapter and ScannedStation moved to separate files
 
     // Métodos delegados al PresetManager para compatibilidad con código existente
+    public void gotoFreq(int freq) {
+        if (mEngine != null) {
+            // V20.0: Limpieza inmediata de UI para evitar logos "pegados" si el hardware falla o es lento
+            runOnUiThread(() -> {
+                if (mLogoManager != null) mLogoManager.clearLogo();
+            });
+            mEngine.tune(freq);
+            mLastFreq = freq;
+            refreshRadioStatus();
+        }
+    }
+
     public void gotoPreset(int index) {
         if (mPresetManager != null) {
             int freq = mPresetManager.getFreq(index);
@@ -773,20 +785,34 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             mCurrentBand = mEngine.getCurrentBand();
 
-            // V18.6.3: Asegurar sintonización al arranque de cero
-            if (mEngine.getCurrentFreq() <= 0 && mLastFreq > 0) {
-                Log.d(TAG, "Startup: Tuning to last frequency " + mLastFreq);
-                mEngine.tune(mLastFreq);
+            // V20.0: Encapsular lógica de post-inicialización para permitir retardo táctico
+            final Runnable postInitAction = () -> {
+                // V18.6.3: Asegurar sintonización al arranque de cero
+                if (mEngine != null && mEngine.getCurrentFreq() <= 0 && mLastFreq > 0) {
+                    Log.d(TAG, "Startup: Tuning to last frequency " + mLastFreq);
+                    mEngine.tune(mLastFreq);
+                }
+
+                startStatusPolling();
+
+                runOnUiThread(() -> {
+                    if (mEngine != null) {
+                        showToast("Hardware: " + mEngine.getEngineName());
+                        refreshPresetsCache();
+                        refreshPresetButtons();
+                        refreshRadioStatus();
+                    }
+                });
+            };
+
+            // V20.0: Retardo de estabilización de 500ms específico para QS6 (NWD) 
+            // para evitar DeadObjectException durante la transición de layout/inflado.
+            if (mEngine != null && mEngine.getEngineName().contains("QS6")) {
+                Log.d(TAG, "QS6 Startup: Aplicando pausa de estabilización de 500ms...");
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(postInitAction, 500);
+            } else {
+                postInitAction.run();
             }
-
-            startStatusPolling();
-
-            runOnUiThread(() -> {
-                showToast("Hardware: " + mEngine.getEngineName());
-                refreshPresetsCache();
-                refreshPresetButtons();
-                refreshRadioStatus();
-            });
         }
 
         @Override
@@ -1104,6 +1130,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
+
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -1168,11 +1195,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     protected void onDestroy() {
-        // V5.5: Limpieza delegada a DeviceManager
+        boolean changingConfigs = isChangingConfigurations();
+        Log.d(TAG, "onDestroy: Limpiando recursos. isChangingConfigurations=" + changingConfigs);
+        
+        // V5.5: Limpieza delegada a DeviceManager (Actualizado V20.0 con flag de persistencia)
         stopStatusPolling();
 
         if (mDeviceManager != null) {
-            mDeviceManager.releaseAllResources();
+            mDeviceManager.releaseAllResources(changingConfigs);
         }
 
         // V18.5: Limpiar reloj
@@ -1271,6 +1301,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
         } else if (v instanceof TextView) {
             ((TextView) v).setTypeface(tf);
+        }
+    }
+
+    public void seekUp() {
+        if (mEngine != null) {
+            runOnUiThread(() -> {
+                if (mLogoManager != null) mLogoManager.clearLogo();
+            });
+            mEngine.seekUp();
+        }
+    }
+
+    public void seekDown() {
+        if (mEngine != null) {
+            runOnUiThread(() -> {
+                if (mLogoManager != null) mLogoManager.clearLogo();
+            });
+            mEngine.seekDown();
         }
     }
 
@@ -1915,48 +1963,23 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     // V4: Frequency Step Helpers (Manual Tuning)
     public void stepFreqUp() {
-        mCurrentPty = null;
-        if (mEngine == null)
-            return;
-        int current = mEngine.getCurrentFreq();
-        int band = mEngine.getCurrentBand();
-        boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
-
-        int newFreq;
-        if (isAm) {
-            newFreq = current + 9;
-            if (newFreq > 1620)
-                newFreq = 522;
-        } else {
-            // V12.3: Paso de 100 kHz (0.1 MHz) estándar en Europa, evita el parpadeo de
-            // 0.05
-            newFreq = current + 100;
-            if (newFreq > 108000)
-                newFreq = 87500;
+        if (mEngine != null) {
+            runOnUiThread(() -> {
+                if (mLogoManager != null) mLogoManager.clearLogo();
+            });
+            mEngine.stepUp();
+            refreshRadioStatus();
         }
-        mEngine.tune(newFreq);
     }
 
     public void stepFreqDown() {
-        mCurrentPty = null;
-        if (mEngine == null)
-            return;
-        int current = mEngine.getCurrentFreq();
-        int band = mEngine.getCurrentBand();
-        boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
-
-        int newFreq;
-        if (isAm) {
-            newFreq = current - 9;
-            if (newFreq < 522)
-                newFreq = 1620;
-        } else {
-            // V12.3: Paso de 100 kHz (0.1 MHz)
-            newFreq = current - 100;
-            if (newFreq < 87500)
-                newFreq = 108000;
+        if (mEngine != null) {
+            runOnUiThread(() -> {
+                if (mLogoManager != null) mLogoManager.clearLogo();
+            });
+            mEngine.stepDown();
+            refreshRadioStatus();
         }
-        mEngine.tune(newFreq);
     }
 
     // V4: Swipe Listener Class
@@ -2169,11 +2192,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mEngine.seekDown();
     }
 
-    public void gotoFreq(int freq) {
-        mCurrentPty = null; // V5.2: Reset PTY on tune
-        if (mEngine != null)
-            mEngine.tune(freq);
-    }
+
 
 
     /**
