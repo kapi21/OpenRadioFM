@@ -827,6 +827,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.Theme_OpenRadioFm);
         super.onCreate(savedInstanceState);
+        
+        // V19.2: Forzar que el control de volumen por hardware afecte al stream de musica 
+        // desde el inicio. Esto evita el bug de doble pulsacion en MTK.
+        setVolumeControlStream(android.media.AudioManager.STREAM_MUSIC);
 
         if (savedInstanceState != null) {
             mLastFreq = savedInstanceState.getInt("mLastFreq", -1);

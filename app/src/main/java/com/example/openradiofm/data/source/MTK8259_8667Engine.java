@@ -313,9 +313,6 @@ public class MTK8259_8667Engine implements RadioEngine {
         if (rtSafe != null && !rtSafe.isEmpty() && !rtSafe.equals(this.mLastRt)) {
             this.mLastRt = rtSafe;
             this.mCallback.onRdsText(rtSafe);
-        } else {
-            this.mLastRt = null;
-            this.mCallback.onRdsText("");
         }
 
         // 4. RDS Status (AF, TA, TP bits) - V18.9

@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v4.8.5_V5.0_Phase2.7-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v20.0_Alpha-red.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -157,6 +157,18 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v20.0 Alpha "MTK Volume & UI Clearance" (13 de Marzo 2026)
+- **Corrección de Volumen MTK 8259**: 
+    - Implementación de `setVolumeControlStream` en `MainActivity` para forzar el control del stream de música por defecto.
+    - Integración de gestión de **AudioFocus** en `MTK8259_8667RadioManager`.
+    - Solucionado el bug de "doble pulsación" necesaria para mostrar la barra de volumen del sistema.
+- **Estabilización de RDS (Feedback Csaba)**:
+    - Eliminado el parpadeo del RDS Text en el motor MTK mediante la optimización del ciclo de refresco de texto.
+    - Actualizada la interfaz de hardware `ITsCommon.aidl` con soporte para `GetAudioSessionId` y `GetRadioSessionId`.
+- **Depuración de Layouts & Clics**:
+    - **UI Clearance**: Reajuste de guidelines en el Layout Estándar y V3 (frecuencia al 48%) para evitar el solapamiento físico con botones de control.
+    - **Fix de Interrupción**: Restaurados los clics inmediatos en botones AF/TA/TP que anteriormente quedaban bloqueados por el TextView de frecuencia.
 
 ### v19.5 "Cloud ID & Premium Layout Refinement" (12 de Marzo 2026)
 - **Identificación Única (Cloud Sync)**:

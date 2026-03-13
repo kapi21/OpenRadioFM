@@ -55,6 +55,14 @@
         android:orientation="horizontal"
         app:layout_constraintGuide_percent="0.90" />
 
+    <!-- V20.0: Guideline to avoid frequency overlap with RDS icons (calculated at 36% to clear weighted row) -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_v3_freq_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.36" />
+
     <!-- ====================================================================================== -->
     <!-- ROW 1: TOP STATUS & RDS (15%) -->
     <!-- ====================================================================================== -->
@@ -374,7 +382,7 @@
         android:id="@+id/tvFrequency"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginBottom="28dp"
+        android:layout_marginBottom="2dp"
         android:gravity="center"
         android:text="92.30"
         android:textColor="@color/white"
@@ -385,7 +393,7 @@
         app:autoSizeStepGranularity="2sp"
         android:maxLines="1"
         app:layout_constraintTop_toTopOf="@id/boxFrequency"
-        app:layout_constraintBottom_toBottomOf="@id/boxFrequency"
+        app:layout_constraintBottom_toBottomOf="@id/guideline_v3_freq_bottom"
         app:layout_constraintStart_toEndOf="@id/btnFavPrev"
         app:layout_constraintEnd_toStartOf="@id/btnFavNext" />
 

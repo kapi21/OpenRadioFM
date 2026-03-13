@@ -1,6 +1,9 @@
 package com.example.openradiofm.data.source;
 
 import android.content.Context;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -20,11 +23,30 @@ public class MTK8259_8667RadioManager {
     private final Context mContext;
     private final ITsCommon mTsCommon;
     private final ITsSpeechRadio mTsSpeechRadio;
+    
+    private AudioManager mAudioManager;
+    private AudioManager.OnAudioFocusChangeListener mAudioFocusChangeListener;
+    private AudioFocusRequest mAudioFocusRequest;
+    private boolean mIsAudioFocusHeld = false;
 
     public MTK8259_8667RadioManager(Context context, ITsCommon tsCommon, ITsSpeechRadio tsSpeechRadio) {
         this.mContext = context.getApplicationContext();
         this.mTsCommon = tsCommon;
         this.mTsSpeechRadio = tsSpeechRadio;
+        
+        mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
+        mAudioFocusChangeListener = focusChange -> {
+            Log.d(TAG, "onAudioFocusChange: " + focusChange);
+            switch (focusChange) {
+                case AudioManager.AUDIOFOCUS_LOSS:
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                    setMute(true);
+                    break;
+                case AudioManager.AUDIOFOCUS_GAIN:
+                    setMute(false);
+                    break;
+            }
+        };
     }
 
     public boolean isConnected() {
@@ -35,6 +57,7 @@ public class MTK8259_8667RadioManager {
         if (mTsSpeechRadio != null) {
             Log.d(TAG, "openDevice(): OpenRadioCh()");
             mTsSpeechRadio.OpenRadioCh();
+            requestAudioFocus();
         }
     }
 
@@ -42,6 +65,57 @@ public class MTK8259_8667RadioManager {
         if (mTsSpeechRadio != null) {
             Log.d(TAG, "closeDevice(): CloseRadioCh()");
             mTsSpeechRadio.CloseRadioCh();
+            abandonAudioFocus();
+        }
+    }
+    
+    // --- Lógica de AudioFocus (V19.2) ---
+    
+    public void requestAudioFocus() {
+        if (mAudioManager == null || mIsAudioFocusHeld) return;
+        
+        try {
+            int result;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                AudioAttributes playbackAttributes = new AudioAttributes.Builder()
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .build();
+                mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                        .setAudioAttributes(playbackAttributes)
+                        .setAcceptsDelayedFocusGain(true)
+                        .setOnAudioFocusChangeListener(mAudioFocusChangeListener)
+                        .build();
+                result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+            } else {
+                result = mAudioManager.requestAudioFocus(mAudioFocusChangeListener,
+                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            }
+
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                mIsAudioFocusHeld = true;
+                Log.d(TAG, "AudioFocus GRANTED");
+            } else {
+                Log.w(TAG, "AudioFocus DENIED");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error requesting AudioFocus", e);
+        }
+    }
+
+    public void abandonAudioFocus() {
+        if (mAudioManager == null || !mIsAudioFocusHeld) return;
+        
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O && mAudioFocusRequest != null) {
+                mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
+            } else {
+                mAudioManager.abandonAudioFocus(mAudioFocusChangeListener);
+            }
+            mIsAudioFocusHeld = false;
+            Log.d(TAG, "AudioFocus ABANDONED");
+        } catch (Exception e) {
+            Log.e(TAG, "Error abandoning AudioFocus", e);
         }
     }
 

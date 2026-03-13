@@ -35,6 +35,14 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.70" />
 
+    <!-- V20.0: Guideline to avoid frequency overlap with RDS icons in column 2 -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_v1_freq_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.48" />
+
     <!-- ====================================================================================== -->
     <!-- COLUMN 1: PRESETS (30%) -->
     <!-- ====================================================================================== -->
@@ -297,14 +305,14 @@
         android:textStyle="bold"
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
-        android:paddingBottom="10dp"
+        android:paddingBottom="0dp"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="12sp"
         app:autoSizeMaxTextSize="100sp"
         app:autoSizeStepGranularity="2sp"
         android:maxLines="1"
         app:layout_constraintTop_toTopOf="@id/boxFrequency"
-        app:layout_constraintBottom_toBottomOf="@id/boxFrequency"
+        app:layout_constraintBottom_toBottomOf="@id/guideline_v1_freq_bottom"
         app:layout_constraintStart_toStartOf="@id/guideline_col1"
         app:layout_constraintEnd_toEndOf="@id/guideline_col2" />
     
