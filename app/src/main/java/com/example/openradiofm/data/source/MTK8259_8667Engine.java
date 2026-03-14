@@ -69,6 +69,17 @@ public class MTK8259_8667Engine implements RadioEngine {
 
     @Override
     public void release() {
+        release(false); // Por defecto, liberación completa
+    }
+
+    @Override
+    public void release(boolean persist) {
+        if (persist) {
+            Log.d(TAG, "release(persist=true): Recreación detectada. Manteniendo MTK vivo.");
+            return;
+        }
+
+        Log.d(TAG, "release(persist=false): Soltando recursos MTK8259/8667");
         stopRdsPolling();
         if (mManager != null) {
             try {

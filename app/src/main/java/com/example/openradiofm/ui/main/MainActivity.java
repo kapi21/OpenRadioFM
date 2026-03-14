@@ -214,6 +214,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public K706EngineeringDialog mEngineeringDialog = null;
 
     public int mCurrentBand = 0;
+    private boolean mIsRecreating = false; // V20.3: Flag to distinguish between Cold Start and Layout Switch
 
     public int getCurrentBand() {
         return mCurrentBand;
@@ -801,6 +802,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         refreshPresetsCache();
                         refreshPresetButtons();
                         refreshRadioStatus();
+                        
+                        // V20.3: Agresivo solo en Cold Start. En recreación (layout switch) delegar en el init del motor
+                        // para evitar Binder flood y Signal 9 del sistema.
+                        if (mPlaybackManager != null && !mIsRecreating) {
+                            Log.d(TAG, "Startup Audio Recovery (Cold Start): Forzando desmuteo");
+                            mPlaybackManager.setMute(false);
+                        } else {
+                            Log.d(TAG, "Startup: Saltando recuperación agresiva por recreación actia");
+                        }
                     }
                 });
             };
@@ -861,7 +871,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (savedInstanceState != null) {
             mLastFreq = savedInstanceState.getInt("mLastFreq", -1);
             mIsV3 = savedInstanceState.getBoolean("mIsV3", false);
-            Log.d(TAG, "State Restored: Freq=" + mLastFreq);
+            mIsRecreating = true;
+            Log.d(TAG, "State Restored: Freq=" + mLastFreq + " (Recreation detected)");
         }
 
         // V18.6: MCU and BT logic controlled by HardwareManager
@@ -1195,14 +1206,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     protected void onDestroy() {
-        boolean changingConfigs = isChangingConfigurations();
-        Log.d(TAG, "onDestroy: Limpiando recursos. isChangingConfigurations=" + changingConfigs);
+        // V20.0: Check more robust for recreation (recreate() or config change)
+        // or just moving to background (not finishing).
+        // This prevents muting MT8163 on layout change.
+        boolean recreating = isChangingConfigurations() || !isFinishing();
+        Log.d(TAG, "onDestroy: Limpiando recursos. recreating=" + recreating + " (isFinishing=" + isFinishing() + ")");
         
         // V5.5: Limpieza delegada a DeviceManager (Actualizado V20.0 con flag de persistencia)
         stopStatusPolling();
 
+        if (mMediaSessionManager != null) {
+            mMediaSessionManager.disconnect();
+        }
+
         if (mDeviceManager != null) {
-            mDeviceManager.releaseAllResources(changingConfigs);
+            mDeviceManager.releaseAllResources(recreating);
         }
 
         // V18.5: Limpiar reloj
@@ -1506,8 +1524,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
         boolean isStreaming = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
 
-        // V18.6: Sincronizar estado visual del Mute con el sistema real (Solo MTK para evitar regresiones en K706)
-        if (mPlaybackManager != null && mEngine != null && "MTK8259_8667".equals(mEngine.getEngineName())) {
+        // V18.6: Sincronizar estado visual del Mute con el sistema real (Solo MTK/MT8163 para evitar regresiones en K706)
+        if (mPlaybackManager != null && mEngine != null && 
+            ("MTK8259_8667".equals(mEngine.getEngineName()) || "MT8163".equals(mEngine.getEngineName()))) {
             android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
                 boolean isSystemMuted;
@@ -2472,7 +2491,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mPrefs.edit().putBoolean("pref_layout_v3", false).putBoolean("pref_layout_simple", false).apply();
             showToast("Layout: V2 (Vertical)");
         }
-        recreate();
+        
+        // V20.1: Pequeña pausa de seguridad antes de recrear para permitir que las SharedPreferences persistan 
+        // y evitar una recreación "sucia" que el sistema pueda interpretar como un crash. (V20.3: Simplificado para evitar saltos de AudioFocus)
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::recreate, 400);
     }
 
     /**

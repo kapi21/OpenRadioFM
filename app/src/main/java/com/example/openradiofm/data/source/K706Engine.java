@@ -54,6 +54,17 @@ public class K706Engine implements RadioEngine {
 
     @Override
     public void release() {
+        release(false); // Por defecto, liberación completa
+    }
+
+    @Override
+    public void release(boolean persist) {
+        if (persist) {
+            Log.d(TAG, "release(persist=true): Recreación detectada. Manteniendo K706 vivo.");
+            return;
+        }
+
+        Log.d(TAG, "release(persist=false): Soltando recursos K706");
         if (mManager != null) {
             try { mManager.closeDevice(); } catch (Exception ignored) {}
         }

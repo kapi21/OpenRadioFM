@@ -82,7 +82,9 @@ public class PlaybackManager {
         // V11: Via RadioEngine
         if (mEngine != null) {
             mEngine.setMute(mute);
-            // V17.0: Si estamos desmuteando, forzar recuperación agresiva del canal hardware
+            // V17.0/V20.1: Si estamos desmuteando, forzar recuperación agresiva del canal hardware
+            // Lo hacemos SIEMPRE que se pida false, incluso si ya creíamos estar en false,
+            // por si el hardware se ha muteado externamente (ej: tras un layout crash).
             if (!mute) {
                 mEngine.enforceAudioRecovery();
             }

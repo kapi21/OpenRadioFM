@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- V2.0: Semi-opaque background for better readability -->
-    <solid android:color="#59121212" />
+    <!-- V2.5: Optimized Perception (1.2dp border) -->
+    <solid android:color="#00000000" />
     
-    <!-- Classic gray/white stroke -->
+    <!-- Perceptible but non-intrusive border -->
     <stroke
-        android:width="1.5dp"
-        android:color="@color/border_classic_gray" />
+        android:width="1.2dp"
+        android:color="#33B0B0B0" />
     
     <!-- Rounded corners -->
     <corners android:radius="12dp" />

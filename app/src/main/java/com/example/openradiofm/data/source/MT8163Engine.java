@@ -185,7 +185,17 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void release() {
-        Log.d(TAG, "release: Soltando recursos MT8163");
+        release(false); // Por defecto, liberación completa y muteo
+    }
+
+    @Override
+    public void release(boolean persist) {
+        if (persist) {
+            Log.d(TAG, "release(persist=true): Recreación detectada. Manteniendo hardware activo.");
+            return;
+        }
+
+        Log.d(TAG, "release(persist=false): Soltando recursos MT8163 y silenciando");
         switchToAndroidAudio(); // Asegurar liberación de audio al salir
         
         if (mPollingRunnable != null) {

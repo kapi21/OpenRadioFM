@@ -20,7 +20,7 @@ public class ThemeManager {
     // Skins disponibles
     public enum Skin {
         NIGHT_MODE("Night Mode", "#2A2A2A"),
-        CLASSIC_GRAY("Classic Gray", "#B0B0B0"),
+        CLASSIC("Classic", "#B0B0B0"),
         ORANGE("Orange", "#FF8C00"),
         BLUE("Blue", "#00A8FF"),
         GREEN("Green", "#00D68F"),
@@ -29,8 +29,7 @@ public class ThemeManager {
         YELLOW("Yellow", "#FFD700"),
         CYAN("Cyan", "#00CED1"),
         PINK("Pink", "#FF69B4"),
-        WHITE("White", "#FFFFFF"),
-        GREY("Grey", "#757575");
+        WHITE("White", "#FFFFFF");
 
         public final String displayName;
         public final String colorHex;
@@ -54,7 +53,7 @@ public class ThemeManager {
     private final Activity mActivity;
     private SharedPreferences mLayoutPrefs;
     private SkinAppliedListener mListener;
-    private Skin mCurrentSkin = Skin.CLASSIC_GRAY;
+    private Skin mCurrentSkin = Skin.CLASSIC;
 
     public ThemeManager(android.content.Context context) {
         this.prefs = context.getSharedPreferences(PREFS_NAME, android.content.Context.MODE_PRIVATE);
@@ -75,11 +74,11 @@ public class ThemeManager {
     // ==================== Persistencia ====================
 
     public Skin getCurrentSkin() {
-        String skinName = prefs.getString(KEY_SKIN, Skin.CLASSIC_GRAY.name());
+        String skinName = prefs.getString(KEY_SKIN, Skin.CLASSIC.name());
         try {
             return Skin.valueOf(skinName);
         } catch (IllegalArgumentException e) {
-            return Skin.CLASSIC_GRAY;
+            return Skin.CLASSIC;
         }
     }
 
@@ -136,10 +135,9 @@ public class ThemeManager {
                 return R.drawable.bg_glass_card_pink;
             case WHITE:
                 return R.drawable.bg_glass_card_white;
-            case GREY:
-                return R.drawable.bg_glass_card_classic;
+            case CLASSIC:
             default:
-                return R.drawable.bg_glass_card_premium;
+                return R.drawable.bg_glass_card_classic;
         }
     }
 
@@ -164,43 +162,28 @@ public class ThemeManager {
         boolean isLayoutV3 = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_v3", false);
         boolean isSimpleLayout = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_simple", false);
 
-        // Aplicar bordes del skin SOLO en Layout V2 (Vertical estándar)
-        if (!isLayoutV3 && !isSimpleLayout) {
-            int[] viewIds = {
-                    R.id.boxFrequency, R.id.boxIconsTopLayout2, 
-                    R.id.btnSeekUp, R.id.btnSeekDown,
-                    R.id.btnFavPrev, R.id.btnFavNext,
-                    R.id.tvRdsName, R.id.tvRdsInfo,
-                    R.id.btnBand, R.id.btnAutoScan,
-                    R.id.boxLogo,
-                    R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
-                    R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff
-            };
+        // V20.4: Unified skin application for all layouts (V2, V3, Simple)
+        // This ensures all boxes (Frequency, RDS, etc.) match the favorite boxes' transparency.
+        int[] viewIds = {
+                R.id.boxFrequency, R.id.boxIconsTopLayout2, 
+                R.id.btnSeekUp, R.id.btnSeekDown,
+                R.id.btnFavPrev, R.id.btnFavNext,
+                R.id.tvRdsName, R.id.tvRdsInfo,
+                R.id.btnBand, R.id.btnAutoScan,
+                R.id.boxLogo, R.id.containerBand, R.id.containerRds, R.id.bottomControls,
+                R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
+                R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff
+        };
 
-            for (int id : viewIds) {
-                View v = mActivity.findViewById(id);
-                if (v != null) {
-                    int pL = v.getPaddingLeft();
-                    int pT = v.getPaddingTop();
-                    int pR = v.getPaddingRight();
-                    int pB = v.getPaddingBottom();
-                    v.setBackgroundResource(drawableId);
-                    v.setPadding(pL, pT, pR, pB);
-                }
-            }
-        } else {
-            // Layout V3: RDS boxes sin borde (borderless)
-            int[] v3BoxIds = { R.id.tvRdsName, R.id.tvRdsInfo };
-            for (int id : v3BoxIds) {
-                View v = mActivity.findViewById(id);
-                if (v != null) {
-                    int pL = v.getPaddingLeft();
-                    int pT = v.getPaddingTop();
-                    int pR = v.getPaddingRight();
-                    int pB = v.getPaddingBottom();
-                    v.setBackground(null);
-                    v.setPadding(pL, pT, pR, pB);
-                }
+        for (int id : viewIds) {
+            View v = mActivity.findViewById(id);
+            if (v != null) {
+                int pL = v.getPaddingLeft();
+                int pT = v.getPaddingTop();
+                int pR = v.getPaddingRight();
+                int pB = v.getPaddingBottom();
+                v.setBackgroundResource(drawableId);
+                v.setPadding(pL, pT, pR, pB);
             }
         }
 
