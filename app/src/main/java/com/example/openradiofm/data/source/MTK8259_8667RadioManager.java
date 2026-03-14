@@ -55,16 +55,22 @@ public class MTK8259_8667RadioManager {
 
     public void openDevice() throws RemoteException {
         if (mTsSpeechRadio != null) {
-            Log.d(TAG, "openDevice(): OpenRadioCh()");
+            Log.d(TAG, "openDevice(): OpenRadioCh() + EnterMode(1)");
             mTsSpeechRadio.OpenRadioCh();
+            if (mTsCommon != null) {
+                mTsCommon.EnterMode(1); // Forzar conmutación de audio a Radio
+            }
             requestAudioFocus();
         }
     }
 
     public void closeDevice() throws RemoteException {
         if (mTsSpeechRadio != null) {
-            Log.d(TAG, "closeDevice(): CloseRadioCh()");
+            Log.d(TAG, "closeDevice(): CloseRadioCh() + EnterMode(0)");
             mTsSpeechRadio.CloseRadioCh();
+            if (mTsCommon != null) {
+                mTsCommon.EnterMode(0); // Devolver audio al sistema
+            }
             abandonAudioFocus();
         }
     }
