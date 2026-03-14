@@ -388,11 +388,11 @@ public class RadioRepository {
                             
                             if (cName != null && !cName.isEmpty() && !SupabaseLogoSource.isNameGeneric(cName)) {
                                 android.util.Log.d("RadioRepository", "SUPABASE FETCH: Using Custom Name -> " + cName);
-                                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "*");
+                                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "eq." + country, "*");
                             } else if (piCode != null && !piCode.isEmpty()) {
-                                call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "*");
+                                call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "eq." + country, "*");
                             } else if (stationNameForLambda != null && !SupabaseLogoSource.isNameGeneric(stationNameForLambda)) {
-                                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "*");
+                                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "eq." + country, "*");
                             }
 
                             if (call != null) {
@@ -609,12 +609,13 @@ public class RadioRepository {
                         String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
                         retrofit2.Call<java.util.List<com.example.openradiofm.data.source.network.model.SupabaseLogoResponse>> call = null;
                         
+                        String country = getCountryCode();
                         if (cName != null && !cName.isEmpty() && !SupabaseLogoSource.isNameGeneric(cName)) {
-                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "*");
+                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "eq." + country, "*");
                         } else if (piCode != null && !piCode.isEmpty()) {
-                            call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "*");
+                            call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "eq." + country, "*");
                         } else if (stationNameForLambda != null && !SupabaseLogoSource.isNameGeneric(stationNameForLambda)) {
-                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "*");
+                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "eq." + country, "*");
                         }
 
                         if (call != null) {

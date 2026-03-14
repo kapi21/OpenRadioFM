@@ -26,4 +26,8 @@ public class StationSearchResponse {
     public String getTags() {
         return tags;
     }
+
+    public String getStreamUrl() {
+        return streamUrl;
+    }
 }

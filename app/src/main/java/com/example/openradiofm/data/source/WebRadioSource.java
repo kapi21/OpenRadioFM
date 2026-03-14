@@ -15,10 +15,15 @@ public class WebRadioSource {
     }
 
     public String fetchLogo(int freqKHz, String rdsName, String countryCode) {
+        StationSearchResponse station = fetchStation(freqKHz, rdsName, countryCode);
+        return station != null ? station.getFavicon() : null;
+    }
+
+    public StationSearchResponse fetchStation(int freqKHz, String rdsName, String countryCode) {
         // 1. Try by RDS Name (Best Match)
         if (rdsName != null && rdsName.length() > 2) {
-             String logo = search(rdsName, countryCode);
-             if (logo != null) return logo;
+             StationSearchResponse station = search(rdsName, countryCode);
+             if (station != null) return station;
         }
 
         // 2. Fallback by Frequency (e.g. "91.3")
@@ -26,16 +31,15 @@ public class WebRadioSource {
         return search(freqLabel, countryCode);
     }
     
-    private String search(String query, String countryCode) {
+    private StationSearchResponse search(String query, String countryCode) {
         try {
-            Call<List<StationSearchResponse>> call = api.searchStations(query, countryCode, 5);
+            Call<List<StationSearchResponse>> call = api.searchStations(query, countryCode, 10);
             Response<List<StationSearchResponse>> response = call.execute();
 
             if (response.isSuccessful() && response.body() != null) {
                 for (StationSearchResponse station : response.body()) {
-                    if (station.getFavicon() != null && !station.getFavicon().isEmpty()) {
-                        return station.getFavicon();
-                    }
+                    // Si buscamos por nombre, intentamos que coincida lo mejor posible
+                    return station; 
                 }
             }
         } catch (Exception e) {

@@ -21,6 +21,7 @@ public interface SupabaseApi {
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Query("pi_code") String piFilter,
+            @Query("country_code") String countryFilter,
             @Query("select") String select
     );
 
@@ -29,6 +30,7 @@ public interface SupabaseApi {
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Query("ps_name") String nameFilter,
+            @Query("country_code") String countryFilter,
             @Query("select") String select
     );
 
@@ -37,6 +39,7 @@ public interface SupabaseApi {
             @Header("apikey") String apiKey,
             @Header("Authorization") String auth,
             @Query("frequency") String freqFilter,
+            @Query("country_code") String countryFilter,
             @Query("select") String select
     );
 

@@ -69,11 +69,14 @@ public class SupabaseLogoSource {
      */
     public String fetchLogo(String piCode, String rdsName, int freqKHz) {
         notifyActivity(true);
-        android.util.Log.d("SupabaseLogoSource", "FETCH START: PI=" + piCode + ", Name=" + rdsName + ", Freq=" + freqKHz);
+        String country = java.util.Locale.getDefault().getCountry();
+        if (country == null || country.isEmpty()) country = "ES";
+        
+        android.util.Log.d("SupabaseLogoSource", "FETCH START: PI=" + piCode + ", Name=" + rdsName + ", Freq=" + freqKHz + ", Country=" + country);
         try {
             // 1. prioridad: PI Code (exacto)
             if (piCode != null && !piCode.isEmpty()) {
-                String logo = queryByPi(piCode);
+                String logo = queryByPi(piCode, country);
                 if (logo != null) {
                     android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (PI): " + logo);
                     return logo;
@@ -84,7 +87,7 @@ public class SupabaseLogoSource {
             if (rdsName != null && !rdsName.isEmpty()) {
                 String trimmedName = rdsName.trim();
                 if (!isNameGeneric(trimmedName)) {
-                    String logo = queryByName(trimmedName);
+                    String logo = queryByName(trimmedName, country);
                     if (logo != null) {
                         android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (Name): " + logo);
                         return logo;
@@ -95,7 +98,7 @@ public class SupabaseLogoSource {
             }
 
             // 3. prioridad: Frecuencia (kHz)
-            String logoFreq = queryByFreq(freqKHz);
+            String logoFreq = queryByFreq(freqKHz, country);
             if (logoFreq != null) {
                 android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (Freq): " + logoFreq);
             } else {
@@ -158,7 +161,29 @@ public class SupabaseLogoSource {
 
                 String hwModel = android.os.Build.MODEL; // Identificador del hardware (ej: K706, etc)
                 String deviceId = com.example.openradiofm.utils.DeviceMetadataUtils.getUniqueDeviceId(context);
-                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqStr, finalLogoUrl, streamUrl, hwModel, deviceId);
+
+                // Enriquecer con Stream URL si no viene definido (auto-populación de la base comunitaria)
+                String finalStreamUrl = streamUrl;
+                String country = java.util.Locale.getDefault().getCountry();
+                if (country == null || country.isEmpty()) country = "ES";
+
+                if ((finalStreamUrl == null || finalStreamUrl.isEmpty()) && !isNameGeneric(rdsName)) {
+                    android.util.Log.d("SupabaseLogoSource", "SUPABASE ENRICH: Searching stream for " + rdsName);
+                    WebRadioSource webSource = new WebRadioSource();
+                    
+                    com.example.openradiofm.data.source.network.model.StationSearchResponse webStation = webSource.fetchStation(freqKHz, rdsName, country);
+                    if (webStation != null && webStation.getStreamUrl() != null) {
+                        finalStreamUrl = webStation.getStreamUrl();
+                        android.util.Log.d("SupabaseLogoSource", "SUPABASE ENRICH: Found stream -> " + finalStreamUrl);
+                        
+                        // También aprovechamos si no hay logoUrl para usar el favicon encontrado
+                        if (finalLogoUrl == null || finalLogoUrl.isEmpty()) {
+                            finalLogoUrl = webStation.getFavicon();
+                        }
+                    }
+                }
+
+                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqStr, finalLogoUrl, finalStreamUrl, hwModel, deviceId, country);
                 
                 // V18.8: Filtro mejorado con isNameGeneric para evitar basura en la DB
                 if (piCode == null && (rdsName == null || isNameGeneric(rdsName))) {
@@ -166,7 +191,7 @@ public class SupabaseLogoSource {
                     return;
                 }
 
-                String conflictColumns = (piCode != null && !piCode.isEmpty()) ? "pi_code" : "ps_name";
+                String conflictColumns = (piCode != null && !piCode.isEmpty()) ? "pi_code,country_code" : "ps_name,country_code";
                 
                 // V19.4: Cabecera 'return=minimal,resolution=merge-duplicates' para asegurar compatibilidad con PostgREST
                 Call<Void> call = api.upsertLogo(apiKey, "Bearer " + apiKey, "return=minimal,resolution=merge-duplicates", conflictColumns, data);
@@ -191,9 +216,9 @@ public class SupabaseLogoSource {
         }).start();
     }
 
-    private String queryByPi(String pi) {
+    private String queryByPi(String pi, String country) {
         try {
-            Call<List<SupabaseLogoResponse>> call = api.getLogosByPi(apiKey, "Bearer " + apiKey, "ilike." + pi, "*");
+            Call<List<SupabaseLogoResponse>> call = api.getLogosByPi(apiKey, "Bearer " + apiKey, "ilike." + pi, "eq." + country, "*");
             Response<List<SupabaseLogoResponse>> res = call.execute();
             if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
                 return res.body().get(0).getLogoUrl();
@@ -202,9 +227,9 @@ public class SupabaseLogoSource {
         return null;
     }
 
-    private String queryByName(String name) {
+    private String queryByName(String name, String country) {
         try {
-            Call<List<SupabaseLogoResponse>> call = api.getLogosByName(apiKey, "Bearer " + apiKey, "ilike." + name, "*");
+            Call<List<SupabaseLogoResponse>> call = api.getLogosByName(apiKey, "Bearer " + apiKey, "ilike." + name, "eq." + country, "*");
             Response<List<SupabaseLogoResponse>> res = call.execute();
             if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
                 return res.body().get(0).getLogoUrl();
@@ -213,9 +238,11 @@ public class SupabaseLogoSource {
         return null;
     }
 
-    private String queryByFreq(int freq) {
+    private String queryByFreq(int freq, String country) {
         try {
-            Call<List<SupabaseLogoResponse>> call = api.getLogosByFreq(apiKey, "Bearer " + apiKey, "eq." + freq, "*");
+            // V19.4: Formatear frecuencia a String MHz (ej: 87.50) para coincidir con SQL
+            String freqStr = String.format(java.util.Locale.US, "%.2f", freq / 1000.0);
+            Call<List<SupabaseLogoResponse>> call = api.getLogosByFreq(apiKey, "Bearer " + apiKey, "eq." + freqStr, "eq." + country, "*");
             Response<List<SupabaseLogoResponse>> res = call.execute();
             if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
                 return res.body().get(0).getLogoUrl();

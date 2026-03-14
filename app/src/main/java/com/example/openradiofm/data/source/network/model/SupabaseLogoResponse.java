@@ -30,6 +30,9 @@ public class SupabaseLogoResponse {
     @SerializedName("device_id")
     private String deviceId;
 
+    @SerializedName("country_code")
+    private String countryCode;
+
     public SupabaseLogoResponse() {}
 
     public SupabaseLogoResponse(String piCode, String psName, String frequency, String logoUrl) {
@@ -39,11 +42,12 @@ public class SupabaseLogoResponse {
         this.logoUrl = logoUrl;
     }
 
-    public SupabaseLogoResponse(String piCode, String psName, String frequency, String logoUrl, String streamUrl, String hwModel, String deviceId) {
+    public SupabaseLogoResponse(String piCode, String psName, String frequency, String logoUrl, String streamUrl, String hwModel, String deviceId, String countryCode) {
         this(piCode, psName, frequency, logoUrl);
         this.streamUrl = streamUrl;
         this.hwModel = hwModel;
         this.deviceId = deviceId;
+        this.countryCode = countryCode;
     }
 
     // Getters
@@ -54,4 +58,5 @@ public class SupabaseLogoResponse {
     public String getStreamUrl() { return streamUrl; }
     public String getHwModel() { return hwModel; }
     public String getDeviceId() { return deviceId; }
+    public String getCountryCode() { return countryCode; }
 }
