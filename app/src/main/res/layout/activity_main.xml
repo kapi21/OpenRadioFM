@@ -136,6 +136,8 @@
             android:elevation="20dp"
             android:translationZ="20dp">
 
+
+
             <ImageView
                 android:id="@+id/ivBandIndicator"
                 android:layout_width="90dp"
@@ -173,6 +175,16 @@
                     android:scaleType="fitCenter"
                     android:src="@drawable/cloud" />
             </FrameLayout>
+
+            <ImageView
+                android:id="@+id/ivFavoriteIndicator"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="8dp"
+                android:alpha="0.9"
+                android:visibility="gone"
+                android:scaleType="fitCenter"
+                android:src="@drawable/radio_icon_p01" />
         </LinearLayout>
     </FrameLayout>
     <!-- V18.6: Box Central para Frecuencia (Cuerpo visual) -->
@@ -208,15 +220,6 @@
             android:scaleType="fitCenter"
             android:src="@drawable/radio_mhz" />
 
-        <ImageView
-            android:id="@+id/ivFavoriteIndicator"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_gravity="top|end"
-            android:layout_margin="12dp"
-            android:alpha="0.8"
-            android:visibility="gone"
-            android:src="@drawable/radio_icon_p01" />
 
         <!-- PTY + RDS Status Icons: Barra inferior distribuida con pesos -->
         <LinearLayout

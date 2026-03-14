@@ -125,22 +125,33 @@
 
 ---
 
-## 🔲 Próximos Pasos (V.21.0+)
+---
 
-### Prioridad 1: Estabilidad QS6 (Bypass de Servicio)
-- [ ] **NWD "Shadow Motor"**: Implementar un motor híbrido que escuche broadcasts crudos (`ACTION_SEND_RADIO_FREQUENCE_NEW`) en lugar de depender solo de callbacks AIDL.
-- [ ] **Settings.System Observer**: Monitorizar cambios en `nwd_radio_current_ps_data` y `nwd_radio_current_freq` para refrescar la UI incluso si el servicio remoto ha colapsado.
-- [ ] **Command Intent Redundancy**: Estudiar el envío de órdenes vía Intent (`ACTION_SET_RADIO_FREQUENCE`) para evitar bloqueos del proxy AIDL.
-- [ ] **Log Parsing**: Refinar el sistema de logs para diagnósticos externos.
+## ✅ Sesión 14/Marzo/2026 — Completado (V.4.9.0 Community Logo Edition)
 
-### Prioridad 2: V5.0 Fase 2 (Estructural)
+### Comunidad y Optimización de Logos
+- [x] **Community Logo Edition**: Lanzamiento de la versión 4.9 centrada en la compartición de logos.
+- [x] **Refinamiento UI**: Reubicación de los iconos de favorito a la barra superior (Derecha en Main, Izquierda de Cloud en V3).
+- [x] **Gestión de Espacio**: Ajuste de dimensiones de la nube y otros widgets para evitar solapamientos.
+
+### Robustez QS6 (Bypass de Servicio)
+- [x] **NWD "Shadow Motor"**: Motor híbrido que escucha broadcasts crudos (`ACTION_SEND_RADIO_FREQUENCE_NEW`).
+- [x] **Settings.System Observer**: Monitorización de `nwd_radio_current_freq` para redundancia total.
+- [x] **Persistence Fix**: Limpieza de registros y gestión de ciclo de vida mejorada.
+
+---
+
+## 🔲 Próximos Pasos (V.5.0+)
+
+### Prioridad 1: V5.0 Fase 2 (Estructural)
 - [ ] **RadioUIManager**: Extraer toda la lógica de búsqueda de vistas y setters de `MainActivity`.
 - [ ] **RadioStatusPoller**: Mover el `Timer` de refresco a un manager independiente con soporte para diferentes intervalos por motor.
 - [ ] **MediaSession Expansion**: Integrar carátulas de emisora en la notificación dinámicamente según el logo de Supabase.
+
 ### Prioridad 2: Funcionalidades Premium
 - [ ] **Visualización Espectro:** Implementar visualizador de audio integrado en la UI principal.
 - [ ] **Android Auto:** Soporte para control de medios desde la unidad principal externa.
 
 ### Prioridad 3: Limpieza Continua
-- [ ] Extraer lógica de presets a `PresetManager`.
 - [ ] Implementar sistema de temas dinámicos basado en JSON.
+- [ ] Migración parcial a Kotlin para nuevos módulos.

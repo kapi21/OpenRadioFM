@@ -34,12 +34,29 @@ public class QS6Engine implements RadioEngine {
     private boolean mIsTpEnabled = false;
     private boolean mIsScanning = false;
     private boolean mIsDxLocal = false;
+    private String mLastPs = "";
+    private int mLastReportedFreq = -1;
+    private String mLastReportedPs = "";
     private final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     // Intents de Emisión (Encendido/Apagado General del MCU)
     private static final String ACTION_CHANGE_SOURCE = "com.nwd.action.ACTION_CHANGE_SOURCE";
     private static final String ACTION_KEY_VALUE = "com.nwd.action.ACTION_KEY_VALUE";
     private static final String ACTION_START_NWD_ACTIVITY = "com.nwd.action.ACTION_START_NWD_ACTIVITY";
+    
+    // V21.0: Shadow Motor Intents (NWD Broadcasts)
+    private static final String ACTION_SEND_RADIO_FREQUENCE_NEW = "com.nwd.action.ACTION_SEND_RADIO_FREQUENCE_NEW";
+    private static final String ACTION_SEND_RADIO_RDS_RT = "com.nwd.action.ACTION_SEND_RADIO_RDS_RT";
+    
+    // V21.0: Shadow Motor Control Intents (NWD Commands)
+    private static final String ACTION_SET_RADIO_FREQUENCE = "com.nwd.action.ACTION_SET_RADIO_FREQUENCE";
+    private static final String ACTION_SEARCH_UP = "com.nwd.action.ACTION_SEARCH_UP";
+    private static final String ACTION_SEARCH_DOWN = "com.nwd.action.ACTION_SEARCH_DOWN";
+    private static final String ACTION_AMS = "com.nwd.action.ACTION_AMS";
+
+    // V21.0: Shadow Motor Settings Keys
+    private static final String SETTING_NWD_FREQ = "nwd_radio_current_freq";
+    private static final String SETTING_NWD_PS = "nwd_radio_current_ps_data";
 
     // KEY_VALUE Mapeos
     private static final byte KEY_FM = 0x48;
@@ -52,6 +69,10 @@ public class QS6Engine implements RadioEngine {
     private boolean mIsBound = false;
     private int mRetryCount = 0;
     private static final int MAX_RETRIES = 3;
+
+    // V21.0: Shadow Motor Components
+    private android.content.BroadcastReceiver mShadowReceiver;
+    private android.database.ContentObserver mSettingsObserver;
 
     // Implementación de la Callback del IPC hacia NWD
     private final RadioCallback.Stub mNwdCallback = new RadioCallback.Stub() {
@@ -170,6 +191,129 @@ public class QS6Engine implements RadioEngine {
         public void notifyStereoOn(boolean isOn) {
         }
     };
+
+    // V21.0: Componentes del Shadow Motor
+    private void setupShadowMotor() {
+        if (mContext == null) return;
+        
+        try {
+            // V21.0: Limpieza preventiva si ya estaban registrados (evita duplicidad)
+            cleanupShadowMotor();
+
+            // 1. Broadcast Receiver para eventos crudos de NWD
+            mShadowReceiver = new android.content.BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    String action = intent.getAction();
+                    if (ACTION_SEND_RADIO_FREQUENCE_NEW.equals(action)) {
+                        int freqRaw = intent.getIntExtra("extra_frequence", -1);
+                        int band = intent.getIntExtra("extra_band", -1);
+                        String ps = intent.getStringExtra("extra_ps_name");
+
+                        if (freqRaw != -1) {
+                            // Escalar frecuencia (NWD suele mandar décimas de MHz en FM)
+                            int freqKhz = (band < 3) ? freqRaw * 10 : freqRaw;
+                            
+                            // Solo notificar si hay cambio real para evitar bucles con AIDL
+                            if (freqKhz != mCurrentFreq || (ps != null && !ps.equals(mLastPs))) {
+                                Log.d(TAG, "Shadow Motor (Broadcast) -> Freq: " + freqKhz + ", PS: " + ps);
+                                updateLocalState(freqKhz, band, ps);
+                            }
+                        }
+                    } else if (ACTION_SEND_RADIO_RDS_RT.equals(action)) {
+                        String rt = intent.getStringExtra("extra_rds_rt");
+                        if (rt != null && mCallback != null) {
+                            mMainHandler.post(() -> mCallback.onRdsText(rt));
+                        }
+                    }
+                }
+            };
+
+            android.content.IntentFilter filter = new android.content.IntentFilter();
+            filter.addAction(ACTION_SEND_RADIO_FREQUENCE_NEW);
+            filter.addAction(ACTION_SEND_RADIO_RDS_RT);
+            
+            // CRÍTICO V21.1: Android 13+ (API 33+) requiere flags de exportación.
+            // Al escuchar broadcasts de NWD (otra app), DEBE ser RECEIVER_EXPORTED.
+            if (android.os.Build.VERSION.SDK_INT >= 33) {
+                mContext.registerReceiver(mShadowReceiver, filter, Context.RECEIVER_EXPORTED);
+            } else {
+                mContext.registerReceiver(mShadowReceiver, filter);
+            }
+
+            // 2. ContentObserver para Settings.System
+            mSettingsObserver = new android.database.ContentObserver(mMainHandler) {
+                @Override
+                public void onChange(boolean selfChange, android.net.Uri uri) {
+                    if (mContext == null) return;
+                    try {
+                        int freqRaw = android.provider.Settings.System.getInt(mContext.getContentResolver(), SETTING_NWD_FREQ, -1);
+                        String ps = android.provider.Settings.System.getString(mContext.getContentResolver(), SETTING_NWD_PS);
+                        
+                        if (freqRaw != -1) {
+                            int band = (freqRaw < 3000) ? 0 : 3; // Heurística simple para banda
+                            int freqKhz = (freqRaw < 3000) ? freqRaw * 10 : freqRaw;
+
+                            if (freqKhz != mCurrentFreq) {
+                                Log.d(TAG, "Shadow Motor (Settings) -> Freq: " + freqKhz + ", PS: " + ps);
+                                updateLocalState(freqKhz, band, ps);
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error en Shadow SettingsObserver: " + e.getMessage());
+                    }
+                }
+            };
+
+            mContext.getContentResolver().registerContentObserver(
+                android.provider.Settings.System.getUriFor(SETTING_NWD_FREQ),
+                false,
+                mSettingsObserver
+            );
+            
+            Log.i(TAG, "Shadow Motor iniciado (Broadcast + Settings)");
+        } catch (Exception e) {
+            Log.e(TAG, "Error FATAL al iniciar Shadow Motor: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    private void cleanupShadowMotor() {
+        if (mContext == null) return;
+        if (mShadowReceiver != null) {
+            try { mContext.unregisterReceiver(mShadowReceiver); } catch (Exception ignored) {}
+            mShadowReceiver = null;
+        }
+        if (mSettingsObserver != null) {
+            try { mContext.getContentResolver().unregisterContentObserver(mSettingsObserver); } catch (Exception ignored) {}
+            mSettingsObserver = null;
+        }
+    }
+
+    private void updateLocalState(int freqKhz, int band, String ps) {
+        // Filtrado de ruido: Si los valores son idénticos a lo último reportado, ignorar.
+        // Esto evita lag masivo por actualizaciones redundantes del Shadow Motor.
+        if (freqKhz == mLastReportedFreq && (ps == null || ps.equals(mLastReportedPs))) {
+            return;
+        }
+
+        mCurrentFreq = freqKhz;
+        mCurrentBand = band;
+        if (ps != null) mLastPs = ps;
+        
+        mLastReportedFreq = freqKhz;
+        if (ps != null) mLastReportedPs = ps;
+
+        mMainHandler.post(() -> {
+            if (mCallback != null) {
+                mCallback.onFrequencyChanged(freqKhz);
+                mCallback.onBandChanged(band);
+                if (ps != null && !ps.trim().isEmpty()) {
+                    mCallback.onRdsName(ps);
+                }
+            }
+        });
+    }
 
     // Conexión del Servicio Android al servicio NWD
     private final ServiceConnection mConnection = new ServiceConnection() {
@@ -291,7 +435,10 @@ public class QS6Engine implements RadioEngine {
             Log.d(TAG, "QS6 Service Fallback Bind Request -> Success: " + fallBind);
         }
 
-        // 2. Despertar hardware y encender sistema de audio principal (Source NWD)
+        // 2. Iniciar Shadow Motor (REDUNDANCIA V21.0)
+        setupShadowMotor();
+
+        // 3. Despertar hardware y encender sistema de audio principal (Source NWD)
         // V17.6: Ejecutamos en hilo de fondo para no penalizar el arranque de la app
         new Thread(() -> {
             try {
@@ -319,6 +466,10 @@ public class QS6Engine implements RadioEngine {
         }
 
         Log.d(TAG, "QS6: release() - Soltando recursos y desvinculando AIDL definitivamente");
+        
+        // V21.0: Limpieza forzada de Shadow Motor
+        cleanupShadowMotor();
+
         if (mIsBound && mNwdService != null) {
             performAidlCall("unRegistCallback", () -> mNwdService.unRegistCallback(mNwdCallback));
             try {
@@ -411,6 +562,15 @@ public class QS6Engine implements RadioEngine {
             mNwdService.setCurrentFrequency(nwdFreq, (byte) mCurrentBand, 0);
             Log.d(TAG, "QS6 AIDL TUNE: " + freqKhz + " (" + nwdFreq + ") Band=" + mCurrentBand);
         });
+
+        // V21.0: Redundancia por Intent si el servicio AIDL está bloqueado o ausente
+        if (!mIsBound || mNwdService == null) {
+            Log.d(TAG, "QS6 Shadow Motor: Enviando TUNE vía Intent (Redundancia)");
+            Intent intent = new Intent(ACTION_SET_RADIO_FREQUENCE);
+            intent.putExtra("extra_frequence", nwdFreq);
+            intent.putExtra("extra_band", (byte) mCurrentBand);
+            mContext.sendBroadcast(intent);
+        }
     }
 
     @Override
@@ -428,6 +588,11 @@ public class QS6Engine implements RadioEngine {
         performAidlCall("seekUp", () -> {
             mNwdService.search(true);
         });
+        
+        // V21.0: Redundancia
+        if (!mIsBound || mNwdService == null) {
+            mContext.sendBroadcast(new Intent(ACTION_SEARCH_UP));
+        }
     }
 
     @Override
@@ -435,6 +600,11 @@ public class QS6Engine implements RadioEngine {
         performAidlCall("seekDown", () -> {
             mNwdService.search(false);
         });
+        
+        // V21.0: Redundancia
+        if (!mIsBound || mNwdService == null) {
+            mContext.sendBroadcast(new Intent(ACTION_SEARCH_DOWN));
+        }
     }
 
     @Override
@@ -455,6 +625,11 @@ public class QS6Engine implements RadioEngine {
         performAidlCall("scan", () -> {
             mNwdService.AMS();
         });
+        
+        // V21.0: Redundancia
+        if (!mIsBound || mNwdService == null) {
+            mContext.sendBroadcast(new Intent(ACTION_AMS));
+        }
     }
 
     @Override
@@ -569,13 +744,11 @@ public class QS6Engine implements RadioEngine {
             Log.d(TAG, "QS6: Solicitando cambio de fuente -> ACTION_REQUEST_CHANGE_SOURCE (0)");
             // V18.4: En Qualcomm NWD, REQUEST_CHANGE_SOURCE es la vía oficial "amigable"
             Intent intent = new Intent("com.nwd.action.ACTION_REQUEST_CHANGE_SOURCE");
-            intent.setPackage("com.nwd.radio.service");
             intent.putExtra("extra_source_id", SOURCE_ANDROID); // 0
             mContext.sendBroadcast(intent);
             
             // También enviamos el ACTION_CHANGE_SOURCE directo por si el gestor de peticiones falla
             Intent intentDirect = new Intent(ACTION_CHANGE_SOURCE);
-            intentDirect.setPackage("com.nwd.radio.service");
             intentDirect.putExtra("extra_source_id", SOURCE_ANDROID); // 0
             mContext.sendBroadcast(intentDirect);
         } catch (Exception e) {

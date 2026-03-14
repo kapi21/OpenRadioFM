@@ -106,7 +106,7 @@
         android:layout_height="0dp"
         android:gravity="center"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
-        app:layout_constraintEnd_toStartOf="@+id/ivDataActivity"
+        app:layout_constraintEnd_toStartOf="@+id/ivFavoriteIndicator"
         app:layout_constraintStart_toEndOf="@+id/containerBand"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -141,10 +141,24 @@
             android:focusableInTouchMode="true" />
     </FrameLayout>
 
-    <!-- V18.2: Cloud movido a la derecha de RDS RT (izquierda de CarLogo) -->
+
+
+    <ImageView
+        android:id="@+id/ivFavoriteIndicator"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_marginEnd="8dp"
+        android:alpha="0.8"
+        android:visibility="gone"
+        android:scaleType="fitCenter"
+        android:src="@drawable/radio_icon_p01"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toStartOf="@+id/ivDataActivity"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <FrameLayout
         android:id="@+id/ivDataActivity"
-        android:layout_width="100dp"
+        android:layout_width="120dp"
         android:layout_height="75dp"
         android:layout_marginEnd="8dp"
         android:clickable="true"
@@ -366,15 +380,6 @@
             </LinearLayout>
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/ivFavoriteIndicator"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:layout_gravity="top|end"
-            android:layout_margin="8dp"
-            android:alpha="0.8"
-            android:visibility="gone"
-            android:src="@drawable/radio_icon_p01" />
     </FrameLayout>
 
     <!-- tvFrequency: Fuera del FrameLayout para forzar Autosizing por ConstraintLayout -->

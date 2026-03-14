@@ -1,6 +1,6 @@
-# OpenRadioFM 📻
+# OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v20.0_Alpha-red.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.9_Stable-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -141,7 +141,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## ⚠️ Problemas Conocidos (Marzo 2026)
 - **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
-- **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas por otros elementos de la UI.
+- **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.
+- **Audio QS6 (Qualcomm)**: ⚠️ El sonido no se activa a pesar de la sintonía. El ID de fuente de audio nativo está en investigación.
 
 ---
 
@@ -157,6 +158,29 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v4.9.0 "Community Logo Edition" (14 de Marzo 2026) - STABLE
+- **Enfoque Comunitario**: Nueva edición centrada en la base de datos de logos compartidos por la comunidad.
+- **Refinamiento de UI Individual**:
+    - **Reubicación de Favorito**: El icono de favorito se ha trasladado a la barra superior en ambos layouts principales para una visualización más limpia.
+    - **Optimización de Espacio**: Reajustado el tamaño de los iconos de estado y nube (120dp) para garantizar la visibilidad del indicador de favorito.
+- **Shadow Motor QS6 (Redundancia)**:
+    - **Broadcast Monitoring**: Nueva lógica para capturar frecuencias y RDS PS directamente desde el bus del sistema (`ACTION_SEND_RADIO_FREQUENCE_NEW`).
+    - **Settings Observer**: Monitorización de `nwd_radio_current_freq` para refrescar la UI independientemente de fallos en el servicio AIDL.
+- **Saneamiento Android 13+**: Registro de receptores con flag `RECEIVER_EXPORTED`.
+- **Estabilidad General**: Mejoras en la persistencia de datos y eliminación de parpadeos en las actualizaciones de RDS.
+
+### v21.1 "QS6 Shadow Motor & Android 13" (14 de Marzo 2026)
+- **Implementación del Shadow Motor (Redundancia QS6)**:
+    - **Broadcast Monitoring**: Nueva lógica para capturar frecuencias y RDS PS directamente desde el bus del sistema (`ACTION_SEND_RADIO_FREQUENCE_NEW`), evitando parálisis si el servicio AIDL de Qualcomm colapsa.
+    - **Settings Observer**: Monitorización en tiempo real de `nwd_radio_current_freq` para refrescar la UI independientemente de los callbacks remotos.
+    - **Comandos Redundantes**: Los cambios de frecuencia ahora se envían también vía Intent por si el proxy AIDL está bloqueado.
+- **Saneamiento Android 13+ (API 33)**: 
+    - Corregido el regitro de receptores añadiendo el flag obligatorio `RECEIVER_EXPORTED` para permitir la comunicación entre apps de sistema y la radio.
+- **Optimización de Rendimiento**:
+    - **Anti-Lag**: Implementado filtrado de actualizaciones de frecuencia para evitar el parpadeo de la UI durante cambios rápidos por parte del hardware.
+    - **Persistence Refinement**: Corregida la duplicidad de registros del Shadow Motor en los ciclos de vida de la Activity.
+- **Estado QS6**: Estabilidad total en UI, sintonía y RDS. El desarrollo de sonido queda en pausa temporal tras la reversión de las pruebas inestables v21.2-v21.5.
 
 ### v20.0 Alpha "QS6 Robustness & MTK Volume" (13 de Marzo 2026)
 - **Robustez Crítica Motor QS6 (NWD Platform)**:
