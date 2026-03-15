@@ -36,7 +36,8 @@ public class MTK8259_8667RadioManager {
         
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         mAudioFocusChangeListener = focusChange -> {
-            Log.d(TAG, "onAudioFocusChange: " + focusChange);
+            Log.d(TAG, "onAudioFocusChange: " + focusChange + " (Ignored in MTK8259 to prevent mute bugs)");
+            /*
             switch (focusChange) {
                 case AudioManager.AUDIOFOCUS_LOSS:
                 case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
@@ -46,6 +47,7 @@ public class MTK8259_8667RadioManager {
                     setMute(false);
                     break;
             }
+            */
         };
     }
 
@@ -60,7 +62,7 @@ public class MTK8259_8667RadioManager {
             if (mTsCommon != null) {
                 mTsCommon.EnterMode(1); // Forzar conmutación de audio a Radio
             }
-            requestAudioFocus();
+            // requestAudioFocus(); // V19.3: Desactivado por Csaba para evitar mute en recreación
         }
     }
 
@@ -71,7 +73,7 @@ public class MTK8259_8667RadioManager {
             if (mTsCommon != null) {
                 mTsCommon.EnterMode(0); // Devolver audio al sistema
             }
-            abandonAudioFocus();
+            // abandonAudioFocus(); // V19.3: Desactivado por Csaba
         }
     }
     
