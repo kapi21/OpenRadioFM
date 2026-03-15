@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Centramos el logo original y lo escalamos un poco para que se vea más grande -->
+    <!-- El área segura de un Adaptive Icon es de 66dp. -->
+    <item
+        android:drawable="@mipmap/ic_launcher"
+        android:width="82dp"
+        android:height="82dp"
+        android:gravity="center" />
+</layer-list>
