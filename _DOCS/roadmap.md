@@ -121,7 +121,7 @@
 ### Mejoras UI & UX
 - [x] **Instant UI Responsiveness**: Limpieza inmediata de buffer de logos al sintonizar.
 - [x] **Layout Clearance**: Corrección de solapamiento de clics entre frecuencia y botones AF/TA/TP.
-- [x] **MTK Volume Sync**: Implementado `setVolumeControlStream` y AudioFocus para corregir la "doble pulsación" en unidades Topway.
+- [x] **MTK Volume Sync**: Implementado `setVolumeControlStream` and AudioFocus para corregir la "doble pulsación" en unidades Topway.
 
 ---
 
@@ -129,15 +129,20 @@
 
 ## ✅ Sesión 14/Marzo/2026 — Completado (V.4.9.0 Community Logo Edition)
 
-### Comunidad y Optimización de Logos
-- [x] **Community Logo Edition**: Lanzamiento de la versión 4.9 centrada en la compartición de logos.
-- [x] **Refinamiento UI**: Reubicación de los iconos de favorito a la barra superior (Derecha en Main, Izquierda de Cloud en V3).
-- [x] **Gestión de Espacio**: Ajuste de dimensiones de la nube y otros widgets para evitar solapamientos.
+### Comunidad y Lanzamiento V4.9
+- [x] **Community Logo Edition**: Lanzamiento oficial de la v4.9.0.
+- [x] **Web Gallery Renewal**: Renovación total del sitio de GitHub con galería de capturas v4.9 y actualización en 8 idiomas.
+- [x] **Sincronización de Activos**: Los últimos pantallazos (V2 Night / V3 Premium) ya están integrados en la web.
 
-### Robustez QS6 (Bypass de Servicio)
-- [x] **NWD "Shadow Motor"**: Motor híbrido que escucha broadcasts crudos (`ACTION_SEND_RADIO_FREQUENCE_NEW`).
-- [x] **Settings.System Observer**: Monitorización de `nwd_radio_current_freq` para redundancia total.
-- [x] **Persistence Fix**: Limpieza de registros y gestión de ciclo de vida mejorada.
+### UI & Layout Polishing
+- [x] **Fav Icon Repositioning**: Movido el icono de favorito a la derecha de la nube en Layout 2 y a la izquierda en Layout 3.
+- [x] **Cloud Restoration**: Tamaño de la nube a 120dp con funcionamiento dinámico.
+- [x] **Premium Aesthetics**: Unificación de tamaños y márgenes para una interfaz más limpia.
+
+### Fixes de Audio y Hardware
+- [x] **MTK8259 Audio Fix**: Implementado `mTsCommon.EnterMode(1/0)` para forzar el canal de audio FM en unidades Topway al iniciar/cerrar.
+- [x] **QS6 Shadow Motor**: Motor híbrido que escucha broadcasts crudos para redundancia total.
+- [x] **NWD Stability**: Gestión de ciclo de vida mejorada para los receptores de hardware.
 
 ---
 

@@ -129,15 +129,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     public boolean mIsSimpleLayout = false;
     public boolean mIsV3 = false;
-    public boolean mIsMinimal = false; // V19.2
     public boolean mControlsHidden = false;
     private android.view.View bottomControls;
     private android.os.Handler mAutoHideHandler;
     private Runnable mAutoHideRunnable;
-
-    // V21.0: UI Controllers Refactor
-    public BaseLayoutController mUiController;
-    private final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     // V16: Managers de Modo Nocturno e Historial
     public NightModeManager mNightModeManager;
@@ -308,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     // V3.0: Background personalizado
+    private android.view.View mRootLayout;
 
     private TextView tvFrequency, tvRdsName, tvRdsInfo;
     private android.view.View boxFrequency;
@@ -366,13 +362,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     public void onFrequencyChanged(int freqKhz) {
         handleFrequencyChange(freqKhz);
-        runOnUiThread(() -> {
-            if (mUiController != null) {
-                mUiController.updateFrequency(freqKhz, null, mCurrentBand >= 3);
-            } else {
-                updateFrequencyDisplay(freqKhz, null);
-            }
-        });
+        runOnUiThread(() -> updateFrequencyDisplay(freqKhz, null));
     }
 
     @Override
@@ -383,24 +373,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mPresetManager.refreshPresetsCache(band);
                 mPresetManager.refreshButtons(band);
             }
-            if (mUiController != null) {
-                mUiController.updateBandIndicator(band);
-            } else {
-                updateBandImage(band);
-            }
+            updateBandImage(band);
         });
     }
 
     @Override
     public void onStereoChanged(boolean stereo) {
         runOnUiThread(() -> {
-            if (mUiController != null) {
-                mUiController.updateStereo(stereo);
-            } else if (ivStereoIcon != null) {
+            if (ivStereoIcon != null)
                 ivStereoIcon.setVisibility(stereo ? android.view.View.VISIBLE : android.view.View.INVISIBLE);
-            }
-            
             if (ivSignalLevel != null) {
+                // V12.4: Actualizar color de señal según estado Stereo (Verde=Stereo,
+                // Amarillo=Mono)
                 int color = stereo ? android.graphics.Color.parseColor("#00E676")
                         : android.graphics.Color.parseColor("#FFD600");
                 ivSignalLevel.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
@@ -414,13 +398,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (mRdsManager != null) {
                 mRdsManager.onRdsName(name);
                 mHasRdsLock = mRdsManager.hasRdsLock();
+                // V16: Sincronizar con MediaSession (Android Auto)
                 if (mMediaSessionManager != null) {
                     String freqText = String.format(java.util.Locale.US, "%.2f MHz", (mEngine != null ? mEngine.getCurrentFreq() : 0) / 1000.0);
                     mMediaSessionManager.updateMetadata(name, freqText, null);
                 }
-            }
-            if (mUiController != null) {
-                mUiController.updateRDS(name);
             }
         });
     }
@@ -536,10 +518,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     // Forzar recarga en segundo plano
                     new Thread(() -> {
                         mRepository.getStationInfo(freq, logoUrl -> {
-                            // V18.6.4: Preservar nombre RDS actual al recargar
-                            String name = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
-                            runOnUiThread(() -> updateFrequencyDisplay(freq, name));
+                            runOnUiThread(() -> updateFrequencyDisplay(freq, null));
                         });
+                        if (freq > 0) {
+                            runOnUiThread(() -> updateFrequencyDisplay(freq, null));
+                        }
                     }).start();
                 }
                 return true;
@@ -568,11 +551,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private boolean isInternetAvailable() {
         try {
             android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            // V18.6.4: Migrado de getActiveNetworkInfo() (deprecada API 29) a NetworkCapabilities
-            android.net.Network net = cm.getActiveNetwork();
-            if (net == null) return false;
-            android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(net);
-            return caps != null && caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET);
+            android.net.NetworkInfo netInfo = cm.getActiveNetworkInfo();
+            return netInfo != null && netInfo.isConnected();
         } catch (Exception e) {
             Log.e(TAG, "isInternetAvailable: Error checking connection", e);
             return false;
@@ -586,12 +566,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (mRdsManager != null) {
                 mRdsManager.onRdsText(text);
                 mHasRdsLock = mRdsManager.hasRdsLock();
+                // V16: Sincronizar con MediaSession (Android Auto)
                 if (mMediaSessionManager != null) {
                     mMediaSessionManager.updateRds(text);
                 }
-            }
-            if (mUiController != null) {
-                mUiController.updateRDSText(text);
             }
         });
     }
@@ -604,9 +582,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mRdsManager.onRdsPty(pty);
                 mCurrentPty = mRdsManager.getCurrentPty();
             }
-            if (mUiController != null) {
-                mUiController.updatePTY(pty);
-            }
         });
     }
 
@@ -616,16 +591,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
         runOnUiThread(() -> {
-            if (mUiController != null) {
-                mUiController.updateRdsStatus(afEnabled, taEnabled, tpEnabled);
-            } else {
-                if (ivAfIcon != null)
-                    ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
-                if (ivTaIcon != null)
-                    ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
-                if (ivTpIcon != null)
-                    ivTpIcon.setAlpha(tpEnabled ? 1.0f : 0.2f);
-            }
+            if (ivAfIcon != null)
+                ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
+            if (ivTaIcon != null)
+                ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
+            if (ivTpIcon != null)
+                ivTpIcon.setAlpha(tpEnabled ? 1.0f : 0.2f);
             Log.d(TAG, "Engine RDS Status: AF=" + afEnabled + " TA=" + taEnabled + " TP=" + tpEnabled);
         });
     }
@@ -744,7 +715,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         public void onModeDetected(FmMode mode) {
             mMode = mode; // Se asigna sincronamente antes de volver a la cola de eventos
             runOnUiThread(() -> {
-                if (isFinishing() || isDestroyed()) return;
                 Log.d(TAG, "Modo de funcionamiento detectado: " + mMode);
 
                 if (mMode == FmMode.FM_MT8163) {
@@ -827,7 +797,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 startStatusPolling();
 
                 runOnUiThread(() -> {
-                    if (isFinishing() || isDestroyed()) return;
                     if (mEngine != null) {
                         showToast("Hardware: " + mEngine.getEngineName());
                         refreshPresetsCache();
@@ -840,7 +809,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             Log.d(TAG, "Startup Audio Recovery (Cold Start): Forzando desmuteo");
                             mPlaybackManager.setMute(false);
                         } else {
-                            Log.d(TAG, "Startup: Saltando recuperación agresiva por recreación activa");
+                            Log.d(TAG, "Startup: Saltando recuperación agresiva por recreación actia");
                         }
                     }
                 });
@@ -920,18 +889,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         if (mIsSimpleLayout) {
             setContentView(R.layout.activity_simple_radio);
-            mUiController = new SimpleLayoutController(this);
-        } else if (mIsV3) {
-            setContentView(R.layout.activity_main_v3);
-            mUiController = new V3LayoutController(this);
         } else {
-            setContentView(R.layout.activity_main);
-            mUiController = new MainLayoutController(this);
-        }
-
-        // V21.0: Initialize the active UI Controller
-        if (mUiController != null) {
-            mUiController.initViews(findViewById(android.R.id.content));
+            setContentView(mIsV3 ? R.layout.activity_main_v3 : R.layout.activity_main);
         }
 
         // V15.6: Aplicar tipografía global inmediatamente tras cargar el layout
@@ -953,11 +912,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mServiceController = new RadioServiceController(this, mPrefs, mServiceListener);
 
         // V16: NightMode y History Managers
-        mNightModeManager = new NightModeManager(this, mPrefs, freq -> {
-            // V18.6.4: Pasar el nombre RDS actual para no perderlo al cambiar de skin
-            String currentName = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
-            updateFrequencyDisplay(freq, currentName);
-        });
+        mNightModeManager = new NightModeManager(this, mPrefs, freq -> updateFrequencyDisplay(freq, null));
         mHistoryManager = new HistoryManager(this, mPrefs);
         mMediaSessionManager = new MediaSessionManager(this);
         mMediaSessionManager.connect();
@@ -971,13 +926,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             public void onMuteStateChanged(boolean isMuted) {
                 mMuteState = isMuted;
                 runOnUiThread(() -> {
-                    if (mUiController != null) {
-                        mUiController.updateMute(isMuted);
-                    }
-                    
                     ImageButton btnMute = findViewById(R.id.btnMute);
                     if (btnMute != null) {
                         btnMute.setSelected(isMuted);
+                        // V18.9: Para el motor MTK, el usuario prefiere que el icono no cambie (siempre radio_mute_n)
+                        // aunque el hardware esté muteado. Para otros motores (K706, etc.) se mantiene el toggle.
                         boolean isMTK = mEngine != null && mEngine.getEngineName().contains("MTK");
 
                         if (isMuted && !isMTK) {
@@ -1253,11 +1206,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     protected void onDestroy() {
-        // V21.0: Cancel all pending UI tasks immediately
-        mMainHandler.removeCallbacksAndMessages(null);
-        if (mAutoHideHandler != null) mAutoHideHandler.removeCallbacksAndMessages(null);
-        if (mClockHandler != null) mClockHandler.removeCallbacksAndMessages(null);
-
         // V20.0: Check more robust for recreation (recreate() or config change)
         // or just moving to background (not finishing).
         // This prevents muting MT8163 on layout change.
@@ -1275,12 +1223,19 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mDeviceManager.releaseAllResources(recreating);
         }
 
+        // V18.5: Limpiar reloj
+        if (mClockHandler != null) {
+            mClockHandler.removeCallbacks(mClockRunnable);
+        }
+
         // Recursos no gestionados por DeviceManager (legacy específico)
         try {
-            if (mHardwareManager != null) {
-                mHardwareManager.unregisterReceivers();
-            }
+        if (mHardwareManager != null) {
+            mHardwareManager.unregisterReceivers();
+        }
         } catch (Exception e) {}
+
+
 
         if (mHiddenPlayer != null) {
             mHiddenPlayer.release();
@@ -1291,12 +1246,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mOnlineStreamManager.release();
             mOnlineStreamManager = null;
         }
-
-        // V18.6.2: Explicit cleanup for all managers
-        if (mPresetManager != null) mPresetManager.release();
-        if (mLogoManager != null) mLogoManager.release();
-        if (mRdsManager != null) mRdsManager.release();
-        if (mUiController != null) mUiController.release(); // Assuming the controller follows the pattern
 
         super.onDestroy();
     }
@@ -1613,12 +1562,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             runOnUiThread(() -> {
                if (ivStereoIcon != null) setVisibilityIfChanged(ivStereoIcon, isStereo ? View.VISIBLE : View.INVISIBLE);
                if (btnLocDx != null) btnLocDx.setSelected(isLocal);
-               // V18.6.4: Actualizar color de señal en el path de polling (para MT8163 que no tiene callback activo)
-               if (ivSignalLevel != null) {
-                   int sigColor = isStereo ? android.graphics.Color.parseColor("#00E676")
-                           : android.graphics.Color.parseColor("#FFD600");
-                   ivSignalLevel.setColorFilter(sigColor, android.graphics.PorterDuff.Mode.SRC_IN);
-               }
             });
             return;
         }
@@ -1626,12 +1569,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V4.8.6: Limpieza inmediata de UI al cambiar de sintonía (Sin esperar a carga asíncrona)
         runOnUiThread(() -> {
             if (mRdsManager != null) mRdsManager.reset(true);
-            if (mUiController != null) {
-                mUiController.updateLogo(null);
-                mUiController.updateRDS("");
-            } else if (mLogoManager != null) {
-                mLogoManager.clearLogo();
-            }
+            if (mLogoManager != null) mLogoManager.clearLogo();
         });
 
         mLastRefreshFreq = freq;
@@ -1670,7 +1608,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V18.6: Mover recuperación de información de emisora a hilo secundario
         new Thread(() -> {
-            if (isFinishing() || isDestroyed()) return;
             com.example.openradiofm.data.model.RadioStation station = null;
             if (mRepository != null && !mIsScanning) {
                 station = mRepository.getStationInfo(fFreq, null);
@@ -1679,46 +1616,36 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mLastPs = rdsName; // V18.6: Sincronizar campo para acceso externo
 
             runOnUiThread(() -> {
-                if (isFinishing() || isDestroyed()) return;
                 // Get State
                 boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-                
-                if (mUiController != null) {
-                    mUiController.updateFrequency(fFreq, rdsName, fIsAm);
-                    mUiController.applySkin(isNight);
-                    mUiController.updateBandIndicator(fBand);
-                    
-                    // Logo & Background
-                    if (mLogoManager != null) {
-                        String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
-                        mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
-                    }
+                int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+                int white = android.graphics.Color.WHITE;
 
-                    // V18.6.4: Fix favorite indicator delay - Update immediately
-                    boolean isFav = isStationMemorized(fFreq);
-                    int pIndex = getPresetIndex(fFreq);
-                    mUiController.updateFavoriteIndicator(isFav, pIndex, isNight);
+                // Sync color filters if in Night Mode
+                if (isNight) {
+                    setColorFilterIfChanged(ivUnitLabel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    setTextColorIfChanged(tvFrequency, nightBlue);
                 } else {
-                    // Legacy Fallback
-                    int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                    if (isNight) {
-                        setColorFilterIfChanged(ivUnitLabel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                        setTextColorIfChanged(tvFrequency, nightBlue);
-                    } else {
-                        setColorFilterIfChanged(ivUnitLabel, null, null);
-                        setTextColorIfChanged(tvFrequency, android.graphics.Color.WHITE);
-                    }
-                    updateFrequencyDisplay(fFreq, rdsName);
-                    updateBandImage(fBand);
+                    setColorFilterIfChanged(ivUnitLabel, null, null);
+                    setTextColorIfChanged(tvFrequency, white);
                 }
 
-                // Metadata update (Session)
+                // V18.6: Actualizar metadatos de la sesión de medios inmediatamente
                 if (mMediaSessionManager != null) {
                     float freqDisplay = fFreq / 1000.0f;
                     String freqStr = String.format(java.util.Locale.US, "%.1f MHz", freqDisplay);
                     mMediaSessionManager.updateMetadata(rdsName, freqStr, null);
                 }
 
+                updateFrequencyDisplay(fFreq, rdsName);
+
+                // V4.0: Logo & Background (Always refresh logo in polling for consistency)
+                if (mLogoManager != null) {
+                    String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
+                    mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
+                }
+
+                updateBandImage(fBand);
                 if (btnLocDx != null) {
                     btnLocDx.setSelected(fIsLocal);
                     setImageResourceIfChanged(btnLocDx, fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
@@ -1880,40 +1807,154 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
     // V4.8.6: Ahora acepta rdsName para evitar hilos redundantes si ya se obtuvo antes.
     void updateFrequencyDisplay(int freq, String rdsName) {
-        if (freq <= 0) return;
-        
-        runOnUiThread(() -> {
-            if (mUiController != null) {
-                mUiController.updateFrequency(freq, rdsName, mCurrentBand >= 3);
-                
-                // Add RDS updates through controller
-                if (mRdsManager != null) {
-                    boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-                    mUiController.applySkin(isNight);
-                }
-                
-                // Favorite indicator update
-                boolean isFavorite = isStationMemorized(freq);
-                int idx = getPresetIndex(freq);
-                boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == ThemeManager.Skin.NIGHT_MODE);
-                mUiController.updateFavoriteIndicator(isFavorite, idx, isNight);
-                
+        if (freq <= 0)
+            return; // V11.7: Evitar mostrar 00.0/0
+        if (tvFrequency != null) {
+            // V2.1: MOSTRAR FRECUENCIA NUMÉRICA INSTANTÁNEAMENTE
+            // V2.2: Solo si ha cambiado para evitar "jitter"
+            String freqStr;
+            if (mCurrentBand >= 3) { // AM1, AM2, SW
+                freqStr = String.valueOf(freq);
             } else {
-                // FALLBACK LEGACY
-                legacy_updateFrequencyDisplay(freq, rdsName);
+                freqStr = String.format(java.util.Locale.US, "%.1f", freq / 1000.0);
             }
-        });
+            
+            // Si tenemos un nombre RDS pasado por argumento, lo usamos directamente si no es vacío.
+            // Si no lo tenemos, probamos a resolverlo.
+            if (rdsName != null && !rdsName.isEmpty()) {
+                setTextIfChanged(tvFrequency, rdsName);
+            } else if (mLastPs != null && !mLastPs.isEmpty()) {
+                // V18.6.4: Use cached name instead of numbers during UI refreshes (avoid tremble/jitter)
+                setTextIfChanged(tvFrequency, mLastPs);
+            } else {
+                setTextIfChanged(tvFrequency, freqStr);
+                
+                // V18.2/V4.8.6: Solo lanzamos hilo si no nos han pasado el nombre ya resuelto.
+                // Esto reduce drásticamente el parpadeo y la carga de CPU.
+                new Thread(() -> {
+                    String finalDisplayName = null;
+                    if (!mIsScanning && mRdsManager != null) {
+                        finalDisplayName = mRdsManager.getDisplayName(freq);
+                    }
+                    
+                    // Fallback al repositorio si el RDSManager no reconoce el nombre
+                    if ((finalDisplayName == null || finalDisplayName.isEmpty()) && mRepository != null && !mIsScanning) {
+                        com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
+                        if (station != null) {
+                            finalDisplayName = station.getName();
+                        }
+                    }
+                    
+                    final String resultName = finalDisplayName;
+                    if (resultName != null && !resultName.isEmpty()) {
+                        runOnUiThread(() -> {
+                            setTextIfChanged(tvFrequency, resultName);
+                        });
+                    }
+                }).start();
+            }
+
+            // Get State
+            boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+            boolean isFavorite = isStationMemorized(freq);
+            int idx = getPresetIndex(freq);
+
+            // Colors
+            int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+            int white = android.graphics.Color.WHITE;
+
+            // 1. Dial Color & Unit Label
+            if (isNight) {
+                // V5.6: Always Night Blue in Night Mode as requested
+                setTextColorIfChanged(tvFrequency, nightBlue);
+                setColorFilterIfChanged(ivUnitLabel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                setTextColorIfChanged(tvRdsName, nightBlue);
+                setTextColorIfChanged(tvRdsInfo, nightBlue);
+                setTextColorIfChanged(tvPty, nightBlue);
+                setColorFilterIfChanged(btnPowerOff, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+            } else {
+                // Normal Mode -> Always White
+                setTextColorIfChanged(tvFrequency, white);
+                setColorFilterIfChanged(ivUnitLabel, null, null);
+                setTextColorIfChanged(tvRdsName, white);
+                setTextColorIfChanged(tvRdsInfo, white);
+                setTextColorIfChanged(tvPty, white);
+                setColorFilterIfChanged(btnPowerOff, null, null);
+            }
+
+            // 2. Favorite Icon
+            if (ivFavoriteIndicator != null) {
+                if (isFavorite && idx > 0) {
+                    setVisibilityIfChanged(ivFavoriteIndicator, View.VISIBLE);
+                    int resId = getResources().getIdentifier("radio_icon_p" + String.format("%02d", idx), "drawable",
+                            getPackageName());
+                    setImageResourceIfChanged(ivFavoriteIndicator, resId != 0 ? resId : R.drawable.radio_icon_p01);
+
+                    // Tint logic
+                    setColorFilterIfChanged(ivFavoriteIndicator, isNight ? nightBlue : white, android.graphics.PorterDuff.Mode.SRC_IN);
+                } else {
+                    setVisibilityIfChanged(ivFavoriteIndicator, View.GONE);
+                }
+            }
+
+            // V16.2: Centralizar lógica de RDS en el manager (Name, RT, PTY)
+            if (mRdsManager != null) {
+                mRdsManager.updateRDSDisplay(freq, isNight, nightBlue, white);
+            }
+
+            // 4. Signal Level Coloring (V4.2 Refinement)
+            if (ivSignalLevel != null) {
+                int signalColor;
+                boolean hasStereo = false;
+                if (mEngine != null)
+                    hasStereo = mEngine.isStereo();
+
+                if (mHasRdsLock && hasStereo) {
+                    signalColor = android.graphics.Color.parseColor("#00E676"); // Green
+                } else if (hasStereo) {
+                    signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow (Solo si hay estéreo mínimo,
+                                                                                // lo consideramos emisión válida normal
+                                                                                // en FM)
+                } else if (mCurrentBand == BAND_AM1 || mCurrentBand == BAND_AM2) {
+                    // AM bands don't usually have stereo, maybe we show yellow if we are tuned?
+                    // We assume that the tune locked, so we provide default AM color
+                    signalColor = android.graphics.Color.parseColor("#FFD600"); // Yellow for AM
+                } else {
+                    signalColor = android.graphics.Color.parseColor("#FF5252"); // Red (No emisión reconocible)
+                }
+                if (!isNight) {
+                    setColorFilterIfChanged(ivSignalLevel, signalColor, android.graphics.PorterDuff.Mode.SRC_IN);
+                } else {
+                    setColorFilterIfChanged(ivSignalLevel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                }
+            }
+
+            // Re-apply stereo visibility based on immediate hardware state
+            if (ivStereoIcon != null) {
+                boolean hasStereo = mEngine != null && mEngine.isStereo();
+                setVisibilityIfChanged(ivStereoIcon, hasStereo ? View.VISIBLE : View.INVISIBLE);
+            }
+        }
     }
 
-    private void legacy_updateFrequencyDisplay(int freq, String rdsName) {
-        if (tvFrequency == null) return;
-        // ... (Mantengo la lógica por si el mUiController fuera nulo accidentalmente)
-        // Pero idealmente esta lógica se mueva a cada controlador
-        String freqStr = (mCurrentBand >= 3) ? String.valueOf(freq) : String.format(java.util.Locale.US, "%.1f", freq / 1000.0);
-        if (rdsName != null && !rdsName.isEmpty()) setTextIfChanged(tvFrequency, rdsName);
-        else setTextIfChanged(tvFrequency, freqStr);
+    private int getPresetIndexForFreq(int freq) {
+        for (int i = 1; i <= 15; i++) {
+            String key = "P" + i + "_B" + mCurrentBand;
+            if (mPrefs.getInt(key, 0) == freq)
+                return i;
+        }
+        return -1;
     }
 
+    private boolean isFrequencySaved(int freq) {
+        // Check current band presets
+        for (int i = 1; i <= 12; i++) {
+            String key = "P" + i + "_B" + mCurrentBand;
+            if (mPrefs.getInt(key, 0) == freq)
+                return true;
+        }
+        return false;
+    }
 
     /**
      * V16.2: Delegado a ThemeManager.applySkin().
@@ -1924,19 +1965,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         
         boolean isNight = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
 
-        if (mUiController != null) {
-            mUiController.applySkin(isNight);
-        } else if (mIsSimpleLayout && mSimpleLayoutManager != null) {
-            // Legacy/Fallback for SimpleLayoutManager directly
+        // V18.6: Propagate skin change to SimpleLayoutManager
+        if (mIsSimpleLayout && mSimpleLayoutManager != null) {
             mSimpleLayoutManager.applyColors(isNight);
-        }
-
-        // Shared Clock Visibility Color
-        if (tvDigitalClock != null) {
-            if (isNight) {
-                tvDigitalClock.setTextColor(getResources().getColor(R.color.night_blue_primary, null));
-            } else {
-                tvDigitalClock.setTextColor(android.graphics.Color.WHITE);
+            if (tvDigitalClock != null) {
+                if (isNight) {
+                    tvDigitalClock.setTextColor(getResources().getColor(R.color.night_blue_primary, null));
+                } else {
+                    tvDigitalClock.setTextColor(android.graphics.Color.WHITE);
+                }
             }
         }
     }
@@ -2141,10 +2178,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1001) {
             if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                showToast("Permisos concedidos");
+                showToast("Permisos concedidos. Probando acceso...");
                 if (mDialogManager != null)
                     mDialogManager.showSaveLoadFavoritesDialog();
-            } else {
                 showToast("Se requieren permisos de almacenamiento para guardar favoritos.");
             }
         }

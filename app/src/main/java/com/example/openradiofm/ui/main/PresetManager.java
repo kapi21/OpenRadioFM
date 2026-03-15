@@ -104,6 +104,7 @@ public class PresetManager {
 
             // V18.2: Mover la obtención de info a hilo secundario para evitar congelar la UI
             new Thread(() -> {
+                if (mActivity == null || mActivity.isFinishing() || mActivity.isDestroyed()) return;
                 RadioStation s = null;
                 if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
                     s = mRepository.getStationInfo(fFreq, null);
@@ -111,6 +112,7 @@ public class PresetManager {
                 final String displayName = (s != null) ? s.getName() : "";
                 
                 mActivity.runOnUiThread(() -> {
+                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
                     if (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+")) {
                         tvPresets[fIndex].setText(displayName);
                     } else {
@@ -130,8 +132,10 @@ public class PresetManager {
         if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
             mRepository.getStationInfo(freq, logoUrl -> {
                 mActivity.runOnUiThread(() -> {
+                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                    
                     if (logoUrl != null && ivPresets[fIndex] != null) {
-                        Glide.with(mActivity)
+                        Glide.with(ivPresets[fIndex])
                                 .load(logoUrl)
                                 .transform(new RoundedCorners(20))
                                 .transition(DrawableTransitionOptions.withCrossFade())
@@ -251,6 +255,26 @@ public class PresetManager {
             if (tv != null) {
                 tv.setTypeface(typeface);
             }
+        }
+    }
+
+    /**
+     * V18.6.2: Cleanup to avoid memory leaks and pending callbacks.
+     */
+    public void release() {
+        // V18.6.3: Glide handles this automatically, but if we clear, 
+        // we MUST use the view context and NOT the activity to avoid crashes 
+        // when this is called from onDestroy().
+        for (int i = 0; i < mPresetsCount; i++) {
+            if (ivPresets[i] != null) {
+                try {
+                    // Glide.with(ivPresets[i]) is safe even if Activity is destroyed
+                    // whereas Glide.with(mActivity) would crash.
+                    Glide.with(ivPresets[i].getContext()).clear(ivPresets[i]);
+                } catch (Exception ignored) {}
+                ivPresets[i] = null;
+            }
+            if (tvPresets[i] != null) tvPresets[i] = null;
         }
     }
 }

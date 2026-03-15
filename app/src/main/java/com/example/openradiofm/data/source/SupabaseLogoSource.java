@@ -58,9 +58,13 @@ public class SupabaseLogoSource {
     }
 
     public void notifyActivity(boolean active) {
-        android.util.Log.d("SupabaseLogoSource", "notifyActivity: active=" + active);
+        // android.util.Log.d("SupabaseLogoSource", "notifyActivity: active=" + active);
         if (mActivityListener != null) {
-            mActivityListener.onDataActivity(active);
+            try {
+                mActivityListener.onDataActivity(active);
+            } catch (Exception e) {
+                android.util.Log.e("SupabaseLogoSource", "Error notifying activity: " + e.getMessage());
+            }
         }
     }
     /**
@@ -160,7 +164,9 @@ public class SupabaseLogoSource {
                 }
 
                 String hwModel = android.os.Build.MODEL; // Identificador del hardware (ej: K706, etc)
-                String deviceId = com.example.openradiofm.utils.DeviceMetadataUtils.getUniqueDeviceId(context);
+                // V18.6.3: Use ApplicationContext for safety in background threads.
+                android.content.Context appContext = (context != null) ? context.getApplicationContext() : null;
+                String deviceId = com.example.openradiofm.utils.DeviceMetadataUtils.getUniqueDeviceId(appContext != null ? appContext : context);
 
                 // Enriquecer con Stream URL si no viene definido (auto-populación de la base comunitaria)
                 String finalStreamUrl = streamUrl;

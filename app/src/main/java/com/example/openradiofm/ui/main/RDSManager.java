@@ -100,28 +100,12 @@ public class RDSManager {
     }
 
     public void updatePtyUI(String pty) {
-        int ptyCode = 0;
-        String displayLabel = mContext.getString(R.string.pty_none);
-
-        if (pty != null && !pty.isEmpty()) {
-            try {
-                ptyCode = Integer.parseInt(pty.trim());
-                if (ptyCode > 0 && ptyCode <= 31) {
-                    displayLabel = PtyManager.getPtyLabel(mContext, ptyCode);
-                } else {
-                    ptyCode = 0;
-                }
-            } catch (NumberFormatException e) {
-                // V18.6: Si no es un número, es una etiqueta directa (ej: "Música Pop")
-                displayLabel = pty;
-            }
-        }
+        String displayLabel = PtyManager.getPtyDisplayLabel(mContext, pty);
 
         if (tvPty != null) {
             tvPty.setText(displayLabel);
             tvPty.setVisibility(View.VISIBLE);
             tvPty.setSelected(true); // V16.x: Activar Marquee
-            // Log.d(TAG, "PTY UI Updated: " + displayLabel + " (Code: " + ptyCode + ")");
         }
     }
 
@@ -233,5 +217,14 @@ public class RDSManager {
      */
     public void clearCustomNameOverride() {
         mCustomNameOverride = null;
+    }
+
+    /**
+     * V18.6.2: Cleanup to avoid memory leaks.
+     */
+    public void release() {
+        // Nothing heavy to release here yet as they are simple TextViews,
+        // but we keep the pattern for consistency.
+        reset(true);
     }
 }

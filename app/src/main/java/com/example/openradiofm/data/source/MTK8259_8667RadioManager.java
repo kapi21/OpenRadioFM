@@ -179,12 +179,18 @@ public class MTK8259_8667RadioManager {
         if (mTsSpeechRadio != null) mTsSpeechRadio.SeekDn();
     }
 
+    // V18.6.4: Csaba confirma que onNextFreq/onPrevFreq solo ciclan presets de fábrica.
+    // Fix: Calcular la frecuencia manualmente y usar gotoFreq().
     public void onManualUpEvent() throws RemoteException {
-        if (mTsSpeechRadio != null) mTsSpeechRadio.onNextFreq();
+        int freq = getCurrentFreq();
+        int step = isAmBand() ? 9 : 100; // 9 kHz para AM, 100 kHz para FM
+        gotoFreq(freq + step);
     }
 
     public void onManualDownEvent() throws RemoteException {
-        if (mTsSpeechRadio != null) mTsSpeechRadio.onPrevFreq();
+        int freq = getCurrentFreq();
+        int step = isAmBand() ? 9 : 100;
+        gotoFreq(freq - step);
     }
 
     /**
@@ -311,26 +317,13 @@ public class MTK8259_8667RadioManager {
         }
     }
 
+    // V18.6.4: Csaba confirma que AudioManager NO tiene efecto en el volumen de radio.
+    // Solo mTsCommon.Mute() funciona. Alternativa: OpenRadioCh/CloseRadioCh.
     public void setMute(boolean mute) {
         try {
-            // V18.6: Usar AudioManager de Android para evitar que el MainUI de Topway
-            // bloquee la barra de volumen o deje el mute de hardware persistente.
-            android.media.AudioManager am = (android.media.AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, 
-                        mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
-                } else {
-                    am.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
-                }
-                Log.d(TAG, "Mute set to " + mute + " via AudioManager");
-            }
-            
-            // V18.6: Usar tanto AudioManager como mTsCommon para asegurar el mute.
-            // Csaba reporta que solo AudioManager no es suficiente en algunas unidades.
             if (mTsCommon != null && mute != mTsCommon.IsMute()) {
                 mTsCommon.Mute();
-                Log.d(TAG, "Hardware Mute toggled via TsCommon");
+                Log.d(TAG, "Mute toggled via TsCommon: target=" + mute);
             }
         } catch (Throwable t) {
             Log.e(TAG, "Mute failed", t);
@@ -341,16 +334,11 @@ public class MTK8259_8667RadioManager {
      * V20.0: Fuerza un estado de sonido activo.
      * Útil para solventar el bug de audio silenciado al arrancar en MTK8259.
      */
+    // V18.6.4: Simplificado — solo mTsCommon.Mute() + OpenRadioCh() (sin AudioManager)
     public void forceUnmute() {
         try {
-            android.media.AudioManager am = (android.media.AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-            if (am != null) {
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC, android.media.AudioManager.ADJUST_UNMUTE, 0);
-                }
-            }
             if (mTsCommon != null && mTsCommon.IsMute()) {
-                mTsCommon.Mute(); // El comando Mute() en Topway suele actuar como toggle o alternar estado
+                mTsCommon.Mute(); // Toggle para restaurar sonido
                 Log.d(TAG, "forceUnmute: Hardware Mute toggled to restore sound");
             }
             // Asegurar canal abierto

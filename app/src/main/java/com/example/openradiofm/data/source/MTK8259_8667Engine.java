@@ -75,7 +75,8 @@ public class MTK8259_8667Engine implements RadioEngine {
     @Override
     public void release(boolean persist) {
         if (persist) {
-            Log.d(TAG, "release(persist=true): Recreación detectada. Manteniendo MTK vivo.");
+            Log.d(TAG, "release(persist=true): Recreación detectada. Manteniendo MTK vivo pero pausando polling.");
+            stopRdsPolling(); // V18.6.4: Evitar que el hilo intente actualizar vistas destruidas
             return;
         }
 
@@ -294,6 +295,10 @@ public class MTK8259_8667Engine implements RadioEngine {
     @Override
     public void setCallback(RadioEngineCallback cb) {
         this.mCallback = cb;
+        // V18.6.4: Al reconectar el callback (ej. tras recreación de layout), reanudamos el polling
+        if (cb != null && mManager != null && mManager.isConnected()) {
+            startRdsPolling();
+        }
     }
 
     private void pollRdsAndDispatch() {

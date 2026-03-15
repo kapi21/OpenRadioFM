@@ -110,7 +110,7 @@ public class LogoManager {
             Object lastTag = iv.getTag(R.id.tag_logo_url);
             if (lastTag == null || !path.equals(lastTag)) {
                 iv.setImageDrawable(null); // Clear to avoid overlapping during load
-                Glide.with(mActivity)
+                Glide.with(iv)
                         .load(logoFile)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
@@ -139,7 +139,7 @@ public class LogoManager {
             if (logoExists) {
                 ivCarLogo.setVisibility(View.VISIBLE);
                 ivCarLogo.setImageDrawable(null); // Clear overlap
-                Glide.with(mActivity)
+                Glide.with(ivCarLogo)
                         .load(logoFile)
                         .diskCacheStrategy(DiskCacheStrategy.NONE)
                         .skipMemoryCache(true)
@@ -173,7 +173,7 @@ public class LogoManager {
                 if (!logoUrl.equals(mLastDynamicBgUrl)) {
                     mLastDynamicBgUrl = logoUrl;
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
-                    Glide.with(mActivity)
+                    Glide.with(ivDynamicBackground)
                             .load(logoUrl)
                             .centerCrop()
                             .transition(DrawableTransitionOptions.withCrossFade())
@@ -183,7 +183,7 @@ public class LogoManager {
                 if (mLastDynamicBgUrl != null) {
                     mLastDynamicBgUrl = null;
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
-                    Glide.with(mActivity).clear(ivDynamicBackground);
+                    Glide.with(ivDynamicBackground.getContext()).clear(ivDynamicBackground);
                     loadCustomBackground();
                 }
             }
@@ -229,7 +229,7 @@ public class LogoManager {
                     }
                     
                     // V18.6.2: Gestión Unificada de Glide para evitar solapamientos y suavizar transiciones
-                    Glide.with(mActivity)
+                    Glide.with(ivMainLogo)
                             .asBitmap()
                             .load(cachedUrl)
                             .transform(new RoundedCorners(24))
@@ -240,6 +240,7 @@ public class LogoManager {
                             .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
                                 @Override
                                 public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
                                     super.onResourceReady(resource, transition);
                                     
                                     // Notificar a otros componentes una vez el bitmap está listo
@@ -263,6 +264,8 @@ public class LogoManager {
             if (mActivity.mRepository == null) return;
             mActivity.mRepository.getStationInfo(freq, url -> {
                 mActivity.runOnUiThread(() -> {
+                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+
                     if (url != null) {
                         if (!url.equals(mActivity.mLastLogoUrl)) {
                             mActivity.mLastLogoUrl = url;
@@ -276,7 +279,7 @@ public class LogoManager {
                                 }
                                 
                                 // V18.6.2: Aplicar la misma transición premium en la búsqueda asíncrona
-                                Glide.with(mActivity)
+                                Glide.with(ivMainLogo)
                                         .asBitmap()
                                         .load(url)
                                         .transform(new RoundedCorners(24))
@@ -285,6 +288,7 @@ public class LogoManager {
                                         .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
                                             @Override
                                             public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                                                if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
                                                 super.onResourceReady(resource, transition);
                                                 if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
                                                     mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
@@ -313,6 +317,31 @@ public class LogoManager {
                     }
                 });
             });
+        }
+    }
+
+    /**
+     * V18.6.2: Cleanup to avoid memory leaks.
+     */
+    public void release() {
+        mLastDynamicBgUrl = null;
+        mLastStationLogoUrl = null;
+        
+        try {
+            ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
+            if (ivMainLogo != null) {
+                Glide.with(ivMainLogo.getContext()).clear(ivMainLogo);
+            }
+            ImageView ivCarLogo = mActivity.findViewById(R.id.ivCarLogo);
+            if (ivCarLogo != null) {
+                Glide.with(ivCarLogo.getContext()).clear(ivCarLogo);
+            }
+            ImageView ivDynamicBackground = mActivity.findViewById(R.id.ivDynamicBackground);
+            if (ivDynamicBackground != null) {
+                Glide.with(ivDynamicBackground.getContext()).clear(ivDynamicBackground);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error during release: " + e.getMessage());
         }
     }
 }

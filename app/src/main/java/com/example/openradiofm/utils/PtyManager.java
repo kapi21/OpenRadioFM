@@ -184,12 +184,73 @@ public class PtyManager {
     }
 
     /**
-     * Legacy method - returns non-localized label.
+     * V18.6.4: Helper robusto para procesar saltos de PTY que vienen como "PTY 10", "10" o texto puro.
+     */
+    public static String getPtyDisplayLabel(Context context, String pty) {
+        if (pty == null || pty.isEmpty()) {
+            return context.getString(R.string.pty_none);
+        }
+
+        // 1. Intentar extraer números (ej: "PTY 10" -> "10")
+        String ptyDigits = pty.replaceAll("[^0-9]", "").trim();
+        if (!ptyDigits.isEmpty()) {
+            try {
+                int code = Integer.parseInt(ptyDigits);
+                if (code >= 0 && code <= 31) {
+                    return getPtyLabel(context, code);
+                }
+            } catch (NumberFormatException e) {
+                // Ignorar y tratar como texto normal
+            }
+        }
+
+        // 2. Si no hay números o falló el parseo, devolver el texto original (ej: "Pop Music")
+        return pty;
+    }
+
+    /**
+     * Returns non-localized label.
      * @deprecated Use getPtyLabel(Context, int) instead.
      */
     @Deprecated
     public static String getPtyLabel(int pty) {
-        return "PTY " + pty;
+        // V18.6.2: Restored to avoid showing "PTY 10" and use generic labels if possible,
+        // although getPtyLabel(Context, int) is preferred for localization.
+        switch (pty) {
+            case 1: return "News";
+            case 2: return "Current Affairs";
+            case 3: return "Information";
+            case 4: return "Sport";
+            case 5: return "Education";
+            case 6: return "Drama";
+            case 7: return "Culture";
+            case 8: return "Science";
+            case 9: return "Varied";
+            case 10: return "Pop Music";
+            case 11: return "Rock Music";
+            case 12: return "Easy Listening";
+            case 13: return "Light Classical";
+            case 14: return "Serious Classical";
+            case 15: return "Other Music";
+            case 16: return "Weather";
+            case 17: return "Finance";
+            case 18: return "Children";
+            case 19: return "Social";
+            case 20: return "Religion";
+            case 21: return "Phone In";
+            case 22: return "Travel";
+            case 23: return "Leisure";
+            case 24: return "Jazz";
+            case 25: return "Country";
+            case 26: return "National Music";
+            case 27: return "Oldies";
+            case 28: return "Folk";
+            case 29: return "Documentary";
+            case 30: return "Alarm Test";
+            case 31: return "Alarm";
+            case 0:
+            default: return "None";
+        }
     }
 }
 

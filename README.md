@@ -164,6 +164,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Refinamiento de UI Individual**:
     - **Reubicación de Favorito**: El icono de favorito se ha trasladado a la barra superior en ambos layouts principales para una visualización más limpia.
     - **Optimización de Espacio**: Reajustado el tamaño de los iconos de estado y nube (120dp) para garantizar la visibilidad del indicador de favorito.
+    - **Señal MT8163**: Corregido bug donde el icono de señal quedaba blanco; ahora se colorea en tiempo real mediante el bucle asíncrono (verde en estéreo, amarillo en mono).
+- **Core Stability & Motores**:
+    - **Auditoría MainActivity**: Saneamiento de código obsoleto, reemplazo de `NetworkInfo` por `NetworkCapabilities`, mejoras de null-safety en streaming online y eliminación de callbacks duplicados.
+    - **MTK8259 Engine Polish**:
+        - Fix crítico en `onManualUp`/`onManualDown` que forzaba el salto entre presets de fábrica en lugar de buscar frecuencias (calculado manualmente a intervalos de 100KHz y 9KHz).
+        - Desacoplamiento total de `AudioManager` para la lógica de Mute, delegando exclusivamente al SoC `TsCommon` según hardware specs.
+        - Fix de Crash al cambiar Layout provocado por callbacks `DeadObject` del RDS polling.
 - **Shadow Motor QS6 (Redundancia)**:
     - **Broadcast Monitoring**: Nueva lógica para capturar frecuencias y RDS PS directamente desde el bus del sistema (`ACTION_SEND_RADIO_FREQUENCE_NEW`).
     - **Settings Observer**: Monitorización de `nwd_radio_current_freq` para refrescar la UI independientemente de fallos en el servicio AIDL.
