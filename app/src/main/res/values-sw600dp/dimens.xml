@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Optimized Font Sizes for 1280x1024 (5:4) @ 240dpi -->
+    <dimen name="text_size_preset">20sp</dimen>
+    <dimen name="text_size_preset_small">17sp</dimen>
+    <dimen name="text_size_frequency_large">110sp</dimen>
+    <dimen name="text_size_frequency_min">20sp</dimen>
+    <dimen name="text_size_frequency_base_v3">85sp</dimen>
+    <dimen name="text_size_mhz">20sp</dimen>
+    <dimen name="text_size_rds_name">22sp</dimen>
+    <dimen name="text_size_rds_info">18sp</dimen>
+    <dimen name="text_size_button">12sp</dimen>
+
+    <!-- Margins & Paddings -->
+    <dimen name="margin_standard">4dp</dimen>
+    <dimen name="padding_standard">4dp</dimen>
+    <dimen name="padding_large">6dp</dimen>
+    <dimen name="padding_extra_large">10dp</dimen>
+    
+    <!-- Component Sizes -->
+    <dimen name="preset_card_height">85dp</dimen>
+    <dimen name="v3_preset_card_size">125dp</dimen>
+</resources>

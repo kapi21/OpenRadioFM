@@ -2545,33 +2545,43 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         
         android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
         float density = metrics.density;
-        android.util.Log.d(TAG, "DPI Detection: density=" + density + " height=" + metrics.heightPixels);
+        float width = metrics.widthPixels;
+        float height = metrics.heightPixels;
+        float aspectRatio = width / height;
+        
+        android.util.Log.d(TAG, "DPI/Aspect Detection: density=" + density + " ratio=" + aspectRatio + " res=" + width + "x" + height);
 
-        if (density > 1.0f) {
+        // V20.0: Optimización para pantallas Cuadradas/Altas (5:4 o 4:3)
+        // Estas pantallas suelen tener un ancho en DP menor (sw) que las 16:9
+        boolean isTallScreen = aspectRatio < 1.45f;
+
+        if (density > 1.0f || isTallScreen) {
             // 1. Subir la guía del texto (0.36 -> 0.32) para dar mucho más espacio abajo
+            // En pantallas altas (5:4), usamos un valor intermedio si no ha sido ya ajustado por el XML base
             android.view.View guidelineView = findViewById(R.id.guideline_v3_freq_bottom);
             if (guidelineView instanceof androidx.constraintlayout.widget.Guideline) {
-                ((androidx.constraintlayout.widget.Guideline) guidelineView).setGuidelinePercent(0.32f);
+                float targetPercent = isTallScreen ? 0.38f : 0.32f;
+                ((androidx.constraintlayout.widget.Guideline) guidelineView).setGuidelinePercent(targetPercent);
             }
             
             // 2. Capar el tamaño de la fuente de la frecuencia
             if (tvFrequency instanceof androidx.appcompat.widget.AppCompatTextView) {
+                int maxSp = isTallScreen ? 75 : 72; // Un poco más en pantallas altas
                 ((androidx.appcompat.widget.AppCompatTextView)tvFrequency).setAutoSizeTextTypeUniformWithConfiguration(
-                    12, 72, 2, android.util.TypedValue.COMPLEX_UNIT_SP);
+                    12, maxSp, 2, android.util.TypedValue.COMPLEX_UNIT_SP);
             }
 
-            // 3. Achicar los iconos RDS (originalmente 56dp) para que no sean gigantes y permitan el clic
-            // 42dp es un tamaño excelente para que sigan siendo táctiles pero no estorben
-            int rdsSize = (int) (42 * density);
+            // 3. Achicar los iconos RDS (originalmente 56dp)
+            int rdsSize = (int) ((isTallScreen ? 38 : 42) * density);
             scaleView(findViewById(R.id.ivAfIcon), rdsSize, rdsSize);
             scaleView(findViewById(R.id.ivTaIcon), rdsSize, rdsSize);
             scaleView(findViewById(R.id.ivTpIcon), rdsSize, rdsSize);
             
-            // 4. Achicar el logo principal (originalmente 64dp -> 48dp)
-            int logoSize = (int) (48 * density);
+            // 4. Achicar el logo principal
+            int logoSize = (int) ((isTallScreen ? 44 : 48) * density);
             scaleView(findViewById(R.id.ivMainLogo), logoSize, logoSize);
 
-            android.util.Log.d(TAG, "DPI dynamic scaling applied to buttons and icons");
+            android.util.Log.d(TAG, "DPI dynamic scaling applied (Tall=" + isTallScreen + ")");
         }
     }
 

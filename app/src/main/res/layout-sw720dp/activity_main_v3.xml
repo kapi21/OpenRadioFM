@@ -37,7 +37,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.18" />
+        app:layout_constraintGuide_percent="0.15" />
 
     <!-- Row 2: Frequency (15-45%) -->
     <androidx.constraintlayout.widget.Guideline
@@ -45,7 +45,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.52" />
+        app:layout_constraintGuide_percent="0.45" />
 
     <!-- Row 3: Presets (45-90%) -->
     <androidx.constraintlayout.widget.Guideline
@@ -53,7 +53,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.86" />
+        app:layout_constraintGuide_percent="0.90" />
 
     <!-- V20.0: Guideline to avoid frequency overlap with RDS icons (calculated at 36% to clear weighted row) -->
     <androidx.constraintlayout.widget.Guideline
@@ -61,7 +61,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.42" />
+        app:layout_constraintGuide_percent="0.36" />
 
     <!-- ====================================================================================== -->
     <!-- ROW 1: TOP STATUS & RDS (15%) -->
