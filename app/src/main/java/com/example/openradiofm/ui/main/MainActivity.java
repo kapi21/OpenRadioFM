@@ -388,6 +388,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } else {
                 updateBandImage(band);
             }
+            
+            // V5.2: Actualizar Widget al cambiar de banda
+            if (mEngine != null) {
+                sendWidgetUpdateIntent(mEngine.getCurrentFreq(), band, mLastPs);
+            }
         });
     }
 
@@ -421,6 +426,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
             if (mUiController != null) {
                 mUiController.updateRDS(name);
+            }
+            
+            // V5.2: Forzar actualización de Widget al recibir nombre RDS
+            if (mEngine != null) {
+                sendWidgetUpdateIntent(mEngine.getCurrentFreq(), mCurrentBand, name);
             }
         });
     }
@@ -1733,10 +1743,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * V5.2: Broadcast to K706 Launcher Widget
      */
     private void sendWidgetUpdateIntent(int freq, int band, String rdsName) {
-        if (mMode == FmMode.FM_QS6) {
-            return;
-        }
-
+        // V5.2: Broadcast to K706/MTK/Topway Launcher Widgets
+        
         // V2.5: Deep Guard to avoid "Permission Denial" Binder flood
         if (freq == mLastBroadcastFreq && band == mLastBroadcastBand && 
             ((rdsName == null && mLastBroadcastPs == null) || (rdsName != null && rdsName.equals(mLastBroadcastPs)))) {
@@ -1748,10 +1756,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mLastBroadcastPs = rdsName;
 
         try {
-            android.content.Intent intent = new android.content.Intent("com.qf.radio.update_action");
-
-            // Format frequency string (e.g., "92.20") exactly as K706 native
-            // FmUtils.formatStation does.
+            // 1. BROADCAST ESTÁNDAR K706 / QUICKFISH
+            android.content.Intent qfIntent = new android.content.Intent("com.qf.radio.update_action");
             String freqStr;
             int nativeFreqInt;
             if (band == BAND_AM1 || band == BAND_AM2) {
@@ -1762,29 +1768,44 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 java.text.DecimalFormatSymbols dfs = new java.text.DecimalFormatSymbols(java.util.Locale.US);
                 df.setDecimalFormatSymbols(dfs);
                 freqStr = df.format(freq / 1000.0f);
-                nativeFreqInt = freq / 10; // K706 native uses 8750 for 87.5 MHz (our freq is 87500)
+                nativeFreqInt = freq / 10; 
             }
-
-            intent.putExtra("com.qf.radio.update_action_key", freqStr);
-            intent.putExtra("com.qf.radio.update_action_freq_key", nativeFreqInt);
-            intent.putExtra("com.qf.radio.update_action_band_key", band);
-            intent.putExtra("com.qf.radio.update_action_preset_key", getPresetIndex(freq)); // Send 0 if not a preset
-            intent.putExtra("com.qf.radio.update_action_searching_key", false); // We don't track search status globally
-                                                                                // here yet
-
+            qfIntent.putExtra("com.qf.radio.update_action_key", freqStr);
+            qfIntent.putExtra("com.qf.radio.update_action_freq_key", nativeFreqInt);
+            qfIntent.putExtra("com.qf.radio.update_action_band_key", band);
+            qfIntent.putExtra("com.qf.radio.update_action_preset_key", getPresetIndex(freq));
+            qfIntent.putExtra("com.qf.radio.update_action_searching_key", false);
             String widgetName = (rdsName != null && !rdsName.isEmpty() && !rdsName.equals("STATION NAME")
                     && !rdsName.equals("STATION")) ? rdsName : "";
-            intent.putExtra("com.qf.radio.update_action_name_key", widgetName);
+            qfIntent.putExtra("com.qf.radio.update_action_name_key", widgetName);
+            qfIntent.setPackage("com.android.auto.autohome");
+            sendBroadcast(qfIntent);
 
-            // Try to make the intent explicit to bypass background implicit broadcast
-            // restrictions
-            intent.setPackage("com.android.auto.autohome");
+            // 2. BROADCAST ESTÁNDAR LAUNCHER MTK (Vista Radio Original)
+            android.content.Intent mtkIntent = new android.content.Intent("com.android.launcher.action.UPDATE_RADIO");
+            mtkIntent.putExtra("frequency", freqStr);
+            mtkIntent.putExtra("name", widgetName);
+            mtkIntent.putExtra("band", band < 3 ? "FM" : "AM");
+            mtkIntent.putExtra("isRadio", true);
+            mtkIntent.putExtra("stereo", mEngine != null && mEngine.isStereo());
+            sendBroadcast(mtkIntent);
 
-            // Send standard broadcast (system apps or apps with correct permission will
-            // receive it)
-            sendBroadcast(intent);
+            // 3. BROADCAST ESPECÍFICO TOPWAY / TS
+            android.content.Intent tsIntent = new android.content.Intent("com.ts.main.radio.update");
+            tsIntent.putExtra("freq", nativeFreqInt);
+            tsIntent.putExtra("band", band);
+            tsIntent.putExtra("name", widgetName);
+            tsIntent.putExtra("isRadio", true);
+            sendBroadcast(tsIntent);
+
+            // 4. ACTUALIZACIÓN DE FUENTE DEL SISTEMA (Para activar widget de Radio)
+            android.content.Intent sourceIntent = new android.content.Intent("com.android.launcher.action.UPDATE_SOURCE");
+            sourceIntent.putExtra("source", 1); // 1 suele ser Radio
+            sourceIntent.putExtra("sourceName", "Radio");
+            sendBroadcast(sourceIntent);
+
         } catch (Exception ex) {
-            // V16.2: Silenciar si es error de permisos (esperable en widgets de terceros)
+            Log.e(TAG, "Error updating launcher widgets", ex);
         }
     }
 
@@ -2372,6 +2393,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             String title = (freq / 1000.0) + " MHz";
             mMediaSessionManager.updateMetadata(title, "OpenRadioFM", null);
         }
+
+        // V5.2: Update Launcher Widget on frequency shift
+        sendWidgetUpdateIntent(freq, mCurrentBand, null);
     }
 
     // V18.6: Métodos para ocultación automática de controles
