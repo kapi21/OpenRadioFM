@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v4.9_Stable-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.9.3_Stable-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -158,6 +158,18 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v4.9.3 "Hijacker & Layout Refinement" (15 de Marzo 2026) - STABLE
+- **Intent Hijacking (Interceptación de Botón Físico)**:
+    - Implementación de `FactoryRadioHijackerService` (Servicio de Accesibilidad) para interceptar el botón RADIO físico en unidades K706 (y similares), permitiendo que OpenRadioFM se abra automáticamente sobre la app de fábrica sin necesidad de Root.
+- **Refinamiento Estético Layout 3 (V3)**:
+    - **Clean UI**: Los boxes genéricos de control (RDS, bandas, búsqueda) son ahora completamente planos (sin bordes) para un aspecto más moderno.
+    - **Skins Focalizados**: Los colores de los Skins (Night, Classic, Orange, etc.) ahora se aplican exclusivamente a las cajas de favoritos (P1-P12).
+    - **Neutralidad de Frecuencia**: El recuadro de frecuencia conserva un borde neutro transparente (`bg_glass_card_classic`) independiente del skin seleccionado.
+- **Motor MTK8259 Polish**:
+    - Optimización del método `forceUnmute()` eliminando el comando redundante de Mute para mejorar la estabilidad del canal de audio al arrancar.
+- **Branding**:
+    - Reducción del nombre en el lanzador a simplemente "OpenRadioFM" para mayor limpieza visual en el escritorio de la radio.
 
 ### v4.9.0 "Community Logo Edition" (14 de Marzo 2026) - STABLE
 - **Enfoque Comunitario**: Nueva edición centrada en la base de datos de logos compartidos por la comunidad.

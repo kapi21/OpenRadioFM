@@ -337,10 +337,6 @@ public class MTK8259_8667RadioManager {
     // V18.6.4: Simplificado — solo mTsCommon.Mute() + OpenRadioCh() (sin AudioManager)
     public void forceUnmute() {
         try {
-            if (mTsCommon != null && mTsCommon.IsMute()) {
-                mTsCommon.Mute(); // Toggle para restaurar sonido
-                Log.d(TAG, "forceUnmute: Hardware Mute toggled to restore sound");
-            }
             // Asegurar canal abierto
             if (mTsSpeechRadio != null) {
                 mTsSpeechRadio.OpenRadioCh();

@@ -1,6 +1,5 @@
-# Manual de Usuario - OpenRadioFM v.4.8 Cloud_Server
-
-Bienvenido a **OpenRadioFM v.4.8 Cloud_Server**, la evolución definitiva de la radio FM para unidades Android (Head Units). Esta versión introduce capacidades de streaming y gestión de logos en la nube, optimizada para máxima estabilidad y rendimiento.
+# Manual de Usuario - OpenRadioFM v.4.9.3 "Hijacker"
+Bienvenido a **OpenRadioFM v.4.9.3**, la edición con interceptor de radio y refinamiento de diseño. Esta versión permite "secuestrar" el botón de radio físico y estrena una interfaz V3 mucho más limpia.
 
 ---
 
@@ -67,4 +66,4 @@ Si experimentas problemas de audio o sintonización, selecciona tu motor en *Aju
 
 ---
 **AVISO:** Esta es una versión **BETA**. Algunas funciones de servidor y streaming están bajo pruebas constantes.
-*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v.4.8 Cloud_Server*
+*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v.4.9.3 "Hijacker"*

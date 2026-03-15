@@ -1,3 +1,13 @@
+## [4.9.3] - 2026-03-15
+### Added
+- **Intent Hijacking**: Implementación de `FactoryRadioHijackerService` para interceptar la radio de fábrica en K706.
+- **Layout V3 Refresh**: Los boxes de control ahora son planos (sin bordes) para un diseño más limpio.
+- **Skin Focused**: Los colores de los Skins ahora solo se aplican a las cajas de favoritos (P1-P12).
+
+### Changed
+- **Lanzador**: Reducido el nombre de la app a "OpenRadioFM" para el escritorio de Android.
+- **Motor MTK8259**: Optimizado `forceUnmute()` para evitar redundancias de Mute por hardware.
+
 ## [18.5.1] - 2026-03-07
 ### Added
 - **Secuencia de Apagado QS6 (V18.4)**: Implementada desvinculación proactiva de callbacks AIDL, `ACTION_REQUEST_CHANGE_SOURCE` y sincronización de iconos de barra de estado.

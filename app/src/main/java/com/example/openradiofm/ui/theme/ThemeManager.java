@@ -175,15 +175,48 @@ public class ThemeManager {
                 R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff
         };
 
-        for (int id : viewIds) {
-            View v = mActivity.findViewById(id);
-            if (v != null) {
-                int pL = v.getPaddingLeft();
-                int pT = v.getPaddingTop();
-                int pR = v.getPaddingRight();
-                int pB = v.getPaddingBottom();
-                v.setBackgroundResource(drawableId);
-                v.setPadding(pL, pT, pR, pB);
+        if (isLayoutV3) {
+            // Layout V3:
+            // 1. Quitar los bordes a todos (excepto Frequency y Fav) -> No les aplicamos el background.
+            //    En el XML ya tienen ?attr/selectableItemBackgroundBorderless. Así que los restauramos o saltamos.
+            
+            // Le forzamos el glass card neutro a boxFrequency para que tenga borde pero NO tome el color del skin activo.
+            View freqBox = mActivity.findViewById(R.id.boxFrequency);
+            if (freqBox != null) {
+                int pL = freqBox.getPaddingLeft(), pT = freqBox.getPaddingTop();
+                int pR = freqBox.getPaddingRight(), pB = freqBox.getPaddingBottom();
+                freqBox.setBackgroundResource(R.drawable.bg_glass_card_classic);
+                freqBox.setPadding(pL, pT, pR, pB);
+            }
+            
+            // Para el resto de views genéricas, removemos el fondo (o restauramos algo básico si se requiere), 
+            // pero lo más seguro es resetearlos a un background estandar borrando el color card.
+            // Para no sobrecomplicar, simplemente reestablecemos su fondo a transparente
+            // o a un recurso seleccionable para botones.
+            android.util.TypedValue outValue = new android.util.TypedValue();
+            mActivity.getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
+            for (int id : viewIds) {
+                if (id == R.id.boxFrequency) continue;
+                View v = mActivity.findViewById(id);
+                if (v != null && v instanceof android.widget.ImageButton || id == R.id.ivDataActivity) {
+                    v.setBackgroundResource(outValue.resourceId);
+                } else if (v != null) {
+                    // Contenedores genéricos, sin borde
+                    v.setBackgroundResource(android.R.color.transparent);
+                }
+            }
+        } else {
+            // Comportamiento V2 normal: aplica el skin entero a todos los views
+            for (int id : viewIds) {
+                View v = mActivity.findViewById(id);
+                if (v != null) {
+                    int pL = v.getPaddingLeft();
+                    int pT = v.getPaddingTop();
+                    int pR = v.getPaddingRight();
+                    int pB = v.getPaddingBottom();
+                    v.setBackgroundResource(drawableId);
+                    v.setPadding(pL, pT, pR, pB);
+                }
             }
         }
 
