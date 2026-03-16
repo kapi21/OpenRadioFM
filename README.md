@@ -6,7 +6,7 @@
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
 [![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units**, con soporte para hardware MediaTek MT8163 K706 y actualmente trabajando para modelo QS NWD y otros en versiones iniciales.  
+**Aplicación de radio FM premium para Android Head Units**, con soporte para hardware MediaTek MT8163 K706 y actualmente trabajando para modelo QS NWD y MTK8259 otros en versiones iniciales.  
 Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada.
 
 <div align="center">
