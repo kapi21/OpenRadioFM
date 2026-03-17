@@ -121,7 +121,7 @@ graph TB
 ### Build
 ```bash
 # Clonar
-git clone https://github.com/tu-usuario/OpenRadioFM.git
+git clone https://github.com/kapi21/OpenRadioFM.git
 cd OpenRadioFM
 
 # Compilar
@@ -154,6 +154,19 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [Compatibilidad de Hardware](docs/HW_COMPATIBILITY.md)
 - [Changelog](CHANGELOG.md)
 - [Roadmap](_DOCS/roadmap.md)
+
+---
+
+## 🤝 Cómo Contribuir
+
+- **Issues**: Si encuentras un bug o comportamiento raro en tu radio (modelo, firmware, chip, versión de app), abre un *Issue* detallando:
+  - Modelo exacto de la head unit (HCN, K706, QS6, MTK8259, etc.).
+  - Versión de OpenRadioFM (por ejemplo `v4.9.3_Stable`).
+  - Pasos para reproducir el problema y, si es posible, logs o fotos/vídeos.
+- **Pull Requests**: Se aceptan mejoras de código, refactors y nuevas traducciones:
+  - Intenta mantener el estilo actual (Java para el core; Kotlin bienvenido para piezas nuevas).
+  - Acompaña los cambios con una breve explicación en el PR y, si afecta a la UX, con capturas.
+  - Para cambios grandes (refactor de motores, arquitectura, etc.), es recomendable comentar primero en un Issue para alinear el enfoque.
 
 ---
 
