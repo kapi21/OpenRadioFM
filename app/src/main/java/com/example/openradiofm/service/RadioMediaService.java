@@ -1,6 +1,8 @@
 package com.example.openradiofm.service;
 
 import android.content.Intent;
+import android.content.BroadcastReceiver;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
@@ -25,9 +27,15 @@ import android.os.Build;
 import android.graphics.Bitmap;
 
 import com.example.openradiofm.R;
+import com.example.openradiofm.data.source.RadioEngine;
+import com.example.openradiofm.data.source.K706RadioManager;
+import com.example.openradiofm.ui.main.PlaybackManager;
+import com.example.openradiofm.ui.main.RadioServiceController;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * V16: Servicio para compatibilidad con Android Auto y controles de medios.
@@ -36,7 +44,14 @@ import java.util.List;
 public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
     private static final String MEDIA_ROOT_ID = "radio_root";
-    private static final String PRESETS_ID = "presets_folder";
+    private static final String BANDS_ID = "bands";
+    private static final String BAND_PREFIX = "band:"; // band:<idx>
+    private static final String PRESET_PREFIX = "preset:"; // preset:<band>:<slot>:<freqKhz>
+    private static final String RECENTS_ID = "recent";
+    private static final String SUGGESTED_ID = "suggested";
+    private static final String RECENT_PREFIX = "recent:"; // recent:<freqKhz>
+    private static final String SUGGEST_PREFIX = "suggest:"; // suggest:<freqKhz>
+    private static final String FAVORITES_ID = "favorites"; // Requerido por Zlink/Android Auto
 
     private static final String CHANNEL_ID = "radio_channel";
     private static final int NOTIFICATION_ID = 101;
@@ -44,6 +59,34 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private MediaSessionCompat mMediaSession;
     private PlaybackStateCompat.Builder mStateBuilder;
     private NotificationManager mNotificationManager;
+
+    // Reproducción (hardware) controlada desde el servicio para que Android Auto funcione sin UI
+    private RadioServiceController mRadioServiceController;
+    private RadioEngine mEngine;
+    private PlaybackManager mPlaybackManager;
+    private boolean mIsPlaying = false;
+
+    // Preferencias y datos para nombres/presets (sin depender del repositorio/UI)
+    private android.content.SharedPreferences mPresetPrefs; // "RadioPresets"
+    private android.content.SharedPreferences mStationNamePrefs; // "RadioStationNames"
+
+    // OEM cold start: cola mínima de comandos hasta que el engine esté listo
+    private final Object mCommandLock = new Object();
+    private boolean mPendingPlay = false;
+    private boolean mPendingPause = false;
+    private int mPendingTuneFreqKhz = -1;
+    private int mPendingSkip = 0; // -1 prev, +1 next
+    private final AtomicBoolean mEngineInitStarted = new AtomicBoolean(false);
+
+    // OEM metadata cache (para Android Auto): RT/PTY/PI actuales (si engine los emite)
+    private volatile String mCurrentRt = null;
+    private volatile String mCurrentPty = null;
+    private volatile String mCurrentPi = null;
+    private volatile int mCurrentFreqKhz = -1;
+
+    // Estado OEM para restaurar tras pérdidas de foco en K706
+    private boolean mUserPaused = false;
+    private boolean mWasPlayingBeforeFocusLoss = false;
     
     // V2.6: State guards for notification to avoid Binder flood
     private String mLastNotifiedTitle = "";
@@ -55,6 +98,64 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         super.onCreate();
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         createNotificationChannel();
+
+        // Preferencias utilizadas por la app (mismo naming que MainActivity/RadioRepository)
+        mPresetPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE);
+        mStationNamePrefs = getSharedPreferences("RadioStationNames", MODE_PRIVATE);
+        writeOemStateToPrefs("BOOT");
+
+        // K706 OEM: escuchar eventos reales de AudioFocus del SoC para sincronizar MediaSession
+        try {
+            IntentFilter f = new IntentFilter(K706RadioManager.ACTION_OEM_AUDIO_FOCUS);
+            registerReceiver(mOemFocusReceiver, f);
+        } catch (Exception e) {
+            Log.w(TAG, "No se pudo registrar mOemFocusReceiver", e);
+        }
+
+        // Inicializar motor de radio (hardware) dentro del servicio para no depender de MainActivity
+        try {
+            mRadioServiceController = new RadioServiceController(this, mPresetPrefs, new RadioServiceController.ServiceListener() {
+                @Override
+                public void onModeDetected(com.example.openradiofm.ui.main.MainActivity.FmMode mode) {
+                    // No-op: el servicio no necesita la UI
+                }
+
+                @Override
+                public void onEngineReady(RadioEngine engine) {
+                    mEngine = engine;
+                    if (mPlaybackManager == null) {
+                        mPlaybackManager = new PlaybackManager(RadioMediaService.this);
+                        mPlaybackManager.init(mEngine, null);
+                    } else {
+                        mPlaybackManager.setEngine(mEngine);
+                    }
+                    try {
+                        // El servicio también necesita callbacks para actualizar metadata/estado a Android Auto
+                        mEngine.setCallback(mEngineCallback);
+                    } catch (Exception e) {
+                        Log.w(TAG, "No se pudo setear callback al engine desde el servicio", e);
+                    }
+                    Log.d(TAG, "Engine listo dentro del servicio: " + (engine != null ? engine.getEngineName() : "null"));
+
+                    // Aplicar comandos pendientes (si llegaron antes de inicializar el engine)
+                    flushPendingCommands();
+                }
+
+                @Override
+                public void onServiceConnected(com.hcn.autoradio.IRadioServiceAPI service) {
+                    // No-op: el motor MT8163 se inicializa desde MainActivity vía callback onEngineReady
+                }
+
+                @Override
+                public void onServiceDisconnected() {
+                    // No-op
+                }
+            });
+            // Iniciamos bajo demanda (botones/Auto). Evita trabajo innecesario si nadie controla medios.
+            // El arranque en frío se dispara desde maybeStartEngine().
+        } catch (Throwable t) {
+            Log.e(TAG, "No se pudo inicializar RadioServiceController en el servicio", t);
+        }
 
         // 1. Inicializar MediaSession
         mMediaSession = new MediaSessionCompat(this, TAG);
@@ -73,11 +174,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 .setActions(
                         PlaybackStateCompat.ACTION_PLAY |
                         PlaybackStateCompat.ACTION_PAUSE |
+                        PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
                         PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
                         PlaybackStateCompat.ACTION_PLAY_PAUSE
                 );
-        mMediaSession.setPlaybackState(mStateBuilder.build());
+        setPlaybackState(false);
 
         // V18.6: Registrar cambios de estado para actualizar la notificación
         mMediaSession.getController().registerCallback(new MediaControllerCompat.Callback() {
@@ -97,23 +199,71 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         mMediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public void onPlay() {
-                // Comandado por MediaSessionManager / Broadcast
-                sendBroadcastToActivity("ACTION_PLAY");
+                handlePlay();
             }
 
             @Override
             public void onPause() {
-                sendBroadcastToActivity("ACTION_PAUSE");
+                handlePause();
             }
 
             @Override
             public void onSkipToNext() {
-                sendBroadcastToActivity("ACTION_NEXT");
+                try {
+                    if (mEngine != null) {
+                        mEngine.nextFavorite();
+                        handlePlay(); // aseguramos estado PLAYING si el usuario pulsa Next
+                    } else {
+                        enqueueSkip(+1);
+                        maybeStartEngine();
+                        // Mostramos estado como activo mientras arranca el engine
+                        mIsPlaying = true;
+                        setPlaybackState(true);
+                        ensureNotificationVisible();
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "Error en onSkipToNext()", e);
+                }
             }
 
             @Override
             public void onSkipToPrevious() {
-                sendBroadcastToActivity("ACTION_PREV");
+                try {
+                    if (mEngine != null) {
+                        mEngine.prevFavorite();
+                        handlePlay();
+                    } else {
+                        enqueueSkip(-1);
+                        maybeStartEngine();
+                        mIsPlaying = true;
+                        setPlaybackState(true);
+                        ensureNotificationVisible();
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "Error en onSkipToPrevious()", e);
+                }
+            }
+
+            @Override
+            public void onPlayFromMediaId(String mediaId, Bundle extras) {
+                try {
+                    int freq = parseFreqFromMediaId(mediaId);
+                    if (freq > 0 && mEngine != null) {
+                        handlePlay();
+                        mEngine.tune(freq);
+                    } else {
+                        if (freq > 0) {
+                            enqueueTune(freq);
+                        } else {
+                            enqueuePlay();
+                        }
+                        maybeStartEngine();
+                        handlePlay(); // estado/notification inmediata
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "Error en onPlayFromMediaId(" + mediaId + ")", e);
+                    handlePlay();
+                }
             }
 
             @Override
@@ -145,9 +295,443 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        // V18.6: Iniciar como Foreground Service para evitar que Android lo mate
-        startForeground(NOTIFICATION_ID, buildNotification("Sintonizando...", "Radio FM", null));
-        return START_STICKY;
+        // OEM safety (Android 8+): si nos arrancan con startForegroundService(),
+        // debemos llamar a startForeground() rápidamente o Android mata el proceso.
+        // Entramos en foreground con una notificación "pausada" y salimos si procede.
+        try {
+            startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            if (!mIsPlaying) {
+                stopForeground(false); // mantener notificación visible
+            }
+        } catch (Exception e) {
+            // Fallback: al menos publicar notificación
+            ensureNotificationVisible();
+        }
+
+        // Procesar botones de medios (notificación, Android Auto, volante)
+        try {
+            MediaButtonReceiver.handleIntent(mMediaSession, intent);
+        } catch (Exception e) {
+            Log.w(TAG, "MediaButtonReceiver.handleIntent falló", e);
+        }
+
+        // Si el sistema nos arranca sin intención, no forzamos reproducción.
+        // Estado inicial: notificación visible y sesión activa en PAUSED.
+        maybeStartEngine();
+        return START_NOT_STICKY;
+    }
+
+    private final com.example.openradiofm.data.source.RadioEngineCallback mEngineCallback =
+            new com.example.openradiofm.data.source.RadioEngineCallback() {
+                @Override
+                public void onFrequencyChanged(int freqKhz) {
+                    // Actualizar title/artist basado en datos guardados (CUSTOM/RDS) para Android Auto
+                    mCurrentFreqKhz = freqKhz;
+                    updateMetadataFromPrefs(freqKhz);
+                    saveRecentFrequency(freqKhz);
+                }
+
+                @Override public void onBandChanged(int band) {}
+                @Override public void onStereoChanged(boolean stereo) {}
+
+                @Override
+                public void onRdsName(String name) {
+                    // Se persistirá por RadioRepository en UI normalmente, aquí solo refrescamos
+                    updateMetadataName(name);
+                }
+
+                @Override
+                public void onRdsText(String text) {
+                    mCurrentRt = text;
+                    persistRtForCurrentFreq(text);
+                    updateMetadataFromPrefs(mCurrentFreqKhz > 0 ? mCurrentFreqKhz : 0);
+                }
+
+                @Override
+                public void onRdsPty(String pty) {
+                    mCurrentPty = pty;
+                    persistPtyForCurrentFreq(pty);
+                    updateMetadataFromPrefs(mCurrentFreqKhz > 0 ? mCurrentFreqKhz : 0);
+                }
+
+                @Override public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {}
+                @Override
+                public void onRdsPi(String piCode) {
+                    mCurrentPi = piCode;
+                    persistPiForCurrentFreq(piCode);
+                    updateMetadataFromPrefs(mCurrentFreqKhz > 0 ? mCurrentFreqKhz : 0);
+                }
+                @Override public void onDxLocalChanged(boolean isLocal) {}
+                @Override public void onScanStatusChanged(boolean scanning) {}
+                @Override public void onRawEvent(int code, String data) {}
+                @Override public void onSignalUpdate(int rssi, int snr) {}
+            };
+
+    private void handlePlay() {
+        if (mEngine == null) {
+            enqueuePlay();
+            maybeStartEngine();
+            mIsPlaying = true;
+            setPlaybackState(true);
+            ensureNotificationVisible();
+            return;
+        }
+        mUserPaused = false;
+        mIsPlaying = true;
+        setPlaybackState(true);
+        writeOemStateToPrefs("PLAY");
+
+        // Control de hardware si está disponible
+        try {
+            if (mPlaybackManager != null) {
+                mPlaybackManager.setMute(false);
+            } else if (mEngine != null) {
+                mEngine.setMute(false);
+                mEngine.enforceAudioRecovery();
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error al ejecutar PLAY (unmute)", e);
+        }
+
+        // En PLAY sí somos foreground (media playback)
+        startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+    }
+
+    private void handlePause() {
+        final boolean wasPlaying = mIsPlaying;
+        if (mEngine == null) {
+            enqueuePause();
+            maybeStartEngine();
+            mIsPlaying = false;
+            setPlaybackState(false);
+            ensureNotificationVisible();
+            return;
+        }
+        mUserPaused = true;
+        mIsPlaying = false;
+        setPlaybackState(false);
+        writeOemStateToPrefs("PAUSE");
+
+        // OEM: Pausa = silenciar radio SOLO si realmente estaba sonando.
+        // Algunos clientes (Android Auto/Zlink) pueden enviar PAUSE al conectar/sondear la sesión.
+        if (wasPlaying) {
+            try {
+                if (mPlaybackManager != null) {
+                    mPlaybackManager.setMute(true);
+                } else if (mEngine != null) {
+                    mEngine.setMute(true);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error al ejecutar PAUSE (mute)", e);
+            }
+        }
+
+        // Salimos del modo foreground, pero mantenemos la notificación visible (paused)
+        try {
+            stopForeground(false);
+        } catch (Exception ignored) {}
+        updateNotification();
+        ensureNotificationVisible();
+    }
+
+    private void enqueuePlay() {
+        synchronized (mCommandLock) {
+            mPendingPlay = true;
+            mPendingPause = false;
+        }
+    }
+
+    private void enqueuePause() {
+        synchronized (mCommandLock) {
+            mPendingPause = true;
+            mPendingPlay = false;
+        }
+    }
+
+    private void enqueueTune(int freqKhz) {
+        synchronized (mCommandLock) {
+            mPendingTuneFreqKhz = freqKhz;
+        }
+    }
+
+    private void enqueueSkip(int direction) {
+        synchronized (mCommandLock) {
+            mPendingSkip += direction;
+            if (mPendingSkip > 3) mPendingSkip = 3;
+            if (mPendingSkip < -3) mPendingSkip = -3;
+        }
+    }
+
+    private void maybeStartEngine() {
+        try {
+            if (mEngine != null) return;
+            if (mRadioServiceController == null) return;
+            if (mEngineInitStarted.compareAndSet(false, true)) {
+                Log.d(TAG, "Iniciando RadioServiceController.start() (OEM cold start)");
+                mRadioServiceController.start();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "maybeStartEngine() falló", e);
+        }
+    }
+
+    private void flushPendingCommands() {
+        if (mEngine == null) return;
+
+        boolean doPlay;
+        boolean doPause;
+        int tune;
+        int skip;
+        synchronized (mCommandLock) {
+            doPlay = mPendingPlay;
+            doPause = mPendingPause;
+            tune = mPendingTuneFreqKhz;
+            skip = mPendingSkip;
+
+            mPendingPlay = false;
+            mPendingPause = false;
+            mPendingTuneFreqKhz = -1;
+            mPendingSkip = 0;
+        }
+
+        try {
+            if (tune > 0) {
+                mEngine.tune(tune);
+                updateMetadataFromPrefs(tune);
+                doPlay = true;
+                doPause = false;
+            }
+
+            if (skip != 0) {
+                int times = Math.abs(skip);
+                for (int i = 0; i < times; i++) {
+                    if (skip > 0) mEngine.nextFavorite();
+                    else mEngine.prevFavorite();
+                }
+                doPlay = true;
+                doPause = false;
+            }
+
+            if (doPlay) handlePlay();
+            else if (doPause) handlePause();
+        } catch (Exception e) {
+            Log.w(TAG, "flushPendingCommands() falló", e);
+        }
+    }
+
+    private final BroadcastReceiver mOemFocusReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(android.content.Context context, Intent intent) {
+            if (intent == null) return;
+            String event = intent.getStringExtra(K706RadioManager.EXTRA_FOCUS_EVENT);
+            if (event == null) return;
+
+            switch (event) {
+                case K706RadioManager.EVENT_LOSS:
+                case K706RadioManager.EVENT_LOSS_TRANSIENT:
+                    // Si estaba sonando y el usuario NO había pausado, recordamos y reflejamos PAUSE
+                    if (mIsPlaying && !mUserPaused) {
+                        mWasPlayingBeforeFocusLoss = true;
+                    }
+                    // Reflejar estado pausado en el sistema (sin forzar mute extra; K706 ya gestiona canal/mute)
+                    mIsPlaying = false;
+                    setPlaybackState(false);
+                    writeOemStateToPrefs(event);
+                    ensureNotificationVisible();
+                    break;
+
+                case K706RadioManager.EVENT_GAIN:
+                    // Restaurar solo si fue interrupción (no pausa del usuario)
+                    if (mWasPlayingBeforeFocusLoss && !mUserPaused) {
+                        mWasPlayingBeforeFocusLoss = false;
+                        handlePlay();
+                    } else {
+                        mWasPlayingBeforeFocusLoss = false;
+                        writeOemStateToPrefs(event);
+                    }
+                    break;
+            }
+        }
+    };
+
+    private void writeOemStateToPrefs(String lastEvent) {
+        try {
+            if (mPresetPrefs == null) return;
+            mPresetPrefs.edit()
+                    .putString("oem_last_focus_event", lastEvent != null ? lastEvent : "N/A")
+                    .putBoolean("oem_user_paused", mUserPaused)
+                    .putBoolean("oem_was_playing_before_focus_loss", mWasPlayingBeforeFocusLoss)
+                    .putBoolean("oem_is_playing", mIsPlaying)
+                    .apply();
+        } catch (Exception ignored) {}
+    }
+
+    private void ensureNotificationVisible() {
+        try {
+            mNotificationManager.notify(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+        } catch (Exception e) {
+            Log.w(TAG, "No se pudo publicar notificación", e);
+        }
+    }
+
+    private void setPlaybackState(boolean playing) {
+        int state = playing ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
+        long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
+        mStateBuilder.setState(state, position, playing ? 1.0f : 0.0f);
+        mMediaSession.setPlaybackState(mStateBuilder.build());
+    }
+
+    private void updateMetadataFromPrefs(int freqKhz) {
+        try {
+            String name = null;
+            if (mStationNamePrefs != null) {
+                name = mStationNamePrefs.getString("CUSTOM_" + freqKhz, null);
+                if (name == null || name.isEmpty()) name = mStationNamePrefs.getString("RDS_" + freqKhz, null);
+                if (name == null || name.isEmpty()) name = "";
+            }
+
+            String title;
+            if (name != null && !name.isEmpty() && !name.matches("\\d+")) title = name;
+            else title = formatFrequency(freqKhz);
+
+            String pty = (mStationNamePrefs != null) ? mStationNamePrefs.getString("PTY_" + freqKhz, null) : null;
+            String pi = (mStationNamePrefs != null) ? mStationNamePrefs.getString("PI_" + freqKhz, null) : null;
+            String rt = (mStationNamePrefs != null) ? mStationNamePrefs.getString("RT_" + freqKhz, null) : null;
+
+            // Fallback a cache viva
+            if ((pty == null || pty.isEmpty()) && mCurrentPty != null) pty = mCurrentPty;
+            if ((pi == null || pi.isEmpty()) && mCurrentPi != null) pi = mCurrentPi;
+            if ((rt == null || rt.isEmpty()) && mCurrentRt != null) rt = mCurrentRt;
+
+            MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder()
+                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "OpenRadioFM")
+                    .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
+                    .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "Radio FM");
+
+            // OEM-like enrichment: RT como "álbum"/descripción, PTY como género, PI como id/extra
+            if (rt != null && !rt.trim().isEmpty()) {
+                builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, rt.trim());
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_DESCRIPTION, rt.trim());
+            }
+            if (pty != null && !pty.trim().isEmpty()) {
+                builder.putString(MediaMetadataCompat.METADATA_KEY_GENRE, pty.trim());
+            }
+            if (pi != null && !pi.trim().isEmpty()) {
+                builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, pi.trim());
+            }
+            mMediaSession.setMetadata(builder.build());
+        } catch (Exception e) {
+            Log.w(TAG, "updateMetadataFromPrefs() falló", e);
+        }
+    }
+
+    private void updateMetadataName(String rdsName) {
+        try {
+            if (rdsName == null || rdsName.trim().isEmpty()) return;
+            MediaMetadataCompat current = mMediaSession.getController().getMetadata();
+            MediaMetadataCompat.Builder builder = (current != null)
+                    ? new MediaMetadataCompat.Builder(current)
+                    : new MediaMetadataCompat.Builder();
+            builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, rdsName.trim());
+            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, rdsName.trim());
+            mMediaSession.setMetadata(builder.build());
+        } catch (Exception e) {
+            Log.w(TAG, "updateMetadataName() falló", e);
+        }
+    }
+
+    private String formatFrequency(int freqKhz) {
+        // FM típico: 87500 -> 87.5
+        if (freqKhz <= 0) return "---";
+        return String.format(java.util.Locale.US, "%.1f", freqKhz / 1000.0);
+    }
+
+    private int parseFreqFromMediaId(String mediaId) {
+        if (mediaId == null) return -1;
+        // preset:<band>:<slot>:<freqKhz>
+        if (mediaId.startsWith(PRESET_PREFIX)) {
+            String[] parts = mediaId.substring(PRESET_PREFIX.length()).split(":");
+            if (parts.length >= 3) {
+                try { return Integer.parseInt(parts[2]); } catch (NumberFormatException ignored) {}
+            }
+        }
+        // recent:<freqKhz>
+        if (mediaId.startsWith(RECENT_PREFIX)) {
+            try { return Integer.parseInt(mediaId.substring(RECENT_PREFIX.length())); }
+            catch (NumberFormatException ignored) {}
+        }
+        // suggest:<freqKhz>
+        if (mediaId.startsWith(SUGGEST_PREFIX)) {
+            try { return Integer.parseInt(mediaId.substring(SUGGEST_PREFIX.length())); }
+            catch (NumberFormatException ignored) {}
+        }
+        return -1;
+    }
+
+    private void persistRtForCurrentFreq(String rt) {
+        try {
+            if (mStationNamePrefs == null) return;
+            int f = mCurrentFreqKhz;
+            if (f <= 0) return;
+            if (rt == null) return;
+            String cleaned = rt.trim();
+            if (cleaned.isEmpty()) return;
+            mStationNamePrefs.edit().putString("RT_" + f, cleaned).apply();
+        } catch (Exception ignored) {}
+    }
+
+    private void persistPtyForCurrentFreq(String pty) {
+        try {
+            if (mStationNamePrefs == null) return;
+            int f = mCurrentFreqKhz;
+            if (f <= 0) return;
+            if (pty == null) return;
+            String cleaned = pty.trim();
+            if (cleaned.isEmpty()) return;
+            mStationNamePrefs.edit().putString("PTY_" + f, cleaned).apply();
+        } catch (Exception ignored) {}
+    }
+
+    private void persistPiForCurrentFreq(String pi) {
+        try {
+            if (mStationNamePrefs == null) return;
+            int f = mCurrentFreqKhz;
+            if (f <= 0) return;
+            if (pi == null) return;
+            String cleaned = pi.trim();
+            if (cleaned.isEmpty()) return;
+            mStationNamePrefs.edit().putString("PI_" + f, cleaned).apply();
+        } catch (Exception ignored) {}
+    }
+
+    private void saveRecentFrequency(int freqKhz) {
+        try {
+            if (mPresetPrefs == null) return;
+            if (freqKhz <= 0) return;
+
+            // Guardamos como CSV "freq1,freq2,...", más reciente primero
+            String csv = mPresetPrefs.getString("recent_freqs", "");
+            java.util.ArrayList<Integer> list = new java.util.ArrayList<>();
+            if (csv != null && !csv.trim().isEmpty()) {
+                String[] parts = csv.split(",");
+                for (String p : parts) {
+                    try {
+                        int f = Integer.parseInt(p.trim());
+                        if (f > 0 && f != freqKhz) list.add(f);
+                    } catch (Exception ignored) {}
+                }
+            }
+            list.add(0, freqKhz);
+            while (list.size() > 12) list.remove(list.size() - 1);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0) sb.append(",");
+                sb.append(list.get(i));
+            }
+            mPresetPrefs.edit().putString("recent_freqs", sb.toString()).apply();
+        } catch (Exception ignored) {}
     }
 
     private void updateNotification() {
@@ -176,6 +760,26 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         mNotificationManager.notify(NOTIFICATION_ID, buildNotification(title, artist, logo));
     }
 
+    private String getSafeTitle() {
+        MediaMetadataCompat metadata = mMediaSession.getController().getMetadata();
+        if (metadata == null) return "OpenRadioFM";
+        String t = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+        return (t == null || t.isEmpty()) ? "OpenRadioFM" : t;
+    }
+
+    private String getSafeArtist() {
+        MediaMetadataCompat metadata = mMediaSession.getController().getMetadata();
+        if (metadata == null) return "Radio FM";
+        String a = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+        return (a == null || a.isEmpty()) ? "Radio FM" : a;
+    }
+
+    private Bitmap getSafeLogo() {
+        MediaMetadataCompat metadata = mMediaSession.getController().getMetadata();
+        if (metadata == null) return null;
+        return metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
+    }
+
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -200,7 +804,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     .setContentText(subtitle)
                     .setLargeIcon(logo)
                     .setContentIntent(contentIntent)
+                    .setCategory(NotificationCompat.CATEGORY_TRANSPORT)
                     .setOnlyAlertOnce(true)
+                    .setOngoing(mIsPlaying)
                     .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                     .setStyle(new MediaStyle()
                             .setMediaSession(mMediaSession.getSessionToken())
@@ -246,35 +852,261 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     @Nullable
     @Override
     public BrowserRoot onGetRoot(@NonNull String clientPackageName, int clientUid, @Nullable Bundle rootHints) {
-        // Permitir que cualquier app (ej: Android Auto) navegue por los favoritos (presets)
-        return new BrowserRoot(MEDIA_ROOT_ID, null);
+        // OEM hardening: permitimos Android Auto y sistema. Evitamos exponer el catálogo
+        // a apps arbitrarias (reduce abuso de intents/escucha de presets).
+        if (!isTrustedMediaClient(clientPackageName)) {
+            Log.w(TAG, "Cliente MediaBrowser no confiable rechazado: " + clientPackageName);
+            return null;
+        }
+        Bundle extras = new Bundle();
+        extras.putBoolean(BrowserRoot.EXTRA_OFFLINE, true);
+        extras.putBoolean(BrowserRoot.EXTRA_RECENT, true);
+        extras.putBoolean(BrowserRoot.EXTRA_SUGGESTED, true);
+        return new BrowserRoot(MEDIA_ROOT_ID, extras);
+    }
+
+    private boolean isTrustedMediaClient(String pkg) {
+        if (pkg == null) return false;
+        // Android Auto y componentes del sistema suelen estar en estas familias.
+        if (pkg.startsWith("com.google.android.projection")) return true; // Android Auto (projection)
+        if (pkg.contains("android.auto") || pkg.contains("projection.gearhead")) return true; // variantes
+        if (pkg.startsWith("com.google.android.gms")) return true; // Servicios Google (Auto)
+        if (pkg.startsWith("com.google.android.")) return true; // otros componentes de Auto/Car en OEMs
+        if (pkg.startsWith("com.android.")) return true; // sistema / launcher coche
+        if (pkg.startsWith("android")) return true;
+        
+        // V21.1: Incluir Zlink (cliente común en hardware OEM para Android Auto por cable/inalámbrico)
+        if (pkg.equals("com.zjinnova.zlink")) return true;
+        if (pkg.contains("zlink")) return true;
+        if (pkg.contains("carlink") || pkg.contains("tlink") || pkg.contains("easyconn")) return true;
+        
+        // Permitir también la propia app
+        return pkg.equals(getPackageName());
     }
 
     @Override
     public void onLoadChildren(@NonNull String parentId, @NonNull Result<List<MediaBrowserCompat.MediaItem>> result) {
         if (MEDIA_ROOT_ID.equals(parentId)) {
-            // Devolvemos una lista de categorías (ej: Favoritos)
             List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
+            items.add(makeBrowsable(FAVORITES_ID, "Favoritos", "Mis emisoras"));
+            items.add(makeBrowsable(RECENTS_ID, "Recientes", "Últimas emisoras"));
+            items.add(makeBrowsable(SUGGESTED_ID, "Sugeridos", "Recomendados"));
+            // Bandas como raíz (OEM-like)
+            items.add(makeBrowsable("band:0", "FM1", "Presets"));
+            items.add(makeBrowsable("band:1", "FM2", "Presets"));
+            items.add(makeBrowsable("band:2", "FM3", "Presets"));
+            items.add(makeBrowsable("band:3", "AM1", "Presets"));
+            items.add(makeBrowsable("band:4", "AM2", "Presets"));
+            result.sendResult(items);
+        } else if (RECENTS_ID.equals(parentId)) {
+            result.sendResult(loadRecents());
+        } else if (SUGGESTED_ID.equals(parentId)) {
+            result.sendResult(loadSuggested());
+        } else if (FAVORITES_ID.equals(parentId) || "Favorites".equals(parentId)) {
+            result.sendResult(loadAllFavorites());
+        } else if (parentId.startsWith(BAND_PREFIX)) {
+            int band = parseBand(parentId);
+            result.sendResult(loadPresetsForBand(band));
+        } else {
+            result.sendResult(new ArrayList<>());
+        }
+    }
+
+    private List<MediaBrowserCompat.MediaItem> loadAllFavorites() {
+        List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
+        if (mPresetPrefs == null) return items;
+
+        // Recorrer todas las bandas y slots para buscar frecuencias guardadas
+        // Asume BAND_FM1 a BAND_AM2 (0 a 4) y 6 slots por banda
+        for (int b = 0; b < 5; b++) {
+            for (int s = 0; s < 6; s++) {
+                String key = "P" + (s + 1) + "_B" + b;
+                int f = mPresetPrefs.getInt(key, 0);
+                if (f > 0) {
+                    String name = getStoredName(f);
+                    String vId = PRESET_PREFIX + b + ":" + s + ":" + f;
+                    
+                    // Solo añadir si no hemos añadido esta frecuencia exacta ya para evitar duplicados en la lista global de favoritos
+                    boolean exists = false;
+                    for (MediaBrowserCompat.MediaItem item : items) {
+                        if (item.getDescription().getMediaId() != null && item.getDescription().getMediaId().endsWith(":" + f)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                    if (!exists) {
+                        Bundle extras = new Bundle();
+                        extras.putInt("freqKhz", f);
+                        extras.putInt("band", b);
+                        items.add(new MediaBrowserCompat.MediaItem(
+                                new MediaDescriptionCompat.Builder()
+                                        .setMediaId(vId)
+                                        .setTitle(name != null && !name.isEmpty() ? name : String.format(Locale.getDefault(), "%.1f MHz", f / 1000.0f))
+                                        .setSubtitle("Favorito")
+                                        .setExtras(extras)
+                                        .build(),
+                                MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+                        ));
+                    }
+                }
+            }
+        }
+        return items;
+    }
+
+    private List<MediaBrowserCompat.MediaItem> loadRecents() {
+        List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
+        if (mPresetPrefs == null) return items;
+        String csv = mPresetPrefs.getString("recent_freqs", "");
+        if (csv == null || csv.trim().isEmpty()) return items;
+
+        String[] parts = csv.split(",");
+        for (String p : parts) {
+            try {
+                int f = Integer.parseInt(p.trim());
+                if (f <= 0) continue;
+                String name = getStoredName(f);
+                String title = (name != null && !name.isEmpty() && !name.matches("\\d+")) ? name : formatFrequency(f);
+                items.add(new MediaBrowserCompat.MediaItem(
+                        new MediaDescriptionCompat.Builder()
+                                .setMediaId(RECENT_PREFIX + f)
+                                .setTitle(title)
+                                .setSubtitle("Reciente")
+                                .build(),
+                        MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+                ));
+            } catch (Exception ignored) {}
+        }
+        return items;
+    }
+
+    private List<MediaBrowserCompat.MediaItem> loadSuggested() {
+        // Estrategia simple OEM-like:
+        // - Si hay recents, sugerimos los 3 primeros.
+        // - Si no, sugerimos presets FM1.
+        List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
+        List<MediaBrowserCompat.MediaItem> rec = loadRecents();
+        for (int i = 0; i < rec.size() && i < 3; i++) {
+            MediaDescriptionCompat d = rec.get(i).getDescription();
+            String id = d != null ? d.getMediaId() : null;
+            int f = parseFreqFromMediaId(id);
+            if (f > 0) {
+                items.add(new MediaBrowserCompat.MediaItem(
+                        new MediaDescriptionCompat.Builder()
+                                .setMediaId(SUGGEST_PREFIX + f)
+                                .setTitle(d.getTitle())
+                                .setSubtitle("Sugerido")
+                                .build(),
+                        MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+                ));
+            }
+        }
+
+        if (!items.isEmpty()) return items;
+
+        // Fallback: FM1 (band 0)
+        List<MediaBrowserCompat.MediaItem> fm1 = loadPresetsForBand(0);
+        for (int i = 0; i < fm1.size() && i < 6; i++) {
+            MediaDescriptionCompat d = fm1.get(i).getDescription();
+            String id = d != null ? d.getMediaId() : null;
+            int f = parseFreqFromMediaId(id);
+            if (f > 0) {
+                items.add(new MediaBrowserCompat.MediaItem(
+                        new MediaDescriptionCompat.Builder()
+                                .setMediaId(SUGGEST_PREFIX + f)
+                                .setTitle(d.getTitle())
+                                .setSubtitle("Sugerido")
+                                .build(),
+                        MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+                ));
+            }
+        }
+        return items;
+    }
+
+    private int parseBand(String parentId) {
+        try {
+            String idx = parentId.substring(BAND_PREFIX.length());
+            return Integer.parseInt(idx);
+        } catch (Exception ignored) {
+            return 0;
+        }
+    }
+
+    private MediaBrowserCompat.MediaItem makeBrowsable(String mediaId, String title, String subtitle) {
+        return new MediaBrowserCompat.MediaItem(
+                new MediaDescriptionCompat.Builder()
+                        .setMediaId(mediaId)
+                        .setTitle(title)
+                        .setSubtitle(subtitle)
+                        .build(),
+                MediaBrowserCompat.MediaItem.FLAG_BROWSABLE
+        );
+    }
+
+    private List<MediaBrowserCompat.MediaItem> loadPresetsForBand(int band) {
+        List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
+        if (mPresetPrefs == null) return items;
+
+        // MainActivity define PRESETS_COUNT=15
+        final int presetsCount = 15;
+        for (int slot = 0; slot < presetsCount; slot++) {
+            String key = "P" + (slot + 1) + "_B" + band;
+            int freq = mPresetPrefs.getInt(key, 0);
+            if (freq <= 0) continue;
+
+            String displayName = getStoredName(freq);
+            String title = (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+"))
+                    ? displayName
+                    : formatFrequency(freq);
+
+            String mediaId = PRESET_PREFIX + band + ":" + slot + ":" + freq;
+
+            Bundle extras = new Bundle();
+            extras.putInt("freqKhz", freq);
+            extras.putInt("band", band);
+            extras.putInt("slot", slot);
+
             items.add(new MediaBrowserCompat.MediaItem(
                     new MediaDescriptionCompat.Builder()
-                            .setMediaId(PRESETS_ID)
-                            .setTitle(getString(R.string.my_favorites))
-                            .setSubtitle("Emisoras memorizadas")
+                            .setMediaId(mediaId)
+                            .setTitle(title)
+                            .setSubtitle("Preset P" + (slot + 1))
+                            .setExtras(extras)
                             .build(),
-                    MediaBrowserCompat.MediaItem.FLAG_BROWSABLE));
-            result.sendResult(items);
-        } else if (PRESETS_ID.equals(parentId)) {
-            // Aquí se enviarán las emisoras guardadas. 
-            // Esta lógica se actualizará dinámicamente cuando MainActivity esté conectada.
-            result.sendResult(null); // Pendiente implementación dinámica
-        } else {
-            result.sendResult(null);
+                    MediaBrowserCompat.MediaItem.FLAG_PLAYABLE
+            ));
         }
+        return items;
+    }
+
+    private String getStoredName(int freqKhz) {
+        if (mStationNamePrefs == null) return "";
+        String custom = mStationNamePrefs.getString("CUSTOM_" + freqKhz, null);
+        if (custom != null && !custom.isEmpty()) return custom;
+        String rds = mStationNamePrefs.getString("RDS_" + freqKhz, null);
+        if (rds != null && !rds.isEmpty()) return rds;
+        return "";
     }
 
     @Override
     public void onDestroy() {
-        mMediaSession.release();
+        try {
+            if (mPlaybackManager != null) {
+                // Liberar referencia (no mata hardware por sí mismo)
+                mPlaybackManager = null;
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            unregisterReceiver(mOemFocusReceiver);
+        } catch (Exception ignored) {}
+
+        try {
+            if (mMediaSession != null) {
+                mMediaSession.release();
+            }
+        } catch (Exception ignored) {}
         super.onDestroy();
     }
 }

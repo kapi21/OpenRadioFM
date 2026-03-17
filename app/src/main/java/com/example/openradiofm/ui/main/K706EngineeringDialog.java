@@ -31,6 +31,9 @@ public class K706EngineeringDialog extends Dialog {
     
     // UI Elements - RDS
     private TextView tvK706Ps, tvK706Rt, tvK706Pi, tvK706Pty;
+
+    // UI Elements - OEM Media
+    private TextView tvK706OemFocusEvent, tvK706OemFlags;
     
     // UI Elements - Assets & System
     private TextView tvK706Assets, tvK706McuRaw, tvK706Device;
@@ -81,6 +84,10 @@ public class K706EngineeringDialog extends Dialog {
         tvK706Pi = findViewById(R.id.tvK706Pi);
         tvK706Pty = findViewById(R.id.tvK706Pty);
 
+        // OEM Media
+        tvK706OemFocusEvent = findViewById(R.id.tvK706OemFocusEvent);
+        tvK706OemFlags = findViewById(R.id.tvK706OemFlags);
+
         // System & Assets
         tvK706Assets = findViewById(R.id.tvK706Assets);
         tvK706McuRaw = findViewById(R.id.tvK706McuRaw);
@@ -99,20 +106,28 @@ public class K706EngineeringDialog extends Dialog {
         
         // Tuner Buttons
         setupTunerButton(R.id.btnK706SeekDown, () -> {
-            if (mActivity.mRadioService != null) try { mActivity.mRadioService.onSeekDownEvent(); } catch(Exception e){}
-            logEvent("MCU", "CMD_SEEK_DOWN (0xA0 0x0C)");
+            try {
+                if (mActivity.mEngine != null) mActivity.mEngine.seekDown();
+            } catch (Exception ignored) {}
+            logEvent("MCU", "CMD_SEEK_DOWN");
         });
         setupTunerButton(R.id.btnK706SeekUp, () -> {
-            if (mActivity.mRadioService != null) try { mActivity.mRadioService.onSeekUpEvent(); } catch(Exception e){}
-            logEvent("MCU", "CMD_SEEK_UP (0xA0 0x0D)");
+            try {
+                if (mActivity.mEngine != null) mActivity.mEngine.seekUp();
+            } catch (Exception ignored) {}
+            logEvent("MCU", "CMD_SEEK_UP");
         });
         setupTunerButton(R.id.btnK706FineDown, () -> {
-            if (mActivity.mRadioService != null) try { mActivity.mRadioService.onManualDownEvent(); } catch(Exception e){}
-            logEvent("MCU", "CMD_STEP_DOWN (0xA0 0x0E)");
+            try {
+                if (mActivity.mEngine != null) mActivity.mEngine.stepDown();
+            } catch (Exception ignored) {}
+            logEvent("MCU", "CMD_STEP_DOWN");
         });
         setupTunerButton(R.id.btnK706FineUp, () -> {
-            if (mActivity.mRadioService != null) try { mActivity.mRadioService.onManualUpEvent(); } catch(Exception e){}
-            logEvent("MCU", "CMD_STEP_UP (0xA0 0x0F)");
+            try {
+                if (mActivity.mEngine != null) mActivity.mEngine.stepUp();
+            } catch (Exception ignored) {}
+            logEvent("MCU", "CMD_STEP_UP");
         });
     }
 
@@ -166,7 +181,8 @@ public class K706EngineeringDialog extends Dialog {
             int bars = sqi / 10;
             for(int i=0; i<10; i++) bar.append(i < bars ? "█" : "░");
             bar.append("]");
-            tvK706Rssi.setText(String.format(Locale.US, "[%ddBm] %s", -120 + rssiRaw, bar.toString()));
+            String dbm = (rssiRaw != -1) ? String.valueOf(-120 + rssiRaw) : "N/A";
+            tvK706Rssi.setText(String.format(Locale.US, "[%sdBm] %s", dbm, bar.toString()));
 
             // 2. RDS DATA
             TextView mainRdsName = mActivity.findViewById(R.id.tvRdsName);
@@ -175,8 +191,23 @@ public class K706EngineeringDialog extends Dialog {
             tvK706Ps.setText((mainRdsName != null) ? mainRdsName.getText() : "NONE");
             String rt = (mainRdsInfo != null) ? mainRdsInfo.getText().toString() : "WAITING...";
             tvK706Rt.setText(rt.length() > 30 ? rt.substring(0, 27) + "..." : rt);
-            tvK706Pi.setText("A210 (STATIC)"); // Placeholder PI
+            tvK706Pi.setText(mActivity.mCurrentPi != null ? mActivity.mCurrentPi : "WAITING...");
             tvK706Pty.setText(mActivity.mCurrentPty != null ? mActivity.mCurrentPty : "00");
+
+            // 2.5 OEM Media / AudioFocus status (vía SharedPreferences escrito por RadioMediaService)
+            try {
+                android.content.SharedPreferences prefs =
+                        mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
+                String lastFocus = prefs.getString("oem_last_focus_event", "N/A");
+                boolean userPaused = prefs.getBoolean("oem_user_paused", false);
+                boolean wasPlayingBeforeLoss = prefs.getBoolean("oem_was_playing_before_focus_loss", false);
+                boolean isPlaying = prefs.getBoolean("oem_is_playing", false);
+
+                if (tvK706OemFocusEvent != null) tvK706OemFocusEvent.setText(lastFocus);
+                if (tvK706OemFlags != null) {
+                    tvK706OemFlags.setText("playing=" + isPlaying + " userPaused=" + userPaused + " resumeArmed=" + wasPlayingBeforeLoss);
+                }
+            } catch (Exception ignored) {}
 
             // 3. SYSTEM
             String mcuRaw = (mgr != null && signalData != null) ? mgr.bytesToHex(signalData) : "NONE";

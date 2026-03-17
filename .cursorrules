@@ -1,0 +1,5 @@
+# Reglas de Eficiencia de Tokens
+- Sé conciso: No repitas código que no ha cambiado.
+- Respuestas breves: Evita explicaciones introductorias o conclusiones largas a menos que te lo pida.
+- Enfoque en cambios: Cuando edites un archivo, muestra solo las líneas modificadas o el bloque de función relevante.
+- Prioridad de hardware: Si pregunto por protocolos (SPI, I2C, UART), asume que estoy usando el analizador lógico de mi inventario y busca errores de timing.

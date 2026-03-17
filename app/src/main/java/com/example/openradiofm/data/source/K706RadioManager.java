@@ -32,6 +32,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private static final String TAG = "K706RadioManager";
     private static final String SERVICE_NAME = "mcu_service";
+
+    // Broadcast interno para sincronizar MediaSession/Android Auto con el AudioFocus real del SoC
+    public static final String ACTION_OEM_AUDIO_FOCUS = "com.example.openradiofm.OEM_AUDIO_FOCUS";
+    public static final String EXTRA_FOCUS_EVENT = "event";
+    public static final String EVENT_LOSS = "LOSS";
+    public static final String EVENT_LOSS_TRANSIENT = "LOSS_TRANSIENT";
+    public static final String EVENT_GAIN = "GAIN";
     
     // === Sub-comandos MCU (V9.6: Oficiales extraídos de TunerCmdFactory.smali) ===
     private static final int CMD_TUNER = 0xA0; // Comando base tuner
@@ -113,6 +120,53 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
     private boolean mIsTransientFocusLoss = false; // V17.0: Spotify/Android Auto
     
+    // OEM fix: evitar "mute inicial" por pérdidas espurias de AudioFocus (Zlink/Auto al enganchar)
+    private long mIgnoreFocusLossUntilUptimeMs = 0L;
+    private boolean mWasRadioActiveBeforeFocusLoss = false;
+    
+    // OEM fix: recuperar audio sin depender de recreación de layout.
+    // En K706 el sistema puede forzar MUTE_EQ + SetChannel(4) tras un LOSS.
+    // La app debe reintentar recuperar canal FM si el usuario "quiere FM".
+    private boolean mUserWantsFmAudio = false;
+    private final android.os.Handler mAudioRecoveryHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private int mAutoRecoveryAttempts = 0;
+    private final Runnable mAutoRecoveryRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!mUserWantsFmAudio) return;
+            if (mIsOnlineStreamingActive) return;
+            if (mIsInCall) return;
+            
+            // Si ya estamos activos, no martilleamos el MCU.
+            if (mIsRadioActive) return;
+            
+            // Backoff simple: 1.5s, 3s, 6s, 10s (máx 4 intentos)
+            if (mAutoRecoveryAttempts >= 4) return;
+            mAutoRecoveryAttempts++;
+            long delayMs;
+            switch (mAutoRecoveryAttempts) {
+                case 1: delayMs = 1500L; break;
+                case 2: delayMs = 3000L; break;
+                case 3: delayMs = 6000L; break;
+                default: delayMs = 10000L; break;
+            }
+            
+            try {
+                Log.d(TAG, "OEM AutoRecovery: intento " + mAutoRecoveryAttempts + " (re-pedir foco y recuperar FM)");
+                requestAudioFocus();
+                // Fuerza SetChannel(2) + setAudioParams(true) + setMute(false) internamente
+                enforceAudioChannelRecovery();
+                try { setMute(false); } catch (Exception ignored) {}
+                mIsRadioActive = true;
+            } catch (Exception e) {
+                Log.w(TAG, "OEM AutoRecovery falló (intento " + mAutoRecoveryAttempts + ")", e);
+            }
+            
+            // Programar siguiente intento por si el sistema nos vuelve a tumbar
+            mAudioRecoveryHandler.postDelayed(this, delayMs);
+        }
+    };
+    
     // V13.1: Estabilización de Dial / Debouncing
     private long mLastFreqUpdateTime = 0;
     private int mPendingFreq = -1;
@@ -134,14 +188,37 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 switch (focusChange) {
                     case AudioManager.AUDIOFOCUS_LOSS:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS----");
+                        broadcastOemFocus(EVENT_LOSS);
                         if (mIsOnlineStreamingActive) {
                             Log.d(TAG, "onAudioFocusChange(LOSS): Ignorando mute porque el Streaming Online está activo");
                             break;
                         }
+                        // K706 OEM: en algunos firmwares el framework provoca LOSS espurio justo tras conceder foco.
+                        // Si el usuario quiere FM, NO soltamos canal ni apagamos FM aquí (eso inicia la "pelea").
+                        if (mUserWantsFmAudio) {
+                            Log.d(TAG, "AUDIOFOCUS_LOSS: mUserWantsFmAudio=true -> manteniendo FM, forzando recovery (sin SetChannel(4)/setAudioParams(false))");
+                            mIsRadioActive = true;
+                            mWasRadioActiveBeforeFocusLoss = true;
+                            mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
+                            mAutoRecoveryAttempts = 0;
+                            mAudioRecoveryHandler.postDelayed(mAutoRecoveryRunnable, 500L);
+                            break;
+                        }
+                        // Ignorar pérdidas inmediatas tras pedir foco si todavía no estábamos activos
+                        if (android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs && !mIsRadioActive) {
+                            Log.d(TAG, "onAudioFocusChange(LOSS): Ignorado (startup/espurio). mIsRadioActive=false");
+                            break;
+                        }
                         try {
                             // Secuencia de salida segura
+                            mWasRadioActiveBeforeFocusLoss = mIsRadioActive;
                             mIsRadioActive = false; // Detener Heartbeat inmediatamente
-                            setMute(true);
+                            // Solo silenciar si realmente estaba sonando/activo
+                            if (mWasRadioActiveBeforeFocusLoss) {
+                                setMute(true);
+                            } else {
+                                Log.d(TAG, "AUDIOFOCUS_LOSS: Skip setMute(true) (radio no activa)");
+                            }
                             if (mSetChannel != null && mMcuManager != null) {
                                 mSetChannel.invoke(mMcuManager, (byte) 4); // Devolver contexto
                             }
@@ -152,13 +229,34 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS", e);
                         }
+                        // OEM: no dependas de recreación de layout para volver a sonar.
+                        // Programamos intentos de autorecuperación si el usuario quería FM.
+                        if (mUserWantsFmAudio) {
+                            mAutoRecoveryAttempts = 0;
+                            mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
+                            mAudioRecoveryHandler.postDelayed(mAutoRecoveryRunnable, 1500L);
+                        }
                         abandonAudioFocus();
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS_TRANSIENT (" + focusChange + ")----");
+                        broadcastOemFocus(EVENT_LOSS_TRANSIENT);
                         if (mIsOnlineStreamingActive) {
                             Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorando mute porque el Streaming Online está activo");
+                            break;
+                        }
+                        if (mUserWantsFmAudio) {
+                            Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: mUserWantsFmAudio=true -> manteniendo FM, forzando recovery (sin SetChannel(4)/mute)");
+                            mIsRadioActive = true;
+                            mWasRadioActiveBeforeFocusLoss = true;
+                            mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
+                            mAutoRecoveryAttempts = 0;
+                            mAudioRecoveryHandler.postDelayed(mAutoRecoveryRunnable, 500L);
+                            break;
+                        }
+                        if (android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs && !mIsRadioActive) {
+                            Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorado (startup/espurio). mIsRadioActive=false");
                             break;
                         }
                         mIsAudioFocusHeld = true;
@@ -173,8 +271,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         }
                         
                         try {
+                            mWasRadioActiveBeforeFocusLoss = mIsRadioActive;
                             mIsRadioActive = false; // Detener Heartbeat temporalmente
-                            setMute(true);
+                            if (mWasRadioActiveBeforeFocusLoss) {
+                                setMute(true);
+                            } else {
+                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: Skip setMute(true) (radio no activa)");
+                            }
                             // V11.5: Soltar canal MCU para que BT/teléfono suene limpio
                             if (mSetChannel != null && mMcuManager != null) {
                                 mSetChannel.invoke(mMcuManager, (byte) 4);
@@ -188,10 +291,18 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         break;
                     case AudioManager.AUDIOFOCUS_GAIN:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_GAIN----");
+                        broadcastOemFocus(EVENT_GAIN);
                         mIsAudioFocusHeld = true;
                         mIsInCall = false;
                         mIsTransientFocusLoss = false;
-                        mIsRadioActive = true; // Rehabilitar Heartbeat
+                        // Rehabilitar heartbeat solo si veníamos de una radio activa
+                        if (mWasRadioActiveBeforeFocusLoss) {
+                            mIsRadioActive = true;
+                            mWasRadioActiveBeforeFocusLoss = false;
+                        }
+                        // Al recuperar foco, cancelamos backoff y forzamos recuperación inmediata.
+                        mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
+                        mAutoRecoveryAttempts = 0;
                         // Forzar recuperación inmediata
                         enforceAudioChannelRecovery();
                         break;
@@ -256,6 +367,18 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             }
         } catch (Exception e) {
             Log.e(TAG, "Error registrando PhoneStateListener", e);
+        }
+    }
+
+    private void broadcastOemFocus(String event) {
+        try {
+            if (mContext == null) return;
+            Intent i = new Intent(ACTION_OEM_AUDIO_FOCUS);
+            i.setPackage(mContext.getPackageName()); // solo nuestra app
+            i.putExtra(EXTRA_FOCUS_EVENT, event);
+            mContext.sendBroadcast(i);
+        } catch (Exception e) {
+            Log.w(TAG, "broadcastOemFocus falló: " + event, e);
         }
     }
 
@@ -1108,6 +1231,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private void requestAudioFocus() {
         if (mAudioManager != null && !mIsAudioFocusHeld) {
+            // Ventana anti-LOSS espurio tras pedir foco (Zlink/Auto)
+            mIgnoreFocusLossUntilUptimeMs = android.os.SystemClock.uptimeMillis() + 2500L;
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 AudioAttributes attributes = new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -1244,6 +1369,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.w(TAG, "[7/7] setMute(false) failed", e);
         }
+        
+        // OEM: el usuario quiere FM (aunque el sistema intente tumbar canal/mute)
+        mUserWantsFmAudio = true;
 
         // 8. RDS - V9.8: Re-habilitado de forma segura vía QFTunerManager
         if (mTunerSetRdsSwitch != null && mTunerManager != null) {
@@ -1334,6 +1462,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private void stopFmAudioSequence() {
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM (Teardown V9.5) ===");
         mIsRadioActive = false; // V9.9: Limpiar flag activo inmediatamente
+        mUserWantsFmAudio = false;
+        mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
+        mAutoRecoveryAttempts = 0;
         try {
             // 1. Silenciar temporalmente para evitar transitorios
             setMute(true);

@@ -158,7 +158,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     // V11: RDS PI Database Identification
     private com.example.openradiofm.data.source.RdsDatabase mRdsDb;
-    private String mCurrentPi = null;
+    public String mCurrentPi = null;
 
     // V13: Gestor de Presets (Reducción de MainActivity)
     public PresetManager mPresetManager;
@@ -844,13 +844,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         refreshPresetButtons();
                         refreshRadioStatus();
                         
-                        // V20.3: Agresivo solo en Cold Start. En recreación (layout switch) delegar en el init del motor
-                        // para evitar Binder flood y Signal 9 del sistema.
-                        if (mPlaybackManager != null && !mIsRecreating) {
-                            Log.d(TAG, "Startup Audio Recovery (Cold Start): Forzando desmuteo");
-                            mPlaybackManager.setMute(false);
-                        } else {
-                            Log.d(TAG, "Startup: Saltando recuperación agresiva por recreación activa");
+                        // V20.3/V21.1: Agresivo siempre que estemos en Cold Start. 
+                        // En recreación (layout switch) delegar en el init del motor si ya hay audio, 
+                        // pero si detectamos mute injustificado, forzar recuperación.
+                        if (mPlaybackManager != null) {
+                            if (!mIsRecreating) {
+                                Log.d(TAG, "Startup Audio Recovery (Cold Start): Forzando desmuteo");
+                                mPlaybackManager.setMute(false);
+                            } else if (mMuteState) {
+                                Log.d(TAG, "Startup Audio Recovery (Recreation): Detectado mute previo, forzando recuperación");
+                                mPlaybackManager.setMute(false);
+                            }
                         }
                     }
                 });

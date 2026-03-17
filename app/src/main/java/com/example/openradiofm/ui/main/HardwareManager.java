@@ -60,7 +60,9 @@ public class HardwareManager {
             }, 500);
         } else if (state == 2) { // Conectado
             try {
-                k706Manager.setMute(true);
+                // OEM fix: NO mutear la radio solo porque BT esté conectado.
+                // El AudioFocus real (K706RadioManager) ya se encarga de ceder/recuperar audio
+                // cuando otra app toma el foco. Aquí solo forzamos una resincro del canal.
                 k706Manager.returnAudioChannel();
             } catch (Exception e) {
                 Log.e(TAG, "Error cediendo canal FM tras BT connect", e);

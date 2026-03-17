@@ -106,12 +106,10 @@
             android:text="100.0"
             android:textColor="#BBFFFFFF"
             android:textSize="100sp"
-			android:translationY="40dp"
             app:autoSizeMaxTextSize="130sp"
             app:autoSizeMinTextSize="20sp"
             app:autoSizeStepGranularity="2sp"
-            app:autoSizeTextType="uniform"
-			/>
+            app:autoSizeTextType="uniform" />
 
         <!-- RDS Radio Text (Marquee) - Más grande y sin bordes -->
 
@@ -120,8 +118,7 @@
             android:id="@+id/tvRdsInfo"
             android:layout_width="match_parent"
             android:layout_height="72dp"
-            android:layout_marginTop="10dp"
-			android:translationY="10dp"
+            android:layout_marginTop="4dp"
             android:background="@null"
             android:backgroundTint="@android:color/transparent"
             android:elevation="0dp"
@@ -137,7 +134,7 @@
             android:text=""
             android:textColor="#BBFFFFFF"
             android:textSize="40sp" />
-                                     	
+
         <LinearLayout
             android:id="@+id/buttonsContainer"
             android:layout_width="604dp"

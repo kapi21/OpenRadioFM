@@ -9,6 +9,8 @@ import android.widget.TextView;
 import android.view.Window;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.content.Context;
+import androidx.appcompat.widget.SwitchCompat;
 
 import com.example.openradiofm.R;
 import java.util.Locale;
@@ -41,6 +43,10 @@ public class EngineeringModeDialog extends Dialog {
     private TextView tvTerminalLog;
     private ScrollView scrollLog;
     private SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
+
+    // Dev toggles (MT8163)
+    private SwitchCompat swMt8163GlobalStreamMute;
+    private android.content.SharedPreferences mPrefs;
     
     private int mLastFreq = -1;
 
@@ -70,6 +76,8 @@ public class EngineeringModeDialog extends Dialog {
     }
 
     private void bindViews() {
+        mPrefs = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE);
+
         // RF
         tvSignalQualityIndex = findViewById(R.id.tvSignalQualityIndex);
         tvStereoPilot = findViewById(R.id.tvStereoPilot);
@@ -97,6 +105,9 @@ public class EngineeringModeDialog extends Dialog {
         // Log
         tvTerminalLog = findViewById(R.id.tvTerminalLog);
         scrollLog = findViewById(R.id.scrollLog);
+
+        // Dev toggles
+        swMt8163GlobalStreamMute = findViewById(R.id.swMt8163GlobalStreamMute);
     }
 
     private void setupControls() {
@@ -116,6 +127,22 @@ public class EngineeringModeDialog extends Dialog {
                 logEvent("RF", "STEP_UP_CMD");
             }
         });
+
+        if (swMt8163GlobalStreamMute != null) {
+            boolean enabled = false;
+            try { enabled = mPrefs.getBoolean("pref_mt8163_global_stream_mute", false); }
+            catch (Exception ignored) {}
+            swMt8163GlobalStreamMute.setChecked(enabled);
+            swMt8163GlobalStreamMute.setOnCheckedChangeListener((btn, checked) -> {
+                try {
+                    mPrefs.edit().putBoolean("pref_mt8163_global_stream_mute", checked).apply();
+                } catch (Exception ignored) {}
+                logEvent("DEV", "pref_mt8163_global_stream_mute=" + checked);
+                if (checked) {
+                    logEvent("WARN", "STREAM_MUSIC mute ON: puede silenciar Spotify/BT/Android Auto");
+                }
+            });
+        }
     }
 
     private void startUpdateLoop() {

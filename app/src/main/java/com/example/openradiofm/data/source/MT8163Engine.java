@@ -42,6 +42,9 @@ public class MT8163Engine implements RadioEngine {
     private boolean mIsOnlineStreamingActive = false;
     private android.media.AudioManager mAudioManager;
     private android.media.AudioManager.OnAudioFocusChangeListener mAudioFocusListener;
+    
+    // OEM safety: evitar mutear todo el dispositivo (STREAM_MUSIC) salvo compatibilidad explícita
+    private boolean mAllowGlobalStreamMute = false;
 
     public MT8163Engine() {}
 
@@ -98,6 +101,13 @@ public class MT8163Engine implements RadioEngine {
                 Log.e(TAG, "Error intentando reconectar", e);
             }
         }
+    }
+
+    private void handleDeadService(String op, Exception e) {
+        Log.w(TAG, "Servicio HCN muerto en " + op + " -> reconectando", e);
+        mService = null;
+        mBound = false;
+        reconnectIfNeeded();
     }
 
     @Override
@@ -180,6 +190,14 @@ public class MT8163Engine implements RadioEngine {
             }
         };
 
+        // Preferencia de compatibilidad: algunas ROMs antiguas dependían de mutear STREAM_MUSIC.
+        // Por defecto OFF para no silenciar Spotify/BT/Android Auto.
+        try {
+            mAllowGlobalStreamMute = context
+                    .getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_mt8163_global_stream_mute", false);
+        } catch (Exception ignored) {}
+
         return true; 
     }
 
@@ -242,8 +260,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.gotoFreq(freqKhz); 
         } catch (android.os.DeadObjectException e) {
-            Log.e(TAG, "DeadObjectException en tune: " + e.getMessage());
-            mService = null;
+            handleDeadService("tune", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en tune: " + e.getMessage()); 
         }
@@ -294,7 +311,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             return mService.getCurrentFreq(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("getCurrentFreq", e);
             return 0;
         } catch (RemoteException e) { 
             return 0; 
@@ -308,7 +325,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             return mService.getCurrentBand(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("getCurrentBand", e);
             return 0;
         } catch (RemoteException e) { 
             return 0; 
@@ -324,7 +341,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.onSeekDownEvent(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("seekUp", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en seekUp"); 
         }
@@ -340,7 +357,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.onSeekUpEvent(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("seekDown", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en seekDown"); 
         }
@@ -359,7 +376,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.onManualUpEvent(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("stepUp", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en stepUp"); 
         }
@@ -378,7 +395,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.onManualDownEvent(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("stepDown", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en stepDown"); 
         }
@@ -392,7 +409,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.onScanEvent(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("scan", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en scan"); 
         }
@@ -405,7 +422,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.onPSEvent(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("stopScan", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en stopScan"); 
         }
@@ -417,7 +434,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             mService.onBandEvent(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("bandCycle", e);
         } catch (RemoteException e) { 
             Log.e(TAG, "RemoteException en bandCycle"); 
         }
@@ -451,11 +468,16 @@ public class MT8163Engine implements RadioEngine {
         if (mAudioManager != null) {
             try {
                 mAudioManager.setParameters("fm_radio_on=1;fm_mute=" + (mute ? "1" : "0"));
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    mAudioManager.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC,
-                            mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
-                } else {
-                    mAudioManager.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
+                
+                // OEM safety: NO mutear STREAM_MUSIC por defecto, porque silencia todo el dispositivo.
+                // Si se requiere por una ROM específica, activar pref_mt8163_global_stream_mute.
+                if (mAllowGlobalStreamMute) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        mAudioManager.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC,
+                                mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
+                    } else {
+                        mAudioManager.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
+                    }
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error setMute (AudiorManager fallback)", e);
@@ -488,7 +510,7 @@ public class MT8163Engine implements RadioEngine {
         try { 
             return mService.requestPlayAudio(); 
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("requestPlayAudio", e);
             return false;
         } catch (RemoteException e) { 
             return false; 

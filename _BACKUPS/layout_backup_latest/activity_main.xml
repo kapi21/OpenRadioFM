@@ -115,89 +115,85 @@
     <!-- ====================================================================================== -->
     
     <!-- V18.6: Box Superior para Iconos de Estado -->
-	
-<FrameLayout
-    android:id="@+id/boxIconsTopLayout2"
-    android:layout_width="0dp"
-    android:layout_height="wrap_content"
-    android:layout_margin="8dp"
-    android:background="@drawable/bg_glass_card_premium"
-    app:layout_constraintTop_toTopOf="parent"
-    app:layout_constraintStart_toEndOf="@id/guideline_col1"
-    app:layout_constraintEnd_toStartOf="@id/guideline_col2">
-
-    <LinearLayout
-        android:id="@+id/boxIcons"
-        android:layout_width="match_parent"
+    <FrameLayout
+        android:id="@+id/boxIconsTopLayout2"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
-        android:layout_marginEnd="12dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="8dp"
-        android:paddingStart="4dp"
-        android:paddingEnd="4dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:elevation="20dp"
-        android:translationZ="20dp">
+        android:layout_margin="8dp"
+        android:background="@drawable/bg_glass_card_classic"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/guideline_col1"
+        app:layout_constraintEnd_toStartOf="@id/guideline_col2">
 
-        <ImageView
-            android:id="@+id/ivBandIndicator"
-            android:layout_width="78dp"
-            android:layout_height="52dp"
-            android:layout_marginEnd="8dp"
-            android:adjustViewBounds="true"
-            android:scaleType="fitStart"
-            android:src="@drawable/radio_fm1" />
+        <!-- V17.1: Contenedor Superior de Iconos (Banda, Estéreo, Nube) -->
+        <LinearLayout
+            android:id="@+id/boxIcons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:elevation="20dp"
+            android:translationZ="20dp">
 
-        <ImageView
-            android:id="@+id/ivStereoIcon"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="8dp"
-            android:adjustViewBounds="true"
-            android:scaleType="fitCenter"
-            android:src="@drawable/fwt"
-            android:visibility="invisible" />
 
-        <FrameLayout
-            android:id="@+id/ivDataActivity"
-            android:layout_width="92dp"
-            android:layout_height="60dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:visibility="invisible">
 
             <ImageView
-                android:id="@+id/ivDataActivityIcon"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="4dp"
+                android:id="@+id/ivBandIndicator"
+                android:layout_width="90dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitStart"
+                android:src="@drawable/radio_fm1" />
+
+            <ImageView
+                android:id="@+id/ivStereoIcon"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="8dp"
                 android:adjustViewBounds="true"
                 android:scaleType="fitCenter"
-                android:src="@drawable/cloud" />
-        </FrameLayout>
+                android:src="@drawable/fwt"
+                android:visibility="invisible" />
 
-        <ImageView
-            android:id="@+id/ivFavoriteIndicator"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:alpha="0.9"
-            android:visibility="gone"
-            android:scaleType="fitCenter"
-            android:src="@drawable/radio_icon_p01" />
-    </LinearLayout>
-</FrameLayout>
+            <FrameLayout
+                android:id="@+id/ivDataActivity"
+                android:layout_width="120dp"
+                android:layout_height="80dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:visibility="invisible">
+                
+                <ImageView
+                    android:id="@+id/ivDataActivityIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="4dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/cloud" />
+            </FrameLayout>
 
+            <ImageView
+                android:id="@+id/ivFavoriteIndicator"
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:layout_marginStart="8dp"
+                android:alpha="0.9"
+                android:visibility="gone"
+                android:scaleType="fitCenter"
+                android:src="@drawable/radio_icon_p01" />
+        </LinearLayout>
+    </FrameLayout>
     <!-- V18.6: Box Central para Frecuencia (Cuerpo visual) -->
     <FrameLayout
         android:id="@+id/boxFrequency"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_margin="8dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         app:layout_constraintTop_toBottomOf="@id/boxIconsTopLayout2"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
@@ -206,11 +202,10 @@
         <!-- Signal: esquina inferior-izquierda -->
         <ImageView
             android:id="@+id/ivSignalLevel"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
             android:layout_gravity="bottom|start"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="6dp"
+            android:layout_margin="8dp"
             android:scaleType="fitCenter"
             android:src="@drawable/level_signal"
             android:visibility="visible" />
@@ -221,92 +216,85 @@
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_gravity="bottom|end"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="0dp"
-            android:translationY="10dp"
+            android:layout_margin="8dp"
             android:scaleType="fitCenter"
             android:src="@drawable/radio_mhz" />
 
 
         <!-- PTY + RDS Status Icons: Barra inferior distribuida con pesos -->
-      <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_marginStart="35dp"
-        android:layout_marginEnd="70dp"
-        android:layout_marginBottom="5dp"
-        android:orientation="horizontal"
-        android:gravity="center_vertical">
-    
-        <!-- PTY Icon + Text (alineado a la izquierda) -->
         <LinearLayout
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="72dp"
+            android:layout_marginEnd="72dp"
+            android:layout_marginBottom="8dp"
             android:orientation="horizontal"
-            android:gravity="start|center_vertical">
-    
-            <TextView
-                android:id="@+id/tvPty"
+            android:gravity="center_vertical">
+
+            <!-- PTY Icon + Text (alineado a la izquierda) -->
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:layout_marginEnd="0dp"
-                android:text=""
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:gravity="start|center_vertical"
-                android:singleLine="true"
-                android:ellipsize="marquee"
-                android:marqueeRepeatLimit="marquee_forever"
-                android:scrollHorizontally="true"
-                android:focusable="true"
-                android:focusableInTouchMode="true"
-                android:translationY="4dp"
-                android:visibility="gone" />
+                android:orientation="horizontal"
+                android:gravity="start|center_vertical">
+
+                <TextView
+                    android:id="@+id/tvPty"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text=""
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:gravity="start|center_vertical"
+                    android:singleLine="true"
+                    android:ellipsize="marquee"
+                    android:marqueeRepeatLimit="marquee_forever"
+                    android:scrollHorizontally="true"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- RDS Status Icons (AF, TA, TP) alineados a la derecha -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="end|center_vertical">
+
+                <ImageView
+                    android:id="@+id/ivAfIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="2dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="visible"
+                    android:alpha="0.2"
+                    android:src="@drawable/rds_af_n" />
+
+                <ImageView
+                    android:id="@+id/ivTaIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginEnd="2dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="visible"
+                    android:alpha="0.2"
+                    android:src="@drawable/rds_ta_n" />
+
+                <ImageView
+                    android:id="@+id/ivTpIcon"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="visible"
+                    android:alpha="0.2"
+                    android:src="@drawable/rds_tp_n" />
+            </LinearLayout>
         </LinearLayout>
-    
-        <!-- RDS Status Icons (AF, TA, TP) alineados a la derecha -->
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:orientation="horizontal"
-            android:gravity="end|center_vertical">
-    
-            <ImageView
-                android:id="@+id/ivAfIcon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="2dp"
-                android:scaleType="fitCenter"
-                android:visibility="visible"
-                android:alpha="0.2"
-                android:src="@drawable/rds_af_n" />
-    
-            <ImageView
-                android:id="@+id/ivTaIcon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginEnd="2dp"
-                android:scaleType="fitCenter"
-                android:visibility="visible"
-                android:alpha="0.2"
-                android:src="@drawable/rds_ta_n" />
-    
-            <ImageView
-                android:id="@+id/ivTpIcon"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:scaleType="fitCenter"
-                android:visibility="visible"
-                android:alpha="0.2"
-                android:src="@drawable/rds_tp_n" />
-        </LinearLayout>
-      </LinearLayout>
     </FrameLayout>
 
     <!-- Frecuencia: Movida fuera para forzar el cálculo de ancho de ConstraintLayout -->
@@ -321,11 +309,9 @@
         android:paddingStart="8dp"
         android:paddingEnd="8dp"
         android:paddingBottom="0dp"
-        android:includeFontPadding="false"
-        android:layout_marginBottom="50dp"
         app:autoSizeTextType="uniform"
         app:autoSizeMinTextSize="12sp"
-        app:autoSizeMaxTextSize="60sp"
+        app:autoSizeMaxTextSize="100sp"
         app:autoSizeStepGranularity="2sp"
         android:maxLines="1"
         app:layout_constraintTop_toTopOf="@id/boxFrequency"
@@ -345,7 +331,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="2dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         android:src="@drawable/seek_down"
         android:scaleType="fitCenter"
         android:padding="14dp"
@@ -361,7 +347,7 @@
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         android:src="@drawable/btn_previous_n"
         android:scaleType="fitCenter"
         android:padding="16dp"
@@ -377,7 +363,7 @@
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         android:src="@drawable/btn_next_n"
         android:scaleType="fitCenter"
         android:padding="16dp"
@@ -393,7 +379,7 @@
         android:layout_marginStart="2dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         android:src="@drawable/seek_up"
         android:scaleType="fitCenter"
         android:padding="14dp"
@@ -421,7 +407,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         android:gravity="center"
         android:text=""
         android:textColor="@color/white"
@@ -447,7 +433,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginEnd="2dp"
         android:layout_marginBottom="8dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         android:src="@drawable/radio_band_n"
         android:scaleType="fitCenter"
         android:padding="16dp"
@@ -463,7 +449,7 @@
             android:layout_marginStart="2dp"
             android:layout_marginEnd="2dp"
             android:layout_marginBottom="8dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_classic"
             android:src="@drawable/radio_scan_icon_f"
             android:scaleType="fitCenter"
             android:padding="16dp"
@@ -479,7 +465,7 @@
             android:layout_marginStart="2dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
-            android:background="@drawable/bg_glass_card_premium"
+            android:background="@drawable/bg_glass_card_classic"
             android:src="@drawable/radio_loc_n"
             android:scaleType="fitCenter"
             android:padding="16dp"
@@ -497,7 +483,7 @@
         android:id="@+id/boxLogo"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="@drawable/bg_glass_card_premium"
+        android:background="@drawable/bg_glass_card_classic"
         android:layout_margin="8dp"
         android:padding="16dp"
         android:orientation="vertical"
@@ -525,7 +511,7 @@
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp" 
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_glass_card_premium" 
+        android:background="@drawable/bg_glass_card_classic" 
         android:src="@drawable/ic_android_settings" 
         android:scaleType="fitCenter" 
         android:padding="16dp"
@@ -544,7 +530,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_glass_card_premium" 
+        android:background="@drawable/bg_glass_card_classic" 
         android:src="@drawable/ic_save_load" 
         android:scaleType="fitCenter" 
         android:padding="16dp"
@@ -564,7 +550,7 @@
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp" 
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_glass_card_premium" 
+        android:background="@drawable/bg_glass_card_classic" 
         android:src="@drawable/radio_mute_n" 
         android:scaleType="fitCenter" 
         android:padding="16dp"
@@ -583,7 +569,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp"
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_glass_card_premium" 
+        android:background="@drawable/bg_glass_card_classic" 
         android:src="@drawable/radio_gps" 
         android:scaleType="fitCenter" 
         android:padding="16dp"
@@ -603,7 +589,7 @@
         android:layout_marginEnd="4dp"
         android:layout_marginBottom="8dp" 
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_glass_card_premium" 
+        android:background="@drawable/bg_glass_card_classic" 
         android:src="@drawable/radio_eq_n" 
         android:scaleType="fitCenter" 
         android:padding="16dp"
@@ -622,7 +608,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginBottom="8dp" 
         android:layout_marginTop="4dp"
-        android:background="@drawable/bg_glass_card_premium" 
+        android:background="@drawable/bg_glass_card_classic" 
         android:src="@drawable/power_off" 
         android:scaleType="fitCenter" 
         android:padding="16dp"

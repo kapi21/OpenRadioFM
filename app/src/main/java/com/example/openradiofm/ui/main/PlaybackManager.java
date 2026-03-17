@@ -111,7 +111,9 @@ public class PlaybackManager {
         }
 
         // V18.6: Iniciar el Foreground Service cuando la radio está activa
-        if (!mute) {
+        // Importante: el servicio de medios debe poder controlar la radio sin bucles.
+        // Si este PlaybackManager se está ejecutando DENTRO del propio servicio, no re-iniciamos nada.
+        if (!mute && !(mContext instanceof com.example.openradiofm.service.RadioMediaService)) {
             Intent serviceIntent = new Intent(mContext, com.example.openradiofm.service.RadioMediaService.class);
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 mContext.startForegroundService(serviceIntent);

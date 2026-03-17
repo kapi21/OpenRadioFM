@@ -1,0 +1,585 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/rootLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black_background">
+
+    <!-- Premium Background Layer (Dynamic Blurred Logo) -->
+    <ImageView
+        android:id="@+id/ivDynamicBackground"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="centerCrop"
+        android:alpha="0.25"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Grainy/Noise overlay for depth -->
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="#11000000"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Guidelines for Rows (15% | 45% | 90%) -->
+    <!-- Row 1: Top (0-15%) -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_row1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.15" />
+
+    <!-- Row 2: Frequency (15-45%) -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_row2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.45" />
+
+    <!-- Row 3: Presets (45-90%) -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_row3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.90" />
+
+    <!-- V20.0: Guideline to avoid frequency overlap with RDS icons (calculated at 36% to clear weighted row) -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline_v3_freq_bottom"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.36" />
+
+    <!-- ====================================================================================== -->
+    <!-- ROW 1: TOP STATUS & RDS (15%) -->
+    <!-- ====================================================================================== -->
+
+    <!-- Barra superior: Band + ST + Data (izquierda) | RDS RT (centro) | CarLogo (derecha) -->
+    <LinearLayout
+        android:id="@+id/containerBand"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/ivBandIndicator"
+            android:layout_width="150dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="4dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_fm1" />
+
+        <ImageView
+            android:id="@+id/ivStereoIcon"
+            android:layout_width="80dp"
+            android:layout_height="60dp"
+            android:layout_marginEnd="8dp"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:visibility="invisible"
+            android:src="@drawable/fwt" />
+    </LinearLayout>
+
+    <!-- RDS RT: Centrado con tvFrequency -->
+    <FrameLayout
+        android:id="@+id/containerRds"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:gravity="center"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintStart_toEndOf="@+id/containerBand"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <!-- V16.2: tvRdsName oculto, el nombre RDS PS se muestra sobre la frecuencia -->
+        <TextView
+            android:id="@+id/tvRdsName"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone"
+            android:text="" />
+
+        <!-- RDS RT: Ocupa su espacio propio, centrado, sin solaparse con ST/Data -->
+        <TextView
+            android:id="@+id/tvRdsInfo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="8dp"
+            android:gravity="center"
+            android:ellipsize="marquee"
+            android:marqueeRepeatLimit="marquee_forever"
+            android:requiresFadingEdge="horizontal"
+            android:fadingEdgeLength="16dp"
+            android:singleLine="true"
+            android:scrollHorizontally="true"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="22sp"
+            android:includeFontPadding="false"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/ivDataActivity"
+        android:layout_width="120dp"
+        android:layout_height="75dp"
+        android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:elevation="10dp"
+        android:translationZ="10dp"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toStartOf="@+id/barrier_right_widgets"
+        app:layout_constraintTop_toTopOf="parent">
+        
+        <ImageView
+            android:id="@+id/ivDataActivityIcon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:scaleType="fitCenter"
+            android:src="@drawable/cloud" />
+    </FrameLayout>
+
+
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/barrier_right_widgets"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="start"
+        app:constraint_referenced_ids="ivCarLogo,tvDigitalClock" />
+
+    <ImageView
+        android:id="@+id/ivCarLogo"
+        android:layout_width="150dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvDigitalClock"
+        android:layout_width="180dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:gravity="center"
+        android:text="12:00"
+        android:textColor="@color/white"
+        android:visibility="gone"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="24sp"
+        app:autoSizeMaxTextSize="120sp"
+        app:autoSizeStepGranularity="2sp"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- ====================================================================================== -->
+    <!-- ROW 2: MAIN FREQUENCY (30%) -->
+    <!-- ====================================================================================== -->
+
+    <ImageButton
+        android:id="@+id/btnSeekDown"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="6dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/seek_down"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row2"
+        app:layout_constraintEnd_toStartOf="@+id/btnFavPrev"
+        app:layout_constraintHorizontal_weight="0.10"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline_row1" />
+
+    <ImageButton
+        android:id="@+id/btnFavPrev"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="16dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/btn_previous_n"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row2"
+        app:layout_constraintEnd_toStartOf="@+id/boxFrequency"
+        app:layout_constraintHorizontal_weight="0.10"
+        app:layout_constraintStart_toEndOf="@+id/btnSeekDown"
+        app:layout_constraintTop_toBottomOf="@id/guideline_row1" />
+
+    <FrameLayout
+        android:id="@+id/boxFrequency"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@drawable/bg_glass_card_classic"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row2"
+        app:layout_constraintEnd_toStartOf="@+id/btnFavNext"
+        app:layout_constraintHorizontal_weight="0.60"
+        app:layout_constraintStart_toEndOf="@+id/btnFavPrev"
+        app:layout_constraintTop_toBottomOf="@id/guideline_row1">
+
+        <!-- Layout vertical: Info contextual -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <!-- Fila superior: Reservada para Logo (si se muestra) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.70"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/ivMainLogo"
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+            <!-- Fila inferior: Signal + PTY + Unit -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="0.30"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp">
+
+                <ImageView
+                    android:id="@+id/ivSignalLevel"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/level_signal"
+                    android:visibility="visible" />
+
+                <!-- PTY Icon + Text ligados a la señal, usa el espacio delástico -->
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/tvPty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="PTY NONE"
+                        android:textColor="@color/white"
+                        android:textSize="18sp"
+                        android:textStyle="bold"
+                        android:visibility="gone"
+                        android:gravity="start|center_vertical"
+                        android:singleLine="true"
+                        android:ellipsize="marquee"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:scrollHorizontally="true"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:includeFontPadding="false" />
+                </LinearLayout>
+
+                <!-- RDS Status Icons (AF, TA, TP) -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+                    
+                    <ImageView
+                        android:id="@+id/ivFavoriteIndicator"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="fitCenter"
+                        android:visibility="gone"
+                        android:alpha="0.8"
+                        android:src="@drawable/radio_icon_p01" />
+                    
+                    <ImageView
+                        android:id="@+id/ivAfIcon"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="fitCenter"
+                        android:visibility="visible"
+                        android:alpha="0.2"
+                        android:src="@drawable/rds_af_n" />
+                        
+                    <ImageView
+                        android:id="@+id/ivTaIcon"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:layout_marginEnd="4dp"
+                        android:scaleType="fitCenter"
+                        android:visibility="visible"
+                        android:alpha="0.2"
+                        android:src="@drawable/rds_ta_n" />
+                        
+                    <ImageView
+                        android:id="@+id/ivTpIcon"
+                        android:layout_width="56dp"
+                        android:layout_height="56dp"
+                        android:scaleType="fitCenter"
+                        android:visibility="visible"
+                        android:alpha="0.2"
+                        android:src="@drawable/rds_tp_n" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/ivUnitLabel"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:layout_marginStart="24dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/radio_mhz" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <!-- tvFrequency: Fuera del FrameLayout para forzar Autosizing por ConstraintLayout -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tvFrequency"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="2dp"
+        android:gravity="center"
+        android:text="92.30"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        app:autoSizeTextType="uniform"
+        app:autoSizeMinTextSize="12sp"
+        app:autoSizeMaxTextSize="@dimen/text_size_frequency_base_v3"
+        app:autoSizeStepGranularity="2sp"
+        android:maxLines="1"
+        app:layout_constraintTop_toTopOf="@id/boxFrequency"
+        app:layout_constraintBottom_toBottomOf="@id/guideline_v3_freq_bottom"
+        app:layout_constraintStart_toEndOf="@id/btnFavPrev"
+        app:layout_constraintEnd_toStartOf="@id/btnFavNext" />
+
+    <ImageButton
+        android:id="@+id/btnFavNext"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="16dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/btn_next_n"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row2"
+        app:layout_constraintEnd_toStartOf="@+id/btnSeekUp"
+        app:layout_constraintHorizontal_weight="0.10"
+        app:layout_constraintStart_toEndOf="@+id/boxFrequency"
+        app:layout_constraintTop_toBottomOf="@id/guideline_row1" />
+
+    <ImageButton
+        android:id="@+id/btnSeekUp"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="6dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/seek_up"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="0.10"
+        app:layout_constraintStart_toEndOf="@+id/btnFavNext"
+        app:layout_constraintTop_toBottomOf="@id/guideline_row1" />
+
+    <!-- ====================================================================================== -->
+    <!-- ROW 3: PRESETS GALLERY (45%) -->
+    <!-- ====================================================================================== -->
+
+    <HorizontalScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline_row2">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="0dp">
+            
+            <!-- P1 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP1" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP1" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP1" android:text="87.5 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P2 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP2" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP2" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP2" android:text="90.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P3 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP3" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP3" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP3" android:text="92.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P4 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP4" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP4" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP4" android:text="94.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P5 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP5" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP5" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP5" android:text="96.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P6 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP6" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP6" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP6" android:text="98.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P7 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP7" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP7" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP7" android:text="100.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P8 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP8" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP8" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP8" android:text="102.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P9 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP9" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP9" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP9" android:text="104.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P10 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP10" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP10" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP10" android:text="106.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P11 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP11" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP11" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP11" android:text="108.0 MHz" style="@style/PresetTextStyleV3"/></LinearLayout>
+            <!-- P12 -->
+            <LinearLayout style="@style/PresetContainerV3"><LinearLayout android:id="@+id/cardP12" style="@style/PresetCardStyleV3"><ImageView android:id="@+id/ivP12" style="@style/PresetIconStyleV3"/></LinearLayout><TextView android:id="@+id/tvP12" android:text="Empty" style="@style/PresetTextStyleV3"/></LinearLayout>
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- ====================================================================================== -->
+    <!-- ROW 4: BOTTOM CONTROLS (10%) -->
+    <!-- ====================================================================================== -->
+
+    <LinearLayout
+        android:id="@+id/bottomControls"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="horizontal"
+        android:padding="0dp"
+        android:layout_marginBottom="12dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/guideline_row3">
+
+        <ImageButton
+            android:id="@+id/btnSettings"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_eq_n" />
+
+        <ImageButton
+            android:id="@+id/btnBand"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_band_n" />
+
+        <ImageButton
+            android:id="@+id/btnLocDx"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_loc_n" />
+
+        <ImageButton
+            android:id="@+id/btnAutoScan"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_scan_icon_f" />
+
+        <ImageButton
+            android:id="@+id/btnMute"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_mute_n" />
+
+        <ImageButton
+            android:id="@+id/btnGps"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/radio_gps" />
+
+        <!-- V5.1: Extra 1 (Android Settings) -->
+        <ImageButton
+            android:id="@+id/btnExtra1"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_android_settings" />
+
+        <!-- V5.1: Extra 2 (Save/Load Favorites) -->
+        <ImageButton
+            android:id="@+id/btnExtra2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_save_load" />
+
+        <ImageButton
+            android:id="@+id/btnPowerOff"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/power_off" />
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

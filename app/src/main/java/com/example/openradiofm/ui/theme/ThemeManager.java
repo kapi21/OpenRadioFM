@@ -205,6 +205,20 @@ public class ThemeManager {
                     v.setBackgroundResource(android.R.color.transparent);
                 }
             }
+        } else if (isSimpleLayout) {
+            // Layout Simple: Sin bordes de skin interactivos, fondo transparente
+            android.util.TypedValue outValue = new android.util.TypedValue();
+            mActivity.getTheme().resolveAttribute(android.R.attr.selectableItemBackgroundBorderless, outValue, true);
+            
+            for (int id : viewIds) {
+                if (id == R.id.boxFrequency) continue; 
+                View v = mActivity.findViewById(id);
+                if (v != null && v instanceof android.widget.ImageButton) {
+                    v.setBackgroundResource(outValue.resourceId);
+                } else if (v != null) {
+                    v.setBackgroundResource(android.R.color.transparent);
+                }
+            }
         } else {
             // Comportamiento V2 normal: aplica el skin entero a todos los views
             for (int id : viewIds) {
@@ -220,12 +234,20 @@ public class ThemeManager {
             }
         }
 
-        // Aplicar a Presets P1-P12
-        for (int i = 1; i <= 12; i++) {
+        // Aplicar a Presets P1-P15 (SimpleLayout soporta hasta 15)
+        for (int i = 1; i <= 15; i++) {
             int id = mActivity.getResources().getIdentifier("cardP" + i, "id", mActivity.getPackageName());
             View v = mActivity.findViewById(id);
-            if (v != null)
-                v.setBackgroundResource(drawableId);
+            if (v != null) {
+                if (isSimpleLayout) {
+                    // En Simple Layout los presets no tienen el recuadro colorido
+                    android.util.TypedValue outValue = new android.util.TypedValue();
+                    mActivity.getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
+                    v.setBackgroundResource(outValue.resourceId);
+                } else {
+                    v.setBackgroundResource(drawableId);
+                }
+            }
         }
 
         // Notificar al listener (Night Mode colors, etc.)

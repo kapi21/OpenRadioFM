@@ -154,6 +154,32 @@
                 <TextView android:id="@+id/tvK706Pty" android:text="00" style="@style/EngValueStyle"/>
             </GridLayout>
 
+            <!-- SECTION: OEM MEDIA / AUDIOFOCUS STATUS -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ OEM_MEDIA_SESSION_STATUS ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="LAST_FOCUS_EVENT" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706OemFocusEvent" android:text="N/A" style="@style/EngValueStyle"/>
+
+                <TextView android:text="OEM_FLAGS" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706OemFlags" android:text="N/A" style="@style/EngValueStyle"/>
+            </GridLayout>
+
             <!-- SECTION: FILE SYSTEM & ASSETS -->
             <TextView
                 android:layout_width="match_parent"
