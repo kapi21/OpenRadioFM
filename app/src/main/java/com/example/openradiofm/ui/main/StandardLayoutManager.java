@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.openradiofm.R;
+import com.example.openradiofm.ui.theme.ThemeManager;
 
 public class StandardLayoutManager {
 
@@ -100,7 +101,9 @@ public class StandardLayoutManager {
 
     public void applyColors(boolean isNight) {
         int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
-        int white = Color.WHITE;
+        boolean isLight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        int normalText = isLight ? Color.BLACK : Color.WHITE;
 
         if (isNight) {
             if (tvFrequency != null) tvFrequency.setTextColor(nightBlue);
@@ -110,11 +113,11 @@ public class StandardLayoutManager {
             if (tvPty != null) tvPty.setTextColor(nightBlue);
             if (btnPowerOff != null) btnPowerOff.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
         } else {
-            if (tvFrequency != null) tvFrequency.setTextColor(white);
+            if (tvFrequency != null) tvFrequency.setTextColor(normalText);
             if (ivUnitLabel != null) ivUnitLabel.clearColorFilter();
-            if (tvRdsName != null) tvRdsName.setTextColor(white);
-            if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
-            if (tvPty != null) tvPty.setTextColor(white);
+            if (tvRdsName != null) tvRdsName.setTextColor(normalText);
+            if (tvRdsInfo != null) tvRdsInfo.setTextColor(normalText);
+            if (tvPty != null) tvPty.setTextColor(normalText);
             if (btnPowerOff != null) btnPowerOff.clearColorFilter();
         }
     }
@@ -130,7 +133,9 @@ public class StandardLayoutManager {
                 if (isNight) {
                     ivFavoriteIndicator.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
                 } else {
-                    ivFavoriteIndicator.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_IN);
+                    boolean isLight = (mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+                    ivFavoriteIndicator.setColorFilter(isLight ? Color.BLACK : Color.WHITE, PorterDuff.Mode.SRC_IN);
                 }
             } else {
                 ivFavoriteIndicator.setVisibility(View.GONE);

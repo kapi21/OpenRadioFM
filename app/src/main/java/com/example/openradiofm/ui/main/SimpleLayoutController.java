@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.example.openradiofm.R;
+import com.example.openradiofm.ui.theme.ThemeManager;
 
 /**
  * V21.0: Controlador para el Layout Simple (Minimalista).
@@ -78,7 +79,10 @@ public class SimpleLayoutController extends BaseLayoutController {
     @Override
     public void applySkin(boolean isNight) {
         int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
-        int color = isNight ? nightBlue : Color.WHITE;
+        boolean isLight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        int normalColor = isLight ? Color.BLACK : Color.WHITE;
+        int color = isNight ? nightBlue : normalColor;
         MainActivity.setTextColorIfChanged(tvFrequency, color);
         MainActivity.setTextColorIfChanged(tvRdsInfo, color);
     }

@@ -29,6 +29,7 @@ public class ThemeManager {
         YELLOW("Yellow", "#FFD700"),
         CYAN("Cyan", "#00CED1"),
         PINK("Pink", "#FF69B4"),
+        CLEAR("Clear", "#FFFFFF"),
         WHITE("White", "#FFFFFF");
 
         public final String displayName;
@@ -76,7 +77,10 @@ public class ThemeManager {
     public Skin getCurrentSkin() {
         String skinName = prefs.getString(KEY_SKIN, Skin.CLASSIC.name());
         try {
-            return Skin.valueOf(skinName);
+            Skin parsed = Skin.valueOf(skinName);
+            // CLEAR desactivado por ahora: evitar activación accidental
+            if (parsed == Skin.CLEAR) return Skin.CLASSIC;
+            return parsed;
         } catch (IllegalArgumentException e) {
             return Skin.CLASSIC;
         }
@@ -91,6 +95,12 @@ public class ThemeManager {
         Skin[] all = Skin.values();
         int nextIndex = (current.ordinal() + 1) % all.length;
         Skin next = all[nextIndex];
+        // CLEAR desactivado por ahora: saltarlo en el ciclo
+        int guard = 0;
+        while (next == Skin.CLEAR && guard++ < all.length) {
+            nextIndex = (nextIndex + 1) % all.length;
+            next = all[nextIndex];
+        }
         setSkin(next);
         return next;
     }
@@ -133,6 +143,8 @@ public class ThemeManager {
                 return R.drawable.bg_glass_card_cyan;
             case PINK:
                 return R.drawable.bg_glass_card_pink;
+            case CLEAR:
+                return R.drawable.bg_glass_card_clear;
             case WHITE:
                 return R.drawable.bg_glass_card_white;
             case CLASSIC:
@@ -149,6 +161,8 @@ public class ThemeManager {
      */
     public void applySkin(Skin skin) {
         if (mActivity == null) return;
+        // CLEAR desactivado por ahora: tratar como CLASSIC
+        if (skin == Skin.CLEAR) skin = Skin.CLASSIC;
         if (this.mCurrentSkin == skin) {
             // V2.5: Ahora que NightModeManager usa guardu de estado en sus tintes, 
             // ya no es necesario forzar el refresco del skin completo cada polling.
@@ -157,6 +171,18 @@ public class ThemeManager {
 
         this.mCurrentSkin = skin;
         int drawableId = getSkinDrawableId();
+        
+        // Modo claro (skin CLEAR): además del glass-card, forzamos el fondo real de la ventana
+        // para que la UI no quede sobre negro por el theme base.
+        try {
+            int bgColor;
+            if (skin == Skin.CLEAR) {
+                bgColor = android.graphics.Color.WHITE;
+            } else {
+                bgColor = mActivity.getResources().getColor(R.color.black_background, null);
+            }
+            mActivity.getWindow().getDecorView().setBackgroundColor(bgColor);
+        } catch (Exception ignored) {}
 
         // Detectar layout activo
         boolean isLayoutV3 = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_v3", false);

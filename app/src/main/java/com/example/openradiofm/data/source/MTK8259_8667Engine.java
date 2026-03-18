@@ -2,7 +2,7 @@ package com.example.openradiofm.data.source;
 
 import android.content.Context;
 import android.os.Handler;
-import android.os.Looper;
+import android.os.HandlerThread;
 import android.util.Log;
 
 import com.ts.main.common.ITsCommon;
@@ -26,7 +26,9 @@ public class MTK8259_8667Engine implements RadioEngine {
     private String mLastPs = null;
     private String mLastRt = null;
     
-    private final Handler mHandler = new Handler(Looper.getMainLooper());
+    // V21.1: Polling fuera del hilo UI para evitar jank
+    private HandlerThread mPollThread;
+    private Handler mHandler;
     private final Runnable mRdsRunnable = new Runnable() {
         @Override
         public void run() {
@@ -49,6 +51,7 @@ public class MTK8259_8667Engine implements RadioEngine {
             // Iniciar el bucle de RDS si el manager está conectado
             if (mManager.isConnected()) {
                 mManager.forceUnmute(); // V20.0: Asegurar sonido al arrancar
+                ensurePollThread();
                 startRdsPolling();
                 return true;
             }
@@ -58,13 +61,21 @@ public class MTK8259_8667Engine implements RadioEngine {
         return false;
     }
 
+    private void ensurePollThread() {
+        if (mHandler != null) return;
+        mPollThread = new HandlerThread("MTK8259_8667-RdsPoll");
+        mPollThread.start();
+        mHandler = new Handler(mPollThread.getLooper());
+    }
+
     private void startRdsPolling() {
+        ensurePollThread();
         mHandler.removeCallbacks(mRdsRunnable);
         mHandler.postDelayed(mRdsRunnable, 1000);
     }
 
     private void stopRdsPolling() {
-        mHandler.removeCallbacks(mRdsRunnable);
+        if (mHandler != null) mHandler.removeCallbacks(mRdsRunnable);
     }
 
     @Override
@@ -82,6 +93,13 @@ public class MTK8259_8667Engine implements RadioEngine {
 
         Log.d(TAG, "release(persist=false): Soltando recursos MTK8259/8667");
         stopRdsPolling();
+        if (mPollThread != null) {
+            try {
+                mPollThread.quitSafely();
+            } catch (Exception ignored) {}
+            mPollThread = null;
+            mHandler = null;
+        }
         if (mManager != null) {
             try {
                 mManager.closeDevice();

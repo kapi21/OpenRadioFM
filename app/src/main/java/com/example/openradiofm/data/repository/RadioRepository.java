@@ -57,12 +57,33 @@ public class RadioRepository {
         ensureRadioLogosFolderExists();
     }
 
+    // V21.1: Compatibilidad storage (preferir app-specific, fallback legacy /sdcard)
+    private java.io.File getAppLogoDir() {
+        java.io.File external = mContext.getExternalFilesDir(null);
+        java.io.File base = (external != null) ? external : mContext.getFilesDir();
+        return new java.io.File(base, "RadioLogos");
+    }
+
+    private java.io.File getLegacyLogoDir() {
+        return new java.io.File("/sdcard/RadioLogos/");
+    }
+
+    private java.io.File getPreferredLogoDir() {
+        java.io.File legacy = getLegacyLogoDir();
+        try {
+            if ((legacy.exists() || legacy.mkdirs()) && legacy.canWrite()) return legacy;
+        } catch (Exception ignored) {}
+        java.io.File app = getAppLogoDir();
+        try { app.mkdirs(); } catch (Exception ignored) {}
+        return app;
+    }
+
     /**
      * V3.0: Asegura que la carpeta /sdcard/RadioLogos/ existe.
      */
     private void ensureRadioLogosFolderExists() {
         try {
-            java.io.File dir = new java.io.File("/sdcard/RadioLogos/");
+            java.io.File dir = getPreferredLogoDir();
             if (!dir.exists()) {
                 dir.mkdirs();
             }
@@ -145,13 +166,15 @@ public class RadioRepository {
 
         // 3. Borrar logo local de la carpeta para forzar descarga
         try {
-            java.io.File dir = new java.io.File("/sdcard/RadioLogos/");
-            if (dir.exists() && dir.isDirectory()) {
-                java.io.File[] files = dir.listFiles((d, name) -> name.startsWith(prefix));
-                if (files != null) {
-                    for (java.io.File file : files) {
-                        if (file.delete()) {
-                            android.util.Log.d("RadioRepository", "Logo cache borrado: " + file.getName());
+            java.io.File[] dirs = new java.io.File[] { getPreferredLogoDir(), getLegacyLogoDir() };
+            for (java.io.File dir : dirs) {
+                if (dir != null && dir.exists() && dir.isDirectory()) {
+                    java.io.File[] files = dir.listFiles((d, name) -> name.startsWith(prefix));
+                    if (files != null) {
+                        for (java.io.File file : files) {
+                            if (file.delete()) {
+                                android.util.Log.d("RadioRepository", "Logo cache borrado: " + file.getName());
+                            }
                         }
                     }
                 }
@@ -476,23 +499,26 @@ public class RadioRepository {
 
         // 1. Prioridad: Frecuencia + RDS
         if (sanitizedName != null && !sanitizedName.isEmpty()) {
-            String pathWithRds = "/sdcard/RadioLogos/" + freqKHz + "_" + sanitizedName + ".png";
-            if (new java.io.File(pathWithRds).exists()) {
-                return pathWithRds;
-            }
+            String fileName = freqKHz + "_" + sanitizedName + ".png";
+            java.io.File f1 = new java.io.File(getPreferredLogoDir(), fileName);
+            if (f1.exists()) return f1.getAbsolutePath();
+            java.io.File f2 = new java.io.File(getLegacyLogoDir(), fileName);
+            if (f2.exists()) return f2.getAbsolutePath();
         }
 
         // 2. Compatibilidad: Solo frecuencia completa
-        String pathFull = "/sdcard/RadioLogos/" + freqKHz + ".png";
-        if (new java.io.File(pathFull).exists()) {
-            return pathFull;
-        }
+        String fullName = freqKHz + ".png";
+        java.io.File full1 = new java.io.File(getPreferredLogoDir(), fullName);
+        if (full1.exists()) return full1.getAbsolutePath();
+        java.io.File full2 = new java.io.File(getLegacyLogoDir(), fullName);
+        if (full2.exists()) return full2.getAbsolutePath();
 
         // 3. Compatibilidad: Frecuencia corta (sin último cero)
-        String pathShort = "/sdcard/RadioLogos/" + (freqKHz / 10) + ".png";
-        if (new java.io.File(pathShort).exists()) {
-            return pathShort;
-        }
+        String shortName = (freqKHz / 10) + ".png";
+        java.io.File short1 = new java.io.File(getPreferredLogoDir(), shortName);
+        if (short1.exists()) return short1.getAbsolutePath();
+        java.io.File short2 = new java.io.File(getLegacyLogoDir(), shortName);
+        if (short2.exists()) return short2.getAbsolutePath();
 
         return null;
     }
@@ -503,15 +529,13 @@ public class RadioRepository {
      */
     private String downloadAndSaveLogo(String urlString, int freqKHz, String rdsName) {
         try {
-            java.net.URL url = new java.net.URL(urlString);
-            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-
-            java.io.InputStream input = connection.getInputStream();
-            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(input);
-
             ensureRadioLogosFolderExists();
+            // V21.1: Usar Glide para downsample + decode seguro (evita OOM)
+            android.graphics.Bitmap bitmap = com.bumptech.glide.Glide.with(mContext)
+                    .asBitmap()
+                    .load(urlString)
+                    .submit(512, 512)
+                    .get();
 
             // V3.0: Guardar con nombre RDS si está disponible
             String fileName;
@@ -522,15 +546,12 @@ public class RadioRepository {
                 fileName = freqKHz + ".png";
             }
 
-            java.io.File destFile = new java.io.File("/sdcard/RadioLogos/", fileName);
+            java.io.File destFile = new java.io.File(getPreferredLogoDir(), fileName);
             java.io.FileOutputStream out = new java.io.FileOutputStream(destFile);
 
             bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, out);
             out.flush();
             out.close();
-
-            // CRÍTICO: Liberar el Bitmap de memoria para evitar OutOfMemoryError
-            bitmap.recycle();
 
             android.util.Log.d("RadioLogos", "DOWNLOAD SAVED: " + destFile.getAbsolutePath());
 

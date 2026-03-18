@@ -2,10 +2,9 @@ package com.example.openradiofm.ui.main;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -28,7 +27,13 @@ import java.io.File;
 public class LogoManager {
     private static final String TAG = "LogoManager";
     private final MainActivity mActivity;
-    private final String LOGO_DIR = "/sdcard/RadioLogos/";
+    
+    // V21.1: Compatibilidad storage (preferir app-specific dir, fallback a legacy /sdcard)
+    private final File mLegacyLogoDir = new File("/sdcard/RadioLogos/");
+    private final File mAppLogoDir;
+    private final File mActiveLogoDir;
+    
+    private CustomTarget<Drawable> mBackgroundTarget;
 
     // V2.4: State guards to avoid redundant reloads/flicker
     private int mLastFallbackResId = -1;
@@ -37,7 +42,28 @@ public class LogoManager {
 
     public LogoManager(MainActivity activity) {
         this.mActivity = activity;
+        File external = activity.getExternalFilesDir(null);
+        mAppLogoDir = new File(external != null ? external : activity.getFilesDir(), "RadioLogos");
+        mActiveLogoDir = pickWritableDir(mLegacyLogoDir, mAppLogoDir);
         createRadioLogosFolder();
+    }
+    
+    private static File pickWritableDir(File legacy, File appDir) {
+        try {
+            if (legacy.exists() || legacy.mkdirs()) {
+                if (legacy.canWrite()) return legacy;
+            }
+        } catch (Exception ignored) {}
+        try { appDir.mkdirs(); } catch (Exception ignored) {}
+        return appDir;
+    }
+    
+    private File resolveExistingFile(String fileName) {
+        File legacy = new File(mLegacyLogoDir, fileName);
+        if (legacy.exists()) return legacy;
+        File app = new File(mAppLogoDir, fileName);
+        if (app.exists()) return app;
+        return null;
     }
 
     /**
@@ -45,7 +71,7 @@ public class LogoManager {
      */
     public void createRadioLogosFolder() {
         try {
-            File radioLogosDir = new File(LOGO_DIR);
+            File radioLogosDir = mActiveLogoDir;
             if (!radioLogosDir.exists()) {
                 if (radioLogosDir.mkdirs()) {
                     Log.d(TAG, "Carpeta RadioLogos creada exitosamente");
@@ -70,15 +96,37 @@ public class LogoManager {
             root.setBackgroundColor(Color.BLACK);
         } else if (bgMode == 1) {
             try {
-                File bgJpg = new File(LOGO_DIR + "background.jpg");
-                File bgPng = new File(LOGO_DIR + "background.png");
-                File backgroundFile = bgJpg.exists() ? bgJpg : (bgPng.exists() ? bgPng : null);
+                File bgJpg = resolveExistingFile("background.jpg");
+                File bgPng = (bgJpg == null) ? resolveExistingFile("background.png") : null;
+                File backgroundFile = (bgJpg != null) ? bgJpg : bgPng;
 
                 if (backgroundFile != null) {
-                    Bitmap bitmap = BitmapFactory.decodeFile(backgroundFile.getAbsolutePath());
-                    if (bitmap != null) {
-                        root.setBackground(new BitmapDrawable(mActivity.getResources(), bitmap));
+                    if (mBackgroundTarget != null) {
+                        Glide.with(mActivity).clear(mBackgroundTarget);
+                        mBackgroundTarget = null;
                     }
+                    mBackgroundTarget = new CustomTarget<Drawable>() {
+                        @Override
+                        public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
+                            if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                            root.setBackground(resource);
+                        }
+
+                        @Override
+                        public void onLoadCleared(Drawable placeholder) {
+                            // CRÍTICO: si Glide limpia el drawable, el bitmap interno puede reciclarse.
+                            // Si lo dejamos como background, puede crashear al dibujar.
+                            try {
+                                root.setBackgroundResource(R.drawable.bg_grainy_dark);
+                            } catch (Exception ignored) {}
+                        }
+                    };
+                    Glide.with(mActivity)
+                            .load(backgroundFile)
+                            .centerCrop()
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                            .skipMemoryCache(true)
+                            .into(mBackgroundTarget);
                 } else {
                     root.setBackgroundResource(R.drawable.bg_grainy_dark);
                 }
@@ -102,8 +150,8 @@ public class LogoManager {
             return;
         }
 
-        File logoFile = new File(LOGO_DIR + "car_logo.png");
-        if (logoFile.exists()) {
+        File logoFile = resolveExistingFile("car_logo.png");
+        if (logoFile != null && logoFile.exists()) {
             iv.setVisibility(View.VISIBLE);
             // V2.4: Only reload if needed
             String path = logoFile.getAbsolutePath();
@@ -132,8 +180,8 @@ public class LogoManager {
         ImageView ivCarLogo = mActivity.findViewById(R.id.ivCarLogo);
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
 
-        File logoFile = new File(LOGO_DIR + "car_logo.png");
-        boolean logoExists = logoFile.exists();
+        File logoFile = resolveExistingFile("car_logo.png");
+        boolean logoExists = logoFile != null && logoFile.exists();
 
         if (ivCarLogo != null) {
             if (logoExists) {
@@ -328,6 +376,10 @@ public class LogoManager {
         mLastStationLogoUrl = null;
         
         try {
+            if (mBackgroundTarget != null) {
+                Glide.with(mActivity).clear(mBackgroundTarget);
+                mBackgroundTarget = null;
+            }
             ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
             if (ivMainLogo != null) {
                 Glide.with(ivMainLogo.getContext()).clear(ivMainLogo);

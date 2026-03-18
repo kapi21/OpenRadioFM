@@ -12,7 +12,7 @@ import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
 
 import android.os.Handler;
-import android.os.Looper;
+import android.os.HandlerThread;
 
 /**
  * V5.0: Motor MT8163 — Combina IRadioServiceAPI (servicio nativo del coche)
@@ -33,7 +33,9 @@ public class MT8163Engine implements RadioEngine {
     private boolean mExternalService = false;
 
     // V16.2: Polling mechanism for continuous frequency updates during seek/scan
-    private Handler mPollingHandler = new Handler(Looper.getMainLooper());
+    // V21.1: Polling fuera del hilo UI para evitar jank
+    private HandlerThread mPollingThread;
+    private Handler mPollingHandler;
     private Runnable mPollingRunnable;
     private int mLastPolledFreq = -1;
     private int mPollingTicks = 0;
@@ -198,7 +200,15 @@ public class MT8163Engine implements RadioEngine {
                     .getBoolean("pref_mt8163_global_stream_mute", false);
         } catch (Exception ignored) {}
 
+        ensurePollingThread();
         return true; 
+    }
+
+    private void ensurePollingThread() {
+        if (mPollingHandler != null) return;
+        mPollingThread = new HandlerThread("MT8163-FreqPoll");
+        mPollingThread.start();
+        mPollingHandler = new Handler(mPollingThread.getLooper());
     }
 
     @Override
@@ -210,14 +220,24 @@ public class MT8163Engine implements RadioEngine {
     public void release(boolean persist) {
         if (persist) {
             Log.d(TAG, "release(persist=true): Recreación detectada. Manteniendo hardware activo.");
+            if (mPollingRunnable != null && mPollingHandler != null) {
+                mPollingHandler.removeCallbacks(mPollingRunnable);
+            }
             return;
         }
 
         Log.d(TAG, "release(persist=false): Soltando recursos MT8163 y silenciando");
         switchToAndroidAudio(); // Asegurar liberación de audio al salir
         
-        if (mPollingRunnable != null) {
+        if (mPollingRunnable != null && mPollingHandler != null) {
             mPollingHandler.removeCallbacks(mPollingRunnable);
+        }
+        if (mPollingThread != null) {
+            try {
+                mPollingThread.quitSafely();
+            } catch (Exception ignored) {}
+            mPollingThread = null;
+            mPollingHandler = null;
         }
         if (mHiddenPlayer != null) {
             mHiddenPlayer.release();
@@ -280,6 +300,7 @@ public class MT8163Engine implements RadioEngine {
     }
 
     private void startFreqPolling() {
+        ensurePollingThread();
         if (mPollingRunnable != null) {
             mPollingHandler.removeCallbacks(mPollingRunnable);
         }

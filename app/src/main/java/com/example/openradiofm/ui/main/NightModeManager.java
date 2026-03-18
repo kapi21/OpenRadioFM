@@ -182,7 +182,12 @@ public class NightModeManager {
      * @param lastFreq Última frecuencia conocida para refrescar la visualización.
      */
     public void resetNightModeColors(int lastFreq) {
-        int white = mActivity.getResources().getColor(R.color.white, null);
+        boolean isLight = false;
+        if (mActivity instanceof MainActivity) {
+            MainActivity main = (MainActivity) mActivity;
+            isLight = (main.mThemeManager != null && main.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        }
+        int normalText = isLight ? android.graphics.Color.BLACK : mActivity.getResources().getColor(R.color.white, null);
 
         // Restaurar textos
         TextView tvRdsName = mActivity.findViewById(R.id.tvRdsName);
@@ -194,13 +199,13 @@ public class NightModeManager {
             mListener.onRefreshFrequencyDisplay(lastFreq);
         }
 
-        if (tvRdsName != null) tvRdsName.setTextColor(white);
-        if (tvRdsInfo != null) tvRdsInfo.setTextColor(white);
-        if (tvPty != null) tvPty.setTextColor(white);
+        if (tvRdsName != null) tvRdsName.setTextColor(normalText);
+        if (tvRdsInfo != null) tvRdsInfo.setTextColor(normalText);
+        if (tvPty != null) tvPty.setTextColor(normalText);
 
         // V18.6: Restaurar reloj a blanco
         TextView tvClock = mActivity.findViewById(R.id.tvDigitalClock);
-        if (tvClock != null) tvClock.setTextColor(white);
+        if (tvClock != null) tvClock.setTextColor(normalText);
 
         // Restaurar iconos
         ImageView ivBandIndicator = mActivity.findViewById(R.id.ivBandIndicator);
@@ -241,7 +246,7 @@ public class NightModeManager {
         for (int i = 1; i <= 18; i++) {
             int tvId = mActivity.getResources().getIdentifier("tvP" + i, "id", mActivity.getPackageName());
             TextView tv = mActivity.findViewById(tvId);
-            if (tv != null) tv.setTextColor(white);
+            if (tv != null) tv.setTextColor(normalText);
 
              int ivId = mActivity.getResources().getIdentifier("ivP" + i, "id", mActivity.getPackageName());
              android.view.View ivView = mActivity.findViewById(ivId);

@@ -192,6 +192,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private int mLastRefreshFreq = -1;
     private int mLastRefreshBand = -1;
     private long mLastFullRefreshTime = 0;
+    
+    // V21.1: Throttling de tareas UI no críticas (fluidez)
+    private static final long NIGHT_MODE_CHECK_INTERVAL_MS = 30_000;
+    private static final long DATA_ACTIVITY_UI_INTERVAL_MS = 1_000;
+    private long mLastNightModeCheckTime = 0;
+    private long mLastDataActivityUiTime = 0;
+    
+    // V21.1: Evitar crear hilos por cada refresh (coalescing de station info)
+    private java.util.concurrent.ExecutorService mStationInfoExecutor;
+    private final java.util.concurrent.atomic.AtomicInteger mStationInfoSeq = new java.util.concurrent.atomic.AtomicInteger(0);
+    private volatile int mLastStationInfoRequestedSeq = 0;
 
     public boolean mMuteState = false;
 
@@ -1349,6 +1360,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         
         // V5.5: Limpieza delegada a DeviceManager (Actualizado V20.0 con flag de persistencia)
         stopStatusPolling();
+        
+        if (mStationInfoExecutor != null) {
+            try {
+                mStationInfoExecutor.shutdownNow();
+            } catch (Exception ignored) {}
+            mStationInfoExecutor = null;
+        }
 
         if (mMediaSessionManager != null) {
             mMediaSessionManager.disconnect();
@@ -1564,16 +1582,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
     private void createRadioLogosFolder() {
         try {
-            java.io.File radioLogosDir = new java.io.File("/sdcard/RadioLogos/");
-            if (!radioLogosDir.exists()) {
-                boolean created = radioLogosDir.mkdirs();
-                if (created) {
-                    Log.d(TAG, "Carpeta RadioLogos creada exitosamente");
-                } else {
-                    Log.e(TAG, "Error al crear carpeta RadioLogos");
-                }
-            } else {
-                Log.d(TAG, "Carpeta RadioLogos ya existe");
+            // V21.1: Carpeta principal legacy para evitar confusión al usuario.
+            // Fallback a app-specific solo si el sistema bloquea /sdcard.
+            java.io.File legacyDir = new java.io.File("/sdcard/RadioLogos/");
+            boolean legacyOk = (legacyDir.exists() || legacyDir.mkdirs()) && legacyDir.canWrite();
+            if (!legacyOk) {
+                java.io.File external = getExternalFilesDir(null);
+                java.io.File appDir = new java.io.File((external != null ? external : getFilesDir()), "RadioLogos");
+                if (!appDir.exists()) appDir.mkdirs();
             }
         } catch (Exception e) {
             Log.e(TAG, "Excepción al crear carpeta RadioLogos: " + e.getMessage());
@@ -1585,48 +1601,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * 0: Negro Puro, 1: background.png personal, 2: Logo Dinámico.
      */
     public void loadCustomBackground() {
-        int bgMode = mPrefs.getInt("pref_bg_mode", 1); // Por defecto Imagen si existe
-
-        // Reset backgrounds first
-        if (ivDynamicBackground != null)
-            ivDynamicBackground.setVisibility(View.GONE);
-        View root = findViewById(R.id.rootLayout); // assuming id is set, or find by type
-        if (root == null) {
-            android.view.View decor = getWindow().getDecorView().findViewById(android.R.id.content);
-            if (decor instanceof android.view.ViewGroup)
-                root = ((android.view.ViewGroup) decor).getChildAt(0);
-        }
-
-        if (root == null)
+        // V21.1: Unificar lógica con LogoManager (Glide/downsample + compat storage)
+        if (mLogoManager != null) {
+            mLogoManager.loadCustomBackground();
             return;
-
-        if (bgMode == 0) {
-            // Negro Puro
-            root.setBackgroundColor(android.graphics.Color.BLACK);
-        } else if (bgMode == 1) {
-            // Imagen Fija background.png
-            try {
-                java.io.File bgJpg = new java.io.File("/sdcard/RadioLogos/background.jpg");
-                java.io.File bgPng = new java.io.File("/sdcard/RadioLogos/background.png");
-                java.io.File backgroundFile = bgJpg.exists() ? bgJpg : (bgPng.exists() ? bgPng : null);
-
-                if (backgroundFile != null) {
-                    android.graphics.Bitmap bitmap = android.graphics.BitmapFactory
-                            .decodeFile(backgroundFile.getAbsolutePath());
-                    if (bitmap != null) {
-                        root.setBackground(new android.graphics.drawable.BitmapDrawable(getResources(), bitmap));
-                    }
-                } else {
-                    root.setBackgroundResource(R.drawable.bg_grainy_dark);
-                }
-            } catch (Exception e) {
-                root.setBackgroundResource(R.drawable.bg_grainy_dark);
-            }
-        } else {
-            // Logo Dinámico (El fondo base es negro, el logo se superpone en
-            // ivDynamicBackground)
-            root.setBackgroundColor(android.graphics.Color.BLACK);
-            // El refresco real ocurre en updateDynamicBackground
         }
     }
 
@@ -1648,11 +1626,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mEngine == null)
             return;
 
-        // V16.2: Refrescar estado de conectividad/datos del icono de Supabase
-        runOnUiThread(() -> {
-            updateDataActivityUI();
-            checkAndApplyNightMode(); // V18.x: Forzar check de modo noche periódico (transiciones por tiempo)
-        });
+        // V16.2/V21.1: Refrescar UI no crítica con throttling para evitar jitter en el hilo principal
+        long now = System.currentTimeMillis();
+        final boolean shouldUpdateDataUi = (now - mLastDataActivityUiTime) >= DATA_ACTIVITY_UI_INTERVAL_MS;
+        final boolean shouldCheckNight = (now - mLastNightModeCheckTime) >= NIGHT_MODE_CHECK_INTERVAL_MS;
+        if (shouldUpdateDataUi) mLastDataActivityUiTime = now;
+        if (shouldCheckNight) mLastNightModeCheckTime = now;
+        if (shouldUpdateDataUi || shouldCheckNight) {
+            runOnUiThread(() -> {
+                if (shouldUpdateDataUi) updateDataActivityUI();
+                if (shouldCheckNight) checkAndApplyNightMode(); // Transiciones por tiempo
+            });
+        }
 
         // V18.6: Si estamos reproduciendo streaming online, saltamos la interrogación síncrona al hardware.
         // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
@@ -1758,38 +1743,46 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         final boolean fIsAm = (band == BAND_AM1 || band == BAND_AM2);
         final boolean fIsLocal = isLocal;
 
-        // V18.6: Mover recuperación de información de emisora a hilo secundario
-        new Thread(() -> {
+        // V18.6/V21.1: Recuperación de info de emisora en executor único (sin crear hilos en loop)
+        final int seq = mStationInfoSeq.incrementAndGet();
+        mLastStationInfoRequestedSeq = seq;
+        if (mStationInfoExecutor == null) {
+            mStationInfoExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        }
+        mStationInfoExecutor.execute(() -> {
             if (isFinishing() || isDestroyed()) return;
+            if (seq != mLastStationInfoRequestedSeq) return;
+
             com.example.openradiofm.data.model.RadioStation station = null;
             if (mRepository != null && !mIsScanning) {
                 station = mRepository.getStationInfo(fFreq, null);
             }
+            if (seq != mLastStationInfoRequestedSeq) return;
+
             final String rdsName = (station != null) ? station.getName() : "";
-            mLastPs = rdsName; // V18.6: Sincronizar campo para acceso externo
+            mLastPs = rdsName; // Sincronizar campo para acceso externo
 
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
-                // Get State
-                boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-                
+                if (seq != mLastStationInfoRequestedSeq) return;
+
+                boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin()
+                        == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+
                 if (mUiController != null) {
                     mUiController.updateFrequency(fFreq, rdsName, fIsAm);
                     mUiController.applySkin(isNight);
                     mUiController.updateBandIndicator(fBand);
-                    
-                    // Logo & Background
+
                     if (mLogoManager != null) {
                         String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
                         mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
                     }
 
-                    // V18.6.4: Fix favorite indicator delay - Update immediately
                     boolean isFav = isStationMemorized(fFreq);
                     int pIndex = getPresetIndex(fFreq);
                     mUiController.updateFavoriteIndicator(isFav, pIndex, isNight);
                 } else {
-                    // Legacy Fallback
                     int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
                     if (isNight) {
                         setColorFilterIfChanged(ivUnitLabel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
@@ -1802,7 +1795,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     updateBandImage(fBand);
                 }
 
-                // Metadata update (Session)
                 if (mMediaSessionManager != null) {
                     float freqDisplay = fFreq / 1000.0f;
                     String freqStr = String.format(java.util.Locale.US, "%.1f MHz", freqDisplay);
@@ -1813,10 +1805,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     btnLocDx.setSelected(fIsLocal);
                     setImageResourceIfChanged(btnLocDx, fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
                 }
-            });
 
-            sendWidgetUpdateIntent(fFreq, fBand, rdsName);
-        }).start();
+                sendWidgetUpdateIntent(fFreq, fBand, rdsName);
+            });
+        });
     }
 
     /**
@@ -2024,6 +2016,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mThemeManager != null) mThemeManager.applySkin(skin);
         
         boolean isNight = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+        boolean isClear = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
 
         if (mUiController != null) {
             mUiController.applySkin(isNight);
@@ -2031,13 +2024,52 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // Legacy/Fallback for SimpleLayoutManager directly
             mSimpleLayoutManager.applyColors(isNight);
         }
+        
+        // CLEAR: iconos de botones en negro (y al salir, restaurar)
+        applyClearButtonIconTint(isClear && !isNight);
 
         // Shared Clock Visibility Color
         if (tvDigitalClock != null) {
             if (isNight) {
                 tvDigitalClock.setTextColor(getResources().getColor(R.color.night_blue_primary, null));
             } else {
-                tvDigitalClock.setTextColor(android.graphics.Color.WHITE);
+                boolean isLight = (mThemeManager != null
+                        && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+                tvDigitalClock.setTextColor(isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
+            }
+        }
+    }
+
+    private void applyClearButtonIconTint(boolean enabled) {
+        final int tint = android.graphics.Color.BLACK;
+        final android.graphics.PorterDuff.Mode mode = android.graphics.PorterDuff.Mode.SRC_IN;
+
+        int[] buttonIds = {
+                R.id.btnSeekUp, R.id.btnSeekDown,
+                R.id.btnFavPrev, R.id.btnFavNext,
+                R.id.btnBand, R.id.btnAutoScan,
+                R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
+                R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff
+        };
+
+        for (int id : buttonIds) {
+            android.view.View v = findViewById(id);
+            if (v instanceof android.widget.ImageView) {
+                if (enabled) setColorFilterIfChanged((android.widget.ImageView) v, tint, mode);
+                else setColorFilterIfChanged((android.widget.ImageView) v, null, null);
+            }
+        }
+
+        // Iconos de estado que se ven como "botones" en algunos layouts
+        int[] iconIds = {
+                R.id.ivAfIcon, R.id.ivTaIcon, R.id.ivTpIcon,
+                R.id.ivStereoIcon, R.id.ivDataActivityIcon
+        };
+        for (int id : iconIds) {
+            android.view.View v = findViewById(id);
+            if (v instanceof android.widget.ImageView) {
+                if (enabled) setColorFilterIfChanged((android.widget.ImageView) v, tint, mode);
+                else setColorFilterIfChanged((android.widget.ImageView) v, null, null);
             }
         }
     }
@@ -2131,7 +2163,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 String currentLang = mPrefs.getString("app_language", "es");
                 if (languageCodes[position].equals(currentLang)) {
                     tv.setBackgroundResource(R.drawable.bg_glass_card_blue); // Resaltar actual
-                    tv.setTextColor(android.graphics.Color.WHITE);
+                    boolean isLight = (mThemeManager != null
+                            && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+                    tv.setTextColor(isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
                 }
                 return tv;
             }

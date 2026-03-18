@@ -30,6 +30,27 @@ public class HistoryManager {
 
     private final MainActivity mActivity;
     private final SharedPreferences mPrefs;
+    
+    // V21.1: Compatibilidad storage (preferir app-specific, fallback legacy /sdcard)
+    private File getAppRadioLogosDir() {
+        File external = mActivity.getExternalFilesDir(null);
+        File base = (external != null) ? external : mActivity.getFilesDir();
+        return new File(base, "RadioLogos");
+    }
+    
+    private File getLegacyRadioLogosDir() {
+        return new File("/sdcard/RadioLogos");
+    }
+    
+    private File getPreferredRadioLogosDir() {
+        File legacy = getLegacyRadioLogosDir();
+        try {
+            if ((legacy.exists() || legacy.mkdirs()) && legacy.canWrite()) return legacy;
+        } catch (Exception ignored) {}
+        File appDir = getAppRadioLogosDir();
+        try { appDir.mkdirs(); } catch (Exception ignored) {}
+        return appDir;
+    }
 
     public HistoryManager(MainActivity activity, SharedPreferences prefs) {
         this.mActivity = activity;
@@ -117,10 +138,8 @@ public class HistoryManager {
      */
     public void saveFavoritesToFile() {
         try {
-            File radioLogosDir = new File(android.os.Environment.getExternalStorageDirectory(), "RadioLogos");
-            if (!radioLogosDir.exists()) {
-                radioLogosDir.mkdirs();
-            }
+            File radioLogosDir = getPreferredRadioLogosDir();
+            if (!radioLogosDir.exists()) radioLogosDir.mkdirs();
 
             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
                     .format(new Date());
@@ -179,7 +198,9 @@ public class HistoryManager {
      */
     public void loadFavoritesFromFile() {
         try {
-            File radioLogosDir = new File(android.os.Environment.getExternalStorageDirectory(), "RadioLogos");
+            // Buscar en legacy si existe, sino usar app-specific
+            File legacy = getLegacyRadioLogosDir();
+            File radioLogosDir = (legacy.exists() && legacy.isDirectory()) ? legacy : getPreferredRadioLogosDir();
             if (!radioLogosDir.exists() || !radioLogosDir.isDirectory()) {
                 mActivity.showStyledToast(mActivity.getString(R.string.folder_not_found));
                 return;

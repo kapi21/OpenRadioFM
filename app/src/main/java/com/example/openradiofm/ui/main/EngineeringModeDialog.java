@@ -219,8 +219,11 @@ public class EngineeringModeDialog extends Dialog {
     }
 
     private void checkAssets() {
-        File dir = new File("/sdcard/RadioLogos");
+        File appDir = new File(mActivity.getExternalFilesDir(null) != null ? mActivity.getExternalFilesDir(null) : mActivity.getFilesDir(), "RadioLogos");
+        File legacyDir = new File("/sdcard/RadioLogos");
+        File dir = (legacyDir.exists() && legacyDir.isDirectory()) ? legacyDir : appDir;
         StringBuilder sb = new StringBuilder();
+        sb.append("PATH...........: ").append(dir.getAbsolutePath()).append("\n");
         sb.append("DIR_STATUS....: ").append(dir.exists() ? "OK" : "MISSING").append("\n");
         
         File bg = new File(dir, "background.png");

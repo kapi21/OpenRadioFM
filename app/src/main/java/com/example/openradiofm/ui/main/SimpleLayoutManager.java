@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.palette.graphics.Palette;
 import com.example.openradiofm.R;
+import com.example.openradiofm.ui.theme.ThemeManager;
 
 /**
  * Manager para el Layout Simple (Minimalista).
@@ -217,7 +218,10 @@ public class SimpleLayoutManager {
 
     public void applyColors(boolean isNight) {
         int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
-        int white = android.graphics.Color.WHITE;
+        boolean isLight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        int normalText = isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE;
+        int normalSecondary = isLight ? 0xBB000000 : 0xBBFFFFFF;
 
         if (isNight) {
             if (tvFrequency != null) tvFrequency.getPaint().setShader(null); // Remove gradient for solid color or update it
@@ -230,14 +234,22 @@ public class SimpleLayoutManager {
             if (btnMute != null) btnMute.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
         } else {
             // Normal mode
-            if (tvFrequency != null) tvFrequency.setTextColor(white);
-            if (tvRdsInfo != null) tvRdsInfo.setTextColor(0xBBFFFFFF);
+            if (tvFrequency != null) {
+                if (isLight) tvFrequency.getPaint().setShader(null);
+                tvFrequency.setTextColor(normalText);
+            }
+            if (tvRdsInfo != null) {
+                if (isLight) tvRdsInfo.getPaint().setShader(null);
+                tvRdsInfo.setTextColor(normalSecondary);
+            }
             
             if (btnSeekDown != null) btnSeekDown.clearColorFilter();
             if (btnSeekUp != null) btnSeekUp.clearColorFilter();
             if (btnMute != null) btnMute.clearColorFilter();
             
-            applyGradientToTexts(); // Re-apply gradient
+            if (!isLight) {
+                applyGradientToTexts(); // Re-apply gradient (solo para UI oscura)
+            }
         }
     }
 
@@ -271,6 +283,13 @@ public class SimpleLayoutManager {
     private void applyGradientToTexts() {
         boolean isNight = (mActivity.mThemeManager != null && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
         if (isNight) {
+            if (tvFrequency != null) tvFrequency.getPaint().setShader(null);
+            if (tvRdsInfo != null) tvRdsInfo.getPaint().setShader(null);
+            return;
+        }
+        boolean isLight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        if (isLight) {
             if (tvFrequency != null) tvFrequency.getPaint().setShader(null);
             if (tvRdsInfo != null) tvRdsInfo.getPaint().setShader(null);
             return;

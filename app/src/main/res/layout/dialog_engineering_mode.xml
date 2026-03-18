@@ -138,7 +138,7 @@
                 android:textColor="#00FF00"
                 android:textSize="12sp"
                 android:fontFamily="monospace"
-                android:text="CHECKING /sdcard/RadioLogos..."/>
+                android:text="CHECKING RadioLogos folder..."/>
 
             <!-- SECTION: SYSTEM METRICS -->
             <TextView

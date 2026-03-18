@@ -173,6 +173,7 @@ public class DialogManager {
 
             mActivity.mRepository.getSupabaseSource().checkConnection(connected -> {
                 mActivity.runOnUiThread(() -> {
+                    if (mActivity.isFinishing() || mActivity.isDestroyed() || !dialog.isShowing()) return;
                     if (connected) {
                         tvSupabaseStatus.setText("• Online");
                         tvSupabaseStatus.setTextColor(Color.parseColor("#44FF44")); // Verde
@@ -455,9 +456,13 @@ public class DialogManager {
                 TextView tv = (TextView) super.getView(position, convertView, parent);
                 if (position == currentIndex) {
                     tv.setBackgroundResource(R.drawable.bg_glass_card_blue);
-                    tv.setTextColor(Color.WHITE);
+                    boolean isLight = (mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+                    tv.setTextColor(isLight ? Color.BLACK : Color.WHITE);
                 } else {
-                    tv.setTextColor(Color.parseColor("#BBFFFFFF"));
+                    boolean isLight = (mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+                    tv.setTextColor(Color.parseColor(isLight ? "#BB000000" : "#BBFFFFFF"));
                 }
                 return tv;
             }
@@ -485,12 +490,28 @@ public class DialogManager {
     }
 
     public void showThemeSelector(android.app.Dialog parentDialog, View colorPreview, TextView fontPreview) {
-        String[] skins = { "Night Mode", "Classic", "Orange", "Blue", "Green", "Purple", "Red", "Yellow", "Cyan",
-                "Pink", "White", "Grey" };
-        int currentSkinIdx = mActivity.mThemeManager.getCurrentSkin().ordinal();
+        com.example.openradiofm.ui.theme.ThemeManager.Skin[] allSkins = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
+        java.util.ArrayList<com.example.openradiofm.ui.theme.ThemeManager.Skin> skinValuesList = new java.util.ArrayList<>();
+        java.util.ArrayList<String> skinsList = new java.util.ArrayList<>();
+        for (com.example.openradiofm.ui.theme.ThemeManager.Skin s : allSkins) {
+            // CLEAR desactivado por ahora: no mostrar en selector
+            if (s == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) continue;
+            skinValuesList.add(s);
+            skinsList.add(s.displayName);
+        }
+        com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = skinValuesList.toArray(new com.example.openradiofm.ui.theme.ThemeManager.Skin[0]);
+        String[] skins = skinsList.toArray(new String[0]);
+
+        int currentSkinIdx = 0;
+        com.example.openradiofm.ui.theme.ThemeManager.Skin current = mActivity.mThemeManager.getCurrentSkin();
+        for (int i = 0; i < skinValues.length; i++) {
+            if (skinValues[i] == current) {
+                currentSkinIdx = i;
+                break;
+            }
+        }
 
         showGridSelector(mActivity.getString(R.string.select_skin), skins, currentSkinIdx, w -> {
-            com.example.openradiofm.ui.theme.ThemeManager.Skin[] skinValues = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
             if (w < skinValues.length) {
                 mActivity.mThemeManager.setSkin(skinValues[w]);
                 mActivity.applySkin(skinValues[w]);
