@@ -467,7 +467,18 @@ public class MT8163Engine implements RadioEngine {
         // V18.6: Fallback para MT8163 enviando par\u00e1metros directos al AudioManager
         if (mAudioManager != null) {
             try {
-                mAudioManager.setParameters("fm_radio_on=1;fm_mute=" + (mute ? "1" : "0"));
+                // En algunos firmwares MT8163, el mute efectivo requiere apagar la ruta FM.
+                // Convención OEM: on=0;mute=1 para silenciar, on=1;mute=0 para restaurar.
+                final String params = mute ? "fm_radio_on=0;fm_mute=1" : "fm_radio_on=1;fm_mute=0";
+                mAudioManager.setParameters(params);
+                // Reintento corto: algunos stacks OEM ignoran el primer setParameters si el servicio está ocupado.
+                try {
+                    if (mPollingHandler != null) {
+                        mPollingHandler.postDelayed(() -> {
+                            try { mAudioManager.setParameters(params); } catch (Exception ignored) {}
+                        }, 120);
+                    }
+                } catch (Exception ignored) {}
                 
                 // OEM safety: NO mutear STREAM_MUSIC por defecto, porque silencia todo el dispositivo.
                 // Si se requiere por una ROM específica, activar pref_mt8163_global_stream_mute.

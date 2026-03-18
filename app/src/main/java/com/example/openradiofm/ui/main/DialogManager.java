@@ -126,8 +126,14 @@ public class DialogManager {
         TextView tvFontPreview = dialog.findViewById(R.id.tvFontPreview);
         TextView tvBackgroundStatus = dialog.findViewById(R.id.tvBackgroundStatus);
 
+        // Night schedule views
+        View rowNightSchedule = dialog.findViewById(R.id.rowNightSchedule);
+        TextView tvNightStart = dialog.findViewById(R.id.tvNightStart);
+        TextView tvNightEnd = dialog.findViewById(R.id.tvNightEnd);
+
         androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
+        androidx.appcompat.widget.SwitchCompat swNightLogos = dialog.findViewById(R.id.switchNightLogos);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
         androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
         androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
@@ -147,6 +153,16 @@ public class DialogManager {
 
         // Previews
         updateSettingsPreviews(viewColorPreview, tvFontPreview);
+
+        // Night schedule initial text from prefs
+        if (tvNightStart != null && tvNightEnd != null) {
+            int startHour = mActivity.mPrefs.getInt("pref_night_start", 19);
+            int startMin = mActivity.mPrefs.getInt("pref_night_start_min", 0);
+            int endHour = mActivity.mPrefs.getInt("pref_night_end", 7);
+            int endMin = mActivity.mPrefs.getInt("pref_night_end_min", 0);
+            tvNightStart.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", startHour, startMin));
+            tvNightEnd.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", endHour, endMin));
+        }
 
         // V19.7: Indicador de Conexión a Supabase (Automático)
         TextView tvSupabaseStatus = dialog.findViewById(R.id.tvSupabaseStatus);
@@ -235,7 +251,6 @@ public class DialogManager {
         if (swNight != null) {
             boolean nightEnabled = mActivity.mPrefs.getBoolean("pref_night_mode_auto", false);
             swNight.setChecked(nightEnabled);
-            View rowNightSchedule = dialog.findViewById(R.id.rowNightSchedule);
             if (rowNightSchedule != null)
                 rowNightSchedule.setVisibility(nightEnabled ? View.VISIBLE : View.GONE);
             swNight.setOnCheckedChangeListener((bv, checked) -> {
@@ -245,6 +260,81 @@ public class DialogManager {
                 if (checked) {
                     mActivity.checkAndApplyNightMode();
                     mActivity.showToast("Modo Noche Automático: Activado");
+                }
+            });
+        }
+
+        // Edit night schedule on tap
+        if (rowNightSchedule != null && tvNightStart != null && tvNightEnd != null) {
+            View.OnClickListener editSchedule = v -> {
+                int startHour = mActivity.mPrefs.getInt("pref_night_start", 19);
+                int startMin = mActivity.mPrefs.getInt("pref_night_start_min", 0);
+                int endHour = mActivity.mPrefs.getInt("pref_night_end", 7);
+                int endMin = mActivity.mPrefs.getInt("pref_night_end_min", 0);
+
+                // Simple hour picker using TimePickerDialog for start and end consecutively
+                android.app.TimePickerDialog startDialog = new android.app.TimePickerDialog(
+                        mActivity,
+                        (view, hourOfDay, minute) -> {
+                            mActivity.mPrefs.edit()
+                                    .putInt("pref_night_start", hourOfDay)
+                                    .putInt("pref_night_start_min", minute)
+                                    .apply();
+                            tvNightStart.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", hourOfDay, minute));
+
+                            android.app.TimePickerDialog endDialog = new android.app.TimePickerDialog(
+                                    mActivity,
+                                    (view2, endHourOfDay, endMinute) -> {
+                                        mActivity.mPrefs.edit()
+                                                .putInt("pref_night_end", endHourOfDay)
+                                                .putInt("pref_night_end_min", endMinute)
+                                                .apply();
+                                        tvNightEnd.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", endHourOfDay, endMinute));
+
+                                        mActivity.showToast(mActivity.getString(
+                                                R.string.night_schedule_updated,
+                                                tvNightStart.getText(),
+                                                tvNightEnd.getText()
+                                        ));
+                                        // Reaplicar modo noche con nuevo horario
+                                        mActivity.checkAndApplyNightMode();
+                                    },
+                                    endHour,
+                                    endMin,
+                                    true
+                            );
+                            endDialog.show();
+                        },
+                        startHour,
+                        startMin,
+                        true
+                );
+                startDialog.show();
+            };
+
+            rowNightSchedule.setOnClickListener(editSchedule);
+            tvNightStart.setOnClickListener(editSchedule);
+            tvNightEnd.setOnClickListener(editSchedule);
+        }
+
+        if (swNightLogos != null) {
+            boolean nightLogos = mActivity.mPrefs.getBoolean("pref_night_logos", true);
+            swNightLogos.setChecked(nightLogos);
+            swNightLogos.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_night_logos", checked).apply();
+                mActivity.showToast(checked ? "Teñir logos en modo noche" : "Logos sin tinte en modo noche");
+                // Aplicar inmediatamente el cambio sobre el estado visual actual
+                if (mActivity.mNightModeManager != null) {
+                    boolean autoNight = mActivity.mPrefs.getBoolean("pref_night_mode_auto", false);
+                    boolean isNightTime = mActivity.mNightModeManager.isNightTime();
+                    boolean isNightSkin = mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE;
+
+                    if (isNightSkin || (autoNight && isNightTime)) {
+                        mActivity.mNightModeManager.applyNightModeColors(mActivity.mLastFreq);
+                    } else {
+                        mActivity.mNightModeManager.resetNightModeColors(mActivity.mLastFreq);
+                    }
                 }
             });
         }

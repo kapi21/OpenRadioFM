@@ -31,6 +31,8 @@ import com.example.openradiofm.data.source.RadioEngine;
 import com.example.openradiofm.data.source.K706RadioManager;
 import com.example.openradiofm.ui.main.PlaybackManager;
 import com.example.openradiofm.ui.main.RadioServiceController;
+import com.example.openradiofm.ui.main.RadioSessionController;
+import com.example.openradiofm.ui.main.RadioSessionState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,6 +66,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private RadioServiceController mRadioServiceController;
     private RadioEngine mEngine;
     private PlaybackManager mPlaybackManager;
+    private RadioSessionController mSessionController;
     private boolean mIsPlaying = false;
 
     // Preferencias y datos para nombres/presets (sin depender del repositorio/UI)
@@ -77,12 +80,6 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private int mPendingTuneFreqKhz = -1;
     private int mPendingSkip = 0; // -1 prev, +1 next
     private final AtomicBoolean mEngineInitStarted = new AtomicBoolean(false);
-
-    // OEM metadata cache (para Android Auto): RT/PTY/PI actuales (si engine los emite)
-    private volatile String mCurrentRt = null;
-    private volatile String mCurrentPty = null;
-    private volatile String mCurrentPi = null;
-    private volatile int mCurrentFreqKhz = -1;
 
     // Estado OEM para restaurar tras pérdidas de foco en K706
     private boolean mUserPaused = false;
@@ -128,6 +125,18 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         mPlaybackManager.init(mEngine, null);
                     } else {
                         mPlaybackManager.setEngine(mEngine);
+                    }
+                    // Inicializar controlador de sesión compartido (estado lógico de radio)
+                    try {
+                        mSessionController = new RadioSessionController(
+                                RadioMediaService.this,
+                                mEngine,
+                                mPlaybackManager,
+                                mPresetPrefs,
+                                mStationNamePrefs
+                        );
+                    } catch (Exception e) {
+                        Log.w(TAG, "No se pudo inicializar RadioSessionController en el servicio", e);
                     }
                     try {
                         // El servicio también necesita callbacks para actualizar metadata/estado a Android Auto
@@ -326,45 +335,95 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 @Override
                 public void onFrequencyChanged(int freqKhz) {
                     // Actualizar title/artist basado en datos guardados (CUSTOM/RDS) para Android Auto
-                    mCurrentFreqKhz = freqKhz;
                     updateMetadataFromPrefs(freqKhz);
                     saveRecentFrequency(freqKhz);
+                    if (mSessionController != null) {
+                        mSessionController.onFrequencyChanged(freqKhz);
+                    }
                 }
 
-                @Override public void onBandChanged(int band) {}
-                @Override public void onStereoChanged(boolean stereo) {}
+                @Override
+                public void onBandChanged(int band) {
+                    if (mSessionController != null) {
+                        mSessionController.onBandChanged(band);
+                    }
+                }
+
+                @Override
+                public void onStereoChanged(boolean stereo) {
+                    if (mSessionController != null) {
+                        mSessionController.onStereoChanged(stereo);
+                    }
+                }
 
                 @Override
                 public void onRdsName(String name) {
                     // Se persistirá por RadioRepository en UI normalmente, aquí solo refrescamos
                     updateMetadataName(name);
+                    if (mSessionController != null) {
+                        mSessionController.onRdsName(name);
+                    }
                 }
 
                 @Override
                 public void onRdsText(String text) {
-                    mCurrentRt = text;
                     persistRtForCurrentFreq(text);
-                    updateMetadataFromPrefs(mCurrentFreqKhz > 0 ? mCurrentFreqKhz : 0);
+                    updateMetadataFromPrefs(getLiveFreqKhzOrDefault(0));
+                    if (mSessionController != null) {
+                        mSessionController.onRdsText(text);
+                    }
                 }
 
                 @Override
                 public void onRdsPty(String pty) {
-                    mCurrentPty = pty;
                     persistPtyForCurrentFreq(pty);
-                    updateMetadataFromPrefs(mCurrentFreqKhz > 0 ? mCurrentFreqKhz : 0);
+                    updateMetadataFromPrefs(getLiveFreqKhzOrDefault(0));
+                    if (mSessionController != null) {
+                        mSessionController.onRdsPty(pty);
+                    }
                 }
 
-                @Override public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {}
+                @Override
+                public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
+                    if (mSessionController != null) {
+                        mSessionController.onRdsStatus(afEnabled, taEnabled, tpEnabled);
+                    }
+                }
                 @Override
                 public void onRdsPi(String piCode) {
-                    mCurrentPi = piCode;
                     persistPiForCurrentFreq(piCode);
-                    updateMetadataFromPrefs(mCurrentFreqKhz > 0 ? mCurrentFreqKhz : 0);
+                    updateMetadataFromPrefs(getLiveFreqKhzOrDefault(0));
+                    if (mSessionController != null) {
+                        mSessionController.onRdsPi(piCode);
+                    }
                 }
-                @Override public void onDxLocalChanged(boolean isLocal) {}
-                @Override public void onScanStatusChanged(boolean scanning) {}
-                @Override public void onRawEvent(int code, String data) {}
-                @Override public void onSignalUpdate(int rssi, int snr) {}
+                @Override
+                public void onDxLocalChanged(boolean isLocal) {
+                    if (mSessionController != null) {
+                        mSessionController.onDxLocalChanged(isLocal);
+                    }
+                }
+
+                @Override
+                public void onScanStatusChanged(boolean scanning) {
+                    if (mSessionController != null) {
+                        mSessionController.onScanStatusChanged(scanning);
+                    }
+                }
+
+                @Override
+                public void onRawEvent(int code, String data) {
+                    if (mSessionController != null) {
+                        mSessionController.onRawEvent(code, data);
+                    }
+                }
+
+                @Override
+                public void onSignalUpdate(int rssi, int snr) {
+                    if (mSessionController != null) {
+                        mSessionController.onSignalUpdate(rssi, snr);
+                    }
+                }
             };
 
     private void handlePlay() {
@@ -381,9 +440,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         setPlaybackState(true);
         writeOemStateToPrefs("PLAY");
 
-        // Control de hardware si está disponible
+        // Control de hardware centralizado (si existe session controller, lo usa; si no, fallback legacy)
         try {
-            if (mPlaybackManager != null) {
+            if (mSessionController != null) {
+                mSessionController.play();
+            } else if (mPlaybackManager != null) {
                 mPlaybackManager.setMute(false);
             } else if (mEngine != null) {
                 mEngine.setMute(false);
@@ -416,7 +477,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         // Algunos clientes (Android Auto/Zlink) pueden enviar PAUSE al conectar/sondear la sesión.
         if (wasPlaying) {
             try {
-                if (mPlaybackManager != null) {
+                if (mSessionController != null) {
+                    mSessionController.pause();
+                } else if (mPlaybackManager != null) {
                     mPlaybackManager.setMute(true);
                 } else if (mEngine != null) {
                     mEngine.setMute(true);
@@ -583,6 +646,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     private void updateMetadataFromPrefs(int freqKhz) {
         try {
+            // Preferimos el estado vivo de sesión si está disponible, y hacemos fallback a prefs/cache legacy.
+            RadioSessionState live = null;
+            try {
+                if (mSessionController != null) {
+                    live = mSessionController.getCurrentState();
+                }
+            } catch (Exception ignored) {}
+
             String name = null;
             if (mStationNamePrefs != null) {
                 name = mStationNamePrefs.getString("CUSTOM_" + freqKhz, null);
@@ -591,17 +662,33 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
 
             String title;
-            if (name != null && !name.isEmpty() && !name.matches("\\d+")) title = name;
-            else title = formatFrequency(freqKhz);
+            if (live != null && live.rdsName != null && !live.rdsName.trim().isEmpty()) {
+                title = live.rdsName.trim();
+            } else if (name != null && !name.isEmpty() && !name.matches("\\d+")) {
+                title = name;
+            } else {
+                int f = (live != null && live.freqKhz > 0) ? live.freqKhz : freqKhz;
+                title = formatFrequency(f);
+            }
 
             String pty = (mStationNamePrefs != null) ? mStationNamePrefs.getString("PTY_" + freqKhz, null) : null;
             String pi = (mStationNamePrefs != null) ? mStationNamePrefs.getString("PI_" + freqKhz, null) : null;
             String rt = (mStationNamePrefs != null) ? mStationNamePrefs.getString("RT_" + freqKhz, null) : null;
 
-            // Fallback a cache viva
-            if ((pty == null || pty.isEmpty()) && mCurrentPty != null) pty = mCurrentPty;
-            if ((pi == null || pi.isEmpty()) && mCurrentPi != null) pi = mCurrentPi;
-            if ((rt == null || rt.isEmpty()) && mCurrentRt != null) rt = mCurrentRt;
+            // Preferir estado vivo si coincide con la frecuencia actual
+            if (live != null && (live.freqKhz <= 0 || live.freqKhz == freqKhz)) {
+                if ((rt == null || rt.isEmpty()) && live.rdsText != null && !live.rdsText.trim().isEmpty()) {
+                    rt = live.rdsText.trim();
+                }
+                if ((pty == null || pty.isEmpty()) && live.pty != null && !live.pty.trim().isEmpty()) {
+                    pty = live.pty.trim();
+                }
+                if ((pi == null || pi.isEmpty()) && live.pi != null && !live.pi.trim().isEmpty()) {
+                    pi = live.pi.trim();
+                }
+            }
+
+            // Fallback legacy eliminado: si el dato no está vivo, depender de prefs persistidas.
 
             MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder()
                     .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
@@ -672,7 +759,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private void persistRtForCurrentFreq(String rt) {
         try {
             if (mStationNamePrefs == null) return;
-            int f = mCurrentFreqKhz;
+            int f = getLiveFreqKhzOrDefault(-1);
             if (f <= 0) return;
             if (rt == null) return;
             String cleaned = rt.trim();
@@ -684,7 +771,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private void persistPtyForCurrentFreq(String pty) {
         try {
             if (mStationNamePrefs == null) return;
-            int f = mCurrentFreqKhz;
+            int f = getLiveFreqKhzOrDefault(-1);
             if (f <= 0) return;
             if (pty == null) return;
             String cleaned = pty.trim();
@@ -696,13 +783,29 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private void persistPiForCurrentFreq(String pi) {
         try {
             if (mStationNamePrefs == null) return;
-            int f = mCurrentFreqKhz;
+            int f = getLiveFreqKhzOrDefault(-1);
             if (f <= 0) return;
             if (pi == null) return;
             String cleaned = pi.trim();
             if (cleaned.isEmpty()) return;
             mStationNamePrefs.edit().putString("PI_" + f, cleaned).apply();
         } catch (Exception ignored) {}
+    }
+
+    private int getLiveFreqKhzOrDefault(int defaultValue) {
+        try {
+            if (mSessionController != null) {
+                RadioSessionState s = mSessionController.getCurrentState();
+                if (s != null && s.freqKhz > 0) return s.freqKhz;
+            }
+        } catch (Exception ignored) {}
+        try {
+            if (mEngine != null) {
+                int f = mEngine.getCurrentFreq();
+                if (f > 0) return f;
+            }
+        } catch (Exception ignored) {}
+        return defaultValue;
     }
 
     private void saveRecentFrequency(int freqKhz) {
@@ -735,16 +838,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     }
 
     private void updateNotification() {
-        MediaMetadataCompat metadata = mMediaSession.getController().getMetadata();
-        String title = "Cargando...";
-        String artist = "Radio FM";
-        Bitmap logo = null;
-
-        if (metadata != null) {
-            title = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
-            artist = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
-            logo = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
-        }
+        // Preferimos la misma fuente que usa foreground/ensureNotificationVisible:
+        // RadioSessionState (si existe) -> metadata de MediaSession.
+        String title = getSafeTitle();
+        String artist = getSafeArtist();
+        Bitmap logo = getSafeLogo();
 
         // V2.6: Master Guard for System IPC
         if (title != null && title.equals(mLastNotifiedTitle) && 
@@ -761,6 +859,18 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     }
 
     private String getSafeTitle() {
+        try {
+            if (mSessionController != null) {
+                RadioSessionState s = mSessionController.getCurrentState();
+                if (s != null && s.rdsName != null && !s.rdsName.trim().isEmpty()) {
+                    return s.rdsName.trim();
+                }
+                if (s != null && s.freqKhz > 0) {
+                    // Fallback simple a frecuencia formateada si no hay nombre
+                    return String.format(java.util.Locale.US, "%.1f", s.freqKhz / 1000.0);
+                }
+            }
+        } catch (Exception ignored) {}
         MediaMetadataCompat metadata = mMediaSession.getController().getMetadata();
         if (metadata == null) return "OpenRadioFM";
         String t = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
@@ -768,6 +878,18 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     }
 
     private String getSafeArtist() {
+        try {
+            if (mSessionController != null) {
+                RadioSessionState s = mSessionController.getCurrentState();
+                if (s != null && s.rdsText != null && !s.rdsText.trim().isEmpty()) {
+                    // Mostramos RT como subtítulo (más útil que un "Radio FM" fijo)
+                    return s.rdsText.trim();
+                }
+                if (s != null && s.pty != null && !s.pty.trim().isEmpty()) {
+                    return s.pty.trim();
+                }
+            }
+        } catch (Exception ignored) {}
         MediaMetadataCompat metadata = mMediaSession.getController().getMetadata();
         if (metadata == null) return "Radio FM";
         String a = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);

@@ -119,6 +119,7 @@
     <string name="night_start">Inicio</string>
     <string name="night_end">Fin</string>
     <string name="night_schedule_updated">✅ Horario actualizado: %1$s - %2$s</string>
+    <string name="night_mode_logos">Modo noche para logos</string>
     
     <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
     <string name="pty_none">Sin PTY</string>

@@ -67,26 +67,26 @@ public class NightModeManager {
      * 2. Fallback: rango horario configurable (por defecto 19h-7h).
      */
     public boolean isNightTime() {
-        // 1. Time Based (configurable, default 19h-7h) - HIGHER PRIORITY to follow user prefs
+        // Time Based (configurable, default 19:00-07:00, con minutos)
         int startHour = mPrefs.getInt("pref_night_start", 19);
+        int startMin = mPrefs.getInt("pref_night_start_min", 0);
         int endHour = mPrefs.getInt("pref_night_end", 7);
-        int hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY);
-        
-        boolean isTimeRangeNight;
-        if (startHour > endHour) {
-            // Overnight range (e.g. 19-7)
-            isTimeRangeNight = (hour >= startHour || hour < endHour);
-        } else {
-            // Same-day range (e.g. 22-23)
-            isTimeRangeNight = (hour >= startHour && hour < endHour);
-        }
-        
-        if (isTimeRangeNight) return true;
+        int endMin = mPrefs.getInt("pref_night_end_min", 0);
 
-        // 2. Fallback: Check System UI Mode (ILL cable trigger)
-        int nightModeFlags = mActivity.getResources().getConfiguration().uiMode
-                & Configuration.UI_MODE_NIGHT_MASK;
-        return (nightModeFlags == Configuration.UI_MODE_NIGHT_YES);
+        java.util.Calendar cal = java.util.Calendar.getInstance();
+        int nowMinutes = cal.get(java.util.Calendar.HOUR_OF_DAY) * 60 + cal.get(java.util.Calendar.MINUTE);
+        int startMinutes = startHour * 60 + startMin;
+        int endMinutes = endHour * 60 + endMin;
+
+        boolean isTimeRangeNight;
+        if (startMinutes > endMinutes) {
+            // Overnight range (e.g. 19:00-07:00)
+            isTimeRangeNight = (nowMinutes >= startMinutes || nowMinutes < endMinutes);
+        } else {
+            // Same-day range (e.g. 22:00-23:30)
+            isTimeRangeNight = (nowMinutes >= startMinutes && nowMinutes < endMinutes);
+        }
+        return isTimeRangeNight;
     }
 
     /**
@@ -149,11 +149,30 @@ public class NightModeManager {
             }
         }
 
-        // Presets en azul noche
+        // Presets: texto en azul noche, logos opcionalmente teñidos según preferencia
+        boolean tintLogos = mPrefs.getBoolean("pref_night_logos", true);
         for (int i = 1; i <= 12; i++) {
             int tvId = mActivity.getResources().getIdentifier("tvP" + i, "id", mActivity.getPackageName());
             TextView tv = mActivity.findViewById(tvId);
             if (tv != null) tv.setTextColor(nightBlue);
+
+            int ivId = mActivity.getResources().getIdentifier("ivP" + i, "id", mActivity.getPackageName());
+            android.view.View ivView = mActivity.findViewById(ivId);
+            if (ivView instanceof ImageView) {
+                if (tintLogos) {
+                    if (mActivity instanceof MainActivity) {
+                        ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) ivView, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    } else {
+                        ((ImageView) ivView).setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                    }
+                } else {
+                    if (mActivity instanceof MainActivity) {
+                        ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) ivView, null, null);
+                    } else {
+                        ((ImageView) ivView).clearColorFilter();
+                    }
+                }
+            }
         }
     }
 
@@ -223,6 +242,14 @@ public class NightModeManager {
             int tvId = mActivity.getResources().getIdentifier("tvP" + i, "id", mActivity.getPackageName());
             TextView tv = mActivity.findViewById(tvId);
             if (tv != null) tv.setTextColor(white);
+
+             int ivId = mActivity.getResources().getIdentifier("ivP" + i, "id", mActivity.getPackageName());
+             android.view.View ivView = mActivity.findViewById(ivId);
+             if (ivView instanceof ImageView && mActivity instanceof MainActivity) {
+                 ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) ivView, null, null);
+             } else if (ivView instanceof ImageView) {
+                 ((ImageView) ivView).clearColorFilter();
+             }
         }
     }
 

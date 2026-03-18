@@ -179,4 +179,16 @@
     <string name="logo_mode_clock">Digitális Óra</string>
     <string name="history_cleared">Előzmények törölve</string>
     <string name="my_favorites">Kedvenceim</string>
+
+    <!-- Missing keys (fallback/translations) -->
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
+    <string name="all_favorites_deleted">✅ Az összes kedvenc törölve</string>
+    <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
+    <string name="gestures_enabled">✅ Lapozó gesztusok engedélyezve</string>
+    <string name="gestures_disabled">❌ Lapozó gesztusok letiltva</string>
+    <string name="enable_gestures_beta" translatable="false">Gestos (Obsoleto)</string>
+    <string name="category_app_options">App Opciók</string>
+    <string name="category_premium">Prémium Testreszabás</string>
+    <string name="night_mode_logos">Éjszakai mód a logókhoz</string>
 </resources>

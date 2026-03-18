@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium-Anpassung</string>
@@ -56,6 +58,7 @@
     <string name="save_load_favorites">💾 Favoriten Speichern/Laden</string>
     <string name="save_favorites">💾 Favoriten speichern</string>
     <string name="load_favorites">📂 Favoriten laden</string>
+    <string name="all_favorites_deleted">✅ Alle Favoriten gelöscht</string>
     <string name="select_favorites_file">📂 Favoritendatei auswählen</string>
     <string name="cancel">Abbrechen</string>
     <string name="favorites_saved">✅ Favoriten gespeichert: %s</string>
@@ -78,6 +81,10 @@
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="category_app_options">App-Optionen</string>
+    <string name="category_premium">Premium-Anpassung</string>
+    <string name="night_mode_logos">Nachtmodus für Logos</string>
     <string name="language_romanian">Română</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_serbian">Srpski</string>

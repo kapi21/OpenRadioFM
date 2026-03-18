@@ -36,15 +36,6 @@
         android:fontFamily="sans-serif-medium" />
 
     <TextView
-        android:id="@+id/tvVersionCredits"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="v.4.7 Beta Server"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"
-        android:layout_marginTop="4dp" />
-
-    <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Developed by Jimmy80"
@@ -62,7 +53,7 @@
         android:textSize="18sp"
         android:textStyle="bold"
         android:padding="16dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="0dp"
         android:background="?android:attr/selectableItemBackground"
         android:clickable="true"
         android:focusable="true" />

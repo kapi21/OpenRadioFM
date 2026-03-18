@@ -179,4 +179,16 @@
     <string name="logo_mode_car">Logo dell\'Auto</string>
     <string name="logo_mode_clock">Orologio Digitale</string>
     <string name="my_favorites">I Miei Preferiti</string>
+
+    <!-- Missing keys (fallback/translations) -->
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">Questo servizio permette a OpenRadioFM di sovrapporsi quando premi il pulsante fisico RADIO su unità Android compatibili (es. K706), bypassando l’app di serie.</string>
+    <string name="all_favorites_deleted">✅ Tutti i preferiti eliminati</string>
+    <string name="category_app_options">Opzioni App</string>
+    <string name="category_premium">Personalizzazione Premium</string>
+    <string name="night_mode_logos">Modalità notte per i loghi</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_portuguese">Português</string>
 </resources>

@@ -103,4 +103,19 @@
     <string name="logo_mode_car">汽车徽标</string>
     <string name="logo_mode_clock">数字时钟</string>
     <string name="my_favorites">我的收藏</string>
+
+    <!-- Missing keys (fallback/translations) -->
+    <string name="about_info_header">信息</string>
+    <string name="about_dev_by">开发者</string>
+    <string name="about_tech_details">技术详情</string>
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">此服务允许在兼容的安卓主机（例如 K706）按下物理 RADIO 按键时，OpenRadioFM 覆盖显示并绕过原厂应用。</string>
+    <string name="all_favorites_deleted">✅ 已删除所有收藏</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_portuguese">Português</string>
+    <string name="category_app_options">应用选项</string>
+    <string name="category_premium">高级个性化</string>
+    <string name="night_mode_logos">徽标夜间模式</string>
 </resources>

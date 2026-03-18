@@ -155,4 +155,18 @@
 <string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string>    <string name="logo_mode_label">🏎️ Režim Gornjeg Logotipa</string>
     <string name="logo_mode_car">Logo Automobila</string>
     <string name="logo_mode_clock">Digitalni Sat</string>
+
+    <!-- Missing keys (fallback/translations) -->
+    <string name="about_info_header">INFORMACIJE</string>
+    <string name="about_dev_by">Razvio</string>
+    <string name="about_tech_details">Tehnički detalji</string>
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
+    <string name="all_favorites_deleted">✅ Svi favoriti su obrisani</string>
+    <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="language_ukrainian">Українська</string>
+    <string name="category_app_options">Opcije aplikacije</string>
+    <string name="category_premium">Premium podešavanja</string>
+    <string name="night_mode_logos">Noćni režim za logotipe</string>
 </resources>

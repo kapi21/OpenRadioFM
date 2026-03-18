@@ -1,6 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
     <string name="premium_customization">Personnalisation Premium</string>
     <string name="theme_colors">Couleurs du Thème</string>
     <string name="typography">Typographie</string>
@@ -42,6 +44,7 @@
     <string name="save_load_favorites">💾 Enregistrer/Charger Favoris</string>
     <string name="save_favorites">💾 Enregistrer Favoris</string>
     <string name="load_favorites">📂 Charger Favoris</string>
+    <string name="all_favorites_deleted">✅ Tous les favoris supprimés</string>
     <string name="select_favorites_file">📂 Sélectionner fichier favoris</string>
     <string name="cancel">Annuler</string>
     <string name="favorites_saved">✅ Favoris enregistrés: %s</string>
@@ -58,6 +61,10 @@
     <string name="language_spanish">Español</string>
     <string name="language_english">English</string>
     <string name="language_russian">Русский</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="category_app_options">Options de l’App</string>
+    <string name="category_premium">Personnalisation Premium</string>
+    <string name="night_mode_logos">Mode nuit pour les logos</string>
     <string name="language_romanian">Română</string>
     <string name="language_ukrainian">Українська</string>
     <string name="language_serbian">Srpski</string>

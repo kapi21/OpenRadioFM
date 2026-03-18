@@ -111,6 +111,17 @@
                 android:layout_height="wrap_content"/>
         </LinearLayout>
 
+        <!-- Modo Noche para Logos -->
+        <LinearLayout style="@style/SettingsRowStyle">
+            <TextView
+                style="@style/SettingsLabelStyle"
+                android:text="@string/night_mode_logos"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchNightLogos"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
         <!-- Horario Modo Noche -->
         <LinearLayout
             android:id="@+id/rowNightSchedule"

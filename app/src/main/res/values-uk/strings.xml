@@ -155,4 +155,17 @@
 <string name="status_bar_v2">Показати рядок стану</string><string name="status_bar_enabled">✅ Рядок стану увімкнено</string><string name="status_bar_disabled">❌ Рядок стану вимкнено</string><string name="edit_station_name">Змінити назву радіостанції</string><string name="frequency_label">Частота: %1$s МГц</string><string name="searching_next">Пошук наступної...</string><string name="scanning">Сканування...</string><string name="scan_completed">Сканування завершено</string><string name="identifying_rds">Визначення радіостанції (RDS)...</string><string name="version">Версія %1$s</string><string name="radio_engine_label">⚙ МОТОР РАДІО : %1$s</string><string name="freq_no_service">FREQ: НЕМАЄ_СЕРВІСУ\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ПОМИЛКА_ЧИТАННЯ\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМАЄ_СЕРВІСУ</string><string name="sqi_error_read">SQI_INDEX.....: ПОМИЛКА_ЧИТАННЯ</string><string name="af_list_scanning">AF_LIST.......: [СКАНУВАННЯ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Вибране успішно скинуто</string><string name="history_cleared">Історію очищено</string><string name="my_favorites">Моє вибране</string>    <string name="logo_mode_label">🏎️ Режим Верхнього Логотипу</string>
     <string name="logo_mode_car">Логотип Автомобіля</string>
     <string name="logo_mode_clock">Цифровий Годинник</string>
+
+    <!-- Missing keys (fallback/translations) -->
+    <string name="about_info_header">ІНФОРМАЦІЯ</string>
+    <string name="about_dev_by">Розроблено</string>
+    <string name="about_tech_details">Технічні деталі</string>
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
+    <string name="all_favorites_deleted">✅ Усі обрані видалено</string>
+    <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="category_app_options">Опції застосунку</string>
+    <string name="category_premium">Преміум налаштування</string>
+    <string name="night_mode_logos">Нічний режим для логотипів</string>
 </resources>

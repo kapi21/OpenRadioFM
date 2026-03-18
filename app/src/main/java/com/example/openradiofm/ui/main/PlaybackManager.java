@@ -26,6 +26,7 @@ public class PlaybackManager {
     private boolean mMuteState = false;
     private boolean mIsMutedBySystem = false; // V4.8: Track if mute was automatic
     private PlaybackListener mListener;
+    private Integer mSavedMusicVolume = null; // Para mute global fiable (MT8163)
 
     /**
      * Interfaz para notificar a la UI de cambios en el estado de reproducción.
@@ -90,20 +91,32 @@ public class PlaybackManager {
             }
         }
 
-        /* V17.0: No mutear STREAM_MUSIC desde aquí.
-           Muteamos el hardware de la radio vía mEngine.setMute(mute),
-           pero dejar STREAM_MUSIC activo permite que la Radio Online funcione. */
-        /*
-        android.media.AudioManager am = (android.media.AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
-        if (am != null) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                am.adjustStreamVolume(android.media.AudioManager.STREAM_MUSIC,
-                        mute ? android.media.AudioManager.ADJUST_MUTE : android.media.AudioManager.ADJUST_UNMUTE, 0);
-            } else {
-                am.setStreamMute(android.media.AudioManager.STREAM_MUSIC, mute);
+        // MT8163: Mute global opcional (compatibilidad).
+        // En muchas ROMs OEM, ADJUST_MUTE/UNMUTE se ignora; por eso usamos setStreamVolume(0) + restauración.
+        try {
+            boolean isMT8163 = mEngine != null && "MT8163".equals(mEngine.getEngineName());
+            boolean allowGlobal = mContext
+                    .getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                    .getBoolean("pref_mt8163_global_stream_mute", false);
+
+            if (isMT8163 && allowGlobal && mAudioManager != null) {
+                if (mute) {
+                    if (mSavedMusicVolume == null) {
+                        int current = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                        mSavedMusicVolume = Math.max(current, 1);
+                    }
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+                } else {
+                    int restore = (mSavedMusicVolume != null) ? mSavedMusicVolume : 1;
+                    int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    restore = Math.min(Math.max(restore, 1), Math.max(max, 1));
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, restore, 0);
+                    mSavedMusicVolume = null;
+                }
             }
+        } catch (Exception e) {
+            Log.w(TAG, "Mute global STREAM_MUSIC falló", e);
         }
-        */
 
         // Notificar a la UI
         if (mListener != null) {

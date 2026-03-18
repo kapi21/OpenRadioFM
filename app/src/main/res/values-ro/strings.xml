@@ -159,4 +159,14 @@
 <string name="status_bar_enabled">✅ Bara de stare activată</string><string name="status_bar_disabled">❌ Bara de stare dezactivată</string><string name="edit_station_name">Editează numele stației</string><string name="frequency_label">Frecvență: %1$s MHz</string><string name="searching_next">Căutare următoarea...</string><string name="scanning">Scanare...</string><string name="scan_completed">Scanare completă</string><string name="identifying_rds">Identificare stație (RDS)...</string><string name="version">Versiunea %1$s</string><string name="radio_engine_label">⚙ MOTOR RADIO : %1$s</string><string name="freq_no_service">FREQ: FĂRĂ_SERVICIU\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: EROARE_CITIRE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: FĂRĂ_SERVICIU</string><string name="sqi_error_read">SQI_INDEX.....: EROARE_CITIRE</string><string name="af_list_scanning">AF_LIST.......: [SCANARE]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoritele au fost resetate cu succes</string><string name="history_cleared">Istoric șters</string><string name="my_favorites">Favoritele mele</string>    <string name="logo_mode_label">🏎️ Mod Logo Superior</string>
     <string name="logo_mode_car">Logo Mașină</string>
     <string name="logo_mode_clock">Ceas Digital</string>
+
+    <!-- Missing keys (fallback/translations) -->
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
+    <string name="all_favorites_deleted">✅ Toate favoritele au fost șterse</string>
+    <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="category_app_options">Opțiuni aplicație</string>
+    <string name="category_premium">Setări Premium</string>
+    <string name="night_mode_logos">Mod noapte pentru logo-uri</string>
 </resources>

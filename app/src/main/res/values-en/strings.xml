@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">This service allows OpenRadioFM to overlay when you press the physical RADIO button on compatible Android units (e.g., K706), bypassing the stock radio app.</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium Customization</string>
@@ -112,6 +114,7 @@
     <string name="night_start">Start</string>
     <string name="night_end">End</string>
     <string name="night_schedule_updated">✅ Schedule updated: %1$s - %2$s</string>
+    <string name="night_mode_logos">Night mode for logos</string>
 
     <!-- V4.5: PTY Categories (RDS Standard 0-31) -->
     <string name="pty_none">No PTY</string>

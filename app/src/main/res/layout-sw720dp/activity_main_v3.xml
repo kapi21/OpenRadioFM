@@ -26,6 +26,15 @@
     
 
 
+    <!-- Slot fijo a la derecha para Logo Coche / Reloj (evita empujar el cloud) -->
+    <Space
+        android:id="@+id/rightWidgetSlot"
+        android:layout_width="200dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 <FrameLayout
     android:id="@+id/ivDataActivity"
     android:background="?selectableItemBackgroundBorderless"
@@ -34,18 +43,17 @@
     android:clickable="true"
     android:layout_width="100dp"
     android:layout_height="60dp"
-    android:layout_marginEnd="-20dp"
+    android:layout_marginEnd="0dp"
     android:translationZ="10dp"
     android:elevation="10dp"
     app:layout_constraintBottom_toTopOf="@id/guideline_row1"
-    app:layout_constraintEnd_toStartOf="@id/ivCarLogo"
+    app:layout_constraintEnd_toStartOf="@id/rightWidgetSlot"
     app:layout_constraintTop_toTopOf="parent">
 
 
 
     <ImageView android:id="@+id/ivDataActivityIcon" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/cloud" android:scaleType="fitCenter" android:adjustViewBounds="true" />
     </FrameLayout>
-    <androidx.constraintlayout.widget.Barrier android:id="@+id/barrier_right_widgets" android:layout_width="wrap_content" android:layout_height="wrap_content" app:barrierDirection="start" app:constraint_referenced_ids="ivDataActivity,ivCarLogo,tvDigitalClock" />
 
 
     
@@ -67,8 +75,36 @@
 	<TextView android:id="@+id/tvRdsName" android:visibility="gone" android:layout_width="0.0dp" android:layout_height="0.0dp" android:text="" />
         <TextView android:textSize="22.0sp" android:textColor="@color/white" android:ellipsize="marquee" android:gravity="center" android:id="@+id/tvRdsInfo" android:background="@android:color/transparent" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:focusable="true" android:focusableInTouchMode="true" android:fadingEdgeLength="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:text="" android:scrollHorizontally="true" android:singleLine="true" android:includeFontPadding="false" android:marqueeRepeatLimit="marquee_forever" android:requiresFadingEdge="horizontal" android:paddingStart="16.0dp" android:paddingEnd="40.0dp" />
     </FrameLayout>
-    <ImageView android:id="@+id/ivCarLogo" android:visibility="gone" android:layout_width="150.0dp" android:layout_height="0.0dp" android:scaleType="fitCenter" android:layout_marginStart="8.0dp" android:layout_marginEnd="8.0dp" app:layout_constraintBottom_toTopOf="@id/guideline_row1" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" />
-    <androidx.appcompat.widget.AppCompatTextView android:textColor="@color/white" android:gravity="center" android:id="@+id/tvDigitalClock" android:visibility="gone" android:layout_width="180.0dp" android:layout_height="0.0dp" android:text="12:00" android:layout_marginStart="8.0dp" android:layout_marginEnd="8.0dp" app:autoSizeMaxTextSize="120.0sp" app:autoSizeMinTextSize="24.0sp" app:autoSizeStepGranularity="2.0sp" app:autoSizeTextType="uniform" app:layout_constraintBottom_toTopOf="@id/guideline_row1" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <ImageView
+        android:id="@+id/ivCarLogo"
+        android:visibility="gone"
+        android:layout_width="150.0dp"
+        android:layout_height="0.0dp"
+        android:scaleType="fitCenter"
+        android:layout_marginStart="8.0dp"
+        android:layout_marginEnd="8.0dp"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/rightWidgetSlot"
+        app:layout_constraintTop_toTopOf="parent" />
+    <androidx.appcompat.widget.AppCompatTextView
+        android:textColor="@color/white"
+        android:gravity="center"
+        android:id="@+id/tvDigitalClock"
+        android:visibility="gone"
+        android:layout_width="180.0dp"
+        android:layout_height="0.0dp"
+        android:text="12:00"
+        android:layout_marginStart="8.0dp"
+        android:layout_marginEnd="8.0dp"
+        app:autoSizeMaxTextSize="120.0sp"
+        app:autoSizeMinTextSize="24.0sp"
+        app:autoSizeStepGranularity="2.0sp"
+        app:autoSizeTextType="uniform"
+        app:layout_constraintBottom_toTopOf="@id/guideline_row1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/rightWidgetSlot"
+        app:layout_constraintTop_toTopOf="parent" />
     <ImageButton android:id="@+id/btnSeekDown" android:background="?selectableItemBackgroundBorderless" android:padding="6.0dp" android:layout_width="0.0dp" android:layout_height="0.0dp" android:src="@drawable/seek_down" android:scaleType="fitCenter" app:layout_constraintBottom_toTopOf="@id/guideline_row2" app:layout_constraintEnd_toStartOf="@id/btnFavPrev" app:layout_constraintHorizontal_weight="0.1" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toBottomOf="@id/guideline_row1" />
     <ImageButton android:id="@+id/btnFavPrev" android:background="?selectableItemBackgroundBorderless" android:padding="16.0dp" android:layout_width="0.0dp" android:layout_height="0.0dp" android:src="@drawable/btn_previous_n" android:scaleType="fitCenter" app:layout_constraintBottom_toTopOf="@id/guideline_row2" app:layout_constraintEnd_toStartOf="@id/boxFrequency" app:layout_constraintHorizontal_weight="0.1" app:layout_constraintStart_toEndOf="@id/btnSeekDown" app:layout_constraintTop_toBottomOf="@id/guideline_row1" />
     <FrameLayout android:id="@+id/boxFrequency" android:background="@drawable/bg_glass_card_classic" android:layout_width="0.0dp" android:layout_height="0.0dp" app:layout_constraintBottom_toTopOf="@id/guideline_row2" app:layout_constraintEnd_toStartOf="@id/btnFavNext" app:layout_constraintHorizontal_weight="0.6" app:layout_constraintStart_toEndOf="@id/btnFavPrev" app:layout_constraintTop_toBottomOf="@id/guideline_row1">

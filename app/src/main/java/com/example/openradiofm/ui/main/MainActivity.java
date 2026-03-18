@@ -154,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public PlaybackManager mPlaybackManager;
     public DeviceManager mDeviceManager;
     public HardwareManager mHardwareManager;
+    public RadioSessionController mSessionController;
 
 
     // V11: RDS PI Database Identification
@@ -365,6 +366,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // RadioEngineCallback)
     @Override
     public void onFrequencyChanged(int freqKhz) {
+        if (mSessionController != null) {
+            mSessionController.onFrequencyChanged(freqKhz);
+        }
         handleFrequencyChange(freqKhz);
         runOnUiThread(() -> {
             if (mUiController != null) {
@@ -377,6 +381,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onBandChanged(int band) {
+        if (mSessionController != null) {
+            mSessionController.onBandChanged(band);
+        }
         runOnUiThread(() -> {
             mCurrentBand = band;
             if (mPresetManager != null) {
@@ -388,6 +395,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } else {
                 updateBandImage(band);
             }
+
+            // Asegurar que el icono de unidad (MHz/KHz) se actualiza SIEMPRE al cambiar de banda,
+            // independientemente de si usamos UiController o el fallback legacy.
+            if (ivUnitLabel != null) {
+                int unitResId = (band == BAND_AM1 || band == BAND_AM2)
+                        ? R.drawable.radio_khz
+                        : R.drawable.radio_mhz;
+                setImageResourceIfChanged(ivUnitLabel, unitResId);
+            }
             
             // V5.2: Actualizar Widget al cambiar de banda
             if (mEngine != null) {
@@ -398,6 +414,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onStereoChanged(boolean stereo) {
+        if (mSessionController != null) {
+            mSessionController.onStereoChanged(stereo);
+        }
         runOnUiThread(() -> {
             if (mUiController != null) {
                 mUiController.updateStereo(stereo);
@@ -415,6 +434,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onRdsName(final String name) {
+        if (mSessionController != null) {
+            mSessionController.onRdsName(name);
+        }
         runOnUiThread(() -> {
             if (mRdsManager != null) {
                 mRdsManager.onRdsName(name);
@@ -592,6 +614,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onRdsText(String text) {
+        if (mSessionController != null) {
+            mSessionController.onRdsText(text);
+        }
         runOnUiThread(() -> {
             if (mRdsManager != null) {
                 mRdsManager.onRdsText(text);
@@ -609,6 +634,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onRdsPty(String pty) {
+        if (mSessionController != null) {
+            mSessionController.onRdsPty(pty);
+        }
         runOnUiThread(() -> {
             if (mRdsManager != null) {
                 mRdsManager.onRdsPty(pty);
@@ -625,6 +653,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
+        if (mSessionController != null) {
+            mSessionController.onRdsStatus(afEnabled, taEnabled, tpEnabled);
+        }
         runOnUiThread(() -> {
             if (mUiController != null) {
                 mUiController.updateRdsStatus(afEnabled, taEnabled, tpEnabled);
@@ -642,6 +673,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onRdsPi(String piCode) {
+        if (mSessionController != null) {
+            mSessionController.onRdsPi(piCode);
+        }
         mCurrentPi = piCode;
         // V16.0: Persistir PI Code para búsqueda de logos en Supabase
         if (mRepository != null && mEngine != null) {
@@ -690,6 +724,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onDxLocalChanged(boolean isLocal) {
+        if (mSessionController != null) {
+            mSessionController.onDxLocalChanged(isLocal);
+        }
         runOnUiThread(() -> {
             if (btnLocDx != null) {
                 btnLocDx.setSelected(isLocal);
@@ -702,6 +739,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onScanStatusChanged(boolean scanning) {
+        if (mSessionController != null) {
+            mSessionController.onScanStatusChanged(scanning);
+        }
         runOnUiThread(() -> {
             mIsScanning = scanning; // V13.9: Track global scanning state
             if (!scanning && mScanManager != null && mScanManager.getStationAdapter() != null) {
@@ -721,6 +761,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onRawEvent(int code, String data) {
+        if (mSessionController != null) {
+            mSessionController.onRawEvent(code, data);
+        }
         // Forward to engineering dialog if open
         if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
             mEngineeringDialog.addRdsLog(data);
@@ -729,6 +772,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public void onSignalUpdate(int rssi, int snr) {
+        if (mSessionController != null) {
+            mSessionController.onSignalUpdate(rssi, snr);
+        }
         runOnUiThread(() -> {
             if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
                 mEngineeringDialog.updateSignalQuality(rssi, snr);
@@ -817,6 +863,29 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (mDeviceManager != null) {
                 mDeviceManager.init(engine, mPlaybackManager, mMediaSessionManager,
                         mServiceController, mRdsManager, mRepository, mPollingExecutor);
+            }
+
+            // Inicializar controlador de sesión compartido usando el mismo motor y playback manager
+            try {
+                if (mSessionController == null) {
+                    mSessionController = new RadioSessionController(
+                            MainActivity.this,
+                            mEngine,
+                            mPlaybackManager,
+                            mPrefs,
+                            getSharedPreferences("RadioStationNames", Context.MODE_PRIVATE)
+                    );
+                    // Listener opcional: refrescar algunos elementos de UI cuando cambie el estado global
+                    mSessionController.addListener(state -> {
+                        // Por ahora solo sincronizamos banda/frecuencia básicos si el engine está listo
+                        if (state != null && mEngine != null) {
+                            mLastFreq = state.freqKhz > 0 ? state.freqKhz : mLastFreq;
+                            mCurrentBand = state.band;
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "No se pudo inicializar RadioSessionController en MainActivity", e);
             }
 
             // Si el motor no se ha inicializado todavía (ej: K706), lo hacemos aquí
@@ -1589,14 +1658,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
         boolean isStreaming = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
 
-        // V18.6: Sincronizar estado visual del Mute con el sistema real (Solo MTK/MT8163 para evitar regresiones en K706)
-        if (mPlaybackManager != null && mEngine != null && 
-            ("MTK8259_8667".equals(mEngine.getEngineName()) || "MT8163".equals(mEngine.getEngineName()))) {
+        // V18.6: Sincronizar estado visual del Mute con el sistema real.
+        // Importante: En MT8163 el mute es por HW (fm_mute) y NO debe depender de STREAM_MUSIC
+        // salvo compatibilidad explícita (pref_mt8163_global_stream_mute).
+        if (mPlaybackManager != null && mEngine != null &&
+            ("MTK8259_8667".equals(mEngine.getEngineName()) ||
+             ("MT8163".equals(mEngine.getEngineName()) && mPrefs.getBoolean("pref_mt8163_global_stream_mute", false)))) {
             android.media.AudioManager am = (android.media.AudioManager) getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
                 boolean isSystemMuted;
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-                    isSystemMuted = am.isStreamMute(android.media.AudioManager.STREAM_MUSIC);
+                    // Nota OEM: en algunas ROMs isStreamMute() no refleja correctamente el estado real.
+                    // Usamos también volumen==0 como señal fiable.
+                    boolean muteFlag = am.isStreamMute(android.media.AudioManager.STREAM_MUSIC);
+                    boolean volumeZero = am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) == 0;
+                    isSystemMuted = muteFlag || volumeZero;
                 } else {
                     // Fallback para versiones antiguas o checking volume
                     isSystemMuted = am.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) == 0;

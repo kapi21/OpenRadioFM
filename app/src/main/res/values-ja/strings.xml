@@ -103,4 +103,19 @@
     <string name="logo_mode_car">車ロゴ</string>
     <string name="logo_mode_clock">デジタル時計</string>
     <string name="my_favorites">私のお気に入り</string>
+
+    <!-- Missing keys (fallback/translations) -->
+    <string name="about_info_header">情報</string>
+    <string name="about_dev_by">開発者</string>
+    <string name="about_tech_details">技術詳細</string>
+    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
+    <string name="all_favorites_deleted">✅ すべてのお気に入りを削除しました</string>
+    <string name="language_german">Deutsch</string>
+    <string name="language_hungarian">Magyar</string>
+    <string name="language_italian">Italiano</string>
+    <string name="language_portuguese">Português</string>
+    <string name="category_app_options">アプリのオプション</string>
+    <string name="category_premium">プレミアムカスタマイズ</string>
+    <string name="night_mode_logos">ロゴの夜間モード</string>
 </resources>
