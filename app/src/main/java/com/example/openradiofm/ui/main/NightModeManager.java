@@ -272,4 +272,5 @@ public class NightModeManager {
             ((ImageView) v).clearColorFilter();
         }
     }
+
 }

@@ -320,9 +320,11 @@ public class DialogManager {
         if (swNightLogos != null) {
             boolean nightLogos = mActivity.mPrefs.getBoolean("pref_night_logos", true);
             swNightLogos.setChecked(nightLogos);
+
             swNightLogos.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_night_logos", checked).apply();
                 mActivity.showToast(checked ? "Teñir logos en modo noche" : "Logos sin tinte en modo noche");
+
                 // Aplicar inmediatamente el cambio sobre el estado visual actual
                 if (mActivity.mNightModeManager != null) {
                     boolean autoNight = mActivity.mPrefs.getBoolean("pref_night_mode_auto", false);
