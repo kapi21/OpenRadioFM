@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     private static final String TAG = "OpenRadioFm";
-    private static final int PRESETS_COUNT = 15; // Updated to match V4 max presets
+    private static final int PRESETS_COUNT = 18; // V21.2: ampliar memorias de presets
 
     // Band Constants
     private static final int BAND_FM1 = 0;

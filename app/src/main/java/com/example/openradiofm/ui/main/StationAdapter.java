@@ -30,13 +30,13 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationV
 
     public static class StationViewHolder extends RecyclerView.ViewHolder {
         TextView freq, name;
-        Button[] presets = new Button[12];
+        Button[] presets = new Button[18];
 
         StationViewHolder(View root) {
             super(root);
             freq = root.findViewById(R.id.tvFreq);
             name = root.findViewById(R.id.tvName);
-            for (int i = 0; i < 12; i++) {
+            for (int i = 0; i < 18; i++) {
                 int resId = root.getResources().getIdentifier("btnP" + (i + 1), "id", root.getContext().getPackageName());
                 presets[i] = root.findViewById(resId);
             }
@@ -59,7 +59,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationV
         ScannedStation s = mCapturedList.get(p);
         h.freq.setText(String.format(java.util.Locale.US, "%.2f MHz", s.frequency / 1000.0f));
         h.name.setText(s.name);
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 18; i++) {
             final int slot = i;
             h.presets[i].setOnClickListener(v -> {
                 if (mActivity.mPresetManager != null) {

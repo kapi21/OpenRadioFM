@@ -106,6 +106,18 @@
             <LinearLayout android:id="@+id/cardP11" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP11" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP11" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
             <!-- Preset 12 -->
             <LinearLayout android:id="@+id/cardP12" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP12" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP12" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
+            <!-- Preset 13 -->
+            <LinearLayout android:id="@+id/cardP13" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP13" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP13" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
+            <!-- Preset 14 -->
+            <LinearLayout android:id="@+id/cardP14" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP14" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP14" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
+            <!-- Preset 15 -->
+            <LinearLayout android:id="@+id/cardP15" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP15" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP15" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
+            <!-- Preset 16 -->
+            <LinearLayout android:id="@+id/cardP16" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP16" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP16" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
+            <!-- Preset 17 -->
+            <LinearLayout android:id="@+id/cardP17" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP17" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP17" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
+            <!-- Preset 18 -->
+            <LinearLayout android:id="@+id/cardP18" style="@style/PresetCardStyle"><ImageView android:id="@+id/ivP18" style="@style/PresetIconStyle"/><TextView android:id="@+id/tvP18" android:text="Empty" style="@style/PresetTextStyle"/></LinearLayout>
 
         </LinearLayout>
     </ScrollView>

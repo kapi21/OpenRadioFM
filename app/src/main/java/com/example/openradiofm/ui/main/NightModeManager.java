@@ -151,7 +151,7 @@ public class NightModeManager {
 
         // Presets: texto en azul noche, logos opcionalmente teñidos según preferencia
         boolean tintLogos = mPrefs.getBoolean("pref_night_logos", true);
-        for (int i = 1; i <= 12; i++) {
+        for (int i = 1; i <= 18; i++) {
             int tvId = mActivity.getResources().getIdentifier("tvP" + i, "id", mActivity.getPackageName());
             TextView tv = mActivity.findViewById(tvId);
             if (tv != null) tv.setTextColor(nightBlue);
@@ -238,7 +238,7 @@ public class NightModeManager {
         }
 
         // Restaurar presets a blanco
-        for (int i = 1; i <= 12; i++) {
+        for (int i = 1; i <= 18; i++) {
             int tvId = mActivity.getResources().getIdentifier("tvP" + i, "id", mActivity.getPackageName());
             TextView tv = mActivity.findViewById(tvId);
             if (tv != null) tv.setTextColor(white);
