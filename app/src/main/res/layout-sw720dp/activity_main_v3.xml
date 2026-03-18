@@ -26,10 +26,10 @@
     
 
 
-    <!-- Slot fijo a la derecha para Logo Coche / Reloj (evita empujar el cloud) -->
+    <!-- Slot fijo a la derecha para Logo Coche / Reloj (Un poco más estrecho para ganar centro) -->
     <Space
         android:id="@+id/rightWidgetSlot"
-        android:layout_width="200dp"
+        android:layout_width="150dp"
         android:layout_height="0dp"
         app:layout_constraintBottom_toTopOf="@id/guideline_row1"
         app:layout_constraintEnd_toEndOf="parent"
@@ -41,7 +41,7 @@
     android:focusable="true"
     android:visibility="invisible"
     android:clickable="true"
-    android:layout_width="100dp"
+    android:layout_width="70dp"
     android:layout_height="60dp"
     android:layout_marginEnd="0dp"
     android:translationZ="10dp"
@@ -60,20 +60,20 @@
 <FrameLayout
     android:gravity="center"
     android:id="@+id/containerRds"
-    android:layout_width="470dp"
+    android:layout_width="0dp"
     android:layout_height="0dp"
     app:layout_constraintBottom_toTopOf="@id/guideline_row1"
-    app:layout_constraintStart_toStartOf="parent"
-    app:layout_constraintEnd_toEndOf="parent"
+    app:layout_constraintStart_toStartOf="@id/boxFrequency"
+    app:layout_constraintEnd_toEndOf="@id/boxFrequency"
     app:layout_constraintTop_toTopOf="parent"
-	android:paddingStart="12dp"
-    android:paddingEnd="12dp" >
+	android:paddingStart="40dp"
+    android:paddingEnd="40dp" >
 
 
 
 
 	<TextView android:id="@+id/tvRdsName" android:visibility="gone" android:layout_width="0.0dp" android:layout_height="0.0dp" android:text="" />
-        <TextView android:textSize="22.0sp" android:textColor="@color/white" android:ellipsize="marquee" android:gravity="center" android:id="@+id/tvRdsInfo" android:background="@android:color/transparent" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:focusable="true" android:focusableInTouchMode="true" android:fadingEdgeLength="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:text="" android:scrollHorizontally="true" android:singleLine="true" android:includeFontPadding="false" android:marqueeRepeatLimit="marquee_forever" android:requiresFadingEdge="horizontal" android:paddingStart="16.0dp" android:paddingEnd="40.0dp" />
+        <TextView android:textSize="22.0sp" android:textColor="@color/white" android:ellipsize="marquee" android:gravity="center" android:id="@+id/tvRdsInfo" android:background="@android:color/transparent" android:paddingTop="8.0dp" android:paddingBottom="8.0dp" android:focusable="true" android:focusableInTouchMode="true" android:fadingEdgeLength="16.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:text="" android:scrollHorizontally="true" android:singleLine="true" android:includeFontPadding="false" android:marqueeRepeatLimit="marquee_forever" android:requiresFadingEdge="horizontal" android:paddingStart="16.0dp" android:paddingEnd="16.0dp" />
     </FrameLayout>
     <ImageView
         android:id="@+id/ivCarLogo"
