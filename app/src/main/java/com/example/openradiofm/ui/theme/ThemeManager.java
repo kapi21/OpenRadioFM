@@ -234,8 +234,8 @@ public class ThemeManager {
             }
         }
 
-        // Aplicar a Presets P1-P15 (SimpleLayout soporta hasta 15)
-        for (int i = 1; i <= 15; i++) {
+        // Aplicar a Presets P1-P18 (el layout activo define cuántos existen realmente)
+        for (int i = 1; i <= 18; i++) {
             int id = mActivity.getResources().getIdentifier("cardP" + i, "id", mActivity.getPackageName());
             View v = mActivity.findViewById(id);
             if (v != null) {

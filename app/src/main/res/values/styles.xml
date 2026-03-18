@@ -36,7 +36,7 @@
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:orientation">vertical</item>
-        <item name="android:layout_marginEnd">@dimen/padding_extra_large</item>
+        <item name="android:layout_marginEnd">@dimen/padding_large</item>
         <item name="android:gravity">center</item>
     </style>
 
