@@ -146,7 +146,16 @@ public class V3LayoutController extends BaseLayoutController {
             case 4: drawId = R.drawable.radio_am2; break;
             default: drawId = R.drawable.radio_fm1; break;
         }
-        ivBandIndicator.setImageResource(drawId);
+        
+        // V2.5: Usar el helper centralizado para preservar el tinte (filtros)
+        MainActivity.setImageResourceIfChanged(ivBandIndicator, drawId);
+        
+        // Re-asegurar tinte si es modo noche (por si el helper no lo detectó en el primer frame)
+        if (mActivity.mThemeManager != null && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.NIGHT_MODE) {
+            ivBandIndicator.setColorFilter(mActivity.getResources().getColor(R.color.night_blue_primary, null), android.graphics.PorterDuff.Mode.SRC_IN);
+        } else {
+            ivBandIndicator.clearColorFilter();
+        }
     }
 
     @Override

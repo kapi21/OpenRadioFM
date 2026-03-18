@@ -276,9 +276,11 @@ public class ThemeManager {
             }
         }
 
-        // Notificar al listener (Night Mode colors, etc.)
+        // V2.5: Notificación eliminada. MainActivity ahora aplica Night Mode secuencialmente en su wrapper applySkin().
+        /*
         if (mListener != null) {
             mListener.onSkinApplied(skin);
         }
+        */
     }
 }

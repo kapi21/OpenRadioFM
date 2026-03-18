@@ -60,7 +60,7 @@ public class SimpleLayoutManager {
         if (btnMute != null) btnMute.setOnClickListener(v -> {
             mActivity.mMuteState = !mActivity.mMuteState;
             mActivity.mEngine.setMute(mActivity.mMuteState);
-            btnMute.setImageResource(mActivity.mMuteState ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+            MainActivity.setImageResourceIfChanged(btnMute, mActivity.mMuteState ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
         });
 
         if (ivMainLogo != null) {

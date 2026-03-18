@@ -44,17 +44,21 @@ public class NightModeManager {
     public void checkAndApplyNightMode() {
         boolean autoNight = mPrefs.getBoolean("pref_night_mode_auto", false);
 
+        // V2.6: Si auto night NO está habilitado, no interferir con la selección manual.
+        // El usuario puede haber seleccionado NIGHT_MODE manualmente y no debemos revertirlo.
+        if (!autoNight) return;
+
         // V16.2: Usar instancia compartida de ThemeManager
         if (mActivity instanceof MainActivity) {
             MainActivity main = (MainActivity) mActivity;
             if (main.mThemeManager != null) {
                 ThemeManager.Skin savedSkin = main.mThemeManager.getCurrentSkin();
 
-                if (autoNight && isNightTime()) {
+                if (isNightTime()) {
                     // Apply without overwriting the user's saved preference
                     main.applySkin(ThemeManager.Skin.NIGHT_MODE);
                 } else {
-                    // Revert to user's saved skin when day time or auto disabled
+                    // Revert to user's saved skin when day time
                     main.applySkin(savedSkin);
                 }
             }

@@ -194,7 +194,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private long mLastFullRefreshTime = 0;
     
     // V21.1: Throttling de tareas UI no críticas (fluidez)
-    private static final long NIGHT_MODE_CHECK_INTERVAL_MS = 30_000;
+    private static final long NIGHT_MODE_CHECK_INTERVAL_MS = 5_000;
     private static final long DATA_ACTIVITY_UI_INTERVAL_MS = 1_000;
     private long mLastNightModeCheckTime = 0;
     private long mLastDataActivityUiTime = 0;
@@ -414,6 +414,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         ? R.drawable.radio_khz
                         : R.drawable.radio_mhz;
                 setImageResourceIfChanged(ivUnitLabel, unitResId);
+            }
+            
+            // V2.6: Re-asegurar tinte noche completo tras refrescar presets y unit label.
+            // refreshButtons() pone nuevas imágenes/textos en blanco, y setImageResourceIfChanged
+            // cambia la imagen de ivUnitLabel. Ambos necesitan re-tintado.
+            boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+            if (isNight && mNightModeManager != null) {
+                mNightModeManager.applyNightModeColors(mLastFreq);
             }
             
             // V5.2: Actualizar Widget al cambiar de banda
@@ -743,7 +751,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 btnLocDx.setSelected(isLocal);
                 btnLocDx.setAlpha(1.0f);
                 // V9: LOCAL=radio_loc_p (active/filled), DX=radio_loc_n (normal/outline)
-                btnLocDx.setImageResource(isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                setImageResourceIfChanged(btnLocDx, isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
             }
         });
     }
@@ -1072,12 +1080,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     ImageButton btnMute = findViewById(R.id.btnMute);
                     if (btnMute != null) {
                         btnMute.setSelected(isMuted);
-                        boolean isMTK = mEngine != null && mEngine.getEngineName().contains("MTK");
+                        // boolean isMTK = mEngine != null && mEngine.getEngineName().contains("MTK"); // Removed as per instruction
 
-                        if (isMuted && !isMTK) {
-                            btnMute.setImageResource(R.drawable.radio_mute_p);
+                        if (isMuted) {
+                            setImageResourceIfChanged(btnMute, R.drawable.radio_mute_p);
                         } else {
-                            btnMute.setImageResource(R.drawable.radio_mute_n);
+                            setImageResourceIfChanged(btnMute, R.drawable.radio_mute_n);
+                        }
+                        // V2.5: Preservar tinte noche si activo
+                        Object savedFilter = btnMute.getTag(R.id.tag_color_filter);
+                        if (savedFilter instanceof Integer) {
+                            btnMute.setColorFilter((Integer) savedFilter, android.graphics.PorterDuff.Mode.SRC_IN);
                         }
                         btnMute.setAlpha(1.0f);
                         if (!isMuted) btnMute.setSelected(false);
@@ -1216,16 +1229,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // Configurar indicadores de estado (Eliminados)
         // setupIndicators();
 
-        // V16.2: Inicializar ThemeManager y registrar listener para Night Mode
+        // V16.2: Inicializar ThemeManager
         mThemeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
-        mThemeManager.setLayoutPrefs(mPrefs); // V16.2: Pasar las SharedPreferences correctas
-        mThemeManager.setSkinAppliedListener(skin -> {
-            if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                if (mNightModeManager != null) mNightModeManager.applyNightModeColors(mLastFreq);
-            } else {
-                if (mNightModeManager != null) mNightModeManager.resetNightModeColors(mLastFreq);
-            }
-        });
+        mThemeManager.setLayoutPrefs(mPrefs); 
+        // V2.5: Eliminado SkinAppliedListener redundante. applySkin() ahora gestiona todo secuencialmente.
         applySkin(mThemeManager.getCurrentSkin());
         checkAndApplyNightMode(); // V4: Automatic Night Mode
 
@@ -1685,8 +1692,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         if (!stateChanged) {
             // Solo actualizamos visibilidades inmediatas (Mute/Stream) y salimos
+            final boolean fIsNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
             runOnUiThread(() -> {
-               if (ivStereoIcon != null) setVisibilityIfChanged(ivStereoIcon, isStereo ? View.VISIBLE : View.INVISIBLE);
+               if (ivStereoIcon != null) {
+                   setVisibilityIfChanged(ivStereoIcon, isStereo ? View.VISIBLE : View.INVISIBLE);
+                   // V2.6: Proteger tinte noche al actualizar visibilidad
+                   if (fIsNight) {
+                       int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+                       setColorFilterIfChanged(ivStereoIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                   }
+               }
                if (btnLocDx != null) btnLocDx.setSelected(isLocal);
                // V18.6.4: Actualizar color de señal en el path de polling (para MT8163 que no tiene callback activo)
                if (ivSignalLevel != null) {
@@ -1782,6 +1797,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     boolean isFav = isStationMemorized(fFreq);
                     int pIndex = getPresetIndex(fFreq);
                     mUiController.updateFavoriteIndicator(isFav, pIndex, isNight);
+                    
+                    // V2.6: Re-asegurar tinte noche completo tras actualizaciones parciales.
+                    // mUiController.applySkin() solo cubre textos (freq, rds, pty, unit).
+                    // NightModeManager cubre TODO: botones, iconos RDS, presets, reloj.
+                    if (isNight && mNightModeManager != null) {
+                        mNightModeManager.applyNightModeColors(mLastFreq);
+                    }
                 } else {
                     int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
                     if (isNight) {
@@ -2025,8 +2047,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mSimpleLayoutManager.applyColors(isNight);
         }
         
-        // CLEAR: iconos de botones en negro (y al salir, restaurar)
-        applyClearButtonIconTint(isClear && !isNight);
+        // V2.5: Aplicación centralizada de colores azul noche al final de applySkin
+        if (mNightModeManager != null) {
+            if (isNight) {
+                mNightModeManager.applyNightModeColors(mLastFreq);
+            } else {
+                mNightModeManager.resetNightModeColors(mLastFreq);
+            }
+        }
+
+        // CLEAR: iconos de botones en negro (y al salir, restaurar).
+        // V2.6: NO ejecutar cuando isNight — NightModeManager gestiona los filtros de botones.
+        // applyClearButtonIconTint(false) borra los filtros Y tags, destruyendo el tintado azul.
+        if (!isNight) {
+            applyClearButtonIconTint(isClear);
+        }
 
         // Shared Clock Visibility Color
         if (tvDigitalClock != null) {
@@ -2453,7 +2488,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mHasRdsLock = false;
 
         if (mRdsManager != null) {
-            mRdsManager.reset(true);
+            // MT8163: handleFrequencyChange puede venir desde un hilo de polling del engine.
+            // RDSManager.reset(true) toca TextViews (setText) y puede crashear por CalledFromWrongThreadException.
+            // La limpieza visual ya se hace más abajo dentro de runOnUiThread().
+            mRdsManager.reset(false);
         }
 
         if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
@@ -2648,6 +2686,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (current == null || (int)current != resId) {
             iv.setImageResource(resId);
             iv.setTag(R.id.tag_image_res, resId);
+            
+            // V2.5: Re-aplicar el filtro de color si existe en el tag.
+            // Android a veces limpia el colorFilter al llamar a setImageResource.
+            Object filterColor = iv.getTag(R.id.tag_color_filter);
+            if (filterColor instanceof Integer) {
+                iv.setColorFilter((Integer) filterColor, android.graphics.PorterDuff.Mode.SRC_IN);
+            }
         }
     }
     /**
