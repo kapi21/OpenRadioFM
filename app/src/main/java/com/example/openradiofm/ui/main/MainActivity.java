@@ -935,7 +935,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         // V20.3/V21.1: Agresivo siempre que estemos en Cold Start. 
                         // En recreación (layout switch) delegar en el init del motor si ya hay audio, 
                         // pero si detectamos mute injustificado, forzar recuperación.
-                        if (mPlaybackManager != null) {
+                        // V18.6.5: NO desmutear si LIVE streaming está activo (evita audio duplicado).
+                        boolean liveActive = mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
+                        if (mPlaybackManager != null && !liveActive) {
                             if (!mIsRecreating) {
                                 Log.d(TAG, "Startup Audio Recovery (Cold Start): Forzando desmuteo");
                                 mPlaybackManager.setMute(false);
@@ -943,6 +945,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                                 Log.d(TAG, "Startup Audio Recovery (Recreation): Detectado mute previo, forzando recuperación");
                                 mPlaybackManager.setMute(false);
                             }
+                        } else if (liveActive) {
+                            Log.d(TAG, "Startup Audio Recovery: LIVE activo, no se desmutea la radio FM");
                         }
                     }
                 });
@@ -1276,7 +1280,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     protected void onResume() {
         super.onResume();
-        android.util.Log.d(TAG, "onResume: Restaurando hardware de audio");
+        
+        // V18.6.5: Si LIVE streaming está activo, NO restaurar el canal FM.
+        // El ExoPlayer sigue emitiendo en segundo plano y forzar FM causa audio duplicado.
+        boolean liveActive = mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
+        android.util.Log.d(TAG, "onResume: liveActive=" + liveActive);
+        
+        if (liveActive) {
+            // LIVE sigue sonando: no tocar el canal de audio ni el mute
+            return;
+        }
         
         // V4.8: En K706, es mejor dejar que el Engine gestione el foco y el canal.
         if (mPlaybackManager != null) {

@@ -52,7 +52,7 @@
             android:resource="@xml/automotive_app_desc"/>
 
         <activity
-
+            android:launchMode="singleTask"
             android:name=".ui.main.MainActivity"
             android:exported="true"
             android:label="@string/app_name"

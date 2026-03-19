@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v4.9.3_Stable-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.9.4_Stable-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -171,6 +171,17 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v4.9.4 "Streaming & Stability Polish" (19 de Marzo 2026) - STABLE
+- **Streaming Online Pro (Icecast & M3U)**:
+    - **Resolución de Playlists**: Añadido soporte automático para ficheros `.m3u` y `.pls`. La app ahora extrae la URL real del stream en segundo plano, permitiendo sintonizar emisoras que antes daban error de formato.
+    - **Compatibilidad Icecast SSL**: Forzado automático de protocolo **HTTP** en puertos no estándar (8xxx/9xxx). Esto soluciona los fallos de conexión por certificados desactualizados en hardware antiguo.
+    - **Mime Type Forcing**: Detección mejorada de streams MPEG (`audio/mpeg`) para URLs que terminan en `/stream`.
+- **Fix de Audio Duplicado**:
+    - **Protección de Ciclo de Vida**: Corregido bug donde la radio FM se reactivaba al volver a la app mientras el streaming LIVE seguía sonando.
+    - **Mute Guard**: El sistema de recuperación de audio ahora respeta el estado del streaming activo para no desmutear la radio física innecesariamente.
+- **Estabilidad de Instancia**:
+    - **SingleTask Launch**: Configurado `launchMode="singleTask"` en el manifiesto para evitar que algunos launchers OEM creen múltiples instancias de la app al volver desde el escritorio.
 
 ### v4.9.3 "Hijacker & Layout Refinement" (15 de Marzo 2026) - STABLE
 - **Intent Hijacking (Interceptación de Botón Físico)**:

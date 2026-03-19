@@ -54,7 +54,90 @@ public class OnlineStreamManager {
             return;
         }
 
-        mCurrentStreamUrl = url;
+        // V18.6.5: Si la URL es una playlist M3U/PLS, resolver en segundo plano
+        // antes de iniciar ExoPlayer. Los ficheros .m3u son simples listas de texto
+        // con la URL real del stream, que ExoPlayer no sabe interpretar directamente.
+        String lowerUrl = url.toLowerCase();
+        if (lowerUrl.endsWith(".m3u") || lowerUrl.endsWith(".pls")) {
+            Log.d(TAG, "Detectada playlist (" + url + "), resolviendo URL real...");
+            mIsLoading = true;
+            updateUI();
+            new Thread(() -> {
+                String resolved = resolvePlaylistUrl(url);
+                if (resolved != null && !resolved.isEmpty()) {
+                    Log.d(TAG, "Playlist resuelta: " + resolved);
+                    // Volver al hilo principal para iniciar ExoPlayer  
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> startStreamDirect(resolved));
+                } else {
+                    Log.e(TAG, "No se pudo resolver la playlist: " + url);
+                    new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> {
+                        mIsLoading = false;
+                        updateUI();
+                        if (mListener != null) mListener.onStreamError("No se pudo leer la playlist M3U");
+                    });
+                }
+            }).start();
+            return;
+        }
+
+        startStreamDirect(url);
+    }
+
+    /**
+     * V18.6.5: Resuelve una playlist M3U/PLS descargando su contenido y extrayendo
+     * la primera URL de stream válida. Debe llamarse desde un hilo de fondo.
+     */
+    private String resolvePlaylistUrl(String playlistUrl) {
+        try {
+            java.net.URL u = new java.net.URL(playlistUrl);
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) u.openConnection();
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.setInstanceFollowRedirects(true);
+            java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(conn.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                // M3U: líneas que empiezan por http son URLs de stream
+                if (line.startsWith("http://") || line.startsWith("https://")) {
+                    reader.close();
+                    conn.disconnect();
+                    return line;
+                }
+                // PLS: File1=http://...
+                if (line.startsWith("File") && line.contains("=")) {
+                    String val = line.substring(line.indexOf("=") + 1).trim();
+                    if (val.startsWith("http://") || val.startsWith("https://")) {
+                        reader.close();
+                        conn.disconnect();
+                        return val;
+                    }
+                }
+            }
+            reader.close();
+            conn.disconnect();
+        } catch (Exception e) {
+            Log.e(TAG, "Error resolviendo playlist: " + playlistUrl, e);
+        }
+        return null;
+    }
+
+    private void startStreamDirect(String url) {
+
+        // V18.6.5: Normalización de URL para maximizar compatibilidad en radios chinas.
+        // Muchos servidores Icecast en puertos no estándar (ej: 8222) tienen certificados SSL
+        // que fallan en hardware antiguo o Android < 9. Forzamos HTTP si detectamos estos puertos.
+        String normalizedUrl;
+        if (url.startsWith("https://") && (url.contains(":8") || url.contains(":9"))) {
+            Log.w(TAG, "Forzando HTTP para puerto Icecast no estándar: " + url);
+            normalizedUrl = url.replace("https://", "http://");
+        } else {
+            normalizedUrl = url;
+        }
+        final String finalUrl = normalizedUrl;
+
+        mCurrentStreamUrl = finalUrl;
         stopStream(); // Limpiar instancias previas
 
         mIsLoading = true;
@@ -94,7 +177,7 @@ public class OnlineStreamManager {
                         mIsLoading = false;
                         if (mExoPlayer.getPlayWhenReady()) {
                             mIsPlaying = true;
-                            Log.d(TAG, "ExoPlayer reproduciendo: " + url);
+                            Log.d(TAG, "ExoPlayer reproduciendo: " + finalUrl);
                         }
                         updateUI();
                         break;
@@ -108,7 +191,8 @@ public class OnlineStreamManager {
 
             @Override
             public void onPlayerError(PlaybackException error) {
-                Log.e(TAG, "ExoPlayer Error genérico", error);
+                String errorCodeName = error.getErrorCodeName();
+                Log.e(TAG, "ExoPlayer Error (" + errorCodeName + "): " + error.getMessage(), error);
                 
                 // V18.6: Autorecuperación si la conexión a internet es lenta y nos caemos del "Live Window" HLS
                 if (error.errorCode == PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
@@ -121,20 +205,24 @@ public class OnlineStreamManager {
                 }
 
                 if (mListener != null) {
-                    mListener.onStreamError("Error de reproducción: " + error.getMessage());
+                    mListener.onStreamError("Error (" + errorCodeName + "): " + error.getMessage());
                 }
                 stopStream();
             }
         });
 
         try {
-            MediaItem.Builder mediaItemBuilder = new MediaItem.Builder().setUri(url);
+            MediaItem.Builder mediaItemBuilder = new MediaItem.Builder().setUri(finalUrl);
             
-            // V18.4: Forzar detección de tipo si la URL es ambigua
-            if (url.toLowerCase().contains("m3u8")) {
+            // V18.4/V18.6.5: Forzar detección de tipo si la URL es ambigua
+            String lowerUrl = finalUrl.toLowerCase();
+            if (lowerUrl.contains("m3u8")) {
                 mediaItemBuilder.setMimeType(androidx.media3.common.MimeTypes.APPLICATION_M3U8);
-            } else if (url.toLowerCase().contains(".aac") || url.toLowerCase().contains("type=aac")) {
+            } else if (lowerUrl.contains(".aac") || lowerUrl.contains("type=aac")) {
                 mediaItemBuilder.setMimeType(androidx.media3.common.MimeTypes.AUDIO_AAC);
+            } else if (lowerUrl.endsWith("/stream") || lowerUrl.contains(".mp3") || lowerUrl.contains("icecast")) {
+                // V18.6.5: Forzar MPEG para el caso específico del usuario (Elite Comunicación)
+                mediaItemBuilder.setMimeType(androidx.media3.common.MimeTypes.AUDIO_MPEG);
             }
             
             mExoPlayer.setMediaItem(mediaItemBuilder.build());
