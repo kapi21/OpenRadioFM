@@ -1,3 +1,13 @@
+## [4.9.4] - 2026-03-19
+### Added
+- **Streaming Online Pro**: Soporte para resolución automática de playlists `.m3u` y `.pls`.
+- **Compatibilidad Icecast**: Forzado de HTTP en puertos 8xxx/9xxx para evitar fallos de SSL en hardware antiguo.
+- **MIME Type Detection**: Mejora en la detección forzada de `audio/mpeg` para URLs `/stream`.
+
+### Fixed
+- **Audio Duplicado**: Solucionado el problema donde la radio FM se activaba al volver desde segundo plano con LIVE activo.
+- **Estabilidad**: Configurado `launchMode="singleTask"` para evitar instancias duplicadas de la app.
+
 ## [4.9.3] - 2026-03-15
 ### Added
 - **Intent Hijacking**: Implementación de `FactoryRadioHijackerService` para interceptar la radio de fábrica en K706.
