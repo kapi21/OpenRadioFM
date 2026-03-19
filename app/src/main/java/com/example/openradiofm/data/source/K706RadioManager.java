@@ -152,9 +152,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             }
             
             try {
-                Log.d(TAG, "OEM AutoRecovery: intento " + mAutoRecoveryAttempts + " (re-pedir foco y recuperar FM)");
-                requestAudioFocus();
-                // Fuerza SetChannel(2) + setAudioParams(true) + setMute(false) internamente
+                // V18.5: CRÍTICO - Solo recuperar si REALMENTE tenemos el foco de audio.
+                // Si el sistema nos dio LOSS, no debemos intentar recuperar el canal de radio.
+                if (!mIsAudioFocusHeld) {
+                    Log.d(TAG, "OEM AutoRecovery: abortado (no tenemos el foco de audio)");
+                    return;
+                }
+
+                Log.d(TAG, "OEM AutoRecovery: intento " + mAutoRecoveryAttempts + " (recuperando canal FM)");
+                // Forza SetChannel(2) + setAudioParams(true) + setMute(false) internamente
                 enforceAudioChannelRecovery();
                 try { setMute(false); } catch (Exception ignored) {}
                 mIsRadioActive = true;
@@ -162,8 +168,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 Log.w(TAG, "OEM AutoRecovery falló (intento " + mAutoRecoveryAttempts + ")", e);
             }
             
-            // Programar siguiente intento por si el sistema nos vuelve a tumbar
-            mAudioRecoveryHandler.postDelayed(this, delayMs);
+            // Programar siguiente intento por si el sistema nos vuelve a tumbar (máximo 4 intentos total)
+            if (mAutoRecoveryAttempts < 4) {
+                mAudioRecoveryHandler.postDelayed(this, delayMs);
+            }
         }
     };
     
@@ -193,10 +201,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             Log.d(TAG, "onAudioFocusChange(LOSS): Ignorando mute porque el Streaming Online está activo");
                             break;
                         }
-                        // K706 OEM: en algunos firmwares el framework provoca LOSS espurio justo tras conceder foco.
-                        // Si el usuario quiere FM, NO soltamos canal ni apagamos FM aquí (eso inicia la "pelea").
-                        if (mUserWantsFmAudio) {
-                            Log.d(TAG, "AUDIOFOCUS_LOSS: mUserWantsFmAudio=true -> manteniendo FM, forzando recovery (sin SetChannel(4)/setAudioParams(false))");
+                        // K706 OEM FIX (V18.5): Solo ignorar LOSS si es extremadamente reciente tras pedir foco (ventana de 2.5s)
+                        // y el usuario quiere FM. Esto evita que la app "muera" al arrancar en algunos firmwares chinos,
+                        // pero permite que Spotify/Música tomen el control después.
+                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs) {
+                            Log.d(TAG, "AUDIOFOCUS_LOSS (Glitch Protect): mUserWantsFmAudio=true -> manteniendo FM, forzando recovery");
                             mIsRadioActive = true;
                             mWasRadioActiveBeforeFocusLoss = true;
                             mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
@@ -246,8 +255,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorando mute porque el Streaming Online está activo");
                             break;
                         }
-                        if (mUserWantsFmAudio) {
-                            Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: mUserWantsFmAudio=true -> manteniendo FM, forzando recovery (sin SetChannel(4)/mute)");
+                        // V18.5: En LOSS_TRANSIENT (llamadas/navegación), respetamos SIEMPRE la interrupción.
+                        // Solo usamos recovery si es un glitch de inicio.
+                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs) {
+                            Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT (Glitch Protect): forzando recovery");
                             mIsRadioActive = true;
                             mWasRadioActiveBeforeFocusLoss = true;
                             mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);

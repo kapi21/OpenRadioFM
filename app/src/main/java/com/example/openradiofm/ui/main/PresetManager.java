@@ -171,7 +171,59 @@ public class PresetManager {
     }
 
     /**
-     * V14.2: Navegación por Software - Busca el siguiente favorito.
+     * V14.2/V21.3: Navegación Secuencial - Busca el siguiente slot ocupado.
+     */
+    public int getNextSequentialFavorite(int currentFreq) {
+        int currentIndex = -1;
+        int tolerance = 50;
+
+        // 1. Identificar si estamos en un preset conocido
+        for (int i = 0; i < mPresetsCount; i++) {
+            if (mPresets[i] > 0 && Math.abs(mPresets[i] - currentFreq) <= tolerance) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        // 2. Buscar el siguiente slot ocupado circularmente
+        for (int i = 1; i <= mPresetsCount; i++) {
+            int nextIdx = (currentIndex + i) % mPresetsCount;
+            if (mPresets[nextIdx] > 0) {
+                return mPresets[nextIdx];
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * V14.2/V21.3: Navegación Secuencial - Busca el slot ocupado anterior.
+     */
+    public int getPreviousSequentialFavorite(int currentFreq) {
+        int currentIndex = -1;
+        int tolerance = 50;
+
+        for (int i = 0; i < mPresetsCount; i++) {
+            if (mPresets[i] > 0 && Math.abs(mPresets[i] - currentFreq) <= tolerance) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        // Si currentIndex es -1 (frecuencia manual), empezamos desde el final o desde 0
+        int start = (currentIndex == -1) ? 0 : currentIndex;
+
+        for (int i = 1; i <= mPresetsCount; i++) {
+            int prevIdx = (start - i + mPresetsCount) % mPresetsCount;
+            if (mPresets[prevIdx] > 0) {
+                return mPresets[prevIdx];
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * V14.2: Navegación por Software (Legacy) - Busca el siguiente favorito más cercano por frecuencia.
+     * Mantenida por compatibilidad.
      */
     public int getNextFavorite(int currentFreq) {
         int nextFreq = -1;
@@ -196,7 +248,8 @@ public class PresetManager {
     }
 
     /**
-     * V14.2: Navegación por Software - Busca el favorito anterior.
+     * V14.2: Navegación por Software (Legacy) - Busca el favorito anterior más cercano por frecuencia.
+     * Mantenida por compatibilidad.
      */
     public int getPreviousFavorite(int currentFreq) {
         int prevFreq = -1;

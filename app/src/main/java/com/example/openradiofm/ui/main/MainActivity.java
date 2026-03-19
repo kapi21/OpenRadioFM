@@ -290,10 +290,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             return;
 
         int currentFreq = mEngine.getCurrentFreq();
-        int nextFreq = mPresetManager.getNextFavorite(currentFreq);
+        // V21.3: Cambiado de getNextFavorite (frecuencia) a getNextSequentialFavorite (slots 1-18)
+        int nextFreq = mPresetManager.getNextSequentialFavorite(currentFreq);
 
         if (nextFreq != -1) {
-            Log.d(TAG, "Saltando a SIGUIENTE favorito (Software): " + nextFreq);
+            Log.d(TAG, "Saltando a SIGUIENTE favorito (Secuencial): " + nextFreq);
             gotoFreq(nextFreq);
         } else {
             showToast("No hay otros favoritos guardados");
@@ -302,17 +303,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     /**
      * V14.0: Salta al favorito anterior guardado en la banda actual.
-     * V14.1: Prioriza el comando de hardware del motor.
+     * V21.3: Ahora usa navegación secuencial por slots.
      */
     public void gotoPreviousFavorite() {
         if (mEngine == null || mPresetManager == null)
             return;
 
         int currentFreq = mEngine.getCurrentFreq();
-        int prevFreq = mPresetManager.getPreviousFavorite(currentFreq);
+        // V21.3: Cambiado de getPreviousFavorite (frecuencia) a getPreviousSequentialFavorite (slots 1-18)
+        int prevFreq = mPresetManager.getPreviousSequentialFavorite(currentFreq);
 
         if (prevFreq != -1) {
-            Log.d(TAG, "Saltando a ANTERIOR favorito (Software): " + prevFreq);
+            Log.d(TAG, "Saltando a ANTERIOR favorito (Secuencial): " + prevFreq);
             gotoFreq(prevFreq);
         } else {
             showToast("No hay otros favoritos guardados");

@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v4.9.4_Stable-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v4.9.5_Stable-blue.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -171,6 +171,15 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v4.9.5 "Audio Focus & Sequential Presets" (19 de Marzo 2026) - STABLE
+- **Audio Focus K706 (Fix Crítico)**:
+    - Rediseñada la lógica de `onAudioFocusChange` para respetar la pérdida permanente de foco.
+    - El canal MCU (Channel 4) ahora se libera correctamente al perder el foco, permitiendo que otros reproductores (Spotify, etc.) suenen sin interferencias.
+    - Corregido el bucle de auto-recuperación agresiva.
+- **Navegación Secuencial de Presets**:
+    - Los botones de Favorito Siguiente/Anterior ahora recorren los slots (1-18) de forma numérica.
+    - Salto automático de slots vacíos y comportamiento circular por banda.
 
 ### v4.9.4 "Streaming & Stability Polish" (19 de Marzo 2026) - STABLE
 - **Streaming Online Pro (Icecast & M3U)**:

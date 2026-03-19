@@ -1,3 +1,11 @@
+## [4.9.5] - 2026-03-19
+### Added
+- **Navegación Secuencial**: Los botones de los layouts ahora recorren los favoritos por slot (1-18) en lugar de por frecuencia.
+
+### Fixed
+- **Audio Focus (K706)**: Corregida la gestión de foco para liberar el canal MCU en pérdidas permanentes y evitar reinicios de audio no deseados.
+- **AutoRecovery**: El hilo de recuperación ahora solo actúa si la app tiene el foco de audio.
+
 ## [4.9.4] - 2026-03-19
 ### Added
 - **Streaming Online Pro**: Soporte para resolución automática de playlists `.m3u` y `.pls`.
