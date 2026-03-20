@@ -1,5 +1,5 @@
-# Manual de Usuario - OpenRadioFM v.4.9.3 "Hijacker"
-Bienvenido a **OpenRadioFM v.4.9.3**, la edición con interceptor de radio y refinamiento de diseño. Esta versión permite "secuestrar" el botón de radio físico y estrena una interfaz V3 mucho más limpia.
+# Manual de Usuario - OpenRadioFM v.5.0.0-Beta "Stability Edition"
+Bienvenido a **OpenRadioFM v.5.0.0**, la edición centrada en la estabilidad extrema del hardware y refinamiento visual. Esta versión introduce el nuevo **Modo Claro (White Skin)** y protecciones críticas para motores MediaTek.
 
 ---
 
@@ -9,7 +9,9 @@ Bienvenido a **OpenRadioFM v.4.9.3**, la edición con interceptor de radio y ref
 OpenRadioFM cuenta con dos diseños principales:
 - **V2 (Clásico Vertical):** Optimizado para pantallas tipo tablet o verticales.
 - **V3 (Premium Horizontal):** Diseño panorámico ideal para el salpicadero, con iconos de gran formato y efecto **"Glass Mode"**.
-- **Cómo cambiar:** Mantén pulsado el botón **LOC/DX** para alternar. La app se reiniciará automáticamente.
+- **Nuevo: White Skin (Modo Claro):** Tema de alta visibilidad para conducción diurna.
+- **Cómo cambiar Layout:** Mantén pulsado el botón **LOC/DX** para alternar entre V2 y V3. 
+- **Cómo cambiar Tema:** Mantén pulsado el botón de **Configuración (EQ)** y selecciona "Seleccionar Tema".
 
 ### 1.2 Navegación de Favoritos (Hardware)
 - **Favoritos:** Los botones centrales permiten saltar entre tus emisoras memorizadas. Compatible con mandos de volante (K706/MT8163).
@@ -33,11 +35,12 @@ Elige entre 10 esquemas de color. En **Modo Noche**, se aplicará el color **"Ni
 
 ## 3. Logos y Streaming Online [Novedad v4.7 Beta]
 
-### 3.1 Servidor de Logos (Beta)
-La app puede descargar logos automáticamente desde nuestro servidor Supabase.
-- **Reset de Caché:** Si un logo es incorrecto o quieres forzar la recarga, mantén pulsado el icono de la **Nubecita Cloud**. Aparecerá el mensaje *"Caché de emisora borrada"* y se reajustará la información.
-- **IMPORTANTE:** Actualmente el catálogo de logos está enfocado principalmente a **España**, pero gracias al Crowdsourcing se expande cada día.
-- Se puede activar en *Ajustes Premium > Logos en Línea*.
+### 3.1 Sistema de Logos (Prioridad Local)
+La app busca los logos en este orden de prioridad:
+1. **Carpeta Local**: Busca en `/sdcard/RadioLogos/` archivos con nombre `Frecuencia_Nombre.png`.
+2. **Servidor Online**: Si no existe localmente, descarga desde **Supabase** (Comunidad) o servidores web.
+- **Reset de Caché:** Mantén pulsado el icono de la **Nubecita Cloud** para borrar el logo actual y forzar una nueva descarga.
+- **Manuales**: Puedes añadir tus propios logos simplemente copiándolos a la carpeta `RadioLogos` con el nombre de la frecuencia (ej: `96900.png`).
 
 ### 3.2 Streaming Online (Beta)
 - **Funcionalidad:** Permite escuchar la emisora vía internet si la señal FM es débil.
@@ -61,9 +64,11 @@ Usa el botón del **Disquete (💾)** para exportar o importar tu lista de favor
 
 Si experimentas problemas de audio o sintonización, selecciona tu motor en *Ajustes Hardware*:
 - **HCN (K706):** Para unidades Vento/HCN.
-- **Eonon/Topway (MT8163):** Optimizado para evitar congelaciones en v4.7.
+- **MediaTek 8259 / 8667:** Nuevo motor con estabilidad mejorada y protección de banda AM.
+- **Topway / Eonon (MT8163):** Optimizado para evitar duplicidad de instancias y bloqueos.
 - **QS6:** Para unidades Nanis/NWD.
+- **AVISO DE SEGURIDAD**: En motores MTK, la banda AM está forzada para evitar bloqueos del hardware. No intentes desactivarla. 
 
 ---
-**AVISO:** Esta es una versión **BETA**. Algunas funciones de servidor y streaming están bajo pruebas constantes.
-*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v.4.9.3 "Hijacker"*
+**AVISO:** Esta es una versión **BETA de Estabilidad**. Algunas funciones de servidor y streaming están bajo pruebas constantes.
+*Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit - v.5.0.0-Beta "Stability Edition"*

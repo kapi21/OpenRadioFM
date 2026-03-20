@@ -1,5 +1,5 @@
-# User Manual - OpenRadioFM v.4.9.3 "Hijacker"
-Welcome to **OpenRadioFM v.4.9.3**, the edition featuring the radio interceptor and design refinement. This version allows you to "hijack" the physical radio button and debuts a much cleaner V3 interface.
+# User Manual - OpenRadioFM v.5.0.0-Beta "Stability Edition"
+Welcome to **OpenRadioFM v.5.0.0**, the edition focused on extreme hardware stability and visual refinement. This version introduces the new **Light Mode (White Skin)** and critical protections for MediaTek engines.
 
 ---
 
@@ -9,7 +9,9 @@ Welcome to **OpenRadioFM v.4.9.3**, the edition featuring the radio interceptor 
 OpenRadioFM features two main designs:
 - **V2 (Classic Vertical):** Optimized for tablet-style or vertical screens.
 - **V3 (Premium Horizontal):** Widescreen design ideal for dashboards, with large icons and **"Glass Mode"** effect.
-- **How to switch:** Long press the **LOC/DX** button to toggle. The app will restart automatically.
+- **New: White Skin (Light Mode):** High visibility theme for daytime driving.
+- **How to switch Layout:** Long press the **LOC/DX** button to toggle between V2 and V3.
+- **How to switch Theme:** Long press the **Settings (EQ)** button and select "Select Theme".
 
 ### 1.2 Favorites Navigation (Hardware)
 - **Favorites:** Central buttons skip between your saved stations. Compatible with steering wheel controls (K706/MT8163).
@@ -33,11 +35,12 @@ Choose from 10 color schemes. In **Night Mode**, "Night Blue" will be applied to
 
 ## 3. Online Logos & Streaming [New in v4.7 Beta]
 
-### 3.1 Logo Server (Beta)
-The app can automatically download logos from our Supabase server.
-- **Cache Reset:** If a logo is incorrect or you want to force a reload, long press the **Cloud icon**. The message *"Station cache cleared"* will appear and info will be reset.
-- **IMPORTANT:** Currently, the logo catalog is primarily focused on **Spain**, but thanks to Crowdsourcing it expands every day.
-- Enable in *Premium Settings > Online Logos*.
+### 3.1 Logo System (Local Priority)
+The app searches for logos in this priority order:
+1. **Local Folder**: Looks in `/sdcard/RadioLogos/` for files named `Frequency_Name.png`.
+2. **Online Server**: IF not found locally, downloads from **Supabase** (Community) or web servers.
+- **Cache Reset:** Long press the **Cloud icon** to clear the current logo and force a new download.
+- **Manuals**: You can add your own logos by simply copying them to the `RadioLogos` folder with the frequency name (e.g., `96900.png`).
 
 ### 3.2 Online Streaming (Beta)
 - **Functionality:** Listen to stations via internet if the FM signal is weak.
@@ -61,9 +64,11 @@ Use the **Floppy Disk (💾)** button to export or import your favorites list. T
 
 If you experience audio or tuning issues, select your engine in *Hardware Settings*:
 - **HCN (K706):** For Vento/HCN units.
-- **Eonon/Topway (MT8163):** Optimized to prevent freezes in v4.7.
+- **MediaTek 8259 / 8667:** New engine with improved stability and AM band protection.
+- **Topway / Eonon (MT8163):** Optimized to prevent duplicate instances and freezes.
 - **QS6:** For Nanis/NWD units.
+- **SAFETY NOTICE**: In MTK engines, the AM band is forced to prevent hardware freezes. Do not attempt to disable it.
 
 ---
-**NOTICE:** This is a **BETA** version. Some server and streaming functions are under constant testing.
-*Developed with ❤️ by Jimmy80 for the Android Head Unit community - v.4.9.3 "Hijacker"*
+**NOTICE:** This is a **Stability BETA** version. Some server and streaming functions are under constant testing.
+*Developed with ❤️ by Jimmy80 for the Android Head Unit community - v.5.0.0-Beta "Stability Edition"*

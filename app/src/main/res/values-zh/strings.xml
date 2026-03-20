@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
+    <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
     <string name="premium_customization">高级个性化</string>
     <string name="theme_colors">主题颜色</string>
     <string name="typography">字体设置</string>
@@ -108,7 +108,7 @@
     <string name="about_info_header">信息</string>
     <string name="about_dev_by">开发者</string>
     <string name="about_tech_details">技术详情</string>
-    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
     <string name="accessibility_service_description">此服务允许在兼容的安卓主机（例如 K706）按下物理 RADIO 按键时，OpenRadioFM 覆盖显示并绕过原厂应用。</string>
     <string name="all_favorites_deleted">✅ 已删除所有收藏</string>
     <string name="language_german">Deutsch</string>

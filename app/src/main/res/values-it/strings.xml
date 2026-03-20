@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
+    <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalizzazione Premium</string>
@@ -181,7 +181,7 @@
     <string name="my_favorites">I Miei Preferiti</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
     <string name="accessibility_service_description">Questo servizio permette a OpenRadioFM di sovrapporsi quando premi il pulsante fisico RADIO su unità Android compatibili (es. K706), bypassando l’app di serie.</string>
     <string name="all_favorites_deleted">✅ Tutti i preferiti eliminati</string>
     <string name="category_app_options">Opzioni App</string>

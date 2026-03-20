@@ -1,6 +1,6 @@
-# Manual do Usuário - OpenRadioFM v.4.8 Cloud_Server
+# Manual do Usuário - OpenRadioFM v.5.0.0-Beta Stability Edition
 
-Bem-vindo ao **OpenRadioFM v.4.8 Cloud_Server**, a evolução definitiva do rádio FM para unidades Android (Head Units). Esta versão introduz capacidades de streaming e gestão de logótipos na nuvem, otimizada para máxima estabilidade e desempenho.
+Bem-vindo ao **OpenRadioFM v.5.0.0-Beta Stability Edition**, a evolução definitiva do rádio FM para unidades Android (Head Units). Esta versão introduz capacidades de streaming e gestão de logótipos na nuvem, otimizada para máxima estabilidade e desempenho.
 
 ---
 
@@ -67,4 +67,4 @@ Se experimentar problemas de áudio ou sintonização, selecione o seu motor em 
 
 ---
 **AVISO:** Esta é uma versão **BETA**. Algumas funções de servidor e streaming estão sob testes constantes.
-*Desenvolvido com ❤️ por Jimmy80 para a comunidade Android Head Unit - v.4.8 Cloud_Server*
+*Desenvolvido com ❤️ por Jimmy80 para a comunidade Android Head Unit - v.5.0.0-Beta Stability Edition*

@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
-    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
+    <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
     <string name="accessibility_service_description">This service allows OpenRadioFM to overlay when you press the physical RADIO button on compatible Android units (e.g., K706), bypassing the stock radio app.</string>
     
     <!-- Premium Menu Strings -->

@@ -1,6 +1,6 @@
-# Benutzerhandbuch - OpenRadioFM v.4.8 Cloud_Server
+# Benutzerhandbuch - OpenRadioFM v.5.0.0-Beta Stability Edition
 
-Willkommen bei **OpenRadioFM v.4.8 Cloud_Server**, der ultimativen Entwicklung des UKW-Radios für Android-Head-Units. Diese Version führt Cloud-Streaming- und Logo-Management-Funktionen ein, die auf maximale Stabilität und Leistung optimiert sind.
+Willkommen bei **OpenRadioFM v.5.0.0-Beta Stability Edition**, der ultimativen Entwicklung des UKW-Radios für Android-Head-Units. Diese Version führt Cloud-Streaming- und Logo-Management-Funktionen ein, die auf maximale Stabilität und Leistung optimiert sind.
 
 ---
 
@@ -67,4 +67,4 @@ Wenn Audio- oder Abstimmungsprobleme auftreten, wählen Sie Ihren Motor in den *
 
 ---
 **HINWEIS:** Dies ist eine **BETA**-Version. Einige Server- und Streaming-Funktionen werden ständig getestet.
-*Entwickelt mit ❤️ von Jimmy80 für die Android Head Unit Community - v.4.8 Cloud_Server*
+*Entwickelt mit ❤️ von Jimmy80 für die Android Head Unit Community - v.5.0.0-Beta Stability Edition*

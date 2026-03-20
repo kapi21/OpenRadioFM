@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM_v4.8 Cloud_Server</string>
+    <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalização Premium</string>
@@ -181,7 +181,7 @@
     <string name="my_favorites">Meus Favoritos</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - Community Logo Edition 4.9.3</string>
+    <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
     <string name="accessibility_service_description">Este serviço permite que o OpenRadioFM se sobreponha quando você pressiona o botão físico RADIO em unidades Android compatíveis (ex.: K706), ignorando o app de fábrica.</string>
     <string name="all_favorites_deleted">✅ Todos os favoritos apagados</string>
     <string name="category_app_options">Opções da App</string>

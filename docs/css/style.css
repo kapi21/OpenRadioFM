@@ -20,13 +20,13 @@
 }
 
 :root {
-    --bg-dark: #050505;
-    --primary: #FF7E00;
-    --primary-glow: rgba(255, 126, 0, 0.4);
+    --bg-dark: #0A0A0A;
+    --primary: #FF8C00;
+    --primary-glow: rgba(255, 140, 0, 0.4);
     --text-main: #ffffff;
     --text-muted: #888888;
     --border-ui: #2a2a2a;
-    --panel-bg: rgba(20, 20, 20, 0.95);
+    --panel-bg: rgba(15, 15, 15, 0.95);
     --transition: all 0.25s ease-out;
 }
 
@@ -41,9 +41,9 @@ body {
 
 .carbon-bg {
     background:
-        radial-gradient(circle at 0% 0%, rgba(255, 126, 0, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 100% 100%, rgba(255, 126, 0, 0.1) 0%, transparent 50%),
-        #050505;
+        radial-gradient(circle at 0% 0%, rgba(255, 140, 0, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 100% 100%, rgba(255, 140, 0, 0.1) 0%, transparent 50%),
+        #0A0A0A;
     position: relative;
 }
 

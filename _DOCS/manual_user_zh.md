@@ -1,6 +1,6 @@
-# 用户手册 - OpenRadioFM v.4.8 Cloud_Server
+# 用户手册 - OpenRadioFM v.5.0.0-Beta Stability Edition
 
-欢迎使用 **OpenRadioFM v.4.8 Cloud_Server**，这是针对 Android 车机（Head Units）的 FM 收音机的最终进化版。此版本引入了云端流媒体和徽标管理功能，并针对最大的稳定性和性能进行了优化。
+欢迎使用 **OpenRadioFM v.5.0.0-Beta Stability Edition**，这是针对 Android 车机（Head Units）的 FM 收音机的最终进化版。此版本引入了云端流媒体和徽标管理功能，并针对最大的稳定性和性能进行了优化。
 
 ---
 
@@ -68,4 +68,4 @@ OpenRadioFM 具有两种主要设计：
 
 ---
 **注意:** 这是一个 **BETA** 版本。某些服务器和流媒体功能正在不断测试中。
-*由 Jimmy80 为 Android 车机社区倾情开发 - v.4.8 Cloud_Server*
+*由 Jimmy80 为 Android 车机社区倾情开发 - v.5.0.0-Beta Stability Edition*
