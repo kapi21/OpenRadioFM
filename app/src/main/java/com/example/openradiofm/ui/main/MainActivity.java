@@ -972,6 +972,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // Solo manejamos MT8163/HCN aquí, ya que QS6 se inicializa de forma asíncrona e
             // independiente.
             if (mMode == FmMode.FM_MT8163) {
+                // V21.3: Si ya tenemos el motor MT8163 creado, reutilizarlo en vez de crear uno nuevo.
+                // Esto previene la duplicidad de hilos de polling y fugas de recursos.
+                if (mEngine instanceof com.example.openradiofm.data.source.MT8163Engine) {
+                    Log.i(TAG, "onServiceConnected: Reutilizando instancia existente del motor MT8163.");
+                    ((com.example.openradiofm.data.source.MT8163Engine) mEngine).updateService(mRadioService);
+                    return;
+                }
+
                 RadioEngine engine = new com.example.openradiofm.data.source.MT8163Engine(mRadioService);
                 if (engine.init(MainActivity.this)) {
                     onEngineReady(engine);
@@ -1020,6 +1028,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V3.0: Layout Selection
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
+        
+        // V21.3: Forzar habilitación de banda AM para evitar inestabilidad en motores HW (MTK8259)
+        // Se ha eliminado la opción de desactivarlo en Ajustes Premium.
+        if (!mPrefs.getBoolean("pref_enable_am", true)) {
+            mPrefs.edit().putBoolean("pref_enable_am", true).apply();
+            Log.i(TAG, "AM Band forced to enabled for stability.");
+        }
+        
         mIsV3 = mPrefs.getBoolean("pref_layout_v3", false);
         mIsSimpleLayout = mPrefs.getBoolean("pref_layout_simple", false);
 
@@ -1277,6 +1293,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V20.0: Ajuste automático por densidad (DPI)
         adjustLayoutForDPI();
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        Log.d(TAG, "onNewIntent: App ya activa, refrescando parámetros (Single Instance).");
     }
 
     @Override
@@ -1754,13 +1777,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
         }
 
-        // V4.3: Hardware Toggle for AM
-        boolean amEnabled = mPrefs.getBoolean("pref_enable_am", true);
-        boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
-        if (isAm && !amEnabled) {
-            mEngine.bandCycle();
-            return;
-        }
+        // V4.3: Hardware Toggle for AM (REMOVED v21.3)
+        // boolean amEnabled = mPrefs.getBoolean("pref_enable_am", true);
+        // boolean isAm = (band == BAND_AM1 || band == BAND_AM2);
+        // if (isAm && !amEnabled) {
+        //     mEngine.bandCycle();
+        //     return;
+        // }
 
         String bandCacheKey = band + "_" + freq;
 

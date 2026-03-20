@@ -362,8 +362,9 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Habilitar AM -->
-        <LinearLayout style="@style/SettingsRowStyle">
+        <!-- Habilitar AM (Oculto v21.3 por estabilidad hardware) -->
+        <LinearLayout style="@style/SettingsRowStyle"
+            android:visibility="gone">
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"

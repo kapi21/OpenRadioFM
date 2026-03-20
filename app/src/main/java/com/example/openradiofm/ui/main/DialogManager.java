@@ -138,7 +138,7 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
         androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
         androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
-        androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm);
+        // androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm); // Removed v21.3
 
         // Language Row
         View rowLanguage = dialog.findViewById(R.id.rowLanguage);
@@ -342,6 +342,7 @@ public class DialogManager {
             });
         }
 
+        /*
         if (swAm != null) {
             swAm.setChecked(mActivity.mPrefs.getBoolean("pref_enable_am", true));
             swAm.setOnCheckedChangeListener((bv, checked) -> {
@@ -358,6 +359,7 @@ public class DialogManager {
                 }
             });
         }
+        */
 
         if (swHistory != null) {
             swHistory.setChecked(mActivity.mPrefs.getBoolean("pref_save_history", true));

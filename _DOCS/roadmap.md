@@ -125,6 +125,39 @@
 
 ---
 
+## ✅ Sesión 19/Marzo/2026 — Completado (V.4.9.5 Audio Focus & Presets)
+
+### Audio Focus & Estabilidad (K706)
+- [x] **Gestión de AudioFocus**: Rediseñada la lógica en `K706RadioManager` para liberar el canal MCU (`SetChannel 4`) en pérdidas permanentes de foco.
+- [x] **AutoRecovery Guard**: La recuperación de audio ahora solo se intenta si la app posee el foco, evitando "robar" el audio a Spotify/Youtube.
+- [x] **SingleTask**: Configurado `launchMode` en el manifiesto para evitar instancias duplicadas.
+
+### UI & Navegación
+- [x] **Navegación Secuencial**: Implementada lógica en `PresetManager` para recorrer favoritos por slot (1-18) en lugar de por frecuencia.
+- [x] **Iconos v5**: Migración de iconos de lanzador de XML a PNG (v5.png) para mayor compatibilidad y estética.
+
+### Android Auto Analysis
+- [x] **Auditoría de Compatibilidad**: Verificado que la app es 90% compatible. Identificadas tareas para Comandos de Voz y Gestión de Colas.
+
+---
+
+## ✅ Sesión 20/Marzo/2026 — Completado (V.5.0.0 Stability Beta)
+
+### Estabilidad de Hardware (Motor Layer)
+- [x] **Protección AM (MTK8259)**: Eliminada la opción de desactivar la banda AM en ajustes. Se fuerza su activación para evitar bucles infinitos y bloqueos en el hardware Topway al intentar saltar una banda inexistente.
+- [x] **Precisión de Sintonía**: Implementado cálculo manual de pasos de frecuencia (100KHz FM / 9KHz AM) en el motor MTK para garantizar sintonización exacta.
+- [x] **Mute Decoupling**: Sincronización de silencio delegada exclusivamente a `TsCommon` según especificaciones de hardware, eliminando interferencias con `AudioManager`.
+- [x] **MT8163 Instance Fix**: Implementado método `updateService` para prevenir la duplicación de motores durante reconexiones de red o cambios de configuración.
+
+### UI & Personalización Premium
+- [x] **Light Mode Support**: Implementada compatibilidad completa para el skin "White". Ajuste de colores de fuentes, fondos y opacidades para legibilidad total.
+- [x] **Uniform Transparency**: Corregida la opacidad inconsistente en Layout 2 y Classic Skin (Cards al 100% de transparencia según diseño Glass).
+- [x] **Lanzador v5**: Solucionado el crash "Recursive reference" en el icono de la app reemplazándolo por un recurso PNG rasterizado estable.
+
+### Documentación & Web
+- [x] **GitHub Pages v5**: Actualizada la web oficial (ES/EN) con la nueva identidad visual de la versión 5 y el roadmap actualizado.
+- [x] **Repository Polish**: `README.md` y `CHANGELOG.md` actualizados con los hitos de la última semana de desarrollo intensivo.
+
 ---
 
 ## ✅ Sesión 14/Marzo/2026 — Completado (V.4.9.0 Community Logo Edition)
@@ -146,7 +179,7 @@
 
 ---
 
-## 🔲 Próximos Pasos (V.5.0+)
+## 🔲 Próximos Pasos (V.5.1+)
 
 ### Prioridad 1: V5.0 Fase 2 (Estructural)
 - [ ] **RadioUIManager**: Extraer toda la lógica de búsqueda de vistas y setters de `MainActivity`.

@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v4.9.5_Stable-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.0_Beta-red.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -105,7 +105,7 @@ graph TB
 |---|---|---|---|
 | HCN AutoRadio (ESSGO, JUNSU) | MediaTek MT8163 | `FM_MT8163` | ✅ Completo |
 | Radio K706 | K706 + MCU | `FM_K706` | ✅ Completo |
-| Radio MTK8259 / 8667 | MT8259 + MCU | `FM_MT8259` | 🛠️ En desarrollo |
+| Radio MTK8259 / 8667 | MT8259 + MCU | `FM_MT8259` | ⚠️ Beta (v5.0) |
 | Radio NWD G5 | NWD Platform | `FM_QS6` | 🛠️ En desarrollo |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
@@ -171,6 +171,18 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.0 "Stability & Light Mode" (20 de Marzo 2026) - BETA
+- **Hardware Stability (MTK8259 & MT8163)**:
+    - **Protección AM**: Eliminada la opción de desactivar AM para evitar bloqueos del motor en Topway.
+    - **Precisión de Sintonía**: Implementado cálculo manual de pasos de frecuencia en MTK para sintonización exacta.
+    - **Instancia Única**: Corregida la duplicidad del motor MT8163 en reconexiones del servicio AIDL.
+- **Personalización Premium**:
+    - **Light Mode**: Nuevo skin "White" completamente funcional con visibilidad optimizada.
+    - **Transparencia Real**: Sincronización de opacidad en todas las tarjetas y layouts.
+- **Core Polish**:
+    - Fix de crash por recursividad de iconos en el lanzador.
+    - Mitigación de parpadeo (flicker) en el texto RDS.
 
 ### v4.9.5 "Audio Focus & Sequential Presets" (19 de Marzo 2026) - STABLE
 - **Audio Focus K706 (Fix Crítico)**:

@@ -31,6 +31,9 @@ public class MT8163Engine implements RadioEngine {
     private RadioEngineCallback mCallback;
     private boolean mBound = false;
     private boolean mExternalService = false;
+    
+    // V21.3: Estado de recuperación diferida para reconexión asíncrona
+    private boolean mPendingAudioRecovery = false;
 
     // V16.2: Polling mechanism for continuous frequency updates during seek/scan
     // V21.1: Polling fuera del hilo UI para evitar jank
@@ -74,13 +77,20 @@ public class MT8163Engine implements RadioEngine {
                 
                 // V18.6: Si el servicio fue matado por el sistema (ej. abriendo Youtube)
                 // y teníamos una emisora sintonizada, la restauramos automáticamente
-                if (mLastPolledFreq > 0 && !mIsOnlineStreamingActive) {
-                    Log.d(TAG, "Restaurando frecuencia tras reconexión: " + mLastPolledFreq);
-                    mService.gotoFreq(mLastPolledFreq);
+                if ((mPendingAudioRecovery || mLastPolledFreq > 0) && !mIsOnlineStreamingActive) {
+                    Log.i(TAG, "Restaurando estado tras conexión (Re-init RDS y Audio). Freq: " + mLastPolledFreq);
+                    if (mLastPolledFreq > 0) mService.gotoFreq(mLastPolledFreq);
                     mService.requestPlayAudio();
+                    
+                    // V21.3: Re-inicializar canal RDS para evitar referencias a proceso muerto
+                    if (mHiddenPlayer != null) {
+                        mHiddenPlayer.init();
+                        mHiddenPlayer.setMute(false);
+                    }
+                    mPendingAudioRecovery = false;
                 }
             } catch (RemoteException e) {
-                Log.e(TAG, "Error registrando callback AIDL", e);
+                Log.e(TAG, "Error registrando callback AIDL o recuperando estado", e);
             }
         }
 
@@ -96,6 +106,12 @@ public class MT8163Engine implements RadioEngine {
         if ((!mBound || mService == null) && !mExternalService) {
             Log.w(TAG, "Reconectando servicio HCN (Estaba muerto)...");
             try {
+                // V21.3: Enviar broadcast de "Despertar" al hardware de radio nativo.
+                // Esto fuerza al sistema a levantar el chip de radio si estaba en standby.
+                if (mContext != null) {
+                    mContext.sendBroadcast(new Intent("com.hcn.autoradio.FMRADIO_START"));
+                }
+                
                 Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
                 intent.setPackage("com.hcn.autoradio");
                 mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
@@ -110,6 +126,18 @@ public class MT8163Engine implements RadioEngine {
         mService = null;
         mBound = false;
         reconnectIfNeeded();
+    }
+
+    /**
+     * V21.3: Permite actualizar el binder del servicio sin re-inicializar todo el motor.
+     * Evita la duplicidad de instancias y fugas de hilos de polling.
+     */
+    public void updateService(IRadioServiceAPI service) {
+        Log.i(TAG, "updateService: Actualizando binder del servicio AIDL legado.");
+        this.mService = service;
+        this.mBound = (service != null);
+        // Al actualizar el servicio, disparamos la recuperación de audio si estaba pendiente
+        enforceAudioRecovery();
     }
 
     @Override
@@ -551,9 +579,20 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void enforceAudioRecovery() {
-        reconnectIfNeeded();
+        if (mService == null) {
+            Log.w(TAG, "enforceAudioRecovery: Servicio nulo, marcando recuperación pendiente.");
+            mPendingAudioRecovery = true;
+            reconnectIfNeeded();
+            return;
+        }
+        
         // En MT8163 basta con volver a pedir el canal de audio al servicio AIDL
-        requestPlayAudio();
+        try {
+            mService.requestPlayAudio();
+        } catch (Exception e) {
+            handleDeadService("enforceAudioRecovery", e);
+        }
+        
         if (mHiddenPlayer != null) {
             mHiddenPlayer.setMute(false);
         }

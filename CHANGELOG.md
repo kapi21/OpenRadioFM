@@ -1,53 +1,19 @@
+## [5.0.0-Beta] - 2026-03-20
+### Added
+- **Estabilidad MTK8259 (Crítico)**:
+    - Nuevo sistema de paso de frecuencia (manual) para evitar errores de sintonía en Topway.
+    - Eliminada la opción "Desactivar AM" en Ajustes Premium para prevenir bucles infinitos en el hardware.
+    - Sincronización de Mute delegada exclusivamente a `TsCommon` para mayor fiabilidad.
+- **Modo Claro (White Skin)**: Implementación completa del skin "White" con visibilidad garantizada en todos los elementos de UI y fuentes.
+- **Transparencia Uniforme**: Aplicada opacidad consistente en todas las tarjetas de Layout 2 y Classic Skin.
+- **Engineering Mode v2**: Mejoras en el terminal de log "Matrix Style" y comprobación de permisos Root.
+
+### Fixed
+- **MT8163 Initialization**: Corregido bug de instancia duplicada en `onServiceConnected` mediante el método `updateService`.
+- **Iconos Recursores**: Solucionado el crash de "Recursive reference" en el icono del lanzador.
+- **RDS Flickering**: Optimizado el buffer de texto RDS para evitar parpadeos en unidades MTK.
+
 ## [4.9.5] - 2026-03-19
-### Added
-- **Navegación Secuencial**: Los botones de los layouts ahora recorren los favoritos por slot (1-18) en lugar de por frecuencia.
-
-### Fixed
-- **Audio Focus (K706)**: Corregida la gestión de foco para liberar el canal MCU en pérdidas permanentes y evitar reinicios de audio no deseados.
-- **AutoRecovery**: El hilo de recuperación ahora solo actúa si la app tiene el foco de audio.
-
-## [4.9.4] - 2026-03-19
-### Added
-- **Streaming Online Pro**: Soporte para resolución automática de playlists `.m3u` y `.pls`.
-- **Compatibilidad Icecast**: Forzado de HTTP en puertos 8xxx/9xxx para evitar fallos de SSL en hardware antiguo.
-- **MIME Type Detection**: Mejora en la detección forzada de `audio/mpeg` para URLs `/stream`.
-
-### Fixed
-- **Audio Duplicado**: Solucionado el problema donde la radio FM se activaba al volver desde segundo plano con LIVE activo.
-- **Estabilidad**: Configurado `launchMode="singleTask"` para evitar instancias duplicadas de la app.
-
-## [4.9.3] - 2026-03-15
-### Added
-- **Intent Hijacking**: Implementación de `FactoryRadioHijackerService` para interceptar la radio de fábrica en K706.
-- **Layout V3 Refresh**: Los boxes de control ahora son planos (sin bordes) para un diseño más limpio.
-- **Skin Focused**: Los colores de los Skins ahora solo se aplican a las cajas de favoritos (P1-P12).
-
-### Changed
-- **Lanzador**: Reducido el nombre de la app a "OpenRadioFM" para el escritorio de Android.
-- **Motor MTK8259**: Optimizado `forceUnmute()` para evitar redundancias de Mute por hardware.
-
-## [18.5.1] - 2026-03-07
-### Added
-- **Secuencia de Apagado QS6 (V18.4)**: Implementada desvinculación proactiva de callbacks AIDL, `ACTION_REQUEST_CHANGE_SOURCE` y sincronización de iconos de barra de estado.
-- **Optimización AM**: Bloqueo de búsquedas en Supabase para banda AM para mejorar el rendimiento.
-- **Limpieza Proactiva**: Cierre forzado de hilos de red en `RadioRepository` durante el ciclo de vida de cierre.
-
-### Fixed
-- **QS6 Tuning**: Corregida la sintonización Seek y Fine para que coincida con los pasos de frecuencia del hardware NWD.
-- **Syntax Fixes**: Corregidos errores de llaves y bloques try-catch introducidos durante la refactorización de apagado.
-
-## [5.2.0] - 2026-03-03
-### Added
-- **Botón Power Off**: Implementación de botón de apagado seguro en Layout 2 (clásico) y Layout 3 (V3).
-- **Lógica de Cierre**: Cierre de hardware (`closeDevice()`) integrado para asegurar que el MCU recupere el canal de audio del sistema al cerrar la app.
-- **Audio Focus Recovery**: Nuevo sistema de "latido" y recuperación manual (`enforceAudioRecovery`) para Spotify/Android Auto.
-- **Iconografía**: Incorporación del icono `power_off.png` a los recursos del sistema.
-
-### Fixed
-- **Audio Focus Loop**: Corregido el bloqueo de audio tras pausar Spotify en Android Auto.
-- **Mapeo de Comandos**: Sincronización de los comandos `PLAY/PAUSE` de Android Auto con la recuperación del hardware de radio.
-
-## [5.0.0-Beta] - In Progress
 ### Added
 - **Engineering Mode Dashboard**: Hidden diagnostic menu (GPS button x5) features:
     - **RF Telemetry**: Signal Quality (SQI), Stereo/Mono, LOC/DX, Estimated RSSI.
