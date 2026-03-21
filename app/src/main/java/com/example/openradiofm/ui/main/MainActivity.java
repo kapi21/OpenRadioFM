@@ -1,5 +1,6 @@
 package com.example.openradiofm.ui.main;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -887,7 +888,19 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         @Override
         public void onEngineReady(RadioEngine engine) {
             mEngine = engine;
-            mEngine.setCallback(MainActivity.this);
+            // Si RadioMediaService ya registró callback en el motor compartido (QS6/K706), combinar (no perder metadata Auto).
+            com.example.openradiofm.data.source.RadioEngineCallback existingCb = null;
+            if (mEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
+                existingCb = ((com.example.openradiofm.data.source.QS6Engine) mEngine).getCallback();
+            } else if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
+                existingCb = ((com.example.openradiofm.data.source.K706Engine) mEngine).getCallback();
+            }
+            if (existingCb != null && existingCb != MainActivity.this) {
+                mEngine.setCallback(new com.example.openradiofm.data.source.CompositeRadioEngineCallback(
+                        MainActivity.this, existingCb));
+            } else {
+                mEngine.setCallback(MainActivity.this);
+            }
 
             // V5.5: Sincronizar managers con el nuevo motor
             if (mPlaybackManager != null) {
@@ -942,6 +955,20 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     if (isFinishing() || isDestroyed()) return;
                     if (mEngine != null) {
                         showToast("Hardware: " + mEngine.getEngineName());
+                        if (mEngine.getEngineName() != null && mEngine.getEngineName().contains("QS6")
+                                && mPrefs != null && !mPrefs.getBoolean("pref_qs6_firmware_notice_shown", false)) {
+                            mPrefs.edit().putBoolean("pref_qs6_firmware_notice_shown", true).apply();
+                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                                if (isFinishing() || isDestroyed()) return;
+                                try {
+                                    new AlertDialog.Builder(MainActivity.this)
+                                            .setTitle(R.string.qs6_audio_firmware_notice_title)
+                                            .setMessage(R.string.qs6_audio_firmware_notice)
+                                            .setPositiveButton(R.string.close, null)
+                                            .show();
+                                } catch (Exception ignored) {}
+                            }, 2800);
+                        }
                         refreshPresetsCache();
                         refreshPresetButtons();
                         refreshRadioStatus();

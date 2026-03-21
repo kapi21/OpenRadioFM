@@ -4,11 +4,18 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
+import android.os.Build;
 import android.os.DeadObjectException;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 
+import com.example.openradiofm.utils.MetadataUtils;
 import com.nwd.radio.service.RadioCallback;
 import com.nwd.radio.service.RadioFeature;
 import com.nwd.radio.service.data.Frequency;
@@ -21,6 +28,8 @@ import com.nwd.radio.service.data.RadioPoint;
  */
 public class QS6Engine implements RadioEngine {
     private static final String TAG = "QS6Engine";
+    /** Filtra en logcat: debe aparecer junto a MediaFocusControl con callingPack=com.example.openradiofm */
+    private static final String FOCUS_TAG = "OpenRadioFM-AudioFocus";
     private Context mContext;
     private RadioEngineCallback mCallback;
 
@@ -68,11 +77,225 @@ public class QS6Engine implements RadioEngine {
     private RadioFeature mNwdService;
     private boolean mIsBound = false;
     private int mRetryCount = 0;
-    private static final int MAX_RETRIES = 3;
+    private static final int MAX_RETRIES = 5;
+
+    /** Paquete del servicio de radio NWD (QS6). */
+    private static final String NWD_RADIO_PACKAGE = "com.nwd.radio.service";
+
+    /**
+     * AppID de {@code com.nwd.radio} en {@code ApplicationList.xml} / SourceConstant.
+     * SprdRadioManager / AWRadioManager solo ejecutan {@code InitFM()}+{@code SendArmFmMediaPlay()}
+     * si {@code ACTION_APP_IN_OUT} trae {@code extra_app_id == 8}; el default del intent es 4 (launcher).
+     */
+    private static final int NWD_APPLICATION_ID_RADIO = 8;
+
+    /** Nombre con typo en firmware NWD (SprdRadioManager$1). Cierra el camino de audio FM en ARM. */
+    private static final String ACTION_EXIT_ARM_FM_RADIO = "com.nwd.android.ACTION_EXIT_ARM_FM_RAIDO";
+
+    /**
+     * Evita spam de ACTION_CHANGE_SOURCE: onResume + init + recovery disparaban docenas de broadcasts
+     * y el SourceMgr (com.nwd.setting.service) puede quedar en estado incoherente.
+     */
+    /** -1 = aún no hemos enviado {@code ACTION_CHANGE_SOURCE} a radio en esta sesión. */
+    private long mLastSourceRadioBroadcastElapsedMs = -1L;
+    private static final long MIN_PLAY_AUDIO_INTERVAL_MS = 900L;
+    /**
+     * Varios {@code force=true} en arranque (onResume + postInit + recovery) mandaban 3×
+     * {@code ACTION_CHANGE_SOURCE} en &lt;1s y el SourceMgr NWD puede quedar sin audio.
+     */
+    /** > ~1,7s entre el primer arranque y enforceAudioRecovery; si es menor, se repite InitFM() y hay “salto” de audio. */
+    private static final long MIN_FORCE_SOURCE_BROADCAST_MS = 2400L;
+
+    /** Mismo criterio: evitar segundo {@code ACTION_APP_IN_OUT} (extra_app_id=8) en ráfaga. */
+    private long mLastNwdAppEnterBroadcastElapsedMs = -1L;
+    private static final long MIN_NWD_APP_ENTER_INTERVAL_MS = 2400L;
+
+    /**
+     * QS6 (NWD): el reproductor de música suena porque pide AudioFocus; la FM a veces queda muda
+     * si solo enviamos broadcasts. Pedimos el mismo tipo de foco ({@code USAGE_MEDIA}) que
+     * {@code com.nwd.setting.service} en los logs del sistema para que el HAL enrute el DSP.
+     */
+    private AudioManager mAudioManager;
+    private AudioManager.OnAudioFocusChangeListener mAudioFocusListener;
+    private AudioFocusRequest mAudioFocusRequest;
+    private boolean mIsAudioFocusHeld = false;
+    /** Si cambia la forma del {@link AudioFocusRequest}, incrementar para recrear el builder. */
+    private static final int AUDIO_FOCUS_REQUEST_BUILD = 2;
+    private int mAudioFocusRequestBuild = 0;
+
+    /**
+     * True mientras queremos FM en primer plano (no hemos llamado a {@link #requestStopAudio}).
+     * Tras conectar NWD, el sistema a veces envía {@link AudioManager#AUDIOFOCUS_LOSS} al instante;
+     * sin re-pedir foco la salida queda muda pese a RDS/tuner OK.
+     */
+    private volatile boolean mWantsFmAudioRoute = false;
+    private static final long FOCUS_RECLAIM_AFTER_LOSS_MS = 320L;
+    private final Runnable mReclaimAudioFocusRunnable = () -> {
+        if (!mWantsFmAudioRoute || mContext == null) return;
+        Log.i(FOCUS_TAG, "Reclaim: nuevo requestAudioFocus tras AUDIOFOCUS_LOSS (QS6/NWD)");
+        requestAndroidAudioFocusForFmOnMainThread();
+    };
 
     // V21.0: Shadow Motor Components
     private android.content.BroadcastReceiver mShadowReceiver;
     private android.database.ContentObserver mSettingsObserver;
+
+    /**
+     * NWD (Bengal/QS) a veces envía extras como {@link Byte} en lugar de {@link Integer}.
+     * {@link Intent#getIntExtra(String, int)} lanza {@link ClassCastException} en ese caso.
+     */
+    private static int getNumericExtraAsInt(Intent intent, String key, int defaultValue) {
+        if (intent == null || !intent.hasExtra(key)) return defaultValue;
+        android.os.Bundle extras = intent.getExtras();
+        if (extras == null) return defaultValue;
+        Object val = extras.get(key);
+        if (val == null) return defaultValue;
+        if (val instanceof Integer) return (Integer) val;
+        if (val instanceof Byte) return ((Byte) val).intValue();
+        if (val instanceof Short) return ((Short) val).intValue();
+        if (val instanceof Long) return ((Long) val).intValue();
+        if (val instanceof String) {
+            try {
+                return Integer.parseInt((String) val);
+            } catch (NumberFormatException e) {
+                return defaultValue;
+            }
+        }
+        return defaultValue;
+    }
+
+    /**
+     * NWD guarda {@link #SETTING_NWD_PS} como cadena hexadecimal (8 bytes RDS → 16 chars, a veces 32).
+     * Si se muestra tal cual, la UI enseña "434f5045..." o "0000000000000000".
+     */
+    private static boolean looksLikeNwdHexPsBlob(String s) {
+        if (s == null) return false;
+        int len = s.length();
+        if (len != 8 && len != 16 && len != 32) return false;
+        if ((len & 1) != 0) return false;
+        for (int i = 0; i < len; i++) {
+            char c = s.charAt(i);
+            if ((c < '0' || c > '9') && (c < 'a' || c > 'f') && (c < 'A' || c > 'F')) {
+                return false;
+            }
+        }
+        // 8 chars solo 0-9 son casi siempre basura (p. ej. "87600000"), no PS hex real.
+        if (len == 8) {
+            boolean hasAlphaHex = false;
+            for (int i = 0; i < len; i++) {
+                char c = s.charAt(i);
+                if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+                    hasAlphaHex = true;
+                    break;
+                }
+            }
+            if (!hasAlphaHex) return false;
+        }
+        return true;
+    }
+
+    /**
+     * El firmware a veces mete la frecuencia en el campo PS (solo dígitos).
+     */
+    private static boolean looksLikeNumericFrequencyMasqueradingAsPs(String s) {
+        if (s == null) return false;
+        String t = s.trim();
+        if (t.isEmpty()) return false;
+        for (int i = 0; i < t.length(); i++) {
+            if (!Character.isDigit(t.charAt(i))) return false;
+        }
+        try {
+            int v = Integer.parseInt(t);
+            int len = t.length();
+            if (len >= 5 && len <= 6 && v >= 87500 && v <= 108000) return true;
+            if (len == 5 && v >= 76000 && v < 87500) return true;
+            if (len == 4 && v >= 8750 && v <= 10800) return true;
+            if (len >= 3 && len <= 4 && v >= 100 && v <= 1999) return true;
+        } catch (NumberFormatException ignored) {
+        }
+        return false;
+    }
+
+    /**
+     * {@link #SETTING_NWD_FREQ}: FM suele ir en décimas de MHz (8760); a veces en kHz (87600);
+     * MW puede aparecer como 531 o 5310 (×10 erróneo).
+     */
+    private static int nwdSystemSettingFreqToKhz(int freqRaw) {
+        if (freqRaw <= 0) return -1;
+        if (freqRaw >= 8750 && freqRaw <= 10800) {
+            return freqRaw * 10;
+        }
+        if (freqRaw >= 87500 && freqRaw <= 108000) {
+            return freqRaw;
+        }
+        if (freqRaw >= 76000 && freqRaw < 87500) {
+            return freqRaw;
+        }
+        if (freqRaw >= 100 && freqRaw <= 1999) {
+            return freqRaw;
+        }
+        if (freqRaw >= 2000 && freqRaw <= 30000 && freqRaw % 10 == 0) {
+            int d = freqRaw / 10;
+            if (d >= 100 && d <= 2000) {
+                return d;
+            }
+        }
+        return freqRaw;
+    }
+
+    /**
+     * NWD reporta Band 1/2/4 en frecuencias que son FM (92.7, 97.7 MHz) — unificar para UI/estado.
+     */
+    private static int coerceQs6BandForDisplay(int freqKhz, int bandFromNwd) {
+        if (freqKhz >= 65000 && freqKhz <= 120000) {
+            return 0;
+        }
+        if (freqKhz >= 100 && freqKhz <= 2500) {
+            return bandFromNwd >= 3 ? bandFromNwd : 3;
+        }
+        return bandFromNwd;
+    }
+
+    private static String decodeHexPsToAscii(String hex) {
+        StringBuilder ascii = new StringBuilder(hex.length() / 2);
+        for (int i = 0; i < hex.length(); i += 2) {
+            int b = Integer.parseInt(hex.substring(i, i + 2), 16);
+            if (b >= 32 && b < 127) {
+                ascii.append((char) b);
+            } else {
+                ascii.append(' ');
+            }
+        }
+        return ascii.toString();
+    }
+
+    /**
+     * Convierte PS crudo (hex NWD o texto AIDL) a texto legible para la UI.
+     */
+    private static String normalizeNwdPsDisplay(String raw) {
+        if (raw == null) return null;
+        String s = raw.trim();
+        if (s.isEmpty()) return null;
+        if (looksLikeNwdHexPsBlob(s)) {
+            s = decodeHexPsToAscii(s);
+        }
+        s = s.replace('\t', ' ').trim();
+        s = s.replaceAll("\\s+", " ").trim();
+        if (s.isEmpty()) return null;
+        StringBuilder sb = new StringBuilder(s.length());
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c >= 32 && c < 127) {
+                sb.append(c);
+            }
+        }
+        s = sb.toString().trim();
+        if (s.isEmpty()) return null;
+        if (looksLikeNumericFrequencyMasqueradingAsPs(s)) {
+            return null;
+        }
+        return s;
+    }
 
     // Implementación de la Callback del IPC hacia NWD
     private final RadioCallback.Stub mNwdCallback = new RadioCallback.Stub() {
@@ -89,19 +312,29 @@ public class QS6Engine implements RadioEngine {
             }
 
             mCurrentFreq = freqKhz;
-            mCurrentBand = (int) bandType;
-            
+            int bandDisp = coerceQs6BandForDisplay(freqKhz, (int) bandType);
+            mCurrentBand = bandDisp;
+            mLastReportedFreq = freqKhz;
+            final String psDisp = normalizeNwdPsDisplay(psName);
+            if (psDisp != null) {
+                mLastPs = psDisp;
+                mLastReportedPs = psDisp;
+            }
+
+            final int bandForUi = bandDisp;
             mMainHandler.post(() -> {
                 if (mCallback != null) {
-                    mCallback.onBandChanged((int) bandType);
+                    mCallback.onBandChanged(bandForUi);
                     mCallback.onFrequencyChanged(freqKhz);
-                    if (psName != null && !psName.trim().isEmpty()) {
-                        mCallback.onRdsName(psName);
+                    if (psDisp != null) {
+                        mCallback.onRdsName(psDisp);
                     }
                 }
             });
-            
-            Log.d(TAG, "NWD AIDL notifyCurrentFrequency -> FreqRaw: " + frequency + ", FreqKhz: " + freqKhz + ", Band: " + bandType + ", PS: " + psName);
+
+            Log.d(TAG, "NWD AIDL notifyCurrentFrequency -> FreqRaw: " + frequency + ", FreqKhz: " + freqKhz
+                    + ", Band: " + bandType + "→" + bandDisp + ", PS: " + psName
+                    + (psDisp != null ? (" → disp: " + psDisp) : ""));
         }
 
         @Override
@@ -165,10 +398,11 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyRtMessage(String rtMessage) {
+            final String rtClean = MetadataUtils.cleanRdsText(rtMessage);
             Log.d(TAG, "NWD AIDL notifyRtMessage -> " + rtMessage);
             mMainHandler.post(() -> {
-                if (mCallback != null && rtMessage != null) {
-                    mCallback.onRdsText(rtMessage);
+                if (mCallback != null && rtClean != null && !rtClean.isEmpty()) {
+                    mCallback.onRdsText(rtClean);
                 }
             });
         }
@@ -206,24 +440,27 @@ public class QS6Engine implements RadioEngine {
                 public void onReceive(Context context, Intent intent) {
                     String action = intent.getAction();
                     if (ACTION_SEND_RADIO_FREQUENCE_NEW.equals(action)) {
-                        int freqRaw = intent.getIntExtra("extra_frequence", -1);
-                        int band = intent.getIntExtra("extra_band", -1);
-                        String ps = intent.getStringExtra("extra_ps_name");
+                        int freqRaw = getNumericExtraAsInt(intent, "extra_frequence", -1);
+                        int band = getNumericExtraAsInt(intent, "extra_band", -1);
+                        String psRaw = intent.getStringExtra("extra_ps_name");
+                        String psNorm = normalizeNwdPsDisplay(psRaw);
 
                         if (freqRaw != -1) {
                             // Escalar frecuencia (NWD suele mandar décimas de MHz en FM)
                             int freqKhz = (band < 3) ? freqRaw * 10 : freqRaw;
-                            
+
                             // Solo notificar si hay cambio real para evitar bucles con AIDL
-                            if (freqKhz != mCurrentFreq || (ps != null && !ps.equals(mLastPs))) {
-                                Log.d(TAG, "Shadow Motor (Broadcast) -> Freq: " + freqKhz + ", PS: " + ps);
-                                updateLocalState(freqKhz, band, ps);
+                            boolean psDiffers = psNorm != null && !psNorm.equals(mLastPs);
+                            if (freqKhz != mCurrentFreq || psDiffers) {
+                                Log.d(TAG, "Shadow Motor (Broadcast) -> Freq: " + freqKhz + ", PS: " + psNorm);
+                                updateLocalState(freqKhz, psRaw);
                             }
                         }
                     } else if (ACTION_SEND_RADIO_RDS_RT.equals(action)) {
                         String rt = intent.getStringExtra("extra_rds_rt");
-                        if (rt != null && mCallback != null) {
-                            mMainHandler.post(() -> mCallback.onRdsText(rt));
+                        String rtClean = MetadataUtils.cleanRdsText(rt);
+                        if (rtClean != null && !rtClean.isEmpty() && mCallback != null) {
+                            mMainHandler.post(() -> mCallback.onRdsText(rtClean));
                         }
                     }
                 }
@@ -248,15 +485,21 @@ public class QS6Engine implements RadioEngine {
                     if (mContext == null) return;
                     try {
                         int freqRaw = android.provider.Settings.System.getInt(mContext.getContentResolver(), SETTING_NWD_FREQ, -1);
-                        String ps = android.provider.Settings.System.getString(mContext.getContentResolver(), SETTING_NWD_PS);
-                        
-                        if (freqRaw != -1) {
-                            int band = (freqRaw < 3000) ? 0 : 3; // Heurística simple para banda
-                            int freqKhz = (freqRaw < 3000) ? freqRaw * 10 : freqRaw;
+                        String psRaw = android.provider.Settings.System.getString(mContext.getContentResolver(), SETTING_NWD_PS);
+                        String psNorm = normalizeNwdPsDisplay(psRaw);
 
-                            if (freqKhz != mCurrentFreq) {
-                                Log.d(TAG, "Shadow Motor (Settings) -> Freq: " + freqKhz + ", PS: " + ps);
-                                updateLocalState(freqKhz, band, ps);
+                        if (freqRaw != -1) {
+                            int freqKhz = nwdSystemSettingFreqToKhz(freqRaw);
+                            if (freqKhz <= 0) {
+                                return;
+                            }
+
+                            boolean freqChanged = freqKhz != mCurrentFreq;
+                            boolean psChanged = psNorm != null && !psNorm.equals(mLastReportedPs);
+                            if (freqChanged || psChanged) {
+                                Log.d(TAG, "Shadow Motor (Settings) -> raw=" + freqRaw + " → kHz=" + freqKhz
+                                        + ", PS: " + psNorm);
+                                updateLocalState(freqKhz, psRaw);
                             }
                         }
                     } catch (Exception e) {
@@ -265,12 +508,18 @@ public class QS6Engine implements RadioEngine {
                 }
             };
 
-            mContext.getContentResolver().registerContentObserver(
+            android.content.ContentResolver cr = mContext.getContentResolver();
+            cr.registerContentObserver(
                 android.provider.Settings.System.getUriFor(SETTING_NWD_FREQ),
                 false,
                 mSettingsObserver
             );
-            
+            cr.registerContentObserver(
+                android.provider.Settings.System.getUriFor(SETTING_NWD_PS),
+                false,
+                mSettingsObserver
+            );
+
             Log.i(TAG, "Shadow Motor iniciado (Broadcast + Settings)");
         } catch (Exception e) {
             Log.e(TAG, "Error FATAL al iniciar Shadow Motor: " + e.getMessage());
@@ -290,7 +539,13 @@ public class QS6Engine implements RadioEngine {
         }
     }
 
-    private void updateLocalState(int freqKhz, int band, String ps) {
+    /**
+     * Shadow (broadcast/settings): solo frecuencia + PS. La banda la fija AIDL con
+     * {@link #coerceQs6BandForDisplay}; si notificáramos banda aquí, la heurística vieja
+     * (p. ej. 5310→MW mal) rompe la UI.
+     */
+    private void updateLocalState(int freqKhz, String psRaw) {
+        String ps = normalizeNwdPsDisplay(psRaw);
         // Filtrado de ruido: Si los valores son idénticos a lo último reportado, ignorar.
         // Esto evita lag masivo por actualizaciones redundantes del Shadow Motor.
         if (freqKhz == mLastReportedFreq && (ps == null || ps.equals(mLastReportedPs))) {
@@ -298,17 +553,19 @@ public class QS6Engine implements RadioEngine {
         }
 
         mCurrentFreq = freqKhz;
-        mCurrentBand = band;
-        if (ps != null) mLastPs = ps;
-        
+        if (ps != null) {
+            mLastPs = ps;
+        }
+
         mLastReportedFreq = freqKhz;
-        if (ps != null) mLastReportedPs = ps;
+        if (ps != null) {
+            mLastReportedPs = ps;
+        }
 
         mMainHandler.post(() -> {
             if (mCallback != null) {
                 mCallback.onFrequencyChanged(freqKhz);
-                mCallback.onBandChanged(band);
-                if (ps != null && !ps.trim().isEmpty()) {
+                if (ps != null) {
                     mCallback.onRdsName(ps);
                 }
             }
@@ -327,12 +584,8 @@ public class QS6Engine implements RadioEngine {
             try {
                 service.linkToDeath(() -> {
                     Log.e(TAG, "!!! QS6 SERVICE DIED !!! El proceso com.nwd.radio.service ha muerto inesperadamente.");
-                    mNwdService = null;
-                    mIsBound = false;
-                    // Intentar recuperar audio si es posible
-                    if (mContext != null) {
-                        Log.w(TAG, "QS6: Intentando recuperación de emergencia...");
-                    }
+                    // Mismo flujo que DeadObject: unbind + re-init (evita conexión zombie).
+                    mMainHandler.post(() -> handleServiceDeath());
                 }, 0);
             } catch (RemoteException e) {
                 Log.e(TAG, "Error vinculando DeathRecipient en QS6", e);
@@ -344,7 +597,20 @@ public class QS6Engine implements RadioEngine {
                 Log.d(TAG, "QS6 (Background): Registrando callbacks y modo de fondo...");
                 performAidlCall("registCallback", () -> mNwdService.registCallback(mNwdCallback));
                 performAidlCall("setRadioBackServiceOn", () -> mNwdService.setRadioBackServiceOn(true));
+                // Algunas builds NWD usan INTRO() como paso de inicialización del stack (nombre heredado).
+                performAidlCall("INTRO", () -> mNwdService.INTRO());
+                performAidlCall("getRadioState", () -> {
+                    byte st = mNwdService.getRadioState();
+                    Log.i(TAG, "QS6 AIDL getRadioState=" + st + " (tras INTRO/setRadioBackServiceOn)");
+                });
                 Log.d(TAG, "QS6 (Background): Configuración inicial completada.");
+                // Refuerzo: el MCU a veces solo enruta audio tras un segundo empujón (logs: set radio switch to true).
+                // Solo AIDL: el cambio de fuente ya lo hace init/onResume/recovery con broadcast implícito.
+                mMainHandler.postDelayed(() -> {
+                    if (mNwdService == null) return;
+                    performAidlCall("setRadioBackServiceOn(retry)", () -> mNwdService.setRadioBackServiceOn(true));
+                    Log.d(TAG, "QS6: Handshake post-AIDL (solo setRadioBackServiceOn, 350ms)");
+                }, 350);
             }).start();
         }
 
@@ -382,18 +648,240 @@ public class QS6Engine implements RadioEngine {
     }
 
     private void handleServiceDeath() {
+        // Desvincular antes de volver a bindService; si no, Android puede dejar el ServiceConnection
+        // colgando y provocar doble bind / DeadObject en bucle.
+        if (mContext != null && mIsBound) {
+            try {
+                mContext.unbindService(mConnection);
+            } catch (Exception ignored) {
+            }
+        }
         mNwdService = null;
         mIsBound = false;
-        
+
         if (mRetryCount < MAX_RETRIES) {
             mRetryCount++;
             Log.w(TAG, "QS6: Re-vinculando servicio (Intento " + mRetryCount + "/" + MAX_RETRIES + ")...");
             if (mContext != null) {
-                // Forzar un bindService limpio
                 init(mContext);
             }
         } else {
             Log.e(TAG, "QS6: Se alcanzó el máximo de reintentos de reconexión. El hardware NWD no responde.");
+        }
+    }
+
+    /**
+     * Broadcasts de cambio de fuente / audio: deben ser IMPLÍCITOS (sin {@code setPackage}).
+     * En QS6, {@code com.nwd.setting.service} (SourceMgr) arbitra el audio; si el intent solo
+     * va a {@code com.nwd.radio.service}, el gestor de fuentes no conmuta y la FM puede quedar muda.
+     */
+    private void sendSourceSystemBroadcast(Intent intent) {
+        if (mContext == null || intent == null) return;
+        try {
+            intent.setPackage(null);
+            intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            mContext.sendBroadcast(intent);
+        } catch (Exception e) {
+            Log.e(TAG, "sendSourceSystemBroadcast falló", e);
+        }
+    }
+
+    /**
+     * Para intents que deben ir solo al APK de radio (p. ej. wake interno); si falla, reintenta implícito.
+     */
+    private void sendNwdBroadcast(Intent intent) {
+        if (mContext == null || intent == null) return;
+        try {
+            intent.setPackage(NWD_RADIO_PACKAGE);
+            mContext.sendBroadcast(intent);
+        } catch (Exception e) {
+            Log.w(TAG, "sendNwdBroadcast (con paquete) falló: " + e.getMessage());
+            try {
+                intent.setPackage(null);
+                intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                mContext.sendBroadcast(intent);
+            } catch (Exception e2) {
+                Log.e(TAG, "sendNwdBroadcast (fallback) falló", e2);
+            }
+        }
+    }
+
+    /** Inicializa AudioManager y el listener (una vez). */
+    private void setupAudioFocus() {
+        if (mContext == null) return;
+        if (mAudioManager != null) return;
+        Context app = mContext.getApplicationContext();
+        mAudioManager = (AudioManager) app.getSystemService(Context.AUDIO_SERVICE);
+        mAudioFocusListener = focusChange -> {
+            Log.d(TAG, "QS6 AudioFocus change: " + focusChange);
+            switch (focusChange) {
+                case AudioManager.AUDIOFOCUS_GAIN:
+                    mIsAudioFocusHeld = true;
+                    if (mWantsFmAudioRoute) {
+                        applyQs6HalAudioHints("after-audiofocus-gain");
+                    }
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS:
+                    mIsAudioFocusHeld = false;
+                    // Un solo reclaim diferido: el inmediato + el de 320ms generaban ráfagas de
+                    // requestAudioFocus sin mejorar el audio en ROMs NWD (LOSS viene del SourceMgr).
+                    scheduleAudioFocusReclaimAfterLoss("AUDIOFOCUS_LOSS");
+                    break;
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                    break;
+                default:
+                    break;
+            }
+        };
+    }
+
+    /**
+     * Pistas al Audio HAL (mismo estilo que MT8163/K706). En algunos SoC Qualcomm/NWD el DSP FM
+     * escucha {@code fm_radio_on} aunque el servicio NWD falle abriendo {@code /dev/audio-dsp}.
+     */
+    private void applyQs6HalAudioHints(String reason) {
+        setupAudioFocus();
+        if (mAudioManager == null) return;
+        try {
+            mAudioManager.setMode(AudioManager.MODE_NORMAL);
+            Log.d(TAG, "QS6: setMode(MODE_NORMAL) (" + reason + ")");
+        } catch (Exception e) {
+            Log.w(TAG, "QS6: setMode(MODE_NORMAL) falló", e);
+        }
+        String[] paramsList = new String[] {
+                "fm_radio_on=1;fm_mute=0",
+                "fm_radio_on=1",
+        };
+        for (String p : paramsList) {
+            try {
+                mAudioManager.setParameters(p);
+                Log.i(FOCUS_TAG, "setParameters (" + reason + "): " + p);
+            } catch (Exception e) {
+                Log.w(TAG, "setParameters falló (" + reason + "): " + p, e);
+            }
+        }
+    }
+
+    private void scheduleAudioFocusReclaimAfterLoss(String reason) {
+        if (!mWantsFmAudioRoute) return;
+        mMainHandler.removeCallbacks(mReclaimAudioFocusRunnable);
+        mMainHandler.postDelayed(mReclaimAudioFocusRunnable, FOCUS_RECLAIM_AFTER_LOSS_MS);
+        Log.d(TAG, "QS6: programado reclaim AudioFocus en " + FOCUS_RECLAIM_AFTER_LOSS_MS + "ms (" + reason + ")");
+    }
+
+    private void cancelAudioFocusReclaim() {
+        mMainHandler.removeCallbacks(mReclaimAudioFocusRunnable);
+    }
+
+    /**
+     * Alineado con {@code KernelUtils.appStart(Context, appId)} y SprdRadioManager$1 / AWRadioManager$1:
+     * hace falta {@code extra_app_id=8} para que el servicio NWD llame {@code InitFM()} y enrute audio.
+     */
+    private void notifyNwdThirdPartyRadioAppInOut(boolean appEntered) {
+        if (mContext == null) return;
+        try {
+            if (appEntered) {
+                long now = SystemClock.elapsedRealtime();
+                if (mLastNwdAppEnterBroadcastElapsedMs >= 0
+                        && (now - mLastNwdAppEnterBroadcastElapsedMs) < MIN_NWD_APP_ENTER_INTERVAL_MS) {
+                    Log.d(TAG, "QS6: APP_IN_OUT enter omitido (" + MIN_NWD_APP_ENTER_INTERVAL_MS
+                            + "ms) — evita doble InitFM / salto de audio");
+                    return;
+                }
+                mLastNwdAppEnterBroadcastElapsedMs = now;
+                Intent i = new Intent("com.nwd.action.ACTION_APP_IN_OUT");
+                i.putExtra("extra_app_id", NWD_APPLICATION_ID_RADIO);
+                i.putExtra("extra_app_operation", 1);
+                i.putExtra("extra_app_event", 0);
+                i.putExtra("extra_app_in_out", 1);
+                i.putExtra("extra_app_reset", 0);
+                sendSourceSystemBroadcast(i);
+                Log.i(TAG, "QS6: ACTION_APP_IN_OUT extra_app_id=8 op=1 (InitFM en Sprd/AW — ver QS NWD/tools ingeniería inversa)");
+            } else {
+                mLastNwdAppEnterBroadcastElapsedMs = -1L;
+                Intent exit = new Intent(ACTION_EXIT_ARM_FM_RADIO);
+                sendSourceSystemBroadcast(exit);
+                Log.d(TAG, "QS6: " + ACTION_EXIT_ARM_FM_RADIO + " (ExitFm en stack ARM)");
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "notifyNwdThirdPartyRadioAppInOut falló", e);
+        }
+    }
+
+    /**
+     * Pide foco de audio como app de medios (solo desde el hilo principal).
+     * En ROMs NWD, llamar {@code requestAudioFocus} desde un hilo de fondo puede no registrar la petición
+     * en AudioService (no verás {@code com.example.openradiofm} en MediaFocusControl).
+     */
+    private void requestAndroidAudioFocusForFmOnMainThread() {
+        if (mContext == null) return;
+        setupAudioFocus();
+        if (mAudioManager == null) return;
+        String pkg = mContext.getApplicationContext().getPackageName();
+        Log.i(FOCUS_TAG, "QS6Engine.requestAudioFocus pkg=" + pkg + " (debe coincidir con MediaFocusControl)");
+        try {
+            int result;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (mAudioFocusRequest == null || mAudioFocusRequestBuild != AUDIO_FOCUS_REQUEST_BUILD) {
+                    AudioAttributes aa = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+                    // Igual que MemorySettingService en log: flags=0x0 (sin DELAY_OK).
+                    mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(aa)
+                            .setWillPauseWhenDucked(false)
+                            .setOnAudioFocusChangeListener(mAudioFocusListener, mMainHandler)
+                            .build();
+                    mAudioFocusRequestBuild = AUDIO_FOCUS_REQUEST_BUILD;
+                }
+                result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+            } else {
+                result = mAudioManager.requestAudioFocus(mAudioFocusListener,
+                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            }
+            if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+                mIsAudioFocusHeld = true;
+                Log.i(FOCUS_TAG, "GRANTED result=" + result + " pkg=" + pkg);
+                Log.d(TAG, "QS6: AudioFocus GRANTED para FM (USAGE_MEDIA)");
+                applyQs6HalAudioHints("after-audiofocus-granted");
+            } else if (result == AudioManager.AUDIOFOCUS_REQUEST_DELAYED) {
+                Log.i(FOCUS_TAG, "DELAYED result=" + result + " pkg=" + pkg);
+                Log.d(TAG, "QS6: AudioFocus DELAYED — esperando concesión del sistema");
+            } else {
+                Log.w(FOCUS_TAG, "NO concedido result=" + result + " pkg=" + pkg);
+                Log.w(TAG, "QS6: AudioFocus no concedido (result=" + result + ") — probar de nuevo al cambiar de pantalla");
+            }
+        } catch (Exception e) {
+            Log.e(FOCUS_TAG, "Excepción en requestAudioFocus pkg=" + pkg, e);
+            Log.e(TAG, "QS6: requestAudioFocus falló", e);
+        }
+    }
+
+    private void abandonAndroidAudioFocusForFm() {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            abandonAndroidAudioFocusForFmOnMainThread();
+        } else {
+            mMainHandler.post(this::abandonAndroidAudioFocusForFmOnMainThread);
+        }
+    }
+
+    private void abandonAndroidAudioFocusForFmOnMainThread() {
+        if (mAudioManager == null || mAudioFocusListener == null) return;
+        String pkg = mContext != null ? mContext.getApplicationContext().getPackageName() : "?";
+        Log.i(FOCUS_TAG, "abandonAudioFocus pkg=" + pkg);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && mAudioFocusRequest != null) {
+                mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
+            } else {
+                mAudioManager.abandonAudioFocus(mAudioFocusListener);
+            }
+            Log.d(TAG, "QS6: AudioFocus abandonado");
+        } catch (Exception e) {
+            Log.e(TAG, "QS6: abandonAudioFocus falló", e);
+        } finally {
+            mIsAudioFocusHeld = false;
         }
     }
 
@@ -403,6 +891,7 @@ public class QS6Engine implements RadioEngine {
     @Override
     public boolean init(Context context) {
         this.mContext = context;
+        setupAudioFocus();
         Log.d(TAG, "Iniciando motor QS6 (Plan Nivel 2 - NWD AIDL IPC)");
 
         // 1. Iniciamos el intent al servicio original
@@ -438,13 +927,12 @@ public class QS6Engine implements RadioEngine {
         // 2. Iniciar Shadow Motor (REDUNDANCIA V21.0)
         setupShadowMotor();
 
-        // 3. Despertar hardware y encender sistema de audio principal (Source NWD)
-        // V17.6: Ejecutamos en hilo de fondo para no penalizar el arranque de la app
+        // 3. Despertar hardware (sin ACTION_CHANGE_SOURCE aquí: onResume + recovery ya lo hacen;
+        // un tercer disparo en init desincronizaba el SourceMgr en QS6).
         new Thread(() -> {
             try {
                 requestWakeUp();
-                Thread.sleep(500); // Dar un respiro al hardware
-                requestPlayAudio();
+                Thread.sleep(500);
             } catch (Exception e) {}
         }).start();
 
@@ -466,6 +954,10 @@ public class QS6Engine implements RadioEngine {
         }
 
         Log.d(TAG, "QS6: release() - Soltando recursos y desvinculando AIDL definitivamente");
+
+        mWantsFmAudioRoute = false;
+        cancelAudioFocusReclaim();
+        abandonAndroidAudioFocusForFm();
         
         // V21.0: Limpieza forzada de Shadow Motor
         cleanupShadowMotor();
@@ -481,6 +973,7 @@ public class QS6Engine implements RadioEngine {
             mNwdService = null;
         }
         // V18.4: Forzar limpieza de hilos o estados si fuera necesario
+        com.example.openradiofm.ui.main.RadioServiceController.clearSharedLocalEngineIfSame(this);
     }
 
     @Override
@@ -688,13 +1181,56 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public boolean requestPlayAudio() {
-        if (mContext == null)
+        return requestPlayAudioInternal(false);
+    }
+
+    /**
+     * Igual que {@link #requestPlayAudio()} pero ignora el throttle (arranque en frío, recuperación).
+     */
+    public boolean requestPlayAudioForced() {
+        return requestPlayAudioInternal(true);
+    }
+
+    /**
+     * Encadena foco + broadcast en el hilo principal cuando el llamador viene de un hilo de fondo
+     * (init, enforceAudioRecovery); evita que MediaFocusControl nunca vea a {@code com.example.openradiofm}.
+     */
+    private boolean requestPlayAudioInternal(boolean force) {
+        if (mContext == null) {
             return false;
+        }
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            return requestPlayAudioInternalOnMain(force);
+        }
+        mMainHandler.post(() -> requestPlayAudioInternalOnMain(force));
+        return true;
+    }
+
+    private boolean requestPlayAudioInternalOnMain(boolean force) {
+        mWantsFmAudioRoute = true;
+        cancelAudioFocusReclaim();
+        // Siempre pedir AudioFocus al volver a FM aunque el broadcast esté en throttle.
+        requestAndroidAudioFocusForFmOnMainThread();
+        long now = SystemClock.elapsedRealtime();
+        if (!force && mLastSourceRadioBroadcastElapsedMs >= 0
+                && (now - mLastSourceRadioBroadcastElapsedMs) < MIN_PLAY_AUDIO_INTERVAL_MS) {
+            Log.d(TAG, "QS6: requestPlayAudio omitido (throttle " + MIN_PLAY_AUDIO_INTERVAL_MS + "ms)");
+            return true;
+        }
+        if (force && mLastSourceRadioBroadcastElapsedMs >= 0
+                && (now - mLastSourceRadioBroadcastElapsedMs) < MIN_FORCE_SOURCE_BROADCAST_MS) {
+            Log.d(TAG, "QS6: ACTION_CHANGE_SOURCE coalescido (" + MIN_FORCE_SOURCE_BROADCAST_MS
+                    + "ms) — ya se pidió foco arriba");
+            return true;
+        }
+        mLastSourceRadioBroadcastElapsedMs = now;
         try {
-            Log.d(TAG, "Iniciando Audio NWD Radio -> ACTION_CHANGE_SOURCE a SOURCE_RADIO");
+            Log.d(TAG, "Iniciando Audio NWD Radio -> ACTION_CHANGE_SOURCE a SOURCE_RADIO (broadcast implícito)");
             Intent intent = new Intent(ACTION_CHANGE_SOURCE);
             intent.putExtra("extra_source_id", SOURCE_RADIO);
-            mContext.sendBroadcast(intent); // System wide
+            sendSourceSystemBroadcast(intent);
+            notifyNwdThirdPartyRadioAppInOut(true);
+            applyQs6HalAudioHints("after-change-source-radio");
             return true;
         } catch (Exception e) {
             return false;
@@ -709,12 +1245,15 @@ public class QS6Engine implements RadioEngine {
             try {
                 requestWakeUp();
                 Thread.sleep(800); // Antes 300ms
-                requestPlayAudio();
-                Thread.sleep(500); // Antes 200ms
-                // Forzar sintonía a la frecuencia actual para "enganchar" el tuner
-                tune(mCurrentFreq);
-                setMute(false);
-                Log.d(TAG, "QS6: Audio Recovery completado con re-tune a " + mCurrentFreq);
+                mMainHandler.post(() -> {
+                    requestPlayAudioInternalOnMain(true);
+                    mMainHandler.postDelayed(() -> {
+                        tune(mCurrentFreq);
+                        setMute(false);
+                        applyQs6HalAudioHints("after-recovery-tune");
+                        Log.d(TAG, "QS6: Audio Recovery completado con re-tune a " + mCurrentFreq);
+                    }, 450);
+                });
             } catch (Exception e) {
                 Log.e(TAG, "Error en secuencia de recuperación de audio QS6", e);
             }
@@ -733,26 +1272,35 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void setOnlineStreamingActive(boolean active) {
-        // En QS6 el cambio de fuente ya es potente, no necesitamos flag interno por ahora
         if (active) {
             switchToAndroidAudio();
+        } else {
+            // OnlineStreamManager ya llama a switchToFmAudio(); esto refuerza el HAL al cerrar streaming.
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                applyQs6HalAudioHints("streaming-inactive");
+            } else {
+                mMainHandler.post(() -> applyQs6HalAudioHints("streaming-inactive"));
+            }
         }
     }
 
     public void requestStopAudio() {
+        mWantsFmAudioRoute = false;
+        cancelAudioFocusReclaim();
+        notifyNwdThirdPartyRadioAppInOut(false);
         try {
-            Log.d(TAG, "QS6: Solicitando cambio de fuente -> ACTION_REQUEST_CHANGE_SOURCE (0)");
-            // V18.4: En Qualcomm NWD, REQUEST_CHANGE_SOURCE es la vía oficial "amigable"
+            Log.d(TAG, "QS6: Solicitando cambio de fuente -> SOURCE_ANDROID (broadcast implícito)");
             Intent intent = new Intent("com.nwd.action.ACTION_REQUEST_CHANGE_SOURCE");
-            intent.putExtra("extra_source_id", SOURCE_ANDROID); // 0
-            mContext.sendBroadcast(intent);
-            
-            // También enviamos el ACTION_CHANGE_SOURCE directo por si el gestor de peticiones falla
+            intent.putExtra("extra_source_id", SOURCE_ANDROID);
+            sendSourceSystemBroadcast(intent);
+
             Intent intentDirect = new Intent(ACTION_CHANGE_SOURCE);
-            intentDirect.putExtra("extra_source_id", SOURCE_ANDROID); // 0
-            mContext.sendBroadcast(intentDirect);
+            intentDirect.putExtra("extra_source_id", SOURCE_ANDROID);
+            sendSourceSystemBroadcast(intentDirect);
         } catch (Exception e) {
             Log.e(TAG, "Error enviando fuente stop", e);
+        } finally {
+            abandonAndroidAudioFocusForFm();
         }
     }
 
@@ -824,6 +1372,11 @@ public class QS6Engine implements RadioEngine {
         this.mCallback = cb;
     }
 
+    /** Para combinar con {@link CompositeRadioEngineCallback} cuando el motor es compartido. */
+    public RadioEngineCallback getCallback() {
+        return mCallback;
+    }
+
     /**
      * V17.5: Envía el broadcast mágico que despierta el hardware NWD sin abrir la interfaz.
      */
@@ -833,7 +1386,7 @@ public class QS6Engine implements RadioEngine {
             Log.d(TAG, "QS6: Despertando hardware mediante ACTION_START_NWD_ACTIVITY");
             Intent intent = new Intent(ACTION_START_NWD_ACTIVITY);
             intent.putExtra("pkg", "com.nwd.radio");
-            mContext.sendBroadcast(intent);
+            sendNwdBroadcast(intent);
         } catch (Exception e) {
             Log.e(TAG, "Error enviando wake-up broadcast", e);
         }

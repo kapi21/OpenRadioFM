@@ -13,6 +13,10 @@ import android.util.Log;
 import com.hcn.autoradio.IRadioServiceAPI;
 import com.example.openradiofm.data.source.RadioEngine;
 import com.example.openradiofm.data.source.MT8163Engine;
+import com.example.openradiofm.service.RadioMediaService;
+
+import android.os.Build;
+
 import java.util.List;
 
 /**
@@ -21,6 +25,28 @@ import java.util.List;
  */
 public class RadioServiceController {
     private static final String TAG = "RadioServiceController";
+
+    /**
+     * Motor instanciado localmente (QS6/K706) compartido entre MainActivity y RadioMediaService.
+     * Ambos crean su propio RadioServiceController; sin esto se llamaría a start() dos veces y habría
+     * doble {@code QS6Engine} / doble bind a NWD.
+     */
+    private static volatile RadioEngine sSharedLocalEngine;
+    private static final Object SHARED_LOCAL_ENGINE_LOCK = new Object();
+
+    /**
+     * Llamar desde {@link com.example.openradiofm.data.source.QS6Engine#release()} (y K706 si aplica)
+     * para no reutilizar un motor ya cerrado.
+     */
+    public static void clearSharedLocalEngineIfSame(RadioEngine engine) {
+        if (engine == null) return;
+        synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+            if (sSharedLocalEngine == engine) {
+                sSharedLocalEngine = null;
+                Log.d(TAG, "Motor local compartido liberado (referencia única)");
+            }
+        }
+    }
 
     public interface ServiceListener {
         void onModeDetected(MainActivity.FmMode mode);
@@ -86,13 +112,21 @@ public class RadioServiceController {
         // McuService)
         if (mode == MainActivity.FmMode.FM_K706) {
             try {
-                com.example.openradiofm.data.source.K706Engine engine = new com.example.openradiofm.data.source.K706Engine();
-                // Ojo: MainActivity necesita que se llame a init antes de hacer cualquier cosa
-                if (engine.init(mContext)) {
-                    if (mListener != null)
-                        mListener.onEngineReady(engine);
-                } else {
-                    Log.e(TAG, "Error iniciando K706Engine (init devolvió false)");
+                synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                    if (sSharedLocalEngine instanceof com.example.openradiofm.data.source.K706Engine) {
+                        Log.i(TAG, "=> K706Engine ya activo — reutilizando instancia compartida");
+                        if (mListener != null)
+                            mListener.onEngineReady(sSharedLocalEngine);
+                        return;
+                    }
+                    com.example.openradiofm.data.source.K706Engine engine = new com.example.openradiofm.data.source.K706Engine();
+                    if (engine.init(mContext)) {
+                        sSharedLocalEngine = engine;
+                        if (mListener != null)
+                            mListener.onEngineReady(engine);
+                    } else {
+                        Log.e(TAG, "Error iniciando K706Engine (init devolvió false)");
+                    }
                 }
                 return;
             } catch (Exception e) {
@@ -101,16 +135,36 @@ public class RadioServiceController {
         } else if (mode == MainActivity.FmMode.FM_QS6) {
             // V14.0: QS6 (NWD) ahora utiliza un engine que se auto-vincula (bindService
             // interno en init)
-            Log.e(TAG, "=> RAMA QS6 ALCANZADA. INSTANCIANDO MOTOR QS6Engine...");
             try {
-                com.example.openradiofm.data.source.QS6Engine engine = new com.example.openradiofm.data.source.QS6Engine();
-                Log.e(TAG, "=> QS6Engine INSTANCIADO OK. LLAMANDO A .init()...");
-                if (engine.init(mContext)) {
-                    Log.e(TAG, "=> QS6Engine INIT EXITOSO. AVISANDO A LA INTERFAZ...");
-                    if (mListener != null)
-                        mListener.onEngineReady(engine);
-                } else {
-                    Log.e(TAG, "Error iniciando QS6Engine V14 (init devolvió false)");
+                synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                    if (sSharedLocalEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
+                        Log.i(TAG, "=> QS6Engine ya activo — reutilizando instancia compartida (evita doble START MainActivity+RadioMediaService)");
+                        if (mListener != null)
+                            mListener.onEngineReady(sSharedLocalEngine);
+                        return;
+                    }
+                    Log.e(TAG, "=> RAMA QS6 ALCANZADA. INSTANCIANDO MOTOR QS6Engine...");
+                    com.example.openradiofm.data.source.QS6Engine engine = new com.example.openradiofm.data.source.QS6Engine();
+                    Log.e(TAG, "=> QS6Engine INSTANCIADO OK. LLAMANDO A .init()...");
+                    if (engine.init(mContext)) {
+                        Log.e(TAG, "=> QS6Engine INIT EXITOSO. AVISANDO A LA INTERFAZ...");
+                        sSharedLocalEngine = engine;
+                        try {
+                            Intent mediaSvc = new Intent(mContext, RadioMediaService.class);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                mContext.startForegroundService(mediaSvc);
+                            } else {
+                                mContext.startService(mediaSvc);
+                            }
+                            Log.i(TAG, "QS6: RadioMediaService arrancado en paralelo (AudioFocus / sesión medios)");
+                        } catch (Exception e) {
+                            Log.w(TAG, "QS6: no se pudo arrancar RadioMediaService anticipado", e);
+                        }
+                        if (mListener != null)
+                            mListener.onEngineReady(engine);
+                    } else {
+                        Log.e(TAG, "Error iniciando QS6Engine V14 (init devolvió false)");
+                    }
                 }
                 return;
             } catch (Exception e) {
@@ -206,7 +260,6 @@ public class RadioServiceController {
         int engineIdx = mPrefs.getInt("pref_radio_engine", 0);
 
         // Prioridad: Selección manual del usuario
-        if (engineIdx == 1)
         if (engineIdx == 1) return MainActivity.FmMode.FM_K706;
         if (engineIdx == 2) return MainActivity.FmMode.FM_QS6;
         if (engineIdx >= 3 && engineIdx <= 5) return MainActivity.FmMode.FM_MT8163;

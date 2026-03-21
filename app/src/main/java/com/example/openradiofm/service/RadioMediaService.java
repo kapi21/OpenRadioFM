@@ -23,7 +23,12 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.graphics.Bitmap;
 
 import com.example.openradiofm.R;
@@ -90,6 +95,15 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private String mLastNotifiedArtist = "";
     private Bitmap mLastNotifiedLogo = null;
 
+    /**
+     * QS6 (NWD): segundo {@link AudioManager#requestAudioFocus} desde este servicio en foreground.
+     * Algunas unidades enlazan el bus de audio al cliente de medios activo, no solo al proceso de la Activity.
+     */
+    private static final String QS6_SVC_FOCUS_TAG = "OpenRadioFM-MediaSvc-Focus";
+    private AudioManager mQs6ServiceAudioManager;
+    private AudioManager.OnAudioFocusChangeListener mQs6ServiceFocusListener;
+    private AudioFocusRequest mQs6ServiceFocusRequest;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -139,8 +153,20 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         Log.w(TAG, "No se pudo inicializar RadioSessionController en el servicio", e);
                     }
                     try {
-                        // El servicio también necesita callbacks para actualizar metadata/estado a Android Auto
-                        mEngine.setCallback(mEngineCallback);
+                        // El servicio también necesita callbacks para actualizar metadata/estado a Android Auto.
+                        // Si MainActivity ya registró callback en el motor compartido (QS6/K706), combinar (no pisar la UI).
+                        com.example.openradiofm.data.source.RadioEngineCallback uiCb = null;
+                        if (mEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
+                            uiCb = ((com.example.openradiofm.data.source.QS6Engine) mEngine).getCallback();
+                        } else if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
+                            uiCb = ((com.example.openradiofm.data.source.K706Engine) mEngine).getCallback();
+                        }
+                        if (uiCb != null) {
+                            mEngine.setCallback(new com.example.openradiofm.data.source.CompositeRadioEngineCallback(
+                                    uiCb, mEngineCallback));
+                        } else {
+                            mEngine.setCallback(mEngineCallback);
+                        }
                     } catch (Exception e) {
                         Log.w(TAG, "No se pudo setear callback al engine desde el servicio", e);
                     }
@@ -148,6 +174,10 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
                     // Aplicar comandos pendientes (si llegaron antes de inicializar el engine)
                     flushPendingCommands();
+
+                    if (engine instanceof com.example.openradiofm.data.source.QS6Engine) {
+                        ensureQs6ServiceAudioFocus();
+                    }
                 }
 
                 @Override
@@ -456,6 +486,10 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
         // En PLAY sí somos foreground (media playback)
         startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+
+        if (mEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
+            ensureQs6ServiceAudioFocus();
+        }
     }
 
     private void handlePause() {
@@ -495,6 +529,57 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         } catch (Exception ignored) {}
         updateNotification();
         ensureNotificationVisible();
+
+        if (wasPlaying && mEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
+            abandonQs6ServiceAudioFocus();
+        }
+    }
+
+    private void ensureQs6ServiceAudioFocus() {
+        try {
+            if (mQs6ServiceAudioManager == null) {
+                mQs6ServiceAudioManager = (AudioManager) getApplicationContext().getSystemService(AUDIO_SERVICE);
+                mQs6ServiceFocusListener = focusChange ->
+                        Log.d(TAG, "QS6 MediaSvc onAudioFocusChange=" + focusChange);
+            }
+            if (mQs6ServiceAudioManager == null) return;
+
+            int result;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (mQs6ServiceFocusRequest == null) {
+                    AudioAttributes aa = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+                    mQs6ServiceFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(aa)
+                            .setWillPauseWhenDucked(false)
+                            .setOnAudioFocusChangeListener(mQs6ServiceFocusListener, new Handler(Looper.getMainLooper()))
+                            .build();
+                }
+                result = mQs6ServiceAudioManager.requestAudioFocus(mQs6ServiceFocusRequest);
+            } else {
+                result = mQs6ServiceAudioManager.requestAudioFocus(mQs6ServiceFocusListener,
+                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN);
+            }
+            Log.i(QS6_SVC_FOCUS_TAG, "requestAudioFocus result=" + result + " (RadioMediaService)");
+        } catch (Exception e) {
+            Log.w(TAG, "ensureQs6ServiceAudioFocus falló", e);
+        }
+    }
+
+    private void abandonQs6ServiceAudioFocus() {
+        try {
+            if (mQs6ServiceAudioManager == null || mQs6ServiceFocusListener == null) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && mQs6ServiceFocusRequest != null) {
+                mQs6ServiceAudioManager.abandonAudioFocusRequest(mQs6ServiceFocusRequest);
+            } else {
+                mQs6ServiceAudioManager.abandonAudioFocus(mQs6ServiceFocusListener);
+            }
+            Log.i(QS6_SVC_FOCUS_TAG, "abandonAudioFocus (RadioMediaService)");
+        } catch (Exception e) {
+            Log.w(TAG, "abandonQs6ServiceAudioFocus falló", e);
+        }
     }
 
     private void enqueuePlay() {
@@ -1213,6 +1298,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     @Override
     public void onDestroy() {
+        abandonQs6ServiceAudioFocus();
         try {
             if (mPlaybackManager != null) {
                 // Liberar referencia (no mata hardware por sí mismo)

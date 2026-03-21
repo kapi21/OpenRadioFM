@@ -70,6 +70,7 @@ public class K706Engine implements RadioEngine {
         }
         mCallback = null;
         mManager = null;
+        com.example.openradiofm.ui.main.RadioServiceController.clearSharedLocalEngineIfSame(this);
     }
 
     @Override
@@ -293,6 +294,11 @@ public class K706Engine implements RadioEngine {
     @Override
     public void setCallback(RadioEngineCallback cb) {
         this.mCallback = cb;
+    }
+
+    /** Para combinar con {@link CompositeRadioEngineCallback} cuando el motor es compartido. */
+    public RadioEngineCallback getCallback() {
+        return mCallback;
     }
 
     /**

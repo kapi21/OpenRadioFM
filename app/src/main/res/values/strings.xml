@@ -2,6 +2,10 @@
     <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
     <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
     <string name="accessibility_service_description">Este servicio permite a OpenRadioFM sobreponerse cuando pulsas el botón físico de RADIO en unidades Android compatibles (ej: K706), ignorando la app de fábrica.</string>
+
+    <!-- QS6 / NWD: aviso cuando RDS y sintonía OK pero el firmware no mezcla audio FM para apps de terceros -->
+    <string name="qs6_audio_firmware_notice_title">Unidad QS6 (NWD)</string>
+    <string name="qs6_audio_firmware_notice">La sintonía y el RDS funcionan; el hardware responde bien.\n\nSi no oyes audio por los altavoces, suele ser una limitación del firmware: la salida FM a veces solo la activa la radio del fabricante.\n\nPrueba la app de radio OEM de la unidad o una actualización de sistema.</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Personalización Premium</string>

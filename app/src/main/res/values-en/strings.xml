@@ -2,6 +2,9 @@
     <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
     <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
     <string name="accessibility_service_description">This service allows OpenRadioFM to overlay when you press the physical RADIO button on compatible Android units (e.g., K706), bypassing the stock radio app.</string>
+
+    <string name="qs6_audio_firmware_notice_title">QS6 unit (NWD)</string>
+    <string name="qs6_audio_firmware_notice">Tuning and RDS work; the tuner hardware is fine.\n\nIf there is no sound through the speakers, this is often a firmware limitation: FM audio output may only be enabled for the manufacturer radio app.\n\nTry the OEM radio app or a system update.</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Premium Customization</string>
