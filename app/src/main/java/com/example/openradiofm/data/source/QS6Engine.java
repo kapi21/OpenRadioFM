@@ -22,9 +22,9 @@ import com.nwd.radio.service.data.Frequency;
 import com.nwd.radio.service.data.RadioPoint;
 
 /**
- * V14.0: Motor Nativo Avanzado mediante IPC AIDL para QS6 G5 (NWD).
- * Se conecta al servicio oficial com.nwd.radio.service.RadioService,
- * ganando acceso profundo a RDS, presets y sincronía bidireccional perfecta.
+ * V14.0+: Motor nativo AIDL para QS6 G5 (NWD) — {@code com.nwd.radio.service.RadioService}.
+ * V22.0: Callbacks AIDL completos (PTY, DX/local, estéreo piloto+decodificador), {@code toggleRdsFeature}
+ * alineado con {@link RadioEngine} (0/1/2), {@code gotoPreset}, sync tras bind y fallback stopScan.
  */
 public class QS6Engine implements RadioEngine {
     private static final String TAG = "QS6Engine";
@@ -36,7 +36,13 @@ public class QS6Engine implements RadioEngine {
     // Estado local sincronizado por AIDL
     private int mCurrentFreq = 87500;
     private int mCurrentBand = 0;
+    /** Piloto RDS / portadora con subportadora estéreo (callback {@code notifyStereo}). */
     private boolean mIsStereo = false;
+    /**
+     * Decodificación estéreo activa en el stack NWD ({@code setStreroOn} / {@code notifyStereoOn}).
+     * La UI usa {@link #effectiveStereoForUi()}: sin decodificador no se muestra estéreo aunque haya piloto.
+     */
+    private boolean mStereoDecoderOn = true;
     private boolean mIsMute = false;
     private boolean mIsAfEnabled = false;
     private boolean mIsTaEnabled = false;
@@ -66,6 +72,19 @@ public class QS6Engine implements RadioEngine {
     // V21.0: Shadow Motor Settings Keys
     private static final String SETTING_NWD_FREQ = "nwd_radio_current_freq";
     private static final String SETTING_NWD_PS = "nwd_radio_current_ps_data";
+    /** Banda actual que escribe NWD junto a la frecuencia (ver Fase D / RadioProtocalUtil). */
+    private static final String SETTING_NWD_BAND = "nwd_radio_current_band";
+    /**
+     * Máscara RDS escrita por NWD al recibir el grupo MCU ({@code RadioProtocalUtil.responseRDS}).
+     * Bit TP = Traffic Program (emisora TP), no el interruptor TA ni AF.
+     * Alineado con {@code com.nwd.radio.service.RadioConstant.RDSType} en smali OEM.
+     */
+    private static final String SETTING_NWD_RDS_MASK = "nwd_radio_rds_enable";
+    private static final int NWD_RDS_BIT_AF = 0x1;
+    private static final int NWD_RDS_BIT_TA = 0x2;
+    /** Traffic Program (programa de tráfico) — solo debe activar el icono TP cuando el bit viene del RDS real. */
+    private static final int NWD_RDS_BIT_TP = 0x8;
+    private static final int NWD_RDS_BIT_RDS = 0x80;
 
     // KEY_VALUE Mapeos
     private static final byte KEY_FM = 0x48;
@@ -244,10 +263,16 @@ public class QS6Engine implements RadioEngine {
     }
 
     /**
-     * NWD reporta Band 1/2/4 en frecuencias que son FM (92.7, 97.7 MHz) — unificar para UI/estado.
+     * Mapea banda NWD a índice UI (0=FM1, 1=FM2, 2=FM3, 3+=AM/SW).
+     * En aire FM la frecuencia suele seguir en 65–120 MHz al cambiar FM1↔FM2↔FM3: hay que
+     * respetar {@code bandFromNwd} 0..2; forzar todo a FM1 rompía el indicador hasta saltar a AM.
+     * Valores raros del OEM en FM (p. ej. 4) se tratan como FM1.
      */
     private static int coerceQs6BandForDisplay(int freqKhz, int bandFromNwd) {
         if (freqKhz >= 65000 && freqKhz <= 120000) {
+            if (bandFromNwd >= 0 && bandFromNwd <= 2) {
+                return bandFromNwd;
+            }
             return 0;
         }
         if (freqKhz >= 100 && freqKhz <= 2500) {
@@ -297,6 +322,77 @@ public class QS6Engine implements RadioEngine {
         return s;
     }
 
+    /** Nombres PTY RDS (tabla EU, 0–31). */
+    private static final String[] RDS_PTY_EU = {
+            "—", "Noticias", "Actualidad", "Información", "Deportes", "Educación", "Drama",
+            "Cultura", "Ciencia", "Variedades", "Pop", "Rock", "Fácil", "Clásica lig.",
+            "Clásica", "Otra música", "Tiempo", "Economía", "Infantil", "Social",
+            "Religión", "Teléfono", "Viajes", "Ocio", "Jazz", "Country", "Música nacional",
+            "Oldies", "Folk", "Documental", "Test alarma", "Alarma"
+    };
+
+    private static String rdsPtyEuString(byte ptyType) {
+        int i = ptyType & 0xff;
+        if (i >= 0 && i < RDS_PTY_EU.length) {
+            return RDS_PTY_EU[i];
+        }
+        return "PTY " + i;
+    }
+
+    private boolean effectiveStereoForUi() {
+        return mStereoDecoderOn && mIsStereo;
+    }
+
+    private void postStereoUiIfNeeded() {
+        mMainHandler.post(() -> {
+            if (mCallback != null) {
+                mCallback.onStereoChanged(effectiveStereoForUi());
+            }
+        });
+    }
+
+    /**
+     * Actualiza solo el indicador TP desde el bit 0x8. En {@code ArmRadioManager} {@code getRDSState(8)}
+     * suele devolver false; entonces se usa {@link #SETTING_NWD_RDS_MASK} (misma máscara que escribe el MCU).
+     */
+    private void refreshTpTrafficProgramFromNwd() {
+        boolean tp = false;
+        if (mNwdService != null) {
+            try {
+                tp = mNwdService.getRDSState(NWD_RDS_BIT_TP);
+            } catch (RemoteException e) {
+                Log.w(TAG, "refreshTpTrafficProgram: getRDSState(TP)", e);
+            }
+        }
+        if (!tp) {
+            tp = readTpBitFromSystemRdsMask();
+        }
+        mIsTpEnabled = tp;
+    }
+
+    private boolean readTpBitFromSystemRdsMask() {
+        if (mContext == null) return false;
+        try {
+            int mask = android.provider.Settings.System.getInt(
+                    mContext.getContentResolver(), SETTING_NWD_RDS_MASK, 0);
+            return (mask & NWD_RDS_BIT_TP) != 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    /** AF/TA según máscara AIDL + TP real (bit 0x8 / Settings). Llamar dentro de {@code performAidlCall} o con servicio ya listo. */
+    private void refreshAfTaTpFromNwdService() {
+        if (mNwdService == null) return;
+        try {
+            mIsAfEnabled = mNwdService.getRDSState(NWD_RDS_BIT_AF);
+            mIsTaEnabled = mNwdService.getRDSState(NWD_RDS_BIT_TA);
+        } catch (RemoteException e) {
+            Log.w(TAG, "refreshAfTaTpFromNwdService", e);
+        }
+        refreshTpTrafficProgramFromNwd();
+    }
+
     // Implementación de la Callback del IPC hacia NWD
     private final RadioCallback.Stub mNwdCallback = new RadioCallback.Stub() {
         @Override
@@ -339,7 +435,8 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyCurrentIsTA(boolean isTA) {
-            mIsTaEnabled = isTA;
+            // isTA = anuncio de tráfico en antena (TA on-air), no el interruptor TA ni el TP.
+            refreshTpTrafficProgramFromNwd();
             mMainHandler.post(() -> {
                 if (mCallback != null) {
                     mCallback.onRdsStatus(mIsAfEnabled, isTA, mIsTpEnabled);
@@ -349,26 +446,54 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyCurrentPTYType(byte ptyType) {
+            final String label = rdsPtyEuString(ptyType);
+            Log.d(TAG, "NWD AIDL notifyCurrentPTYType -> " + (ptyType & 0xff) + " " + label);
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onRdsPty(label);
+                }
+            });
         }
 
         @Override
         public void notifyNearOn(boolean isOn) {
+            // NWD "Near" ≈ modo local (filtro DX/local); alineado con toggleDxLocal / isNearOn.
+            mIsDxLocal = isOn;
+            Log.d(TAG, "NWD AIDL notifyNearOn -> local/near=" + isOn);
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onDxLocalChanged(isOn);
+                }
+            });
         }
 
         @Override
         public void notifyPrefabFrequency(Frequency[] frequencys) {
+            int n = frequencys == null ? 0 : frequencys.length;
+            Log.d(TAG, "NWD AIDL notifyPrefabFrequency -> count=" + n);
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onRawEvent(200, "prefab_freq_count=" + n);
+                }
+            });
         }
 
         @Override
         public void notifyPrefabPTYType(byte ptyType) {
+            final String label = rdsPtyEuString(ptyType);
+            Log.d(TAG, "NWD AIDL notifyPrefabPTYType -> " + label);
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onRdsPty(label);
+                }
+            });
         }
 
         @Override
         public void notifyRDSStateChange() {
-            // V19.5: Consultar estados reales tras el cambio
+            // Tras cambio RDS (incl. bit TP en máscara MCU): AF/TA = bits 1 y 2; TP = bit 0x8 o Settings.
             performAidlCall("notifyRDSStateChange", () -> {
-                mIsAfEnabled = mNwdService.getRDSState(1); // 1 = AF en NWD
-                mIsTaEnabled = mNwdService.getRDSState(0); // 0 = TA en NWD
+                refreshAfTaTpFromNwdService();
                 mMainHandler.post(() -> {
                     if (mCallback != null) {
                         mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
@@ -379,6 +504,13 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyRadioPoint(RadioPoint[] radioPoints) {
+            int n = radioPoints == null ? 0 : radioPoints.length;
+            Log.d(TAG, "NWD AIDL notifyRadioPoint -> count=" + n);
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onRawEvent(201, "radio_point_count=" + n);
+                }
+            });
         }
 
         @Override
@@ -394,6 +526,12 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyRdsShowState(boolean isShow) {
+            Log.d(TAG, "NWD AIDL notifyRdsShowState -> " + isShow);
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onRawEvent(202, "rds_show=" + isShow);
+                }
+            });
         }
 
         @Override
@@ -409,20 +547,27 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyState(byte state) {
-        }
-
-        @Override
-        public void notifyStereo(boolean isStereo) {
-            mIsStereo = isStereo;
+            Log.d(TAG, "NWD AIDL notifyState -> " + state);
             mMainHandler.post(() -> {
                 if (mCallback != null) {
-                    mCallback.onStereoChanged(isStereo);
+                    mCallback.onRawEvent(state & 0xff, "nwd_radio_state");
                 }
             });
         }
 
         @Override
+        public void notifyStereo(boolean isStereo) {
+            mIsStereo = isStereo;
+            postStereoUiIfNeeded();
+            Log.d(TAG, "NWD AIDL notifyStereo (piloto)=" + isStereo + " decoder=" + mStereoDecoderOn
+                    + " ui=" + effectiveStereoForUi());
+        }
+
+        @Override
         public void notifyStereoOn(boolean isOn) {
+            mStereoDecoderOn = isOn;
+            postStereoUiIfNeeded();
+            Log.d(TAG, "NWD AIDL notifyStereoOn (decodificador)=" + isOn);
         }
     };
 
@@ -447,13 +592,18 @@ public class QS6Engine implements RadioEngine {
 
                         if (freqRaw != -1) {
                             // Escalar frecuencia (NWD suele mandar décimas de MHz en FM)
-                            int freqKhz = (band < 3) ? freqRaw * 10 : freqRaw;
+                            int freqKhz = (band >= 0 && band < 3) ? freqRaw * 10 : freqRaw;
+                            int bandDisp = (band >= 0)
+                                    ? coerceQs6BandForDisplay(freqKhz, band)
+                                    : coerceQs6BandForDisplay(freqKhz, mCurrentBand);
 
                             // Solo notificar si hay cambio real para evitar bucles con AIDL
                             boolean psDiffers = psNorm != null && !psNorm.equals(mLastPs);
-                            if (freqKhz != mCurrentFreq || psDiffers) {
-                                Log.d(TAG, "Shadow Motor (Broadcast) -> Freq: " + freqKhz + ", PS: " + psNorm);
-                                updateLocalState(freqKhz, psRaw);
+                            boolean bandDiffers = bandDisp != mCurrentBand;
+                            if (freqKhz != mCurrentFreq || psDiffers || bandDiffers) {
+                                Log.d(TAG, "Shadow Motor (Broadcast) -> Freq: " + freqKhz + ", bandRaw=" + band
+                                        + " → disp=" + bandDisp + ", PS: " + psNorm);
+                                updateLocalState(freqKhz, psRaw, band >= 0 ? bandDisp : null);
                             }
                         }
                     } else if (ACTION_SEND_RADIO_RDS_RT.equals(action)) {
@@ -484,8 +634,25 @@ public class QS6Engine implements RadioEngine {
                 public void onChange(boolean selfChange, android.net.Uri uri) {
                     if (mContext == null) return;
                     try {
-                        int freqRaw = android.provider.Settings.System.getInt(mContext.getContentResolver(), SETTING_NWD_FREQ, -1);
-                        String psRaw = android.provider.Settings.System.getString(mContext.getContentResolver(), SETTING_NWD_PS);
+                        if (uri != null && uri.equals(android.provider.Settings.System.getUriFor(SETTING_NWD_RDS_MASK))) {
+                            boolean prevTp = mIsTpEnabled;
+                            refreshTpTrafficProgramFromNwd();
+                            if (prevTp != mIsTpEnabled && mCallback != null) {
+                                mMainHandler.post(() -> {
+                                    if (mCallback != null) {
+                                        mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
+                                    }
+                                });
+                            }
+                            return;
+                        }
+                        android.content.ContentResolver cr = mContext.getContentResolver();
+                        if (uri != null && uri.equals(android.provider.Settings.System.getUriFor(SETTING_NWD_BAND))) {
+                            applyBandFromSettingsSystem(cr);
+                            return;
+                        }
+                        int freqRaw = android.provider.Settings.System.getInt(cr, SETTING_NWD_FREQ, -1);
+                        String psRaw = android.provider.Settings.System.getString(cr, SETTING_NWD_PS);
                         String psNorm = normalizeNwdPsDisplay(psRaw);
 
                         if (freqRaw != -1) {
@@ -494,12 +661,14 @@ public class QS6Engine implements RadioEngine {
                                 return;
                             }
 
+                            Integer bandUi = readBandDisplayFromSettings(cr, freqKhz);
                             boolean freqChanged = freqKhz != mCurrentFreq;
                             boolean psChanged = psNorm != null && !psNorm.equals(mLastReportedPs);
-                            if (freqChanged || psChanged) {
+                            boolean bandChanged = bandUi != null && bandUi != mCurrentBand;
+                            if (freqChanged || psChanged || bandChanged) {
                                 Log.d(TAG, "Shadow Motor (Settings) -> raw=" + freqRaw + " → kHz=" + freqKhz
-                                        + ", PS: " + psNorm);
-                                updateLocalState(freqKhz, psRaw);
+                                        + ", bandUi=" + bandUi + ", PS: " + psNorm);
+                                updateLocalState(freqKhz, psRaw, bandUi);
                             }
                         }
                     } catch (Exception e) {
@@ -516,6 +685,16 @@ public class QS6Engine implements RadioEngine {
             );
             cr.registerContentObserver(
                 android.provider.Settings.System.getUriFor(SETTING_NWD_PS),
+                false,
+                mSettingsObserver
+            );
+            cr.registerContentObserver(
+                android.provider.Settings.System.getUriFor(SETTING_NWD_RDS_MASK),
+                false,
+                mSettingsObserver
+            );
+            cr.registerContentObserver(
+                android.provider.Settings.System.getUriFor(SETTING_NWD_BAND),
                 false,
                 mSettingsObserver
             );
@@ -539,19 +718,49 @@ public class QS6Engine implements RadioEngine {
         }
     }
 
+    /** Banda UI desde {@link #SETTING_NWD_BAND} + frecuencia actual en kHz; null si la clave no existe. */
+    private static Integer readBandDisplayFromSettings(android.content.ContentResolver cr, int freqKhz) {
+        try {
+            int bandRaw = android.provider.Settings.System.getInt(cr, SETTING_NWD_BAND, -1);
+            if (bandRaw < 0) return null;
+            return coerceQs6BandForDisplay(freqKhz, bandRaw);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
-     * Shadow (broadcast/settings): solo frecuencia + PS. La banda la fija AIDL con
-     * {@link #coerceQs6BandForDisplay}; si notificáramos banda aquí, la heurística vieja
-     * (p. ej. 5310→MW mal) rompe la UI.
+     * Solo cambió {@link #SETTING_NWD_BAND} (p. ej. ciclo FM1→FM2 sin mover frecuencia en Settings todavía).
      */
-    private void updateLocalState(int freqKhz, String psRaw) {
+    private void applyBandFromSettingsSystem(android.content.ContentResolver cr) {
+        if (mContext == null || cr == null) return;
+        try {
+            int bandRaw = android.provider.Settings.System.getInt(cr, SETTING_NWD_BAND, -1);
+            if (bandRaw < 0) return;
+            int freqRaw = android.provider.Settings.System.getInt(cr, SETTING_NWD_FREQ, -1);
+            int freqKhz = freqRaw > 0 ? nwdSystemSettingFreqToKhz(freqRaw) : mCurrentFreq;
+            if (freqKhz <= 0) freqKhz = mCurrentFreq;
+            int bandDisp = coerceQs6BandForDisplay(freqKhz, bandRaw);
+            String psRaw = android.provider.Settings.System.getString(cr, SETTING_NWD_PS);
+            updateLocalState(freqKhz, psRaw, bandDisp);
+        } catch (Exception e) {
+            Log.e(TAG, "applyBandFromSettingsSystem: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Shadow: frecuencia + PS; {@code bandForUi} si viene de broadcast/Settings (coercionada).
+     */
+    private void updateLocalState(int freqKhz, String psRaw, Integer bandForUi) {
         String ps = normalizeNwdPsDisplay(psRaw);
-        // Filtrado de ruido: Si los valores son idénticos a lo último reportado, ignorar.
-        // Esto evita lag masivo por actualizaciones redundantes del Shadow Motor.
-        if (freqKhz == mLastReportedFreq && (ps == null || ps.equals(mLastReportedPs))) {
+        boolean bandWillChange = bandForUi != null && bandForUi != mCurrentBand;
+        if (freqKhz == mLastReportedFreq && (ps == null || ps.equals(mLastReportedPs)) && !bandWillChange) {
             return;
         }
 
+        if (bandForUi != null) {
+            mCurrentBand = bandForUi;
+        }
         mCurrentFreq = freqKhz;
         if (ps != null) {
             mLastPs = ps;
@@ -562,8 +771,13 @@ public class QS6Engine implements RadioEngine {
             mLastReportedPs = ps;
         }
 
+        final boolean bandChanged = bandWillChange;
+        final int bandOut = mCurrentBand;
         mMainHandler.post(() -> {
             if (mCallback != null) {
+                if (bandChanged) {
+                    mCallback.onBandChanged(bandOut);
+                }
                 mCallback.onFrequencyChanged(freqKhz);
                 if (ps != null) {
                     mCallback.onRdsName(ps);
@@ -602,6 +816,20 @@ public class QS6Engine implements RadioEngine {
                 performAidlCall("getRadioState", () -> {
                     byte st = mNwdService.getRadioState();
                     Log.i(TAG, "QS6 AIDL getRadioState=" + st + " (tras INTRO/setRadioBackServiceOn)");
+                });
+                // Sincronía estado UI con NWD (estudio Fase C/D: getCurrentScanState, isNearOn, RDS, estéreo).
+                performAidlCall("syncNwdUiState", () -> {
+                    mIsDxLocal = mNwdService.isNearOn();
+                    mIsScanning = mNwdService.getCurrentScanState() != 0;
+                    refreshAfTaTpFromNwdService();
+                    mStereoDecoderOn = mNwdService.isStreroOn();
+                });
+                mMainHandler.post(() -> {
+                    if (mCallback == null) return;
+                    mCallback.onDxLocalChanged(mIsDxLocal);
+                    mCallback.onScanStatusChanged(mIsScanning);
+                    mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
+                    mCallback.onStereoChanged(effectiveStereoForUi());
                 });
                 Log.d(TAG, "QS6 (Background): Configuración inicial completada.");
                 // Refuerzo: el MCU a veces solo enruta audio tras un segundo empujón (logs: set radio switch to true).
@@ -1130,6 +1358,12 @@ public class QS6Engine implements RadioEngine {
         performAidlCall("stopScan", () -> {
             mNwdService.changeBand();
         });
+        if ((!mIsBound || mNwdService == null) && mContext != null) {
+            // Misma pista que bandCycle: KEY_FM suele cortar escaneo en stack NWD sin AIDL.
+            Intent intent = new Intent(ACTION_KEY_VALUE);
+            intent.putExtra("extra_key_value", KEY_FM);
+            mContext.sendBroadcast(intent);
+        }
     }
 
     @Override
@@ -1143,16 +1377,56 @@ public class QS6Engine implements RadioEngine {
         }
         performAidlCall("bandCycle", () -> {
             mNwdService.changeBand();
+            // El OEM a veces no envía notifyCurrentFrequency al instante; alinear UI con getCurrentFrequency().
+            pushUiFromCurrentFrequencyAidl();
         });
+    }
+
+    /**
+     * Lee {@link RadioFeature#getCurrentFrequency()} y actualiza banda/frecuencia/PS en la UI.
+     * Útil tras {@code changeBand()} cuando el callback AIDL llega tarde o la coerción antigua ocultaba FM2/FM3.
+     */
+    private void pushUiFromCurrentFrequencyAidl() {
+        if (mNwdService == null) return;
+        try {
+            Frequency f = mNwdService.getCurrentFrequency();
+            if (f == null) return;
+            byte bandType = f.getBandType();
+            int raw = f.getFrequency();
+            int freqKhz = bandType < 3 ? raw * 10 : raw;
+            int bandDisp = coerceQs6BandForDisplay(freqKhz, bandType);
+            final String psDisp = normalizeNwdPsDisplay(f.getPSName());
+            mCurrentFreq = freqKhz;
+            mCurrentBand = bandDisp;
+            mLastReportedFreq = freqKhz;
+            if (psDisp != null) {
+                mLastPs = psDisp;
+                mLastReportedPs = psDisp;
+            }
+            final int fk = freqKhz;
+            final int bd = bandDisp;
+            mMainHandler.post(() -> {
+                if (mCallback == null) return;
+                mCallback.onBandChanged(bd);
+                mCallback.onFrequencyChanged(fk);
+                if (psDisp != null) {
+                    mCallback.onRdsName(psDisp);
+                }
+            });
+        } catch (RemoteException e) {
+            Log.w(TAG, "pushUiFromCurrentFrequencyAidl", e);
+        }
     }
 
     @Override
     public boolean isStereo() {
-        return mIsStereo;
+        return effectiveStereoForUi();
     }
 
     @Override
     public void setStereo(boolean enable) {
+        mStereoDecoderOn = enable;
+        postStereoUiIfNeeded();
         performAidlCall("setStereo", () -> {
             mNwdService.setStreroOn(enable);
         });
@@ -1306,12 +1580,35 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void toggleRdsFeature(int type) {
+        if (type == 99) {
+            Log.d(TAG, "toggleRdsFeature(99): reservado UI — ignorado en QS6");
+            return;
+        }
+        if (type != 0 && type != 1 && type != 2) {
+            Log.w(TAG, "toggleRdsFeature: tipo no soportado en QS6: " + type);
+            return;
+        }
         performAidlCall("toggleRdsFeature", () -> {
-            // NWD mapea: 0=TA, 1=AF (visto en logs y AIDL)
-            byte rdsType = (type == 1) ? (byte) 1 : (byte) 0;
-            boolean currentState = mNwdService.getRDSState(rdsType);
-            mNwdService.setRDSState(rdsType, !currentState);
-            Log.d(TAG, "Toggle RDS Feature " + type + " (NWD Type " + rdsType + ") -> " + !currentState);
+            // Máscara NWD: AF=0x1, TA=0x2, RDS master=0x80 (RadioManager.setRDSState or-int).
+            if (type == 1) {
+                boolean cur = mNwdService.getRDSState(NWD_RDS_BIT_AF);
+                mNwdService.setRDSState((byte) NWD_RDS_BIT_AF, !cur);
+                Log.d(TAG, "Toggle RDS AF -> " + !cur);
+            } else if (type == 2) {
+                boolean cur = mNwdService.getRDSState(NWD_RDS_BIT_TA);
+                mNwdService.setRDSState((byte) NWD_RDS_BIT_TA, !cur);
+                Log.d(TAG, "Toggle RDS TA (interruptor 0x2) -> " + !cur);
+            } else {
+                boolean cur = mNwdService.getRDSState(NWD_RDS_BIT_RDS);
+                mNwdService.setRDSState((byte) NWD_RDS_BIT_RDS, !cur);
+                Log.d(TAG, "Toggle RDS global (0x80) -> " + !cur);
+            }
+            refreshAfTaTpFromNwdService();
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
+                }
+            });
         });
     }
 
@@ -1340,6 +1637,12 @@ public class QS6Engine implements RadioEngine {
         performAidlCall("toggleDxLocal", () -> {
             boolean isNear = mNwdService.isNearOn();
             mNwdService.setNearOn(!isNear);
+            mIsDxLocal = !isNear;
+            mMainHandler.post(() -> {
+                if (mCallback != null) {
+                    mCallback.onDxLocalChanged(mIsDxLocal);
+                }
+            });
         });
     }
 
@@ -1350,7 +1653,26 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void gotoPreset(int index) {
-        // Podría implementarse con getPrefabFrequency, etc.
+        if (index < 0 || mContext == null) {
+            return;
+        }
+        performAidlCall("gotoPreset", () -> {
+            Frequency[] presets = mNwdService.getPrefabFrequency();
+            if (presets == null || index >= presets.length) {
+                Log.w(TAG, "gotoPreset: sin datos o índice fuera de rango: " + index
+                        + (presets == null ? " (null)" : (" len=" + presets.length)));
+                return;
+            }
+            Frequency f = presets[index];
+            if (f == null) {
+                Log.w(TAG, "gotoPreset: preset nulo en slot " + index);
+                return;
+            }
+            byte band = f.getBandType();
+            int raw = f.getFrequency();
+            mNwdService.setCurrentFrequency(raw, band, index);
+            Log.d(TAG, "gotoPreset AIDL slot=" + index + " rawFreq=" + raw + " band=" + band);
+        });
     }
 
     @Override
