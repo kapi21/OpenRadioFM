@@ -149,6 +149,7 @@
 
 ### Lanzamiento & Comunidad
 - [x] **Stability Beta**: Oficializada la versión 5.0.0 como "Stability Beta", priorizando la fiabilidad sobre nuevas funciones experimentales.
+- [x] **Localization Audit**: Auditoría completa de los 13 idiomas (160 claves cada uno) con unificación técnica de placeholders y branding.
 - [x] **Contributors**: Incorporación de **Csaba** como colaborador oficial para los motores MTK (8227L/8259/8667).
 - [x] **Soporte Junsun V1 Pro**: Documentado y optimizado el soporte para dispositivos Junsun bajo el motor MT8163.
 - [x] **Presentación V5**: Redactado comunicado oficial (ES/EN) para Telegram y foros con tono conservador y enfoque en reporte de bugs.
