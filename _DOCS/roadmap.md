@@ -141,6 +141,20 @@
 
 ---
 
+## ✅ Sesión 21/Marzo/2026 — Completado (V.5.0.0 Stability Beta Release)
+
+### Estabilidad Crítica & Networks
+- [x] **Supabase / Retrofit Fix**: Implementada captura de `Throwable` en `SupabaseLogoSource` para evitar el crash `NoClassDefFoundError: java.lang.ClassValue` en Android 9 (API 28).
+- [x] **Service Resilience**: Mejorada la lógica de reconexión y gestión de ciclos de vida en `RadioServiceController` para evitar fugas de conexión (`ServiceConnectionLeaked`) tras crashes del servicio remoto.
+
+### Lanzamiento & Comunidad
+- [x] **Stability Beta**: Oficializada la versión 5.0.0 como "Stability Beta", priorizando la fiabilidad sobre nuevas funciones experimentales.
+- [x] **Contributors**: Incorporación de **Csaba** como colaborador oficial para los motores MTK (8227L/8259/8667).
+- [x] **Soporte Junsun V1 Pro**: Documentado y optimizado el soporte para dispositivos Junsun bajo el motor MT8163.
+- [x] **Presentación V5**: Redactado comunicado oficial (ES/EN) para Telegram y foros con tono conservador y enfoque en reporte de bugs.
+
+---
+
 ## ✅ Sesión 20/Marzo/2026 — Completado (V.5.0.0 Stability Beta)
 
 ### Estabilidad de Hardware (Motor Layer)

@@ -109,7 +109,7 @@ public class SupabaseLogoSource {
                 android.util.Log.d("SupabaseLogoSource", "FETCH EMPTY: No logo found for this station.");
             }
             return logoFreq;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             android.util.Log.e("SupabaseLogoSource", "FETCH ERROR: " + e.getMessage());
             return null;
         } finally {
@@ -214,7 +214,7 @@ public class SupabaseLogoSource {
                     } catch (Exception ignored) {}
                     android.util.Log.e("SupabaseLogoSource", "UPSERT FAILED: Code=" + response.code() + " Error=" + errorBody);
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 android.util.Log.e("SupabaseLogoSource", "Error upserting logo: " + e.getMessage());
             } finally {
                 notifyActivity(false);
@@ -263,7 +263,7 @@ public class SupabaseLogoSource {
                 Call<Void> call = api.ping(apiKey, "Bearer " + apiKey);
                 retrofit2.Response<Void> res = call.execute();
                 callback.accept(res.isSuccessful());
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 callback.accept(false);
             }
         }).start();

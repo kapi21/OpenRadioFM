@@ -1,4 +1,4 @@
-## [5.0.0-Beta] - 2026-03-20
+## [5.0.0 (Stability Beta)] - 2026-03-21
 ### Added
 - **Estabilidad MTK8259 (Crítico)**:
     - Nuevo sistema de paso de frecuencia (manual) para evitar errores de sintonía en Topway.
@@ -12,6 +12,8 @@
 - **MT8163 Initialization**: Corregido bug de instancia duplicada en `onServiceConnected` mediante el método `updateService`.
 - **Iconos Recursores**: Solucionado el crash de "Recursive reference" en el icono del lanzador.
 - **RDS Flickering**: Optimizado el buffer de texto RDS para evitar parpadeos en unidades MTK.
+- **Supabase Stability**: Reemplazado `catch (Exception)` por `catch (Throwable)` en procesos de red para evitar cierres por `NoClassDefFoundError` (ClassValue) en Android 9.
+- **Service Recovery**: Mejorada la recuperación del servicio nativo tras un cierre inesperado del proceso remoto.
 
 ## [4.9.5] - 2026-03-19
 ### Added

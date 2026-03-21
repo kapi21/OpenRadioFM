@@ -1,12 +1,12 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.0_Beta-red.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.0_(Stability_Beta)-red.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
-[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6-purple.svg)]()
+[![Hardware](https://img.shields.io/badge/hardware-MT8163/Junsun_V1_Pro_|_K706_|_QS6-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units**, con soporte para hardware MediaTek MT8163 K706 y actualmente trabajando para modelo QS NWD y MTK8259 otros en versiones iniciales.  
+**Aplicación de radio FM premium para Android Head Units**, con soporte para hardware MediaTek MT8163 (K706, Junsun V1 Pro) y activamente testeando modelos MTK8259/8227L/8667 en esta nueva etapa.  
 Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada.
 
 <div align="center">
@@ -103,9 +103,9 @@ graph TB
 
 | Dispositivo | Chip | Motor | Estado |
 |---|---|---|---|
-| HCN AutoRadio (ESSGO, JUNSU) | MediaTek MT8163 | `FM_MT8163` | ✅ Completo |
+| HCN AutoRadio (ESSGO, JUNSU) | MediaTek MT8163 | `FM_MT8163` | ✅ Completo (V1 Pro) |
 | Radio K706 | K706 + MCU | `FM_K706` | ✅ Completo |
-| Radio MTK8259 / 8667 | MT8259 + MCU | `FM_MT8259` | ⚠️ Beta (v5.0) |
+| Radio MTK8259 / 8667 / 8227L_8 | MT8259 + MCU | `FM_MT8259` | ⚠️ Beta (Csaba Edition) |
 | Radio NWD G5 | NWD Platform | `FM_QS6` | 🛠️ En desarrollo |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
@@ -172,8 +172,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.0.0 "Stability & Light Mode" (20 de Marzo 2026) - BETA
-- **Hardware Stability (MTK8259 & MT8163)**:
+### v5.0.0 "Stability Beta" (21 de Marzo 2026)
+- **Hardware Stability & Contributor Support**:
+    - **Csaba Edition**: Integración oficial de soporte para MTK 8227L / 8259 / 8667 de la mano de Csaba.
+    - **Junsun V1 Pro**: Optimización del motor MT8163 para dispositivos Junsun.
+    - **Protección de Red (SST)**: Parche crítico para `NoClassDefFoundError` en Retrofit/Supabase.
     - **Protección AM**: Eliminada la opción de desactivar AM para evitar bloqueos del motor en Topway.
     - **Precisión de Sintonía**: Implementado cálculo manual de pasos de frecuencia en MTK para sintonización exacta.
     - **Instancia Única**: Corregida la duplicidad del motor MT8163 en reconexiones del servicio AIDL.

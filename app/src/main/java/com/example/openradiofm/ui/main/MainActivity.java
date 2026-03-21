@@ -557,18 +557,30 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         if (ivDataActivity != null) {
             ivDataActivity.setOnClickListener(v -> {
+                // V21.4: Permitir siempre detener el stream si ya está sonando, independientemente de si la radio nativa murió (freq <= 0)
+                if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
+                    mOnlineStreamManager.stopStream();
+                    showToast("Volviendo a Radio FM...");
+                    if (mRadioService == null && mMode == FmMode.FM_MT8163 && mServiceController != null) {
+                        try {
+                            android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
+                            wakeIntent.setPackage("com.hcn.autoradio");
+                            wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                            sendBroadcast(wakeIntent);
+                        } catch (Exception ignored) {}
+                        mServiceController.start();
+                    }
+                    return;
+                }
+
                 int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
                 if (freq <= 0) return;
 
                 // Obtener datos de la emisora actual (incluyendo streamUrl)
                 com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
                 if (station != null && station.getStreamUrl() != null && !station.getStreamUrl().isEmpty()) {
-                    mOnlineStreamManager.toggleStream(station.getStreamUrl());
-                    if (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading()) {
-                        showToast("Iniciando Radio Online...");
-                    } else {
-                        showToast("Volviendo a Radio FM...");
-                    }
+                    mOnlineStreamManager.startStream(station.getStreamUrl());
+                    showToast("Iniciando Radio Online...");
                 } else {
                     showToast("Streaming no disponible para esta emisora");
                 }
@@ -1314,6 +1326,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (liveActive) {
             // LIVE sigue sonando: no tocar el canal de audio ni el mute
             return;
+        }
+        
+        // V21.4: Re-conectar si la app vuelve al frente y el servicio nativo fue matado (ej. por Music Player)
+        if (mRadioService == null && mMode == FmMode.FM_MT8163 && mServiceController != null) {
+            android.util.Log.w(TAG, "onResume: mRadioService nulo (posible force-stop). Reactivando servicio...");
+            try {
+                android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
+                wakeIntent.setPackage("com.hcn.autoradio");
+                wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                sendBroadcast(wakeIntent);
+            } catch (Exception ignored) {}
+            
+            mServiceController.start();
+            // La reconexión es asíncrona. onServiceConnected disparará updateService() y enforceAudioRecovery()
+            return; 
         }
         
         // V4.8: En K706, es mejor dejar que el Engine gestione el foco y el canal.

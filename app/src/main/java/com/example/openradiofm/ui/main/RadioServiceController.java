@@ -36,6 +36,7 @@ public class RadioServiceController {
     private final SharedPreferences mPrefs;
     private final ServiceListener mListener;
     private IRadioServiceAPI mRadioService;
+    private boolean mBound = false;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
@@ -59,6 +60,7 @@ public class RadioServiceController {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
+            Log.w(TAG, "Servicio DESCONECTADO (Muerte o force-stop): " + name.flattenToShortString());
             mRadioService = null;
             if (mListener != null) {
                 mListener.onServiceDisconnected();
@@ -187,9 +189,12 @@ public class RadioServiceController {
     private boolean bindToProvider(String[] provider) {
         Intent intent = new Intent(provider[1]);
         intent.setPackage(provider[0]);
+        // V21.4: Asegurar que se incluya el flag por si el paquete está force-stopped
+        intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         try {
             if (mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE)) {
                 Log.d(TAG, "Vinculando a proveedor: " + provider[0]);
+                mBound = true;
                 return true;
             }
         } catch (Exception ignored) {
