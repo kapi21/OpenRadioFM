@@ -1,4 +1,4 @@
-# Manual de Usuario - OpenRadioFM v.5.0.0-Beta "Stability Edition"
+# Manual de Usuario - OpenRadioFM v5.0.0 (Stability Beta)
 Bienvenido a **OpenRadioFM v.5.0.0**, la edición centrada en la estabilidad extrema del hardware y refinamiento visual. Esta versión introduce el nuevo **Modo Claro (White Skin)** y protecciones críticas para motores MediaTek.
 
 ---

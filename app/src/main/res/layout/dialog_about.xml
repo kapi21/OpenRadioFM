@@ -37,7 +37,7 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:text="v.4.9.3.5 Cursor"
+            android:text="v.5.0.0 (Stability Beta)"
             android:layout_marginBottom="24dp"/>
 
         <!-- SUBHEADER -->

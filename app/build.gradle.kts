@@ -12,7 +12,7 @@ android {
         minSdk = 21
         targetSdk = 35
         versionCode = 13
-        versionName = "v4.9.5 Audio Focus & Presets"
+        versionName = "5.0.0 (Stability Beta)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
