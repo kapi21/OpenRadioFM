@@ -4,10 +4,10 @@
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
-[![Hardware](https://img.shields.io/badge/hardware-MT8163/Junsun_V1_Pro_|_K706_|_QS6-purple.svg)]()
+[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units**, con soporte para hardware MediaTek MT8163 (K706, Junsun V1 Pro) y activamente testeando modelos MTK8259/8227L/8667 en esta nueva etapa.  
-Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada.
+**Aplicación de radio FM premium para Android Head Units**, con soporte activo para **K706**, **MT8163 (Junsun V1 Pro)** y las plataformas **MTK 8227L / 8259 / 8667**.  
+Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada de logos y temas.
 
 <div align="center">
   <img src="docs/img/app_icon.png" width="150" alt="OpenRadioFM Logo">
@@ -25,28 +25,20 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 
 ## 🎯 Funciones Principales
 
-| Función | MT8163 | K706 |
-|---|:---:|:---:|
-| Sintonización FM | ✅ | ✅ |
-| Seek / AutoScan | ✅ | ✅ |
-| RDS PS (nombre emisora) | ✅ | ✅ |
-| RDS RT (texto informativo) | ✅ | ✅ |
-| RDS PTY (tipo programa) | ✅ | ✅ |
-| AF (frecuencias alternativas) | ✅ | ✅ |
-| TA (anuncios de tráfico) | ✅ | ✅ |
-| TP (indicador) | ✅ | ✅ |
-| DX/Local | ✅ | ✅ |
-| Stereo / Mono | ✅ | ✅ |
-| Layouts múltiples (V2/V3) | ✅ | ✅ |
-| Glassmorphism UI | ✅ | ✅ |
-| Temas / Night Mode | ✅ | ✅ |
-| Logos de emisora | ✅ | ✅ |
-| Logos Online (Supabase) | ✅ | ✅ |
-| 18 favoritos × 3 bandas | ✅ | ✅ |
-| Nav. Hardware Favoritos | ✅ | ✅ |
-| Soporte Android Auto | ✅ | ✅ |
-| Multilingüe (ES/EN/RU/RO/UK/SR/FR/DE) | ✅ | ✅ |
-| Streaming Online (MP3/HLS/AAC) | ✅ | ✅ |
+| Función | MT8163 / Junsun | K706 | MTK8259/8667 |
+|---|:---:|:---:|:---:|
+| Sintonización FM | ✅ | ✅ | ✅ |
+| Seek / AutoScan | ✅ | ✅ | ✅ |
+| RDS PS (nombre) | ✅ | ✅ | ✅ |
+| RDS RT (información) | ✅ | ✅ | ✅ |
+| AF / TA / TP | ✅ | ✅ | ✅ |
+| DX / Local | ✅ | ✅ | ✅ |
+| Stereo / Mono | ✅ | ✅ | ✅ |
+| Layouts (V2 / V3) | ✅ | ✅ | ✅ |
+| Temas / Night Mode | ✅ | ✅ | ✅ |
+| Logos HD (Supabase) | ✅ | ✅ | ✅ |
+| Soporte Android Auto | ✅ | ✅ | ✅ |
+| Streaming Online | ✅ | ✅ | ✅ |
 
 
 ---
@@ -57,20 +49,31 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 graph TB
     subgraph "UI Layer"
         MA[MainActivity]
-        STM[Standard Layouts]
+        LCN[Layout Controllers]
+        STM[Standard/V3 Layouts]
         SLM[Simple Layout]
-        CPM[Control Panels]
     end
 
-    subgraph "Logic & State Managers"
-        PM[Playback & Focus]
-        DM[Dialogs & Settings]
-        NM[NightMode & Themes]
+    subgraph "Domain Managers"
+        PM[PlaybackManager]
+        SM[ScanManager]
+        HM[HistoryManager]
+        PRM[PresetManager]
+        RDS[RDSManager]
+    end
+
+    subgraph "System & UI Logic"
+        TM[ThemeManager]
+        NM[NightModeManager]
+        LM[LogoManager]
+        DM[DialogManager]
     end
 
     subgraph "Hardware Abstraction"
-        RS[RadioServiceController]
-        RE[RadioEngine Interface]
+        RSC[RadioServiceController]
+        REI[RadioEngine Interface]
+        DEV[DeviceManager]
+        HWM[HardwareManager]
     end
 
     subgraph "Radio Engines"
@@ -80,33 +83,34 @@ graph TB
         MTK[MTK8259_8667Engine]
     end
 
-    MA --> STM
-    MA --> SLM
-    MA --> CPM
+    MA --> LCN
+    LCN --> STM
+    LCN --> SLM
     MA --> PM
-    PM --> RS
-    CPM --> RS
-    RS --> RE
-    RE --> K706
-    RE --> MT
-    RE --> QS
-    RE --> MTK
-
+    MA --> SM
+    MA --> HM
+    PM --> RSC
+    RSC --> REI
+    REI --> K706
+    REI --> MT
+    REI --> QS
+    REI --> MTK
+    
     style MA fill:#1a1a2e,stroke:#e94560,color:#fff
     style PM fill:#16213e,stroke:#0f3460,color:#fff
-    style RS fill:#16213e,stroke:#0f3460,color:#fff
+    style RSC fill:#16213e,stroke:#0f3460,color:#fff
 ```
 
 ---
 
 ## 📱 Hardware Compatible
 
-| Dispositivo | Chip | Motor | Estado |
+| Dispositivo | Chip | Motor | Colaborador |
 |---|---|---|---|
-| HCN AutoRadio (ESSGO, JUNSU) | MediaTek MT8163 | `FM_MT8163` | ✅ Completo (V1 Pro) |
-| Radio K706 | K706 + MCU | `FM_K706` | ✅ Completo |
-| Radio MTK8259 / 8667 / 8227L_8 | MT8259 + MCU | `FM_MT8259` | ⚠️ Beta (Csaba Edition) |
-| Radio NWD G5 | NWD Platform | `FM_QS6` | 🛠️ En desarrollo |
+| JUNSUN V1 Pro / Topway | MediaTek MT8163 | `FM_MT8163` | ✅ |
+| Radio K706 / HCN / Vento | K706 + MCU | `FM_K706` | ✅ |
+| MTK 8227L / 8259 / 8667 | MediaTek | `FM_MT8259` | 🤝 Csaba Edition |
+| Radio NWD G5 | Qualcomm | `FM_QS6` | 🛠️ En desarrollo |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
 ---

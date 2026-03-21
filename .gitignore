@@ -25,10 +25,15 @@ local.properties
 # === Depuración, Logs y Herramientas (LOCAL - NO SUBIR) ===
 _DEBUG/
 _BUILD_LOGS/
+_BACKUPS/
 *.logcat
 *.log
+*.txt
 debug_logs*.bat
+extract_logs.py
 massive_upload.py
+*.csv
+*.sql
 *.ps1
 
 # === Documentación y Estudios (LOCAL - NO SUBIR) ===

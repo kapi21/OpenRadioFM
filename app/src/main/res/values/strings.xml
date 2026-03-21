@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM</string>
+    <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
     <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
     <string name="accessibility_service_description">Este servicio permite a OpenRadioFM sobreponerse cuando pulsas el botón físico de RADIO en unidades Android compatibles (ej: K706), ignorando la app de fábrica.</string>
     
@@ -170,7 +170,7 @@
     <string name="scanning">Escaneando...</string>
     <string name="scan_completed">Escaneo pausado / finalizado</string>
     <string name="identifying_rds">Identificando emisora (RDS)...</string>
-    <string name="version">5.0.0 (Stability Beta)</string>
+    <string name="version">Versión %1$s</string>
     
     <!-- Engineering Mode -->
     <string name="radio_engine_label">⚙ RADIO ENGINE: %1$s</string>
