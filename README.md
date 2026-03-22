@@ -165,7 +165,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
 - [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
 - [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md)
-- [Changelog](CHANGELOG.md)
+- [Changelog](CHANGELOG.md) · [Changelog (English)](CHANGELOG_EN.md)
 - [Roadmap](_DOCS/roadmap.md)
 
 ---
