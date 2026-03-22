@@ -250,7 +250,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             public void onSkipToNext() {
                 try {
                     if (mEngine != null) {
-                        mEngine.nextFavorite();
+                        // Volante / notificación: avanzar frecuencia (seek), no preset
+                        mEngine.seekUp();
                         handlePlay(); // aseguramos estado PLAYING si el usuario pulsa Next
                     } else {
                         enqueueSkip(+1);
@@ -269,7 +270,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             public void onSkipToPrevious() {
                 try {
                     if (mEngine != null) {
-                        mEngine.prevFavorite();
+                        mEngine.seekDown();
                         handlePlay();
                     } else {
                         enqueueSkip(-1);
@@ -653,8 +654,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (skip != 0) {
                 int times = Math.abs(skip);
                 for (int i = 0; i < times; i++) {
-                    if (skip > 0) mEngine.nextFavorite();
-                    else mEngine.prevFavorite();
+                    if (skip > 0) mEngine.seekUp();
+                    else mEngine.seekDown();
                 }
                 doPlay = true;
                 doPause = false;

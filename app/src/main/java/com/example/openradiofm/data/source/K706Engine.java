@@ -378,6 +378,16 @@ public class K706Engine implements RadioEngine {
     }
 
     /**
+     * Tras conceder {@link android.Manifest.permission#READ_PHONE_STATE} (Android 6+),
+     * silencia la FM durante llamadas y restaura al colgar.
+     */
+    public void registerPhoneStateListenerIfPermitted() {
+        if (mManager != null) {
+            mManager.registerPhoneStateListenerIfPermitted();
+        }
+    }
+
+    /**
      * Acceso como IRadioServiceAPI para compatibilidad temporal.
      */
     public IRadioServiceAPI asAidl() {

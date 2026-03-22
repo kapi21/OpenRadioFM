@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.0_(Stability_Beta)-red.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.1_(K706_hotfix)-red.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -162,6 +162,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [User Manual (English)](_DOCS/manual_user_en.md)
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 - [Compatibilidad de Hardware](docs/HW_COMPATIBILITY.md)
+- [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
+- [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
+- [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md)
 - [Changelog](CHANGELOG.md)
 - [Roadmap](_DOCS/roadmap.md)
 
@@ -181,6 +184,16 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.1 "K706 hotfix" (22 de Marzo 2026)
+*Build de corrección; no sustituye el anuncio de release 5.0.0 — útil para subir **APK debug/firmado** a GitHub como asset “fixed” / pre-release.*
+
+- **K706 — Llamadas entrantes / salientes**:
+  - Solicitud en tiempo de ejecución de **`READ_PHONE_STATE`** (Android 6+); sin permiso el sistema no notifica llamadas y la FM podía seguir sonando.
+  - Tras colgar: restauración reforzada (**`SetChannel(2)`**, audio, **`requestPlayAudio()`**).
+- **K706 / volante y sesión multimedia**:
+  - **NEXT / PREVIOUS** del volante y de **MediaSession** / notificación avanzan o retroceden **frecuencia (seek)**, no memorias.
+- **Documentación**: comparativa OEM K706, estudio radio OEM, script jadx opcional (`docs/`).
 
 ### v5.0.0 "Stability Beta" (21 de Marzo 2026)
 - **Hardware Stability & Contributor Support**:

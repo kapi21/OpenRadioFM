@@ -53,3 +53,9 @@ To bypass the API limitations, future versions may attempt to communicate direct
 1.  **Direct `ioctl` calls**: Access `/dev/fm` directly if permissions allow.
 2.  **Kernel Logs**: Parse `dmesg` for `[FMRADIO]` debug prints which often contain `rssi=-54` logs.
 3.  **Property System**: Check `getprop` entries for `vendor.media.fm.rssi`.
+
+## K706 (QuickFish / OEM FM app)
+
+Reverse-engineering notes for the stock head-unit package **`com.android.fmradio.ext`** (AudioFocus, `QFTunerManager`, Broadcom AIDL, comparison with `K706RadioManager`) are maintained in Spanish in:
+
+- **[`ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md`](ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)**

@@ -1,3 +1,13 @@
+## [5.0.1 (K706 hotfix)] - 2026-03-22
+### Fixed
+- **K706 — Llamadas**: `READ_PHONE_STATE` en runtime; `PhoneStateListener` registrado solo con permiso; al colgar se llama a `requestPlayAudio()` para recuperar FM.
+- **K706 — Volante / MediaSession**: `MEDIA_NEXT` / `PREVIOUS` y `RadioMediaService` (`skip` / cola) usan **seek** (frecuencia), no siguiente/anterior preset.
+
+### Added
+- **Docs**: `COMPARATIVA_K706_OPENRADIO_VS_OEM.md`, ampliaciones al estudio OEM; script opcional `scripts/k706_jadx_decompile.bat`.
+
+---
+
 ## [5.0.0 (Stability Beta)] - 2026-03-21
 ### Added
 - **Estabilidad MTK8259 (Crítico)**:

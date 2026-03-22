@@ -17,6 +17,8 @@ import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.AudioFocusRequest;
 import android.media.AudioAttributes;
+import android.Manifest;
+import androidx.core.content.ContextCompat;
 
 /**
  * V7.1: Implementación de la interfaz de radio para K706 (MT8163).
@@ -186,6 +188,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     };
 
+    /** Requiere {@link Manifest.permission#READ_PHONE_STATE} concedido en Android 6+. */
+    private android.telephony.PhoneStateListener mPhoneStateListener;
+    private volatile boolean mPhoneListenerRegistered;
+
     public K706RadioManager(Context context) {
         this.mContext = context;
         mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
@@ -321,15 +327,32 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             }
         };
         initMcuConnection();
-        
-        // V11.5: Detectar llamadas telefónicas para silenciar la radio
-        // AudioFocus no funciona en K706 porque el MCU enruta FM directo.
-        // PhoneStateListener detecta llamadas a nivel de SO.
+
+        // V11.5 + runtime: READ_PHONE_STATE — ver registerPhoneStateListenerIfPermitted()
+        registerPhoneStateListenerIfPermitted();
+    }
+
+    /**
+     * Silencia FM durante llamadas y restaura al colgar. Requiere permiso en Android 6+.
+     * Llamar de nuevo tras {@link android.app.Activity#onRequestPermissionsResult} si se concede.
+     */
+    public void registerPhoneStateListenerIfPermitted() {
+        if (mContext == null) return;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                Log.w(TAG, "READ_PHONE_STATE no concedido: concede permiso para silenciar FM en llamadas");
+                return;
+            }
+        }
+        if (mPhoneListenerRegistered) return;
         try {
-            android.telephony.TelephonyManager tm = 
-                (android.telephony.TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            if (tm != null) {
-                tm.listen(new android.telephony.PhoneStateListener() {
+            android.telephony.TelephonyManager tm =
+                    (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            if (tm == null) return;
+
+            if (mPhoneStateListener == null) {
+                mPhoneStateListener = new android.telephony.PhoneStateListener() {
                     @Override
                     public void onCallStateChanged(int state, String phoneNumber) {
                         switch (state) {
@@ -337,8 +360,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             case android.telephony.TelephonyManager.CALL_STATE_OFFHOOK:
                                 if (!mIsInCall) {
                                     mIsInCall = true;
-                                    mIsTransientFocusLoss = false; 
-                                    mIsRadioActive = false; // Detener Heartbeat
+                                    mIsTransientFocusLoss = false;
+                                    mIsRadioActive = false;
                                     Log.d(TAG, "📞 Llamada detectada - silenciando radio FM");
                                     try {
                                         setMute(true);
@@ -346,7 +369,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                                             mSetChannel.invoke(mMcuManager, (byte) 4);
                                             Log.d(TAG, "📞 RPC_SetChannel(4) - canal FM liberado");
                                         }
-                                        setMute(false); // Desmutear para oír la llamada
+                                        setMute(false);
                                     } catch (Exception e) {
                                         Log.e(TAG, "Error silenciando radio en llamada", e);
                                     }
@@ -356,7 +379,6 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                                 if (mIsInCall) {
                                     mIsInCall = false;
                                     Log.d(TAG, "📞 Llamada finalizada - restaurando radio FM");
-                                    // Esperar un momento para que el sistema asimile
                                     new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                                         try {
                                             if (mSetChannel != null && mMcuManager != null) {
@@ -365,19 +387,28 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                                             }
                                             setAudioParams(true);
                                             setMute(false);
+                                            mUserWantsFmAudio = true;
+                                            try {
+                                                requestPlayAudio();
+                                            } catch (RemoteException ignored) {
+                                            }
                                         } catch (Exception e) {
                                             Log.e(TAG, "Error restaurando radio tras llamada", e);
                                         }
                                     }, 800);
                                 }
                                 break;
+                            default:
+                                break;
                         }
                     }
-                }, android.telephony.PhoneStateListener.LISTEN_CALL_STATE);
-                Log.d(TAG, "V11.5: PhoneStateListener registrado OK");
+                };
             }
+            tm.listen(mPhoneStateListener, android.telephony.PhoneStateListener.LISTEN_CALL_STATE);
+            mPhoneListenerRegistered = true;
+            Log.d(TAG, "PhoneStateListener registrado (silencio FM en llamadas)");
         } catch (Exception e) {
-            Log.e(TAG, "Error registrando PhoneStateListener", e);
+            Log.e(TAG, "registerPhoneStateListenerIfPermitted", e);
         }
     }
 

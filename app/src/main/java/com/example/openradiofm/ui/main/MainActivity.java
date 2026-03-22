@@ -25,6 +25,8 @@ import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.graphics.Bitmap;
+import android.Manifest;
+import android.content.pm.PackageManager;
 
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -84,6 +86,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     private static final String TAG = "OpenRadioFm";
     private static final int PRESETS_COUNT = 18; // V21.2: ampliar memorias de presets
+    /** Silenciar FM en llamadas (K706): {@link Manifest.permission#READ_PHONE_STATE} */
+    private static final int REQ_READ_PHONE_STATE_K706 = 1003;
 
     // Band Constants
     private static final int BAND_FM1 = 0;
@@ -900,6 +904,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         MainActivity.this, existingCb));
             } else {
                 mEngine.setCallback(MainActivity.this);
+            }
+
+            if (mEngine instanceof K706Engine) {
+                runOnUiThread(() -> requestReadPhoneStateForK706IfNeeded());
             }
 
             // V5.5: Sincronizar managers con el nuevo motor
@@ -2398,6 +2406,23 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
+    /**
+     * K706: sin READ_PHONE_STATE el sistema no notifica llamadas y la FM puede seguir sonando.
+     */
+    private void requestReadPhoneStateForK706IfNeeded() {
+        if (isFinishing() || isDestroyed()) return;
+        if (!(mEngine instanceof K706Engine)) return;
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) {
+            ((K706Engine) mEngine).registerPhoneStateListenerIfPermitted();
+            return;
+        }
+        if (checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PackageManager.PERMISSION_GRANTED) {
+            ((K706Engine) mEngine).registerPhoneStateListenerIfPermitted();
+            return;
+        }
+        requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE}, REQ_READ_PHONE_STATE_K706);
+    }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -2408,6 +2433,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     mDialogManager.showSaveLoadFavoritesDialog();
             } else {
                 showToast("Se requieren permisos de almacenamiento para guardar favoritos.");
+            }
+        } else if (requestCode == REQ_READ_PHONE_STATE_K706) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                if (mEngine instanceof K706Engine) {
+                    ((K706Engine) mEngine).registerPhoneStateListenerIfPermitted();
+                }
+                showToast("Llamadas: la radio se silenciará automáticamente");
+            } else {
+                showToast("Sin permiso de teléfono la FM puede seguir sonando durante llamadas");
             }
         }
     }
@@ -2691,16 +2725,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
     @Override
     public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        // V18.x: Interceptar teclas de medios de hardware (volante/unidad)
+        // V18.x: Volante / teclas media = cambiar frecuencia (seek), no memorias
         switch (keyCode) {
             case android.view.KeyEvent.KEYCODE_MEDIA_NEXT:
             case android.view.KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
-                Log.d(TAG, "Hardware Key detected: NEXT");
+                Log.d(TAG, "Hardware Key: NEXT -> seekUp");
+                if (mEngine != null) {
+                    mEngine.seekUp();
+                    return true;
+                }
                 if (mPresetManager != null) mPresetManager.playNextPreset();
                 return true;
             case android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS:
             case android.view.KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
-                Log.d(TAG, "Hardware Key detected: PREV");
+                Log.d(TAG, "Hardware Key: PREV -> seekDown");
+                if (mEngine != null) {
+                    mEngine.seekDown();
+                    return true;
+                }
                 if (mPresetManager != null) mPresetManager.playPrevPreset();
                 return true;
             case android.view.KeyEvent.KEYCODE_MEDIA_PLAY:
