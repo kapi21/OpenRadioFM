@@ -1629,6 +1629,20 @@ public class QS6Engine implements RadioEngine {
         requestStopAudio(); // Cambia a SOURCE_ANDROID
     }
 
+    /**
+     * Segundo plano: menos intrusivo que {@link #switchToAndroidAudio()}.
+     * Evita el ping-pong con el reproductor NWD (reclaim + requestAudioFocus) sin
+     * mandar {@code SOURCE_ANDROID} ni salir del ARM FM.
+     * Al volver, {@link #requestPlayAudio()} / {@link #switchToFmAudio()} restauran foco y ruta.
+     */
+    @Override
+    public void releaseAudioFocusOnlyForBackground() {
+        cancelAudioFocusReclaim();
+        mWantsFmAudioRoute = false;
+        abandonAndroidAudioFocusForFm();
+        Log.d(TAG, "QS6: segundo plano — AudioFocus abandonado + reclaim cancelado (sin cambiar fuente MCU)");
+    }
+
     @Override
     public void switchToFmAudio() {
         requestPlayAudio(); // Cambia a SOURCE_RADIO

@@ -51,6 +51,13 @@ public interface RadioEngine {
     void switchToFmAudio();      // Conmuta el MCU al canal de Radio FM
     void setOnlineStreamingActive(boolean active); // V18.4: Notificar modo streaming para protecciones de audio
 
+    /**
+     * QS6 (y futuros motores): al pasar la UI a segundo plano, dejar de competir por
+     * {@link android.media.AudioManager#AUDIOFOCUS_GAIN} sin forzar cambio de fuente MCU.
+     * Por defecto no hace nada.
+     */
+    default void releaseAudioFocusOnlyForBackground() {}
+
     // === RDS ===
     void toggleRdsFeature(int type); // 0=RDS global, 1=AF, 2=TA
     boolean isAfEnabled();

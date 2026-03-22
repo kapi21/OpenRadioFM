@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.2_(QS_NWD_β)-blue.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.2_(fixed)-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-QS__NWD-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -186,14 +186,21 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### Rama `QS_NWD` — Qualcomm NWD (G5) · actualización Marzo 2026
-*Build orientado a radio **NWD** (`com.nwd.radio.service`). Trabajo activo; fusionar a `main` cuando se estabilice.*
+### v5.0.2 **fixed** (Marzo 2026) — rama `QS_NWD`
+*Corrección acumulada; **no** es un anuncio de release completo (sí sirve como APK de prueba / “fixed build”).*
 
-- **UI AutoScan**: `ScanManager` sincroniza el botón de escaneo con el estado real del HAL (`onScanStatusChanged` de NWD/K706 y `onResume`), evitando el icono “activo” cuando el escaneo ya terminó.
-- **QS6 / motor**: refuerzos en `QS6Engine` (audio, RDS, banda, callbacks) y documentación en `docs/INTELIGENCIA_QS_NWD.md`.
-- **Ingeniería QS6**: diálogo *Technical Matrix* (`QS6EngineeringDialog`) — mismo easter egg que K706/MT8163 (GPS ×5 en ≤3s en modo QS6).
-- **Logos / repositorio**: ajustes en carga de logos (Supabase) y `RadioRepository` para coherencia con RDS y presets en hardware real.
-- **Assets**: guías V5 en `docs/img/` (presentación e instrucciones logos).
+| 🇪🇸 **Español** | 🇬🇧 **English** |
+|---|---|
+| Mejor comportamiento al usar la **radio** junto con el **reproductor de música del coche**: al cambiar de pantalla, la música del sistema vuelve a funcionar con normalidad. El **escaneo automático** muestra mejor si la radio está buscando emisoras. Incluye otros **ajustes de estabilidad** en unidades NWD (Qualcomm). | **Better behaviour** when switching between this **FM app** and the **car’s built-in music player** — music plays reliably again. The **auto-scan** control better matches what the tuner is doing. Includes other **stability tweaks** for NWD (Qualcomm) head units. |
+
+### Rama `QS_NWD` — notas técnicas (desarrollo)
+*Build orientado a radio **NWD** (`com.nwd.radio.service`).*
+
+- **UI AutoScan**: botón de escaneo sincronizado con el HAL (`onScanStatusChanged`, `onResume`).
+- **QS6 / motor**: ajustes en `QS6Engine`, ceda de audio en segundo plano (`releaseAudioFocusOnlyForBackground`), RDS y documentación `docs/INTELIGENCIA_QS_NWD.md`.
+- **Ingeniería QS6**: diálogo *Technical Matrix* (easter egg GPS ×5 en modo QS6).
+- **Logos / datos**: `RadioRepository`, Supabase, `RDSManager` / logos en hardware real.
+- **Assets**: guías V5 en `docs/img/`.
 
 ### v5.0.1 "K706 hotfix" (22 de Marzo 2026)
 *Build de corrección; no sustituye el anuncio de release 5.0.0 — útil para subir **APK debug/firmado** a GitHub como asset “fixed” / pre-release.*

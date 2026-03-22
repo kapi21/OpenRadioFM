@@ -1,12 +1,16 @@
-## [5.0.2 (QS_NWD β)] - 2026-03-23
+## [5.0.2 fixed (QS6 / NWD)] - 2026-03-22
+*Build de corrección (no release completo).*
+
+### Fixed
+- **QS6 / NWD**: al pasar la app a segundo plano se libera la competencia por audio con el reproductor del sistema (`releaseAudioFocusOnlyForBackground`); el reproductor nativo deja de cortarse.
+- **AutoScan**: `ScanManager` + `MainActivity` — botón alineado con el estado real del escaneo.
+
 ### Added
-- **QS6 Engineering**: diálogo *Technical Matrix* para modo `FM_QS6` (mismo easter egg GPS ×5 que K706/MT8163).
-- **Docs**: assets en `docs/img/` (presentación V5 e instrucciones logos).
+- **QS6 Engineering**: diálogo *Technical Matrix* (easter egg GPS ×5).
+- **Docs / assets**: `INTELIGENCIA_QS_NWD.md`, imágenes V5 en `docs/img/`.
 
 ### Changed
-- **AutoScan UI**: `ScanManager` + `MainActivity` sincronizan el botón de escaneo con el HAL (`onScanStatusChanged`, `onResume`).
-- **QS6Engine**: refuerzos de callbacks y audio; `INTELIGENCIA_QS_NWD.md` actualizado.
-- **Logos / datos**: `RadioRepository`, `SupabaseLogoSource`, `LogoManager` y `RDSManager` alineados con hardware NWD.
+- **QS6Engine**, **RDSManager**, logos (`RadioRepository`, `SupabaseLogoSource`, `LogoManager`).
 
 ---
 

@@ -1441,6 +1441,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
+    /**
+     * QS6/NWD: al ir a segundo plano, dejar de reclamar AudioFocus (sin conmutar fuente MCU
+     * a Android — menos agresivo que {@code switchToAndroidAudio()}). Evita competir con el
+     * reproductor nativo. onResume sigue llamando a {@code switchToFmAudio()} cuando toca.
+     */
+    @Override
+    protected void onStop() {
+        boolean liveActive = mOnlineStreamManager != null
+                && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
+        if (!liveActive && mEngine != null && !isChangingConfigurations()) {
+            try {
+                mEngine.releaseAudioFocusOnlyForBackground();
+            } catch (Exception e) {
+                android.util.Log.w(TAG, "onStop: releaseAudioFocusOnlyForBackground", e);
+            }
+        }
+        super.onStop();
+    }
 
     @Override
     public void onConfigurationChanged(android.content.res.Configuration newConfig) {

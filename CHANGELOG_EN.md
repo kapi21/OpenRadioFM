@@ -4,6 +4,22 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.2 fixed (QS6 / NWD)] - 2026-03-22
+*Fix build — not a full release announcement.*
+
+### Fixed
+- **QS6 / NWD**: when the app goes to the background it stops fighting the system music player for audio focus (`releaseAudioFocusOnlyForBackground`); the built-in music player plays reliably again.
+- **Auto-scan**: scan button stays in sync with the real tuner state (`ScanManager` + `MainActivity`).
+
+### Added
+- **QS6 Engineering**: Technical Matrix dialog (GPS ×5 easter egg).
+- **Docs / assets**: `INTELIGENCIA_QS_NWD.md`, V5 images under `docs/img/`.
+
+### Changed
+- **QS6Engine**, **RDSManager**, logos (`RadioRepository`, `SupabaseLogoSource`, `LogoManager`).
+
+---
+
 ## [5.0.1 (K706 hotfix)] - 2026-03-22
 ### Fixed
 - **K706 — Phone calls**: Runtime **`READ_PHONE_STATE`**; **`PhoneStateListener`** registered only when permission is granted; on hang-up, **`requestPlayAudio()`** is called to restore FM.
