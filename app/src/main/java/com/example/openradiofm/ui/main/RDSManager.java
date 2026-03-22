@@ -8,6 +8,7 @@ import android.widget.TextView;
 
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.source.RdsDatabase;
+import com.example.openradiofm.data.source.SupabaseLogoSource;
 import com.example.openradiofm.utils.MetadataUtils;
 import com.example.openradiofm.utils.PtyManager;
 
@@ -27,7 +28,8 @@ public class RDSManager {
 
     private String mCurrentPi;
     private String mCurrentPty;
-    private String mLastConfirmedName; // V5.3: RDS PS Substitution
+    /** V21.2: volatile: lectura segura desde hilos de fondo (executor de estación) vs escritura en UI. */
+    private volatile String mLastConfirmedName; // V5.3: RDS PS Substitution
     private String mCustomNameOverride; // V16.4: Override del usuario al editar nombre
     private boolean mHasRdsLock = false;
 
@@ -49,6 +51,9 @@ public class RDSManager {
     }
 
     public void onRdsName(String name) {
+        if (name != null && SupabaseLogoSource.isGarbageZeroPs(name)) {
+            return;
+        }
         if (tvRdsName != null && name != null && !name.isEmpty()) {
             MainActivity.setTextIfChanged(tvRdsName, name);
             tvRdsName.setVisibility(View.VISIBLE);

@@ -188,11 +188,14 @@ public class RadioRepository {
      * V9: Guarda el nombre RDS PS recibido dinámicamente.
      */
     public void saveRdsName(int freqKHz, String name) {
-        if (name != null && !name.trim().isEmpty() && name.length() >= 2) {
-            String existing = mPrefs.getString("RDS_" + freqKHz, "");
-            if (!name.equals(existing)) {
-                mPrefs.edit().putString("RDS_" + freqKHz, name.trim()).apply();
-            }
+        if (name == null || name.trim().isEmpty() || name.length() < 2) return;
+        if (SupabaseLogoSource.isGarbageZeroPs(name)) {
+            android.util.Log.d("RadioRepository", "saveRdsName: ignorando PS solo-ceros (buffer vacío)");
+            return;
+        }
+        String existing = mPrefs.getString("RDS_" + freqKHz, "");
+        if (!name.equals(existing)) {
+            mPrefs.edit().putString("RDS_" + freqKHz, name.trim()).apply();
         }
     }
 
@@ -236,6 +239,15 @@ public class RadioRepository {
      * debe hacer runOnUiThread() al actualizar vistas.
      */
     public RadioStation getStationInfo(int freqKHz, LogoCallback callback) {
+        return getStationInfo(freqKHz, callback, null);
+    }
+
+    /**
+     * @param liveRdsPsOverride PS actual de la sesión de sintonía (motor RDS), si coincide con {@code freqKHz}.
+     *                         Tiene prioridad sobre {@code RDS_*} persistido (evita logo/nombre de otra emisora
+     *                         que compartía la misma frecuencia).
+     */
+    public RadioStation getStationInfo(int freqKHz, LogoCallback callback, String liveRdsPsOverride) {
         // Warning si se llama desde UI thread (pero no matamos la app)
         if (android.os.Looper.getMainLooper().getThread() == Thread.currentThread()) {
             android.util.Log.w("RadioRepository",
@@ -250,6 +262,16 @@ public class RadioRepository {
         
         String customName = mPrefs.getString("CUSTOM_" + freqKHz, null);
         String rdsPsName = mPrefs.getString("RDS_" + freqKHz, null);
+        if (rdsPsName != null && SupabaseLogoSource.isGarbageZeroPs(rdsPsName)) {
+            rdsPsName = null;
+        }
+        // V21.2: PS confirmado en esta sesión (memoria) antes de que .apply() persista en prefs
+        if (liveRdsPsOverride != null && !liveRdsPsOverride.trim().isEmpty()) {
+            String live = liveRdsPsOverride.trim();
+            if (!SupabaseLogoSource.isGarbageZeroPs(live)) {
+                rdsPsName = live;
+            }
+        }
         String ptyStored = mPrefs.getString("PTY_" + freqKHz, null);
         String piCode = mPrefs.getString("PI_" + freqKHz, null);
         String streamUrlStored = mPrefs.getString("STREAM_" + freqKHz, null);
@@ -605,6 +627,85 @@ public class RadioRepository {
         }
     }
 
+    /**
+     * Resuelve la URL de streaming para FM (≥ 30 MHz): usa caché {@code STREAM_} y, si falta o está
+     * vacía, consulta Supabase en el <b>hilo actual</b> (solo invocar desde hilo de fondo).
+     * <p>
+     * Necesario al pulsar la nube: {@link #getStationInfo} a menudo devuelve la emisora sin URL porque
+     * {@link #fetchStreamUrlAsync} aún no ha terminado o nunca se disparó.
+     */
+    public String resolveStreamUrlForFrequency(int freqKHz) {
+        if (freqKHz < 30000) return null;
+        String streamUrlStored = mPrefs.getString("STREAM_" + freqKHz, null);
+        if (streamUrlStored != null && !streamUrlStored.trim().isEmpty()) {
+            return streamUrlStored;
+        }
+        String customName = mPrefs.getString("CUSTOM_" + freqKHz, null);
+        String rdsPsName = mPrefs.getString("RDS_" + freqKHz, null);
+        String piCode = mPrefs.getString("PI_" + freqKHz, null);
+        String rootName = null;
+        if (useRoot && rootSource != null) {
+            rootName = rootSource.getRdsName(freqKHz);
+        }
+        String finalName = "";
+        if (customName != null && !customName.isEmpty()) {
+            finalName = customName;
+        } else if (rdsPsName != null && !rdsPsName.isEmpty()) {
+            finalName = rdsPsName;
+        } else if (rootName != null && !rootName.isEmpty()) {
+            finalName = rootName;
+        }
+        return querySupabaseForStreamUrl(freqKHz, finalName, piCode);
+    }
+
+    /**
+     * Misma lógica que el fetch asíncrono de URL: Supabase por nombre custom, PI o RDS.
+     * Persiste {@code STREAM_{freq}}. Solo hilo de fondo.
+     */
+    private String querySupabaseForStreamUrl(int freqKHz, String finalName, String piCode) {
+        int provider = mPrefs.getInt("pref_logo_provider", 0);
+        if (!(provider == 0 || provider == 2)) {
+            return null;
+        }
+        try {
+            supabaseSource.notifyActivity(true);
+            String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
+            retrofit2.Call<java.util.List<SupabaseLogoResponse>> call = null;
+            String country = getCountryCode();
+            if (cName != null && !cName.isEmpty() && !SupabaseLogoSource.isNameGeneric(cName)) {
+                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(),
+                        "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "eq." + country, "*");
+            } else if (piCode != null && !piCode.isEmpty()) {
+                call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(),
+                        "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "eq." + country, "*");
+            } else if (finalName != null && !SupabaseLogoSource.isNameGeneric(finalName)) {
+                call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(),
+                        "Bearer " + supabaseSource.getApiKey(), "ilike." + finalName.trim(), "eq." + country, "*");
+            }
+            if (call == null) {
+                return null;
+            }
+            retrofit2.Response<java.util.List<SupabaseLogoResponse>> res = call.execute();
+            if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
+                SupabaseLogoResponse supabaseData = res.body().get(0);
+                String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
+                mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();
+                return streamUrlToSave.isEmpty() ? null : streamUrlToSave;
+            }
+            mPrefs.edit().putString("STREAM_" + freqKHz, "").apply();
+            return null;
+        } catch (Exception e) {
+            android.util.Log.e("RadioRepository", "querySupabaseForStreamUrl", e);
+            return null;
+        } finally {
+            try {
+                Thread.sleep(700);
+            } catch (Exception ignored) {
+            }
+            supabaseSource.notifyActivity(false);
+        }
+    }
+
     // Método auxiliar para buscar la URL de streaming en background
     private void fetchStreamUrlAsync(String cacheKey, int freqKHz, String finalName, String piCode, RadioStation station) {
         // V18.2: Bloqueo global AM/SW
@@ -623,40 +724,9 @@ public class RadioRepository {
         final String stationNameForLambda = finalName;
         logoExecutor.submit(() -> {
             try {
-                int provider = mPrefs.getInt("pref_logo_provider", 0);
-                if (provider == 0 || provider == 2) {
-                    supabaseSource.notifyActivity(true);
-                    try {
-                        String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
-                        retrofit2.Call<java.util.List<com.example.openradiofm.data.source.network.model.SupabaseLogoResponse>> call = null;
-                        
-                        String country = getCountryCode();
-                        if (cName != null && !cName.isEmpty() && !SupabaseLogoSource.isNameGeneric(cName)) {
-                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + cName.trim(), "eq." + country, "*");
-                        } else if (piCode != null && !piCode.isEmpty()) {
-                            call = supabaseSource.getSupabaseApi().getLogosByPi(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + piCode, "eq." + country, "*");
-                        } else if (stationNameForLambda != null && !SupabaseLogoSource.isNameGeneric(stationNameForLambda)) {
-                            call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(), "Bearer " + supabaseSource.getApiKey(), "ilike." + stationNameForLambda.trim(), "eq." + country, "*");
-                        }
-
-                        if (call != null) {
-                            retrofit2.Response<java.util.List<com.example.openradiofm.data.source.network.model.SupabaseLogoResponse>> res = call.execute();
-                            if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                                com.example.openradiofm.data.source.network.model.SupabaseLogoResponse supabaseData = res.body().get(0);
-                                String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
-                                mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();
-                                if (!streamUrlToSave.isEmpty()) {
-                                    station.setStreamUrl(streamUrlToSave);
-                                }
-                            } else {
-                                mPrefs.edit().putString("STREAM_" + freqKHz, "").apply();
-                            }
-                        }
-                    } finally {
-                        // Garantizar que la animación de la UI dure lo suficiente para ser visible
-                        try { Thread.sleep(700); } catch (Exception ignored) {}
-                        supabaseSource.notifyActivity(false);
-                    }
+                String url = querySupabaseForStreamUrl(freqKHz, stationNameForLambda, piCode);
+                if (url != null && !url.isEmpty()) {
+                    station.setStreamUrl(url);
                 }
             } catch (Exception e) {
                 android.util.Log.e("RadioRepository", "Error fetching stream URL: " + e.getMessage());

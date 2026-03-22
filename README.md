@@ -1,6 +1,7 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.1_(K706_hotfix)-red.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.2_(QS_NWD_β)-blue.svg)]()
+[![Branch](https://img.shields.io/badge/branch-QS__NWD-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -116,7 +117,7 @@ graph TB
 | JUNSUN V1 Pro / Topway | MediaTek MT8163 | `FM_MT8163` | ✅ |
 | Radio K706 / HCN / Vento | K706 + MCU | `FM_K706` | ✅ |
 | MTK 8227L / 8259 / 8667 | MediaTek | `FM_MT8259` | 🤝 Csaba Edition |
-| Radio NWD G5 | Qualcomm | `FM_QS6` | 🛠️ En desarrollo |
+| Radio NWD G5 | Qualcomm | `FM_QS6` | 🛠️ Beta (rama **QS_NWD**) |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
 ---
@@ -152,7 +153,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.
-- **Audio QS6 (Qualcomm)**: ⚠️ El sonido no se activa a pesar de la sintonía. El ID de fuente de audio nativo está en investigación.
+- **Audio QS6 (Qualcomm / NWD)**: ⚠️ Comportamiento dependiente del firmware; se sigue probando **cambio de fuente** (`ACTION_CHANGE_SOURCE`), foco y rutas de recuperación. Reporta modelo + build si falla el audio tras sintonizar.
 
 ---
 
@@ -184,6 +185,15 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### Rama `QS_NWD` — Qualcomm NWD (G5) · actualización Marzo 2026
+*Build orientado a radio **NWD** (`com.nwd.radio.service`). Trabajo activo; fusionar a `main` cuando se estabilice.*
+
+- **UI AutoScan**: `ScanManager` sincroniza el botón de escaneo con el estado real del HAL (`onScanStatusChanged` de NWD/K706 y `onResume`), evitando el icono “activo” cuando el escaneo ya terminó.
+- **QS6 / motor**: refuerzos en `QS6Engine` (audio, RDS, banda, callbacks) y documentación en `docs/INTELIGENCIA_QS_NWD.md`.
+- **Ingeniería QS6**: diálogo *Technical Matrix* (`QS6EngineeringDialog`) — mismo easter egg que K706/MT8163 (GPS ×5 en ≤3s en modo QS6).
+- **Logos / repositorio**: ajustes en carga de logos (Supabase) y `RadioRepository` para coherencia con RDS y presets en hardware real.
+- **Assets**: guías V5 en `docs/img/` (presentación e instrucciones logos).
 
 ### v5.0.1 "K706 hotfix" (22 de Marzo 2026)
 *Build de corrección; no sustituye el anuncio de release 5.0.0 — útil para subir **APK debug/firmado** a GitHub como asset “fixed” / pre-release.*

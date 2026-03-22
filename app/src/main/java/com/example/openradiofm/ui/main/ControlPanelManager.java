@@ -77,6 +77,11 @@ public class ControlPanelManager {
                         mActivity.mEngineeringDialog.show();
                     } else if (mActivity.mMode == MainActivity.FmMode.FM_MT8163) {
                         new EngineeringModeDialog(mActivity).show();
+                    } else if (mActivity.mMode == MainActivity.FmMode.FM_QS6) {
+                        mActivity.mQs6EngineeringDialog = new QS6EngineeringDialog(mActivity);
+                        mActivity.mQs6EngineeringDialog.setOnDismissListener(
+                                dialog -> mActivity.mQs6EngineeringDialog = null);
+                        mActivity.mQs6EngineeringDialog.show();
                     } else {
                         mActivity.showToast("Modo básico: Menú de ingeniería no disponible");
                     }

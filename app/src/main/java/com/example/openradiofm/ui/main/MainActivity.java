@@ -174,6 +174,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public String mCurrentPty = null;
     public String mLastLogoUrl = "";
     public java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
+    /**
+     * QS6/NWD y otros motores con callbacks rápidos: invalida cargas de logo asíncronas al cambiar
+     * frecuencia o banda (evita que un Glide/getStationInfo tardío pinte logo de otra emisora).
+     */
+    public final java.util.concurrent.atomic.AtomicInteger mLogoUiGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
     private com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
     private com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
 
@@ -232,8 +237,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     private SignalQuality mCurrentQuality = SignalQuality.NO_SIGNAL;
 
-    // V9.9: RDS Debugging Tracker
+    // V9.9: RDS Debugging Tracker (K706)
     public K706EngineeringDialog mEngineeringDialog = null;
+    /** Menú ingeniería QS6 / NWD (mismo easter egg GPS ×5). */
+    public QS6EngineeringDialog mQs6EngineeringDialog = null;
 
     public int mCurrentBand = 0;
     private boolean mIsRecreating = false; // V20.3: Flag to distinguish between Cold Start and Layout Switch
@@ -403,6 +410,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mSessionController.onBandChanged(band);
         }
         runOnUiThread(() -> {
+            mLogoUiGeneration.incrementAndGet();
             mCurrentBand = band;
             if (mPresetManager != null) {
                 mPresetManager.refreshPresetsCache(band);
@@ -581,14 +589,37 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
                 if (freq <= 0) return;
 
-                // Obtener datos de la emisora actual (incluyendo streamUrl)
-                com.example.openradiofm.data.model.RadioStation station = mRepository.getStationInfo(freq, null);
-                if (station != null && station.getStreamUrl() != null && !station.getStreamUrl().isEmpty()) {
-                    mOnlineStreamManager.startStream(station.getStreamUrl());
-                    showToast("Iniciando Radio Online...");
-                } else {
-                    showToast("Streaming no disponible para esta emisora");
-                }
+                // getStationInfo + resolución Supabase en hilo de fondo (URL a menudo aún no en caché).
+                new Thread(() -> {
+                    try {
+                        com.example.openradiofm.data.model.RadioStation station =
+                                mRepository.getStationInfo(freq, null);
+                        String url = (station != null) ? station.getStreamUrl() : null;
+                        if (url == null || url.isEmpty()) {
+                            runOnUiThread(() -> {
+                                if (!isFinishing()) {
+                                    showToast("Buscando enlace de streaming…");
+                                }
+                            });
+                            url = mRepository.resolveStreamUrlForFrequency(freq);
+                        }
+                        final String streamUrl = url;
+                        runOnUiThread(() -> {
+                            if (isFinishing() || isDestroyed()) return;
+                            if (streamUrl != null && !streamUrl.isEmpty()) {
+                                mOnlineStreamManager.startStream(streamUrl);
+                                showToast("Iniciando Radio Online...");
+                            } else {
+                                showToast("Streaming no disponible para esta emisora");
+                            }
+                        });
+                    } catch (Exception e) {
+                        Log.e(TAG, "Streaming: getStationInfo falló", e);
+                        runOnUiThread(() -> {
+                            if (!isFinishing()) { showToast("Error al cargar datos de emisora"); }
+                        });
+                    }
+                }, "OpenRadioFM-streamMeta").start();
             });
 
             // V17.1: Pulsación larga para forzar recarga (borrar caché) de Supabase
@@ -738,6 +769,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 // V5.3: RDS PS Substitution (La variable reside en mRdsManager)
                 runOnUiThread(() -> updateFrequencyDisplay(freq, name));
 
+                // V21.2: Recargar logo con PS actual (prefs RDS_* puede ir un frame detrás por .apply())
+                if (mLogoManager != null) {
+                    mLogoManager.updateStationLogo(freq, mCurrentBand, null);
+                }
+
                 if (mPresetManager != null) {
                     mPresetManager.updateCardVisuals(-1, freq, mCurrentBand);
                 }
@@ -782,6 +818,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
         runOnUiThread(() -> {
             mIsScanning = scanning; // V13.9: Track global scanning state
+            if (mScanManager != null) {
+                mScanManager.applyEngineScanState(scanning);
+            }
             if (!scanning && mScanManager != null && mScanManager.getStationAdapter() != null) {
                 // Si el escaneo terminó automáticamente, podemos actualizar algún indicador si
                 // existiera
@@ -806,6 +845,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
             mEngineeringDialog.addRdsLog(data);
         }
+        if (mQs6EngineeringDialog != null && mQs6EngineeringDialog.isShowing()) {
+            mQs6EngineeringDialog.addRdsLog(data);
+        }
     }
 
     @Override
@@ -816,6 +858,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         runOnUiThread(() -> {
             if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
                 mEngineeringDialog.updateSignalQuality(rssi, snr);
+            }
+            if (mQs6EngineeringDialog != null && mQs6EngineeringDialog.isShowing()) {
+                mQs6EngineeringDialog.updateSignalQuality(rssi, snr);
             }
         });
     }
@@ -1387,6 +1432,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mEngine.switchToFmAudio();
             }
         }
+
+        // Botón AutoScan alineado con el HAL (evita estado “verde” si el escaneo terminó en segundo plano)
+        if (mEngine != null && mScanManager != null) {
+            boolean scanning = mEngine.isScanning();
+            mIsScanning = scanning;
+            mScanManager.applyEngineScanState(scanning);
+        }
     }
 
 
@@ -1857,6 +1909,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         final int fBand = band;
         final boolean fIsAm = (band == BAND_AM1 || band == BAND_AM2);
         final boolean fIsLocal = isLocal;
+        final boolean fIsStreaming = isStreaming;
 
         // V18.6/V21.1: Recuperación de info de emisora en executor único (sin crear hilos en loop)
         final int seq = mStationInfoSeq.incrementAndGet();
@@ -1870,7 +1923,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             com.example.openradiofm.data.model.RadioStation station = null;
             if (mRepository != null && !mIsScanning) {
-                station = mRepository.getStationInfo(fFreq, null);
+                // V21.2: PS en vivo (RDSManager) gana sobre RDS_* en prefs (histórico de otra emisora en la misma frecuencia).
+                // Solo si la frecuencia pedida es la del sintonizador FM actual (no streaming).
+                String livePs = null;
+                if (!fIsStreaming && mRdsManager != null && mEngine != null && fFreq == mEngine.getCurrentFreq()) {
+                    String cn = mRdsManager.getConfirmedName();
+                    if (cn != null && !cn.trim().isEmpty()) {
+                        livePs = cn.trim();
+                    }
+                }
+                station = mRepository.getStationInfo(fFreq, null, livePs);
             }
             if (seq != mLastStationInfoRequestedSeq) return;
 
@@ -2606,6 +2668,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (freq == mLastFreq)
             return;
 
+        mLogoUiGeneration.incrementAndGet();
         mLastFreq = freq;
         mLastLogoUrl = ""; // Force logo reload
         mCurrentPi = null;

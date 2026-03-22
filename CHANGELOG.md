@@ -1,3 +1,15 @@
+## [5.0.2 (QS_NWD β)] - 2026-03-23
+### Added
+- **QS6 Engineering**: diálogo *Technical Matrix* para modo `FM_QS6` (mismo easter egg GPS ×5 que K706/MT8163).
+- **Docs**: assets en `docs/img/` (presentación V5 e instrucciones logos).
+
+### Changed
+- **AutoScan UI**: `ScanManager` + `MainActivity` sincronizan el botón de escaneo con el HAL (`onScanStatusChanged`, `onResume`).
+- **QS6Engine**: refuerzos de callbacks y audio; `INTELIGENCIA_QS_NWD.md` actualizado.
+- **Logos / datos**: `RadioRepository`, `SupabaseLogoSource`, `LogoManager` y `RDSManager` alineados con hardware NWD.
+
+---
+
 ## [5.0.1 (K706 hotfix)] - 2026-03-22
 ### Fixed
 - **K706 — Llamadas**: `READ_PHONE_STATE` en runtime; `PhoneStateListener` registrado solo con permiso; al colgar se llama a `requestPlayAudio()` para recuperar FM.

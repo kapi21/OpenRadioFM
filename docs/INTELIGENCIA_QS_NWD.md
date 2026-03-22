@@ -180,10 +180,23 @@ Muchos métodos `RadioFeature` no usados aún (`seek`, `getRadioPoint`, …); ca
 | `nwd_radio_current_band` | int; banda OEM → UI FM1–FM3 / AM |
 | `nwd_radio_rds_enable` | int máscara RDS (MCU); bit **TP** |
 | `nwd_radio_rds_mask` / RDS | ver §8 |
+| `nwd_radio_dx_loc_enable` | **0** = modo **LOC** (local), **1** = modo **DX** — ver §7.1 |
 
 **Escritura freq/PS/banda** (NWD-D001): `RadioProtocalUtil.responseCurrentFrequency` → `SettingTableKey.writeDataToTable` → `Settings.System`, si `mcu_current_source == 4`.
 
 **Lectura MCU:** `MCUDeviceManager.sendRadioCurrentData()` lee varias `nwd_radio_*` para reenvío al MCU.
+
+### 7.1 DX / LOC y `setNearOn` (logcat OEM `com.nwd.radio`, 2026-03-22)
+
+Una pulsación del botón LOC/DX (`PlayradiocmdCommFunOnOFF__Loc`) llama a **`RadioFeature.setNearOn(boolean)`** (`actionType = 8`). Convención **Java / AIDL** (la que usa OpenRadioFM):
+
+| Modo en cabecera | `setNearOn` / `isNearOn` | `UPDATE_LOC_DX_STATE` | `nwd_radio_dx_loc_enable` | Log `near state` (MCU) |
+|------------------|--------------------------|------------------------|---------------------------|-------------------------|
+| **LOC** (local) | **true** | `[true]` | **0** | **0** |
+| **DX** (distancia) | **false** | `[false]` | **1** | **1** |
+
+- **`isNearOn() == true`** ⇔ **LOC** ⇔ OpenRadioFM `RadioEngine.isDxLocal() == true` (nombre heredado: “DxLocal” = *estás en local*).
+- El entero **`near state`** en `RadioProtocalUtil` y el **setting** `dx_loc_enable` siguen la pista **0 = LOC, 1 = DX**; no confundir con el booleano AIDL (son capas distintas; el servicio traduce).
 
 ---
 
@@ -256,6 +269,8 @@ Coerción antigua: toda frecuencia en aire FM (65–120 MHz) se mapeaba a **FM1*
 | RDS | `refreshTpTrafficProgramFromNwd`, `toggleRdsFeature` por máscara, callbacks RDS/PTY/raw |
 | Banda | `coerceQs6BandForDisplay`, `updateLocalState(..., band)`, `pushUiFromCurrentFrequencyAidl` |
 | Estéreo | Piloto + decodificador (`notifyStereo` / `notifyStereoOn`) |
+| **Ecualizador / ajustes audio (botón EQ)** | **Logcat OEM:** evento `PlayradiocmdCommon__GotoAudioSetting` → **`com.nwd.audioset/.home_horizontalActivity`**. `openEq`: (1) `ComponentName` explícito + `getLaunchIntentForPackage("com.nwd.audioset")`; (2) reserva **`com.nwd.eq`**; (3) bridge **`ACTION_START_NWD_ACTIVITY`** + `pkg` primero **`com.nwd.audioset`**, luego **`com.nwd.eq`**; fallback **`Settings.ACTION_SOUND_SETTINGS`**. |
+| **Menú ingeniería (Technical Matrix)** | Mismo easter egg que K706/MT8163: **icono GPS ×5** en ≤3 s. Abre `QS6EngineeringDialog` (`dialog_qs6_engineering.xml`): bind AIDL, AF/TA/TP, piloto/decodificador estéreo, RDS, latencia `getCurrentFreq`, OEM Media prefs, log terminal; botones **OPEN_EQ_OEM** y **WAKE_NWD** (`wakeNwdRadioFromEngineeringMenu`). |
 
 ### Documentación de producto
 
@@ -301,6 +316,7 @@ Plantilla ampliada: ver `ESTUDIO_INGENIERIA_INVERSA_APP_NATIVA_NWD.md` §5.
 | Comparar `TRANSACTION_*` entre dos firmwares | Pendiente (sin segundo APK) |
 | **Fase E:** tabla versiones MCU/build vs diferencias | Pendiente |
 | Diff parcelables `Frequency`/`RadioPoint` vs jadx | Opcional |
+| Botón EQ → `com.nwd.audioset` / `home_horizontalActivity` | Cubierto en §10 y `QS6Engine.openEq` (logcat 2026-03-22) |
 
 Tras **OTA**: repetir `adb pull`, versiones en §2, y validar `QS6Engine` en unidad.
 

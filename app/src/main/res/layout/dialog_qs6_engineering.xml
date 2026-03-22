@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E6000000"
+    android:padding="24dp">
+
+    <TextView
+        android:id="@+id/tvQs6Header"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="monospace"
+        android:text="> QS6_NWD_ENGINEERING_MATRIX_V1"
+        android:textColor="#00FF00"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageButton
+        android:id="@+id/btnCloseQs6"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:src="@android:drawable/ic_menu_close_clear_cancel"
+        android:tint="#00FF00"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@+id/scrollQs6Log"
+        app:layout_constraintTop_toBottomOf="@id/tvQs6Header">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- NWD / AIDL -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ NWD_QS6_STACK / AIDL ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="NWD_SERVICE_BIND" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6NwdBind" android:text="..." style="@style/EngValueStyle"/>
+
+                <TextView android:text="AF / TA / TP" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6RdsFlags" android:text="..." style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <!-- RF -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ RADIO_TUNER_DATA_RAW ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="SIGNAL_ESTIMATE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Rssi" android:text="[---] ░░░░░░░░░░" style="@style/EngValueStyle"/>
+
+                <TextView android:text="STEREO_UI" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6StereoUi" android:text="MONO" style="@style/EngValueStyle"/>
+
+                <TextView android:text="PILOT / DECODER" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6StereoRaw" android:text="..." style="@style/EngValueStyle"/>
+
+                <TextView android:text="TUNER_BAND" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6BandInfo" android:text="0" style="@style/EngValueStyle"/>
+
+                <TextView android:text="SCAN_STATUS" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Scan" android:text="IDLE" style="@style/EngValueStyle"/>
+
+                <TextView android:text="DX_LOCAL_MODE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6DxLocal" android:text="DX" style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:text="[ TUNER + NWD_ACTIONS ]"
+                android:textColor="#00FF00"
+                android:textSize="10sp"
+                android:fontFamily="monospace"
+                android:gravity="center"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                android:gravity="center">
+
+                <Button android:id="@+id/btnQs6SeekDown"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:text="SEEK &lt;&lt;"
+                    android:textSize="11sp" android:textColor="#00FF00"
+                    android:backgroundTint="#002200" android:layout_marginEnd="4dp" />
+
+                <Button android:id="@+id/btnQs6FineDown"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:text="STEP &lt;"
+                    android:textSize="11sp" android:textColor="#00FF00"
+                    android:backgroundTint="#002200" android:layout_marginEnd="4dp" />
+
+                <Button android:id="@+id/btnQs6FineUp"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:text="STEP &gt;"
+                    android:textSize="11sp" android:textColor="#00FF00"
+                    android:backgroundTint="#002200" android:layout_marginEnd="4dp" />
+
+                <Button android:id="@+id/btnQs6SeekUp"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:text="SEEK &gt;&gt;"
+                    android:textSize="11sp" android:textColor="#00FF00"
+                    android:backgroundTint="#002200" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button android:id="@+id/btnQs6OpenEq"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:text="OPEN_EQ_OEM"
+                    android:textSize="11sp" android:textColor="#00FFFF"
+                    android:backgroundTint="#002222" android:layout_marginEnd="4dp" />
+
+                <Button android:id="@+id/btnQs6WakeNwd"
+                    android:layout_width="0dp" android:layout_height="40dp"
+                    android:layout_weight="1" android:text="WAKE_NWD"
+                    android:textSize="11sp" android:textColor="#FFFF00"
+                    android:backgroundTint="#222200" />
+            </LinearLayout>
+
+            <!-- RDS -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ RDS_DECODER_RAW_METRICS ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="PROGRAM_SERVICE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Ps" android:text="NONE" style="@style/EngValueStyle"/>
+
+                <TextView android:text="RADIO_TEXT" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Rt" android:text="WAITING..." style="@style/EngValueStyle"/>
+
+                <TextView android:text="PI_CODE (HEX)" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Pi" android:text="0000" style="@style/EngValueStyle"/>
+
+                <TextView android:text="PTY_CODE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Pty" android:text="00" style="@style/EngValueStyle"/>
+
+                <TextView android:text="RDS_LOCK_UI" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6RdsLock" android:text="NO" style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <!-- OEM Media (misma prefs que K706) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ OEM_MEDIA_SESSION_STATUS ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="LAST_FOCUS_EVENT" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6OemFocusEvent" android:text="N/A" style="@style/EngValueStyle"/>
+
+                <TextView android:text="OEM_FLAGS" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6OemFlags" android:text="N/A" style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <!-- Assets -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ FILE_SYSTEM_INTEGRITY ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <TextView
+                android:id="@+id/tvQs6Assets"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:fontFamily="monospace"
+                android:text="..."/>
+
+            <!-- System -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ ANDROID_OS_DIAGNOSTICS ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="AIDL_CALL_LATENCY" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Latency" android:text="0ms" style="@style/EngValueStyle"/>
+
+                <TextView android:text="MEMORY_HEAP" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Memory" android:text="0/0MB" style="@style/EngValueStyle"/>
+
+                <TextView android:text="DEVICE_MODEL" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Device" android:text="UNKNOWN" style="@style/EngValueStyle"/>
+
+                <TextView android:text="ROOT_LEVEL" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6Root" android:text="..." style="@style/EngValueStyle"/>
+            </GridLayout>
+
+        </LinearLayout>
+    </ScrollView>
+
+    <ScrollView
+        android:id="@+id/scrollQs6Log"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:background="#2200FF00"
+        android:layout_marginBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/btnQs6Exit">
+        <TextView
+            android:id="@+id/tvQs6Log"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="4dp"
+            android:textColor="#00FF00"
+            android:textSize="10sp"
+            android:fontFamily="monospace"
+            android:text="[NWD] SYNC..."/>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnQs6Exit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="[ TERMINATE_QS6_NWD_ENGINEERING ]"
+        android:fontFamily="monospace"
+        android:textColor="#FF0000"
+        android:backgroundTint="#220000"
+        app:layout_constraintBottom_toBottomOf="parent"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

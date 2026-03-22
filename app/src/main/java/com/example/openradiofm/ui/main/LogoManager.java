@@ -262,11 +262,13 @@ public class LogoManager {
      * Encapsula la lógica de carga de logo de estación.
      */
     public void updateStationLogo(int freq, int band, String cachedUrl) {
+        final int logoGen = mActivity.mLogoUiGeneration.get();
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         String bandCacheKey = band + "_" + freq;
 
         if (cachedUrl != null) {
             if (!cachedUrl.equals(mActivity.mLastLogoUrl)) {
+                if (!isLogoRequestStillValid(logoGen, freq, band)) return;
                 mActivity.mLastLogoUrl = cachedUrl;
                 if (ivMainLogo != null) {
                     if (mActivity.mIsV3) {
@@ -289,6 +291,7 @@ public class LogoManager {
                                 @Override
                                 public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
                                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                                    if (!isLogoRequestStillValid(logoGen, freq, band)) return;
                                     super.onResourceReady(resource, transition);
                                     
                                     // Notificar a otros componentes una vez el bitmap está listo
@@ -310,9 +313,17 @@ public class LogoManager {
             }
         } else {
             if (mActivity.mRepository == null) return;
+            String livePs = null;
+            if (mActivity.mRdsManager != null && mActivity.mEngine != null && freq == mActivity.mEngine.getCurrentFreq()) {
+                String cn = mActivity.mRdsManager.getConfirmedName();
+                if (cn != null && !cn.trim().isEmpty()) {
+                    livePs = cn.trim();
+                }
+            }
             mActivity.mRepository.getStationInfo(freq, url -> {
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                    if (!isLogoRequestStillValid(logoGen, freq, band)) return;
 
                     if (url != null) {
                         if (!url.equals(mActivity.mLastLogoUrl)) {
@@ -337,6 +348,7 @@ public class LogoManager {
                                             @Override
                                             public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
                                                 if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                                                if (!isLogoRequestStillValid(logoGen, freq, band)) return;
                                                 super.onResourceReady(resource, transition);
                                                 if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
                                                     mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
@@ -364,8 +376,26 @@ public class LogoManager {
                         updateDynamicBackground(null);
                     }
                 });
-            });
+            }, livePs);
         }
+    }
+
+    /**
+     * Evita aplicar logos de una petición obsoleta (QS6: AIDL + shadow; zapping rápido).
+     */
+    private boolean isLogoRequestStillValid(int logoGen, int freq, int band) {
+        if (logoGen != mActivity.mLogoUiGeneration.get()) {
+            return false;
+        }
+        if (mActivity.mEngine != null) {
+            try {
+                if (mActivity.mEngine.getCurrentFreq() != freq) return false;
+                if (mActivity.mEngine.getCurrentBand() != band) return false;
+            } catch (Exception ignored) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**

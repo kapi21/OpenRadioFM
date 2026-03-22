@@ -124,6 +124,12 @@ public class OnlineStreamManager {
     }
 
     private void startStreamDirect(String url) {
+        // ExoPlayer debe crearse y usarse en el hilo principal; si no, Parcel/codec pueden fallar
+        // ("Expecting binder but got null") en algunos firmwares.
+        if (android.os.Looper.myLooper() != android.os.Looper.getMainLooper()) {
+            new android.os.Handler(android.os.Looper.getMainLooper()).post(() -> startStreamDirect(url));
+            return;
+        }
 
         // V18.6.5: Normalización de URL para maximizar compatibilidad en radios chinas.
         // Muchos servidores Icecast en puertos no estándar (ej: 8222) tienen certificados SSL

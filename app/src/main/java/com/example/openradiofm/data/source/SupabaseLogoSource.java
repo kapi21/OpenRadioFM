@@ -30,8 +30,23 @@ public class SupabaseLogoSource {
             "FM", "RADIO", "STEREO", "RDS", "BUSCANDO", "SCAN", "TUNING", "SINR", "NO RDS", "EMPTY", "WAITING", "SIGNAL"
     };
 
+    /**
+     * PS inválido tipo buffer vacío (solo '0', longitud típica RDS/OEM NWD).
+     * No persistir ni usar en consultas Supabase.
+     */
+    public static boolean isGarbageZeroPs(String name) {
+        if (name == null) return false;
+        String t = name.trim();
+        if (t.length() < 4) return false;
+        for (int i = 0; i < t.length(); i++) {
+            if (t.charAt(i) != '0') return false;
+        }
+        return true;
+    }
+
     public static boolean isNameGeneric(String name) {
         if (name == null || name.trim().length() < 2) return true;
+        if (isGarbageZeroPs(name)) return true;
         String clean = name.trim().toUpperCase();
         for (String black : BLACKLIST_NAMES) {
             if (clean.equals(black)) return true;

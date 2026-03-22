@@ -2,12 +2,11 @@ package com.example.openradiofm.ui.main;
 
 import android.app.AlertDialog;
 import android.graphics.Color;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
+import android.graphics.PorterDuff;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.source.RadioEngineCallback;
@@ -19,7 +18,8 @@ import java.util.List;
  * Libera a MainActivity y DialogManager de la lógica de búsqueda de emisoras.
  */
 public class ScanManager {
-    private static final String TAG = "ScanManager";
+    /** Mismo color que el toggle manual (indicador “escaneando”). */
+    private static final int SCAN_ACTIVE_COLOR = Color.parseColor("#00E676");
     private final MainActivity mActivity;
     private final List<StationAdapter.ScannedStation> mCapturedList = new ArrayList<>();
     private StationAdapter mStationAdapter;
@@ -42,24 +42,42 @@ public class ScanManager {
     }
 
     /**
+     * Sincroniza el estado local y el aspecto del botón con el motor (NWD/K706).
+     * Llamar desde el hilo UI cuando {@link com.example.openradiofm.data.source.RadioEngineCallback#onScanStatusChanged}
+     * o tras {@link com.example.openradiofm.data.source.RadioEngine#isScanning()} en onResume.
+     */
+    public void applyEngineScanState(boolean scanning) {
+        mIsScanning = scanning;
+        applyScanButtonVisual(scanning, null);
+    }
+
+    private void applyScanButtonVisual(boolean scanning, ImageButton btn) {
+        ImageButton target = btn != null ? btn : mActivity.findViewById(R.id.btnAutoScan);
+        if (target == null) {
+            return;
+        }
+        if (scanning) {
+            target.setColorFilter(SCAN_ACTIVE_COLOR, PorterDuff.Mode.SRC_IN);
+        } else {
+            target.clearColorFilter();
+        }
+    }
+
+    /**
      * Alterna el escaneo automático estándar.
      */
-    public void toggleAutoScan(android.widget.ImageButton btn) {
+    public void toggleAutoScan(ImageButton btn) {
         if (mActivity.mEngine == null) return;
         
         if (!mIsScanning) {
             mActivity.mEngine.scan();
             mIsScanning = true;
-            if (btn != null) {
-                btn.setColorFilter(Color.parseColor("#00E676"), android.graphics.PorterDuff.Mode.SRC_IN);
-            }
+            applyScanButtonVisual(true, btn);
             mActivity.showToast("AutoScan iniciado...");
         } else {
             mActivity.mEngine.stopScan();
             mIsScanning = false;
-            if (btn != null) {
-                btn.clearColorFilter();
-            }
+            applyScanButtonVisual(false, btn);
             mActivity.showToast("AutoScan detenido");
         }
     }

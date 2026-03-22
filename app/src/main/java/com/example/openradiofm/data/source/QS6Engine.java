@@ -102,6 +102,19 @@ public class QS6Engine implements RadioEngine {
     private static final String NWD_RADIO_PACKAGE = "com.nwd.radio.service";
 
     /**
+     * Ajustes de audio OEM (logcat radio nativa: {@code PlayradiocmdCommon__GotoAudioSetting} →
+     * {@code ActivityTaskManager} lanza {@code com.nwd.audioset/.home_horizontalActivity}).
+     */
+    private static final String NWD_AUDIO_SETTINGS_PACKAGE = "com.nwd.audioset";
+    /** Actividad horizontal que abre el botón EQ en {@code com.nwd.radio} (mismo target que la OEM). */
+    private static final String NWD_AUDIO_SETTINGS_CLASS = "com.nwd.audioset.home_horizontalActivity";
+
+    /**
+     * Paquete alternativo en algunos firmwares / documentación previa; se intenta después de {@link #NWD_AUDIO_SETTINGS_PACKAGE}.
+     */
+    private static final String NWD_EQ_PACKAGE = "com.nwd.eq";
+
+    /**
      * AppID de {@code com.nwd.radio} en {@code ApplicationList.xml} / SourceConstant.
      * SprdRadioManager / AWRadioManager solo ejecutan {@code InitFM()}+{@code SendArmFmMediaPlay()}
      * si {@code ACTION_APP_IN_OUT} trae {@code extra_app_id == 8}; el default del intent es 4 (launcher).
@@ -319,7 +332,22 @@ public class QS6Engine implements RadioEngine {
         if (looksLikeNumericFrequencyMasqueradingAsPs(s)) {
             return null;
         }
+        // Buffer RDS vacío / hex decodificado a espacios pero a veces llega como "000…" texto (18+ ceros).
+        if (looksLikeZeroPaddingPs(s)) {
+            return null;
+        }
         return s;
+    }
+
+    /** PS que es solo ceros ASCII (OEM NWD sin señal RDS útil). */
+    private static boolean looksLikeZeroPaddingPs(String s) {
+        if (s == null) return false;
+        String t = s.trim();
+        if (t.length() < 4) return false;
+        for (int i = 0; i < t.length(); i++) {
+            if (t.charAt(i) != '0') return false;
+        }
+        return true;
     }
 
     /** Nombres PTY RDS (tabla EU, 0–31). */
@@ -457,7 +485,8 @@ public class QS6Engine implements RadioEngine {
 
         @Override
         public void notifyNearOn(boolean isOn) {
-            // NWD "Near" ≈ modo local (filtro DX/local); alineado con toggleDxLocal / isNearOn.
+            // AIDL: isOn=true → LOC; isOn=false → DX (ver INTELIGENCIA_QS_NWD §7.1; no confundir con
+            // el entero "near state" en logcat MCU: 0=LOC, 1=DX).
             mIsDxLocal = isOn;
             Log.d(TAG, "NWD AIDL notifyNearOn -> local/near=" + isOn);
             mMainHandler.post(() -> {
@@ -1445,11 +1474,72 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void openEq(Context context) {
+        if (context == null) return;
         try {
-            Intent intent = new Intent("com.nwd.action.ACTION_START_NWD_ACTIVITY");
-            intent.putExtra("pkg", "com.nwd.eq");
-            context.startActivity(intent);
+            android.content.pm.PackageManager pm = context.getPackageManager();
+            // 1) Misma ruta que la radio OEM: GotoAudioSetting → com.nwd.audioset/.home_horizontalActivity
+            Intent explicit = new Intent();
+            explicit.setComponent(new ComponentName(NWD_AUDIO_SETTINGS_PACKAGE, NWD_AUDIO_SETTINGS_CLASS));
+            explicit.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                context.startActivity(explicit);
+                Log.d(TAG, "openEq: explicit " + NWD_AUDIO_SETTINGS_PACKAGE + "/" + NWD_AUDIO_SETTINGS_CLASS);
+                return;
+            } catch (Exception e) {
+                Log.d(TAG, "openEq: explicit audioset falló, probando launcher…");
+            }
+            Intent launchAudio = pm.getLaunchIntentForPackage(NWD_AUDIO_SETTINGS_PACKAGE);
+            if (launchAudio != null) {
+                launchAudio.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(launchAudio);
+                Log.d(TAG, "openEq: getLaunchIntentForPackage " + NWD_AUDIO_SETTINGS_PACKAGE);
+                return;
+            }
+            // 2) Otros firmwares: paquete com.nwd.eq (o bridge NWD)
+            Intent directEq = pm.getLaunchIntentForPackage(NWD_EQ_PACKAGE);
+            if (directEq != null) {
+                directEq.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(directEq);
+                Log.d(TAG, "openEq: launch " + NWD_EQ_PACKAGE);
+                return;
+            }
+            // 3) OEM NWD: despacho por paquete (probar audioset antes que eq)
+            if (tryOpenEqNwdBridge(context, NWD_AUDIO_SETTINGS_PACKAGE)) return;
+            if (tryOpenEqNwdBridge(context, NWD_EQ_PACKAGE)) return;
+            // 4) Último recurso: panel de sonido de Android
+            Intent sound = new Intent(android.provider.Settings.ACTION_SOUND_SETTINGS);
+            sound.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(sound);
+            Log.d(TAG, "openEq: fallback ACTION_SOUND_SETTINGS");
         } catch (Exception e) {
+            Log.e(TAG, "openEq failed", e);
+        }
+    }
+
+    /**
+     * {@link #ACTION_START_NWD_ACTIVITY} + extra {@code pkg} (mismo patrón que despertar la radio OEM).
+     *
+     * @return true si {@link Context#startActivity(Intent)} tuvo éxito
+     */
+    private static boolean tryOpenEqNwdBridge(Context context, String pkg) {
+        Intent bridge = new Intent(ACTION_START_NWD_ACTIVITY);
+        bridge.putExtra("pkg", pkg);
+        bridge.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+        try {
+            context.sendBroadcast(bridge);
+            Log.d(TAG, "openEq: broadcast " + ACTION_START_NWD_ACTIVITY + " pkg=" + pkg);
+        } catch (Exception e) {
+            Log.w(TAG, "openEq: broadcast falló pkg=" + pkg, e);
+        }
+        Intent startAct = new Intent(ACTION_START_NWD_ACTIVITY);
+        startAct.putExtra("pkg", pkg);
+        startAct.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        try {
+            context.startActivity(startAct);
+            Log.d(TAG, "openEq: startActivity bridge pkg=" + pkg);
+            return true;
+        } catch (Exception ignored) {
+            return false;
         }
     }
 
@@ -1632,6 +1722,10 @@ public class QS6Engine implements RadioEngine {
         return mIsScanning;
     }
 
+    /**
+     * Conmuta LOC/DX vía {@link com.nwd.radio.service.RadioFeature#setNearOn(boolean)}.
+     * OEM: {@code isNearOn true} = LOC, {@code false} = DX; coherente con {@link #isDxLocal()}.
+     */
     @Override
     public void toggleDxLocal() {
         performAidlCall("toggleDxLocal", () -> {
@@ -1697,6 +1791,31 @@ public class QS6Engine implements RadioEngine {
     /** Para combinar con {@link CompositeRadioEngineCallback} cuando el motor es compartido. */
     public RadioEngineCallback getCallback() {
         return mCallback;
+    }
+
+    /**
+     * Menú ingeniería: {@code true} si el AIDL a {@code com.nwd.radio.service} está activo.
+     */
+    public boolean isNwdServiceBound() {
+        return mIsBound && mNwdService != null;
+    }
+
+    /** Diagnóstico: piloto RDS / portadora 19 kHz ({@code notifyStereo}), antes del filtro UI. */
+    public boolean isStereoPilotReported() {
+        return mIsStereo;
+    }
+
+    /** Diagnóstico: decodificador estéreo NWD ({@code notifyStereoOn} / {@code isStreroOn}). */
+    public boolean isStereoDecoderEnabled() {
+        return mStereoDecoderOn;
+    }
+
+    /**
+     * Menú ingeniería: mismo broadcast que el arranque en frío ({@link #requestWakeUp()}) — despierta
+     * el stack NWD ({@code com.nwd.radio}).
+     */
+    public void wakeNwdRadioFromEngineeringMenu() {
+        requestWakeUp();
     }
 
     /**
