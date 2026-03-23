@@ -85,6 +85,10 @@ public class RDSManager {
     }
 
     public void onRdsPty(String pty) {
+        if (pty == null || pty.trim().isEmpty()) {
+            // No pisar PTY válido con eventos vacíos intermitentes.
+            return;
+        }
         mCurrentPty = pty;
         updatePtyUI(pty);
     }

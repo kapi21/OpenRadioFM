@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.2_(fixed)-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.4_(fixed)-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-QS__NWD-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -185,6 +185,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.4 **fixed** (Marzo 2026) — rama `QS_NWD`
+
+- **ES:** Mejora de estabilidad visual en presets para evitar arrastre de logos al cambiar rápidamente de emisora, mejora de consistencia de PTY en QS6 y nuevas opciones de interfaz (Agradecimientos con QR y acceso directo a créditos desde Acerca de OpenRadioFM).
+- **EN:** Improved preset visual stability to prevent stale logos when quickly switching stations, improved QS6 PTY consistency, and new UI options (Acknowledgements with QR and direct credits access from About OpenRadioFM).
 
 ### v5.0.2 **fixed** (Marzo 2026) — rama `QS_NWD`
 *Corrección acumulada; **no** es un anuncio de release completo (sí sirve como APK de prueba / “fixed build”).*

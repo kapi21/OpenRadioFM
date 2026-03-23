@@ -270,6 +270,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mPresetManager != null) {
             int freq = mPresetManager.getFreq(index);
             if (freq > 0) {
+                mPresetManager.preparePresetSelection(index);
                 gotoFreq(freq);
             }
         }
@@ -705,6 +706,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public void onRdsPty(String pty) {
         if (mSessionController != null) {
             mSessionController.onRdsPty(pty);
+        }
+        if (mRepository != null && mEngine != null && pty != null && !pty.trim().isEmpty()) {
+            try {
+                mRepository.saveRdsPty(mEngine.getCurrentFreq(), pty);
+            } catch (Exception ignored) {}
         }
         runOnUiThread(() -> {
             if (mRdsManager != null) {
@@ -1965,6 +1971,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (seq != mLastStationInfoRequestedSeq) return;
 
             final String rdsName = (station != null) ? station.getName() : "";
+            final String stationPty = (station != null) ? station.getPty() : null;
             mLastPs = rdsName; // Sincronizar campo para acceso externo
 
             runOnUiThread(() -> {
@@ -1978,6 +1985,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     mUiController.updateFrequency(fFreq, rdsName, fIsAm);
                     mUiController.applySkin(isNight);
                     mUiController.updateBandIndicator(fBand);
+                    // Fallback PTY desde caché por frecuencia mientras llega RDS en vivo.
+                    if ((mCurrentPty == null || mCurrentPty.trim().isEmpty())
+                            && stationPty != null && !stationPty.trim().isEmpty()
+                            && mRdsManager != null) {
+                        mRdsManager.onRdsPty(stationPty);
+                        mCurrentPty = stationPty;
+                        mUiController.updatePTY(stationPty);
+                    }
 
                     if (mLogoManager != null) {
                         String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);

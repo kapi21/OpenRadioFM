@@ -25,6 +25,10 @@ public class PresetManager {
     private final View[] cardPresets;
     private final TextView[] tvPresets;
     private final ImageView[] ivPresets;
+    private final int[] mLogoRequestSeqPerSlot;
+    private final int[] mTextRequestSeqPerSlot;
+    private final java.util.concurrent.atomic.AtomicInteger mLogoRequestSeq = new java.util.concurrent.atomic.AtomicInteger(0);
+    private final java.util.concurrent.atomic.AtomicInteger mTextRequestSeq = new java.util.concurrent.atomic.AtomicInteger(0);
 
     public PresetManager(MainActivity activity, RadioRepository repository, SharedPreferences prefs, int count) {
         this.mActivity = activity;
@@ -36,6 +40,8 @@ public class PresetManager {
         this.cardPresets = new View[count];
         this.tvPresets = new TextView[count];
         this.ivPresets = new ImageView[count];
+        this.mLogoRequestSeqPerSlot = new int[count];
+        this.mTextRequestSeqPerSlot = new int[count];
     }
 
 
@@ -97,10 +103,20 @@ public class PresetManager {
             }
             return;
         }
+        final int fIndex = index;
+        final int fFreqForSlot = freq;
+        final int textRequestSeq = mTextRequestSeq.incrementAndGet();
+        mTextRequestSeqPerSlot[fIndex] = textRequestSeq;
         if (tvPresets[index] != null) {
-            final int fIndex = index;
             final int fFreq = freq;
             final int fBand = currentBand;
+            // Placeholder inmediato: evita “arrastre” visual mientras llega nombre asíncrono.
+            if (fBand >= 3) {
+                tvPresets[fIndex].setText(String.valueOf(fFreq));
+            } else {
+                tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+            }
+            tvPresets[fIndex].setVisibility(View.VISIBLE);
 
             // V18.2: Mover la obtención de info a hilo secundario para evitar congelar la UI
             new Thread(() -> {
@@ -113,6 +129,8 @@ public class PresetManager {
                 
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                    if (mTextRequestSeqPerSlot[fIndex] != textRequestSeq) return;
+                    if (mPresets[fIndex] != fFreqForSlot) return;
                     if (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+")) {
                         tvPresets[fIndex].setText(displayName);
                     } else {
@@ -128,12 +146,24 @@ public class PresetManager {
             }).start();
         }
 
-        final int fIndex = index;
+        final int fFreqForLogo = freq;
+        final int requestSeq = mLogoRequestSeq.incrementAndGet();
+        mLogoRequestSeqPerSlot[fIndex] = requestSeq;
+        if (ivPresets[fIndex] != null) {
+            // Evita mostrar el logo previo mientras llega el nuevo resultado asíncrono.
+            try {
+                Glide.with(ivPresets[fIndex].getContext()).clear(ivPresets[fIndex]);
+            } catch (Exception ignored) {}
+            ivPresets[fIndex].setImageDrawable(null);
+        }
         if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
             mRepository.getStationInfo(freq, logoUrl -> {
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                    
+                    // Guard anti-stale: descartar callbacks viejos (slot reutilizado o frecuencia cambiada).
+                    if (mLogoRequestSeqPerSlot[fIndex] != requestSeq) return;
+                    if (mPresets[fIndex] != fFreqForLogo) return;
+
                     if (logoUrl != null && ivPresets[fIndex] != null) {
                         Glide.with(ivPresets[fIndex])
                                 .load(logoUrl)
@@ -141,10 +171,28 @@ public class PresetManager {
                                 .transition(DrawableTransitionOptions.withCrossFade())
                                 .into(ivPresets[fIndex]);
                     } else if (ivPresets[fIndex] != null) {
+                        try {
+                            Glide.with(ivPresets[fIndex].getContext()).clear(ivPresets[fIndex]);
+                        } catch (Exception ignored) {}
                         ivPresets[fIndex].setImageDrawable(null);
                     }
                 });
             });
+        }
+    }
+
+    /**
+     * Cancela cargas pendientes del slot pulsado y limpia visual inmediato.
+     */
+    public void preparePresetSelection(int index) {
+        if (index < 0 || index >= mPresetsCount) return;
+        mLogoRequestSeqPerSlot[index] = mLogoRequestSeq.incrementAndGet();
+        mTextRequestSeqPerSlot[index] = mTextRequestSeq.incrementAndGet();
+        if (ivPresets[index] != null) {
+            try {
+                Glide.with(ivPresets[index].getContext()).clear(ivPresets[index]);
+            } catch (Exception ignored) {}
+            ivPresets[index].setImageDrawable(null);
         }
     }
 
