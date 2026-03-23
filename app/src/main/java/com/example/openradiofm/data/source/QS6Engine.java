@@ -32,6 +32,8 @@ public class QS6Engine implements RadioEngine {
     private static final String FOCUS_TAG = "OpenRadioFM-AudioFocus";
     private Context mContext;
     private RadioEngineCallback mCallback;
+    private long mInitElapsedMs = -1L;
+    private boolean mStartupAutoScanBlocked = false;
 
     // Estado local sincronizado por AIDL
     private int mCurrentFreq = 87500;
@@ -97,6 +99,7 @@ public class QS6Engine implements RadioEngine {
     private boolean mIsBound = false;
     private int mRetryCount = 0;
     private static final int MAX_RETRIES = 5;
+    private static final long STARTUP_SCAN_GUARD_WINDOW_MS = 15000L;
 
     /** Paquete del servicio de radio NWD (QS6). */
     private static final String NWD_RADIO_PACKAGE = "com.nwd.radio.service";
@@ -162,11 +165,26 @@ public class QS6Engine implements RadioEngine {
      */
     private volatile boolean mWantsFmAudioRoute = false;
     private static final long FOCUS_RECLAIM_AFTER_LOSS_MS = 320L;
+    private static final long FOCUS_LOSS_RECLAIM_GUARD_MS = 1400L;
+    private volatile long mIgnoreFocusLossReclaimUntilElapsedMs = 0L;
     private final Runnable mReclaimAudioFocusRunnable = () -> {
         if (!mWantsFmAudioRoute || mContext == null) return;
         Log.i(FOCUS_TAG, "Reclaim: nuevo requestAudioFocus tras AUDIOFOCUS_LOSS (QS6/NWD)");
         requestAndroidAudioFocusForFmOnMainThread();
     };
+
+    private boolean isInsideStartupScanGuardWindow() {
+        if (mInitElapsedMs <= 0L) return false;
+        long delta = SystemClock.elapsedRealtime() - mInitElapsedMs;
+        return delta >= 0 && delta <= STARTUP_SCAN_GUARD_WINDOW_MS;
+    }
+
+    private void stopUnexpectedStartupScan(String reason) {
+        if (mStartupAutoScanBlocked || !isInsideStartupScanGuardWindow()) return;
+        mStartupAutoScanBlocked = true;
+        Log.w(TAG, "QS6: auto-scan inesperado al iniciar; forzando stopScan (" + reason + ")");
+        mMainHandler.post(this::stopScan);
+    }
 
     // V21.0: Shadow Motor Components
     private android.content.BroadcastReceiver mShadowReceiver;
@@ -546,6 +564,9 @@ public class QS6Engine implements RadioEngine {
         public void notifyRadioScanState(int state) {
             Log.d(TAG, "NWD AIDL ScanState -> " + state);
             mIsScanning = (state != 0);
+            if (mIsScanning) {
+                stopUnexpectedStartupScan("notifyRadioScanState=" + state);
+            }
             mMainHandler.post(() -> {
                 if (mCallback != null) {
                     mCallback.onScanStatusChanged(mIsScanning);
@@ -577,6 +598,10 @@ public class QS6Engine implements RadioEngine {
         @Override
         public void notifyState(byte state) {
             Log.d(TAG, "NWD AIDL notifyState -> " + state);
+            // En algunas ROM NWD, state=3 tras init equivale a modo búsqueda/scan espontáneo.
+            if ((state & 0xff) == 3) {
+                stopUnexpectedStartupScan("notifyState=3");
+            }
             mMainHandler.post(() -> {
                 if (mCallback != null) {
                     mCallback.onRawEvent(state & 0xff, "nwd_radio_state");
@@ -980,6 +1005,10 @@ public class QS6Engine implements RadioEngine {
                     break;
                 case AudioManager.AUDIOFOCUS_LOSS:
                     mIsAudioFocusHeld = false;
+                    if (SystemClock.elapsedRealtime() < mIgnoreFocusLossReclaimUntilElapsedMs) {
+                        Log.d(TAG, "QS6: AUDIOFOCUS_LOSS ignorado temporalmente (guard anti ping-pong)");
+                        break;
+                    }
                     // Un solo reclaim diferido: el inmediato + el de 320ms generaban ráfagas de
                     // requestAudioFocus sin mejorar el audio en ROMs NWD (LOSS viene del SourceMgr).
                     scheduleAudioFocusReclaimAfterLoss("AUDIOFOCUS_LOSS");
@@ -1148,6 +1177,8 @@ public class QS6Engine implements RadioEngine {
     @Override
     public boolean init(Context context) {
         this.mContext = context;
+        mInitElapsedMs = SystemClock.elapsedRealtime();
+        mStartupAutoScanBlocked = false;
         setupAudioFocus();
         Log.d(TAG, "Iniciando motor QS6 (Plan Nivel 2 - NWD AIDL IPC)");
 
@@ -1468,7 +1499,33 @@ public class QS6Engine implements RadioEngine {
             intent.putExtra("mute", mute ? 1 : 0);
             mContext.sendBroadcast(intent);
             this.mIsMute = mute;
+            if (mute) {
+                // Mute real: cortar ruta FM (SOURCE_ANDROID) porque algunas ROM ignoran el mute lógico.
+                requestStopAudio();
+                applyQs6AndroidMuteHint(true);
+            } else {
+                // Unmute ligero: recuperar foco + hint HAL, sin recovery agresivo.
+                requestPlayAudio();
+                applyQs6AndroidMuteHint(false);
+            }
         } catch (Exception e) {
+            Log.w(TAG, "QS6 setMute falló", e);
+        }
+    }
+
+    /**
+     * Mute/desmute a nivel Audio HAL (Android) para QS6.
+     * No cambia la fuente MCU; solo fuerza estado fm_mute para hacer el botón más consistente.
+     */
+    private void applyQs6AndroidMuteHint(boolean mute) {
+        setupAudioFocus();
+        if (mAudioManager == null) return;
+        String p = mute ? "fm_radio_on=1;fm_mute=1" : "fm_radio_on=1;fm_mute=0";
+        try {
+            mAudioManager.setParameters(p);
+            Log.i(FOCUS_TAG, "setParameters (mute-toggle): " + p);
+        } catch (Exception e) {
+            Log.w(TAG, "QS6 applyQs6AndroidMuteHint falló: " + p, e);
         }
     }
 
@@ -1572,6 +1629,7 @@ public class QS6Engine implements RadioEngine {
 
     private boolean requestPlayAudioInternalOnMain(boolean force) {
         mWantsFmAudioRoute = true;
+        mIgnoreFocusLossReclaimUntilElapsedMs = SystemClock.elapsedRealtime() + FOCUS_LOSS_RECLAIM_GUARD_MS;
         cancelAudioFocusReclaim();
         // Siempre pedir AudioFocus al volver a FM aunque el broadcast esté en throttle.
         requestAndroidAudioFocusForFmOnMainThread();

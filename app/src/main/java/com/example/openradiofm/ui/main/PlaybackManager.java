@@ -87,7 +87,16 @@ public class PlaybackManager {
             // Lo hacemos SIEMPRE que se pida false, incluso si ya creíamos estar en false,
             // por si el hardware se ha muteado externamente (ej: tras un layout crash).
             if (!mute) {
-                mEngine.enforceAudioRecovery();
+                String engineName = null;
+                try {
+                    engineName = mEngine.getEngineName();
+                } catch (Exception ignored) {}
+                boolean isQs6 = engineName != null && engineName.toUpperCase().contains("QS6");
+                // QS6 ya gestiona unmute con AudioFocus/HAL en su propio engine.
+                // Evitamos recovery agresivo aquí para no provocar ping-pong de foco.
+                if (!isQs6) {
+                    mEngine.enforceAudioRecovery();
+                }
             }
         }
 
@@ -128,6 +137,16 @@ public class PlaybackManager {
         // Si este PlaybackManager se está ejecutando DENTRO del propio servicio, no re-iniciamos nada.
         if (!mute && !(mContext instanceof com.example.openradiofm.service.RadioMediaService)) {
             Intent serviceIntent = new Intent(mContext, com.example.openradiofm.service.RadioMediaService.class);
+            String engineName = null;
+            try {
+                if (mEngine != null) engineName = mEngine.getEngineName();
+            } catch (Exception ignored) {}
+            boolean isQs6 = engineName != null && engineName.toUpperCase().contains("QS6");
+            // En QS6 ya estamos haciendo unmute desde el propio engine; forzar PLAY en el servicio
+            // duplica setMute(false) y provoca peticiones redundantes de AudioFocus.
+            if (!isQs6) {
+                serviceIntent.setAction(com.example.openradiofm.service.RadioMediaService.ACTION_FORCE_PLAY);
+            }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 mContext.startForegroundService(serviceIntent);
             } else {

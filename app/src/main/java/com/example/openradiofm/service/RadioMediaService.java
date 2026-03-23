@@ -50,6 +50,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
+    /** Start command from UI to force PLAYING MediaSession state. */
+    public static final String ACTION_FORCE_PLAY = "com.example.openradiofm.action.FORCE_PLAY";
     private static final String MEDIA_ROOT_ID = "radio_root";
     private static final String BANDS_ID = "bands";
     private static final String BAND_PREFIX = "band:"; // band:<idx>
@@ -353,6 +355,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             MediaButtonReceiver.handleIntent(mMediaSession, intent);
         } catch (Exception e) {
             Log.w(TAG, "MediaButtonReceiver.handleIntent falló", e);
+        }
+
+        // Arranque desde UI: asegurar sesión en PLAYING para que volante/media keys
+        // se enruten a esta app también cuando MainActivity está en segundo plano.
+        if (intent != null && ACTION_FORCE_PLAY.equals(intent.getAction())) {
+            handlePlay();
         }
 
         // Si el sistema nos arranca sin intención, no forzamos reproducción.
