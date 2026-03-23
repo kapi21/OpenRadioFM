@@ -114,6 +114,10 @@
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MediaTek 8259 / 8667</string>
     <string name="engine_standard">Android Estándar</string>
+    <string name="steering_next_prev_mode">🛞 Mandos volante NEXT/PREV</string>
+    <string name="steering_mode_seek">Seek (emisoras)</string>
+    <string name="steering_mode_preset">Preset (memorias)</string>
+    <string name="select_steering_mode">Selecciona acción NEXT/PREV</string>
     <string name="am_band_enabled">✅ Banda AM habilitada</string>
     <string name="am_band_disabled">❌ Banda AM deshabilitada</string>
     <string name="engine_changed">✅ Motor de radio cambiado a %s</string>

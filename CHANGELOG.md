@@ -1,3 +1,29 @@
+## [5.0.4 (QS NWD Advance + K706 Fixed)] - 2026-03-23
+*Build de avance y corrección (fixed build, no release mayor).*
+
+### Fixed
+- **QS6 / NWD — transición de emisora**: mitigado arrastre temporal de PS/logo de la emisora anterior al cambiar rápido de frecuencia o preset.
+- **QS6 / NWD — presets**: reforzada la coherencia de logos y textos por slot para descartar callbacks asíncronos obsoletos.
+- **QS6 / NWD — PTY**: persistencia y fallback de PTY por frecuencia para evitar mostrar "Sin PTY" cuando el evento sí llegó desde el HAL.
+- **QS6 / NWD — arranque**: bloqueo de auto-scan espontáneo al iniciar (manteniendo autoscan manual por botón).
+- **QS6 / NWD — última frecuencia**: al abrir la app en frío se sintoniza de nuevo `pref_last_freq` si difiere del estado local del motor (antes `getCurrentFreq()` nunca era ≤0 y no se restauraba la emisora guardada).
+- **K706 / controles**: se mantienen y consolidan los fixes de mandos volante/media para comportamiento estable en foreground/background.
+
+### Added
+- **Ajustes de Hardware**: nuevo selector para mandos de volante `NEXT/PREV`:
+  - `Seek (emisoras)`
+  - `Preset (memorias)`
+- **UI**:
+  - sección **👏 Agradecimientos** en Personalización Premium.
+  - texto pulsable `Radio Android España` con diálogo QR.
+  - acceso a `dialog_credits` con 1 toque sobre el logo en **Acerca de OpenRadioFM**.
+
+### Changed
+- **Versionado app**: `versionCode 15`, `versionName 5.0.4 (QS NWD Advance + K706 Fixed)`.
+- **README**: actualizado historial y resumen bilingüe de la build `v5.0.4`.
+
+---
+
 ## [5.0.2 fixed (QS6 / NWD)] - 2026-03-22
 *Build de corrección (no release completo).*
 

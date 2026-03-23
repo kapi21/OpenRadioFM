@@ -362,6 +362,32 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Mandos volante NEXT/PREV -->
+        <LinearLayout
+            android:id="@+id/rowSteeringMode"
+            style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="@string/steering_next_prev_mode"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentSteeringMode"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/steering_mode_seek"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Habilitar AM (Oculto v21.3 por estabilidad hardware) -->
         <LinearLayout style="@style/SettingsRowStyle"
             android:visibility="gone">
@@ -408,7 +434,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Agradecimientos"
+                android:text="👏 Agradecimientos"
                 android:textColor="@color/white"/>
             <TextView
                 android:layout_width="wrap_content"

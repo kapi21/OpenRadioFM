@@ -173,7 +173,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public boolean mHasRdsLock = false;
     public String mCurrentPty = null;
     public String mLastLogoUrl = "";
+    private volatile String mPrevStationNameBeforeTune = "";
     public java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
+    /** Evita arrastre de RDS/logo de la emisora anterior tras un cambio de frecuencia (QS6/NWD). */
+    private static final long RDS_TRANSITION_GUARD_MS = 1200L;
+    private volatile long mRdsTransitionGuardUntilMs = 0L;
     /**
      * QS6/NWD y otros motores con callbacks rápidos: invalida cargas de logo asíncronas al cambiar
      * frecuencia o banda (evita que un Glide/getStationInfo tardío pinte logo de otra emisora).
@@ -181,6 +185,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public final java.util.concurrent.atomic.AtomicInteger mLogoUiGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
     private com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
     private com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
+
+    private boolean isQs6TransitionGuardActive() {
+        try {
+            boolean isQs6 = mEngine != null
+                    && mEngine.getEngineName() != null
+                    && mEngine.getEngineName().toUpperCase().contains("QS6");
+            return isQs6 && android.os.SystemClock.elapsedRealtime() < mRdsTransitionGuardUntilMs;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
 
     // V5.0: UI Elements (Fixing Compilation Errors)
     private TextView tvPty;
@@ -256,13 +271,39 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // Métodos delegados al PresetManager para compatibilidad con código existente
     public void gotoFreq(int freq) {
         if (mEngine != null) {
+            boolean isQs6 = false;
+            try {
+                isQs6 = mEngine.getEngineName() != null
+                        && mEngine.getEngineName().toUpperCase().contains("QS6");
+            } catch (Exception ignored) {}
+            final boolean isQs6Final = isQs6;
+
             // V20.0: Limpieza inmediata de UI para evitar logos "pegados" si el hardware falla o es lento
             runOnUiThread(() -> {
                 if (mLogoManager != null) mLogoManager.clearLogo();
+                if (isQs6Final) {
+                    // En QS6, fijar la frecuencia objetivo al instante evita mostrar la anterior
+                    // mientras el stack OEM entrega callbacks transitorios tras TUNE.
+                    updateFrequencyDisplay(freq, null);
+                    if (tvRdsName != null) tvRdsName.setText("");
+                    if (tvRdsInfo != null) tvRdsInfo.setText("");
+                    if (tvPty != null) tvPty.setText(getString(R.string.pty_none));
+                }
             });
+
+            if (isQs6) {
+                mPrevStationNameBeforeTune = mLastPs != null ? mLastPs : "";
+                mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
+                mLogoUiGeneration.incrementAndGet();
+            }
             mEngine.tune(freq);
             mLastFreq = freq;
-            refreshRadioStatus();
+            if (isQs6) {
+                // Pequeño retraso: evita leer getCurrentFreq() aún viejo en QS6 justo tras TUNE.
+                mMainHandler.postDelayed(this::refreshRadioStatus, 220);
+            } else {
+                refreshRadioStatus();
+            }
         }
     }
 
@@ -471,6 +512,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public void onRdsName(final String name) {
         if (mSessionController != null) {
             mSessionController.onRdsName(name);
+        }
+        long now = android.os.SystemClock.elapsedRealtime();
+        String incoming = name != null ? name.trim() : "";
+        if (now < mRdsTransitionGuardUntilMs
+                && !incoming.isEmpty()
+                && mPrevStationNameBeforeTune != null
+                && !mPrevStationNameBeforeTune.isEmpty()
+                && mPrevStationNameBeforeTune.equalsIgnoreCase(incoming)) {
+            Log.d(TAG, "onRdsName: bloqueado PS previo en transición (" + incoming + ")");
+            return;
         }
         runOnUiThread(() -> {
             if (mRdsManager != null) {
@@ -767,6 +818,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private final RDSManager.RDSListener mRdsListener = new RDSManager.RDSListener() {
         @Override
         public void onRdsNameConfirmed(String name) {
+            long now = android.os.SystemClock.elapsedRealtime();
+            if (now < mRdsTransitionGuardUntilMs
+                    && mPrevStationNameBeforeTune != null
+                    && !mPrevStationNameBeforeTune.isEmpty()
+                    && mPrevStationNameBeforeTune.equalsIgnoreCase(name != null ? name.trim() : "")) {
+                Log.d(TAG, "RDS guard activo: ignorando PS transitorio '" + name + "'");
+                return;
+            }
             // V13.6: Persistir en repositorio por frecuencia para logos y favoritos
             if (mRepository != null && mEngine != null) {
                 int freq = mEngine.getCurrentFreq();
@@ -1002,10 +1061,27 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             // V20.0: Encapsular lógica de post-inicialización para permitir retardo táctico
             final Runnable postInitAction = () -> {
-                // V18.6.3: Asegurar sintonización al arranque de cero
-                if (mEngine != null && mEngine.getCurrentFreq() <= 0 && mLastFreq > 0) {
-                    Log.d(TAG, "Startup: Tuning to last frequency " + mLastFreq);
-                    mEngine.tune(mLastFreq);
+                // V18.6.3: Sintonizar a la última frecuencia guardada (pref_last_freq).
+                // - Motores que reportan 0 hasta init: siempre tune si mLastFreq > 0.
+                // - QS6: getCurrentFreq() arranca en 87500 por defecto (nunca <= 0), así que sin este
+                //   caso nunca se restauraba la emisora anterior tras cerrar la app.
+                if (mEngine != null && mLastFreq > 0) {
+                    boolean tuneToLast = false;
+                    if (mEngine.getCurrentFreq() <= 0) {
+                        tuneToLast = true;
+                    } else if (mMode == FmMode.FM_QS6 && !mIsRecreating) {
+                        try {
+                            if (mEngine.getCurrentFreq() != mLastFreq) {
+                                tuneToLast = true;
+                            }
+                        } catch (Exception ignored) {
+                            tuneToLast = true;
+                        }
+                    }
+                    if (tuneToLast) {
+                        Log.d(TAG, "Startup: Tuning to last saved frequency " + mLastFreq + " (mode=" + mMode + ")");
+                        mEngine.tune(mLastFreq);
+                    }
                 }
 
                 startStatusPolling();
@@ -1044,6 +1120,27 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             } else if (mMuteState) {
                                 Log.d(TAG, "Startup Audio Recovery (Recreation): Detectado mute previo, forzando recuperación");
                                 mPlaybackManager.setMute(false);
+                            }
+                            // K706: Tras init MCU + AudioFocus, a veces un LOSS espurio o el bind de
+                            // MediaBrowser deja el canal FM muteado aunque PlaybackManager crea estar en false.
+                            // Un segundo/tercer setMute(false) retardado fuerza enforceAudioRecovery() y RPC coherente.
+                            if (mMode == FmMode.FM_K706 && mEngine != null) {
+                                mMainHandler.postDelayed(() -> {
+                                    if (isFinishing() || isDestroyed()) return;
+                                    boolean live = mOnlineStreamManager != null
+                                            && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
+                                    if (live || mPlaybackManager == null || mEngine == null) return;
+                                    Log.d(TAG, "K706: recuperación de audio retardada (+450ms) tras arranque");
+                                    mPlaybackManager.setMute(false);
+                                }, 450L);
+                                mMainHandler.postDelayed(() -> {
+                                    if (isFinishing() || isDestroyed()) return;
+                                    boolean live = mOnlineStreamManager != null
+                                            && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
+                                    if (live || mPlaybackManager == null || mEngine == null) return;
+                                    Log.d(TAG, "K706: recuperación de audio retardada (+1500ms) tras arranque");
+                                    mPlaybackManager.setMute(false);
+                                }, 1500L);
                             }
                         } else if (liveActive) {
                             Log.d(TAG, "Startup Audio Recovery: LIVE activo, no se desmutea la radio FM");
@@ -1221,12 +1318,22 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             @Override
             public void onMediaCommand(String command) {
                 runOnUiThread(() -> {
+                    boolean usePresetMode = mPrefs != null
+                            && mPrefs.getInt("pref_steering_next_prev_mode", 0) == 1;
                     switch (command) {
                         case "ACTION_NEXT":
-                            if (mPresetManager != null) mPresetManager.playNextPreset();
+                            if (usePresetMode) {
+                                if (mPresetManager != null) mPresetManager.playNextPreset();
+                            } else if (mEngine != null) {
+                                mEngine.seekUp();
+                            }
                             break;
                         case "ACTION_PREV":
-                            if (mPresetManager != null) mPresetManager.playPrevPreset();
+                            if (usePresetMode) {
+                                if (mPresetManager != null) mPresetManager.playPrevPreset();
+                            } else if (mEngine != null) {
+                                mEngine.seekDown();
+                            }
                             break;
                     }
                 });
@@ -1954,13 +2061,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mStationInfoExecutor.execute(() -> {
             if (isFinishing() || isDestroyed()) return;
             if (seq != mLastStationInfoRequestedSeq) return;
+            final boolean qs6TransitionActive = isQs6TransitionGuardActive();
 
             com.example.openradiofm.data.model.RadioStation station = null;
             if (mRepository != null && !mIsScanning) {
                 // V21.2: PS en vivo (RDSManager) gana sobre RDS_* en prefs (histórico de otra emisora en la misma frecuencia).
                 // Solo si la frecuencia pedida es la del sintonizador FM actual (no streaming).
                 String livePs = null;
-                if (!fIsStreaming && mRdsManager != null && mEngine != null && fFreq == mEngine.getCurrentFreq()) {
+                if (!qs6TransitionActive
+                        && !fIsStreaming && mRdsManager != null && mEngine != null && fFreq == mEngine.getCurrentFreq()) {
                     String cn = mRdsManager.getConfirmedName();
                     if (cn != null && !cn.trim().isEmpty()) {
                         livePs = cn.trim();
@@ -1970,7 +2079,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
             if (seq != mLastStationInfoRequestedSeq) return;
 
-            final String rdsName = (station != null) ? station.getName() : "";
+            final String rdsNameRaw = (station != null) ? station.getName() : "";
+            final String rdsName = qs6TransitionActive ? "" : rdsNameRaw;
             final String stationPty = (station != null) ? station.getPty() : null;
             mLastPs = rdsName; // Sincronizar campo para acceso externo
 
@@ -1995,8 +2105,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     }
 
                     if (mLogoManager != null) {
-                        String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
-                        mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
+                        boolean qs6GuardActive = false;
+                        try {
+                            boolean isQs6 = mEngine != null
+                                    && mEngine.getEngineName() != null
+                                    && mEngine.getEngineName().toUpperCase().contains("QS6");
+                            qs6GuardActive = isQs6
+                                    && android.os.SystemClock.elapsedRealtime() < mRdsTransitionGuardUntilMs;
+                        } catch (Exception ignored) {}
+                        if (qs6GuardActive) {
+                            // En la ventana de transición QS6, mantener logo en fallback (evitar "logo pegado").
+                            mLogoManager.clearLogo();
+                        } else {
+                            String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
+                            mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
+                        }
                     }
 
                     boolean isFav = isStationMemorized(fFreq);
@@ -2734,6 +2857,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             return;
 
         mLogoUiGeneration.incrementAndGet();
+        mPrevStationNameBeforeTune = mLastPs != null ? mLastPs : "";
+        mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
         mLastFreq = freq;
         mLastLogoUrl = ""; // Force logo reload
         mCurrentPi = null;
@@ -2853,11 +2978,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
     @Override
     public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
-        // V18.x: Volante / teclas media = cambiar frecuencia (seek), no memorias
+        // Volante / teclas media NEXT/PREV configurable: seek o preset.
+        final boolean usePresetMode = mPrefs != null
+                && mPrefs.getInt("pref_steering_next_prev_mode", 0) == 1;
         switch (keyCode) {
             case android.view.KeyEvent.KEYCODE_MEDIA_NEXT:
             case android.view.KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
-                Log.d(TAG, "Hardware Key: NEXT -> seekUp");
+                Log.d(TAG, "Hardware Key: NEXT -> " + (usePresetMode ? "nextPreset" : "seekUp"));
+                if (usePresetMode) {
+                    if (mPresetManager != null) mPresetManager.playNextPreset();
+                    return true;
+                }
                 if (mEngine != null) {
                     mEngine.seekUp();
                     return true;
@@ -2866,7 +2997,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 return true;
             case android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS:
             case android.view.KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
-                Log.d(TAG, "Hardware Key: PREV -> seekDown");
+                Log.d(TAG, "Hardware Key: PREV -> " + (usePresetMode ? "prevPreset" : "seekDown"));
+                if (usePresetMode) {
+                    if (mPresetManager != null) mPresetManager.playPrevPreset();
+                    return true;
+                }
                 if (mEngine != null) {
                     mEngine.seekDown();
                     return true;

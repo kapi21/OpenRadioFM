@@ -7,7 +7,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
-import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.repository.RadioRepository;
 import com.example.openradiofm.data.model.RadioStation;
@@ -27,6 +26,7 @@ public class PresetManager {
     private final ImageView[] ivPresets;
     private final int[] mLogoRequestSeqPerSlot;
     private final int[] mTextRequestSeqPerSlot;
+    private final int[] mLastVisualFreqPerSlot;
     private final java.util.concurrent.atomic.AtomicInteger mLogoRequestSeq = new java.util.concurrent.atomic.AtomicInteger(0);
     private final java.util.concurrent.atomic.AtomicInteger mTextRequestSeq = new java.util.concurrent.atomic.AtomicInteger(0);
 
@@ -42,6 +42,7 @@ public class PresetManager {
         this.ivPresets = new ImageView[count];
         this.mLogoRequestSeqPerSlot = new int[count];
         this.mTextRequestSeqPerSlot = new int[count];
+        this.mLastVisualFreqPerSlot = new int[count];
     }
 
 
@@ -93,6 +94,7 @@ public class PresetManager {
         if (index < 0 || index >= mPresetsCount) return;
 
         if (freq <= 0) {
+            mLastVisualFreqPerSlot[index] = 0;
             if (tvPresets[index] != null) {
                 tvPresets[index].setText("---");
                 tvPresets[index].setVisibility(View.VISIBLE);
@@ -103,6 +105,8 @@ public class PresetManager {
             }
             return;
         }
+        final boolean freqChangedForSlot = mLastVisualFreqPerSlot[index] != freq;
+        mLastVisualFreqPerSlot[index] = freq;
         final int fIndex = index;
         final int fFreqForSlot = freq;
         final int textRequestSeq = mTextRequestSeq.incrementAndGet();
@@ -110,13 +114,15 @@ public class PresetManager {
         if (tvPresets[index] != null) {
             final int fFreq = freq;
             final int fBand = currentBand;
-            // Placeholder inmediato: evita “arrastre” visual mientras llega nombre asíncrono.
-            if (fBand >= 3) {
-                tvPresets[fIndex].setText(String.valueOf(fFreq));
-            } else {
-                tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+            if (freqChangedForSlot) {
+                // Solo cuando cambia de emisora en ese slot; evita "temblor" en refrescos repetidos.
+                if (fBand >= 3) {
+                    tvPresets[fIndex].setText(String.valueOf(fFreq));
+                } else {
+                    tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                }
+                tvPresets[fIndex].setVisibility(View.VISIBLE);
             }
-            tvPresets[fIndex].setVisibility(View.VISIBLE);
 
             // V18.2: Mover la obtención de info a hilo secundario para evitar congelar la UI
             new Thread(() -> {
@@ -149,7 +155,7 @@ public class PresetManager {
         final int fFreqForLogo = freq;
         final int requestSeq = mLogoRequestSeq.incrementAndGet();
         mLogoRequestSeqPerSlot[fIndex] = requestSeq;
-        if (ivPresets[fIndex] != null) {
+        if (freqChangedForSlot && ivPresets[fIndex] != null) {
             // Evita mostrar el logo previo mientras llega el nuevo resultado asíncrono.
             try {
                 Glide.with(ivPresets[fIndex].getContext()).clear(ivPresets[fIndex]);
@@ -168,7 +174,6 @@ public class PresetManager {
                         Glide.with(ivPresets[fIndex])
                                 .load(logoUrl)
                                 .transform(new RoundedCorners(20))
-                                .transition(DrawableTransitionOptions.withCrossFade())
                                 .into(ivPresets[fIndex]);
                     } else if (ivPresets[fIndex] != null) {
                         try {

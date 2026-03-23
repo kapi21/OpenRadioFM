@@ -415,6 +415,22 @@ public class DialogManager {
             });
         }
 
+        // Steering NEXT/PREV row
+        View rowSteeringMode = dialog.findViewById(R.id.rowSteeringMode);
+        TextView tvCurrentSteeringMode = dialog.findViewById(R.id.tvCurrentSteeringMode);
+        if (tvCurrentSteeringMode != null) {
+            int mode = mActivity.mPrefs.getInt("pref_steering_next_prev_mode", 0); // 0=seek, 1=preset
+            tvCurrentSteeringMode.setText(mode == 1
+                    ? mActivity.getString(R.string.steering_mode_preset)
+                    : mActivity.getString(R.string.steering_mode_seek));
+        }
+        if (rowSteeringMode != null) {
+            rowSteeringMode.setOnClickListener(v -> {
+                showSteeringModeSelector();
+                dialog.dismiss();
+            });
+        }
+
         cardTheme.setOnClickListener(v -> {
             if (mActivity.mPrefs.getBoolean("pref_night_mode_auto", false)) {
                 mActivity.showToast("Desactiva Modo Noche Automático para elegir skin manualmente");
@@ -426,6 +442,10 @@ public class DialogManager {
         cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, tvBackgroundStatus));
 
         dialog.findViewById(R.id.btnAbout).setOnClickListener(v -> showAboutDialog());
+        View btnAcknowledgements = dialog.findViewById(R.id.btnAcknowledgements);
+        if (btnAcknowledgements != null) {
+            btnAcknowledgements.setOnClickListener(v -> showAcknowledgementsDialog());
+        }
         dialog.findViewById(R.id.btnCloseSettings).setOnClickListener(v -> dialog.dismiss());
 
         // V15.6: Aplicar fuente de forma recursiva al diálogo de ajustes usando el
@@ -625,6 +645,14 @@ public class DialogManager {
             applyHtmlLink(tvTdtchannels, text);
         }
 
+        View ivAboutLogo = dialog.findViewById(R.id.ivAboutAppLogo);
+        if (ivAboutLogo != null) {
+            ivAboutLogo.setOnClickListener(v -> {
+                dialog.dismiss();
+                showCreditsDialog();
+            });
+        }
+
         View btnClose = dialog.findViewById(R.id.btnClose);
         if (btnClose != null)
             btnClose.setOnClickListener(v -> dialog.dismiss());
@@ -632,6 +660,51 @@ public class DialogManager {
         // V15.6: Aplicar fuente recursiva al diálogo About usando MainActivity
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
 
+        dialog.show();
+    }
+
+    public void showAcknowledgementsDialog() {
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_acknowledgements);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+        }
+
+        TextView tvLink = dialog.findViewById(R.id.tvRadioAndroidLink);
+        if (tvLink != null) {
+            tvLink.setOnClickListener(v -> showRadioAndroidQrDialog());
+        }
+
+        View btnClose = dialog.findViewById(R.id.btnCloseAcknowledgements);
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        dialog.show();
+    }
+
+    public void showRadioAndroidQrDialog() {
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_radio_android_qr);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.8f);
+        }
+
+        View btnClose = dialog.findViewById(R.id.btnCloseQr);
+        if (btnClose != null) {
+            btnClose.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
         dialog.show();
     }
 
@@ -695,6 +768,19 @@ public class DialogManager {
             mActivity.mPrefs.edit().putInt("pref_logo_provider", which).apply();
             mActivity.showToast("Proveedor de logos: " + options[which]);
             // Reabrir ajustes para ver el cambio (opcional)
+            showPremiumSettingsDialog();
+        });
+    }
+
+    public void showSteeringModeSelector() {
+        String[] options = {
+                mActivity.getString(R.string.steering_mode_seek),
+                mActivity.getString(R.string.steering_mode_preset)
+        };
+        int currentIdx = mActivity.mPrefs.getInt("pref_steering_next_prev_mode", 0);
+        showGridSelector(mActivity.getString(R.string.select_steering_mode), options, currentIdx, which -> {
+            mActivity.mPrefs.edit().putInt("pref_steering_next_prev_mode", which).apply();
+            mActivity.showToast("Mandos volante NEXT/PREV: " + options[which]);
             showPremiumSettingsDialog();
         });
     }

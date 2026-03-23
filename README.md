@@ -186,10 +186,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.0.4 **fixed** (Marzo 2026) — rama `QS_NWD`
+### v5.0.4 **"QS NWD Advance + K706 Fixed"** (Marzo 2026) — rama `QS_NWD`
 
-- **ES:** Mejora de estabilidad visual en presets para evitar arrastre de logos al cambiar rápidamente de emisora, mejora de consistencia de PTY en QS6 y nuevas opciones de interfaz (Agradecimientos con QR y acceso directo a créditos desde Acerca de OpenRadioFM).
-- **EN:** Improved preset visual stability to prevent stale logos when quickly switching stations, improved QS6 PTY consistency, and new UI options (Acknowledgements with QR and direct credits access from About OpenRadioFM).
+- **ES:** Build de avance centrado en **consistencia QS6/NWD** (transición de frecuencia, logos en presets, PTY, auto-scan de arranque) y consolidación de **fixes K706** (controles de volante/media). Incluye mejoras de UI: Agradecimientos con QR, créditos accesibles desde Acerca y modo opcional NEXT/PREV (seek o presets).
+- **EN:** Progress build focused on **QS6/NWD consistency** (frequency transition behavior, preset logos, PTY, startup auto-scan guard) while consolidating **K706 fixes** (steering wheel/media controls). Also includes UI improvements: Acknowledgements with QR, credits from About, and optional NEXT/PREV mode (seek or presets).
+- **QS6 — última frecuencia:** en arranque en frío se vuelve a sintonizar `pref_last_freq` cuando difiere del estado local del motor (el motor QS6 no reporta frecuencia “0”, así que antes no se aplicaba la última emisora guardada).
+- **K706 — audio al arranque:** recuperación de audio retardada (+450 ms / +1,5 s) y mute unificado vía `PlaybackManager` en layouts simple/minimal para evitar FM silenciada hasta pulsar mute.
 
 ### v5.0.2 **fixed** (Marzo 2026) — rama `QS_NWD`
 *Corrección acumulada; **no** es un anuncio de release completo (sí sirve como APK de prueba / “fixed build”).*

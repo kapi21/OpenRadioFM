@@ -106,6 +106,10 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private AudioManager.OnAudioFocusChangeListener mQs6ServiceFocusListener;
     private AudioFocusRequest mQs6ServiceFocusRequest;
 
+    private boolean usePresetModeForSteering() {
+        return mPresetPrefs != null && mPresetPrefs.getInt("pref_steering_next_prev_mode", 0) == 1;
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -251,17 +255,23 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             @Override
             public void onSkipToNext() {
                 try {
+                    boolean presetMode = usePresetModeForSteering();
                     if (mEngine != null) {
-                        // Volante / notificación: avanzar frecuencia (seek), no preset
-                        mEngine.seekUp();
+                        if (presetMode) {
+                            mEngine.nextFavorite();
+                        } else {
+                            mEngine.seekUp();
+                        }
                         handlePlay(); // aseguramos estado PLAYING si el usuario pulsa Next
                     } else {
-                        enqueueSkip(+1);
-                        maybeStartEngine();
-                        // Mostramos estado como activo mientras arranca el engine
-                        mIsPlaying = true;
-                        setPlaybackState(true);
-                        ensureNotificationVisible();
+                        if (!presetMode) {
+                            enqueueSkip(+1);
+                            maybeStartEngine();
+                            // Mostramos estado como activo mientras arranca el engine
+                            mIsPlaying = true;
+                            setPlaybackState(true);
+                            ensureNotificationVisible();
+                        }
                     }
                 } catch (Exception e) {
                     Log.w(TAG, "Error en onSkipToNext()", e);
@@ -271,15 +281,22 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             @Override
             public void onSkipToPrevious() {
                 try {
+                    boolean presetMode = usePresetModeForSteering();
                     if (mEngine != null) {
-                        mEngine.seekDown();
+                        if (presetMode) {
+                            mEngine.prevFavorite();
+                        } else {
+                            mEngine.seekDown();
+                        }
                         handlePlay();
                     } else {
-                        enqueueSkip(-1);
-                        maybeStartEngine();
-                        mIsPlaying = true;
-                        setPlaybackState(true);
-                        ensureNotificationVisible();
+                        if (!presetMode) {
+                            enqueueSkip(-1);
+                            maybeStartEngine();
+                            mIsPlaying = true;
+                            setPlaybackState(true);
+                            ensureNotificationVisible();
+                        }
                     }
                 } catch (Exception e) {
                     Log.w(TAG, "Error en onSkipToPrevious()", e);

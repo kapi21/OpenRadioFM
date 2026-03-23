@@ -58,9 +58,14 @@ public class SimpleLayoutManager {
         if (btnSeekDown != null) btnSeekDown.setOnClickListener(v -> mActivity.mEngine.seekDown());
         if (btnSeekUp != null) btnSeekUp.setOnClickListener(v -> mActivity.mEngine.seekUp());
         if (btnMute != null) btnMute.setOnClickListener(v -> {
-            mActivity.mMuteState = !mActivity.mMuteState;
-            mActivity.mEngine.setMute(mActivity.mMuteState);
-            MainActivity.setImageResourceIfChanged(btnMute, mActivity.mMuteState ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+            // Mismo camino que ControlPanelManager: PlaybackManager + enforceAudioRecovery al desmutear
+            if (mActivity.mPlaybackManager != null) {
+                mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted());
+            } else if (mActivity.mEngine != null) {
+                mActivity.mMuteState = !mActivity.mMuteState;
+                mActivity.mEngine.setMute(mActivity.mMuteState);
+                MainActivity.setImageResourceIfChanged(btnMute, mActivity.mMuteState ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+            }
         });
 
         if (ivMainLogo != null) {

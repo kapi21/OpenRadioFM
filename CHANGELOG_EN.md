@@ -4,6 +4,32 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.4 (QS NWD Advance + K706 Fixed)] - 2026-03-23
+*Progress + fixed build (not a major release).*
+
+### Fixed
+- **QS6 / NWD — station transition**: reduced transient carry-over of previous station PS/logo when switching frequency or presets quickly.
+- **QS6 / NWD — presets**: improved per-slot logo/text consistency by rejecting stale async callbacks.
+- **QS6 / NWD — PTY**: added PTY persistence and per-frequency fallback to avoid showing "No PTY" when HAL events were received.
+- **QS6 / NWD — startup**: spontaneous startup auto-scan is blocked while manual autoscan button behavior remains intact.
+- **QS6 / NWD — last frequency**: on cold start the tuner retunes to saved `pref_last_freq` when it differs from the engine’s local state (previously `getCurrentFreq()` was never ≤0 so the last station was not restored).
+- **K706 / controls**: steering wheel/media fixes are preserved and stabilized for both foreground and background paths.
+
+### Added
+- **Hardware Settings**: new steering `NEXT/PREV` mode selector:
+  - `Seek (stations)`
+  - `Preset (memories)`
+- **UI**:
+  - **👏 Acknowledgements** section in Premium Customization.
+  - clickable `Radio Android España` text opening a QR dialog.
+  - one-tap `dialog_credits` access from the About logo.
+
+### Changed
+- **App versioning**: `versionCode 15`, `versionName 5.0.4 (QS NWD Advance + K706 Fixed)`.
+- **README**: updated with bilingual `v5.0.4` summary and history entry.
+
+---
+
 ## [5.0.2 fixed (QS6 / NWD)] - 2026-03-22
 *Fix build — not a full release announcement.*
 

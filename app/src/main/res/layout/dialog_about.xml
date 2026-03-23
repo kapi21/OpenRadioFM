@@ -23,11 +23,15 @@
         </LinearLayout>
 
         <ImageView
+            android:id="@+id/ivAboutAppLogo"
             android:layout_width="80dp"
             android:layout_height="80dp"
             android:src="@mipmap/ic_launcher"
             android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="16dp"/>
+            android:layout_marginBottom="16dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:background="?android:attr/selectableItemBackgroundBorderless"/>
 
         <TextView
             android:id="@+id/tvAppVersion"
