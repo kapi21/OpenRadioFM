@@ -22,10 +22,10 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
   <img src="_ASSETS/v18_layout2.png" width="45%" alt="Standard Layout Premium">
   <br><br>
   <p align="center"><b>【 PRESENTACIÓN V5 - ESTABILIDAD BETA 】</b></p>
-  <img src="docs/img/v5 ingles.png" width="90%" alt="Presentación V5">
+  <img src="docs/img/v5 español.png" width="90%" alt="Presentación V5">
   <br><br>
   <p align="center"><b>【 GUÍA DEL SISTEMA DE LOGOS V5 】</b></p>
-  <img src="docs/img/Instrucciones logos v5 ingles.png" width="90%" alt="Guía de Logos V5">
+  <img src="docs/img/Instrucciones logos español v5.png" width="90%" alt="Guía de Logos V5">
 </div>
 
 ---
@@ -165,7 +165,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [Compatibilidad de Hardware](docs/HW_COMPATIBILITY.md)
 - [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
 - [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
-- [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md)
+- [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md) — incluye **§15 Roadmap motor QS6**
 - [Changelog](CHANGELOG.md) · [Changelog (English)](CHANGELOG_EN.md)
 - [Roadmap](_DOCS/roadmap.md)
 

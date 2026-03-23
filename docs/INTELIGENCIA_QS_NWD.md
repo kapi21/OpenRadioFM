@@ -1,7 +1,7 @@
 # Inteligencia consolidada — pila NWD / QS6 (OpenRadioFM)
 
-**Versión:** 1.0 (consolidado de fases A–D + implementación `QS6Engine`)  
-**Fecha:** 2026-03-21  
+**Versión:** 1.1 (roadmap motor §15)  
+**Fecha:** 2026-03-22  
 **Unidad de referencia:** Carkit — `8925_Carkit_RadioService_VP2.1.6` / `8925_Carkit_KernelService_VP2.3.2` (capturas ADB + smali en `K706_RE\QS NWD\tools\`).
 
 > **Ámbito legal:** análisis sobre firmware/APKs de **tu hardware** o copias que puedas analizar; objetivo **interoperabilidad** (radio de terceros), sin redistribuir binarios OEM.
@@ -23,7 +23,8 @@
 11. [Herramientas y rutas de trabajo](#11-herramientas-y-rutas-de-trabajo)  
 12. [Hallazgos indexados (IDs)](#12-hallazgos-indexados-ids)  
 13. [Pendientes y regresión](#13-pendientes-y-regresión)  
-14. [Anexos (documentos por fase)](#14-anexos-documentos-por-fase)
+14. [Anexos (documentos por fase)](#14-anexos-documentos-por-fase)  
+15. [Roadmap motor QS6 (`QS6Engine`)](#15-roadmap-motor-qs6-qs6engine)
 
 ---
 
@@ -332,6 +333,25 @@ Tras **OTA**: repetir `adb pull`, versiones en §2, y validar `QS6Engine` en uni
 | [`NWD_FASE_D_RDS_Y_SETTINGS.md`](NWD_FASE_D_RDS_Y_SETTINGS.md) | Settings, broadcasts consumidos, NWD-D001 extendido |
 | [`ESTUDIO_INGENIERIA_INVERSA_APP_NATIVA_NWD.md`](ESTUDIO_INGENIERIA_INVERSA_APP_NATIVA_NWD.md) | Plan maestro, checklist, plantilla hallazgos |
 | [`INFORME_MOTOR_QS6_NWD.md`](INFORME_MOTOR_QS6_NWD.md) | Informe integración desde perspectiva app |
+
+---
+
+## 15. Roadmap motor QS6 (`QS6Engine`)
+
+Prioridad sugerida (alta → baja). Objetivo: alinear con OEM, reducir regresiones de audio y simplificar mantenimiento.
+
+| Prioridad | Tema | Mejora propuesta |
+|-----------|------|-------------------|
+| **P1** | **Parar escaneo (`stopScan`)** | Hoy se usa `changeBand()` (y sin AIDL, broadcast `KEY_FM`). Si el AIDL del firmware expone cancelación real de AMS / `stopScan`, sustituir el atajo para no cambiar banda “por casualidad” y acercar el comportamiento a `com.nwd.radio`. |
+| **P1** | **Recuperación de audio (`enforceAudioRecovery`)** | Secuencia pesada (delays + re-tune + broadcasts). Valorar en QS6: recuperación **ligera** en rutas de solo desmute/UI; la secuencia **completa** reservada a arranque frío o fallos detectados. |
+| **P2** | **AudioFocus** | Diferenciar `LOSS` vs `LOSS_TRANSIENT`; evitar reclaim agresivo si la app no está visible; cooldown si el sistema rechaza foco repetidamente. Complementa `releaseAudioFocusOnlyForBackground()` en `MainActivity`. |
+| **P2** | **Throttle de broadcasts** | Revisar `MIN_PLAY_AUDIO_INTERVAL_MS`, `MIN_FORCE_SOURCE_BROADCAST_MS`, `MIN_NWD_APP_ENTER_INTERVAL_MS` por firmware; documentar motivo de cada valor; opcional: preferencias de ingeniería o heurística por versión de `com.nwd.radio.service`. |
+| **P3** | **Shadow motor vs AIDL** | Reducir parpadeos RDS/frecuencia: reglas claras de prioridad cuando AIDL y Settings/broadcast discrepan; menos actualizaciones redundantes si la AIDL ya es estable. |
+| **P3** | **Streaming (ExoPlayer) + QS6** | El uso de `USAGE_ASSISTANCE_NAVIGATION_GUIDANCE` es histórico (MTK). En NWD re-evaluar `USAGE_MEDIA` + foco cuando el motor ya ha cedido fuente Android; modo “solo streaming” probado en unidad. |
+| **P4** | **Diagnóstico** | Exponer en menú ingeniería: estado bind, último error AIDL, foco; logs condicionados bajo flag de debug. |
+| **P4** | **Tests** | Unitarios para utilidades puras (freq/banda, PS); instrumentación mínima en dispositivo QS6 si hay CI. |
+
+**Criterio de cierre:** cada ítem debería cerrarse con prueba en **unidad real** (y, si aplica, segundo firmware) + entrada en §13 o changelog.
 
 ---
 

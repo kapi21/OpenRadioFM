@@ -1,5 +1,11 @@
 # Roadmap OpenRadioFM
 
+## Motor QS6 (NWD) — roadmap técnico
+
+Prioridades y tareas de ingeniería del **`QS6Engine`** (parar escaneo, recuperación de audio, AudioFocus, shadow vs AIDL, streaming, tests): ver **`docs/INTELIGENCIA_QS_NWD.md` §15 — Roadmap motor QS6**.
+
+---
+
 ## ✅ Sesión 24/Feb/2026 — Completado
 
 ### Profesionalización del repositorio

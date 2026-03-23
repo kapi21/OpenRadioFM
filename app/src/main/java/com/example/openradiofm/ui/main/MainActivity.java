@@ -1397,6 +1397,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     protected void onResume() {
         super.onResume();
+        // Algunas ROM OEM (MTK8259/Topway) reimponen fullscreen al volver al frente.
+        applyStatusBarVisibility();
         
         // V18.6.5: Si LIVE streaming está activo, NO restaurar el canal FM.
         // El ExoPlayer sigue emitiendo en segundo plano y forzar FM causa audio duplicado.
@@ -1438,6 +1440,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             boolean scanning = mEngine.isScanning();
             mIsScanning = scanning;
             mScanManager.applyEngineScanState(scanning);
+        }
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            applyStatusBarVisibility();
         }
     }
 
@@ -2645,10 +2655,32 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mPrefs == null) return;
         boolean showStatusBarV2 = mPrefs.getBoolean("pref_show_status_bar_v2", false);
         runOnUiThread(() -> {
-            if (showStatusBarV2) {
-                getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            } else {
-                getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            try {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                    android.view.WindowInsetsController c = getWindow().getInsetsController();
+                    if (c != null) {
+                        if (showStatusBarV2) {
+                            c.show(android.view.WindowInsets.Type.statusBars());
+                        } else {
+                            c.hide(android.view.WindowInsets.Type.statusBars());
+                        }
+                    }
+                }
+                // Fallback legacy y refuerzo en ROMs OEM que ignoran solo insets.
+                final View decor = getWindow().getDecorView();
+                if (showStatusBarV2) {
+                    getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    int vis = decor.getSystemUiVisibility();
+                    vis &= ~View.SYSTEM_UI_FLAG_FULLSCREEN;
+                    decor.setSystemUiVisibility(vis);
+                } else {
+                    getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                    int vis = decor.getSystemUiVisibility();
+                    vis |= View.SYSTEM_UI_FLAG_FULLSCREEN;
+                    decor.setSystemUiVisibility(vis);
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "applyStatusBarVisibility failed", e);
             }
         });
     }

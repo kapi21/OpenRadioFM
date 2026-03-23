@@ -399,6 +399,25 @@
                 android:textSize="20sp"/>
         </LinearLayout>
 
+        <LinearLayout
+            android:id="@+id/btnAcknowledgements"
+            style="@style/SettingsRowStyle"
+            android:clickable="true"
+            android:focusable="true">
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Agradecimientos"
+                android:textColor="@color/white"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="›"
+                android:textColor="#AAAAAA"
+                android:textSize="20sp"/>
+        </LinearLayout>
+
         <!-- Close Button -->
         <TextView
             android:id="@+id/btnCloseSettings"
