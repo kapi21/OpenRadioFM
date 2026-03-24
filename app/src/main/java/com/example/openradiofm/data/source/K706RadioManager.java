@@ -101,7 +101,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private Method mTunerSetRdsPtyType;  // setRdsPtyType(int type)
 
     private IRadioCallBack mCallback;
-    private int mCurrentFreq = 8750; // Cache (en unidades x10, ej: 8750 = 87.50 MHz)
+    /** Cache en unidades OpenRadioFM (×1000 kHz, ej. 87500 = 87.50 MHz). Debe coincidir con {@link #updateFrequency}. */
+    private int mCurrentFreq = 87500;
     public int mLastFreq = -1;
     public boolean mIsStereo = false; // V12.3: Estado real de Stereo
     public boolean mHasRdsLock = false;

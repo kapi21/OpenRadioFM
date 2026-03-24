@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.5-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.6-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-QS__NWD-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -186,6 +186,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.6 **"K706 cold start + QS6 parity"** (Marzo 2026) — `main`
+
+- **ES:** K706: restauración de última frecuencia al **primer arranque tras reinicio de unidad** (misma familia de guardas que QS6), y corrección de escala inicial de frecuencia en `K706RadioManager`. Ver `CHANGELOG.md`.
+- **EN:** K706: restore last station on **first launch after head-unit reboot** (same guard family as QS6), plus initial frequency scale fix in `K706RadioManager`. See `CHANGELOG_EN.md`.
 
 ### v5.0.5 **"Hardening Phase 7 + QS6 startup"** (Marzo 2026) — `main`
 

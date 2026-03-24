@@ -1,3 +1,14 @@
+## [5.0.6 (K706 cold start + QS6 parity)] - 2026-03-24
+
+### Fixed
+- **K706 — primera apertura tras reinicio de unidad**: el arranque ya no depende solo de `getCurrentFreq() <= 0` (el motor reportaba frecuencia distinta de la guardada sin forzar `tune`). Se alinea la lógica con QS6: comparar con `pref_last_freq`, reforzar sintonía ~1,4 s después del init, guardas de persistencia 87.5/87.6 y saneo opcional de prefs bootstrap (`pref_k706_bootstrap_sanitized`).
+- **K706RadioManager**: valor inicial de `mCurrentFreq` corregido de **8750** a **87500** (misma escala OpenRadioFM ×1000 que el resto del pipeline MCU → UI).
+
+### Changed
+- **Versionado app**: `versionCode 17`, `versionName 5.0.6 (K706 cold start + QS6 parity)`.
+
+---
+
 ## [5.0.5 (Hardening Phase 7 + QS6 startup)] - 2026-03-24
 *Merge de `hardening/phase-7-stability` en `main`: estabilidad QS6 al arranque y ajuste de reproducción.*
 

@@ -4,6 +4,17 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.6 (K706 cold start + QS6 parity)] - 2026-03-24
+
+### Fixed
+- **K706 — first launch after head-unit reboot**: startup tuning no longer relies only on `getCurrentFreq() <= 0` (the engine could report a frequency different from the saved one without applying `tune`). Logic is now aligned with QS6: compare against `pref_last_freq`, reinforce tuning ~1.4s after init, 87.5/87.6 persistence guards, and optional bootstrap pref sanitize (`pref_k706_bootstrap_sanitized`).
+- **K706RadioManager**: initial `mCurrentFreq` corrected from **8750** to **87500** (same OpenRadioFM ×1000 scale as the rest of the MCU → UI path).
+
+### Changed
+- **App versioning**: `versionCode 17`, `versionName 5.0.6 (K706 cold start + QS6 parity)`.
+
+---
+
 ## [5.0.5 (Hardening Phase 7 + QS6 startup)] - 2026-03-24
 *Merge of `hardening/phase-7-stability` into `main`: QS6 startup stability and playback tweak.*
 

@@ -180,6 +180,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private int mUserRequestedFreqKhz = -1;
     private long mUserRequestedFreqUntilMs = 0L;
     private static final String PREF_QS6_BOOTSTRAP_SANITIZED = "pref_qs6_bootstrap_sanitized";
+    /** Misma idea que QS6: evitar prefs contaminadas con 87.5/87.6 tras reinicio de unidad (MCU arranca antes que la app). */
+    private static final String PREF_K706_BOOTSTRAP_SANITIZED = "pref_k706_bootstrap_sanitized";
     public String mLastPs = ""; // V18.6: Almacena el nombre RDS/Custom actual
     public boolean mHasRdsLock = false;
     public String mCurrentPty = null;
@@ -1090,11 +1092,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 // - Motores que reportan 0 hasta init: siempre tune si mLastFreq > 0.
                 // - QS6: getCurrentFreq() arranca en 87500 por defecto (nunca <= 0), así que sin este
                 //   caso nunca se restauraba la emisora anterior tras cerrar la app.
+                // - K706: tras reinicio de unidad el MCU puede quedar en 87.5/87.6 hasta que tune(); antes
+                //   solo se comparaba freq si era QS6, así que no se restauraba pref_last_freq al primer arranque.
                 if (mEngine != null && mLastFreq > 0) {
                     boolean tuneToLast = false;
                     if (mEngine.getCurrentFreq() <= 0) {
                         tuneToLast = true;
-                    } else if (mMode == FmMode.FM_QS6 && !mIsRecreating) {
+                    } else if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) && !mIsRecreating) {
                         try {
                             if (mEngine.getCurrentFreq() != mLastFreq) {
                                 tuneToLast = true;
@@ -1110,9 +1114,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         } else {
                             mEngine.tune(mLastFreq);
                         }
-                        // QS6: el stack OEM puede reimponer frecuencia/banda (p.ej. FM2) justo tras el init.
+                        // QS6/K706: el stack OEM o el MCU pueden reimponer 87.5/87.6 justo tras el init.
                         // Reforzamos la sintonía a la última guardada una vez pasa la ráfaga de callbacks iniciales.
-                        if (mMode == FmMode.FM_QS6) {
+                        if (mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) {
                             final int targetFreq = mLastFreq;
                             final int targetBand = mLastBand;
                             mMainHandler.postDelayed(() -> {
@@ -1121,9 +1125,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                                     int current = mEngine.getCurrentFreq();
                                     int currentBand = mEngine.getCurrentBand();
                                     if (current != targetFreq || currentBand != targetBand) {
-                                        Log.d(TAG, "QS6 startup reinforce: retuning "
+                                        Log.d(TAG, "Startup reinforce: retuning "
                                                 + current + "/B" + currentBand + " -> "
-                                                + targetFreq + "/B" + targetBand);
+                                                + targetFreq + "/B" + targetBand + " (mode=" + mMode + ")");
                                         if (mEngine instanceof QS6Engine) {
                                             ((QS6Engine) mEngine).tuneWithBand(targetFreq, targetBand);
                                         } else {
@@ -1131,7 +1135,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                                         }
                                     }
                                 } catch (Exception e) {
-                                    Log.w(TAG, "QS6 startup reinforce retune", e);
+                                    Log.w(TAG, "Startup reinforce retune", e);
                                 }
                             }, 1400L);
                         }
@@ -1435,6 +1439,32 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } catch (Exception e) {
                 mPrefs.edit().putBoolean(PREF_QS6_BOOTSTRAP_SANITIZED, true).apply();
                 Log.w(TAG, "QS6 sanitize check failed", e);
+            }
+        }
+        if (mMode == FmMode.FM_K706
+                && !mPrefs.getBoolean(PREF_K706_BOOTSTRAP_SANITIZED, false)
+                && (mLastFreq == 87500 || mLastFreq == 87600)
+                && mEngine != null) {
+            try {
+                int engineFreq = mEngine.getCurrentFreq();
+                int engineBand = mEngine.getCurrentBand();
+                if (engineFreq > 0 && engineFreq != 87500 && engineFreq != 87600) {
+                    mLastFreq = engineFreq;
+                    mLastBand = engineBand;
+                    mPrefs.edit()
+                            .putInt("pref_last_freq", mLastFreq)
+                            .putInt("pref_last_band", mLastBand)
+                            .putBoolean(PREF_K706_BOOTSTRAP_SANITIZED, true)
+                            .apply();
+                    Log.d(TAG, "K706 sanitize: bootstrap pref replaced with engine freq "
+                            + mLastFreq + "/B" + mLastBand);
+                } else {
+                    mPrefs.edit().putBoolean(PREF_K706_BOOTSTRAP_SANITIZED, true).apply();
+                    Log.d(TAG, "K706 sanitize: bootstrap pref kept (no reliable engine freq yet)");
+                }
+            } catch (Exception e) {
+                mPrefs.edit().putBoolean(PREF_K706_BOOTSTRAP_SANITIZED, true).apply();
+                Log.w(TAG, "K706 sanitize check failed", e);
             }
         }
         mStartupSavedFreqKhz = mLastFreq;
@@ -2936,7 +2966,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     /**
-     * Activa una guarda temporal para que callbacks tardíos del stack QS6 durante apagado
+     * Activa una guarda temporal para que callbacks tardíos del stack QS6/K706 durante apagado
      * no pisen la última emisora guardada.
      */
     public void prepareForPowerOff() {
@@ -2970,9 +3000,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 suppressStartupPersist = true;
                 Log.d(TAG, "Startup guard: suppress persist for bootstrap freq " + freq
                         + " (saved=" + mStartupSavedFreqKhz + ")");
-                // QS6: algunos firmwares reimponen 87.6 tras callbacks tardíos.
+                // QS6/K706: algunos firmwares o el MCU reimponen 87.5/87.6 tras callbacks tardíos.
                 // Reforzamos restauración activa de la emisora guardada durante ventana de arranque.
-                if (mMode == FmMode.FM_QS6 && mEngine != null && mStartupRetuneAttempts < 3) {
+                if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) && mEngine != null && mStartupRetuneAttempts < 3) {
                     final int targetFreq = mStartupSavedFreqKhz;
                     final int targetBand = mLastBand;
                     mStartupRetuneAttempts++;
@@ -3002,16 +3032,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
         }
 
-        // QS6: el firmware puede emitir 87.5/87.6 de forma espuria. Solo permitimos persistir
+        // QS6/K706: el firmware o MCU puede emitir 87.5/87.6 de forma espuria. Solo persistimos
         // estas frecuencias bootstrap si vienen de una acción explícita de usuario reciente.
-        if (mMode == FmMode.FM_QS6 && (freq == 87500 || freq == 87600)) {
+        if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) && (freq == 87500 || freq == 87600)) {
             boolean userRequestedRecently =
                     mUserRequestedFreqKhz == freq
                             && android.os.SystemClock.elapsedRealtime() <= mUserRequestedFreqUntilMs;
             if (!userRequestedRecently) {
                 suppressStartupPersist = true;
-                Log.d(TAG, "QS6 persist guard: suppress bootstrap persist for " + freq
-                        + " (no recent user request)");
+                Log.d(TAG, "Bootstrap persist guard: suppress " + freq + " (no recent user request, mode="
+                        + mMode + ")");
             }
         }
 
