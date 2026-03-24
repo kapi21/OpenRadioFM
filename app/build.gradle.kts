@@ -26,8 +26,8 @@ android {
             // storePassword = "password"
             // keyAlias = "alias"
             // keyPassword = "password"
-            isV1SigningEnabled = true
-            isV2SigningEnabled = true
+            enableV1Signing = true
+            enableV2Signing = true
         }
     }
 
