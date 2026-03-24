@@ -350,6 +350,35 @@ public class RadioServiceController {
 
     private com.ts.main.common.ITsCommon mTsCommon;
     private com.ts.tsspeechlib.radio.ITsSpeechRadio mTsSpeechRadio;
+    private boolean mTsCommonBound = false;
+    private boolean mTsSpeechBound = false;
+    private final ServiceConnection mTsCommonConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "TsCommon Connected");
+            mTsCommon = com.ts.main.common.ITsCommon.Stub.asInterface(service);
+            checkAndStartTsEngine();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mTsCommon = null;
+            mTsCommonBound = false;
+        }
+    };
+    private final ServiceConnection mTsSpeechConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mTsSpeechRadio = com.ts.tsspeechlib.radio.ITsSpeechRadio.Stub.asInterface(service);
+            checkAndStartTsEngine();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mTsSpeechRadio = null;
+            mTsSpeechBound = false;
+        }
+    };
 
     private void tryStartTsEngine() {
         Log.e(TAG, "tryStartTsEngine(): Iniciando vínculo doble TS...");
@@ -361,31 +390,24 @@ public class RadioServiceController {
         Log.d(TAG, "conectarTsCommon() ENTER");
         Intent intent = new Intent();
         intent.setClassName("com.ts.MainUI", "com.ts.main.common.MainUI");
-        mContext.bindService(intent, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                Log.d(TAG, "TsCommon Connected");
-                mTsCommon = com.ts.main.common.ITsCommon.Stub.asInterface(service);
-                checkAndStartTsEngine();
-            }
-            @Override
-            public void onServiceDisconnected(ComponentName name) { mTsCommon = null; }
-        }, Context.BIND_AUTO_CREATE);
+        try {
+            mTsCommonBound = mContext.bindService(intent, mTsCommonConnection, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            mTsCommonBound = false;
+            Log.w(TAG, "conectarTsCommon: bindService falló", e);
+        }
     }
 
     private void conectarTsSpeechRadio() {
         Log.d(TAG, "conectarTsSpeechRadio() ENTER");
         Intent intent = new Intent();
         intent.setClassName("com.ts.MainUI", "com.ts.tsspeechlib.radio.TsRadioService");
-        mContext.bindService(intent, new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                mTsSpeechRadio = com.ts.tsspeechlib.radio.ITsSpeechRadio.Stub.asInterface(service);
-                checkAndStartTsEngine();
-            }
-            @Override
-            public void onServiceDisconnected(ComponentName name) { mTsSpeechRadio = null; }
-        }, Context.BIND_AUTO_CREATE);
+        try {
+            mTsSpeechBound = mContext.bindService(intent, mTsSpeechConnection, Context.BIND_AUTO_CREATE);
+        } catch (Exception e) {
+            mTsSpeechBound = false;
+            Log.w(TAG, "conectarTsSpeechRadio: bindService falló", e);
+        }
     }
 
     private void checkAndStartTsEngine() {
@@ -404,8 +426,25 @@ public class RadioServiceController {
 
     public void release() {
         try {
-            mContext.unbindService(mConnection);
+            if (mBound) {
+                mContext.unbindService(mConnection);
+                mBound = false;
+            }
         } catch (Exception ignored) {
         }
+        try {
+            if (mTsCommonBound) {
+                mContext.unbindService(mTsCommonConnection);
+                mTsCommonBound = false;
+            }
+        } catch (Exception ignored) {}
+        try {
+            if (mTsSpeechBound) {
+                mContext.unbindService(mTsSpeechConnection);
+                mTsSpeechBound = false;
+            }
+        } catch (Exception ignored) {}
+        mTsCommon = null;
+        mTsSpeechRadio = null;
     }
 }
