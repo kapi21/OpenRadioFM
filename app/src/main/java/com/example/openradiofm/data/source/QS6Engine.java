@@ -55,6 +55,14 @@ public class QS6Engine implements RadioEngine {
     private int mLastReportedFreq = -1;
     private String mLastReportedPs = "";
     private final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    // Última sintonía solicitada por la app (protección anti-override de la radio nativa al arranque).
+    private int mRequestedFreqKhz = -1;
+    private int mRequestedBand = 0;
+    private long mRequestedTuneElapsedMs = -1L;
+    private int mRequestedTuneReasserts = 0;
+    private int mLastStableFreqKhz = -1;
+    private int mLastStableBand = 0;
+    private long mLastStableSeenElapsedMs = -1L;
 
     // Intents de Emisión (Encendido/Apagado General del MCU)
     private static final String ACTION_CHANGE_SOURCE = "com.nwd.action.ACTION_CHANGE_SOURCE";
@@ -100,6 +108,8 @@ public class QS6Engine implements RadioEngine {
     private int mRetryCount = 0;
     private static final int MAX_RETRIES = 5;
     private static final long STARTUP_SCAN_GUARD_WINDOW_MS = 15000L;
+    private static final long REQUESTED_TUNE_PROTECT_WINDOW_MS = 12000L;
+    private static final long STABLE_FREQ_RESTORE_WINDOW_MS = 25000L;
 
     /** Paquete del servicio de radio NWD (QS6). */
     private static final String NWD_RADIO_PACKAGE = "com.nwd.radio.service";
@@ -183,7 +193,24 @@ public class QS6Engine implements RadioEngine {
         if (mStartupAutoScanBlocked || !isInsideStartupScanGuardWindow()) return;
         mStartupAutoScanBlocked = true;
         Log.w(TAG, "QS6: auto-scan inesperado al iniciar; forzando stopScan (" + reason + ")");
-        mMainHandler.post(this::stopScan);
+        mMainHandler.post(() -> {
+            stopScan();
+            // Algunos firmwares, tras cortar el scan, saltan al preset nativo #1 (87.6).
+            // Reafirmamos la última sintonía solicitada/estable por la app.
+            final int targetFreq = (mRequestedFreqKhz > 0) ? mRequestedFreqKhz : mLastStableFreqKhz;
+            final int targetBand = (mRequestedFreqKhz > 0) ? mRequestedBand : mLastStableBand;
+            if (targetFreq > 0) {
+                mMainHandler.postDelayed(() -> {
+                    try {
+                        if (mNwdService == null) return;
+                        Log.w(TAG, "QS6: post-stopScan reassert -> " + targetFreq + "/B" + targetBand);
+                        tuneWithBand(targetFreq, targetBand);
+                    } catch (Exception e) {
+                        Log.w(TAG, "QS6: post-stopScan reassert failed", e);
+                    }
+                }, 220L);
+            }
+        });
     }
 
     // V21.0: Shadow Motor Components
@@ -474,7 +501,7 @@ public class QS6Engine implements RadioEngine {
                 }
             });
 
-            Log.d(TAG, "NWD AIDL notifyCurrentFrequency -> FreqRaw: " + frequency + ", FreqKhz: " + freqKhz
+            Log.d(TAG, "SRC=AIDL notifyCurrentFrequency -> FreqRaw: " + frequency + ", FreqKhz: " + freqKhz
                     + ", Band: " + bandType + "→" + bandDisp + ", PS: " + psName
                     + (psDisp != null ? (" → disp: " + psDisp) : ""));
         }
@@ -657,7 +684,7 @@ public class QS6Engine implements RadioEngine {
                             if (freqKhz != mCurrentFreq || psDiffers || bandDiffers) {
                                 Log.d(TAG, "Shadow Motor (Broadcast) -> Freq: " + freqKhz + ", bandRaw=" + band
                                         + " → disp=" + bandDisp + ", PS: " + psNorm);
-                                updateLocalState(freqKhz, psRaw, band >= 0 ? bandDisp : null);
+                                updateLocalState(freqKhz, psRaw, band >= 0 ? bandDisp : null, "SHADOW_BROADCAST");
                             }
                         }
                     } else if (ACTION_SEND_RADIO_RDS_RT.equals(action)) {
@@ -722,7 +749,7 @@ public class QS6Engine implements RadioEngine {
                             if (freqChanged || psChanged || bandChanged) {
                                 Log.d(TAG, "Shadow Motor (Settings) -> raw=" + freqRaw + " → kHz=" + freqKhz
                                         + ", bandUi=" + bandUi + ", PS: " + psNorm);
-                                updateLocalState(freqKhz, psRaw, bandUi);
+                                updateLocalState(freqKhz, psRaw, bandUi, "SHADOW_SETTINGS");
                             }
                         }
                     } catch (Exception e) {
@@ -796,7 +823,7 @@ public class QS6Engine implements RadioEngine {
             if (freqKhz <= 0) freqKhz = mCurrentFreq;
             int bandDisp = coerceQs6BandForDisplay(freqKhz, bandRaw);
             String psRaw = android.provider.Settings.System.getString(cr, SETTING_NWD_PS);
-            updateLocalState(freqKhz, psRaw, bandDisp);
+            updateLocalState(freqKhz, psRaw, bandDisp, "SETTINGS_BAND");
         } catch (Exception e) {
             Log.e(TAG, "applyBandFromSettingsSystem", e);
         }
@@ -805,7 +832,69 @@ public class QS6Engine implements RadioEngine {
     /**
      * Shadow: frecuencia + PS; {@code bandForUi} si viene de broadcast/Settings (coercionada).
      */
-    private void updateLocalState(int freqKhz, String psRaw, Integer bandForUi) {
+    private void updateLocalState(int freqKhz, String psRaw, Integer bandForUi, String source) {
+        long now = SystemClock.elapsedRealtime();
+        boolean looksBootstrap = (freqKhz == 87600 || freqKhz == 87500);
+        boolean startupWindow = isInsideStartupScanGuardWindow();
+        int incomingBand = bandForUi != null ? bandForUi : mCurrentBand;
+        if (!looksBootstrap && freqKhz > 0) {
+            mLastStableFreqKhz = freqKhz;
+            mLastStableBand = incomingBand;
+            mLastStableSeenElapsedMs = now;
+        }
+
+        boolean canRestoreStable = startupWindow
+                && looksBootstrap
+                && mLastStableFreqKhz > 0
+                && (now - mLastStableSeenElapsedMs) <= STABLE_FREQ_RESTORE_WINDOW_MS
+                && mLastStableFreqKhz != freqKhz;
+        if (canRestoreStable) {
+            if (mRequestedTuneReasserts < 4) {
+                mRequestedTuneReasserts++;
+                final int targetFreq = mLastStableFreqKhz;
+                final int targetBand = mLastStableBand;
+                mMainHandler.postDelayed(() -> {
+                    try {
+                        if (mIsBound && mNwdService != null) {
+                            Log.w(TAG, "SRC=ENGINE_GUARD startup stable-restore " + freqKhz + " -> "
+                                    + targetFreq + "/B" + targetBand
+                                    + " intento=" + mRequestedTuneReasserts);
+                            tuneWithBand(targetFreq, targetBand);
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "QS6: error en startup stable-restore", e);
+                    }
+                }, 140L);
+            }
+            return;
+        }
+
+        boolean protectedRequestedTune = mRequestedFreqKhz > 0
+                && mRequestedTuneElapsedMs > 0
+                && (now - mRequestedTuneElapsedMs) <= REQUESTED_TUNE_PROTECT_WINDOW_MS;
+        if (protectedRequestedTune && looksBootstrap && freqKhz != mRequestedFreqKhz) {
+            // El stack NWD nativo a veces reinyecta 87.6 tras haber sintonizado correctamente.
+            // Ignoramos ese rebote y re-afirmamos la sintonía solicitada por la app.
+            if (mRequestedTuneReasserts < 3) {
+                mRequestedTuneReasserts++;
+                final int targetFreq = mRequestedFreqKhz;
+                final int targetBand = mRequestedBand;
+                mMainHandler.postDelayed(() -> {
+                    try {
+                        if (mIsBound && mNwdService != null) {
+                            Log.w(TAG, "SRC=ENGINE_GUARD bootstrap override detectado (" + freqKhz
+                                    + "), re-afirmando " + targetFreq + "/B" + targetBand
+                                    + " intento=" + mRequestedTuneReasserts);
+                            tuneWithBand(targetFreq, targetBand);
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "QS6: error re-afirmando sintonía solicitada", e);
+                    }
+                }, 180L);
+            }
+            return;
+        }
+
         String ps = normalizeNwdPsDisplay(psRaw);
         boolean bandWillChange = bandForUi != null && bandForUi != mCurrentBand;
         if (freqKhz == mLastReportedFreq && (ps == null || ps.equals(mLastReportedPs)) && !bandWillChange) {
@@ -821,9 +910,14 @@ public class QS6Engine implements RadioEngine {
         }
 
         mLastReportedFreq = freqKhz;
+        if (freqKhz == mRequestedFreqKhz) {
+            mRequestedTuneReasserts = 0;
+        }
         if (ps != null) {
             mLastReportedPs = ps;
         }
+        Log.d(TAG, "SRC=" + source + " updateLocalState -> freq=" + freqKhz
+                + ", band=" + mCurrentBand + ", ps=" + ps);
 
         final boolean bandChanged = bandWillChange;
         final int bandOut = mCurrentBand;
@@ -1330,18 +1424,32 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void tune(int freqKhz) {
+        tuneWithBand(freqKhz, mCurrentBand);
+    }
+
+    /**
+     * Sintoniza con banda explícita para evitar que el stack OEM fuerce FM1
+     * cuando la restauración de arranque debería quedar en FM2/FM3/AM.
+     */
+    public void tuneWithBand(int freqKhz, int targetBand) {
+        mRequestedFreqKhz = freqKhz;
+        mRequestedBand = targetBand;
+        mRequestedTuneElapsedMs = SystemClock.elapsedRealtime();
+        mRequestedTuneReasserts = 0;
+
         // V19.1: Escalar sintonía según banda para QS6
         int nwdFreq;
-        if (mCurrentFreq < 30000) { // Aproximación para AM
+        if (targetBand >= 3) { // AM1/AM2: NWD usa kHz directos
             nwdFreq = freqKhz;
         } else {
-            nwdFreq = freqKhz / 10;
+            nwdFreq = freqKhz / 10; // FM: NWD usa unidades de 10 kHz
         }
 
+        final byte bandByte = (byte) targetBand;
         performAidlCall("tune", () -> {
             // La firma de NWD es setCurrentFrequency(frequency, bandType, prefebIndex)
-            mNwdService.setCurrentFrequency(nwdFreq, (byte) mCurrentBand, 0);
-            Log.d(TAG, "QS6 AIDL TUNE: " + freqKhz + " (" + nwdFreq + ") Band=" + mCurrentBand);
+            mNwdService.setCurrentFrequency(nwdFreq, bandByte, 0);
+            Log.d(TAG, "QS6 AIDL TUNE: " + freqKhz + " (" + nwdFreq + ") Band=" + targetBand);
         });
 
         // V21.0: Redundancia por Intent si el servicio AIDL está bloqueado o ausente
@@ -1349,9 +1457,12 @@ public class QS6Engine implements RadioEngine {
             Log.d(TAG, "QS6 Shadow Motor: Enviando TUNE vía Intent (Redundancia)");
             Intent intent = new Intent(ACTION_SET_RADIO_FREQUENCE);
             intent.putExtra("extra_frequence", nwdFreq);
-            intent.putExtra("extra_band", (byte) mCurrentBand);
+            intent.putExtra("extra_band", bandByte);
             mContext.sendBroadcast(intent);
         }
+
+        // Mantener coherencia local inmediata hasta que lleguen callbacks AIDL/Broadcast.
+        mCurrentBand = targetBand;
     }
 
     @Override
@@ -1416,12 +1527,12 @@ public class QS6Engine implements RadioEngine {
     @Override
     public void stopScan() {
         performAidlCall("stopScan", () -> {
-            mNwdService.changeBand();
+            // En NWD, AMS actúa como toggle de auto-scan. changeBand aquí podía
+            // derivar al preset nativo #1 (87.6) en algunos arranques.
+            mNwdService.AMS();
         });
         if ((!mIsBound || mNwdService == null) && mContext != null) {
-            // Misma pista que bandCycle: KEY_FM suele cortar escaneo en stack NWD sin AIDL.
-            Intent intent = new Intent(ACTION_KEY_VALUE);
-            intent.putExtra("extra_key_value", KEY_FM);
+            Intent intent = new Intent(ACTION_AMS);
             mContext.sendBroadcast(intent);
         }
     }

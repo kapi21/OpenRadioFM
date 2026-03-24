@@ -115,6 +115,7 @@ public class ControlPanelManager {
         if (btnPowerOff != null) {
             btnPowerOff.setOnClickListener(v -> {
                 mActivity.animateButton(btnPowerOff);
+                mActivity.prepareForPowerOff();
                 if (mActivity.mDeviceManager != null) {
                     mActivity.mDeviceManager.powerOff();
                 }
