@@ -25,6 +25,8 @@ public class MTK8259_8667Engine implements RadioEngine {
     
     private String mLastPs = null;
     private String mLastRt = null;
+    /** Evita que {@link #enforceAudioRecovery()} vuelva a abrir la FM vía {@code OpenRadioCh()} durante streaming. */
+    private boolean mOnlineStreamingActive = false;
     
     // V21.1: Polling fuera del hilo UI para evitar jank
     private HandlerThread mPollThread;
@@ -232,6 +234,10 @@ public class MTK8259_8667Engine implements RadioEngine {
 
     @Override
     public void enforceAudioRecovery() {
+        if (mOnlineStreamingActive) {
+            Log.d(TAG, "enforceAudioRecovery: omitido (Radio Online activo; evitar OpenRadioCh + stream a la vez)");
+            return;
+        }
         if (mManager != null) {
             mManager.forceUnmute(); // V20.0: Forzar recuperación total del canal y volumen
         }
@@ -250,7 +256,22 @@ public class MTK8259_8667Engine implements RadioEngine {
     }
 
     @Override
-    public void setOnlineStreamingActive(boolean active) {}
+    public boolean isOnlineStreamingActive() {
+        return mOnlineStreamingActive;
+    }
+
+    @Override
+    public void setOnlineStreamingActive(boolean active) {
+        mOnlineStreamingActive = active;
+        Log.d(TAG, "setOnlineStreamingActive: " + active);
+        if (active && mManager != null) {
+            try {
+                mManager.getRawService().CloseRadioCh();
+            } catch (Exception e) {
+                Log.w(TAG, "setOnlineStreamingActive: CloseRadioCh", e);
+            }
+        }
+    }
 
     @Override
     public void toggleRdsFeature(int type) {
