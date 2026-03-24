@@ -138,7 +138,8 @@ public class StandardLayoutManager {
                     ivFavoriteIndicator.setColorFilter(isLight ? Color.BLACK : Color.WHITE, PorterDuff.Mode.SRC_IN);
                 }
             } else {
-                ivFavoriteIndicator.setVisibility(View.GONE);
+                // INVISIBLE: hueco fijo junto a la nube (layout 2); no usar GONE para no colapsar.
+                ivFavoriteIndicator.setVisibility(View.INVISIBLE);
             }
         }
     }

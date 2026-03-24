@@ -31,11 +31,11 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.46" />
 
-    <!-- Icono Cloud / Data Activity (Top Right) - Tamaño aumentado por usuario -->
+    <!-- Icono Cloud / Data Activity (Top Right) — −25% respecto al tamaño anterior -->
     <FrameLayout
         android:id="@+id/ivDataActivity"
-        android:layout_width="135dp"
-        android:layout_height="91dp"
+        android:layout_width="101dp"
+        android:layout_height="68dp"
         android:layout_margin="16dp"
         android:clickable="true"
         android:focusable="true"

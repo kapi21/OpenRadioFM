@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenRadioFM v5.0.0 Stability Beta</string>
-    <string name="app_name_internal">OpenRadioFM - Stability Beta 5.0.0</string>
+    <string name="app_name">OpenRadioFM v5.0.7 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.7 Stable</string>
     <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
     <string name="premium_customization">Personnalisation Premium</string>
     <string name="theme_colors">Couleurs du Thème</string>

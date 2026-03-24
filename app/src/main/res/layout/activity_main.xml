@@ -172,34 +172,53 @@
             android:src="@drawable/fwt"
             android:visibility="invisible" />
 
-        <FrameLayout
-            android:id="@+id/ivDataActivity"
-            android:layout_width="92dp"
-            android:layout_height="60dp"
-            android:clickable="true"
-            android:focusable="true"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:visibility="invisible">
+        <!-- Empuja preset + nube al borde derecho del box; no colapsa si faltan iconos -->
+        <Space
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
 
-            <ImageView
-                android:id="@+id/ivDataActivityIcon"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:padding="4dp"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:src="@drawable/cloud" />
-        </FrameLayout>
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical|end">
 
-        <ImageView
-            android:id="@+id/ivFavoriteIndicator"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginStart="8dp"
-            android:alpha="0.9"
-            android:visibility="gone"
-            android:scaleType="fitCenter"
-            android:src="@drawable/radio_icon_p01" />
+            <!-- Hueco fijo preset (número); INVISIBLE desde código reserva sitio -->
+            <FrameLayout
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="8dp">
+                <ImageView
+                    android:id="@+id/ivFavoriteIndicator"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:alpha="0.9"
+                    android:visibility="invisible"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/radio_icon_p01" />
+            </FrameLayout>
+
+            <!-- Hueco fijo nube (streaming / datos); no compartir con banda/estéreo -->
+            <FrameLayout
+                android:id="@+id/ivDataActivity"
+                android:layout_width="69dp"
+                android:layout_height="45dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:visibility="invisible">
+
+                <ImageView
+                    android:id="@+id/ivDataActivityIcon"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="4dp"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/cloud" />
+            </FrameLayout>
+        </LinearLayout>
     </LinearLayout>
 </FrameLayout>
 

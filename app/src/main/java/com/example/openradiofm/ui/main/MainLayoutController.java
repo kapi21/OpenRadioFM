@@ -146,7 +146,7 @@ public class MainLayoutController extends BaseLayoutController {
                 ivFavoriteIndicator.setColorFilter(isLight ? Color.BLACK : Color.WHITE, PorterDuff.Mode.SRC_IN);
             }
         } else {
-            ivFavoriteIndicator.setVisibility(View.GONE);
+            ivFavoriteIndicator.setVisibility(View.INVISIBLE);
         }
     }
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="500dp"
     android:layout_height="wrap_content"
     android:background="#E6121212"
@@ -41,7 +42,8 @@
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:text="v.5.0.0 (Stability Beta)"
+            android:text=""
+            tools:text="Versión 5.0.7 (Stable)"
             android:layout_marginBottom="24dp"/>
 
         <!-- SUBHEADER -->

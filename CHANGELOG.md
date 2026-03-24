@@ -1,11 +1,14 @@
-## [5.0.7 (K706 streaming vs FM channel)] - 2026-03-24
+## [5.0.7 (Stable)] - 2026-03-24
+*Versión estable publicada: nombre de app, Acerca de y documentación alineados con `5.0.7 (Stable)`.*
 
 ### Fixed
 - **K706 — Radio Online sin audio / sigue sonando FM**: durante la carga del stream (y en otros `setMute(false)`), `PlaybackManager` llamaba a `enforceAudioRecovery()` → `SetChannel(2)` y anulaba el paso a canal Android (`SetChannel(4)`) que usa ExoPlayer. Se omite el recovery forzado a FM si el motor indica streaming activo; `refreshRadioStatus` trata como streaming también el estado **loading** (no solo `isPlaying`); `K706RadioManager` no ejecuta `enforceAudioChannelRecovery` ni el heartbeat de canal mientras `mIsOnlineStreamingActive`.
 
 ### Changed
 - **RadioEngine**: método por defecto `isOnlineStreamingActive()`; implementado en K706, MT8163 y QS6.
-- **Versionado app**: `versionCode 18`, `versionName 5.0.7 (K706 streaming vs FM channel)`.
+- **UI layout 2**: icono nube más compacto; preset + nube alineados a la derecha del `boxIcons` con huecos fijos (`Space` + `INVISIBLE` en preset).
+- **Marca en launcher**: `app_name` / `app_name_internal` actualizados a **v5.0.7 Stable** (todas las locales).
+- **Versionado app**: `versionCode 19`, `versionName 5.0.7 (Stable)`.
 
 ---
 
