@@ -92,8 +92,7 @@ public class HiddenRadioPlayer {
             Log.e(TAG, "ESTE DISPOSITIVO NO ES COMPATIBLE: No se encontraron las clases de radio del sistema.");
             return false;
         } catch (Exception e) {
-            Log.e(TAG, "Fallo al iniciar HiddenRadioPlayer: " + e.getMessage());
-            Log.e(TAG, "init", e);
+            Log.e(TAG, "Fallo al iniciar HiddenRadioPlayer", e);
             return false;
         }
     }
@@ -109,7 +108,7 @@ public class HiddenRadioPlayer {
             stereoMethod.invoke(mRadioPlayerInstance, enable);
             Log.d(TAG, "setStereo(" + enable + ") ejecutado.");
         } catch (Exception e) {
-            Log.e(TAG, "Error llamando a stereo(): " + e.getMessage());
+            Log.e(TAG, "Error llamando a stereo()", e);
         }
     }
 
@@ -123,7 +122,7 @@ public class HiddenRadioPlayer {
             muteMethod.invoke(mRadioPlayerInstance, mute);
             Log.d(TAG, "setMute(" + mute + ") ejecutado.");
         } catch (Exception e) {
-            Log.e(TAG, "Error llamando a setMute(): " + e.getMessage());
+            Log.e(TAG, "Error llamando a setMute()", e);
         }
     }
 
@@ -137,7 +136,7 @@ public class HiddenRadioPlayer {
             nextMethod.invoke(mRadioPlayerInstance);
             Log.d(TAG, "next() ejecutado.");
         } catch (Exception e) {
-            Log.e(TAG, "Error llamando a next(): " + e.getMessage());
+            Log.e(TAG, "Error llamando a next()", e);
         }
     }
 
@@ -151,7 +150,7 @@ public class HiddenRadioPlayer {
             prevMethod.invoke(mRadioPlayerInstance);
             Log.d(TAG, "prev() ejecutado.");
         } catch (Exception e) {
-            Log.e(TAG, "Error llamando a prev(): " + e.getMessage());
+            Log.e(TAG, "Error llamando a prev()", e);
         }
     }
 
@@ -224,7 +223,7 @@ public class HiddenRadioPlayer {
             }
 
         } catch (Exception e) {
-            Log.e(TAG, "Error parseando evento: " + e.getMessage());
+            Log.e(TAG, "Error parseando evento", e);
         }
     }
 
@@ -240,7 +239,7 @@ public class HiddenRadioPlayer {
             Log.d(TAG, "setAF(" + enable + ") ejecutado.");
             if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
         } catch (Exception e) {
-            Log.e(TAG, "Error llamando a setAF(): " + e.getMessage());
+            Log.e(TAG, "Error llamando a setAF()", e);
         }
     }
 
@@ -256,7 +255,7 @@ public class HiddenRadioPlayer {
             Log.d(TAG, "setTA(" + enable + ") ejecutado.");
             if (mClientListener != null) mClientListener.onRdsAfTaStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled);
         } catch (Exception e) {
-            Log.e(TAG, "Error llamando a setTA(): " + e.getMessage());
+            Log.e(TAG, "Error llamando a setTA()", e);
         }
     }
 

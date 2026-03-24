@@ -78,7 +78,7 @@ public class SupabaseLogoSource {
             try {
                 mActivityListener.onDataActivity(active);
             } catch (Exception e) {
-                android.util.Log.e("SupabaseLogoSource", "Error notifying activity: " + e.getMessage());
+                android.util.Log.e("SupabaseLogoSource", "Error notifying activity", e);
             }
         }
     }
@@ -125,7 +125,7 @@ public class SupabaseLogoSource {
             }
             return logoFreq;
         } catch (Throwable e) {
-            android.util.Log.e("SupabaseLogoSource", "FETCH ERROR: " + e.getMessage());
+            android.util.Log.e("SupabaseLogoSource", "FETCH ERROR", e);
             return null;
         } finally {
             notifyActivity(false);
@@ -230,7 +230,7 @@ public class SupabaseLogoSource {
                     android.util.Log.e("SupabaseLogoSource", "UPSERT FAILED: Code=" + response.code() + " Error=" + errorBody);
                 }
             } catch (Throwable e) {
-                android.util.Log.e("SupabaseLogoSource", "Error upserting logo: " + e.getMessage());
+                android.util.Log.e("SupabaseLogoSource", "Error upserting logo", e);
             } finally {
                 notifyActivity(false);
             }
