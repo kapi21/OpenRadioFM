@@ -595,7 +595,7 @@ public class RadioRepository {
 
             return destFile.getAbsolutePath();
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("RadioRepository", "downloadAndSaveLogo", e);
             return null;
         }
     }

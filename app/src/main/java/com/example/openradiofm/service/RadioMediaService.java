@@ -1281,8 +1281,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
         if (mPresetPrefs == null) return items;
 
-        // MainActivity define PRESETS_COUNT=15
-        final int presetsCount = 15;
+        // MainActivity define PRESETS_COUNT=18
+        final int presetsCount = 18;
         for (int slot = 0; slot < presetsCount; slot++) {
             String key = "P" + (slot + 1) + "_B" + band;
             int freq = mPresetPrefs.getInt(key, 0);

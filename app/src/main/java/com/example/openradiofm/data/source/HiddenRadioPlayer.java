@@ -93,7 +93,7 @@ public class HiddenRadioPlayer {
             return false;
         } catch (Exception e) {
             Log.e(TAG, "Fallo al iniciar HiddenRadioPlayer: " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "init", e);
             return false;
         }
     }

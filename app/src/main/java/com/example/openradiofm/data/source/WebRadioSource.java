@@ -3,11 +3,13 @@ package com.example.openradiofm.data.source;
 import com.example.openradiofm.data.source.network.RadioBrowserApi;
 import com.example.openradiofm.data.source.network.RadioBrowserClient;
 import com.example.openradiofm.data.source.network.model.StationSearchResponse;
+import android.util.Log;
 import java.util.List;
 import retrofit2.Call;
 import retrofit2.Response;
 
 public class WebRadioSource {
+    private static final String TAG = "WebRadioSource";
     private final RadioBrowserApi api;
 
     public WebRadioSource() {
@@ -43,7 +45,7 @@ public class WebRadioSource {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "search query=" + query + ", country=" + countryCode, e);
         }
         return null;
     }

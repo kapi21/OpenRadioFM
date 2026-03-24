@@ -1856,7 +1856,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         try {
                             mTunerSetRdsAF.invoke(mTunerManager);
                             Log.d(TAG, "QFTunerManager.setRdsAFSwitch() invoked. AF now=" + nextAfState);
-                        } catch (Exception e) { e.printStackTrace(); }
+                        } catch (Exception e) { Log.e(TAG, "toggleRdsFeature(AF)", e); }
                     } else {
                         // Fallback: Comando MCU directo 0x11
                         byte newState = (byte) (nextAfState ? 1 : 0);
@@ -1891,7 +1891,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             mTunerOnLoc.invoke(mTunerManager, nextLocMode);
                             Log.d(TAG, "QFTunerManager.onLoc(" + nextLocMode + ") invoked");
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            Log.e(TAG, "toggleRdsFeature(DX/Local)", e);
                         }
                     } else {
                         // Fallback MCU: 0xA0 0x07 [mode] 0x00

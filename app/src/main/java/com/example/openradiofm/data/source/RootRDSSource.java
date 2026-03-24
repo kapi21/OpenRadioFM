@@ -2,8 +2,10 @@ package com.example.openradiofm.data.source;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import android.util.Log;
 
 public class RootRDSSource {
+    private static final String TAG = "RootRDSSource";
 
     private int lastFreq = -1;
     private String lastRdsName = null;
@@ -31,7 +33,7 @@ public class RootRDSSource {
             mReader = new java.io.BufferedReader(new java.io.InputStreamReader(mRootProcess.getInputStream()));
         } catch (Exception e) {
             // Si aquí falla, asumimos que el dispositivo NO tiene root o se ha denegado
-            e.printStackTrace();
+            Log.e(TAG, "initShell: no se pudo abrir shell root", e);
             mRootProcess = null;
             mDos = null;
             mReader = null;
@@ -115,7 +117,7 @@ public class RootRDSSource {
         } catch (Exception e) {
             // Cualquier error aquí implica que algo ha ido mal con el proceso root.
             // Dejamos los campos a null para forzar una reinicialización en la siguiente llamada.
-            e.printStackTrace();
+            Log.e(TAG, "getRdsName: error leyendo radio_rds.xml", e);
             mRootProcess = null;
             mDos = null;
             mReader = null;
