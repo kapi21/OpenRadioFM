@@ -8,6 +8,7 @@ import com.example.openradiofm.data.source.WebRadioSource;
 import com.example.openradiofm.data.source.network.model.SupabaseLogoResponse;
 
 public class RadioRepository {
+    private static final long MIN_ACTIVITY_INDICATOR_MS = 700L;
     private final RootRDSSource rootSource;
     private final WebRadioSource webSource;
     private final SupabaseLogoSource supabaseSource; // V16.0: Servidor centralizado
@@ -21,14 +22,15 @@ public class RadioRepository {
     // Limita a 3 hilos concurrentes para evitar crear cientos de hilos.
     private final java.util.concurrent.ExecutorService logoExecutor = java.util.concurrent.Executors
             .newFixedThreadPool(3);
+    private final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     // Caché en memoria para evitar recargas de logos al cambiar frecuencia o nombre.
     // V13.6: Key: freqKHz + "_" + stationName, Value: URL o path del logo
-    private final java.util.HashMap<String, String> logoCache = new java.util.HashMap<>();
+    private final java.util.concurrent.ConcurrentHashMap<String, String> logoCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     // V16.2: Caché por nombre de emisora (Independiente de la frecuencia)
     // Evita búsquedas en red para diferentes frecuencias de la misma cadena.
-    private final java.util.HashMap<String, String> nameLogoCache = new java.util.HashMap<>();
+    private final java.util.concurrent.ConcurrentHashMap<String, String> nameLogoCache = new java.util.concurrent.ConcurrentHashMap<>();
     
     // V16.4: Evita inundar el executor con peticiones idénticas si ya hay una en curso.
     private final java.util.Set<String> pendingRequests = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
@@ -118,11 +120,12 @@ public class RadioRepository {
         
         // V16.5: Limpiar caché en memoria para forzar una nueva consulta a Supabase
         String prefix = freqKHz + "_";
-        java.util.Iterator<java.util.Map.Entry<String, String>> it = logoCache.entrySet().iterator();
-        while (it.hasNext()) {
-            if (it.next().getKey().startsWith(prefix)) {
-                it.remove();
-            }
+        java.util.ArrayList<String> keysToRemove = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, String> entry : logoCache.entrySet()) {
+            if (entry.getKey().startsWith(prefix)) keysToRemove.add(entry.getKey());
+        }
+        for (String key : keysToRemove) {
+            logoCache.remove(key);
         }
         java.util.Iterator<String> pendIt = pendingRequests.iterator();
         while (pendIt.hasNext()) {
@@ -142,11 +145,12 @@ public class RadioRepository {
         String prefix = freqKHz + "_";
         
         // 1. Limpiar Caché en Memoria
-        java.util.Iterator<java.util.Map.Entry<String, String>> it = logoCache.entrySet().iterator();
-        while (it.hasNext()) {
-            if (it.next().getKey().startsWith(prefix)) {
-                it.remove();
-            }
+        java.util.ArrayList<String> keysToRemove = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, String> entry : logoCache.entrySet()) {
+            if (entry.getKey().startsWith(prefix)) keysToRemove.add(entry.getKey());
+        }
+        for (String key : keysToRemove) {
+            logoCache.remove(key);
         }
         java.util.Iterator<String> pendIt = pendingRequests.iterator();
         while (pendIt.hasNext()) {
@@ -420,6 +424,7 @@ public class RadioRepository {
                     // 1. Intentar Supabase si está habilitado (0 o 2)
                     SupabaseLogoResponse supabaseData = null;
                     if (provider == 0 || provider == 2) {
+                        final long supabaseActivityStartMs = android.os.SystemClock.uptimeMillis();
                         // Notificar inicio de actividad de red
                         supabaseSource.notifyActivity(true);
 
@@ -460,10 +465,8 @@ public class RadioRepository {
                         } catch (Exception e) {
                             android.util.Log.e("RadioRepository", "Error fetching Supabase data: " + e.getMessage());
                         } finally {
-                            // Garantizar que la animación de la UI dure lo suficiente para ser visible
-                            try { Thread.sleep(700); } catch (Exception ignored) {}
-                            // Notificar fin de actividad de red
-                            supabaseSource.notifyActivity(false);
+                            // Evitar bloquear el hilo de red y mantener visibilidad mínima del indicador.
+                            finishSupabaseActivityWithMinDuration(supabaseActivityStartMs);
                         }
                     }
 
@@ -595,7 +598,7 @@ public class RadioRepository {
 
             return destFile.getAbsolutePath();
         } catch (Exception e) {
-            e.printStackTrace();
+            android.util.Log.e("RadioRepository", "downloadAndSaveLogo", e);
             return null;
         }
     }
@@ -667,6 +670,7 @@ public class RadioRepository {
         if (!(provider == 0 || provider == 2)) {
             return null;
         }
+        final long supabaseActivityStartMs = android.os.SystemClock.uptimeMillis();
         try {
             supabaseSource.notifyActivity(true);
             String cName = mPrefs.getString("CUSTOM_" + freqKHz, null);
@@ -698,12 +702,22 @@ public class RadioRepository {
             android.util.Log.e("RadioRepository", "querySupabaseForStreamUrl", e);
             return null;
         } finally {
-            try {
-                Thread.sleep(700);
-            } catch (Exception ignored) {
-            }
-            supabaseSource.notifyActivity(false);
+            finishSupabaseActivityWithMinDuration(supabaseActivityStartMs);
         }
+    }
+
+    private void finishSupabaseActivityWithMinDuration(long startUptimeMs) {
+        long elapsed = android.os.SystemClock.uptimeMillis() - startUptimeMs;
+        long delay = Math.max(0L, MIN_ACTIVITY_INDICATOR_MS - elapsed);
+        if (delay == 0L) {
+            supabaseSource.notifyActivity(false);
+            return;
+        }
+        mMainHandler.postDelayed(() -> {
+            try {
+                supabaseSource.notifyActivity(false);
+            } catch (Exception ignored) {}
+        }, delay);
     }
 
     // Método auxiliar para buscar la URL de streaming en background

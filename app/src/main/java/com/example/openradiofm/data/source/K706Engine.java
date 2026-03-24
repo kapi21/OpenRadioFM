@@ -76,7 +76,7 @@ public class K706Engine implements RadioEngine {
     @Override
     public void closeDevice() {
         if (mManager != null) {
-            try { mManager.closeDevice(); } catch (RemoteException e) { e.printStackTrace(); }
+            try { mManager.closeDevice(); } catch (RemoteException e) { Log.e(TAG, "closeDevice", e); }
         }
     }
 
@@ -90,7 +90,7 @@ public class K706Engine implements RadioEngine {
     @Override
     public void tune(int freqKhz) {
         if (mManager == null) return;
-        try { mManager.gotoFreq(freqKhz); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.gotoFreq(freqKhz); } catch (RemoteException e) { Log.e(TAG, "tune", e); }
     }
 
     @Override
@@ -99,7 +99,7 @@ public class K706Engine implements RadioEngine {
         try {
             // K706RadioManager ya devuelve la freq en kHz a través de updateFrequency
             return mManager.getCurrentFreq();
-        } catch (RemoteException e) { e.printStackTrace(); return 87500; }
+        } catch (RemoteException e) { Log.e(TAG, "getCurrentFreq", e); return 87500; }
     }
 
     @Override
@@ -111,37 +111,37 @@ public class K706Engine implements RadioEngine {
     @Override
     public void seekUp() {
         if (mManager == null) return;
-        try { mManager.onSeekUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onSeekUpEvent(); } catch (RemoteException e) { Log.e(TAG, "seekUp", e); }
     }
 
     @Override
     public void seekDown() {
         if (mManager == null) return;
-        try { mManager.onSeekDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onSeekDownEvent(); } catch (RemoteException e) { Log.e(TAG, "seekDown", e); }
     }
 
     @Override
     public void stepUp() {
         if (mManager == null) return;
-        try { mManager.onManualUpEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onManualUpEvent(); } catch (RemoteException e) { Log.e(TAG, "stepUp", e); }
     }
 
     @Override
     public void stepDown() {
         if (mManager == null) return;
-        try { mManager.onManualDownEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onManualDownEvent(); } catch (RemoteException e) { Log.e(TAG, "stepDown", e); }
     }
 
     @Override
     public void scan() {
         if (mManager == null) return;
-        try { mManager.onScanEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onScanEvent(); } catch (RemoteException e) { Log.e(TAG, "scan", e); }
     }
 
     @Override
     public void stopScan() {
         if (mManager == null) return;
-        try { mManager.onPSEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onPSEvent(); } catch (RemoteException e) { Log.e(TAG, "stopScan", e); }
     }
 
     @Override
@@ -153,7 +153,7 @@ public class K706Engine implements RadioEngine {
     @Override
     public void bandCycle() {
         if (mManager == null) return;
-        try { mManager.onBandEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onBandEvent(); } catch (RemoteException e) { Log.e(TAG, "bandCycle", e); }
     }
 
     // === Audio ===
@@ -204,7 +204,7 @@ public class K706Engine implements RadioEngine {
     @Override
     public void enforceAudioRecovery() {
         if (mManager == null) return;
-        try { mManager.enforceAudioRecovery(); } catch (Exception e) { e.printStackTrace(); }
+        try { mManager.enforceAudioRecovery(); } catch (Exception e) { Log.e(TAG, "enforceAudioRecovery", e); }
     }
 
     @Override
@@ -213,7 +213,7 @@ public class K706Engine implements RadioEngine {
         try { 
             mManager.setOnlineStreamingActive(true); // V18.3: Evitar mutes por competencia de foco
             mManager.returnAudioChannel(); 
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { Log.e(TAG, "switchToAndroidAudio", e); }
     }
 
     @Override
@@ -222,7 +222,7 @@ public class K706Engine implements RadioEngine {
         try { 
             mManager.setOnlineStreamingActive(false); // V18.3: Volvemos a modo radio estándar
             mManager.enforceAudioChannelRecovery(); 
-        } catch (Exception e) { e.printStackTrace(); }
+        } catch (Exception e) { Log.e(TAG, "switchToFmAudio", e); }
     }
 
     @Override
@@ -237,7 +237,7 @@ public class K706Engine implements RadioEngine {
     @Override
     public void toggleRdsFeature(int type) {
         if (mManager == null) return;
-        try { mManager.toggleRdsFeature(type); } catch (Exception e) { e.printStackTrace(); }
+        try { mManager.toggleRdsFeature(type); } catch (Exception e) { Log.e(TAG, "toggleRdsFeature", e); }
     }
 
     @Override
@@ -260,7 +260,7 @@ public class K706Engine implements RadioEngine {
     @Override
     public void toggleDxLocal() {
         if (mManager == null) return;
-        try { mManager.onLocDxEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onLocDxEvent(); } catch (RemoteException e) { Log.e(TAG, "toggleDxLocal", e); }
     }
 
     @Override
@@ -274,19 +274,19 @@ public class K706Engine implements RadioEngine {
     @Override
     public void gotoPreset(int index) {
         if (mManager == null) return;
-        try { mManager.gotoFreqIndex(index); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.gotoFreqIndex(index); } catch (RemoteException e) { Log.e(TAG, "gotoPreset", e); }
     }
 
     @Override
     public void nextFavorite() {
         if (mManager == null) return;
-        try { mManager.onNextFavoriteEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onNextFavoriteEvent(); } catch (RemoteException e) { Log.e(TAG, "nextFavorite", e); }
     }
 
     @Override
     public void prevFavorite() {
         if (mManager == null) return;
-        try { mManager.onPreFavoriteEvent(); } catch (RemoteException e) { e.printStackTrace(); }
+        try { mManager.onPreFavoriteEvent(); } catch (RemoteException e) { Log.e(TAG, "prevFavorite", e); }
     }
 
     // === Callbacks ===
@@ -315,7 +315,7 @@ public class K706Engine implements RadioEngine {
                     // K706RadioManager ya envía la frecuencia en kHz (ej. 87500)
                     mCallback.onFrequencyChanged(rawFreq);
                 } catch (NumberFormatException e) {
-                    e.printStackTrace();
+                    Log.w(TAG, "onEvent(100) frecuencia inválida: " + data, e);
                 }
                 break;
             case 101: // Band changed

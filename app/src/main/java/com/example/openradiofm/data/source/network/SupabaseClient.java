@@ -1,5 +1,7 @@
 package com.example.openradiofm.data.source.network;
 
+import com.example.openradiofm.BuildConfig;
+
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 import okhttp3.logging.HttpLoggingInterceptor;
@@ -14,7 +16,9 @@ public class SupabaseClient {
     public static synchronized SupabaseApi getApi() {
         if (api == null) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-            logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+            logging.setLevel(BuildConfig.DEBUG
+                    ? HttpLoggingInterceptor.Level.BASIC
+                    : HttpLoggingInterceptor.Level.NONE);
 
             okhttp3.OkHttpClient client = new okhttp3.OkHttpClient.Builder()
                     .addInterceptor(logging)

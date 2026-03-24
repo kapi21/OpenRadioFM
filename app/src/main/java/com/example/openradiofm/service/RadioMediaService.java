@@ -1281,8 +1281,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
         if (mPresetPrefs == null) return items;
 
-        // MainActivity define PRESETS_COUNT=15
-        final int presetsCount = 15;
+        // MainActivity define PRESETS_COUNT=18
+        final int presetsCount = 18;
         for (int slot = 0; slot < presetsCount; slot++) {
             String key = "P" + (slot + 1) + "_B" + band;
             int freq = mPresetPrefs.getInt(key, 0);
@@ -1326,11 +1326,25 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     public void onDestroy() {
         abandonQs6ServiceAudioFocus();
         try {
+            stopForeground(true);
+        } catch (Exception ignored) {}
+
+        try {
+            if (mRadioServiceController != null) {
+                mRadioServiceController.release();
+                mRadioServiceController = null;
+            }
+        } catch (Exception ignored) {}
+
+        try {
             if (mPlaybackManager != null) {
                 // Liberar referencia (no mata hardware por sí mismo)
                 mPlaybackManager = null;
             }
         } catch (Exception ignored) {}
+
+        mSessionController = null;
+        mEngine = null;
 
         try {
             unregisterReceiver(mOemFocusReceiver);
@@ -1338,7 +1352,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
         try {
             if (mMediaSession != null) {
+                mMediaSession.setActive(false);
                 mMediaSession.release();
+                mMediaSession = null;
             }
         } catch (Exception ignored) {}
         super.onDestroy();

@@ -756,7 +756,7 @@ public class QS6Engine implements RadioEngine {
             Log.i(TAG, "Shadow Motor iniciado (Broadcast + Settings)");
         } catch (Exception e) {
             Log.e(TAG, "Error FATAL al iniciar Shadow Motor: " + e.getMessage());
-            e.printStackTrace();
+            Log.e(TAG, "setupShadowMotor", e);
         }
     }
 
