@@ -167,6 +167,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
 - [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md) — incluye **§15 Roadmap motor QS6**
 - [Changelog](CHANGELOG.md) · [Changelog (English)](CHANGELOG_EN.md)
+- [Depurado en tres fases](depurado%20en%20tres%20fases.md)
 - [Roadmap](_DOCS/roadmap.md)
 
 ---
