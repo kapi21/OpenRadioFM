@@ -1892,7 +1892,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 if (!appDir.exists()) appDir.mkdirs();
             }
         } catch (Exception e) {
-            Log.e(TAG, "Excepción al crear carpeta RadioLogos: " + e.getMessage());
+            Log.e(TAG, "Excepción al crear carpeta RadioLogos", e);
         }
     }
 

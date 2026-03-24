@@ -82,7 +82,7 @@ public class HardwareManager {
             injectKey.invoke(instance, key, 0x32);
             Log.d(TAG, "MCU Key injected: " + key);
         } catch (Exception e) {
-            Log.e(TAG, "Error injecting MCU key: " + e.getMessage());
+            Log.e(TAG, "Error injecting MCU key", e);
             mActivity.showToast("Hardware EQ no soportado en este dispositivo");
         }
     }

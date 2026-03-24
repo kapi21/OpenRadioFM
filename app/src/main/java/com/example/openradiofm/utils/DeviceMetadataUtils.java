@@ -28,7 +28,7 @@ public class DeviceMetadataUtils {
                 return "AND_" + androidId;
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error obteniendo Android ID: " + e.getMessage());
+            Log.e(TAG, "Error obteniendo Android ID", e);
         }
 
         // 2. Fallback: UUID persistente en SharedPreferences

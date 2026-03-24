@@ -47,7 +47,7 @@ public class K706Engine implements RadioEngine {
             
             return true;
         } catch (Exception e) {
-            Log.e(TAG, "Error inicializando K706Engine: " + e.getMessage());
+            Log.e(TAG, "Error inicializando K706Engine", e);
             return false;
         }
     }
