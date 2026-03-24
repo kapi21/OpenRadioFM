@@ -127,10 +127,12 @@ public class RadioRepository {
         for (String key : keysToRemove) {
             logoCache.remove(key);
         }
-        java.util.Iterator<String> pendIt = pendingRequests.iterator();
-        while (pendIt.hasNext()) {
-            if (pendIt.next().startsWith(prefix)) {
-                pendIt.remove();
+        synchronized (pendingRequests) {
+            java.util.Iterator<String> pendIt = pendingRequests.iterator();
+            while (pendIt.hasNext()) {
+                if (pendIt.next().startsWith(prefix)) {
+                    pendIt.remove();
+                }
             }
         }
         // Eliminar también posibles URL de streaming cacheadas (incluso las vacías) para forzar reintento
@@ -152,10 +154,12 @@ public class RadioRepository {
         for (String key : keysToRemove) {
             logoCache.remove(key);
         }
-        java.util.Iterator<String> pendIt = pendingRequests.iterator();
-        while (pendIt.hasNext()) {
-            if (pendIt.next().startsWith(prefix)) {
-                pendIt.remove();
+        synchronized (pendingRequests) {
+            java.util.Iterator<String> pendIt = pendingRequests.iterator();
+            while (pendIt.hasNext()) {
+                if (pendIt.next().startsWith(prefix)) {
+                    pendIt.remove();
+                }
             }
         }
 
@@ -402,16 +406,15 @@ public class RadioRepository {
 
             android.util.Log.e("DEBUG_FETCH", "Fetching freq=" + freqKHz + ", Name=" + finalName + ", PI=" + piCode + ", Provider=" + mPrefs.getInt("pref_logo_provider", 0));
 
-            if (pendingRequests.contains(cacheKey)) {
+            if (!tryMarkPending(cacheKey)) {
                 android.util.Log.e("DEBUG_FETCH", "Skipped due to pendingRequests: " + cacheKey);
                 // Ya hay una búsqueda en curso para esta combinación de freq+meta
                 return station;
             }
-            pendingRequests.add(cacheKey);
 
             // V18.6: Guarda de seguridad para evitar RejectedExecutionException si el executor ya se cerró
             if (logoExecutor == null || logoExecutor.isShutdown()) {
-                pendingRequests.remove(cacheKey);
+                removePending(cacheKey);
                 return station;
             }
 
@@ -501,7 +504,7 @@ public class RadioRepository {
                     android.util.Log.e("RadioRepository", "Fatal loop error: " + e.getMessage());
                 } finally {
                     // SIEMPRE liberar la petición pendiente al terminar (éxito o fallo)
-                    pendingRequests.remove(cacheKey);
+                    removePending(cacheKey);
                 }
             });
         }
@@ -726,12 +729,11 @@ public class RadioRepository {
         if (freqKHz < 30000) return;
         
         String streamCacheKey = cacheKey + "_STREAM";
-        if (pendingRequests.contains(streamCacheKey)) return;
-        pendingRequests.add(streamCacheKey);
+        if (!tryMarkPending(streamCacheKey)) return;
         
         // V18.6: Guarda de seguridad para evitar crash si el executor se cierra en mitad de la petición
         if (logoExecutor == null || logoExecutor.isShutdown()) {
-            pendingRequests.remove(streamCacheKey);
+            removePending(streamCacheKey);
             return;
         }
 
@@ -745,8 +747,22 @@ public class RadioRepository {
             } catch (Exception e) {
                 android.util.Log.e("RadioRepository", "Error fetching stream URL: " + e.getMessage());
             } finally {
-                pendingRequests.remove(streamCacheKey);
+                removePending(streamCacheKey);
             }
         });
+    }
+
+    private boolean tryMarkPending(String key) {
+        synchronized (pendingRequests) {
+            if (pendingRequests.contains(key)) return false;
+            pendingRequests.add(key);
+            return true;
+        }
+    }
+
+    private void removePending(String key) {
+        synchronized (pendingRequests) {
+            pendingRequests.remove(key);
+        }
     }
 }
