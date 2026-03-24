@@ -726,7 +726,7 @@ public class QS6Engine implements RadioEngine {
                             }
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "Error en Shadow SettingsObserver: " + e.getMessage());
+                        Log.e(TAG, "Error en Shadow SettingsObserver", e);
                     }
                 }
             };
@@ -755,7 +755,7 @@ public class QS6Engine implements RadioEngine {
 
             Log.i(TAG, "Shadow Motor iniciado (Broadcast + Settings)");
         } catch (Exception e) {
-            Log.e(TAG, "Error FATAL al iniciar Shadow Motor: " + e.getMessage());
+            Log.e(TAG, "Error FATAL al iniciar Shadow Motor", e);
             Log.e(TAG, "setupShadowMotor", e);
         }
     }
@@ -798,7 +798,7 @@ public class QS6Engine implements RadioEngine {
             String psRaw = android.provider.Settings.System.getString(cr, SETTING_NWD_PS);
             updateLocalState(freqKhz, psRaw, bandDisp);
         } catch (Exception e) {
-            Log.e(TAG, "applyBandFromSettingsSystem: " + e.getMessage());
+            Log.e(TAG, "applyBandFromSettingsSystem", e);
         }
     }
 

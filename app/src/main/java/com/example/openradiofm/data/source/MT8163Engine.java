@@ -152,7 +152,7 @@ public class MT8163Engine implements RadioEngine {
                 context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
                 Log.d(TAG, "Binding al servicio HCN via Action...");
             } catch (Exception e) {
-                Log.e(TAG, "No se pudo conectar al servicio HCN: " + e.getMessage());
+                Log.e(TAG, "No se pudo conectar al servicio HCN", e);
             }
         } else {
             // Si el servicio es externo, registrar el callback de todas formas
@@ -310,7 +310,7 @@ public class MT8163Engine implements RadioEngine {
         } catch (android.os.DeadObjectException e) {
             handleDeadService("tune", e);
         } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en tune: " + e.getMessage()); 
+            Log.e(TAG, "RemoteException en tune", e); 
         }
         startFreqPolling();
     }
@@ -560,7 +560,7 @@ public class MT8163Engine implements RadioEngine {
             injectKey.invoke(instance, key, 0x32);
             Log.d(TAG, "MCU Key injected: " + key);
         } catch (Exception e) {
-            Log.e(TAG, "Error injecting MCU key: " + e.getMessage());
+            Log.e(TAG, "Error injecting MCU key", e);
         }
     }
 
