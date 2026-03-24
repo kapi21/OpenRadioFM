@@ -90,7 +90,7 @@ public class RadioRepository {
                 dir.mkdirs();
             }
         } catch (Exception e) {
-            android.util.Log.e("RadioRepository", "Error creando carpeta RadioLogos: " + e.getMessage());
+            android.util.Log.e("RadioRepository", "Error creando carpeta RadioLogos", e);
         }
     }
 
@@ -470,7 +470,7 @@ public class RadioRepository {
                                 }
                             }
                         } catch (Exception e) {
-                            android.util.Log.e("RadioRepository", "Error fetching Supabase data: " + e.getMessage());
+                            android.util.Log.e("RadioRepository", "Error fetching Supabase data", e);
                         } finally {
                             // Evitar bloquear el hilo de red y mantener visibilidad mínima del indicador.
                             finishSupabaseActivityWithMinDuration(supabaseActivityStartMs);
@@ -505,7 +505,7 @@ public class RadioRepository {
                         // No ponemos en nameLogoCache para permitir reintentar con otra frecuencia.
                     }
                 } catch (Exception e) {
-                    android.util.Log.e("RadioRepository", "Fatal loop error: " + e.getMessage());
+                    android.util.Log.e("RadioRepository", "Fatal loop error", e);
                 } finally {
                     // SIEMPRE liberar la petición pendiente al terminar (éxito o fallo)
                     removePending(cacheKey);
@@ -749,7 +749,7 @@ public class RadioRepository {
                     station.setStreamUrl(url);
                 }
             } catch (Exception e) {
-                android.util.Log.e("RadioRepository", "Error fetching stream URL: " + e.getMessage());
+                android.util.Log.e("RadioRepository", "Error fetching stream URL", e);
             } finally {
                 removePending(streamCacheKey);
             }
