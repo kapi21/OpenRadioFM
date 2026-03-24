@@ -404,10 +404,14 @@ public class RadioRepository {
                 return station;
             }
 
-            android.util.Log.e("DEBUG_FETCH", "Fetching freq=" + freqKHz + ", Name=" + finalName + ", PI=" + piCode + ", Provider=" + mPrefs.getInt("pref_logo_provider", 0));
+            if (com.example.openradiofm.BuildConfig.DEBUG) {
+                android.util.Log.d("DEBUG_FETCH", "Fetching freq=" + freqKHz + ", Name=" + finalName + ", PI=" + piCode + ", Provider=" + mPrefs.getInt("pref_logo_provider", 0));
+            }
 
             if (!tryMarkPending(cacheKey)) {
-                android.util.Log.e("DEBUG_FETCH", "Skipped due to pendingRequests: " + cacheKey);
+                if (com.example.openradiofm.BuildConfig.DEBUG) {
+                    android.util.Log.d("DEBUG_FETCH", "Skipped due to pendingRequests: " + cacheKey);
+                }
                 // Ya hay una búsqueda en curso para esta combinación de freq+meta
                 return station;
             }
