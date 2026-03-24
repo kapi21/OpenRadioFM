@@ -27,6 +27,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ### Changed
 - **App versioning**: `versionCode 15`, `versionName 5.0.4 (QS NWD Advance + K706 Fixed)`.
 - **README**: updated with bilingual `v5.0.4` summary and history entry.
+- **Hardening / stability pass**: safer lifecycle/resource cleanup in `RadioMediaService` and `RadioServiceController`; non-blocking Supabase activity indicator flow in `RadioRepository`; concurrency-safe cache/pending tracking; reduced network log verbosity (`DEBUG=BASIC`, `RELEASE=NONE`).
 
 ---
 

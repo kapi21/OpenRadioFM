@@ -21,6 +21,7 @@
 ### Changed
 - **Versionado app**: `versionCode 15`, `versionName 5.0.4 (QS NWD Advance + K706 Fixed)`.
 - **README**: actualizado historial y resumen bilingüe de la build `v5.0.4`.
+- **Hardening / estabilidad**: limpieza más segura de recursos/ciclo de vida en `RadioMediaService` y `RadioServiceController`; indicador de actividad Supabase no bloqueante en `RadioRepository`; cachés y tracking pendiente reforzados para concurrencia; menor verbosidad de logs de red (`DEBUG=BASIC`, `RELEASE=NONE`).
 
 ---
 
