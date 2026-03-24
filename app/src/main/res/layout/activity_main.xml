@@ -202,8 +202,8 @@
             <!-- Hueco fijo nube (streaming / datos); no compartir con banda/estéreo -->
             <FrameLayout
                 android:id="@+id/ivDataActivity"
-                android:layout_width="69dp"
-                android:layout_height="45dp"
+                android:layout_width="92dp"
+                android:layout_height="60dp"
                 android:clickable="true"
                 android:focusable="true"
                 android:background="?attr/selectableItemBackgroundBorderless"
