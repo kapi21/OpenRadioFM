@@ -25,6 +25,7 @@ public class PlaybackManager {
     private RadioEngine mEngine;
     private boolean mMuteState = false;
     private boolean mIsMutedBySystem = false; // V4.8: Track if mute was automatic
+    private boolean mMediaReceiverRegistered = false;
     private PlaybackListener mListener;
     private Integer mSavedMusicVolume = null; // Para mute global fiable (MT8163)
 
@@ -53,8 +54,10 @@ public class PlaybackManager {
      * Registra el BroadcastReceiver para los comandos de Android Auto.
      */
     public void registerMediaReceiver() {
+        if (mMediaReceiverRegistered) return;
         try {
             mContext.registerReceiver(mMediaControlReceiver, new IntentFilter(ACTION_MEDIA_CONTROL));
+            mMediaReceiverRegistered = true;
             Log.d(TAG, "MediaControlReceiver registrado");
         } catch (Exception e) {
             Log.e(TAG, "Error registrando MediaControlReceiver", e);
@@ -66,7 +69,9 @@ public class PlaybackManager {
      */
     public void unregisterMediaReceiver() {
         try {
+            if (!mMediaReceiverRegistered) return;
             mContext.unregisterReceiver(mMediaControlReceiver);
+            mMediaReceiverRegistered = false;
             Log.d(TAG, "MediaControlReceiver desregistrado");
         } catch (Exception ignored) {}
     }
