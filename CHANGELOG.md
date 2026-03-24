@@ -1,3 +1,16 @@
+## [5.0.5 (Hardening Phase 7 + QS6 startup)] - 2026-03-24
+*Merge de `hardening/phase-7-stability` en `main`: estabilidad QS6 al arranque y ajuste de reproducción.*
+
+### Fixed
+- **QS6 / NWD — arranque en última emisora**: refuerzo frente a callbacks del stack OEM que reinyectan 87.5/87.6 MHz o el primer preset nativo tras auto-scan; `tuneWithBand` con banda explícita, re-afirmación tras cortar scan, protección de sintonía solicitada y restauración desde frecuencia estable reciente; logs `SRC=` para trazar origen.
+- **QS6 / NWD — persistencia**: no guardar 87.x como última emisora salvo sintonía explícita del usuario; guardas en arranque y al apagado (`prepareForPowerOff`) para que callbacks tardíos no pisen `pref_last_freq` / `pref_last_band`; saneo único de preferencias bootstrap contaminadas.
+- **Reproducción**: registro del receptor de medios **idempotente** para evitar duplicados al reanudar la actividad.
+
+### Changed
+- **Versionado app**: `versionCode 16`, `versionName 5.0.5 (Hardening Phase 7 + QS6 startup)`.
+
+---
+
 ## [5.0.4 (QS NWD Advance + K706 Fixed)] - 2026-03-23
 *Build de avance y corrección (fixed build, no release mayor).*
 

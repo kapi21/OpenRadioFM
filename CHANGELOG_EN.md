@@ -4,6 +4,19 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.5 (Hardening Phase 7 + QS6 startup)] - 2026-03-24
+*Merge of `hardening/phase-7-stability` into `main`: QS6 startup stability and playback tweak.*
+
+### Fixed
+- **QS6 / NWD — startup on last station**: hardened against OEM callbacks that re-inject 87.5/87.6 MHz or the first native preset after unexpected auto-scan; explicit-band `tuneWithBand`, re-assert after stopping scan, protection of app-requested tuning and restore from a recent stable frequency; `SRC=` log tags for origin tracing.
+- **QS6 / NWD — persistence**: do not persist 87.x as last station unless the user explicitly tuned there; startup and power-off guards so late callbacks do not overwrite `pref_last_freq` / `pref_last_band`; one-time sanitize of corrupted bootstrap preferences.
+- **Playback**: **idempotent** media button receiver registration to avoid duplicate handlers when the activity resumes.
+
+### Changed
+- **App versioning**: `versionCode 16`, `versionName 5.0.5 (Hardening Phase 7 + QS6 startup)`.
+
+---
+
 ## [5.0.4 (QS NWD Advance + K706 Fixed)] - 2026-03-23
 *Progress + fixed build (not a major release).*
 

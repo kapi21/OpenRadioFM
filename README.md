@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.4_(fixed)-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.5-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-QS__NWD-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -186,6 +186,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.5 **"Hardening Phase 7 + QS6 startup"** (Marzo 2026) — `main`
+
+- **ES:** Endurecimiento QS6 frente a rebotes del firmware (87.5/87.6, primer preset tras scan), persistencia coherente de última emisora/banda, saneo opcional de prefs bootstrap, y receptor de medios idempotente. Ver `CHANGELOG.md`.
+- **EN:** QS6 hardening against OEM frequency bounce (87.5/87.6, first preset after scan), consistent last-station/band persistence, optional bootstrap pref sanitize, and idempotent media receiver. See `CHANGELOG_EN.md`.
 
 ### v5.0.4 **"QS NWD Advance + K706 Fixed"** (Marzo 2026) — rama `QS_NWD`
 
