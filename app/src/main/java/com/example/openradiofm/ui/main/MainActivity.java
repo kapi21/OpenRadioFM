@@ -47,6 +47,7 @@ import com.example.openradiofm.ui.theme.ThemeManager;
 import com.example.openradiofm.utils.PtyManager;
 import com.example.openradiofm.utils.MetadataUtils;
 import com.example.openradiofm.R;
+import com.example.openradiofm.AppConstants;
 
 /**
  * Pantalla principal de la radio FM.
@@ -85,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     private static final String TAG = "OpenRadioFm";
-    private static final int PRESETS_COUNT = 18; // V21.2: ampliar memorias de presets
+    private static final int PRESETS_COUNT = AppConstants.PRESETS_COUNT; // Fuente única global
     /** Silenciar FM en llamadas (K706): {@link Manifest.permission#READ_PHONE_STATE} */
     private static final int REQ_READ_PHONE_STATE_K706 = 1003;
 

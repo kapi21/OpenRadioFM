@@ -32,6 +32,7 @@ import android.os.Looper;
 import android.graphics.Bitmap;
 
 import com.example.openradiofm.R;
+import com.example.openradiofm.AppConstants;
 import com.example.openradiofm.data.source.RadioEngine;
 import com.example.openradiofm.data.source.K706RadioManager;
 import com.example.openradiofm.ui.main.PlaybackManager;
@@ -1281,8 +1282,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         List<MediaBrowserCompat.MediaItem> items = new ArrayList<>();
         if (mPresetPrefs == null) return items;
 
-        // MainActivity define PRESETS_COUNT=18
-        final int presetsCount = 18;
+        final int presetsCount = AppConstants.PRESETS_COUNT;
         for (int slot = 0; slot < presetsCount; slot++) {
             String key = "P" + (slot + 1) + "_B" + band;
             int freq = mPresetPrefs.getInt(key, 0);

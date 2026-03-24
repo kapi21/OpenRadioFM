@@ -104,7 +104,7 @@ public class RadioServiceController {
 
     public void start() {
         MainActivity.FmMode mode = detectMode();
-        Log.e(TAG, "=> START() INVOCADO. MODO DETECTADO: " + mode);
+        Log.i(TAG, "=> START() INVOCADO. MODO DETECTADO: " + mode);
 
         if (mListener != null) {
             mListener.onModeDetected(mode);
@@ -127,7 +127,7 @@ public class RadioServiceController {
                         if (mListener != null)
                             mListener.onEngineReady(engine);
                     } else {
-                        Log.e(TAG, "Error iniciando K706Engine (init devolvió false)");
+                        Log.w(TAG, "Error iniciando K706Engine (init devolvió false)");
                     }
                 }
                 return;
@@ -145,11 +145,11 @@ public class RadioServiceController {
                             mListener.onEngineReady(sSharedLocalEngine);
                         return;
                     }
-                    Log.e(TAG, "=> RAMA QS6 ALCANZADA. INSTANCIANDO MOTOR QS6Engine...");
+                    Log.i(TAG, "=> RAMA QS6 ALCANZADA. INSTANCIANDO MOTOR QS6Engine...");
                     com.example.openradiofm.data.source.QS6Engine engine = new com.example.openradiofm.data.source.QS6Engine();
-                    Log.e(TAG, "=> QS6Engine INSTANCIADO OK. LLAMANDO A .init()...");
+                    Log.i(TAG, "=> QS6Engine INSTANCIADO OK. LLAMANDO A .init()...");
                     if (engine.init(mContext)) {
-                        Log.e(TAG, "=> QS6Engine INIT EXITOSO. AVISANDO A LA INTERFAZ...");
+                        Log.i(TAG, "=> QS6Engine INIT EXITOSO. AVISANDO A LA INTERFAZ...");
                         sSharedLocalEngine = engine;
                         try {
                             Intent mediaSvc = new Intent(mContext, RadioMediaService.class);
@@ -165,7 +165,7 @@ public class RadioServiceController {
                         if (mListener != null)
                             mListener.onEngineReady(engine);
                     } else {
-                        Log.e(TAG, "Error iniciando QS6Engine V14 (init devolvió false)");
+                        Log.w(TAG, "Error iniciando QS6Engine V14 (init devolvió false)");
                     }
                 }
                 return;
@@ -175,7 +175,7 @@ public class RadioServiceController {
         }
 
         // Para MT8163 intentamos la vinculación AIDL clásica
-        Log.e(TAG, "=> RAMA MT8163/Hcn ALCANZADA. LLAMANDO A conectarRadio().");
+        Log.i(TAG, "=> RAMA MT8163/Hcn ALCANZADA. LLAMANDO A conectarRadio().");
         conectarRadio();
     }
 
@@ -383,7 +383,7 @@ public class RadioServiceController {
     };
 
     private void tryStartTsEngine() {
-        Log.e(TAG, "tryStartTsEngine(): Iniciando vínculo doble TS...");
+        Log.i(TAG, "tryStartTsEngine(): Iniciando vínculo doble TS...");
         conectarTsCommon();
         conectarTsSpeechRadio();
     }
