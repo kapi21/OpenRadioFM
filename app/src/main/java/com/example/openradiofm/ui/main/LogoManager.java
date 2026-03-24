@@ -423,7 +423,7 @@ public class LogoManager {
                 Glide.with(ivDynamicBackground.getContext()).clear(ivDynamicBackground);
             }
         } catch (Exception e) {
-            Log.e(TAG, "Error during release: " + e.getMessage());
+            Log.e(TAG, "Error during release", e);
         }
     }
 }

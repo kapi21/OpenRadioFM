@@ -64,7 +64,7 @@ public class PredefinedStationSource {
             Log.d(TAG, "Cargadas " + mPredefinedStations.size() + " emisoras predefinidas.");
             
         } catch (Exception e) {
-            Log.e(TAG, "Error cargando catálogo de assets: " + e.getMessage());
+            Log.e(TAG, "Error cargando catálogo de assets", e);
         }
     }
 

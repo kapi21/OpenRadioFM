@@ -34,7 +34,7 @@ public class SupabaseSyncManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 processReader(reader);
             } catch (Exception e) {
-                Log.e(TAG, "Error leyendo archivo M3U: " + e.getMessage());
+                Log.e(TAG, "Error leyendo archivo M3U", e);
             }
         }).start();
     }
@@ -48,7 +48,7 @@ public class SupabaseSyncManager {
             try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
                 processReader(reader);
             } catch (Exception e) {
-                Log.e(TAG, "Error en sync directo: " + e.getMessage());
+                Log.e(TAG, "Error en sync directo", e);
             }
         }).start();
     }

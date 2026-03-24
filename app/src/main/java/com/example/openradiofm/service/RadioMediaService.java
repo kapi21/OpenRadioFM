@@ -1067,7 +1067,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
             return builder.build();
         } catch (Exception e) {
-            Log.e(TAG, "Error building notification: " + e.getMessage());
+            Log.e(TAG, "Error building notification", e);
             // Fallback básico para evitar que el servicio muera
             return new NotificationCompat.Builder(this, CHANNEL_ID)
                     .setSmallIcon(R.mipmap.ic_launcher)
