@@ -69,6 +69,7 @@ public class RadioServiceController {
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d(TAG, "Servicio conectado: " + name.flattenToShortString());
             mRadioService = IRadioServiceAPI.Stub.asInterface(service);
+            mBound = true;
 
             // Re-evaluar modo basado en el paquete conectado
             MainActivity.FmMode newMode = MainActivity.FmMode.FM_BASICO;
@@ -88,6 +89,7 @@ public class RadioServiceController {
         public void onServiceDisconnected(ComponentName name) {
             Log.w(TAG, "Servicio DESCONECTADO (Muerte o force-stop): " + name.flattenToShortString());
             mRadioService = null;
+            mBound = false;
             if (mListener != null) {
                 mListener.onServiceDisconnected();
             }
@@ -428,9 +430,11 @@ public class RadioServiceController {
         try {
             if (mBound) {
                 mContext.unbindService(mConnection);
-                mBound = false;
             }
         } catch (Exception ignored) {
+        } finally {
+            mBound = false;
+            mRadioService = null;
         }
         try {
             if (mTsCommonBound) {
