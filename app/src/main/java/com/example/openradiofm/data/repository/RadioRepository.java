@@ -26,11 +26,11 @@ public class RadioRepository {
 
     // Caché en memoria para evitar recargas de logos al cambiar frecuencia o nombre.
     // V13.6: Key: freqKHz + "_" + stationName, Value: URL o path del logo
-    private final java.util.HashMap<String, String> logoCache = new java.util.HashMap<>();
+    private final java.util.concurrent.ConcurrentHashMap<String, String> logoCache = new java.util.concurrent.ConcurrentHashMap<>();
 
     // V16.2: Caché por nombre de emisora (Independiente de la frecuencia)
     // Evita búsquedas en red para diferentes frecuencias de la misma cadena.
-    private final java.util.HashMap<String, String> nameLogoCache = new java.util.HashMap<>();
+    private final java.util.concurrent.ConcurrentHashMap<String, String> nameLogoCache = new java.util.concurrent.ConcurrentHashMap<>();
     
     // V16.4: Evita inundar el executor con peticiones idénticas si ya hay una en curso.
     private final java.util.Set<String> pendingRequests = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
@@ -120,11 +120,12 @@ public class RadioRepository {
         
         // V16.5: Limpiar caché en memoria para forzar una nueva consulta a Supabase
         String prefix = freqKHz + "_";
-        java.util.Iterator<java.util.Map.Entry<String, String>> it = logoCache.entrySet().iterator();
-        while (it.hasNext()) {
-            if (it.next().getKey().startsWith(prefix)) {
-                it.remove();
-            }
+        java.util.ArrayList<String> keysToRemove = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, String> entry : logoCache.entrySet()) {
+            if (entry.getKey().startsWith(prefix)) keysToRemove.add(entry.getKey());
+        }
+        for (String key : keysToRemove) {
+            logoCache.remove(key);
         }
         java.util.Iterator<String> pendIt = pendingRequests.iterator();
         while (pendIt.hasNext()) {
@@ -144,11 +145,12 @@ public class RadioRepository {
         String prefix = freqKHz + "_";
         
         // 1. Limpiar Caché en Memoria
-        java.util.Iterator<java.util.Map.Entry<String, String>> it = logoCache.entrySet().iterator();
-        while (it.hasNext()) {
-            if (it.next().getKey().startsWith(prefix)) {
-                it.remove();
-            }
+        java.util.ArrayList<String> keysToRemove = new java.util.ArrayList<>();
+        for (java.util.Map.Entry<String, String> entry : logoCache.entrySet()) {
+            if (entry.getKey().startsWith(prefix)) keysToRemove.add(entry.getKey());
+        }
+        for (String key : keysToRemove) {
+            logoCache.remove(key);
         }
         java.util.Iterator<String> pendIt = pendingRequests.iterator();
         while (pendIt.hasNext()) {
