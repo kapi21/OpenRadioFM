@@ -1738,8 +1738,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // RPC_GetChannel retorna el CANAL DE AUDIO (2=FM, 4=Android), NO la frecuencia.
         // mCurrentFreq ya está en formato OpenRadioFM (×1000) gracias a updateFrequency().
         
-        // V9.9: Aprovechamos este polling (1 vez por seg) para vigilar que el coche no nos haya robado el canal
-        if (mIsRadioActive) {
+        // V9.9: Aprovechamos este polling (1 vez por seg) para vigilar que el coche no nos haya robado el canal.
+        // Durante streaming online el canal deseado es 4 (Android); no forzar recuperación a FM aquí.
+        if (mIsRadioActive && !mIsOnlineStreamingActive) {
             checkAndRecoverAudio();
         }
 
@@ -1941,6 +1942,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     // V9.9: Hack for Bluetooth recovery. The system's MediaFocusControl "steals" the audio channel
     // but never gives it back to us via normal OnAudioFocusChange because it uses an OEM "abandonCustomAudioFocus"
     public void enforceAudioChannelRecovery() {
+        if (mIsOnlineStreamingActive) {
+            Log.d(TAG, "enforceAudioChannelRecovery: omitido (streaming online activo)");
+            return;
+        }
         Log.d(TAG, "enforceAudioChannelRecovery: Forzando SetChannel(2) tras desconexión BT");
         try {
             // Repetimos la secuencia vital para asegurar el audio FM

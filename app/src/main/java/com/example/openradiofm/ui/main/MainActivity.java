@@ -2057,7 +2057,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V18.6: Si estamos reproduciendo streaming online, saltamos la interrogación síncrona al hardware.
         // El hardware en MT8163 se apaga (muere) al tomar el audio, por lo que consultarle congela la UI.
-        boolean isStreaming = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
+        // Incluir isLoading: si no, K706 sigue sonando FM durante el buffer y setMute(false) puede forzar SetChannel(2).
+        boolean isStreaming = mOnlineStreamManager != null
+                && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
 
         // V18.6: Sincronizar estado visual del Mute con el sistema real.
         // Importante: En MT8163 el mute es por HW (fm_mute) y NO debe depender de STREAM_MUSIC

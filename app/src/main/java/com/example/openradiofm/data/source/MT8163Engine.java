@@ -281,6 +281,11 @@ public class MT8163Engine implements RadioEngine {
 
     // V18.4: Permitir que OnlineStreamManager nos notifique el estado
     @Override
+    public boolean isOnlineStreamingActive() {
+        return mIsOnlineStreamingActive;
+    }
+
+    @Override
     public void setOnlineStreamingActive(boolean active) {
         this.mIsOnlineStreamingActive = active;
         Log.d(TAG, "setOnlineStreamingActive: " + active);

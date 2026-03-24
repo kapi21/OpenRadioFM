@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 17
-        versionName = "5.0.6 (K706 cold start + QS6 parity)"
+        versionCode = 18
+        versionName = "5.0.7 (K706 streaming vs FM channel)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

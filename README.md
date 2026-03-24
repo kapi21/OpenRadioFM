@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.6-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.7-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-QS__NWD-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -186,6 +186,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.7 **"K706 streaming vs FM channel"** (Marzo 2026) — `main`
+
+- **ES / EN:** Evita que la recuperación agresiva de canal FM (`SetChannel(2)`) se dispare mientras Radio Online está en buffer o reproducción, para que el audio vaya al canal Android (`SetChannel(4)`) con ExoPlayer. Ver `CHANGELOG.md`.
 
 ### v5.0.6 **"K706 cold start + QS6 parity"** (Marzo 2026) — `main`
 

@@ -52,6 +52,14 @@ public interface RadioEngine {
     void setOnlineStreamingActive(boolean active); // V18.4: Notificar modo streaming para protecciones de audio
 
     /**
+     * {@code true} mientras haya streaming online activo (buffer o reproducción) para no forzar
+     * recuperación de canal FM desde {@link PlaybackManager#setMute(boolean)} u otros caminos.
+     */
+    default boolean isOnlineStreamingActive() {
+        return false;
+    }
+
+    /**
      * QS6 (y futuros motores): al pasar la UI a segundo plano, dejar de competir por
      * {@link android.media.AudioManager#AUDIOFOCUS_GAIN} sin forzar cambio de fuente MCU.
      * Por defecto no hace nada.

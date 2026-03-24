@@ -99,7 +99,13 @@ public class PlaybackManager {
                 boolean isQs6 = engineName != null && engineName.toUpperCase().contains("QS6");
                 // QS6 ya gestiona unmute con AudioFocus/HAL en su propio engine.
                 // Evitamos recovery agresivo aquí para no provocar ping-pong de foco.
-                if (!isQs6) {
+                // K706/MT8163: durante streaming online, enforceAudioRecovery() forzaría SetChannel(2)
+                // y anularía el canal Android que usa ExoPlayer (síntoma: icono streaming pero audio FM).
+                boolean streaming = false;
+                try {
+                    streaming = mEngine.isOnlineStreamingActive();
+                } catch (Exception ignored) {}
+                if (!isQs6 && !streaming) {
                     mEngine.enforceAudioRecovery();
                 }
             }

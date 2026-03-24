@@ -63,6 +63,8 @@ public class QS6Engine implements RadioEngine {
     private int mLastStableFreqKhz = -1;
     private int mLastStableBand = 0;
     private long mLastStableSeenElapsedMs = -1L;
+    /** Refleja {@link #setOnlineStreamingActive(boolean)} para {@link RadioEngine#isOnlineStreamingActive()}. */
+    private boolean mOnlineStreamingActive = false;
 
     // Intents de Emisión (Encendido/Apagado General del MCU)
     private static final String ACTION_CHANGE_SOURCE = "com.nwd.action.ACTION_CHANGE_SOURCE";
@@ -1818,7 +1820,13 @@ public class QS6Engine implements RadioEngine {
     }
 
     @Override
+    public boolean isOnlineStreamingActive() {
+        return mOnlineStreamingActive;
+    }
+
+    @Override
     public void setOnlineStreamingActive(boolean active) {
+        mOnlineStreamingActive = active;
         if (active) {
             switchToAndroidAudio();
         } else {

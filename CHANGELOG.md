@@ -1,3 +1,14 @@
+## [5.0.7 (K706 streaming vs FM channel)] - 2026-03-24
+
+### Fixed
+- **K706 — Radio Online sin audio / sigue sonando FM**: durante la carga del stream (y en otros `setMute(false)`), `PlaybackManager` llamaba a `enforceAudioRecovery()` → `SetChannel(2)` y anulaba el paso a canal Android (`SetChannel(4)`) que usa ExoPlayer. Se omite el recovery forzado a FM si el motor indica streaming activo; `refreshRadioStatus` trata como streaming también el estado **loading** (no solo `isPlaying`); `K706RadioManager` no ejecuta `enforceAudioChannelRecovery` ni el heartbeat de canal mientras `mIsOnlineStreamingActive`.
+
+### Changed
+- **RadioEngine**: método por defecto `isOnlineStreamingActive()`; implementado en K706, MT8163 y QS6.
+- **Versionado app**: `versionCode 18`, `versionName 5.0.7 (K706 streaming vs FM channel)`.
+
+---
+
 ## [5.0.6 (K706 cold start + QS6 parity)] - 2026-03-24
 
 ### Fixed

@@ -232,6 +232,11 @@ public class K706Engine implements RadioEngine {
         }
     }
 
+    @Override
+    public boolean isOnlineStreamingActive() {
+        return mManager != null && mManager.isOnlineStreamingActive();
+    }
+
     // === RDS ===
 
     @Override
