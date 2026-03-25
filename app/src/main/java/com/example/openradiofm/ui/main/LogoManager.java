@@ -168,7 +168,7 @@ public class LogoManager {
                 iv.setTag(R.id.tag_logo_url, path);
             }
         } else {
-            MainActivity.setImageResourceIfChanged(iv, R.mipmap.ic_launcher);
+            MainActivity.setImageResourceIfChanged(iv, R.drawable.ic_app_logo);
             MainActivity.setVisibilityIfChanged(iv, View.VISIBLE);
         }
     }

@@ -109,7 +109,7 @@ public class SimpleLayoutController extends BaseLayoutController {
                 ivMainLogo.setImageBitmap(bitmap);
                 ivMainLogo.setAlpha(1.0f);
             } else {
-                ivMainLogo.setImageResource(R.mipmap.ic_launcher);
+                ivMainLogo.setImageResource(R.drawable.ic_app_logo);
                 ivMainLogo.setAlpha(0.2f);
             }
         }

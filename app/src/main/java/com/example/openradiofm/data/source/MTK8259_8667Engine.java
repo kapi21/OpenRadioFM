@@ -239,14 +239,14 @@ public class MTK8259_8667Engine implements RadioEngine {
             return;
         }
         if (mManager != null) {
-            mManager.forceUnmute(); // V20.0: Forzar recuperación total del canal y volumen
+            mManager.switchMixerToFmAudio();
         }
     }
 
     @Override
     public void switchToAndroidAudio() {
         if (mManager != null) {
-            try { mManager.getRawService().CloseRadioCh(); } catch (Exception ignored) {}
+            mManager.switchMixerToAndroidAudio();
         }
     }
 
@@ -265,11 +265,7 @@ public class MTK8259_8667Engine implements RadioEngine {
         mOnlineStreamingActive = active;
         Log.d(TAG, "setOnlineStreamingActive: " + active);
         if (active && mManager != null) {
-            try {
-                mManager.getRawService().CloseRadioCh();
-            } catch (Exception e) {
-                Log.w(TAG, "setOnlineStreamingActive: CloseRadioCh", e);
-            }
+            mManager.switchMixerToAndroidAudio();
         }
     }
 

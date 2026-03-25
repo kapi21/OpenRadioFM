@@ -4,6 +4,21 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.8 (Stable)] - 2026-03-25
+*Stable release: launcher/logo quality, engineering menu access and MTK8259 mixer toggle, cloud UX when offline, layout fixes.*
+
+### Added
+- **MTK8259/8667**: engineering menu toggle *v5.0 mixer compatibility* (`pref_mtk8259_v5_stream_mixer_compat`): legacy path using only `CloseRadioCh` / `OpenRadioCh` for FM vs streaming mix testing (vs. current path with `EnterMode` / explicit mute).
+
+### Changed
+- **Engineering menu**: open with **long-press GPS** on all engines (replaces 5 taps in ≤3 s). Dialog: scroll hint, visible scrollbar, `[ DEV_TOGGLES_HW ]` section, `MODE` log shows real `FmMode` + engine (removed hardcoded `MT8163_DIAGNOSTIC_CLONE`).
+- **Cloud icon** (online logos enabled): **dimmed** when offline (~0.38 alpha); when online, previous behavior (blink on Supabase activity).
+- **Launcher / UI**: adaptive icon with dedicated foreground layers; `ic_app_logo` in UI; high-quality mipmaps.
+- **Layout 3 / presets**: cloud vs clock overlap reduced; preset logo refresh when retuning.
+- **Branding**: `app_name` / `app_name_internal` → **v5.0.8 Stable**; `versionCode 20`, `versionName 5.0.8 (Stable)`.
+
+---
+
 ## [5.0.7 (Stable)] - 2026-03-24
 *Stable release: app label, About dialog, and docs aligned with `5.0.7 (Stable)`.*
 

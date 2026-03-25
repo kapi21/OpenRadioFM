@@ -36,7 +36,8 @@
         android:layout_height="0dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        android:scrollbars="none"
+        android:scrollbars="vertical"
+        android:fadeScrollbars="false"
         app:layout_constraintBottom_toTopOf="@+id/scrollLog"
         app:layout_constraintTop_toBottomOf="@id/tvHeader">
 
@@ -200,14 +201,23 @@
                     android:textColor="#00FF00"/>
             </LinearLayout>
 
-            <!-- DEV TOGGLES (MT8163) -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="12dp"
+                android:text="Desliza hacia abajo: interruptores (mixer MTK8259, legacy MT8163…)"
+                android:textColor="#99FF99"
+                android:textSize="11sp"
+                android:fontFamily="monospace"/>
+
+            <!-- DEV TOGGLES (MT8163 + MTK8259) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
                 android:background="#3300FF00"
                 android:padding="4dp"
-                android:text="[ DEV_TOGGLES_MT8163 ]"
+                android:text="[ DEV_TOGGLES_HW ]"
                 android:textColor="#00FF00"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -219,6 +229,17 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
                 android:text="Legacy: mutear STREAM_MUSIC (silencia todo el sistema)"
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                app:thumbTint="#00FF00"
+                app:trackTint="#3300FF00" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swMtk8259V5StreamMixerCompat"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="MTK8259: Compatibilidad mixer v5.0 (solo Close/OpenRadioCh)"
                 android:textColor="#00FF00"
                 android:fontFamily="monospace"
                 app:thumbTint="#00FF00"

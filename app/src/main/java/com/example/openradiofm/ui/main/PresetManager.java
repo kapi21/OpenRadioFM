@@ -191,6 +191,8 @@ public class PresetManager {
      */
     public void preparePresetSelection(int index) {
         if (index < 0 || index >= mPresetsCount) return;
+        // Forzar que el siguiente updateCardVisuals trate la frecuencia como "cambio" y vuelva a cargar logo.
+        mLastVisualFreqPerSlot[index] = -1;
         mLogoRequestSeqPerSlot[index] = mLogoRequestSeq.incrementAndGet();
         mTextRequestSeqPerSlot[index] = mTextRequestSeq.incrementAndGet();
         if (ivPresets[index] != null) {

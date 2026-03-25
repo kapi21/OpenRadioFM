@@ -46,6 +46,7 @@ public class EngineeringModeDialog extends Dialog {
 
     // Dev toggles (MT8163)
     private SwitchCompat swMt8163GlobalStreamMute;
+    private SwitchCompat swMtk8259V5StreamMixerCompat;
     private android.content.SharedPreferences mPrefs;
     
     private int mLastFreq = -1;
@@ -71,7 +72,9 @@ public class EngineeringModeDialog extends Dialog {
         
         mIsRunning = true;
         logEvent("SYS", "ENGINEERING MATRIC INITIALIZED");
-        logEvent("SYS", "MODE: MT8163_DIAGNOSTIC_CLONE");
+        String eng = (mActivity.mEngine != null && mActivity.mEngine.getEngineName() != null)
+                ? mActivity.mEngine.getEngineName() : "?";
+        logEvent("SYS", "MODE: " + mActivity.mMode + " | ENGINE: " + eng);
         startUpdateLoop();
     }
 
@@ -108,6 +111,7 @@ public class EngineeringModeDialog extends Dialog {
 
         // Dev toggles
         swMt8163GlobalStreamMute = findViewById(R.id.swMt8163GlobalStreamMute);
+        swMtk8259V5StreamMixerCompat = findViewById(R.id.swMtk8259V5StreamMixerCompat);
     }
 
     private void setupControls() {
@@ -140,6 +144,22 @@ public class EngineeringModeDialog extends Dialog {
                 logEvent("DEV", "pref_mt8163_global_stream_mute=" + checked);
                 if (checked) {
                     logEvent("WARN", "STREAM_MUSIC mute ON: puede silenciar Spotify/BT/Android Auto");
+                }
+            });
+        }
+
+        if (swMtk8259V5StreamMixerCompat != null) {
+            boolean enabled = false;
+            try { enabled = mPrefs.getBoolean("pref_mtk8259_v5_stream_mixer_compat", false); }
+            catch (Exception ignored) {}
+            swMtk8259V5StreamMixerCompat.setChecked(enabled);
+            swMtk8259V5StreamMixerCompat.setOnCheckedChangeListener((btn, checked) -> {
+                try {
+                    mPrefs.edit().putBoolean("pref_mtk8259_v5_stream_mixer_compat", checked).apply();
+                } catch (Exception ignored) {}
+                logEvent("DEV", "pref_mtk8259_v5_stream_mixer_compat=" + checked);
+                if (checked) {
+                    logEvent("WARN", "MTK8259 legacy mixer ON: solo Close/OpenRadioCh (tipo v5.0)");
                 }
             });
         }

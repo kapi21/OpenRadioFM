@@ -21,8 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Menú de ingeniería «Technical Matrix» para plataforma QS6 / NWD (mismo easter egg que K706/MT8163:
- * GPS ×5 en ≤3s).
+ * Menú de ingeniería «Technical Matrix» para plataforma QS6 / NWD (mismo acceso que K706/MT8163:
+ * pulsación larga en GPS).
  */
 public class QS6EngineeringDialog extends Dialog {
 

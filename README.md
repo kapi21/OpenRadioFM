@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.7%20(Stable)-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.8%20(Stable)-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -187,6 +187,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
+### v5.0.8 **Stable** (Marzo 2026) — `main`
+
+- **ES:** **OpenRadioFM v5.0.8 Stable** — icono launcher / logo in-app en máxima calidad (adaptativo + `ic_app_logo`); menú ingeniería con **pulsación larga en GPS** (antes 5 toques); interruptor opcional **MTK8259 mixer v5.0** (Close/OpenRadioCh) para pruebas de mezcla FM/streaming; icono nube **atenuado sin internet**; ajustes layout 3 (reloj / nube) y presets; pista de scroll en el diálogo de ingeniería. Detalle en `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.8 Stable** — launcher / in-app logo quality, engineering menu via **long-press GPS**, optional **MTK8259 v5.0 mixer** toggle, cloud icon dimmed when offline, layout 3 and preset fixes, engineering dialog scroll hints. See `CHANGELOG_EN.md`.
+
 ### v5.0.7 **Stable** (Marzo 2026) — `main`
 
 - **ES:** Cierre de la línea 5.0.x con nombre de app **OpenRadioFM v5.0.7 Stable**, streaming K706 sin “robo” de canal FM, y ajustes de iconos (nube / preset) en layout estándar. Incluye todo lo acumulado en builds 5.0.5–5.0.7 (QS6 arranque, K706 frío, streaming). Detalle en `CHANGELOG.md`.
@@ -221,7 +226,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 - **UI AutoScan**: botón de escaneo sincronizado con el HAL (`onScanStatusChanged`, `onResume`).
 - **QS6 / motor**: ajustes en `QS6Engine`, ceda de audio en segundo plano (`releaseAudioFocusOnlyForBackground`), RDS y documentación `docs/INTELIGENCIA_QS_NWD.md`.
-- **Ingeniería QS6**: diálogo *Technical Matrix* (easter egg GPS ×5 en modo QS6).
+- **Ingeniería QS6**: diálogo *Technical Matrix* (pulsación larga en GPS en modo QS6).
 - **Logos / datos**: `RadioRepository`, Supabase, `RDSManager` / logos en hardware real.
 - **Assets**: guías V5 en `docs/img/`.
 

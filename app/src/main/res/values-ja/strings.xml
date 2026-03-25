@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenRadioFM v5.0.7 Stable</string>
+    <string name="app_name">OpenRadioFM v5.0.8 Stable</string>
     <string name="premium_customization">プレミアムカスタマイズ</string>
     <string name="theme_colors">テーマカラー</string>
     <string name="typography">タイポグラフィ</string>
@@ -108,7 +108,7 @@
     <string name="about_info_header">情報</string>
     <string name="about_dev_by">開発者</string>
     <string name="about_tech_details">技術詳細</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.7 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
     <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
     <string name="all_favorites_deleted">✅ すべてのお気に入りを削除しました</string>
     <string name="language_german">Deutsch</string>

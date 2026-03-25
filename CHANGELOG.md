@@ -1,3 +1,18 @@
+## [5.0.8 (Stable)] - 2026-03-25
+*Versión estable: calidad de icono y logos, menú ingeniería (acceso y MTK8259), UX nube sin red, y ajustes de layout.*
+
+### Added
+- **MTK8259/8667**: interruptor en menú ingeniería *Compatibilidad mixer v5.0* (`pref_mtk8259_v5_stream_mixer_compat`): ruta legacy solo `CloseRadioCh` / `OpenRadioCh` para pruebas de mezcla FM vs streaming (vs. ruta actual con `EnterMode` / mute explícito).
+
+### Changed
+- **Menú ingeniería**: acceso por **pulsación larga en GPS** en todos los motores (sustituye 5 pulsaciones en ≤3 s). Diálogo: pista de scroll, barra vertical visible, sección `[ DEV_TOGGLES_HW ]`, log `MODE` con `FmMode` y motor reales (antes texto fijo `MT8163_DIAGNOSTIC_CLONE`).
+- **Icono nube** (logos online activos): sin conectividad el contenedor se **atenua** (opacidad ~0,38) en lugar de ignorar el estado de red; con internet, comportamiento anterior (parpadeo si hay operaciones Supabase).
+- **Launcher / UI**: icono adaptativo con capas `foreground` dedicadas (evita robot por referencia circular); `ic_app_logo` en UI; mipmaps unificados a calidad alta.
+- **Layout 3 / presets**: menos solape nube–reloj; refresco de logos en presets al retunar.
+- **Marca y versionado**: `app_name` / `app_name_internal` → **v5.0.8 Stable**; `versionCode 20`, `versionName 5.0.8 (Stable)`.
+
+---
+
 ## [5.0.7 (Stable)] - 2026-03-24
 *Versión estable publicada: nombre de app, Acerca de y documentación alineados con `5.0.7 (Stable)`.*
 

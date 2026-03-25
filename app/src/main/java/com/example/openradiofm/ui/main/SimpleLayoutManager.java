@@ -127,7 +127,7 @@ public class SimpleLayoutManager {
 
     public void setDefaultState() {
         if (ivMainLogo != null) {
-            ivMainLogo.setImageResource(R.mipmap.ic_launcher);
+            ivMainLogo.setImageResource(R.drawable.ic_app_logo);
             ivMainLogo.setColorFilter(null); 
             ivMainLogo.setAlpha(0.3f);
         }

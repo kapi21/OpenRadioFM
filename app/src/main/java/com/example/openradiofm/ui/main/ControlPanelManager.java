@@ -20,10 +20,6 @@ public class ControlPanelManager {
     private static final String TAG = "ControlPanelManager";
     private final MainActivity mActivity;
 
-    // Easter Egg Variables
-    private int mTestClickCount = 0;
-    private long mTestStartTime = 0;
-
     public ControlPanelManager(MainActivity activity) {
         this.mActivity = activity;
     }
@@ -56,46 +52,13 @@ public class ControlPanelManager {
             });
         }
 
-        // GPS Button with Hidden Test Menu
+        // GPS: toque = mapas; pulsación larga = menú ingeniería (K706 / MT8163 / MTK8259 / QS6)
         View btnGps = mActivity.findViewById(R.id.btnGps);
         if (btnGps != null) {
-            btnGps.setOnClickListener(v -> {
-                long now = System.currentTimeMillis();
-
-                if (mTestClickCount == 0 || (now - mTestStartTime) > 3000) {
-                    mTestClickCount = 1;
-                    mTestStartTime = now;
-                } else {
-                    mTestClickCount++;
-                }
-
-                if (mTestClickCount >= 5) {
-                    mTestClickCount = 0; // Reset
-                    if (mActivity.mMode == MainActivity.FmMode.FM_K706) {
-                        mActivity.mEngineeringDialog = new K706EngineeringDialog(mActivity);
-                        mActivity.mEngineeringDialog.setOnDismissListener(dialog -> mActivity.mEngineeringDialog = null);
-                        mActivity.mEngineeringDialog.show();
-                    } else if (mActivity.mMode == MainActivity.FmMode.FM_MT8163) {
-                        new EngineeringModeDialog(mActivity).show();
-                    } else if (mActivity.mMode == MainActivity.FmMode.FM_QS6) {
-                        mActivity.mQs6EngineeringDialog = new QS6EngineeringDialog(mActivity);
-                        mActivity.mQs6EngineeringDialog.setOnDismissListener(
-                                dialog -> mActivity.mQs6EngineeringDialog = null);
-                        mActivity.mQs6EngineeringDialog.show();
-                    } else {
-                        mActivity.showToast("Modo básico: Menú de ingeniería no disponible");
-                    }
-                } else {
-                    if (mTestClickCount == 1) {
-                        try {
-                            Intent mapIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q="));
-                            mapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            mActivity.startActivity(mapIntent);
-                        } catch (Exception e) {
-                            mActivity.showToast("No se encontró aplicación de GPS");
-                        }
-                    }
-                }
+            btnGps.setOnClickListener(v -> openGpsMapsIntent());
+            btnGps.setOnLongClickListener(v -> {
+                openEngineeringMenuFromGpsLongPress();
+                return true;
             });
         }
 
@@ -189,6 +152,35 @@ public class ControlPanelManager {
             btnExtra2.setOnClickListener(v -> {
                 if (mActivity.mDialogManager != null) mActivity.mDialogManager.showSaveLoadFavoritesDialog();
             });
+        }
+    }
+
+    private void openGpsMapsIntent() {
+        try {
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0?q="));
+            mapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mActivity.startActivity(mapIntent);
+        } catch (Exception e) {
+            mActivity.showToast("No se encontró aplicación de GPS");
+        }
+    }
+
+    private void openEngineeringMenuFromGpsLongPress() {
+        if (mActivity.mMode == MainActivity.FmMode.FM_K706) {
+            mActivity.mEngineeringDialog = new K706EngineeringDialog(mActivity);
+            mActivity.mEngineeringDialog.setOnDismissListener(dialog -> mActivity.mEngineeringDialog = null);
+            mActivity.mEngineeringDialog.show();
+        } else if (mActivity.mMode == MainActivity.FmMode.FM_MT8163) {
+            new EngineeringModeDialog(mActivity).show();
+        } else if (mActivity.mMode == MainActivity.FmMode.FM_8259_8667) {
+            new EngineeringModeDialog(mActivity).show();
+        } else if (mActivity.mMode == MainActivity.FmMode.FM_QS6) {
+            mActivity.mQs6EngineeringDialog = new QS6EngineeringDialog(mActivity);
+            mActivity.mQs6EngineeringDialog.setOnDismissListener(
+                    dialog -> mActivity.mQs6EngineeringDialog = null);
+            mActivity.mQs6EngineeringDialog.show();
+        } else {
+            mActivity.showToast("Modo básico: Menú de ingeniería no disponible");
         }
     }
 

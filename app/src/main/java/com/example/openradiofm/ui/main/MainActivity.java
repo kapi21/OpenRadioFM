@@ -220,6 +220,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private android.animation.ObjectAnimator mDataBlinkAnimator;
     private long mLastInternetCheckTime = 0;
     private boolean mLastInternetCache = false;
+    /** Opacidad del icono nube cuando hay logos online pero sin conectividad (no ocultar, solo atenuar). */
+    private static final float CLOUD_DATA_OFFLINE_ALPHA = 0.38f;
 
     // V2.5: Broadcast guards
     private int mLastBroadcastFreq = -1;
@@ -267,7 +269,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     // V9.9: RDS Debugging Tracker (K706)
     public K706EngineeringDialog mEngineeringDialog = null;
-    /** Menú ingeniería QS6 / NWD (mismo easter egg GPS ×5). */
+    /** Menú ingeniería QS6 / NWD (pulsación larga en GPS). */
     public QS6EngineeringDialog mQs6EngineeringDialog = null;
 
     public int mCurrentBand = 0;
@@ -336,6 +338,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (freq > 0) {
                 mPresetManager.preparePresetSelection(index);
                 gotoFreq(freq);
+                // V21.4: Tras pulsar un preset, preparePresetSelection limpia el icono del slot;
+                // refreshRadioStatus no llama a refreshButtons al cambiar solo la frecuencia,
+                // así que los logos de preset quedaban vacíos hasta otro evento (p. ej. RDS).
+                runOnUiThread(() -> {
+                    if (mPresetManager != null) {
+                        mPresetManager.refreshButtons(mCurrentBand);
+                    }
+                });
+                mMainHandler.postDelayed(() -> {
+                    if (isFinishing() || isDestroyed() || mPresetManager == null) return;
+                    mPresetManager.refreshButtons(mCurrentBand);
+                }, 400);
             }
         }
     }
@@ -572,9 +586,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     /**
      * V16.2: Actualiza el estado visual del icono de actividad de datos.
-     * - Apagado si no hay internet.
-     * - Fijo si hay internet.
-     * - Parpadeando si hay actividad (download/upload).
+     * - Oculto si logos online desactivados.
+     * - Visible: opacidad plena con internet; atenuado ({@link #CLOUD_DATA_OFFLINE_ALPHA}) sin internet.
+     * - Parpadeando si hay actividad (download/upload) y hay conectividad.
      */
     private void updateDataActivityUI() {
         if (ivDataActivity == null) return;
@@ -600,10 +614,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         setVisibilityIfChanged(ivDataActivity, View.VISIBLE);
 
-        if (mActiveDataOps > 0) {
-            startDataBlink();
-        } else {
+        if (!isConnected) {
             stopDataBlink();
+            ivDataActivity.setAlpha(CLOUD_DATA_OFFLINE_ALPHA);
+        } else {
+            ivDataActivity.setAlpha(1.0f);
+            if (mActiveDataOps > 0) {
+                startDataBlink();
+            } else {
+                stopDataBlink();
+            }
         }
 
         // V17.0: Indicador visual de Streaming Online activo
@@ -956,9 +976,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
         });
     }
-
-    private int mTestClickCount = 0;
-    private long mTestStartTime = 0;
 
     // V8.5: Credits Easter Egg Variables (Restored)
     private int mCreditsClickCount = 0;

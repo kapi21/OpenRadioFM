@@ -21,6 +21,7 @@ public class MTK8259_8667RadioManager {
     private static final String TAG = "MTK8259_8667RM";
 
     private final Context mContext;
+    private final android.content.SharedPreferences mPrefs;
     private final ITsCommon mTsCommon;
     private final ITsSpeechRadio mTsSpeechRadio;
     
@@ -33,6 +34,7 @@ public class MTK8259_8667RadioManager {
         this.mContext = context.getApplicationContext();
         this.mTsCommon = tsCommon;
         this.mTsSpeechRadio = tsSpeechRadio;
+        this.mPrefs = mContext.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE);
         
         mAudioManager = (AudioManager) mContext.getSystemService(Context.AUDIO_SERVICE);
         mAudioFocusChangeListener = focusChange -> {
@@ -49,6 +51,14 @@ public class MTK8259_8667RadioManager {
             }
             */
         };
+    }
+
+    private boolean isV5StreamMixerCompatEnabled() {
+        try {
+            return mPrefs != null && mPrefs.getBoolean("pref_mtk8259_v5_stream_mixer_compat", false);
+        } catch (Exception ignored) {
+            return false;
+        }
     }
 
     public boolean isConnected() {
@@ -74,6 +84,69 @@ public class MTK8259_8667RadioManager {
                 mTsCommon.EnterMode(0); // Devolver audio al sistema
             }
             // abandonAudioFocus(); // V19.3: Desactivado por Csaba
+        }
+    }
+
+    /**
+     * V21.4: Mismo cierre de canal que {@link #closeDevice()} pero sin soltar el servicio AIDL.
+     * Streaming: solo {@code CloseRadioCh()} puede dejar FM mezclándose con ExoPlayer; se añade
+     * {@code EnterMode(0)} para devolver el mixer al sistema (alineado con {@link #closeDevice()}).
+     * <p>
+     * Referencia APK OpenRadioFM v5.0 (Stability Beta): {@code setOnlineStreamingActive} en el engine
+     * era no-op; solo {@code switchToAndroidAudio()} llamaba a {@code CloseRadioCh()} (sin
+     * {@code EnterMode}). Si Csaba/OEM reporta regresión con esta ruta, valorar fallback solo
+     * {@code CloseRadioCh()} o pref OEM (comparar con smali en {@code _ASSETS/v5_apktool}).
+     */
+    public void switchMixerToAndroidAudio() {
+        try {
+            if (isV5StreamMixerCompatEnabled()) {
+                // Compat v5.0 (APK OpenRadioFM v5.0): en MTK8259 el stream cerraba el canal
+                // sin EnterMode y sin mute explícito.
+                if (mTsSpeechRadio != null) {
+                    mTsSpeechRadio.CloseRadioCh();
+                }
+                Log.d(TAG, "switchMixerToAndroidAudio(): LEGACY v5.0 -> CloseRadioCh only");
+                return;
+            }
+            // En MTK8259 el canal se cierra, pero el "mixer" puede seguir dejando ruido.
+            // Para asegurar que no se oye FM debajo del stream, forzamos mute vía TsCommon.
+            setMute(true);
+            if (mTsSpeechRadio != null) {
+                mTsSpeechRadio.CloseRadioCh();
+            }
+            if (mTsCommon != null) {
+                mTsCommon.EnterMode(0);
+            }
+            Log.d(TAG, "switchMixerToAndroidAudio(): setMute(true) + CloseRadioCh + EnterMode(0)");
+        } catch (Throwable t) {
+            Log.e(TAG, "switchMixerToAndroidAudio failed", t);
+        }
+    }
+
+    /**
+     * V21.4: Volver a ruta FM (OpenRadioCh + EnterMode(1)), alineado con {@link #openDevice()}.
+     */
+    public void switchMixerToFmAudio() {
+        try {
+            if (isV5StreamMixerCompatEnabled()) {
+                // Compat v5.0 (APK OpenRadioFM v5.0): volver a FM abría el canal sin EnterMode.
+                if (mTsSpeechRadio != null) {
+                    mTsSpeechRadio.OpenRadioCh();
+                }
+                Log.d(TAG, "switchMixerToFmAudio(): LEGACY v5.0 -> OpenRadioCh only");
+                return;
+            }
+            // Volver a FM debe desmutea r para que el canal sea audible.
+            setMute(false);
+            if (mTsSpeechRadio != null) {
+                mTsSpeechRadio.OpenRadioCh();
+            }
+            if (mTsCommon != null) {
+                mTsCommon.EnterMode(1);
+            }
+            Log.d(TAG, "switchMixerToFmAudio(): setMute(false) + OpenRadioCh + EnterMode(1)");
+        } catch (Throwable t) {
+            Log.e(TAG, "switchMixerToFmAudio failed", t);
         }
     }
     

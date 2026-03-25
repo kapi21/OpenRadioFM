@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">OpenRadioFM v5.0.7 Stable</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.7 Stable</string>
+    <string name="app_name">OpenRadioFM v5.0.8 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
     <string name="accessibility_service_description">Este servicio permite a OpenRadioFM sobreponerse cuando pulsas el botón físico de RADIO en unidades Android compatibles (ej: K706), ignorando la app de fábrica.</string>
 
     <!-- QS6 / NWD: aviso cuando RDS y sintonía OK pero el firmware no mezcla audio FM para apps de terceros -->
