@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v5.0.8 Stable</string>
+    <string name="app_name">OpenRadioFM</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
     <string name="accessibility_service_description">This service allows OpenRadioFM to overlay when you press the physical RADIO button on compatible Android units (e.g., K706), bypassing the stock radio app.</string>
 

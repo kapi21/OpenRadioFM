@@ -15,7 +15,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **Cloud icon** (online logos enabled): **dimmed** when offline (~0.38 alpha); when online, previous behavior (blink on Supabase activity).
 - **Launcher / UI**: adaptive icon with dedicated foreground layers; `ic_app_logo` in UI; high-quality mipmaps.
 - **Layout 3 / presets**: cloud vs clock overlap reduced; preset logo refresh when retuning.
-- **Branding**: `app_name` / `app_name_internal` → **v5.0.8 Stable**; `versionCode 20`, `versionName 5.0.8 (Stable)`.
+- **Branding & versioning**: `app_name` fixed to **OpenRadioFM** (launcher, all locales); `app_name_internal` keeps internal visible version text; `versionCode 20`, `versionName 5.0.8 (Stable)`.
 
 ---
 

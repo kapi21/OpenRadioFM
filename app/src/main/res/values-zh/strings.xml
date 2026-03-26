@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">OpenRadioFM v5.0.8 Stable</string>
+    <string name="app_name">OpenRadioFM</string>
     <string name="premium_customization">高级个性化</string>
     <string name="theme_colors">主题颜色</string>
     <string name="typography">字体设置</string>

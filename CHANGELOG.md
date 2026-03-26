@@ -9,7 +9,7 @@
 - **Icono nube** (logos online activos): sin conectividad el contenedor se **atenua** (opacidad ~0,38) en lugar de ignorar el estado de red; con internet, comportamiento anterior (parpadeo si hay operaciones Supabase).
 - **Launcher / UI**: icono adaptativo con capas `foreground` dedicadas (evita robot por referencia circular); `ic_app_logo` en UI; mipmaps unificados a calidad alta.
 - **Layout 3 / presets**: menos solape nube–reloj; refresco de logos en presets al retunar.
-- **Marca y versionado**: `app_name` / `app_name_internal` → **v5.0.8 Stable**; `versionCode 20`, `versionName 5.0.8 (Stable)`.
+- **Marca y versionado**: `app_name` fijado en **OpenRadioFM** (launcher, todas las locales); `app_name_internal` mantiene la versión visible interna; `versionCode 20`, `versionName 5.0.8 (Stable)`.
 
 ---
 

@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OpenRadioFM v5.0.8 Stable</string>
+    <string name="app_name">OpenRadioFM</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
     <string name="accessibility_service_description">Este servicio permite a OpenRadioFM sobreponerse cuando pulsas el botón físico de RADIO en unidades Android compatibles (ej: K706), ignorando la app de fábrica.</string>
 
