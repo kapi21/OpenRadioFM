@@ -61,6 +61,8 @@ public class MTK8259_8667RadioManager {
         }
     }
 
+
+
     public boolean isConnected() {
         return mTsCommon != null && mTsSpeechRadio != null;
     }
@@ -100,24 +102,23 @@ public class MTK8259_8667RadioManager {
     public void switchMixerToAndroidAudio() {
         try {
             if (isV5StreamMixerCompatEnabled()) {
-                // Compat v5.0 (APK OpenRadioFM v5.0): en MTK8259 el stream cerraba el canal
-                // sin EnterMode y sin mute explícito.
+                // Compat v5.0: solo CloseRadioCh, sin mute explícito ni EnterMode.
                 if (mTsSpeechRadio != null) {
                     mTsSpeechRadio.CloseRadioCh();
                 }
                 Log.d(TAG, "switchMixerToAndroidAudio(): LEGACY v5.0 -> CloseRadioCh only");
                 return;
             }
-            // En MTK8259 el canal se cierra, pero el "mixer" puede seguir dejando ruido.
-            // Para asegurar que no se oye FM debajo del stream, forzamos mute vía TsCommon.
-            setMute(true);
+            // V21.5: NO llamamos setMute(true) aquí. El fix de ACTION_FORCE_PLAY ya evita que
+            // el canal FM se reactive durante el streaming. setMute(true) silenciaba el amplificador
+            // del coche y ExoPlayer no era audible (bug "LIVE activa el mute" - Csaba).
             if (mTsSpeechRadio != null) {
                 mTsSpeechRadio.CloseRadioCh();
             }
             if (mTsCommon != null) {
                 mTsCommon.EnterMode(0);
             }
-            Log.d(TAG, "switchMixerToAndroidAudio(): setMute(true) + CloseRadioCh + EnterMode(0)");
+            Log.d(TAG, "switchMixerToAndroidAudio(): CloseRadioCh + EnterMode(0) [sin mute]");
         } catch (Throwable t) {
             Log.e(TAG, "switchMixerToAndroidAudio failed", t);
         }
@@ -129,14 +130,13 @@ public class MTK8259_8667RadioManager {
     public void switchMixerToFmAudio() {
         try {
             if (isV5StreamMixerCompatEnabled()) {
-                // Compat v5.0 (APK OpenRadioFM v5.0): volver a FM abría el canal sin EnterMode.
+                // Compat v5.0: solo OpenRadioCh, sin mute ni EnterMode.
                 if (mTsSpeechRadio != null) {
                     mTsSpeechRadio.OpenRadioCh();
                 }
                 Log.d(TAG, "switchMixerToFmAudio(): LEGACY v5.0 -> OpenRadioCh only");
                 return;
             }
-            // Volver a FM debe desmutea r para que el canal sea audible.
             setMute(false);
             if (mTsSpeechRadio != null) {
                 mTsSpeechRadio.OpenRadioCh();
@@ -404,6 +404,7 @@ public class MTK8259_8667RadioManager {
             Log.e(TAG, "Mute failed", t);
         }
     }
+
 
     /**
      * V20.0: Fuerza un estado de sonido activo.

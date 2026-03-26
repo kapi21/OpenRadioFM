@@ -46,6 +46,7 @@ public class EngineeringModeDialog extends Dialog {
 
     // Dev toggles (MT8163)
     private SwitchCompat swMt8163GlobalStreamMute;
+    // Dev toggle (MTK8259)
     private SwitchCompat swMtk8259V5StreamMixerCompat;
     private android.content.SharedPreferences mPrefs;
     

@@ -153,9 +153,12 @@ public class PlaybackManager {
                 if (mEngine != null) engineName = mEngine.getEngineName();
             } catch (Exception ignored) {}
             boolean isQs6 = engineName != null && engineName.toUpperCase().contains("QS6");
-            // En QS6 ya estamos haciendo unmute desde el propio engine; forzar PLAY en el servicio
-            // duplica setMute(false) y provoca peticiones redundantes de AudioFocus.
-            if (!isQs6) {
+            // V21.5 (Csaba fix): En MTK8259, ACTION_FORCE_PLAY dispara enforceAudioRecovery()
+            // en el RadioMediaService, que llama a OpenRadioCh() y reactiva el canal FM
+            // mientras el stream de ExoPlayer sigue activo → mezcla de audio.
+            // Igual que QS6, el MTK8259 gestiona su propia recuperación de audio internamente.
+            boolean is8259 = engineName != null && engineName.toUpperCase().contains("8259");
+            if (!isQs6 && !is8259) {
                 serviceIntent.setAction(com.example.openradiofm.service.RadioMediaService.ACTION_FORCE_PLAY);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {

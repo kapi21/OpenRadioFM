@@ -246,6 +246,14 @@ public class OnlineStreamManager {
         mIsLoading = false;
         mIsPlaying = false;
 
+        // V21.5 FIX: Bajar el flag streaming ANTES de cualquier otra operación.
+        // Así, si PlaybackManager.setMute(false) llega a enforceAudioRecovery(),
+        // ya verá streaming=false y podrá recuperar el canal FM correctamente.
+        if (mPlaybackManager != null && mPlaybackManager.getEngine() != null) {
+            mPlaybackManager.getEngine().setOnlineStreamingActive(false);
+        }
+
+        // Liberar ExoPlayer (puede tener latencia interna de decodificador)
         if (mExoPlayer != null) {
             try {
                 mExoPlayer.stop();
@@ -256,14 +264,17 @@ public class OnlineStreamManager {
             mExoPlayer = null;
         }
 
-        // Recuperar audio de la radio física
+        // Recuperar audio de la radio física con un pequeño delay para que ExoPlayer
+        // libere el DAC antes de que el canal FM se active (evita mezcla transitoria).
         if (mPlaybackManager != null) {
-            // Desmuteamos si acaso
-            mPlaybackManager.setMute(false);
-            if (mPlaybackManager.getEngine() != null) {
-                mPlaybackManager.getEngine().setOnlineStreamingActive(false); // V18.4: Volver a modo radio
-                mPlaybackManager.getEngine().switchToFmAudio();
-            }
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (mPlaybackManager != null) {
+                    mPlaybackManager.setMute(false);
+                    if (mPlaybackManager.getEngine() != null) {
+                        mPlaybackManager.getEngine().switchToFmAudio();
+                    }
+                }
+            }, 150);
         }
 
         updateUI();
