@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="premium_customization">高级个性化</string>
+    <string name="premium_customization">选项菜单</string>
     <string name="theme_colors">主题颜色</string>
     <string name="typography">字体设置</string>
     <string name="background_mode">🖼️ 背景模式</string>
@@ -28,6 +28,15 @@
     <string name="save_history">保存收听历史</string>
     <string name="enable_gestures_beta">启用手势 (Swipe) (测试版)</string>
     <string name="online_logos">在线台标</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ 图标包</string>
+    <string name="icon_pack_default">默认</string>
+    <string name="icon_pack_color">彩色</string>
+    <string name="select_icon_pack">选择图标包</string>
+    <string name="layout2_side_label">Layout V2（纵向）：预设位置</string>
+    <string name="layout2_side_presets_left">预设在左侧</string>
+    <string name="layout2_side_presets_right">预设在右侧</string>
     <string name="night_mode_enabled">✅ 自动夜间模式已开启</string>
     <string name="night_mode_disabled">❌ 自动夜间模式已关闭</string>
     <string name="history_enabled">✅ 收听历史已开启</string>

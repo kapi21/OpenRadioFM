@@ -2,7 +2,7 @@
     <string name="app_name">OpenRadioFM</string>
     
     <!-- Premium Menu Strings -->
-    <string name="premium_customization">Personalização Premium</string>
+    <string name="premium_customization">Menu de Opções</string>
     <string name="theme_colors">Cores do Tema</string>
     <string name="typography">Tipografia</string>
     <string name="background_mode">🖼️ Modo de Fundo</string>
@@ -38,6 +38,15 @@
     <string name="status_bar_v2">Mostrar barra de estado</string>
     <string name="status_bar_enabled">✅ Barra de estado ativada</string>
     <string name="status_bar_disabled">❌ Barra de estado desativada</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Pack de ícones</string>
+    <string name="icon_pack_default">Padrão</string>
+    <string name="icon_pack_color">Cor</string>
+    <string name="select_icon_pack">Selecionar pack de ícones</string>
+    <string name="layout2_side_label">Layout V2 (vertical): lado dos presets</string>
+    <string name="layout2_side_presets_left">Presets à esquerda</string>
+    <string name="layout2_side_presets_right">Presets à direita</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Modo Noturno Automático ativado</string>

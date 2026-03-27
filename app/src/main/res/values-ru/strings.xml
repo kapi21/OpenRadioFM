@@ -3,7 +3,7 @@
     <string name="app_name">OpenRadioFM</string>
     
     
-    <string name="premium_customization">Премиум Настройки</string>
+    <string name="premium_customization">Меню настроек</string>
     <string name="theme_colors">Цвета Темы</string>
     <string name="typography">Типография</string>
     <string name="background_mode">🖼️ Режим Фона</string>
@@ -36,6 +36,15 @@
     <string name="save_history">Сохранять Историю Станций</string>
     <string name="enable_gestures_beta">Включить Жесты (Свайп) (бета)</string>
     <string name="online_logos">Онлайн Логотипы</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Пакет иконок</string>
+    <string name="icon_pack_default">По умолчанию</string>
+    <string name="icon_pack_color">Цветной</string>
+    <string name="select_icon_pack">Выбрать пакет иконок</string>
+    <string name="layout2_side_label">Layout V2 (вертикальный): сторона пресетов</string>
+    <string name="layout2_side_presets_left">Пресеты слева</string>
+    <string name="layout2_side_presets_right">Пресеты справа</string>
     
     
     <string name="night_mode_enabled">✅ Автоматический ночной режим включён</string>

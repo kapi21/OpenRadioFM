@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="premium_customization">プレミアムカスタマイズ</string>
+    <string name="premium_customization">オプションメニュー</string>
     <string name="theme_colors">テーマカラー</string>
     <string name="typography">タイポグラフィ</string>
     <string name="background_mode">🖼️ 背景モード</string>
@@ -28,6 +28,15 @@
     <string name="save_history">履歴を保存</string>
     <string name="enable_gestures_beta">ジェスチャー (Swipe) を有効にする (ベータ)</string>
     <string name="online_logos">オンラインロゴ</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ アイコンパック</string>
+    <string name="icon_pack_default">デフォルト</string>
+    <string name="icon_pack_color">カラー</string>
+    <string name="select_icon_pack">アイコンパックを選択</string>
+    <string name="layout2_side_label">Layout V2 (縦): プリセットの位置</string>
+    <string name="layout2_side_presets_left">プリセットを左</string>
+    <string name="layout2_side_presets_right">プリセットを右</string>
     <string name="night_mode_enabled">✅ 自動夜间モードを有効にしました</string>
     <string name="night_mode_disabled">❌ 自動夜间モードを無効にしました</string>
     <string name="history_enabled">✅ 履歴保存を有効にしました</string>

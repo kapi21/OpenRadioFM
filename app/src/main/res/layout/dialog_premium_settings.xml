@@ -100,6 +100,32 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Pack de iconos -->
+        <LinearLayout
+            android:id="@+id/rowIconPack"
+            style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="@string/icon_pack"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentIconPack"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/icon_pack_default"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Relieve HD -->
         <LinearLayout
             style="@style/SettingsRowStyle">
@@ -327,6 +353,32 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Posición columnas Layout V2 (vertical) -->
+        <LinearLayout
+            android:id="@+id/rowLayout2Side"
+            style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="@string/layout2_side_label"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentLayout2Side"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/layout2_side_presets_left"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Guardar Historial -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView
@@ -399,6 +451,7 @@
                     android:textSize="20sp"/>
             </LinearLayout>
         </LinearLayout>
+
 
         <!-- Habilitar AM (Oculto v21.3 por estabilidad hardware) -->
         <LinearLayout style="@style/SettingsRowStyle"

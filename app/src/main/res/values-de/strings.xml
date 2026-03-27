@@ -4,7 +4,7 @@
     <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
     
     <!-- Premium Menu Strings -->
-    <string name="premium_customization">Premium-Anpassung</string>
+    <string name="premium_customization">Optionsmenü</string>
     <string name="theme_colors">Themenfarben</string>
     <string name="typography">Typografie</string>
     <string name="background_mode">🖼️ Hintergrundmodus</string>
@@ -40,6 +40,15 @@
     <string name="status_bar_v2">Statusleiste anzeigen</string>
     <string name="status_bar_enabled">✅ Statusleiste aktiviert</string>
     <string name="status_bar_disabled">❌ Statusleiste deaktiviert</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Icon-Pack</string>
+    <string name="icon_pack_default">Standard</string>
+    <string name="icon_pack_color">Farbe</string>
+    <string name="select_icon_pack">Icon-Pack auswählen</string>
+    <string name="layout2_side_label">Layout V2 (vertikal): Preset-Seite</string>
+    <string name="layout2_side_presets_left">Presets links</string>
+    <string name="layout2_side_presets_right">Presets rechts</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Automatischer Nachtmodus aktiviert</string>

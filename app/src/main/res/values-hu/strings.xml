@@ -2,7 +2,7 @@
     <string name="app_name">OpenRadioFM</string>
     
     <!-- Premium Menu Strings -->
-    <string name="premium_customization">Prémium Testreszabás</string>
+    <string name="premium_customization">Beállítások menü</string>
     <string name="theme_colors">Téma Színek</string>
     <string name="typography">Tipográfia</string>
     <string name="background_mode">🖼️ Háttér Mód</string>
@@ -37,6 +37,15 @@
     <string name="status_bar_v2">Állapotsor megjelenítése</string>
     <string name="status_bar_enabled">✅ Állapotsor engedélyezve</string>
     <string name="status_bar_disabled">❌ Állapotsor letiltva</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Ikon csomag</string>
+    <string name="icon_pack_default">Alapértelmezett</string>
+    <string name="icon_pack_color">Színes</string>
+    <string name="select_icon_pack">Ikon csomag kiválasztása</string>
+    <string name="layout2_side_label">Layout V2 (függőleges): preset oldal</string>
+    <string name="layout2_side_presets_left">Presetek balra</string>
+    <string name="layout2_side_presets_right">Presetek jobbra</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Automatikus Éjszakai Mód engedélyezve</string>

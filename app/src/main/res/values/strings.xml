@@ -8,7 +8,7 @@
     <string name="qs6_audio_firmware_notice">La sintonía y el RDS funcionan; el hardware responde bien.\n\nSi no oyes audio por los altavoces, suele ser una limitación del firmware: la salida FM a veces solo la activa la radio del fabricante.\n\nPrueba la app de radio OEM de la unidad o una actualización de sistema.</string>
     
     <!-- Premium Menu Strings -->
-    <string name="premium_customization">Personalización Premium</string>
+    <string name="premium_customization">Menú de Opciones</string>
     <string name="theme_colors">Colores del Tema</string>
     <string name="typography">Tipografía</string>
     <string name="background_mode">🖼️ Modo de Fondo</string>
@@ -119,6 +119,13 @@
     <string name="steering_next_prev_mode">🛞 Mandos volante NEXT/PREV</string>
     <string name="steering_mode_seek">Seek (emisoras)</string>
     <string name="steering_mode_preset">Preset (memorias)</string>
+    <string name="icon_pack">🎛️ Pack de iconos</string>
+    <string name="icon_pack_default">Default</string>
+    <string name="icon_pack_color">Color</string>
+    <string name="select_icon_pack">Seleccionar pack de iconos</string>
+    <string name="layout2_side_label">Layout V2 (vertical): lado de presets</string>
+    <string name="layout2_side_presets_left">Presets a la izquierda</string>
+    <string name="layout2_side_presets_right">Presets a la derecha</string>
     <string name="select_steering_mode">Selecciona acción NEXT/PREV</string>
     <string name="am_band_enabled">✅ Banda AM habilitada</string>
     <string name="am_band_disabled">❌ Banda AM deshabilitada</string>

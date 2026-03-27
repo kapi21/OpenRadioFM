@@ -7,7 +7,7 @@
     <string name="qs6_audio_firmware_notice">Tuning and RDS work; the tuner hardware is fine.\n\nIf there is no sound through the speakers, this is often a firmware limitation: FM audio output may only be enabled for the manufacturer radio app.\n\nTry the OEM radio app or a system update.</string>
     
     <!-- Premium Menu Strings -->
-    <string name="premium_customization">Premium Customization</string>
+    <string name="premium_customization">Options Menu</string>
     <string name="theme_colors">Theme Colors</string>
     <string name="typography">Typography</string>
     <string name="background_mode">🖼️ Background Mode</string>
@@ -193,6 +193,15 @@
     <string name="logo_mode_car">Car Logo</string>
     <string name="logo_mode_clock">Digital Clock</string>
     <string name="my_favorites">My Favorites</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Icon pack</string>
+    <string name="icon_pack_default">Default</string>
+    <string name="icon_pack_color">Color</string>
+    <string name="select_icon_pack">Select icon pack</string>
+    <string name="layout2_side_label">Layout V2 (vertical): preset side</string>
+    <string name="layout2_side_presets_left">Presets on left</string>
+    <string name="layout2_side_presets_right">Presets on right</string>
     
     <!-- Settings Categories -->
     <string name="category_premium">Premium Customization</string>

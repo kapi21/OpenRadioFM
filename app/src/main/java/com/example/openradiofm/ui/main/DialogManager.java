@@ -400,6 +400,22 @@ public class DialogManager {
             });
         }
 
+        // Layout V2 (vertical): lado de presets
+        View rowLayout2Side = dialog.findViewById(R.id.rowLayout2Side);
+        TextView tvCurrentLayout2Side = dialog.findViewById(R.id.tvCurrentLayout2Side);
+        if (tvCurrentLayout2Side != null) {
+            boolean presetsRight = mActivity.mPrefs.getBoolean("pref_layout2_presets_right", false);
+            tvCurrentLayout2Side.setText(presetsRight
+                    ? mActivity.getString(R.string.layout2_side_presets_right)
+                    : mActivity.getString(R.string.layout2_side_presets_left));
+        }
+        if (rowLayout2Side != null) {
+            rowLayout2Side.setOnClickListener(v -> {
+                showLayout2SideSelector();
+                dialog.dismiss();
+            });
+        }
+
         // Engine Row Logic
         View rowEngine = dialog.findViewById(R.id.rowEngine);
         TextView tvCurrentEngine = dialog.findViewById(R.id.tvCurrentEngine);
@@ -438,6 +454,22 @@ public class DialogManager {
         if (rowSteeringMode != null) {
             rowSteeringMode.setOnClickListener(v -> {
                 showSteeringModeSelector();
+                dialog.dismiss();
+            });
+        }
+
+        // Icon pack row
+        View rowIconPack = dialog.findViewById(R.id.rowIconPack);
+        TextView tvCurrentIconPack = dialog.findViewById(R.id.tvCurrentIconPack);
+        if (tvCurrentIconPack != null) {
+            int pack = mActivity.mPrefs.getInt("pref_icon_pack", 0); // 0=default, 1=color(p2)
+            tvCurrentIconPack.setText(pack == 1
+                    ? mActivity.getString(R.string.icon_pack_color)
+                    : mActivity.getString(R.string.icon_pack_default));
+        }
+        if (rowIconPack != null) {
+            rowIconPack.setOnClickListener(v -> {
+                showIconPackSelector();
                 dialog.dismiss();
             });
         }
@@ -767,6 +799,22 @@ public class DialogManager {
         });
     }
 
+    public void showLayout2SideSelector() {
+        String[] options = {
+                mActivity.getString(R.string.layout2_side_presets_left),
+                mActivity.getString(R.string.layout2_side_presets_right)
+        };
+        int currentIdx = mActivity.mPrefs.getBoolean("pref_layout2_presets_right", false) ? 1 : 0;
+        showGridSelector(mActivity.getString(R.string.layout2_side_label), options, currentIdx, which -> {
+            boolean presetsRight = which == 1;
+            mActivity.mPrefs.edit().putBoolean("pref_layout2_presets_right", presetsRight).apply();
+            mActivity.showToast(options[which]);
+            try { mActivity.applyLayout2SidePreference(); } catch (Exception ignored) {}
+            // Recreate para relayout estable de chains/guidelines en V2.
+            mActivity.recreate();
+        });
+    }
+
     public void showLogoProviderSelector() {
         String[] options = {
                 mActivity.getString(R.string.provider_supabase),
@@ -792,6 +840,19 @@ public class DialogManager {
         showGridSelector(mActivity.getString(R.string.select_steering_mode), options, currentIdx, which -> {
             mActivity.mPrefs.edit().putInt("pref_steering_next_prev_mode", which).apply();
             mActivity.showToast("Mandos volante NEXT/PREV: " + options[which]);
+            showPremiumSettingsDialog();
+        });
+    }
+
+    public void showIconPackSelector() {
+        String[] options = {
+                mActivity.getString(R.string.icon_pack_default),
+                mActivity.getString(R.string.icon_pack_color)
+        };
+        int currentIdx = mActivity.mPrefs.getInt("pref_icon_pack", 0);
+        showGridSelector(mActivity.getString(R.string.select_icon_pack), options, currentIdx, which -> {
+            mActivity.mPrefs.edit().putInt("pref_icon_pack", which).apply();
+            try { mActivity.applyIconPack(); } catch (Exception ignored) {}
             showPremiumSettingsDialog();
         });
     }

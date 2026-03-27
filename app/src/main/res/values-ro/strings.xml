@@ -3,7 +3,7 @@
     <string name="app_name">OpenRadioFM</string>
     
     
-    <string name="premium_customization">Personalizare Premium</string>
+    <string name="premium_customization">Meniu opțiuni</string>
     <string name="theme_colors">Culori Temă</string>
     <string name="typography">Tipografie</string>
     <string name="background_mode">🖼️ Mod Fundal</string>
@@ -36,6 +36,15 @@
     <string name="save_history">Salvează Istoricul Stațiilor</string>
     <string name="enable_gestures_beta">Activează Geste (Swipe) (beta)</string>
     <string name="online_logos">Logo-uri Online</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Pachet de pictograme</string>
+    <string name="icon_pack_default">Implicit</string>
+    <string name="icon_pack_color">Color</string>
+    <string name="select_icon_pack">Selectează pachetul de pictograme</string>
+    <string name="layout2_side_label">Layout V2 (vertical): partea preseturilor</string>
+    <string name="layout2_side_presets_left">Preseturi în stânga</string>
+    <string name="layout2_side_presets_right">Preseturi în dreapta</string>
     
     
     <string name="night_mode_enabled">✅ Mod Noapte Automat activat</string>

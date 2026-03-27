@@ -112,6 +112,9 @@ public class ControlPanelManager {
             btnAutoScan.setAlpha(0.45f);
         }
 
+        // Si hay un pack de iconos seleccionado, aplicarlo tras setear los defaults.
+        try { mActivity.applyIconPack(); } catch (Exception ignored) {}
+
         // Power Off delegada a DeviceManager
         ImageButton btnPowerOff = mActivity.findViewById(R.id.btnPowerOff);
         if (btnPowerOff != null) {

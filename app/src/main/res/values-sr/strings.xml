@@ -3,7 +3,7 @@
     <string name="app_name">OpenRadioFM</string>
     
     
-    <string name="premium_customization">Premium Prilagođavanje</string>
+    <string name="premium_customization">Meni opcija</string>
     <string name="theme_colors">Boje Teme</string>
     <string name="typography">Tipografija</string>
     <string name="background_mode">🖼️ Režim Pozadine</string>
@@ -36,6 +36,15 @@
     <string name="save_history">Sačuvaj Istoriju Stanica</string>
     <string name="enable_gestures_beta">Omogući Gestove (Svajp) (beta)</string>
     <string name="online_logos">Logotipi na mreži</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Paket ikonica</string>
+    <string name="icon_pack_default">Podrazumevano</string>
+    <string name="icon_pack_color">Boja</string>
+    <string name="select_icon_pack">Izaberi paket ikonica</string>
+    <string name="layout2_side_label">Layout V2 (vertikalni): strana preseta</string>
+    <string name="layout2_side_presets_left">Preseti levo</string>
+    <string name="layout2_side_presets_right">Preseti desno</string>
     
     
     <string name="night_mode_enabled">✅ Automatski noćni režim omogućen</string>

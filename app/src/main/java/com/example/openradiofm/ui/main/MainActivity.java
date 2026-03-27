@@ -151,6 +151,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public HistoryManager mHistoryManager;
     public MediaSessionManager mMediaSessionManager;
     public ThemeManager mThemeManager; // V16.2: Skin manager
+    public IconPackManager mIconPackManager;
 
     // V18.5: Reloj Digital
     private android.os.Handler mClockHandler;
@@ -972,6 +973,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 btnLocDx.setAlpha(1.0f);
                 // V9: LOCAL=radio_loc_p (active/filled), DX=radio_loc_n (normal/outline)
                 setImageResourceIfChanged(btnLocDx, isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                // Reaplicar pack si existe (evita volver a default al cambiar estado)
+                if (mIconPackManager != null) {
+                    mIconPackManager.apply(btnLocDx,
+                            isLocal ? "radio_loc_p" : "radio_loc_n",
+                            isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                }
             }
         });
     }
@@ -1355,6 +1362,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V3.0: Layout Selection
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
+        mIconPackManager = new IconPackManager(this, mPrefs);
         
         // V21.3: Forzar habilitación de banda AM para evitar inestabilidad en motores HW (MTK8259)
         // Se ha eliminado la opción de desactivarlo en Ajustes Premium.
@@ -1378,6 +1386,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         } else {
             setContentView(R.layout.activity_main);
             mUiController = new MainLayoutController(this);
+            applyLayout2SidePreference();
         }
 
         // V21.0: Initialize the active UI Controller
@@ -1387,6 +1396,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V15.6: Aplicar tipografía global inmediatamente tras cargar el layout
         applyFonts();
+        // Aplicar pack de iconos (si existe) a la UI actual.
+        applyIconPack();
 
         // VXX: Aplicar relieve opcional de logos
         if (mPrefs != null) {
@@ -1440,6 +1451,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             setImageResourceIfChanged(btnMute, R.drawable.radio_mute_p);
                         } else {
                             setImageResourceIfChanged(btnMute, R.drawable.radio_mute_n);
+                        }
+                        // Reaplicar pack si existe (evita volver a default al cambiar estado)
+                        if (mIconPackManager != null) {
+                            mIconPackManager.apply(btnMute,
+                                    isMuted ? "radio_mute_p" : "radio_mute_n",
+                                    isMuted ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
                         }
                         // V2.5: Preservar tinte noche si activo
                         Object savedFilter = btnMute.getTag(R.id.tag_color_filter);
@@ -1693,6 +1710,150 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // V20.0: Ajuste automático por densidad (DPI)
         adjustLayoutForDPI();
+    }
+
+    /**
+     * Aplica el pack de iconos seleccionado a los ImageButtons/ImageViews visibles.
+     * Si un PNG del pack no existe, se mantiene el drawable resource actual.
+     */
+    public void applyIconPack() {
+        if (mIconPackManager == null) return;
+        try {
+            // Controles comunes (Layout V2/V3)
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnSeekDown), "seek_down", R.drawable.seek_down);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnSeekUp), "seek_up", R.drawable.seek_up);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnFavPrev), "btn_previous_n", R.drawable.btn_previous_n);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnFavNext), "btn_next_n", R.drawable.btn_next_n);
+
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnSettings), "radio_eq_n", R.drawable.radio_eq_n);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnBand), "radio_band_n", R.drawable.radio_band_n);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnLocDx), "radio_loc_n", R.drawable.radio_loc_n);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnAutoScan), "radio_scan_icon_f", R.drawable.radio_scan_icon_f);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnMute), "radio_mute_n", R.drawable.radio_mute_n);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnGps), "radio_gps", R.drawable.radio_gps);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnExtra1), "ic_android_settings", R.drawable.ic_android_settings);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnExtra2), "ic_save_load", R.drawable.ic_save_load);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnPowerOff), "power_off", R.drawable.power_off);
+
+            mIconPackManager.apply((ImageView) findViewById(R.id.ivDataActivityIcon), "cloud", R.drawable.cloud);
+        } catch (Exception ignored) {}
+    }
+
+    /**
+     * Layout V2 (vertical): permite espejar columnas.
+     * - false: presets a la izquierda (actual)
+     * - true: presets a la derecha (espejo)
+     */
+    public void applyLayout2SidePreference() {
+        if (mIsSimpleLayout || mIsV3 || mPrefs == null) return;
+        View root = findViewById(R.id.rootLayout);
+        if (!(root instanceof androidx.constraintlayout.widget.ConstraintLayout)) return;
+        androidx.constraintlayout.widget.ConstraintLayout cl = (androidx.constraintlayout.widget.ConstraintLayout) root;
+        boolean presetsRight = mPrefs.getBoolean("pref_layout2_presets_right", false);
+
+        // Importante: solo intercambiar columnas 1 y 3. La columna central (entre guideline_col1 y guideline_col2)
+        // debe permanecer igual que en el layout original.
+        try {
+            androidx.constraintlayout.widget.ConstraintSet set = new androidx.constraintlayout.widget.ConstraintSet();
+            set.clone(cl);
+
+            final int parent = androidx.constraintlayout.widget.ConstraintSet.PARENT_ID;
+            final int col1 = R.id.guideline_col1;
+            final int col2 = R.id.guideline_col2;
+
+            // Columna 1: presets (ScrollView)
+            final int presets = R.id.scrollViewPresets;
+            if (presetsRight) {
+                // Presets -> derecha (entre guideline_col2 y parent)
+                set.clear(presets, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(presets, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(presets, androidx.constraintlayout.widget.ConstraintSet.START, col2, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(presets, androidx.constraintlayout.widget.ConstraintSet.END, parent, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+
+                // Columna 3 -> izquierda (entre parent y guideline_col1), manteniendo pares en 2 columnas
+                set.clear(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.START, parent, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+                set.connect(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.END, col1, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                // Fila 1: Extra1 | Extra2
+                set.clear(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.START, parent, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+                set.connect(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.END, R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                set.clear(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.START, R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.END, col1, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                // Fila 2: Mute | GPS
+                set.clear(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.START, parent, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+                set.connect(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.END, R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                set.clear(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.START, R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.END, col1, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                // Fila 3: Settings | PowerOff
+                set.clear(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.START, parent, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+                set.connect(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.END, R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                set.clear(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.START, R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.END, col1, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+            } else {
+                // Original: presets -> izquierda (entre parent y guideline_col1)
+                set.clear(presets, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(presets, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(presets, androidx.constraintlayout.widget.ConstraintSet.START, parent, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+                set.connect(presets, androidx.constraintlayout.widget.ConstraintSet.END, col1, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                // Original: columna 3 -> derecha (entre guideline_col2 y parent), manteniendo pares en 2 columnas
+                set.clear(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.START, col2, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.boxLogo, androidx.constraintlayout.widget.ConstraintSet.END, parent, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+
+                set.clear(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.START, col2, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.END, R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                set.clear(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.START, R.id.btnExtra1, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnExtra2, androidx.constraintlayout.widget.ConstraintSet.END, parent, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+
+                set.clear(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.START, col2, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.END, R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                set.clear(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.START, R.id.btnMute, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnGps, androidx.constraintlayout.widget.ConstraintSet.END, parent, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+
+                set.clear(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.START, col2, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.END, R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.START, 0);
+
+                set.clear(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.START);
+                set.clear(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.END);
+                set.connect(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.START, R.id.btnSettings, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+                set.connect(R.id.btnPowerOff, androidx.constraintlayout.widget.ConstraintSet.END, parent, androidx.constraintlayout.widget.ConstraintSet.END, 0);
+            }
+
+            set.applyTo(cl);
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -2444,6 +2605,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 if (btnLocDx != null) {
                     btnLocDx.setSelected(fIsLocal);
                     setImageResourceIfChanged(btnLocDx, fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                    if (mIconPackManager != null) {
+                        mIconPackManager.apply(btnLocDx,
+                                fIsLocal ? "radio_loc_p" : "radio_loc_n",
+                                fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+                    }
                 }
 
                 sendWidgetUpdateIntent(fFreq, fBand, rdsName);

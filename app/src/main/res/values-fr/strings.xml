@@ -3,7 +3,7 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
     <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
-    <string name="premium_customization">Personnalisation Premium</string>
+    <string name="premium_customization">Menu des options</string>
     <string name="theme_colors">Couleurs du Thème</string>
     <string name="typography">Typographie</string>
     <string name="background_mode">🖼️ Mode Arrière-plan</string>
@@ -15,6 +15,15 @@
     <string name="select_font">🔤 Sélectionner Typographie</string>
     <string name="font_applied">Police appliquée</string>
     <string name="bg_mode_updated">Mode arrière-plan mis à jour</string>
+
+    <!-- Icon pack -->
+    <string name="icon_pack">🎛️ Pack d’icônes</string>
+    <string name="icon_pack_default">Par défaut</string>
+    <string name="icon_pack_color">Couleur</string>
+    <string name="select_icon_pack">Sélectionner pack d’icônes</string>
+    <string name="layout2_side_label">Layout V2 (vertical) : côté des presets</string>
+    <string name="layout2_side_presets_left">Presets à gauche</string>
+    <string name="layout2_side_presets_right">Presets à droite</string>
     <string name="bg_pure_black">Noir Pur</string>
     <string name="bg_fixed_image">Image Fixe (background.png)</string>
     <string name="bg_dynamic_logo">Logo Station (Dynamique)</string>

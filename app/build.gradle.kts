@@ -63,6 +63,13 @@ android {
         checkReleaseBuilds = false
         abortOnError = false
     }
+
+    // Icon packs: empaquetar PNGs de packs como assets (sin mover archivos).
+    sourceSets {
+        getByName("main") {
+            assets.srcDirs("src/main/assets", "../icons_color")
+        }
+    }
 }
 
 // Built-in Kotlin configuration in AGP 9.0+

@@ -65,6 +65,13 @@ public class SimpleLayoutManager {
                 mActivity.mMuteState = !mActivity.mMuteState;
                 mActivity.mEngine.setMute(mActivity.mMuteState);
                 MainActivity.setImageResourceIfChanged(btnMute, mActivity.mMuteState ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+                // Reaplicar pack si existe (evita volver a default al cambiar estado)
+                if (mActivity.mIconPackManager != null) {
+                    boolean isMuted = mActivity.mMuteState;
+                    mActivity.mIconPackManager.apply(btnMute,
+                            isMuted ? "radio_mute_p" : "radio_mute_n",
+                            isMuted ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
+                }
             }
         });
 
