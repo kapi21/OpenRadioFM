@@ -52,13 +52,51 @@ public class ControlPanelManager {
             });
         }
 
-        // GPS: toque = mapas; pulsación larga = menú ingeniería (K706 / MT8163 / MTK8259 / QS6)
+        // GPS: toque = mapas; mantener 6s = menú ingeniería (K706 / MT8163 / MTK8259 / QS6)
         View btnGps = mActivity.findViewById(R.id.btnGps);
         if (btnGps != null) {
             btnGps.setOnClickListener(v -> openGpsMapsIntent());
-            btnGps.setOnLongClickListener(v -> {
-                openEngineeringMenuFromGpsLongPress();
-                return true;
+            final long HOLD_MS = 6000L;
+            final android.os.Handler h = new android.os.Handler(android.os.Looper.getMainLooper());
+            final Runnable[] r = new Runnable[1];
+            final boolean[] fired = new boolean[] { false };
+            final float[] downX = new float[] { 0f };
+            final float[] downY = new float[] { 0f };
+            final int slop = android.view.ViewConfiguration.get(mActivity).getScaledTouchSlop();
+            btnGps.setOnTouchListener((v, event) -> {
+                int action = event.getActionMasked();
+                if (action == android.view.MotionEvent.ACTION_DOWN) {
+                    fired[0] = false;
+                    downX[0] = event.getX();
+                    downY[0] = event.getY();
+                    r[0] = () -> {
+                        try {
+                            fired[0] = true;
+                            openEngineeringMenuFromGpsLongPress();
+                        } catch (Exception ignored) {}
+                    };
+                    h.postDelayed(r[0], HOLD_MS);
+                } else if (action == android.view.MotionEvent.ACTION_MOVE) {
+                    float dx = Math.abs(event.getX() - downX[0]);
+                    float dy = Math.abs(event.getY() - downY[0]);
+                    if (dx > slop || dy > slop) {
+                        if (r[0] != null) {
+                            h.removeCallbacks(r[0]);
+                            r[0] = null;
+                        }
+                    }
+                } else if (action == android.view.MotionEvent.ACTION_UP
+                        || action == android.view.MotionEvent.ACTION_CANCEL) {
+                    if (r[0] != null) {
+                        h.removeCallbacks(r[0]);
+                        r[0] = null;
+                    }
+                }
+                // Si ya disparó el modo ingeniería, consumir el UP para que no abra mapas.
+                if (fired[0] && (action == android.view.MotionEvent.ACTION_UP || action == android.view.MotionEvent.ACTION_CANCEL)) {
+                    return true;
+                }
+                return false; // permitir click normal
             });
         }
 
@@ -67,10 +105,11 @@ public class ControlPanelManager {
         if (btnAutoScan != null) {
             btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f);
             btnAutoScan.setOnClickListener(v -> {
-                if (mActivity.mScanManager != null) {
-                    mActivity.mScanManager.toggleAutoScan(btnAutoScan);
-                }
+                // Pendiente / En estudio
+                mActivity.showToast("Under study");
             });
+            // Desactivar visualmente el botón (pero dejamos el click para el toast).
+            btnAutoScan.setAlpha(0.45f);
         }
 
         // Power Off delegada a DeviceManager

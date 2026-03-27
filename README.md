@@ -153,6 +153,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.
+- **AutoScan (Smart v2)**: ⏸️ **Under study**. El botón está temporalmente deshabilitado mientras se calibra el filtrado (RDS/señal) para evitar capturar frecuencias sin emisión.
 - **Audio QS6 (Qualcomm / NWD)**: ⚠️ Comportamiento dependiente del firmware; se sigue probando **cambio de fuente** (`ACTION_CHANGE_SOURCE`), foco y rutas de recuperación. Reporta modelo + build si falla el audio tras sintonizar.
 
 ---

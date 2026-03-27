@@ -24,6 +24,8 @@ public class PresetManager {
     // VXX: Guard para evitar tremble QS6 entre nombre y frecuencia en el preset pulsado.
     // Solo bloquea el texto (fallback a frecuencia) durante un corto transitorio.
     private final long[] mPresetTextLockUntilMs;
+    // VXX: Durante transitorio QS6, forzar limpieza del logo del slot pulsado (anti-arrastre).
+    private final long[] mPresetLogoForceClearUntilMs;
     
     private final View[] cardPresets;
     private final TextView[] tvPresets;
@@ -48,6 +50,7 @@ public class PresetManager {
         this.mTextRequestSeqPerSlot = new int[count];
         this.mLastVisualFreqPerSlot = new int[count];
         this.mPresetTextLockUntilMs = new long[count];
+        this.mPresetLogoForceClearUntilMs = new long[count];
     }
 
 
@@ -99,6 +102,7 @@ public class PresetManager {
         if (index < 0 || index >= mPresetsCount) return;
 
         final boolean lockActive = mPresetTextLockUntilMs[index] > android.os.SystemClock.elapsedRealtime();
+        final boolean forceClearLogo = mPresetLogoForceClearUntilMs[index] > android.os.SystemClock.elapsedRealtime();
 
         if (freq <= 0) {
             mLastVisualFreqPerSlot[index] = 0;
@@ -173,7 +177,7 @@ public class PresetManager {
         final int fFreqForLogo = freq;
         final int requestSeq = mLogoRequestSeq.incrementAndGet();
         mLogoRequestSeqPerSlot[fIndex] = requestSeq;
-        if (freqChangedForSlot && ivPresets[fIndex] != null) {
+        if ((freqChangedForSlot || forceClearLogo) && ivPresets[fIndex] != null) {
             // Evita mostrar el logo previo mientras llega el nuevo resultado asíncrono.
             try {
                 Glide.with(ivPresets[fIndex].getContext()).clear(ivPresets[fIndex]);
@@ -243,6 +247,7 @@ public class PresetManager {
                     && mActivity.mEngine.getEngineName().toUpperCase().contains("QS6");
         } catch (Exception ignored) {}
         mPresetTextLockUntilMs[index] = isQs6 ? android.os.SystemClock.elapsedRealtime() + 2200L : 0L;
+        mPresetLogoForceClearUntilMs[index] = isQs6 ? android.os.SystemClock.elapsedRealtime() + 2200L : 0L;
 
         if (ivPresets[index] != null) {
             try {

@@ -517,6 +517,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mSessionController.onFrequencyChanged(freqKhz);
         }
         handleFrequencyChange(freqKhz);
+        // AutoScan inteligente: capturar frecuencias durante scan/AMS (usar estado local del ScanManager,
+        // ya que en QS6 el callback de scan state puede no llegar siempre).
+        if (mScanManager != null && mScanManager.isScanning()) {
+            try { mScanManager.onScanFrequencyChanged(freqKhz); } catch (Exception ignored) {}
+        }
         runOnUiThread(() -> {
             if (mUiController != null) {
                 mUiController.updateFrequency(freqKhz, null, mCurrentBand >= 3);
@@ -921,6 +926,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 int freq = mEngine.getCurrentFreq();
                 mRepository.saveRdsName(freq, name);
 
+                // AutoScan inteligente: capturar PS confirmado durante scan/AMS
+                if (mScanManager != null && mScanManager.isScanning()) {
+                    try { mScanManager.onScanPsConfirmed(freq, name); } catch (Exception ignored) {}
+                }
+
                 // V5.3: RDS PS Substitution (La variable reside en mRdsManager)
                 runOnUiThread(() -> updateFrequencyDisplay(freq, name));
 
@@ -1009,6 +1019,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public void onSignalUpdate(int rssi, int snr) {
         if (mSessionController != null) {
             mSessionController.onSignalUpdate(rssi, snr);
+        }
+        // AutoScan inteligente: usar señal para filtrar falsas frecuencias durante scan/AMS
+        if (mScanManager != null && mScanManager.isScanning()) {
+            try { mScanManager.onSignalUpdate(rssi, snr); } catch (Exception ignored) {}
         }
         runOnUiThread(() -> {
             if (mEngineeringDialog != null && mEngineeringDialog.isShowing()) {
@@ -1803,9 +1817,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 showToast("Skin: " + next.displayName);
             });
 
-            // Long click: Historial
+            // Long click: Modo Noche (toggle)
             ivMainLogo.setOnLongClickListener(v -> {
-                mDialogManager.showHistoryDialog();
+                toggleNightMode();
                 return true;
             });
         }
@@ -1818,12 +1832,56 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 applySkin(next);
                 showToast("Skin: " + next.displayName);
             });
-            // Long click: Mostrar diálogo de personalización directamente
+            // Long click: Modo Noche (toggle)
             tvDigitalClock.setOnLongClickListener(v -> {
-                mDialogManager.showPremiumSettingsDialog();
+                toggleNightMode();
                 return true;
             });
         }
+    }
+
+    /**
+     * Toggle manual de Modo Noche (sin depender del auto-night).
+     * - Si estamos en NIGHT_MODE, vuelve al skin persistido (o CLASSIC si no existe).
+     * - Si no, activa NIGHT_MODE y recuerda el skin previo.
+     */
+    public void toggleNightMode() {
+        if (mThemeManager == null) return;
+        try {
+            com.example.openradiofm.ui.theme.ThemeManager.Skin active = mThemeManager.getActiveSkin();
+            android.content.SharedPreferences tp = getSharedPreferences("ThemePrefs", Context.MODE_PRIVATE);
+            final String KEY_PREV = "prev_skin_before_night";
+
+            if (active == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                String prevName = tp.getString(KEY_PREV, null);
+                com.example.openradiofm.ui.theme.ThemeManager.Skin prev = null;
+                if (prevName != null) {
+                    try { prev = com.example.openradiofm.ui.theme.ThemeManager.Skin.valueOf(prevName); } catch (Exception ignored) {}
+                }
+                if (prev == null || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE
+                        || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
+                    prev = mThemeManager.getCurrentSkin();
+                }
+                if (prev == null || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE
+                        || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
+                    prev = com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC;
+                }
+                mThemeManager.setSkin(prev);
+                applySkin(prev);
+                showToast("Skin: " + prev.displayName);
+            } else {
+                // Recordar el skin persistido (no el active) para restauración consistente
+                com.example.openradiofm.ui.theme.ThemeManager.Skin current = mThemeManager.getCurrentSkin();
+                if (current != null
+                        && current != com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE
+                        && current != com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
+                    tp.edit().putString(KEY_PREV, current.name()).apply();
+                }
+                mThemeManager.setSkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+                applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+                showToast("Skin: Night Mode");
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -2305,6 +2363,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             final String rdsName = (qs6TransitionActive && !hasStableCachedName) ? "" : rdsNameRaw;
             final String stationPty = (station != null) ? station.getPty() : null;
             mLastPs = rdsName; // Sincronizar campo para acceso externo
+            final String repoLogoForUi = (station != null) ? station.getLogoUrl() : null;
 
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
@@ -2335,12 +2394,21 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             qs6GuardActive = isQs6
                                     && android.os.SystemClock.elapsedRealtime() < mRdsTransitionGuardUntilMs;
                         } catch (Exception ignored) {}
-                        if (qs6GuardActive) {
-                            // En la ventana de transición QS6, mantener logo en fallback (evitar "logo pegado").
+                        // Cache-first: si ya hay logo local/cacheado para esta frecuencia, pintarlo inmediatamente.
+                        // Solo mantener fallback/clear si no tenemos nada aún.
+                        String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
+                        String repoLogo = repoLogoForUi;
+                        String preferredLogo = (cachedLogo != null && !cachedLogo.trim().isEmpty())
+                                ? cachedLogo
+                                : ((repoLogo != null && !repoLogo.trim().isEmpty()) ? repoLogo : null);
+
+                        if (preferredLogo != null) {
+                            mLogoManager.updateStationLogo(fFreq, fBand, preferredLogo);
+                        } else if (qs6GuardActive) {
+                            // En transición QS6 sin caché local: evitar logo "pegado".
                             mLogoManager.clearLogo();
                         } else {
-                            String cachedLogo = mLogoCachePerBand.get(fBand + "_" + fFreq);
-                            mLogoManager.updateStationLogo(fFreq, fBand, cachedLogo);
+                            mLogoManager.updateStationLogo(fFreq, fBand, null);
                         }
                     }
 
