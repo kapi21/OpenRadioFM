@@ -6,6 +6,10 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.repository.RadioRepository;
@@ -102,7 +106,8 @@ public class PresetManager {
         if (index < 0 || index >= mPresetsCount) return;
 
         final boolean lockActive = mPresetTextLockUntilMs[index] > android.os.SystemClock.elapsedRealtime();
-        final boolean forceClearLogo = mPresetLogoForceClearUntilMs[index] > android.os.SystemClock.elapsedRealtime();
+        // Los logos de presets deben quedar estables una vez grabados: no forzar "clear" en transitorios.
+        final boolean forceClearLogo = false;
 
         if (freq <= 0) {
             mLastVisualFreqPerSlot[index] = 0;
@@ -177,13 +182,7 @@ public class PresetManager {
         final int fFreqForLogo = freq;
         final int requestSeq = mLogoRequestSeq.incrementAndGet();
         mLogoRequestSeqPerSlot[fIndex] = requestSeq;
-        if ((freqChangedForSlot || forceClearLogo) && ivPresets[fIndex] != null) {
-            // Evita mostrar el logo previo mientras llega el nuevo resultado asíncrono.
-            try {
-                Glide.with(ivPresets[fIndex].getContext()).clear(ivPresets[fIndex]);
-            } catch (Exception ignored) {}
-            ivPresets[fIndex].setImageDrawable(null);
-        }
+        // Anti-flicker: no limpiar el logo al pulsar/refrescar. Solo se sustituye cuando llega uno nuevo válido.
         if (lockActive && ivPresets[fIndex] != null) {
             // QS6: durante el lock anti-arrastre, intentar resolver logo local/cache al instante
             // para evitar que el box quede vacío 1-2s.
@@ -201,6 +200,21 @@ public class PresetManager {
                     Glide.with(ivPresets[fIndex])
                             .load(immediateLogo)
                             .transform(new RoundedCorners(20))
+                            .listener(new RequestListener<android.graphics.drawable.Drawable>() {
+                                @Override
+                                public boolean onLoadFailed(GlideException e, Object model, Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                                    return false;
+                                }
+
+                                @Override
+                                public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, Target<android.graphics.drawable.Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                    // Quitar el fallback detrás para que no se vea a través del alfa.
+                                    if (ivPresets[fIndex] != null) {
+                                        ivPresets[fIndex].setBackground(null);
+                                    }
+                                    return false;
+                                }
+                            })
                             .into(ivPresets[fIndex]);
                 });
             }).start();
@@ -214,15 +228,26 @@ public class PresetManager {
                     if (mPresets[fIndex] != fFreqForLogo) return;
 
                     if (logoUrl != null && ivPresets[fIndex] != null) {
+                        // Al aplicar logo real, quitar cualquier background residual.
+                        ivPresets[fIndex].setBackground(null);
                         Glide.with(ivPresets[fIndex])
                                 .load(logoUrl)
                                 .transform(new RoundedCorners(20))
+                                .listener(new RequestListener<android.graphics.drawable.Drawable>() {
+                                    @Override
+                                    public boolean onLoadFailed(GlideException e, Object model, Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
+                                        return false;
+                                    }
+
+                                    @Override
+                                    public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, Target<android.graphics.drawable.Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                        if (ivPresets[fIndex] != null) ivPresets[fIndex].setBackground(null);
+                                        return false;
+                                    }
+                                })
                                 .into(ivPresets[fIndex]);
                     } else if (ivPresets[fIndex] != null) {
-                        try {
-                            Glide.with(ivPresets[fIndex].getContext()).clear(ivPresets[fIndex]);
-                        } catch (Exception ignored) {}
-                        ivPresets[fIndex].setImageDrawable(null);
+                        // Si no hay logo, mantener el que ya esté (estabilidad visual).
                     }
                 });
             });
@@ -234,8 +259,7 @@ public class PresetManager {
      */
     public void preparePresetSelection(int index) {
         if (index < 0 || index >= mPresetsCount) return;
-        // Forzar que el siguiente updateCardVisuals trate la frecuencia como "cambio" y vuelva a cargar logo.
-        mLastVisualFreqPerSlot[index] = -1;
+        // Solo cancelar callbacks antiguos; NO limpiar logos (evita parpadeo al pulsar).
         mLogoRequestSeqPerSlot[index] = mLogoRequestSeq.incrementAndGet();
         mTextRequestSeqPerSlot[index] = mTextRequestSeq.incrementAndGet();
 
@@ -247,14 +271,7 @@ public class PresetManager {
                     && mActivity.mEngine.getEngineName().toUpperCase().contains("QS6");
         } catch (Exception ignored) {}
         mPresetTextLockUntilMs[index] = isQs6 ? android.os.SystemClock.elapsedRealtime() + 2200L : 0L;
-        mPresetLogoForceClearUntilMs[index] = isQs6 ? android.os.SystemClock.elapsedRealtime() + 2200L : 0L;
-
-        if (ivPresets[index] != null) {
-            try {
-                Glide.with(ivPresets[index].getContext()).clear(ivPresets[index]);
-            } catch (Exception ignored) {}
-            ivPresets[index].setImageDrawable(null);
-        }
+        mPresetLogoForceClearUntilMs[index] = 0L;
     }
 
     /**

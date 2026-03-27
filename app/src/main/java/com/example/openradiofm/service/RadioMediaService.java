@@ -87,6 +87,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private boolean mPendingPause = false;
     private int mPendingTuneFreqKhz = -1;
     private int mPendingSkip = 0; // -1 prev, +1 next
+    private boolean mPendingSkipPresetMode = false; // true=presets, false=seek
     private final AtomicBoolean mEngineInitStarted = new AtomicBoolean(false);
 
     // Estado OEM para restaurar tras pérdidas de foco en K706
@@ -265,14 +266,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         }
                         handlePlay(); // aseguramos estado PLAYING si el usuario pulsa Next
                     } else {
-                        if (!presetMode) {
-                            enqueueSkip(+1);
-                            maybeStartEngine();
-                            // Mostramos estado como activo mientras arranca el engine
-                            mIsPlaying = true;
-                            setPlaybackState(true);
-                            ensureNotificationVisible();
-                        }
+                        enqueueSkip(+1, presetMode);
+                        maybeStartEngine();
+                        // Mostramos estado como activo mientras arranca el engine
+                        mIsPlaying = true;
+                        setPlaybackState(true);
+                        ensureNotificationVisible();
                     }
                 } catch (Exception e) {
                     Log.w(TAG, "Error en onSkipToNext()", e);
@@ -291,13 +290,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         }
                         handlePlay();
                     } else {
-                        if (!presetMode) {
-                            enqueueSkip(-1);
-                            maybeStartEngine();
-                            mIsPlaying = true;
-                            setPlaybackState(true);
-                            ensureNotificationVisible();
-                        }
+                        enqueueSkip(-1, presetMode);
+                        maybeStartEngine();
+                        mIsPlaying = true;
+                        setPlaybackState(true);
+                        ensureNotificationVisible();
                     }
                 } catch (Exception e) {
                     Log.w(TAG, "Error en onSkipToPrevious()", e);
@@ -629,11 +626,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
     }
 
-    private void enqueueSkip(int direction) {
+    private void enqueueSkip(int direction, boolean presetMode) {
         synchronized (mCommandLock) {
             mPendingSkip += direction;
             if (mPendingSkip > 3) mPendingSkip = 3;
             if (mPendingSkip < -3) mPendingSkip = -3;
+            // Guardar el modo más reciente; si el usuario cambia el ajuste, la siguiente pulsación lo actualizará.
+            mPendingSkipPresetMode = presetMode;
         }
     }
 
@@ -657,16 +656,19 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         boolean doPause;
         int tune;
         int skip;
+        boolean skipPresetMode;
         synchronized (mCommandLock) {
             doPlay = mPendingPlay;
             doPause = mPendingPause;
             tune = mPendingTuneFreqKhz;
             skip = mPendingSkip;
+            skipPresetMode = mPendingSkipPresetMode;
 
             mPendingPlay = false;
             mPendingPause = false;
             mPendingTuneFreqKhz = -1;
             mPendingSkip = 0;
+            mPendingSkipPresetMode = false;
         }
 
         try {
@@ -680,8 +682,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (skip != 0) {
                 int times = Math.abs(skip);
                 for (int i = 0; i < times; i++) {
-                    if (skip > 0) mEngine.seekUp();
-                    else mEngine.seekDown();
+                    if (skipPresetMode) {
+                        if (skip > 0) mEngine.nextFavorite();
+                        else mEngine.prevFavorite();
+                    } else {
+                        if (skip > 0) mEngine.seekUp();
+                        else mEngine.seekDown();
+                    }
                 }
                 doPlay = true;
                 doPause = false;

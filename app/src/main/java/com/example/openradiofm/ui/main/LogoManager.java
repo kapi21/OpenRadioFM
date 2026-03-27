@@ -168,8 +168,14 @@ public class LogoManager {
                 iv.setTag(R.id.tag_logo_url, path);
             }
         } else {
-            MainActivity.setImageResourceIfChanged(iv, R.drawable.ic_app_logo);
-            MainActivity.setVisibilityIfChanged(iv, View.VISIBLE);
+            // UX: no usar el icono de la app como fallback en el logo principal.
+            // Si no hay car_logo.png, ocultar el ivMainLogo para evitar confusión/solapamiento.
+            if (iv.getId() == R.id.ivMainLogo) {
+                MainActivity.setVisibilityIfChanged(iv, View.GONE);
+            } else {
+                MainActivity.setImageResourceIfChanged(iv, R.drawable.ic_app_logo);
+                MainActivity.setVisibilityIfChanged(iv, View.VISIBLE);
+            }
         }
     }
 
@@ -253,7 +259,15 @@ public class LogoManager {
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         if (ivMainLogo != null) {
             ivMainLogo.setTag(R.id.tag_logo_url, null);
-            applyFallbackLogo(ivMainLogo);
+            // Importante: si no existe car_logo.png, NO vaciar/ocultar el ivMainLogo durante transitorios
+            // (QS6 puede llamar a clearLogo() mientras aún está llegando el logo correcto).
+            File car = resolveExistingFile("car_logo.png");
+            if (car != null && car.exists()) {
+                applyFallbackLogo(ivMainLogo);
+            } else {
+                // Mantener el drawable actual como placeholder para evitar "flash" vacío.
+                MainActivity.setVisibilityIfChanged(ivMainLogo, View.VISIBLE);
+            }
         }
         updateDynamicBackground(null);
     }
@@ -275,7 +289,9 @@ public class LogoManager {
                         ivMainLogo.setVisibility(View.GONE);
                     } else {
                         ivMainLogo.setVisibility(View.VISIBLE);
-                        ivMainLogo.setImageDrawable(null); // Clear overlap
+                        // Importante: si el logo nuevo tiene transparencia, NO podemos usar el anterior como placeholder
+                        // porque se vería “debajo”. Limpiamos la imagen para evitar arrastre.
+                        ivMainLogo.setImageDrawable(null);
                     }
                     
                     // V18.6.2: Gestión Unificada de Glide para evitar solapamientos y suavizar transiciones
@@ -285,8 +301,7 @@ public class LogoManager {
                             .transform(new RoundedCorners(24))
                             // Animación más larga para sensación premium (800ms)
                             .transition(BitmapTransitionOptions.withCrossFade(800))
-                            // Usamos el drawable actual como placeholder para un fundido limpio
-                            .placeholder(ivMainLogo.getDrawable())
+                            // No usar placeholder con el logo anterior (transparencias).
                             .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
                                 @Override
                                 public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
@@ -320,6 +335,19 @@ public class LogoManager {
                     livePs = cn.trim();
                 }
             }
+
+            // Cache-first UX: si aún no tenemos URL para esta emisora, no dejar el logo anterior "pegado".
+            // Mostrar fallback inmediato mientras llega el lookup (local/cache/red).
+            if (ivMainLogo != null && !mActivity.mIsV3) {
+                File car = resolveExistingFile("car_logo.png");
+                if (car != null && car.exists()) {
+                    applyFallbackLogo(ivMainLogo);
+                } else {
+                    // Sin car_logo.png: mantener el logo actual como placeholder (no vaciar/ocultar).
+                    MainActivity.setVisibilityIfChanged(ivMainLogo, View.VISIBLE);
+                }
+            }
+
             mActivity.mRepository.getStationInfo(freq, url -> {
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
@@ -334,7 +362,8 @@ public class LogoManager {
                                     ivMainLogo.setVisibility(View.GONE);
                                 } else {
                                     ivMainLogo.setVisibility(View.VISIBLE);
-                                    ivMainLogo.setImageDrawable(null); // Clear overlap
+                                    // Importante: evitar que un logo previo quede “debajo” con transparencias.
+                                    ivMainLogo.setImageDrawable(null);
                                 }
                                 
                                 // V18.6.2: Aplicar la misma transición premium en la búsqueda asíncrona
@@ -343,7 +372,7 @@ public class LogoManager {
                                         .load(url)
                                         .transform(new RoundedCorners(24))
                                         .transition(BitmapTransitionOptions.withCrossFade(800))
-                                        .placeholder(ivMainLogo.getDrawable())
+                                        // No usar placeholder con el logo anterior (transparencias).
                                         .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
                                             @Override
                                             public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
