@@ -132,6 +132,7 @@ public class DialogManager {
         TextView tvNightEnd = dialog.findViewById(R.id.tvNightEnd);
 
         androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
+        androidx.appcompat.widget.SwitchCompat swReliefHd = dialog.findViewById(R.id.switchReliefHd);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swNightLogos = dialog.findViewById(R.id.switchNightLogos);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
@@ -246,6 +247,16 @@ public class DialogManager {
                 // V18.6: Reiniciar el temporizador si se activa
                 if (checked) mActivity.resetAutoHideTimer();
                 else mActivity.showBottomControls();
+            });
+        }
+
+        if (swReliefHd != null) {
+            boolean reliefEnabled = mActivity.mPrefs.getBoolean("pref_relief_hd", false);
+            swReliefHd.setChecked(reliefEnabled);
+            swReliefHd.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_relief_hd", checked).apply();
+                mActivity.applyReliefHd(checked);
+                mActivity.showToast(checked ? "Relieve HD: Activado" : "Relieve HD: Desactivado");
             });
         }
 

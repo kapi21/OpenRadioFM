@@ -32,6 +32,7 @@
     
     <string name="app_options">Опції Додатка</string>
     <string name="night_mode_auto">Автоматичний Нічний Режим</string>
+    <string name="relief_hd">HD рельєф</string>
     <string name="save_history">Зберегти Історію Станцій</string>
     <string name="enable_gestures_beta">Увімкнути Жести (Swipe) (beta)</string>
     <string name="online_logos">Логотипи Онлайн</string>

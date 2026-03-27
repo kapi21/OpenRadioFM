@@ -32,6 +32,7 @@
     
     <string name="app_options">Настройки Приложения</string>
     <string name="night_mode_auto">Автоматический Ночной Режим</string>
+    <string name="relief_hd">Рельеф HD</string>
     <string name="save_history">Сохранять Историю Станций</string>
     <string name="enable_gestures_beta">Включить Жесты (Свайп) (бета)</string>
     <string name="online_logos">Онлайн Логотипы</string>

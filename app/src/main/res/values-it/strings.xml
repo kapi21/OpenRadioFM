@@ -31,6 +31,7 @@
     <!-- V4.0: App Options -->
     <string name="app_options">Opzioni dell\'App</string>
     <string name="night_mode_auto">Modalità Notturna Automatica</string>
+    <string name="relief_hd">Rilievo HD</string>
     <string name="save_history">Salva Cronologia Stazioni</string>
     <string name="enable_gestures_beta">Abilita Gesti (Swipe) (beta)</string>
     <string name="online_logos">Loghi Online</string>

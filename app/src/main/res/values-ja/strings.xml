@@ -24,6 +24,7 @@
     <string name="font_formula1">レース (Formula 1)</string>
     <string name="app_options">アプリのオプション</string>
     <string name="night_mode_auto">自動夜間モード</string>
+    <string name="relief_hd">HDレリーフ</string>
     <string name="save_history">履歴を保存</string>
     <string name="enable_gestures_beta">ジェスチャー (Swipe) を有効にする (ベータ)</string>
     <string name="online_logos">オンラインロゴ</string>

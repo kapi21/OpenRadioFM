@@ -47,7 +47,8 @@
             android:layout_margin="40dp"
             android:src="@drawable/ic_app_logo"
             android:scaleType="fitCenter"
-            android:elevation="20dp" />
+            android:elevation="20dp"
+            />
     </FrameLayout>
 
     <!-- BARRA INFERIOR DE CRISTAL -->

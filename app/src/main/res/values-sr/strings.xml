@@ -32,6 +32,7 @@
     
     <string name="app_options">Opcije Aplikacije</string>
     <string name="night_mode_auto">Automatski Noćni Režim</string>
+    <string name="relief_hd">HD Reljef</string>
     <string name="save_history">Sačuvaj Istoriju Stanica</string>
     <string name="enable_gestures_beta">Omogući Gestove (Svajp) (beta)</string>
     <string name="online_logos">Logotipi na mreži</string>

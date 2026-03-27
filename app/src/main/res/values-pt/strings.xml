@@ -31,6 +31,7 @@
     <!-- V4.0: App Options -->
     <string name="app_options">Opções do App</string>
     <string name="night_mode_auto">Modo Noturno Automático</string>
+    <string name="relief_hd">Relevo HD</string>
     <string name="save_history">Salvar Histórico de Estações</string>
     <string name="enable_gestures_beta">Ativar Gestos (Deslizar) (beta)</string>
     <string name="online_logos">Logos Online</string>

@@ -32,6 +32,7 @@
     
     <string name="app_options">Opțiuni Aplicație</string>
     <string name="night_mode_auto">Mod Noapte Automat</string>
+    <string name="relief_hd">Relief HD</string>
     <string name="save_history">Salvează Istoricul Stațiilor</string>
     <string name="enable_gestures_beta">Activează Geste (Swipe) (beta)</string>
     <string name="online_logos">Logo-uri Online</string>

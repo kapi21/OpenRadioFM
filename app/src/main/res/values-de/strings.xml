@@ -33,6 +33,7 @@
     <!-- V4.0: App Options -->
     <string name="app_options">App-Optionen</string>
     <string name="night_mode_auto">Automatischer Nachtmodus</string>
+    <string name="relief_hd">HD-Relief</string>
     <string name="save_history">Senderverlauf speichern</string>
     <string name="enable_gestures_beta">Gesten aktivieren (Swipe) (beta)</string>
     <string name="online_logos">Online-Logos</string>

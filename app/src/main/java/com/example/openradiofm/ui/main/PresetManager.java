@@ -20,6 +20,10 @@ public class PresetManager {
     private final SharedPreferences mPrefs;
     private final int mPresetsCount;
     private final int[] mPresets;
+
+    // VXX: Guard para evitar tremble QS6 entre nombre y frecuencia en el preset pulsado.
+    // Solo bloquea el texto (fallback a frecuencia) durante un corto transitorio.
+    private final long[] mPresetTextLockUntilMs;
     
     private final View[] cardPresets;
     private final TextView[] tvPresets;
@@ -43,6 +47,7 @@ public class PresetManager {
         this.mLogoRequestSeqPerSlot = new int[count];
         this.mTextRequestSeqPerSlot = new int[count];
         this.mLastVisualFreqPerSlot = new int[count];
+        this.mPresetTextLockUntilMs = new long[count];
     }
 
 
@@ -93,6 +98,8 @@ public class PresetManager {
         
         if (index < 0 || index >= mPresetsCount) return;
 
+        final boolean lockActive = mPresetTextLockUntilMs[index] > android.os.SystemClock.elapsedRealtime();
+
         if (freq <= 0) {
             mLastVisualFreqPerSlot[index] = 0;
             if (tvPresets[index] != null) {
@@ -116,14 +123,21 @@ public class PresetManager {
             final int fBand = currentBand;
             if (freqChangedForSlot) {
                 // Solo cuando cambia de emisora en ese slot; evita "temblor" en refrescos repetidos.
-                if (fBand >= 3) {
-                    tvPresets[fIndex].setText(String.valueOf(fFreq));
-                } else {
-                    tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                if (!lockActive) {
+                    if (fBand >= 3) {
+                        tvPresets[fIndex].setText(String.valueOf(fFreq));
+                    } else {
+                        tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                    }
                 }
                 tvPresets[fIndex].setVisibility(View.VISIBLE);
             }
 
+            // QS6: durante lock transitorio, no pedir nombre asíncrono para evitar
+            // mostrar temporalmente el PS de la emisora anterior.
+            if (lockActive) {
+                // Mantenemos el texto actual (normalmente el último válido del slot).
+            } else {
             // V18.2: Mover la obtención de info a hilo secundario para evitar congelar la UI
             new Thread(() -> {
                 if (mActivity == null || mActivity.isFinishing() || mActivity.isDestroyed()) return;
@@ -141,15 +155,19 @@ public class PresetManager {
                         tvPresets[fIndex].setText(displayName);
                     } else {
                         // V18.2: Formateo dinámico según banda (AM en kHz sin decimales)
-                        if (fBand >= 3) { // BAND_AM1 o BAND_AM2 (o SW)
-                            tvPresets[fIndex].setText(String.valueOf(fFreq));
-                        } else {
-                            tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                        boolean lockNow = mPresetTextLockUntilMs[fIndex] > android.os.SystemClock.elapsedRealtime();
+                        if (!lockNow) {
+                            if (fBand >= 3) { // BAND_AM1 o BAND_AM2 (o SW)
+                                tvPresets[fIndex].setText(String.valueOf(fFreq));
+                            } else {
+                                tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                            }
                         }
                     }
                     tvPresets[fIndex].setVisibility(View.VISIBLE);
                 });
             }).start();
+            }
         }
 
         final int fFreqForLogo = freq;
@@ -162,7 +180,28 @@ public class PresetManager {
             } catch (Exception ignored) {}
             ivPresets[fIndex].setImageDrawable(null);
         }
-        if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
+        if (lockActive && ivPresets[fIndex] != null) {
+            // QS6: durante el lock anti-arrastre, intentar resolver logo local/cache al instante
+            // para evitar que el box quede vacío 1-2s.
+            new Thread(() -> {
+                if (mActivity == null || mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                RadioStation s = mRepository.getStationInfo(fFreqForLogo, null);
+                final String immediateLogo = (s != null) ? s.getLogoUrl() : null;
+                if (immediateLogo == null || immediateLogo.isEmpty()) return;
+
+                mActivity.runOnUiThread(() -> {
+                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                    if (mLogoRequestSeqPerSlot[fIndex] != requestSeq) return;
+                    if (mPresets[fIndex] != fFreqForLogo) return;
+                    if (ivPresets[fIndex] == null) return;
+                    Glide.with(ivPresets[fIndex])
+                            .load(immediateLogo)
+                            .transform(new RoundedCorners(20))
+                            .into(ivPresets[fIndex]);
+                });
+            }).start();
+        }
+        if (!lockActive && (mActivity.mEngine == null || !mActivity.mEngine.isScanning())) {
             mRepository.getStationInfo(freq, logoUrl -> {
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
@@ -195,6 +234,16 @@ public class PresetManager {
         mLastVisualFreqPerSlot[index] = -1;
         mLogoRequestSeqPerSlot[index] = mLogoRequestSeq.incrementAndGet();
         mTextRequestSeqPerSlot[index] = mTextRequestSeq.incrementAndGet();
+
+        // Solo QS6: mientras llega la confirmación RDS, evitar que el preset "pinte" frecuencia interina.
+        boolean isQs6 = false;
+        try {
+            isQs6 = mActivity.mEngine != null
+                    && mActivity.mEngine.getEngineName() != null
+                    && mActivity.mEngine.getEngineName().toUpperCase().contains("QS6");
+        } catch (Exception ignored) {}
+        mPresetTextLockUntilMs[index] = isQs6 ? android.os.SystemClock.elapsedRealtime() + 2200L : 0L;
+
         if (ivPresets[index] != null) {
             try {
                 Glide.with(ivPresets[index].getContext()).clear(ivPresets[index]);

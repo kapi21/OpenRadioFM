@@ -31,6 +31,7 @@
     <!-- V4.0: App Options -->
     <string name="app_options">App Opciók</string>
     <string name="night_mode_auto">Automatikus Éjszakai Mód</string>
+    <string name="relief_hd">HD Domborítás</string>
     <string name="save_history">Adóelőzmények mentése</string>
     <string name="online_logos">Online Logók</string>
     <string name="status_bar_v2">Állapotsor megjelenítése</string>

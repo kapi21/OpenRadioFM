@@ -100,6 +100,18 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- Relieve HD -->
+        <LinearLayout
+            style="@style/SettingsRowStyle">
+            <TextView
+                style="@style/SettingsLabelStyle"
+                android:text="@string/relief_hd"/>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/switchReliefHd"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        </LinearLayout>
+
         <!-- Modo Noche Automático -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView

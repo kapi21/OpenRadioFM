@@ -20,6 +20,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.LinearLayout;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.animation.ObjectAnimator;
 import android.view.animation.AccelerateDecelerateInterpolator;
 import android.view.GestureDetector;
@@ -279,6 +280,36 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         return mCurrentBand;
     }
 
+    /**
+     * Nombre estable cacheado por frecuencia (prioridad: CUSTOM_ > RDS_) para pintura rápida en QS6.
+     */
+    private String getStableCachedNameForFrequency(int freqKhz) {
+        try {
+            android.content.SharedPreferences namesPrefs = getSharedPreferences("RadioStationNames", Context.MODE_PRIVATE);
+            String custom = namesPrefs.getString("CUSTOM_" + freqKhz, null);
+            if (custom != null) {
+                custom = custom.trim();
+                if (!custom.isEmpty()) return custom;
+            }
+
+            String rds = namesPrefs.getString("RDS_" + freqKhz, null);
+            if (rds != null) {
+                rds = rds.trim();
+                if (!rds.isEmpty()
+                        && !com.example.openradiofm.data.source.SupabaseLogoSource.isGarbageZeroPs(rds)) {
+                    return rds;
+                }
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private boolean hasStableCachedNameForFrequency(int freqKhz) {
+        String name = getStableCachedNameForFrequency(freqKhz);
+        return name != null && !name.trim().isEmpty();
+    }
+
 
 
     // V18.6: StationAdapter and ScannedStation moved to separate files
@@ -297,10 +328,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             runOnUiThread(() -> {
                 if (mLogoManager != null) mLogoManager.clearLogo();
                 if (isQs6Final) {
+                    String cachedName = getStableCachedNameForFrequency(freq);
                     // En QS6, fijar la frecuencia objetivo al instante evita mostrar la anterior
                     // mientras el stack OEM entrega callbacks transitorios tras TUNE.
-                    updateFrequencyDisplay(freq, null);
-                    if (tvRdsName != null) tvRdsName.setText("");
+                    updateFrequencyDisplay(freq, cachedName);
+                    if (tvRdsName != null) tvRdsName.setText(cachedName != null ? cachedName : "");
                     if (tvRdsInfo != null) tvRdsInfo.setText("");
                     if (tvPty != null) tvPty.setText(getString(R.string.pty_none));
                 }
@@ -336,6 +368,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mPresetManager != null) {
             int freq = mPresetManager.getFreq(index);
             if (freq > 0) {
+                final int targetIndex = index;
+                final int targetFreq = freq;
                 mPresetManager.preparePresetSelection(index);
                 gotoFreq(freq);
                 // V21.4: Tras pulsar un preset, preparePresetSelection limpia el icono del slot;
@@ -350,6 +384,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     if (isFinishing() || isDestroyed() || mPresetManager == null) return;
                     mPresetManager.refreshButtons(mCurrentBand);
                 }, 400);
+
+                // QS6: tras el lock transitorio anti-arrastre (≈2.2s), refrescar explícitamente
+                // el slot pulsado para recuperar nombre/logo sin esperar a otro evento externo.
+                mMainHandler.postDelayed(() -> {
+                    if (isFinishing() || isDestroyed() || mPresetManager == null) return;
+                    int currentPresetFreq = mPresetManager.getFreq(targetIndex);
+                    if (currentPresetFreq != targetFreq) return; // slot reutilizado/cambiado
+                    mPresetManager.updateCardVisuals(targetIndex, targetFreq, mCurrentBand);
+                }, 2350);
             }
         }
     }
@@ -1331,6 +1374,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V15.6: Aplicar tipografía global inmediatamente tras cargar el layout
         applyFonts();
 
+        // VXX: Aplicar relieve opcional de logos
+        if (mPrefs != null) {
+            applyReliefHd(mPrefs.getBoolean("pref_relief_hd", false));
+        }
+
         // V3.8: Premium Background Binding
         ivDynamicBackground = findViewById(R.id.ivDynamicBackground);
 
@@ -1931,6 +1979,44 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
+    /**
+     * VXX: Opcional "Relieve HD" para logos (launcher y presets).
+     * Se aplica/retira con setForeground para no tocar el contenido de Glide/bitmaps.
+     */
+    public void applyReliefHd(boolean enabled) {
+        Drawable relief = null;
+        if (enabled) {
+            try {
+                relief = getResources().getDrawable(R.drawable.fg_logo_relief);
+            } catch (Exception ignored) {
+                // Si el drawable no está disponible por algún motivo, no romper UI.
+                relief = null;
+            }
+        }
+
+        // 1) Logo principal
+        try {
+            ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
+            if (ivMainLogo != null) {
+                ivMainLogo.setForeground(relief);
+                ivMainLogo.setForegroundGravity(android.view.Gravity.FILL);
+            }
+        } catch (Exception ignored) {}
+
+        // 2) Presets (ivP1..ivP18)
+        try {
+            for (int i = 1; i <= 18; i++) {
+                int ivId = getResources().getIdentifier("ivP" + i, "id", getPackageName());
+                if (ivId == 0) continue;
+                ImageView iv = findViewById(ivId);
+                if (iv != null) {
+                    iv.setForeground(relief);
+                    iv.setForegroundGravity(android.view.Gravity.FILL);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
     /** V16.2: Delegado a ThemeManager */
     public int getSkinDrawableId() {
         return mThemeManager != null ? mThemeManager.getSkinDrawableId() : R.drawable.bg_glass_card_premium;
@@ -2215,7 +2301,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (seq != mLastStationInfoRequestedSeq) return;
 
             final String rdsNameRaw = (station != null) ? station.getName() : "";
-            final String rdsName = qs6TransitionActive ? "" : rdsNameRaw;
+            final boolean hasStableCachedName = hasStableCachedNameForFrequency(fFreq);
+            final String rdsName = (qs6TransitionActive && !hasStableCachedName) ? "" : rdsNameRaw;
             final String stationPty = (station != null) ? station.getPty() : null;
             mLastPs = rdsName; // Sincronizar campo para acceso externo
 

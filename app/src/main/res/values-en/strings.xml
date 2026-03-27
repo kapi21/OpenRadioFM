@@ -36,6 +36,7 @@
     <!-- V4.0: App Options -->
     <string name="app_options">App Options</string>
     <string name="night_mode_auto">Automatic Night Mode</string>
+    <string name="relief_hd">HD Relief</string>
     <string name="save_history">Save Station History</string>
     <string name="enable_gestures_beta">Enable Gestures (Swipe) (beta)</string>
     <string name="online_logos">Online Logos</string>

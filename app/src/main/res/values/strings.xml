@@ -37,6 +37,7 @@
     <!-- V4.0: App Options -->
     <string name="app_options">Opciones de la App</string>
     <string name="night_mode_auto">Modo Noche Automático</string>
+    <string name="relief_hd">Relieve HD</string>
     <string name="save_history">Guardar Historial de Emisoras</string>
     <string name="enable_gestures_beta" translatable="false">Gestos (Obsoleto)</string>
     <string name="online_logos">Logos Online</string>
