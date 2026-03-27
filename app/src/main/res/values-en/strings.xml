@@ -50,6 +50,7 @@
     <string name="gestures_disabled">❌ Swipe gestures disabled</string>
     <string name="logos_online_enabled">✅ Online logos enabled</string>
     <string name="logos_online_disabled">❌ Online logos disabled</string>
+    <string name="under_study">Under study</string>
     <string name="night_mode_manual_blocked">Disable Automatic Night Mode to choose skin manually</string>
     <string name="auto_hide_controls">Auto-hide controls</string>
     <string name="auto_hide_enabled">✅ Auto-hide controls enabled</string>

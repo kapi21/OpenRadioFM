@@ -106,7 +106,7 @@ public class ControlPanelManager {
             btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f);
             btnAutoScan.setOnClickListener(v -> {
                 // Pendiente / En estudio
-                mActivity.showToast("Under study");
+                mActivity.showToast(mActivity.getString(R.string.under_study));
             });
             // Desactivar visualmente el botón (pero dejamos el click para el toast).
             btnAutoScan.setAlpha(0.45f);

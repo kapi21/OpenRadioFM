@@ -54,6 +54,7 @@
     <string name="gestures_disabled" translatable="false">Gestos desactivados</string>
     <string name="logos_online_enabled">✅ Logos online activados</string>
     <string name="logos_online_disabled">❌ Logos online desactivados</string>
+    <string name="under_study">En estudio</string>
     <string name="night_mode_manual_blocked">Desactiva el Modo Noche Automático para elegir skin manualmente</string>
     <string name="auto_hide_controls">Ocultar controles automáticamente</string>
     <string name="auto_hide_enabled">✅ Ocultar controles activado</string>
