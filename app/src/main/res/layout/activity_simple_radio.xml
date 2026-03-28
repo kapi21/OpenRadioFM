@@ -34,9 +34,9 @@
     <!-- Icono Cloud / Data Activity (Top Right) -->
     <FrameLayout
         android:id="@+id/ivDataActivity"
-        android:layout_width="135dp"
-        android:layout_height="91dp"
-        android:layout_margin="16dp"
+        android:layout_width="108dp"
+        android:layout_height="72dp"
+        android:layout_margin="12dp"
         android:clickable="true"
         android:focusable="true"
         app:layout_constraintEnd_toEndOf="parent"
@@ -140,7 +140,7 @@
                                      	
         <LinearLayout
             android:id="@+id/buttonsContainer"
-            android:layout_width="604dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
             android:gravity="center"
@@ -148,9 +148,9 @@
 
             <ImageButton
                 android:id="@+id/btnSeekDown"
-                android:layout_width="173dp"
-                android:layout_height="114dp"
-                android:layout_margin="15dp"
+                android:layout_width="132dp"
+                android:layout_height="86dp"
+                android:layout_margin="8dp"
                 android:background="@null"
                 android:elevation="0dp"
                 android:outlineProvider="none"
@@ -161,9 +161,10 @@
 
             <ImageButton
                 android:id="@+id/btnMute"
-                android:layout_width="105dp"
-                android:layout_height="105dp"
-                android:layout_margin="30dp"
+                android:layout_width="82dp"
+                android:layout_height="82dp"
+                android:layout_marginHorizontal="14dp"
+                android:layout_marginVertical="8dp"
                 android:background="@null"
                 android:elevation="0dp"
                 android:outlineProvider="none"
@@ -174,9 +175,9 @@
 
             <ImageButton
                 android:id="@+id/btnSeekUp"
-                android:layout_width="151dp"
-                android:layout_height="114dp"
-                android:layout_margin="15dp"
+                android:layout_width="118dp"
+                android:layout_height="86dp"
+                android:layout_margin="8dp"
                 android:background="@null"
                 android:elevation="0dp"
                 android:outlineProvider="none"

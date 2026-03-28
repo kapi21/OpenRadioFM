@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.10%20(Stable)-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.11%20(Stable)-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -154,7 +154,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Volante en segundo plano (K706)**: En muchas ROM, con el **launcher u otra app al frente**, las teclas del volante llegan como `KeyEvent` al foco y la **radio OEM** sigue recibiendo mandos por **MCU/QuickFish**. OpenRadioFM no puede usar ese canal sin integración OEM; a partir de **v5.0.10** el servicio de accesibilidad **Factory Radio Hijacker** puede **capturar y reenviar** esas teclas a la app (activar el servicio en Ajustes → Accesibilidad). Opcional (avanzado): en SharedPreferences **RadioPresets**, `pref_a11y_forward_media_keys=false` desactiva el reenvío (por defecto está activo).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.
-- **AutoScan (Smart v2)**: ⏸️ **Under study**. El botón está temporalmente deshabilitado mientras se calibra el filtrado (RDS/señal) para evitar capturar frecuencias sin emisión.
+- **AutoScan (Smart v2)**: ⏸️ **En estudio** por defecto. Desde **v5.0.11**, en los **menús de ingeniería** (pulsación larga en GPS) puedes activar *Modo AutoScan* para usar el botón de escaneo en la UI principal de forma experimental (`pref_dev_autoscan_enabled` en **RadioPresets**).
 - **Audio QS6 (Qualcomm / NWD)**: ⚠️ Comportamiento dependiente del firmware; se sigue probando **cambio de fuente** (`ACTION_CHANGE_SOURCE`), foco y rutas de recuperación. Reporta modelo + build si falla el audio tras sintonizar.
 
 ---
@@ -188,6 +188,11 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.11 **Stable** (Marzo 2026) — `main`
+
+- **ES:** **OpenRadioFM v5.0.11 Stable** — K706: corrección streaming online (sin `switchToFm` retardado al reiniciar stream); layout simple en pantallas no `sw720dp` (iconos más compactos); menús ingeniería con interruptor AutoScan experimental; seek/preset en segundo plano (v5.0.10 accesibilidad) validado. Detalle en `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.11 Stable** — K706 online streaming fix; simple layout tweaks on non-`sw720dp`; engineering AutoScan toggle; background seek/preset (v5.0.10 accessibility) confirmed. See `CHANGELOG_EN.md`.
 
 ### v5.0.10 **Stable** (Marzo 2026) — `main`
 

@@ -48,6 +48,7 @@ public class EngineeringModeDialog extends Dialog {
     private SwitchCompat swMt8163GlobalStreamMute;
     // Dev toggle (MTK8259)
     private SwitchCompat swMtk8259V5StreamMixerCompat;
+    private SwitchCompat swDevAutoScanEnabled;
     private android.content.SharedPreferences mPrefs;
     
     private int mLastFreq = -1;
@@ -113,6 +114,7 @@ public class EngineeringModeDialog extends Dialog {
         // Dev toggles
         swMt8163GlobalStreamMute = findViewById(R.id.swMt8163GlobalStreamMute);
         swMtk8259V5StreamMixerCompat = findViewById(R.id.swMtk8259V5StreamMixerCompat);
+        swDevAutoScanEnabled = findViewById(R.id.swDevAutoScanEnabled);
     }
 
     private void setupControls() {
@@ -164,6 +166,8 @@ public class EngineeringModeDialog extends Dialog {
                 }
             });
         }
+
+        DevAutoscanToggleHelper.bind(swDevAutoScanEnabled, mActivity);
     }
 
     private void startUpdateLoop() {

@@ -1,3 +1,18 @@
+## [5.0.11 (Stable)] - 2026-03-28
+*K706: streaming online coherente con el canal MCU; layout simple (pantallas no sw720dp); menús ingeniería con toggle AutoScan experimental.*
+
+### Fixed
+- **K706 — Radio online se oía FM**: al iniciar stream, `stopStreamInternal(false)` programaba igual un `postDelayed` que llamaba a `switchToFmAudio()` y forzaba `SetChannel(2)` ~150 ms después de `SetChannel(4)`. La recuperación FM al parar stream solo se programa cuando el usuario detiene el stream (`stopStream()`), no en la limpieza previa a un nuevo arranque (`OnlineStreamManager`).
+
+### Added
+- **Menús ingeniería** (MT8163/MTK8259, K706, QS6): interruptor *Modo AutoScan* (`pref_dev_autoscan_enabled`, por defecto desactivado); con él el botón de escaneo en la UI principal llama a `ScanManager.toggleAutoScan` en lugar del toast «en estudio». `DevAutoscanToggleHelper`, `MainActivity.applyDevAutoScanButtonState()`.
+
+### Changed
+- **Layout simple** (`layout/activity_simple_radio.xml`, no `sw720dp`): iconos nube / seek / mute algo más pequeños y fila de botones `match_parent` para evitar desbordes con packs de iconos recientes.
+- **Versión**: `versionCode 23`, `versionName 5.0.11 (Stable)`; `app_name_internal` **v5.0.11 Stable**.
+
+---
+
 ## [5.0.10 (Stable)] - 2026-03-27
 *K706: mandos de volante en segundo plano vía servicio de accesibilidad; sesión de medios y FGS más coherentes cuando la app no está al frente.*
 

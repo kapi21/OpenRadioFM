@@ -19,6 +19,8 @@ import android.widget.ScrollView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import androidx.appcompat.widget.SwitchCompat;
+
 public class K706EngineeringDialog extends Dialog {
 
     private final MainActivity mActivity;
@@ -129,6 +131,8 @@ public class K706EngineeringDialog extends Dialog {
             } catch (Exception ignored) {}
             logEvent("MCU", "CMD_STEP_UP");
         });
+
+        DevAutoscanToggleHelper.bind((SwitchCompat) findViewById(R.id.swDevAutoScanEnabled), mActivity);
     }
 
     private void setupTunerButton(int resId, Runnable action) {

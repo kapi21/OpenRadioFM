@@ -245,6 +245,17 @@
                 app:thumbTint="#00FF00"
                 app:trackTint="#3300FF00" />
 
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swDevAutoScanEnabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/eng_dev_autoscan_toggle"
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                app:thumbTint="#00FF00"
+                app:trackTint="#3300FF00" />
+
         </LinearLayout>
     </ScrollView>
 

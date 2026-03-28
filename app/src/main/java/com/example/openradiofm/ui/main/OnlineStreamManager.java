@@ -326,9 +326,11 @@ public class OnlineStreamManager {
             mExoPlayer = null;
         }
 
-        // Recuperar audio de la radio física con un pequeño delay para que ExoPlayer
-        // libere el DAC antes de que el canal FM se active (evita mezcla transitoria).
-        if (mPlaybackManager != null) {
+        // Recuperar FM solo cuando el usuario para el stream (notifyMt8163DeferredHcn == true).
+        // Si es false, venimos de startStreamDirect(): limpiamos ExoPlayer y enseguida pedimos canal
+        // Android + nuevo player; un postDelayed aquí ejecutaba switchToFmAudio() ~150ms después
+        // y en K706 forzaba SetChannel(2) — síntoma: streaming "activo" pero audio sigue en FM.
+        if (notifyMt8163DeferredHcn && mPlaybackManager != null) {
             long delayMs = 150L;
             try {
                 if (mPlaybackManager.getEngine() != null

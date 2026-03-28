@@ -20,6 +20,8 @@ import android.widget.ScrollView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import androidx.appcompat.widget.SwitchCompat;
+
 /**
  * Menú de ingeniería «Technical Matrix» para plataforma QS6 / NWD (mismo acceso que K706/MT8163:
  * pulsación larga en GPS).
@@ -178,6 +180,8 @@ public class QS6EngineeringDialog extends Dialog {
                 }
             });
         }
+
+        DevAutoscanToggleHelper.bind((SwitchCompat) findViewById(R.id.swDevAutoScanEnabled), mActivity);
     }
 
     private void setupTunerButton(int resId, Runnable action) {

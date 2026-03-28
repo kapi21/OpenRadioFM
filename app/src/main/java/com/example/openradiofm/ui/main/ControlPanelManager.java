@@ -100,16 +100,22 @@ public class ControlPanelManager {
             });
         }
 
-        // AutoScan Button
+        // AutoScan Button (activo solo si modo desarrollo en menú ingeniería)
         ImageButton btnAutoScan = mActivity.findViewById(R.id.btnAutoScan);
         if (btnAutoScan != null) {
             btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f);
             btnAutoScan.setOnClickListener(v -> {
-                // Pendiente / En estudio
-                mActivity.showToast(mActivity.getString(R.string.under_study));
+                if (!mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                        .getBoolean(DevAutoscanToggleHelper.PREF_DEV_AUTOSCAN_ENABLED, false)) {
+                    mActivity.showToast(mActivity.getString(R.string.under_study));
+                    return;
+                }
+                if (mActivity.mScanManager == null) {
+                    mActivity.mScanManager = new ScanManager(mActivity);
+                }
+                mActivity.mScanManager.toggleAutoScan(btnAutoScan);
             });
-            // Desactivar visualmente el botón (pero dejamos el click para el toast).
-            btnAutoScan.setAlpha(0.45f);
+            mActivity.applyDevAutoScanButtonState();
         }
 
         // Si hay un pack de iconos seleccionado, aplicarlo tras setear los defaults.

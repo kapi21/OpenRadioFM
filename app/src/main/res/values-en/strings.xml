@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.10 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.11 Stable</string>
     <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system only sends those keys to the launcher.</string>
 
     <string name="mt8163_stream_stopped_restart_hint">Streaming stopped. If FM does not behave correctly, fully close OpenRadioFM and open it again.</string>
@@ -179,6 +179,7 @@
     <string name="version">Version %1$s</string>
     
     <!-- Engineering Mode -->
+    <string name="eng_dev_autoscan_toggle">AutoScan mode (scan button on main UI)</string>
     <string name="radio_engine_label">⚙ RADIO ENGINE: %1$s</string>
     <string name="freq_no_service">FREQ: NO_SERVICE\nBAND: ---\nFLAGS: ---</string>
     <string name="freq_error_read">FREQ: ERROR_READ\nBAND: ---\n%1$s</string>

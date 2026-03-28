@@ -1807,6 +1807,22 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             mIconPackManager.apply((ImageView) findViewById(R.id.ivDataActivityIcon), "cloud", R.drawable.cloud);
         } catch (Exception ignored) {}
+        applyDevAutoScanButtonState();
+    }
+
+    /** Refleja pref_dev_autoscan_enabled en el botón AutoScan (alpha / aspecto “experimental”). */
+    public void applyDevAutoScanButtonState() {
+        android.widget.ImageButton btn = findViewById(R.id.btnAutoScan);
+        if (btn == null) {
+            return;
+        }
+        boolean on = false;
+        try {
+            android.content.SharedPreferences p = mPrefs != null ? mPrefs
+                    : getSharedPreferences("RadioPresets", Context.MODE_PRIVATE);
+            on = p.getBoolean(DevAutoscanToggleHelper.PREF_DEV_AUTOSCAN_ENABLED, false);
+        } catch (Exception ignored) {}
+        btn.setAlpha(on ? 1f : 0.45f);
     }
 
     /**

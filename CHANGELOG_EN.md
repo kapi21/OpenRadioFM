@@ -4,6 +4,21 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.11 (Stable)] - 2026-03-28
+*K706: online streaming matches MCU routing; simple layout on non-sw720dp; engineering menus with experimental AutoScan toggle.*
+
+### Fixed
+- **K706 — FM audible while “streaming”**: starting a stream called `stopStreamInternal(false)`, which still scheduled `switchToFmAudio()` ~150ms later and forced `SetChannel(2)` after `SetChannel(4)`. FM recovery after stop now runs only on explicit user stop (`stopStream()`), not on internal cleanup before a new start (`OnlineStreamManager`).
+
+### Added
+- **Engineering menus** (MT8163/MTK8259, K706, QS6): *AutoScan mode* switch (`pref_dev_autoscan_enabled`, default off); when on, the main scan button uses `ScanManager.toggleAutoScan` instead of the “under study” toast. `DevAutoscanToggleHelper`, `MainActivity.applyDevAutoScanButtonState()`.
+
+### Changed
+- **Simple layout** (`layout/activity_simple_radio.xml`, not `sw720dp`): slightly smaller cloud / seek / mute icons and `match_parent` button row to avoid overflow with newer icon packs.
+- **Version**: `versionCode 23`, `versionName 5.0.11 (Stable)`; `app_name_internal` **v5.0.11 Stable**.
+
+---
+
 ## [5.0.10 (Stable)] - 2026-03-27
 *K706: steering-wheel keys in background via accessibility service; MediaSession/FGS behavior when the app is not in foreground.*
 

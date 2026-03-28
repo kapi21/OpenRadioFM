@@ -171,7 +171,7 @@
     <string name="logo_mode_clock">Цифровые Часы</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.10 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.11 Stable</string>
     <string name="accessibility_service_description">Этот сервис позволяет OpenRadioFM открываться поверх при нажатии физической кнопки RADIO на совместимых Android-устройствах (например, K706), обходя штатное радио.</string>
     <string name="all_favorites_deleted">✅ Все избранные удалены</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>

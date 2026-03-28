@@ -122,6 +122,29 @@
                     android:backgroundTint="#002200" />
             </LinearLayout>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ DEV_TOGGLES_UI ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swDevAutoScanEnabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/eng_dev_autoscan_toggle"
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                app:thumbTint="#00FF00"
+                app:trackTint="#3300FF00" />
+
             <!-- SECTION: RDS DECODER DATA -->
             <TextView
                 android:layout_width="match_parent"

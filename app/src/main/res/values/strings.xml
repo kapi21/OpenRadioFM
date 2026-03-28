@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.10 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.11 Stable</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema solo envía esas teclas al launcher.</string>
 
     <!-- MT8163/HCN: aviso tras cerrar streaming online (handoff FM puede quedar inconsistente en algunos firmwares) -->
@@ -189,6 +189,7 @@
     <string name="version">Versión %1$s</string>
     
     <!-- Engineering Mode -->
+    <string name="eng_dev_autoscan_toggle">Modo AutoScan (botón escaneo en UI principal)</string>
     <string name="radio_engine_label">⚙ RADIO ENGINE: %1$s</string>
     <string name="freq_no_service">FREQ: NO_SERVICE\nBAND: ---\nFLAGS: ---</string>
     <string name="freq_error_read">FREQ: ERROR_READ\nBAND: ---\n%1$s</string>
