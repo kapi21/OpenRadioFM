@@ -1,6 +1,5 @@
 package com.example.openradiofm.ui.main;
 
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -49,6 +48,7 @@ import com.example.openradiofm.utils.PtyManager;
 import com.example.openradiofm.utils.MetadataUtils;
 import com.example.openradiofm.R;
 import com.example.openradiofm.AppConstants;
+import com.example.openradiofm.service.RadioMediaService;
 
 /**
  * Pantalla principal de la radio FM.
@@ -145,6 +145,63 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V21.0: UI Controllers Refactor
     public BaseLayoutController mUiController;
     private final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+
+    /**
+     * Tras {@link RadioMediaService#ACTION_MT8163_FM_HANDOFF}: ejecutar {@code conectarRadio()}.
+     * El handoff evita que SourceService mate el proceso si la MediaSession seguía en PLAYING.
+     */
+    private final Runnable mHcnBindAfterHandoffRunnable = () -> {
+        try {
+            if (isFinishing() || isDestroyed()) return;
+            if (mMode != FmMode.FM_MT8163 || mServiceController == null) return;
+            if (mRadioService != null) return;
+            android.util.Log.i(TAG, "MT8163: conectarRadio() tras handoff previo");
+            mServiceController.start();
+        } catch (Exception e) {
+            android.util.Log.w(TAG, "mHcnBindAfterHandoffRunnable", e);
+        }
+    };
+
+    private static final long MT8163_MS_AFTER_SESSION_HANDOFF_BEFORE_HCN_BIND = 550L;
+
+    /**
+     * OEM: bajar MediaSession a STOPPED y esperar un tick antes de bind a {@code com.hcn.autoradio},
+     * o el mux puede hacer {@code forceStopPackage} sobre OpenRadioFM.
+     */
+    private void requestHcnBindWithMediaSessionHandoff(String reasonForLog) {
+        if (mMode != FmMode.FM_MT8163 || mServiceController == null) return;
+        if (mRadioService != null) return;
+        try {
+            android.util.Log.i(TAG, "MT8163: handoff MediaSession antes de bind HCN (" + reasonForLog + ")");
+            Intent h = new Intent(this, RadioMediaService.class);
+            h.setAction(RadioMediaService.ACTION_MT8163_FM_HANDOFF);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(h);
+            } else {
+                startService(h);
+            }
+        } catch (Exception e) {
+            android.util.Log.w(TAG, "requestHcnBindWithMediaSessionHandoff", e);
+        }
+        mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
+        mMainHandler.postDelayed(mHcnBindAfterHandoffRunnable, MT8163_MS_AFTER_SESSION_HANDOFF_BEFORE_HCN_BIND);
+    }
+
+    /** MT8163: tras parar streaming, intentar reconectar AIDL al acabar la ventana OEM. */
+    private final Runnable mHcnPostStreamReconnectRunnable = () -> {
+        try {
+            if (isFinishing() || isDestroyed()) return;
+            if (mMode != FmMode.FM_MT8163 || mServiceController == null) return;
+            if (mRadioService != null) return;
+            if (com.example.openradiofm.data.source.MT8163Engine.isHcnServiceBindBlockedAfterStreamEnd()) {
+                return;
+            }
+            android.util.Log.i(TAG, "Reconexión HCN tras ventana post-streaming");
+            requestHcnBindWithMediaSessionHandoff("ventana post-streaming");
+        } catch (Exception e) {
+            android.util.Log.w(TAG, "mHcnPostStreamReconnectRunnable", e);
+        }
+    };
 
     // V16: Managers de Modo Nocturno e Historial
     public NightModeManager mNightModeManager;
@@ -714,6 +771,29 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             public void onStreamError(String message) {
                 runOnUiThread(() -> showToast(message));
             }
+
+            @Override
+            public void onBeforeStreamStart() {
+                mMainHandler.removeCallbacks(mHcnPostStreamReconnectRunnable);
+                mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
+            }
+
+            @Override
+            public void onStreamStoppedMt8163() {
+                // OEM: conectarRadio() al instante tras streaming → SourceService.forceStopPackage.
+                // Ventana corta sin bind; luego reconexión AIDL (o al volver a primer plano).
+                com.example.openradiofm.data.source.MT8163Engine.setBlockHcnServiceBindAfterStreamEnd(true);
+                try {
+                    android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
+                    wakeIntent.setPackage("com.hcn.autoradio");
+                    wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                    sendBroadcast(wakeIntent);
+                } catch (Exception ignored) {}
+                mMainHandler.removeCallbacks(mHcnPostStreamReconnectRunnable);
+                mMainHandler.postDelayed(
+                        mHcnPostStreamReconnectRunnable,
+                        com.example.openradiofm.data.source.MT8163Engine.HCN_BIND_BLOCK_AFTER_STREAM_MS + 400L);
+            }
         });
 
         if (ivDataActivity != null) {
@@ -722,15 +802,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
                     mOnlineStreamManager.stopStream();
                     showToast("Volviendo a Radio FM...");
-                    if (mRadioService == null && mMode == FmMode.FM_MT8163 && mServiceController != null) {
-                        try {
-                            android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
-                            wakeIntent.setPackage("com.hcn.autoradio");
-                            wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-                            sendBroadcast(wakeIntent);
-                        } catch (Exception ignored) {}
-                        mServiceController.start();
-                    }
                     return;
                 }
 
@@ -1229,20 +1300,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     if (isFinishing() || isDestroyed()) return;
                     if (mEngine != null) {
                         showToast("Hardware: " + mEngine.getEngineName());
-                        if (mEngine.getEngineName() != null && mEngine.getEngineName().contains("QS6")
-                                && mPrefs != null && !mPrefs.getBoolean("pref_qs6_firmware_notice_shown", false)) {
-                            mPrefs.edit().putBoolean("pref_qs6_firmware_notice_shown", true).apply();
-                            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-                                if (isFinishing() || isDestroyed()) return;
-                                try {
-                                    new AlertDialog.Builder(MainActivity.this)
-                                            .setTitle(R.string.qs6_audio_firmware_notice_title)
-                                            .setMessage(R.string.qs6_audio_firmware_notice)
-                                            .setPositiveButton(R.string.close, null)
-                                            .show();
-                                } catch (Exception ignored) {}
-                            }, 2800);
-                        }
                         refreshPresetsCache();
                         refreshPresetButtons();
                         refreshRadioStatus();
@@ -1881,6 +1938,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         
         // V21.4: Re-conectar si la app vuelve al frente y el servicio nativo fue matado (ej. por Music Player)
         if (mRadioService == null && mMode == FmMode.FM_MT8163 && mServiceController != null) {
+            if (com.example.openradiofm.data.source.MT8163Engine.isHcnServiceBindBlockedAfterStreamEnd()) {
+                android.util.Log.i(TAG, "onResume: bind HCN en ventana post-streaming (~12s); reintento automático al expirar");
+                try {
+                    android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
+                    wakeIntent.setPackage("com.hcn.autoradio");
+                    wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                    sendBroadcast(wakeIntent);
+                } catch (Exception ignored) {}
+                return;
+            }
             android.util.Log.w(TAG, "onResume: mRadioService nulo (posible force-stop). Reactivando servicio...");
             try {
                 android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
@@ -1888,10 +1955,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
                 sendBroadcast(wakeIntent);
             } catch (Exception ignored) {}
-            
-            mServiceController.start();
+
+            requestHcnBindWithMediaSessionHandoff("onResume");
             // La reconexión es asíncrona. onServiceConnected disparará updateService() y enforceAudioRecovery()
-            return; 
+            return;
         }
         
         // V4.8: En K706, es mejor dejar que el Engine gestione el foco y el canal.

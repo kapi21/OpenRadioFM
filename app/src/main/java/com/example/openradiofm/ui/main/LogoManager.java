@@ -435,21 +435,24 @@ public class LogoManager {
         mLastStationLogoUrl = null;
         
         try {
+            // Contexto de aplicación: en onDestroy / recreación por layout, Glide.with(Activity)
+            // lanza "You cannot start a load for a destroyed activity".
+            Context appCtx = mActivity.getApplicationContext();
             if (mBackgroundTarget != null) {
-                Glide.with(mActivity).clear(mBackgroundTarget);
+                Glide.with(appCtx).clear(mBackgroundTarget);
                 mBackgroundTarget = null;
             }
             ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
             if (ivMainLogo != null) {
-                Glide.with(ivMainLogo.getContext()).clear(ivMainLogo);
+                Glide.with(appCtx).clear(ivMainLogo);
             }
             ImageView ivCarLogo = mActivity.findViewById(R.id.ivCarLogo);
             if (ivCarLogo != null) {
-                Glide.with(ivCarLogo.getContext()).clear(ivCarLogo);
+                Glide.with(appCtx).clear(ivCarLogo);
             }
             ImageView ivDynamicBackground = mActivity.findViewById(R.id.ivDynamicBackground);
             if (ivDynamicBackground != null) {
-                Glide.with(ivDynamicBackground.getContext()).clear(ivDynamicBackground);
+                Glide.with(appCtx).clear(ivDynamicBackground);
             }
         } catch (Exception e) {
             Log.e(TAG, "Error during release", e);

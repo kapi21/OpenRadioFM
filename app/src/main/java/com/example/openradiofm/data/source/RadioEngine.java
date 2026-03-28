@@ -60,6 +60,15 @@ public interface RadioEngine {
     }
 
     /**
+     * MT8163 OEM: durante el handoff streaming→FM, {@link PlaybackManager} no debe lanzar
+     * {@code RadioMediaService} con {@code ACTION_FORCE_PLAY} al mismo tiempo que el bind a HCN
+     * (SourceService puede forzar cierre del proceso).
+     */
+    default boolean shouldSkipMediaServiceForcePlayOnUnmute() {
+        return false;
+    }
+
+    /**
      * QS6 (y futuros motores): al pasar la UI a segundo plano, dejar de competir por
      * {@link android.media.AudioManager#AUDIOFOCUS_GAIN} sin forzar cambio de fuente MCU.
      * Por defecto no hace nada.

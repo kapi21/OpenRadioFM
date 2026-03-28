@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.9 Stable</string>
     <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
+    <string name="mt8163_stream_stopped_restart_hint">Streaming beendet. Wenn UKW nicht richtig reagiert, OpenRadioFM vollständig schließen und erneut öffnen.</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Optionsmenü</string>

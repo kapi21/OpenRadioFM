@@ -35,6 +35,141 @@ public class MT8163Engine implements RadioEngine {
     // V21.3: Estado de recuperación diferida para reconexión asíncrona
     private boolean mPendingAudioRecovery = false;
 
+    /**
+     * Tras streaming online, el AIDL {@code requestPlayAudio()} puede provocar que SourceService
+     * haga force-stop de nuestra app al entregar el mux a com.hcn.autoradio. Durante unos
+     * segundos solo usamos HAL (setParameters) + HiddenRadioPlayer.
+     */
+    private volatile boolean mDeferAidlRequestPlayAudioAfterStream;
+
+    /**
+     * El bind a {@code FMPlugService} vía {@code RadioServiceController.start()} justo después de
+     * parar streaming dispara {@code forceStopPackage} en SourceService de algunos OEM (log:
+     * muxMediaPlayer prepare to Kill openradiofm). Posponemos ese bind ~15s.
+     */
+    private static volatile long sHcnBindAllowedAfterElapsedMs;
+
+    /**
+     * Tras parar streaming, {@code conectarRadio()} inmediato puede provocar force-stop OEM.
+     * Bloqueamos el bind solo una ventana corta; luego se permite reconectar AIDL (HAL sigue usable antes).
+     */
+    public static final long HCN_BIND_BLOCK_AFTER_STREAM_MS = 12_000L;
+
+    private static volatile boolean sBlockHcnServiceBindAfterStreamEnd;
+    /** {@link SystemClock#elapsedRealtime()} hasta el que no se debe llamar {@code conectarRadio()}. */
+    private static volatile long sHcnBindBlockUntilElapsedMs;
+
+    /**
+     * Antes se reactivaba {@code requestPlayAudio AIDL} a los 4s tras streaming; al reconectar el bind
+     * HCN minutos después, eso dispara {@code forceStopPackage} en SourceService. Ya no se programa.
+     */
+    private final Runnable mClearDeferAidlRunnable = new Runnable() {
+        @Override
+        public void run() {
+            mDeferAidlRequestPlayAudioAfterStream = false;
+            Log.d(TAG, "requestPlayAudio AIDL re-permitido (solo tras streaming online)");
+        }
+    };
+
+    /** Evita doble bind + doble requestPlayAudio() al volver de streaming (mux OEM puede force-stop). */
+    private static final long RECONNECT_DEBOUNCE_MS = 400L;
+
+    private final Runnable mDeferredBinderRecoveryRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mIsOnlineStreamingActive) return;
+            if (mService == null) return;
+            try {
+                if (mDeferAidlRequestPlayAudioAfterStream) {
+                    Log.i(TAG, "deferredBinderRecovery: HAL sin requestPlayAudio AIDL (handoff OEM)");
+                    applyFmHardwareRouteOnly();
+                    if (mHiddenPlayer != null) {
+                        mHiddenPlayer.setMute(false);
+                    }
+                    mPendingAudioRecovery = false;
+                    return;
+                }
+                mService.requestPlayAudio();
+                if (mHiddenPlayer != null) {
+                    mHiddenPlayer.setMute(false);
+                }
+                mPendingAudioRecovery = false;
+            } catch (Exception e) {
+                Log.w(TAG, "Recuperación diferida post-updateService falló", e);
+                handleDeadService("deferredBinderRecovery", e);
+            }
+        }
+    };
+
+    private void applyFmHardwareRouteOnly() {
+        if (mAudioManager != null) {
+            try {
+                mAudioManager.setParameters("fm_radio_on=1;fm_mute=0");
+            } catch (Exception e) {
+                Log.w(TAG, "applyFmHardwareRouteOnly", e);
+            }
+        }
+    }
+
+    /** Tras parar streaming: no llamar a {@code RadioServiceController.start()} hasta pasado este margen. */
+    public static void deferHcnServiceBindReconnect(long deferMs) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        sHcnBindAllowedAfterElapsedMs = now + Math.max(0L, deferMs);
+        Log.i(TAG, "deferHcnServiceBindReconnect: bind FMPlug pospuesto ~" + deferMs + "ms (OEM SourceService)");
+    }
+
+    public static void clearHcnBindReconnectDefer() {
+        sHcnBindAllowedAfterElapsedMs = 0L;
+    }
+
+    public static boolean isHcnBindReconnectDeferred() {
+        return android.os.SystemClock.elapsedRealtime() < sHcnBindAllowedAfterElapsedMs;
+    }
+
+    public static void setBlockHcnServiceBindAfterStreamEnd(boolean block) {
+        if (block) {
+            sBlockHcnServiceBindAfterStreamEnd = true;
+            sHcnBindBlockUntilElapsedMs = android.os.SystemClock.elapsedRealtime() + HCN_BIND_BLOCK_AFTER_STREAM_MS;
+            Log.i(TAG, "setBlockHcnServiceBindAfterStreamEnd: true (~" + (HCN_BIND_BLOCK_AFTER_STREAM_MS / 1000) + "s)");
+        } else {
+            sBlockHcnServiceBindAfterStreamEnd = false;
+            sHcnBindBlockUntilElapsedMs = 0L;
+        }
+    }
+
+    public static boolean isHcnServiceBindBlockedAfterStreamEnd() {
+        if (!sBlockHcnServiceBindAfterStreamEnd) {
+            return false;
+        }
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (sHcnBindBlockUntilElapsedMs > 0L && now >= sHcnBindBlockUntilElapsedMs) {
+            Log.i(TAG, "HCN bind block: ventana OEM terminada; se permite conectarRadio");
+            sBlockHcnServiceBindAfterStreamEnd = false;
+            sHcnBindBlockUntilElapsedMs = 0L;
+            return false;
+        }
+        return true;
+    }
+
+    private final Runnable mReconnectRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mContext == null || mExternalService) return;
+            if (mBound && mService != null) return;
+            Log.w(TAG, "Reconectando servicio HCN (Estaba muerto)...");
+            try {
+                Intent wake = new Intent("com.hcn.autoradio.FMRADIO_START");
+                wake.setPackage("com.hcn.autoradio");
+                mContext.sendBroadcast(wake);
+                Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
+                intent.setPackage("com.hcn.autoradio");
+                mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            } catch (Exception e) {
+                Log.e(TAG, "Error intentando reconectar", e);
+            }
+        }
+    };
+
     // V16.2: Polling mechanism for continuous frequency updates during seek/scan
     // V21.1: Polling fuera del hilo UI para evitar jank
     private HandlerThread mPollingThread;
@@ -80,7 +215,12 @@ public class MT8163Engine implements RadioEngine {
                 if ((mPendingAudioRecovery || mLastPolledFreq > 0) && !mIsOnlineStreamingActive) {
                     Log.i(TAG, "Restaurando estado tras conexión (Re-init RDS y Audio). Freq: " + mLastPolledFreq);
                     if (mLastPolledFreq > 0) mService.gotoFreq(mLastPolledFreq);
-                    mService.requestPlayAudio();
+                    if (mDeferAidlRequestPlayAudioAfterStream) {
+                        Log.i(TAG, "onServiceConnected: omitiendo requestPlayAudio AIDL (handoff streaming->FM)");
+                        applyFmHardwareRouteOnly();
+                    } else {
+                        mService.requestPlayAudio();
+                    }
                     
                     // V21.3: Re-inicializar canal RDS para evitar referencias a proceso muerto
                     if (mHiddenPlayer != null) {
@@ -103,21 +243,14 @@ public class MT8163Engine implements RadioEngine {
     };
 
     private void reconnectIfNeeded() {
-        if ((!mBound || mService == null) && !mExternalService) {
-            Log.w(TAG, "Reconectando servicio HCN (Estaba muerto)...");
-            try {
-                // V21.3: Enviar broadcast de "Despertar" al hardware de radio nativo.
-                // Esto fuerza al sistema a levantar el chip de radio si estaba en standby.
-                if (mContext != null) {
-                    mContext.sendBroadcast(new Intent("com.hcn.autoradio.FMRADIO_START"));
-                }
-                
-                Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
-                intent.setPackage("com.hcn.autoradio");
-                mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-            } catch (Exception e) {
-                Log.e(TAG, "Error intentando reconectar", e);
-            }
+        if (mExternalService || mContext == null) return;
+        if (mBound && mService != null) return;
+        ensurePollingThread();
+        if (mPollingHandler != null) {
+            mPollingHandler.removeCallbacks(mReconnectRunnable);
+            mPollingHandler.postDelayed(mReconnectRunnable, RECONNECT_DEBOUNCE_MS);
+        } else {
+            mReconnectRunnable.run();
         }
     }
 
@@ -136,8 +269,14 @@ public class MT8163Engine implements RadioEngine {
         Log.i(TAG, "updateService: Actualizando binder del servicio AIDL legado.");
         this.mService = service;
         this.mBound = (service != null);
-        // Al actualizar el servicio, disparamos la recuperación de audio si estaba pendiente
-        enforceAudioRecovery();
+        // NO llamar enforceAudioRecovery() aquí en el mismo hilo: al volver streaming->FM
+        // coincide con ExoPlayer.release() y con RadioServiceController.start(); el mux OEM
+        // puede matar el proceso si requestPlayAudio() se dispara dos veces seguidas.
+        ensurePollingThread();
+        if (mPollingHandler != null) {
+            mPollingHandler.removeCallbacks(mDeferredBinderRecoveryRunnable);
+            mPollingHandler.postDelayed(mDeferredBinderRecoveryRunnable, 450);
+        }
     }
 
     @Override
@@ -286,11 +425,34 @@ public class MT8163Engine implements RadioEngine {
     }
 
     @Override
+    public boolean shouldSkipMediaServiceForcePlayOnUnmute() {
+        return mDeferAidlRequestPlayAudioAfterStream;
+    }
+
+    @Override
     public void setOnlineStreamingActive(boolean active) {
         this.mIsOnlineStreamingActive = active;
         Log.d(TAG, "setOnlineStreamingActive: " + active);
         if (active) {
+            ensurePollingThread();
+            if (mPollingHandler != null) {
+                mPollingHandler.removeCallbacks(mClearDeferAidlRunnable);
+            }
+            mDeferAidlRequestPlayAudioAfterStream = false;
+            clearHcnBindReconnectDefer();
+            setBlockHcnServiceBindAfterStreamEnd(false);
             switchToAndroidAudio();
+            return;
+        }
+        if (!active) {
+            mDeferAidlRequestPlayAudioAfterStream = true;
+            ensurePollingThread();
+            if (mPollingHandler != null) {
+                mPollingHandler.removeCallbacks(mClearDeferAidlRunnable);
+            }
+            // NO reactivar requestPlayAudio AIDL por temporizador: tras reconectar FMPlug, el OEM
+            // mata OpenRadioFM si se llama requestPlayAudio() (ver SourceService.forceStopPackage).
+            // Solo HAL + HiddenRadioPlayer hasta el próximo streaming (active=true limpia el flag).
         }
     }
 
@@ -308,10 +470,13 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void tune(int freqKhz) {
-        if (mService == null) return;
+        // Snapshot antes de resetRdsUI(): el callback RDS puede llamar getCurrentFreq() y
+        // handleDeadService() deja mService=null antes de llegar a gotoFreq (reentrada).
+        IRadioServiceAPI svc = mService;
+        if (svc == null) return;
         resetRdsUI();
         try { 
-            mService.gotoFreq(freqKhz); 
+            svc.gotoFreq(freqKhz); 
         } catch (android.os.DeadObjectException e) {
             handleDeadService("tune", e);
         } catch (RemoteException e) { 
@@ -388,12 +553,13 @@ public class MT8163Engine implements RadioEngine {
     
     @Override
     public void seekUp() {
-        if (mService == null) return;
+        IRadioServiceAPI svc = mService;
+        if (svc == null) return;
         resetRdsUI();
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current + 100);
         try { 
-            mService.onSeekDownEvent(); 
+            svc.onSeekDownEvent(); 
         } catch (android.os.DeadObjectException e) {
             handleDeadService("seekUp", e);
         } catch (RemoteException e) { 
@@ -404,12 +570,13 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void seekDown() {
-        if (mService == null) return;
+        IRadioServiceAPI svc = mService;
+        if (svc == null) return;
         resetRdsUI();
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current - 100);
         try { 
-            mService.onSeekUpEvent(); 
+            svc.onSeekUpEvent(); 
         } catch (android.os.DeadObjectException e) {
             handleDeadService("seekDown", e);
         } catch (RemoteException e) { 
@@ -420,7 +587,8 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void stepUp() {
-        if (mService == null) return;
+        IRadioServiceAPI svc = mService;
+        if (svc == null) return;
         resetRdsUI();
         // V16.2: Notificar frecuencia inmediata para sensación de movimiento
         int current = getCurrentFreq();
@@ -428,7 +596,7 @@ public class MT8163Engine implements RadioEngine {
             mCallback.onFrequencyChanged(current + 100);
         }
         try { 
-            mService.onManualUpEvent(); 
+            svc.onManualUpEvent(); 
         } catch (android.os.DeadObjectException e) {
             handleDeadService("stepUp", e);
         } catch (RemoteException e) { 
@@ -439,7 +607,8 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void stepDown() {
-        if (mService == null) return;
+        IRadioServiceAPI svc = mService;
+        if (svc == null) return;
         resetRdsUI();
         // V16.2: Notificar frecuencia inmediata para sensación de movimiento
         int current = getCurrentFreq();
@@ -447,7 +616,7 @@ public class MT8163Engine implements RadioEngine {
             mCallback.onFrequencyChanged(current - 100);
         }
         try { 
-            mService.onManualDownEvent(); 
+            svc.onManualDownEvent(); 
         } catch (android.os.DeadObjectException e) {
             handleDeadService("stepDown", e);
         } catch (RemoteException e) { 
@@ -458,10 +627,11 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void scan() {
-        if (mService == null) return;
+        IRadioServiceAPI svc = mService;
+        if (svc == null) return;
         resetRdsUI();
         try { 
-            mService.onScanEvent(); 
+            svc.onScanEvent(); 
         } catch (android.os.DeadObjectException e) {
             handleDeadService("scan", e);
         } catch (RemoteException e) { 
@@ -572,13 +742,20 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public boolean requestPlayAudio() {
         if (mService == null) return false;
-        try { 
-            return mService.requestPlayAudio(); 
+        if (mDeferAidlRequestPlayAudioAfterStream) {
+            Log.d(TAG, "requestPlayAudio: omitido AIDL (post-streaming OEM; uso HAL)");
+            try {
+                applyFmHardwareRouteOnly();
+            } catch (Exception ignored) {}
+            return true;
+        }
+        try {
+            return mService.requestPlayAudio();
         } catch (android.os.DeadObjectException e) {
             handleDeadService("requestPlayAudio", e);
             return false;
-        } catch (RemoteException e) { 
-            return false; 
+        } catch (RemoteException e) {
+            return false;
         }
     }
 
@@ -590,10 +767,27 @@ public class MT8163Engine implements RadioEngine {
             reconnectIfNeeded();
             return;
         }
+
+        if (mDeferAidlRequestPlayAudioAfterStream) {
+            Log.i(TAG, "enforceAudioRecovery: omitiendo requestPlayAudio AIDL (handoff streaming->FM OEM)");
+            try {
+                applyFmHardwareRouteOnly();
+            } catch (Exception ignored) {}
+            if (mHiddenPlayer != null) {
+                mHiddenPlayer.setMute(false);
+            }
+            return;
+        }
         
         // En MT8163 basta con volver a pedir el canal de audio al servicio AIDL
         try {
             mService.requestPlayAudio();
+        } catch (android.os.DeadObjectException e) {
+            Log.w(TAG, "enforceAudioRecovery: DeadObject (sin doble reconnect inmediato)", e);
+            mPendingAudioRecovery = true;
+            mService = null;
+            mBound = false;
+            reconnectIfNeeded();
         } catch (Exception e) {
             handleDeadService("enforceAudioRecovery", e);
         }

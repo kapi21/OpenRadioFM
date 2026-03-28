@@ -158,7 +158,13 @@ public class PlaybackManager {
             // mientras el stream de ExoPlayer sigue activo → mezcla de audio.
             // Igual que QS6, el MTK8259 gestiona su propia recuperación de audio internamente.
             boolean is8259 = engineName != null && engineName.toUpperCase().contains("8259");
-            if (!isQs6 && !is8259) {
+            boolean skipForcePlay = false;
+            try {
+                if (mEngine != null) {
+                    skipForcePlay = mEngine.shouldSkipMediaServiceForcePlayOnUnmute();
+                }
+            } catch (Exception ignored) {}
+            if (!isQs6 && !is8259 && !skipForcePlay) {
                 serviceIntent.setAction(com.example.openradiofm.service.RadioMediaService.ACTION_FORCE_PLAY);
             }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {

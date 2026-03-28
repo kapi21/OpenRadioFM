@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.hcn.autoradio.IRadioServiceAPI;
@@ -25,6 +26,10 @@ import java.util.List;
  */
 public class RadioServiceController {
     private static final String TAG = "RadioServiceController";
+
+    /** Evita ráfagas de bind a com.hcn.autoradio (varias instancias de este controller). */
+    private static final Object sMt8163StartLock = new Object();
+    private static long sLastMt8163StartWallMs;
 
     /**
      * Motor instanciado localmente (QS6/K706) compartido entre MainActivity y RadioMediaService.
@@ -102,6 +107,14 @@ public class RadioServiceController {
         this.mListener = listener;
     }
 
+    /**
+     * MT8163/HCN: un solo {@code bindService} debe vivir en MainActivity. RadioMediaService
+     * no debe duplicar la vinculación (provoca force-stop en SourceService de algunos OEM).
+     */
+    public boolean isFmMt8163Mode() {
+        return detectMode() == MainActivity.FmMode.FM_MT8163;
+    }
+
     public void start() {
         MainActivity.FmMode mode = detectMode();
         Log.i(TAG, "=> START() INVOCADO. MODO DETECTADO: " + mode);
@@ -174,8 +187,24 @@ public class RadioServiceController {
             }
         }
 
+        // Post-streaming en ROM OEM: bind a com.hcn.autoradio desde aquí dispara
+        // SourceService.muxMediaPlayer → forceStopPackage(com.example.openradiofm).
+        // onResume() ya omite el bind, pero start() se ejecuta antes (p. ej. recreación por layout).
+        if (MT8163Engine.isHcnServiceBindBlockedAfterStreamEnd()) {
+            Log.i(TAG, "start(): omitiendo conectarRadio() (bloqueo post-streaming; evita force-stop OEM)");
+            return;
+        }
+
         // Para MT8163 intentamos la vinculación AIDL clásica
         Log.i(TAG, "=> RAMA MT8163/Hcn ALCANZADA. LLAMANDO A conectarRadio().");
+        synchronized (sMt8163StartLock) {
+            long now = SystemClock.elapsedRealtime();
+            if (now - sLastMt8163StartWallMs < 350) {
+                Log.w(TAG, "conectarRadio: suprimido (ráfaga MT8163)");
+                return;
+            }
+            sLastMt8163StartWallMs = now;
+        }
         conectarRadio();
     }
 

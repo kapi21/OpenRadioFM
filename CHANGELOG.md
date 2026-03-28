@@ -1,3 +1,16 @@
+## [5.0.9 (Stable)] - 2026-03-27
+*MT8163/HCN: handoff de MediaSession al cerrar streaming; mandos de volante y sesión de medios más robustos en segundo plano.*
+
+### Added
+- **MT8163**: acciones `ACTION_MT8163_FM_HANDOFF` / `ACTION_MT8163_FM_HANDOFF_COMPLETE` en `RadioMediaService` para bajar la sesión antes de reconectar FM y reducir force-stop OEM; `OnlineStreamManager` dispara el handoff y muestra toast localizado al parar el stream (aviso de reinicio de app si la FM queda rara).
+- **Media / volante**: `setMediaButtonReceiver` explícito hacia `MediaButtonBootstrapReceiver`; `ACTION_FAST_FORWARD` / `ACTION_REWIND` mapeados como NEXT/PREV OEM; `handleSteeringSkip` unificado con cola en arranque en frío.
+
+### Changed
+- **MT8163Engine / RadioServiceController / MainActivity**: ventana que bloquea bind a HCN tras streaming, `requestPlayAudio` diferido y reconexión coordinada con el handoff de sesión.
+- **Strings**: cadena `mt8163_stream_stopped_restart_hint` en todas las locales; eliminado diálogo/cadenas QS6 de aviso de firmware; `app_name_internal` **v5.0.9 Stable**; `versionCode 21`, `versionName 5.0.9 (Stable)`.
+
+---
+
 ## [5.0.8 (Stable)] - 2026-03-25
 *Versión estable: calidad de icono y logos, menú ingeniería (acceso y MTK8259), UX nube sin red, y ajustes de layout.*
 

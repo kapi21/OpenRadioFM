@@ -1,5 +1,6 @@
 package com.example.openradiofm.service;
 
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
@@ -53,6 +54,18 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
     /** Start command from UI to force PLAYING MediaSession state. */
     public static final String ACTION_FORCE_PLAY = "com.example.openradiofm.action.FORCE_PLAY";
+    /**
+     * MT8163: al pasar de streaming online a FM, SourceService puede force-stop si nuestra
+     * sesión sigue como “reproductor activo” y el mux entrega audio a com.hcn.autoradio.
+     * Pausamos la sesión antes de reconectar el servicio FM.
+     */
+    public static final String ACTION_MT8163_FM_HANDOFF = "com.example.openradiofm.action.MT8163_FM_HANDOFF";
+    /**
+     * Tras {@link #ACTION_MT8163_FM_HANDOFF}, liberar ExoPlayer y conmutar FM HAL; cuando el audio FM
+     * está estable, volver a marcar la sesión como PLAYING (sin crear AudioTrack: solo metadata).
+     */
+    public static final String ACTION_MT8163_FM_HANDOFF_COMPLETE =
+            "com.example.openradiofm.action.MT8163_FM_HANDOFF_COMPLETE";
     private static final String MEDIA_ROOT_ID = "radio_root";
     private static final String BANDS_ID = "bands";
     private static final String BAND_PREFIX = "band:"; // band:<idx>
@@ -207,6 +220,18 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         // 1. Inicializar MediaSession
         mMediaSession = new MediaSessionCompat(this, TAG);
 
+        // 1b. Enrutado explícito de MEDIA_BUTTON (Android 8+ / OEM): sin esto el sistema
+        // puede no enviar volante/teclas cuando la app está en segundo plano.
+        try {
+            ComponentName mbr = new ComponentName(this, MediaButtonBootstrapReceiver.class);
+            PendingIntent mbrPi = PendingIntent.getBroadcast(this, 0,
+                    new Intent(Intent.ACTION_MEDIA_BUTTON).setComponent(mbr),
+                    PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+            mMediaSession.setMediaButtonReceiver(mbrPi);
+        } catch (Exception e) {
+            Log.w(TAG, "setMediaButtonReceiver falló", e);
+        }
+
         // 2. Definir los flags: Soporta comandos de transporte y botones de medios
         mMediaSession.setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
@@ -224,7 +249,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         PlaybackStateCompat.ACTION_PLAY_FROM_MEDIA_ID |
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS |
                         PlaybackStateCompat.ACTION_SKIP_TO_NEXT |
-                        PlaybackStateCompat.ACTION_PLAY_PAUSE
+                        PlaybackStateCompat.ACTION_PLAY_PAUSE |
+                        PlaybackStateCompat.ACTION_FAST_FORWARD |
+                        PlaybackStateCompat.ACTION_REWIND
                 );
         setPlaybackState(false);
 
@@ -256,49 +283,23 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
             @Override
             public void onSkipToNext() {
-                try {
-                    boolean presetMode = usePresetModeForSteering();
-                    if (mEngine != null) {
-                        if (presetMode) {
-                            mEngine.nextFavorite();
-                        } else {
-                            mEngine.seekUp();
-                        }
-                        handlePlay(); // aseguramos estado PLAYING si el usuario pulsa Next
-                    } else {
-                        enqueueSkip(+1, presetMode);
-                        maybeStartEngine();
-                        // Mostramos estado como activo mientras arranca el engine
-                        mIsPlaying = true;
-                        setPlaybackState(true);
-                        ensureNotificationVisible();
-                    }
-                } catch (Exception e) {
-                    Log.w(TAG, "Error en onSkipToNext()", e);
-                }
+                handleSteeringSkip(+1);
             }
 
             @Override
             public void onSkipToPrevious() {
-                try {
-                    boolean presetMode = usePresetModeForSteering();
-                    if (mEngine != null) {
-                        if (presetMode) {
-                            mEngine.prevFavorite();
-                        } else {
-                            mEngine.seekDown();
-                        }
-                        handlePlay();
-                    } else {
-                        enqueueSkip(-1, presetMode);
-                        maybeStartEngine();
-                        mIsPlaying = true;
-                        setPlaybackState(true);
-                        ensureNotificationVisible();
-                    }
-                } catch (Exception e) {
-                    Log.w(TAG, "Error en onSkipToPrevious()", e);
-                }
+                handleSteeringSkip(-1);
+            }
+
+            @Override
+            public void onFastForward() {
+                // Algunas cabeceras OEM mapean NEXT del volante a FAST_FORWARD.
+                handleSteeringSkip(+1);
+            }
+
+            @Override
+            public void onRewind() {
+                handleSteeringSkip(-1);
             }
 
             @Override
@@ -365,6 +366,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             ensureNotificationVisible();
         }
 
+        // Motor antes que MEDIA_BUTTON: si el volante dispara skip en el mismo
+        // onStartCommand, el engine ya debe existir o la cola cold-start debe poder vaciarse.
+        // MT8163: NO — el bind a com.hcn.autoradio lo gestiona solo MainActivity; duplicar
+        // bind aquí dispara mux/SourceService y puede force-stop la app.
+        maybeStartEngine();
+
         // Procesar botones de medios (notificación, Android Auto, volante)
         try {
             MediaButtonReceiver.handleIntent(mMediaSession, intent);
@@ -378,10 +385,49 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             handlePlay();
         }
 
-        // Si el sistema nos arranca sin intención, no forzamos reproducción.
-        // Estado inicial: notificación visible y sesión activa en PAUSED.
-        maybeStartEngine();
+        if (intent != null && ACTION_MT8163_FM_HANDOFF.equals(intent.getAction())) {
+            handleMt8163FmHandoff();
+        }
+
+        if (intent != null && ACTION_MT8163_FM_HANDOFF_COMPLETE.equals(intent.getAction())) {
+            handleMt8163FmHandoffComplete();
+        }
+
         return START_NOT_STICKY;
+    }
+
+    private void handleMt8163FmHandoff() {
+        try {
+            Log.i(TAG, "MT8163 FM handoff: sesión STOPPED (antes de soltar ExoPlayer/audio web)");
+            mIsPlaying = false;
+            applyOemStreamingHandoffPlaybackState();
+            try {
+                stopForeground(false);
+            } catch (Exception ignored) {}
+            ensureNotificationVisible();
+        } catch (Exception e) {
+            Log.w(TAG, "handleMt8163FmHandoff falló", e);
+        }
+    }
+
+    /**
+     * STATE_STOPPED + velocidad 0: menos “reproductor activo” que PAUSED en algunos OEM (SourceService).
+     */
+    private void applyOemStreamingHandoffPlaybackState() {
+        if (mMediaSession == null || mStateBuilder == null) return;
+        mStateBuilder.setState(PlaybackStateCompat.STATE_STOPPED, 0L, 0f);
+        mMediaSession.setPlaybackState(mStateBuilder.build());
+    }
+
+    private void handleMt8163FmHandoffComplete() {
+        try {
+            Log.d(TAG, "MT8163 FM handoff complete: restaurando sesión PLAYING (solo FM, sin AudioTrack de stream)");
+            mIsPlaying = true;
+            setPlaybackState(true);
+            ensureNotificationVisible();
+        } catch (Exception e) {
+            Log.w(TAG, "handleMt8163FmHandoffComplete falló", e);
+        }
     }
 
     private final com.example.openradiofm.data.source.RadioEngineCallback mEngineCallback =
@@ -640,12 +686,51 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         try {
             if (mEngine != null) return;
             if (mRadioServiceController == null) return;
+            if (mRadioServiceController.isFmMt8163Mode()) {
+                Log.d(TAG, "maybeStartEngine: omitido (MT8163/HCN enlazado solo desde MainActivity)");
+                return;
+            }
             if (mEngineInitStarted.compareAndSet(false, true)) {
                 Log.d(TAG, "Iniciando RadioServiceController.start() (OEM cold start)");
+                mRadioServiceController.start();
+            } else if (mEngine == null) {
+                Log.d(TAG, "maybeStartEngine: reintento (motor aún null)");
                 mRadioServiceController.start();
             }
         } catch (Exception e) {
             Log.w(TAG, "maybeStartEngine() falló", e);
+        }
+    }
+
+    /**
+     * Volante / notificación / Auto: siguiente/anterior según ajuste seek vs preset.
+     * @param direction +1 siguiente, -1 anterior.
+     */
+    private void handleSteeringSkip(int direction) {
+        if (direction == 0) return;
+        try {
+            boolean presetMode = usePresetModeForSteering();
+            if (mEngine != null) {
+                if (presetMode) {
+                    boolean moved = direction > 0 ? playSequentialPreset(+1) : playSequentialPreset(-1);
+                    if (!moved) {
+                        if (direction > 0) mEngine.seekUp();
+                        else mEngine.seekDown();
+                    }
+                } else {
+                    if (direction > 0) mEngine.seekUp();
+                    else mEngine.seekDown();
+                }
+                handlePlay();
+            } else {
+                enqueueSkip(direction > 0 ? +1 : -1, presetMode);
+                maybeStartEngine();
+                mIsPlaying = true;
+                setPlaybackState(true);
+                ensureNotificationVisible();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "handleSteeringSkip(" + direction + ") falló", e);
         }
     }
 
@@ -683,8 +768,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 int times = Math.abs(skip);
                 for (int i = 0; i < times; i++) {
                     if (skipPresetMode) {
-                        if (skip > 0) mEngine.nextFavorite();
-                        else mEngine.prevFavorite();
+                        boolean moved = playSequentialPreset(skip > 0 ? +1 : -1);
+                        if (!moved) {
+                            if (skip > 0) mEngine.seekUp();
+                            else mEngine.seekDown();
+                        }
                     } else {
                         if (skip > 0) mEngine.seekUp();
                         else mEngine.seekDown();
@@ -954,6 +1042,80 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
             mPresetPrefs.edit().putString("recent_freqs", sb.toString()).apply();
         } catch (Exception ignored) {}
+    }
+
+    /**
+     * Navegación de presets consistente con MainActivity/PresetManager para mandos del volante
+     * cuando la app está en segundo plano.
+     *
+     * @param direction +1 siguiente, -1 anterior.
+     * @return true si se pudo sintonizar un preset válido.
+     */
+    private boolean playSequentialPreset(int direction) {
+        try {
+            if (mEngine == null || mPresetPrefs == null) return false;
+            final int currentBand = getCurrentBandOrDefault(0);
+            final int currentFreq = getLiveFreqKhzOrDefault(0);
+            final int target = resolveSequentialPreset(currentBand, currentFreq, direction);
+            if (target <= 0) return false;
+            mEngine.tune(target);
+            updateMetadataFromPrefs(target);
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "playSequentialPreset() falló", e);
+            return false;
+        }
+    }
+
+    private int getCurrentBandOrDefault(int defaultBand) {
+        try {
+            if (mSessionController != null) {
+                RadioSessionState s = mSessionController.getCurrentState();
+                if (s != null && s.band >= 0) return s.band;
+            }
+        } catch (Exception ignored) {}
+        try {
+            if (mEngine != null) {
+                int b = mEngine.getCurrentBand();
+                if (b >= 0) return b;
+            }
+        } catch (Exception ignored) {}
+        return defaultBand;
+    }
+
+    private int resolveSequentialPreset(int band, int currentFreq, int direction) {
+        if (mPresetPrefs == null || direction == 0) return -1;
+        final int count = AppConstants.PRESETS_COUNT;
+        if (count <= 0) return -1;
+
+        final int[] presets = new int[count];
+        for (int i = 0; i < count; i++) {
+            String key = "P" + (i + 1) + "_B" + band;
+            presets[i] = mPresetPrefs.getInt(key, 0);
+        }
+
+        final int tolerance = 50; // 0.05 MHz
+        int currentIndex = -1;
+        for (int i = 0; i < count; i++) {
+            if (presets[i] > 0 && Math.abs(presets[i] - currentFreq) <= tolerance) {
+                currentIndex = i;
+                break;
+            }
+        }
+
+        if (direction > 0) {
+            for (int i = 1; i <= count; i++) {
+                int nextIdx = (currentIndex + i) % count;
+                if (presets[nextIdx] > 0) return presets[nextIdx];
+            }
+        } else {
+            int start = (currentIndex == -1) ? 0 : currentIndex;
+            for (int i = 1; i <= count; i++) {
+                int prevIdx = (start - i + count) % count;
+                if (presets[prevIdx] > 0) return presets[prevIdx];
+            }
+        }
+        return -1;
     }
 
     private void updateNotification() {

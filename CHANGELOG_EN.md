@@ -4,6 +4,19 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.9 (Stable)] - 2026-03-27
+*MT8163/HCN: MediaSession handoff when stopping online streaming; more robust steering-wheel routing in background.*
+
+### Added
+- **MT8163**: `ACTION_MT8163_FM_HANDOFF` / `ACTION_MT8163_FM_HANDOFF_COMPLETE` in `RadioMediaService` to drop session state before FM reconnect (fewer OEM force-stops); `OnlineStreamManager` triggers handoff and shows a localized toast when streaming stops (hint to fully restart the app if FM misbehaves).
+- **Media / steering**: explicit `setMediaButtonReceiver` to `MediaButtonBootstrapReceiver`; `ACTION_FAST_FORWARD` / `ACTION_REWIND` mapped like NEXT/PREV; unified `handleSteeringSkip` with cold-start queueing.
+
+### Changed
+- **MT8163Engine / RadioServiceController / MainActivity**: window blocking HCN bind after streaming, deferred `requestPlayAudio`, reconnect coordinated with session handoff.
+- **Strings**: `mt8163_stream_stopped_restart_hint` in all locales; removed QS6 firmware notice strings/dialog; `app_name_internal` **v5.0.9 Stable**; `versionCode 21`, `versionName 5.0.9 (Stable)`.
+
+---
+
 ## [5.0.8 (Stable)] - 2026-03-25
 *Stable release: launcher/logo quality, engineering menu access and MTK8259 mixer toggle, cloud UX when offline, layout fixes.*
 

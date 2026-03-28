@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
+    <string name="mt8163_stream_stopped_restart_hint">Streaming chiuso. Se la FM non risponde bene, chiudi completamente OpenRadioFM e riaprila.</string>
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Menu opzioni</string>
@@ -191,7 +192,7 @@
     <string name="my_favorites">I Miei Preferiti</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.9 Stable</string>
     <string name="accessibility_service_description">Questo servizio permette a OpenRadioFM di sovrapporsi quando premi il pulsante fisico RADIO su unità Android compatibili (es. K706), bypassando l’app di serie.</string>
     <string name="all_favorites_deleted">✅ Tutti i preferiti eliminati</string>
     <string name="category_app_options">Opzioni App</string>

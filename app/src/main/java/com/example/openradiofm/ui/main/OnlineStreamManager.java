@@ -1,7 +1,15 @@
 package com.example.openradiofm.ui.main;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
+
+import com.example.openradiofm.R;
+import com.example.openradiofm.service.RadioMediaService;
 
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
@@ -17,8 +25,14 @@ import androidx.media3.exoplayer.ExoPlayer;
  */
 public class OnlineStreamManager {
     private static final String TAG = "OnlineStreamManager";
+    /**
+     * Deja que {@link RadioMediaService} ejecute el handoff de MediaSession antes de
+     * {@link ExoPlayer#release()} (sesión de audio 6xx del stream). Evita carrera con SourceService.
+     */
+    private static final int MT8163_EXO_RELEASE_AFTER_HANDOFF_MS = 120;
 
     private final Context mContext;
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
     private final PlaybackManager mPlaybackManager;
     private ExoPlayer mExoPlayer;
     private String mCurrentStreamUrl;
@@ -29,6 +43,12 @@ public class OnlineStreamManager {
     public interface StreamListener {
         void onStreamStatusChanged(boolean isLoading, boolean isPlaying);
         void onStreamError(String message);
+
+        /** Antes de iniciar un stream (p. ej. cancelar reconexión HCN diferida en MT8163). */
+        default void onBeforeStreamStart() {}
+
+        /** Tras parar streaming en MT8163: posponer bind a FMPlugService (evita force-stop OEM). */
+        default void onStreamStoppedMt8163() {}
     }
 
     public OnlineStreamManager(Context context, PlaybackManager playbackManager) {
@@ -144,7 +164,11 @@ public class OnlineStreamManager {
         final String finalUrl = normalizedUrl;
 
         mCurrentStreamUrl = finalUrl;
-        stopStream(); // Limpiar instancias previas
+        if (mListener != null) {
+            mListener.onBeforeStreamStart();
+        }
+        // No notificar onStreamStoppedMt8163: es un reinicio de stream, no vuelta a FM.
+        stopStreamInternal(false);
 
         mIsLoading = true;
         updateUI();
@@ -243,6 +267,14 @@ public class OnlineStreamManager {
     }
 
     public void stopStream() {
+        stopStreamInternal(true);
+    }
+
+    /**
+     * @param notifyMt8163DeferredHcn {@code false} cuando solo se limpia antes de un nuevo stream
+     *                                (evita programar reconexión HCN + bind que rompe el arranque).
+     */
+    private void stopStreamInternal(boolean notifyMt8163DeferredHcn) {
         mIsLoading = false;
         mIsPlaying = false;
 
@@ -253,7 +285,37 @@ public class OnlineStreamManager {
             mPlaybackManager.getEngine().setOnlineStreamingActive(false);
         }
 
-        // Liberar ExoPlayer (puede tener latencia interna de decodificador)
+        // MT8163: bajar la sesión de medios antes de reconectar HCN (reduce force-stop en SourceService).
+        boolean mt8163 = mPlaybackManager != null && mPlaybackManager.getEngine() != null
+                && "MT8163".equals(mPlaybackManager.getEngine().getEngineName());
+        try {
+            if (mt8163) {
+                Intent handoff = new Intent(mContext, RadioMediaService.class);
+                handoff.setAction(RadioMediaService.ACTION_MT8163_FM_HANDOFF);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mContext.startForegroundService(handoff);
+                } else {
+                    mContext.startService(handoff);
+                }
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "MT8163 FM handoff (MediaSession)", e);
+        }
+
+        updateUI();
+
+        if (mt8163 && mExoPlayer != null) {
+            mMainHandler.postDelayed(
+                    () -> finishStreamStopAfterExoRelease(notifyMt8163DeferredHcn),
+                    MT8163_EXO_RELEASE_AFTER_HANDOFF_MS);
+            Log.d(TAG, "MT8163: liberación ExoPlayer diferida " + MT8163_EXO_RELEASE_AFTER_HANDOFF_MS + "ms tras handoff");
+            return;
+        }
+
+        finishStreamStopAfterExoRelease(notifyMt8163DeferredHcn);
+    }
+
+    private void finishStreamStopAfterExoRelease(boolean notifyMt8163DeferredHcn) {
         if (mExoPlayer != null) {
             try {
                 mExoPlayer.stop();
@@ -267,18 +329,60 @@ public class OnlineStreamManager {
         // Recuperar audio de la radio física con un pequeño delay para que ExoPlayer
         // libere el DAC antes de que el canal FM se active (evita mezcla transitoria).
         if (mPlaybackManager != null) {
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            long delayMs = 150L;
+            try {
+                if (mPlaybackManager.getEngine() != null
+                        && "MT8163".equals(mPlaybackManager.getEngine().getEngineName())) {
+                    delayMs = 450L;
+                }
+            } catch (Exception ignored) {}
+            mMainHandler.postDelayed(() -> {
                 if (mPlaybackManager != null) {
                     mPlaybackManager.setMute(false);
                     if (mPlaybackManager.getEngine() != null) {
                         mPlaybackManager.getEngine().switchToFmAudio();
                     }
                 }
-            }, 150);
+                try {
+                    if (mPlaybackManager != null && mPlaybackManager.getEngine() != null
+                            && "MT8163".equals(mPlaybackManager.getEngine().getEngineName())) {
+                        Intent done = new Intent(mContext, RadioMediaService.class);
+                        done.setAction(RadioMediaService.ACTION_MT8163_FM_HANDOFF_COMPLETE);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            mContext.startForegroundService(done);
+                        } else {
+                            mContext.startService(done);
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.w(TAG, "MT8163 FM handoff complete (MediaSession)", e);
+                }
+            }, delayMs);
         }
 
-        updateUI();
         Log.d(TAG, "Streaming detenido por completo.");
+
+        if (notifyMt8163DeferredHcn && mListener != null) {
+            try {
+                if (mPlaybackManager != null && mPlaybackManager.getEngine() != null
+                        && "MT8163".equals(mPlaybackManager.getEngine().getEngineName())) {
+                    mListener.onStreamStoppedMt8163();
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "onStreamStoppedMt8163", e);
+            }
+        }
+
+        if (notifyMt8163DeferredHcn && mPlaybackManager != null && mPlaybackManager.getEngine() != null
+                && "MT8163".equals(mPlaybackManager.getEngine().getEngineName())) {
+            try {
+                Toast.makeText(mContext.getApplicationContext(),
+                        mContext.getString(R.string.mt8163_stream_stopped_restart_hint),
+                        Toast.LENGTH_LONG).show();
+            } catch (Exception e) {
+                Log.w(TAG, "Toast MT8163 stream stopped", e);
+            }
+        }
     }
 
     private void updateUI() {

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    
+    <string name="mt8163_stream_stopped_restart_hint">Стрим зупинено. Якщо FM поводиться некоректно, повністю закрийте OpenRadioFM і відкрийте знову.</string>
     
     <string name="premium_customization">Меню опцій</string>
     <string name="theme_colors">Кольори Теми</string>
@@ -170,7 +170,7 @@
     <string name="about_info_header">ІНФОРМАЦІЯ</string>
     <string name="about_dev_by">Розроблено</string>
     <string name="about_tech_details">Технічні деталі</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.9 Stable</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
     <string name="all_favorites_deleted">✅ Усі обрані видалено</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>

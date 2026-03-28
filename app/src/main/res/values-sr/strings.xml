@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    
+    <string name="mt8163_stream_stopped_restart_hint">Striming je zaustavljen. Ako FM ne radi kako treba, potpuno zatvorite OpenRadioFM i ponovo ga otvorite.</string>
     
     <string name="premium_customization">Meni opcija</string>
     <string name="theme_colors">Boje Teme</string>
@@ -170,7 +170,7 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.8 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.9 Stable</string>
     <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
     <string name="all_favorites_deleted">✅ Svi favoriti su obrisani</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
