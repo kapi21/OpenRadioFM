@@ -4,6 +4,14 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.12 (Beta)] - 2026-03-27
+*Versioning: replace the “Stable” label with “Beta” in visible naming and active docs until release quality is consolidated.*
+
+### Changed
+- **Branding / versioning**: `versionCode 24`, `versionName 5.0.12 (Beta)`; `app_name_internal` **v5.0.12 Beta** (no functional changes vs 5.0.11).
+
+---
+
 ## [5.0.11 (Stable)] - 2026-03-28
 *K706: online streaming matches MCU routing; simple layout on non-sw720dp; engineering menus with experimental AutoScan toggle.*
 

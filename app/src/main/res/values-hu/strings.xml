@@ -192,7 +192,7 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.11 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.12 Beta</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
     <string name="all_favorites_deleted">✅ Az összes kedvenc törölve</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>

@@ -1,3 +1,11 @@
+## [5.0.12 (Beta)] - 2026-03-27
+*Versionado: la etiqueta «Stable» se sustituye por «Beta» en nombre visible y documentación activa hasta consolidar la calidad de release.*
+
+### Changed
+- **Marca / versionado**: `versionCode 24`, `versionName 5.0.12 (Beta)`; `app_name_internal` **v5.0.12 Beta** (sin cambios funcionales respecto a 5.0.11).
+
+---
+
 ## [5.0.11 (Stable)] - 2026-03-28
 *K706: streaming online coherente con el canal MCU; layout simple (pantallas no sw720dp); menús ingeniería con toggle AutoScan experimental.*
 

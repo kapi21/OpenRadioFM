@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.11%20(Stable)-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.12%20(Beta)-orange.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -189,10 +189,14 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.0.11 **Stable** (Marzo 2026) — `main`
+### v5.0.12 **Beta** (Marzo 2026) — `main`
+- **ES:** **OpenRadioFM v5.0.12 Beta** — misma base que 5.0.11; se deja de usar la etiqueta *Stable* en `versionName` / `app_name_internal` y se publica como **Beta** hasta considerar la línea suficientemente madura.
+- **EN:** **OpenRadioFM v5.0.12 Beta** — same codebase as 5.0.11; *Stable* is dropped from `versionName` / `app_name_internal` in favor of **Beta** until the line is mature enough.
 
-- **ES:** **OpenRadioFM v5.0.11 Stable** — K706: corrección streaming online (sin `switchToFm` retardado al reiniciar stream); layout simple en pantallas no `sw720dp` (iconos más compactos); menús ingeniería con interruptor AutoScan experimental; seek/preset en segundo plano (v5.0.10 accesibilidad) validado. Detalle en `CHANGELOG.md`.
-- **EN:** **OpenRadioFM v5.0.11 Stable** — K706 online streaming fix; simple layout tweaks on non-`sw720dp`; engineering AutoScan toggle; background seek/preset (v5.0.10 accessibility) confirmed. See `CHANGELOG_EN.md`.
+### v5.0.11 (Marzo 2026) — `main`
+
+- **ES:** **OpenRadioFM v5.0.11** — K706: corrección streaming online (sin `switchToFm` retardado al reiniciar stream); layout simple en pantallas no `sw720dp` (iconos más compactos); menús ingeniería con interruptor AutoScan experimental; seek/preset en segundo plano (v5.0.10 accesibilidad) validado. Detalle en `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.11** — K706 online streaming fix; simple layout tweaks on non-`sw720dp`; engineering AutoScan toggle; background seek/preset (v5.0.10 accessibility) confirmed. See `CHANGELOG_EN.md`.
 
 ### v5.0.10 **Stable** (Marzo 2026) — `main`
 
