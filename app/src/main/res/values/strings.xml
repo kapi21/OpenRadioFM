@@ -114,6 +114,7 @@
     <string name="engine_mtk">MediaTek Genérico</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MediaTek 8259 / 8667</string>
+    <string name="engine_jancar">Jancar IVI (8227L / IRadio)</string>
     <string name="engine_standard">Android Estándar</string>
     <string name="steering_next_prev_mode">🛞 Mandos volante NEXT/PREV</string>
     <string name="steering_mode_seek">Seek (emisoras)</string>

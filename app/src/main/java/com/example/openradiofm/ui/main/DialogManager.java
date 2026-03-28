@@ -429,7 +429,8 @@ public class DialogManager {
                     mActivity.getString(R.string.engine_mtk),
                     mActivity.getString(R.string.engine_ts),
                     mActivity.getString(R.string.engine_mtk8259), // V18.6
-                    mActivity.getString(R.string.engine_standard)
+                    mActivity.getString(R.string.engine_standard),
+                    mActivity.getString(R.string.engine_jancar)
             };
             if (engineIdx >= 0 && engineIdx < engineNames.length) {
                 tvCurrentEngine.setText(engineNames[engineIdx]);
@@ -769,7 +770,8 @@ public class DialogManager {
                 mActivity.getString(R.string.engine_mtk),
                 mActivity.getString(R.string.engine_ts),
                 mActivity.getString(R.string.engine_mtk8259),
-                mActivity.getString(R.string.engine_standard)
+                mActivity.getString(R.string.engine_standard),
+                mActivity.getString(R.string.engine_jancar)
         };
         int currentIdx = mActivity.mPrefs.getInt("pref_radio_engine", 0);
 

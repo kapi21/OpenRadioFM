@@ -107,6 +107,7 @@
     <string name="engine_mtk">Generic MediaTek</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_jancar">Jancar IVI (8227L / IRadio)</string>
     <string name="engine_k706_can">K706 CAN-Bus</string>
     <string name="engine_standard">Android Standard</string>
     <string name="am_band_enabled">✅ AM Band enabled</string>

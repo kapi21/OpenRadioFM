@@ -33,6 +33,12 @@
         <intent>
             <action android:name="com.hcn.autoradio.FM_PLUG_SERVICE" />
         </intent>
+
+        <!-- Jancar IVI (IRadio en com.jancar.services) -->
+        <package android:name="com.jancar.services" />
+        <intent>
+            <action android:name="com.jancar.services.action.radio" />
+        </intent>
     </queries>
 
     <application

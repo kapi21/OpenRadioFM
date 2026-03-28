@@ -40,8 +40,9 @@ public class RadioServiceController {
     private static final Object SHARED_LOCAL_ENGINE_LOCK = new Object();
 
     /**
-     * Llamar desde {@link com.example.openradiofm.data.source.QS6Engine#release()} (y K706 si aplica)
-     * para no reutilizar un motor ya cerrado.
+     * Llamar desde {@link com.example.openradiofm.data.source.QS6Engine#release()},
+     * {@link com.example.openradiofm.data.source.K706Engine#release()} o
+     * {@link com.example.openradiofm.data.source.JancarIviEngine#release()} para no reutilizar un motor ya cerrado.
      */
     public static void clearSharedLocalEngineIfSame(RadioEngine engine) {
         if (engine == null) return;
@@ -120,6 +121,11 @@ public class RadioServiceController {
         return detectMode() == MainActivity.FmMode.FM_K706;
     }
 
+    /** Jancar IVI ({@code com.jancar.services} + IRadio). */
+    public boolean isJancarIviMode() {
+        return detectMode() == MainActivity.FmMode.FM_JANCAR_IVI;
+    }
+
     public void start() {
         MainActivity.FmMode mode = detectMode();
         Log.i(TAG, "=> START() INVOCADO. MODO DETECTADO: " + mode);
@@ -189,6 +195,43 @@ public class RadioServiceController {
                 return;
             } catch (Exception e) {
                 Log.e(TAG, "Error iniciando QS6Engine", e);
+            }
+        } else if (mode == MainActivity.FmMode.FM_JANCAR_IVI) {
+            try {
+                synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                    if (sSharedLocalEngine instanceof com.example.openradiofm.data.source.JancarIviEngine) {
+                        Log.i(TAG, "=> JancarIviEngine ya activo — reutilizando instancia compartida");
+                        if (mListener != null) {
+                            mListener.onEngineReady(sSharedLocalEngine);
+                        }
+                        return;
+                    }
+                    Log.i(TAG, "tryStartJancarIviEngine(): iniciando motor Jancar IVI...");
+                    com.example.openradiofm.data.source.JancarIviEngine engine =
+                            new com.example.openradiofm.data.source.JancarIviEngine();
+                    if (engine.init(mContext)) {
+                        sSharedLocalEngine = engine;
+                        try {
+                            Intent mediaSvc = new Intent(mContext, RadioMediaService.class);
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                mContext.startForegroundService(mediaSvc);
+                            } else {
+                                mContext.startService(mediaSvc);
+                            }
+                            Log.i(TAG, "Jancar IVI: RadioMediaService arrancado (AudioFocus / sesión)");
+                        } catch (Exception e) {
+                            Log.w(TAG, "Jancar IVI: no se pudo arrancar RadioMediaService", e);
+                        }
+                        if (mListener != null) {
+                            mListener.onEngineReady(engine);
+                        }
+                    } else {
+                        Log.w(TAG, "Error iniciando JancarIviEngine (init devolvió false)");
+                    }
+                }
+                return;
+            } catch (Exception e) {
+                Log.e(TAG, "Error iniciando JancarIviEngine", e);
             }
         }
 
@@ -301,11 +344,13 @@ public class RadioServiceController {
         if (engineIdx >= 3 && engineIdx <= 5) return MainActivity.FmMode.FM_MT8163;
         if (engineIdx == 6) return MainActivity.FmMode.FM_BASICO;
         if (engineIdx == 7) return MainActivity.FmMode.FM_8259_8667;
+        if (engineIdx == 8) return MainActivity.FmMode.FM_JANCAR_IVI;
 
         // Si es Automático (0), intentamos detectar el hardware
         if (isTS8259()) return MainActivity.FmMode.FM_8259_8667;
         if (isQS6()) return MainActivity.FmMode.FM_QS6;
         if (isK706()) return MainActivity.FmMode.FM_K706;
+        if (isJancarIvi()) return MainActivity.FmMode.FM_JANCAR_IVI;
         if (hasCarRadioService()) return MainActivity.FmMode.FM_MT8163;
         return MainActivity.FmMode.FM_BASICO;
     }
@@ -336,6 +381,10 @@ public class RadioServiceController {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    private boolean isJancarIvi() {
+        return com.example.openradiofm.data.source.JancarIviEngine.isJancarIviAvailable(mContext);
     }
 
     private boolean hasCarRadioService() {

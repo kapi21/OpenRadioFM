@@ -123,6 +123,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         FM_BASICO,
         FM_K706,
         FM_QS6,
+        /** Jancar IVI ({@code com.jancar.services} / IRadio AIDL), p. ej. MTK8227L. */
+        FM_JANCAR_IVI,
         FM_8259_8667,
         AM
     }
@@ -1263,7 +1265,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     boolean tuneToLast = false;
                     if (mEngine.getCurrentFreq() <= 0) {
                         tuneToLast = true;
-                    } else if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) && !mIsRecreating) {
+                    } else if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706
+                            || mMode == FmMode.FM_JANCAR_IVI) && !mIsRecreating) {
                         try {
                             if (mEngine.getCurrentFreq() != mLastFreq) {
                                 tuneToLast = true;
@@ -1281,7 +1284,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         }
                         // QS6/K706: el stack OEM o el MCU pueden reimponer 87.5/87.6 justo tras el init.
                         // Reforzamos la sintonía a la última guardada una vez pasa la ráfaga de callbacks iniciales.
-                        if (mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) {
+                        if (mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706
+                                || mMode == FmMode.FM_JANCAR_IVI) {
                             final int targetFreq = mLastFreq;
                             final int targetBand = mLastBand;
                             mMainHandler.postDelayed(() -> {
@@ -3462,7 +3466,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         + " (saved=" + mStartupSavedFreqKhz + ")");
                 // QS6/K706: algunos firmwares o el MCU reimponen 87.5/87.6 tras callbacks tardíos.
                 // Reforzamos restauración activa de la emisora guardada durante ventana de arranque.
-                if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) && mEngine != null && mStartupRetuneAttempts < 3) {
+                if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706
+                        || mMode == FmMode.FM_JANCAR_IVI) && mEngine != null && mStartupRetuneAttempts < 3) {
                     final int targetFreq = mStartupSavedFreqKhz;
                     final int targetBand = mLastBand;
                     mStartupRetuneAttempts++;
@@ -3494,7 +3499,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // QS6/K706: el firmware o MCU puede emitir 87.5/87.6 de forma espuria. Solo persistimos
         // estas frecuencias bootstrap si vienen de una acción explícita de usuario reciente.
-        if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706) && (freq == 87500 || freq == 87600)) {
+        if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706
+                || mMode == FmMode.FM_JANCAR_IVI) && (freq == 87500 || freq == 87600)) {
             boolean userRequestedRecently =
                     mUserRequestedFreqKhz == freq
                             && android.os.SystemClock.elapsedRealtime() <= mUserRequestedFreqUntilMs;
