@@ -358,7 +358,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         // Entramos en foreground con una notificación "pausada" y salimos si procede.
         try {
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
-            if (!mIsPlaying) {
+            // K706: si la FM sigue “al aire” (!userPaused + playing), mantener FGS aunque onStartCommand
+            // se dispare con intent vacío; si no, Android no enruta MEDIA_BUTTON al volante en segundo plano.
+            boolean k706KeepFg = mRadioServiceController != null && mRadioServiceController.isK706Mode()
+                    && !mUserPaused && mIsPlaying;
+            if (!mIsPlaying && !k706KeepFg) {
                 stopForeground(false); // mantener notificación visible
             }
         } catch (Exception e) {
@@ -789,6 +793,29 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
     }
 
+    private boolean isK706SteeringPlatform() {
+        try {
+            if (mEngine != null && "K706".equals(mEngine.getEngineName())) return true;
+        } catch (Exception ignored) {}
+        return mRadioServiceController != null && mRadioServiceController.isK706Mode();
+    }
+
+    /**
+     * K706: al ir a launcher el SoC suele emitir LOSS; bajar la MediaSession a PAUSED hace que el
+     * sistema envíe KEYCODE_MEDIA al Launcher en lugar de ACTION_MEDIA_BUTTON a esta app.
+     */
+    private void refreshK706SteeringSessionAndForeground() {
+        if (!isK706SteeringPlatform() || mUserPaused || mMediaSession == null) return;
+        try {
+            mIsPlaying = true;
+            setPlaybackState(true);
+            startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            Log.d(TAG, "K706: sesión PLAYING+FGS mantenida para mandos en segundo plano");
+        } catch (Exception e) {
+            Log.w(TAG, "refreshK706SteeringSessionAndForeground", e);
+        }
+    }
+
     private final BroadcastReceiver mOemFocusReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(android.content.Context context, Intent intent) {
@@ -799,6 +826,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             switch (event) {
                 case K706RadioManager.EVENT_LOSS:
                 case K706RadioManager.EVENT_LOSS_TRANSIENT:
+                    if (isK706SteeringPlatform() && !mUserPaused) {
+                        if (mIsPlaying) mWasPlayingBeforeFocusLoss = true;
+                        writeOemStateToPrefs(event);
+                        refreshK706SteeringSessionAndForeground();
+                        ensureNotificationVisible();
+                        break;
+                    }
                     // Si estaba sonando y el usuario NO había pausado, recordamos y reflejamos PAUSE
                     if (mIsPlaying && !mUserPaused) {
                         mWasPlayingBeforeFocusLoss = true;

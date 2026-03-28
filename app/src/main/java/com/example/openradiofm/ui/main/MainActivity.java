@@ -91,6 +91,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     /** Silenciar FM en llamadas (K706): {@link Manifest.permission#READ_PHONE_STATE} */
     private static final int REQ_READ_PHONE_STATE_K706 = 1003;
 
+    /**
+     * {@link com.example.openradiofm.services.FactoryRadioHijackerService}: si es true, esta activity
+     * está al menos en {@code onStart}; no reenviar teclas MEDIA por accesibilidad (evita doble acción).
+     */
+    public static volatile boolean sMainActivityStarted = false;
+
+    /**
+     * True mientras esta activity exista y el modo sea K706: habilita reenvío de teclas MEDIA vía
+     * accesibilidad con la app en segundo plano (no aplica a QS6/MT8163).
+     */
+    public static volatile boolean sK706WheelBridgeActive = false;
+
     // Band Constants
     private static final int BAND_FM1 = 0;
     private static final int BAND_FM2 = 1;
@@ -1126,6 +1138,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         @Override
         public void onModeDetected(FmMode mode) {
             mMode = mode; // Se asigna sincronamente antes de volver a la cola de eventos
+            sK706WheelBridgeActive = (mMode == FmMode.FM_K706);
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 Log.d(TAG, "Modo de funcionamiento detectado: " + mMode);
@@ -1923,6 +1936,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     protected void onResume() {
         super.onResume();
+        sK706WheelBridgeActive = (mMode == FmMode.FM_K706);
         // Algunas ROM OEM (MTK8259/Topway) reimponen fullscreen al volver al frente.
         applyStatusBarVisibility();
         
@@ -1987,6 +2001,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
+    @Override
+    protected void onStart() {
+        super.onStart();
+        sMainActivityStarted = true;
+    }
+
     /**
      * QS6/NWD: al ir a segundo plano, dejar de reclamar AudioFocus (sin conmutar fuente MCU
      * a Android — menos agresivo que {@code switchToAndroidAudio()}). Evita competir con el
@@ -1994,8 +2014,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
     @Override
     protected void onStop() {
+        sMainActivityStarted = false;
         boolean liveActive = mOnlineStreamManager != null
                 && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
+        // K706: al pasar a launcher las teclas van a la ventana enfocada; reforzar FGS + PLAYING en
+        // RadioMediaService para que el sistema enrute MEDIA_BUTTON aquí (no solo dispatchKeyEvent en la Activity).
+        if (!liveActive && mMode == FmMode.FM_K706 && mPlaybackManager != null && !mPlaybackManager.isMuted()) {
+            try {
+                Intent media = new Intent(this, RadioMediaService.class);
+                media.setAction(RadioMediaService.ACTION_FORCE_PLAY);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    startForegroundService(media);
+                } else {
+                    startService(media);
+                }
+            } catch (Exception e) {
+                android.util.Log.w(TAG, "onStop: K706 elevate RadioMediaService for steering", e);
+            }
+        }
         if (!liveActive && mEngine != null && !isChangingConfigurations()) {
             try {
                 mEngine.releaseAudioFocusOnlyForBackground();
@@ -2114,6 +2150,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     protected void onDestroy() {
+        sK706WheelBridgeActive = false;
         // V21.0: Cancel all pending UI tasks immediately
         mMainHandler.removeCallbacksAndMessages(null);
         if (mAutoHideHandler != null) mAutoHideHandler.removeCallbacksAndMessages(null);

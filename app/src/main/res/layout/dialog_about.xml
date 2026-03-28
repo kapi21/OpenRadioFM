@@ -43,7 +43,7 @@
             android:textSize="18sp"
             android:textStyle="bold"
             android:text=""
-            tools:text="Versión 5.0.9 (Stable)"
+            tools:text="Versión 5.0.10 (Stable)"
             android:layout_marginBottom="24dp"/>
 
         <!-- SUBHEADER -->

@@ -1,3 +1,19 @@
+## [5.0.10 (Stable)] - 2026-03-27
+*K706: mandos de volante en segundo plano vía servicio de accesibilidad; sesión de medios y FGS más coherentes cuando la app no está al frente.*
+
+### Added
+- **K706 / accesibilidad**: `FactoryRadioHijackerService` intercepta `KeyEvent` del volante cuando el launcher u otra app está al frente (la radio OEM recibe mandos por MCU/QuickFish; OpenRadioFM no) y reenvía `ACTION_MEDIA_BUTTON` a `RadioMediaService`; `accessibility_service_config.xml` con `requestFilterKeyEvents` y sin filtro por paquete para capturar teclas globales.
+- **Preferencias**: `pref_a11y_forward_media_keys` (por defecto activo) para desactivar el reenvío si no se desea.
+
+### Changed
+- **MainActivity**: banderas `sMainActivityStarted` / `sK706WheelBridgeActive` para reenviar solo en K706 con la app en segundo plano.
+- **RadioMediaService**: en pérdida de audio OEM en K706, mantener sesión en reproducción y FGS cuando aplica; `onStartCommand` evita quitar FGS en ese escenario; `ACTION_FORCE_PLAY` desde `MainActivity.onStop` si no hay mute ni streaming.
+- **RadioServiceController**: `isK706Mode()` para la lógica anterior.
+- **Strings**: descripción del servicio de accesibilidad (ES/EN) alineada con captura de teclas de medios.
+- **Versión**: `versionCode 22`, `versionName 5.0.10 (Stable)`; `app_name_internal` **v5.0.10 Stable**.
+
+---
+
 ## [5.0.9 (Stable)] - 2026-03-27
 *MT8163/HCN: handoff de MediaSession al cerrar streaming; mandos de volante y sesión de medios más robustos en segundo plano.*
 

@@ -4,6 +4,22 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.10 (Stable)] - 2026-03-27
+*K706: steering-wheel keys in background via accessibility service; MediaSession/FGS behavior when the app is not in foreground.*
+
+### Added
+- **K706 / accessibility**: `FactoryRadioHijackerService` intercepts steering `KeyEvent` when the launcher or another app is in front (OEM FM gets MCU/QuickFish; OpenRadioFM does not) and forwards `ACTION_MEDIA_BUTTON` to `RadioMediaService`; `accessibility_service_config.xml` uses `requestFilterKeyEvents` and no package filter for global key capture.
+- **Preferences**: `pref_a11y_forward_media_keys` (default on) to disable forwarding if undesired.
+
+### Changed
+- **MainActivity**: `sMainActivityStarted` / `sK706WheelBridgeActive` so forwarding only runs on K706 with the app in background.
+- **RadioMediaService**: on OEM audio loss on K706, keep session playing and FGS when applicable; `onStartCommand` avoids dropping FGS in that case; `ACTION_FORCE_PLAY` from `MainActivity.onStop` when not muted and not streaming.
+- **RadioServiceController**: `isK706Mode()` for the above.
+- **Strings**: accessibility service description (EN/ES) aligned with media key capture.
+- **Version**: `versionCode 22`, `versionName 5.0.10 (Stable)`; `app_name_internal` **v5.0.10 Stable**.
+
+---
+
 ## [5.0.9 (Stable)] - 2026-03-27
 *MT8163/HCN: MediaSession handoff when stopping online streaming; more robust steering-wheel routing in background.*
 

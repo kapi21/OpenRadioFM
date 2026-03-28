@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.8%20(Stable)-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.10%20(Stable)-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -151,6 +151,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## ⚠️ Problemas Conocidos (Marzo 2026)
 - **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
+- **Volante en segundo plano (K706)**: En muchas ROM, con el **launcher u otra app al frente**, las teclas del volante llegan como `KeyEvent` al foco y la **radio OEM** sigue recibiendo mandos por **MCU/QuickFish**. OpenRadioFM no puede usar ese canal sin integración OEM; a partir de **v5.0.10** el servicio de accesibilidad **Factory Radio Hijacker** puede **capturar y reenviar** esas teclas a la app (activar el servicio en Ajustes → Accesibilidad). Opcional (avanzado): en SharedPreferences **RadioPresets**, `pref_a11y_forward_media_keys=false` desactiva el reenvío (por defecto está activo).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.
 - **AutoScan (Smart v2)**: ⏸️ **Under study**. El botón está temporalmente deshabilitado mientras se calibra el filtrado (RDS/señal) para evitar capturar frecuencias sin emisión.
@@ -187,6 +188,16 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.10 **Stable** (Marzo 2026) — `main`
+
+- **ES:** **OpenRadioFM v5.0.10 Stable** — K706: volante en segundo plano mediante servicio de accesibilidad (captura de `KeyEvent` y reenvío a `RadioMediaService`); sesión de medios y FGS alineados cuando la app no está al frente; `ACTION_FORCE_PLAY` desde `MainActivity` al pasar a segundo plano si aplica. Detalle en `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.10 Stable** — K706: background steering via accessibility (key capture → `RadioMediaService`); MediaSession/FGS tweaks; `ACTION_FORCE_PLAY` from `MainActivity` when going to background when applicable. See `CHANGELOG_EN.md`.
+
+### v5.0.9 **Stable** (Marzo 2026) — `main`
+
+- **ES:** MT8163/HCN: handoff de MediaSession al cerrar streaming online; mandos de volante y sesión más robustos en segundo plano. Ver `CHANGELOG.md`.
+- **EN:** MT8163/HCN: MediaSession handoff when stopping streaming; improved steering/session in background. See `CHANGELOG_EN.md`.
 
 ### v5.0.8 **Stable** (Marzo 2026) — `main`
 

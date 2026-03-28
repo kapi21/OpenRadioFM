@@ -119,7 +119,7 @@
     <string name="about_info_header">信息</string>
     <string name="about_dev_by">开发者</string>
     <string name="about_tech_details">技术详情</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.9 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.10 Stable</string>
     <string name="accessibility_service_description">此服务允许在兼容的安卓主机（例如 K706）按下物理 RADIO 按键时，OpenRadioFM 覆盖显示并绕过原厂应用。</string>
     <string name="all_favorites_deleted">✅ 已删除所有收藏</string>
     <string name="language_german">Deutsch</string>

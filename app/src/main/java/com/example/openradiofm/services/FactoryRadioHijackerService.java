@@ -2,9 +2,13 @@ package com.example.openradiofm.services;
 
 import android.accessibilityservice.AccessibilityService;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
 
+import com.example.openradiofm.service.RadioMediaService;
 import com.example.openradiofm.ui.main.MainActivity;
 
 /**
@@ -15,6 +19,9 @@ import com.example.openradiofm.ui.main.MainActivity;
 public class FactoryRadioHijackerService extends AccessibilityService {
 
     private static final String TAG = "RadioHijackerService";
+    private static final String PREFS = "RadioPresets";
+    /** Si false, no interceptar teclas MEDIA (solo hijack de app de fábrica). */
+    private static final String PREF_FORWARD_MEDIA_KEYS = "pref_a11y_forward_media_keys";
     private static final String TARGET_PACKAGE_K706 = "com.android.fmradio.ext";
     private static final String TARGET_PACKAGE_MT8163 = "com.hcn.autoradio";
     private static final String TARGET_PACKAGE_QS6 = "com.nwd.radio";
@@ -80,6 +87,56 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     @Override
     public void onInterrupt() {
         Log.w(TAG, "Servicio Hijacker interrumpido");
+    }
+
+    /**
+     * K706/Topway: con el launcher al frente las teclas MEDIA van como {@code KeyEvent} al launcher,
+     * no como {@code ACTION_MEDIA_BUTTON} a {@link RadioMediaService}. Reenviamos solo cuando
+     * {@link MainActivity} no está en ciclo started (app en segundo plano).
+     */
+    @Override
+    protected boolean onKeyEvent(KeyEvent event) {
+        try {
+            if (event == null) return false;
+            if (MainActivity.sMainActivityStarted) {
+                return false;
+            }
+            if (!MainActivity.sK706WheelBridgeActive) {
+                return false;
+            }
+            SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
+            if (!p.getBoolean(PREF_FORWARD_MEDIA_KEYS, true)) {
+                return false;
+            }
+            if (event.getAction() != KeyEvent.ACTION_DOWN) {
+                return false;
+            }
+            int code = event.getKeyCode();
+            if (code != KeyEvent.KEYCODE_MEDIA_NEXT
+                    && code != KeyEvent.KEYCODE_MEDIA_PREVIOUS
+                    && code != KeyEvent.KEYCODE_MEDIA_PLAY
+                    && code != KeyEvent.KEYCODE_MEDIA_PAUSE
+                    && code != KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
+                    && code != KeyEvent.KEYCODE_MEDIA_STOP
+                    && code != KeyEvent.KEYCODE_MEDIA_FAST_FORWARD
+                    && code != KeyEvent.KEYCODE_MEDIA_REWIND) {
+                return false;
+            }
+
+            Intent svc = new Intent(this, RadioMediaService.class);
+            svc.setAction(Intent.ACTION_MEDIA_BUTTON);
+            svc.putExtra(Intent.EXTRA_KEY_EVENT, event);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(svc);
+            } else {
+                startService(svc);
+            }
+            Log.d(TAG, "MEDIA key reenviada a RadioMediaService (keyCode=" + code + ")");
+            return true;
+        } catch (Exception e) {
+            Log.w(TAG, "onKeyEvent forward falló", e);
+            return false;
+        }
     }
 
     @Override

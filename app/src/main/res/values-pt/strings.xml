@@ -192,7 +192,7 @@
     <string name="my_favorites">Meus Favoritos</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.9 Stable</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.10 Stable</string>
     <string name="accessibility_service_description">Este serviço permite que o OpenRadioFM se sobreponha quando você pressiona o botão físico RADIO em unidades Android compatíveis (ex.: K706), ignorando o app de fábrica.</string>
     <string name="all_favorites_deleted">✅ Todos os favoritos apagados</string>
     <string name="category_app_options">Opções da App</string>

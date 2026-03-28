@@ -115,6 +115,11 @@ public class RadioServiceController {
         return detectMode() == MainActivity.FmMode.FM_MT8163;
     }
 
+    /** K706: modo MCU Topway; mandos en segundo plano dependen de sesión de medios + servicio en foreground. */
+    public boolean isK706Mode() {
+        return detectMode() == MainActivity.FmMode.FM_K706;
+    }
+
     public void start() {
         MainActivity.FmMode mode = detectMode();
         Log.i(TAG, "=> START() INVOCADO. MODO DETECTADO: " + mode);
