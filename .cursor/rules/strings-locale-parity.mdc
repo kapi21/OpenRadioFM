@@ -1,0 +1,11 @@
+---
+description: Paridad de strings entre idiomas y auditoría
+alwaysApply: false
+---
+
+# Recursos de texto multi-idioma
+
+- Al añadir o renombrar claves en `app/src/main/res/values/strings.xml`, actualizar **todas** las `values-*/strings.xml` del proyecto con la misma lista de `name=`.
+- Tras cambios en strings, ejecutar `./gradlew :app:auditStrings` (requiere Python 3). Falla si falta o sobra alguna clave respecto al `values` por defecto.
+- Alternativa manual: `python tools/diff_strings.py` (informe) o `python tools/diff_strings.py --strict` (exit 1 si hay diferencias).
+- Las claves con `translatable="false"` en el base no suelen necesitar copia en otros idiomas; el script puede ignorarlas con `--ignore-nontranslatable` si se prefiere ese criterio.
