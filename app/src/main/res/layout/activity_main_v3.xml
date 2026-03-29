@@ -78,6 +78,8 @@
     <ImageView
         android:id="@+id/ivCarLogo"
         android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true"
         android:layout_width="150.0dp"
         android:layout_height="0.0dp"
         android:scaleType="fitCenter"

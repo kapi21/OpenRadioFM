@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 24
-        versionName = "5.0.12 (Beta)"
+        versionCode = 25
+        versionName = "5.0.13 (Beta)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -67,7 +67,15 @@ android {
     // Icon packs: empaquetar PNGs de packs como assets (sin mover archivos).
     sourceSets {
         getByName("main") {
-            assets.srcDirs("src/main/assets", "../icons_color")
+            assets.srcDirs(
+                "src/main/assets",
+                "../icons_color",
+                "../icons_google",
+                "../Icons_lucide",
+                "../icons_remix",
+                "../icons_awesome",
+                "../icons_tabler",
+            )
         }
     }
 }
@@ -98,6 +106,8 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp.logging)
     implementation(libs.glide)
+    // SVG icon packs: *_p3 … *_p7 (icons_google, Icons_lucide, icons_remix, icons_awesome, icons_tabler)
+    implementation("com.caverock:androidsvg:1.4")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -116,4 +126,16 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer-dash:1.3.1")
     implementation("androidx.media3:media3-exoplayer-rtsp:1.3.1")
     implementation("androidx.media3:media3-datasource-okhttp:1.3.1")
+}
+
+// Compara claves de strings.xml entre idiomas (requiere Python 3 en PATH).
+tasks.register<Exec>("auditStrings") {
+    group = "verification"
+    description = "Verifica que values-*/strings.xml tengan las mismas claves que values/strings.xml"
+    workingDir = rootProject.layout.projectDirectory.asFile
+    val script = workingDir.resolve("tools/diff_strings.py")
+    inputs.file(script)
+    inputs.dir(file("src/main/res"))
+    commandLine("python", script.absolutePath, "--strict")
+    isIgnoreExitValue = false
 }

@@ -132,10 +132,8 @@ public class NightModeManager {
         tintImageView(R.id.ivTaIcon, nightBlue);
         tintImageView(R.id.ivTpIcon, nightBlue);
         
-        // V17: El ID real del icono es ivDataActivityIcon, el wrapper FrameLayout es ivDataActivity.
-        // tintImageView ahora es seguro contra casts.
-        tintImageView(R.id.ivDataActivityIcon, nightBlue);
-        tintImageView(R.id.ivDataActivity, nightBlue);
+        // Cloud (ivDataActivityIcon): no teñir aquí — rojo/amarillo/azul en idle lo aplica
+        // MainActivity.updateDataActivityUI() tras applyNightModeColors (evita pisar streaming).
 
         // Botones de control
         int[] buttonIds = {
@@ -226,9 +224,7 @@ public class NightModeManager {
         clearImageViewFilter(R.id.ivTaIcon);
         clearImageViewFilter(R.id.ivTpIcon);
         
-        // V17: El ID real del icono es ivDataActivityIcon, el wrapper FrameLayout es ivDataActivity
-        clearImageViewFilter(R.id.ivDataActivityIcon);
-        clearImageViewFilter(R.id.ivDataActivity); // Safe helper handles FrameLayout too now
+        // Cloud: estado (idle/streaming) en MainActivity.updateDataActivityUI()
 
         // Botones
         int[] buttonIds = {

@@ -41,10 +41,19 @@
     <string name="icon_pack">🎛️ Pachet de pictograme</string>
     <string name="icon_pack_default">Implicit</string>
     <string name="icon_pack_color">Color</string>
+    <string name="icon_pack_google">Google (Material)</string>
+    <string name="icon_pack_lucide">Lucide</string>
+    <string name="icon_pack_remix">Remix</string>
+    <string name="icon_pack_awesome">Font Awesome</string>
+    <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Selectează pachetul de pictograme</string>
     <string name="layout2_side_label">Layout V2 (vertical): partea preseturilor</string>
     <string name="layout2_side_presets_left">Preseturi în stânga</string>
     <string name="layout2_side_presets_right">Preseturi în dreapta</string>
+    <string name="steering_next_prev_mode">🛞 Volan NEXT/PREV</string>
+    <string name="steering_mode_seek">Căutare (posturi)</string>
+    <string name="steering_mode_preset">Preset (memorii)</string>
+    <string name="select_steering_mode">Alege acțiunea NEXT/PREV</string>
     
     
     <string name="night_mode_enabled">✅ Mod Noapte Automat activat</string>
@@ -55,6 +64,7 @@
     <string name="gestures_disabled">❌ Geste de glisare dezactivate</string>
     <string name="logos_online_enabled">✅ Logo-uri online activate</string>
     <string name="logos_online_disabled">❌ Logo-uri online dezactivate</string>
+    <string name="under_study">În studiu</string>
     <string name="night_mode_manual_blocked">Dezactivați Modul Noapte Automat pentru a alege tema manual</string>
     <string name="auto_hide_controls">Ascunde controalele automat</string>
     <string name="auto_hide_enabled">✅ Ascundere automată activată</string>
@@ -113,6 +123,7 @@
     <string name="engine_mtk">MediaTek Generic</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MediaTek 8259 / 8667</string>
+    <string name="engine_jancar">Jancar IVI (8227L / IRadio)</string>
     <string name="engine_standard">Android Standard</string>
     <string name="am_band_enabled">✅ Bandă AM activată</string>
     <string name="am_band_disabled">❌ Bandă AM dezactivată</string>
@@ -166,12 +177,12 @@
     <string name="contrib_cloud">Contribuie la Comunitate (Logouri HD)</string>
     <string name="contrib_cloud_desc">Trimite automat frecvența și codul PI al stațiilor locale pentru a îmbunătăți baza de date globală.</string>
 <string name="status_bar_v2">Arată bara de stare</string>
-<string name="status_bar_enabled">✅ Bara de stare activată</string><string name="status_bar_disabled">❌ Bara de stare dezactivată</string><string name="edit_station_name">Editează numele stației</string><string name="frequency_label">Frecvență: %1$s MHz</string><string name="searching_next">Căutare următoarea...</string><string name="scanning">Scanare...</string><string name="scan_completed">Scanare completă</string><string name="identifying_rds">Identificare stație (RDS)...</string><string name="version">Versiunea %1$s</string><string name="radio_engine_label">⚙ MOTOR RADIO : %1$s</string><string name="freq_no_service">FREQ: FĂRĂ_SERVICIU\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: EROARE_CITIRE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: FĂRĂ_SERVICIU</string><string name="sqi_error_read">SQI_INDEX.....: EROARE_CITIRE</string><string name="af_list_scanning">AF_LIST.......: [SCANARE]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoritele au fost resetate cu succes</string><string name="history_cleared">Istoric șters</string><string name="my_favorites">Favoritele mele</string>    <string name="logo_mode_label">🏎️ Mod Logo Superior</string>
+<string name="status_bar_enabled">✅ Bara de stare activată</string><string name="status_bar_disabled">❌ Bara de stare dezactivată</string><string name="edit_station_name">Editează numele stației</string><string name="frequency_label">Frecvență: %1$s MHz</string><string name="searching_next">Căutare următoarea...</string><string name="scanning">Scanare...</string><string name="scan_completed">Scanare completă</string><string name="identifying_rds">Identificare stație (RDS)...</string><string name="version">Versiunea %1$s</string><string name="eng_dev_autoscan_toggle">Mod AutoScan (buton scan în interfața principală)</string><string name="radio_engine_label">⚙ MOTOR RADIO : %1$s</string><string name="freq_no_service">FREQ: FĂRĂ_SERVICIU\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: EROARE_CITIRE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: FĂRĂ_SERVICIU</string><string name="sqi_error_read">SQI_INDEX.....: EROARE_CITIRE</string><string name="af_list_scanning">AF_LIST.......: [SCANARE]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoritele au fost resetate cu succes</string><string name="history_cleared">Istoric șters</string><string name="my_favorites">Favoritele mele</string>    <string name="logo_mode_label">🏎️ Mod Logo Superior</string>
     <string name="logo_mode_car">Logo Mașină</string>
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.12 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="all_favorites_deleted">✅ Toate favoritele au fost șterse</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>

@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.12%20(Beta)-orange.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.13%20(Beta)-orange.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -188,6 +188,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.13 **Beta** (Marzo 2026) — `main`
+- **ES:** **OpenRadioFM v5.0.13 Beta** — packs de iconos SVG ampliados (Material, Lucide, Remix, Font Awesome, Tabler) con raster + plantilla blanca; modo noche y colores del icono nube (streaming / buffer / idle) alineados con el resto; sincronía LOC/DX en MT8163; logo coche V3 con mismos gestos que el reloj (skin / modo noche). Detalle en `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.13 Beta** — extended SVG icon packs (Material, Lucide, Remix, Font Awesome, Tabler) with raster + white template; night mode and cloud icon colors aligned; MT8163 LOC/DX sync; V3 car logo gestures match clock. See `CHANGELOG_EN.md`.
 
 ### v5.0.12 **Beta** (Marzo 2026) — `main`
 - **ES:** **OpenRadioFM v5.0.12 Beta** — misma base que 5.0.11; se deja de usar la etiqueta *Stable* en `versionName` / `app_name_internal` y se publica como **Beta** hasta considerar la línea suficientemente madura.

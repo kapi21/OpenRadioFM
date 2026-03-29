@@ -164,6 +164,13 @@ public class ControlPanelManager {
             btnLocDx.setOnClickListener(v -> {
                 if (mActivity.mEngine != null) {
                     mActivity.mEngine.toggleDxLocal();
+                    // MT8163/HCN: el callback AIDL 106 a veces no llega; tras un tick
+                    // alineamos el icono (incl. pack Google/SVG) con isDxLocal().
+                    v.postDelayed(() -> {
+                        if (mActivity.isFinishing() || mActivity.mEngine == null) return;
+                        boolean isLocal = mActivity.mEngine.isDxLocal();
+                        mActivity.syncLocDxButtonVisual(isLocal);
+                    }, 50);
                 }
             });
 

@@ -43,10 +43,19 @@
     <string name="icon_pack">🎛️ Ikon csomag</string>
     <string name="icon_pack_default">Alapértelmezett</string>
     <string name="icon_pack_color">Színes</string>
+    <string name="icon_pack_google">Google (Material)</string>
+    <string name="icon_pack_lucide">Lucide</string>
+    <string name="icon_pack_remix">Remix</string>
+    <string name="icon_pack_awesome">Font Awesome</string>
+    <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Ikon csomag kiválasztása</string>
     <string name="layout2_side_label">Layout V2 (függőleges): preset oldal</string>
     <string name="layout2_side_presets_left">Presetek balra</string>
     <string name="layout2_side_presets_right">Presetek jobbra</string>
+    <string name="steering_next_prev_mode">🛞 Kormány NEXT/PREV</string>
+    <string name="steering_mode_seek">Keresés (állomások)</string>
+    <string name="steering_mode_preset">Preset (memóriák)</string>
+    <string name="select_steering_mode">NEXT/PREV művelet kiválasztása</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Automatikus Éjszakai Mód engedélyezve</string>
@@ -55,6 +64,7 @@
     <string name="history_disabled">❌ Adóelőzmények letiltva</string>
     <string name="logos_online_enabled">✅ Online logók engedélyezve</string>
     <string name="logos_online_disabled">❌ Online logók letiltva</string>
+    <string name="under_study">Fejlesztés alatt</string>
     <string name="night_mode_manual_blocked">Deaktiválja az automatikus éjszakai módot a téma manuális kiválasztásához</string>
     <string name="auto_hide_controls">Vezérlők automatikus elrejtése</string>
     <string name="auto_hide_enabled">✅ Automatikus elrejtés engedélyezve</string>
@@ -114,6 +124,7 @@
     <string name="engine_mtk">Általános MediaTek</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_jancar">Jancar IVI (8227L / IRadio)</string>
     <string name="engine_standard">Android Standard</string>
     <string name="am_band_enabled">✅ AM sáv engedélyezve</string>
     <string name="am_band_disabled">❌ AM sáv letiltva</string>
@@ -177,6 +188,7 @@
     <string name="version">Verzió %1$s</string>
     
     <!-- Engineering Mode -->
+    <string name="eng_dev_autoscan_toggle">AutoScan mód (szkennelés gomb a főképernyőn)</string>
     <string name="radio_engine_label">⚙ RÁDIÓ MOTOR: %1$s</string>
     <string name="freq_no_service">FREQ: NINCS_SZERVIZ\nBAND: ---\nFLAGS: ---</string>
     <string name="freq_error_read">FREQ: HIBA_OLVASÁSKOR\nBAND: ---\n%1$s</string>
@@ -192,7 +204,7 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.12 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
     <string name="all_favorites_deleted">✅ Az összes kedvenc törölve</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>

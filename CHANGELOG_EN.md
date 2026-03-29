@@ -4,6 +4,23 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.13 (Beta)] - 2026-03-29
+*SVG icon packs (Material, Lucide, Remix, Font Awesome, Tabler), night/CLEAR/cloud tinting, V3 car logo & MT8163 LOC/DX sync.*
+
+### Added
+- **Icon packs** (assets + settings selector): `icons_google` (*_p3), `Icons_lucide` (*_p4), `icons_remix` (*_p5, including `power_off_p5.svg`), `icons_awesome` (*_p6), `icons_tabler` (*_p7; folder uses `ic_android_settings_p2.svg` / `power_off_p2.svg` for two assets). `IconPackManager`: SVG raster → bitmap + white silhouette for tinting; `isSvgTemplatePack()` for packs 2–6.
+- **Strings**: `icon_pack_lucide`, `icon_pack_remix`, `icon_pack_awesome`, `icon_pack_tabler` (all locales).
+
+### Fixed
+- **MT8163 / icon packs**: LOC/DX button synced with `isDxLocal()` when AIDL callback 106 is missing (incl. post-click); Google/SVG icons no longer stuck when toggling.
+- **Cloud icon**: red / yellow / night blue / black (CLEAR) without `applyClearButtonIconTint` overwriting streaming state; `updateDataActivityUI` idle CLEAR uses explicit black.
+
+### Changed
+- **Layout V3**: car logo (`ivCarLogo`) — same as digital clock (tap = cycle skin, long-press = night mode); `clickable`/`focusable` in XML.
+- **Version**: `versionCode 25`, `versionName 5.0.13 (Beta)`; `app_name_internal` **v5.0.13 Beta**.
+
+---
+
 ## [5.0.12 (Beta)] - 2026-03-27
 *Versioning: replace the “Stable” label with “Beta” in visible naming and active docs until release quality is consolidated.*
 

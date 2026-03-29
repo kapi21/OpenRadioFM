@@ -44,10 +44,19 @@
     <string name="icon_pack">🎛️ Pack de ícones</string>
     <string name="icon_pack_default">Padrão</string>
     <string name="icon_pack_color">Cor</string>
+    <string name="icon_pack_google">Google (Material)</string>
+    <string name="icon_pack_lucide">Lucide</string>
+    <string name="icon_pack_remix">Remix</string>
+    <string name="icon_pack_awesome">Font Awesome</string>
+    <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Selecionar pack de ícones</string>
     <string name="layout2_side_label">Layout V2 (vertical): lado dos presets</string>
     <string name="layout2_side_presets_left">Presets à esquerda</string>
     <string name="layout2_side_presets_right">Presets à direita</string>
+    <string name="steering_next_prev_mode">🛞 Volante NEXT/PREV</string>
+    <string name="steering_mode_seek">Procurar (estações)</string>
+    <string name="steering_mode_preset">Preset (memórias)</string>
+    <string name="select_steering_mode">Escolher ação NEXT/PREV</string>
     
     <!-- V4.0: Feedback Messages -->
     <string name="night_mode_enabled">✅ Modo Noturno Automático ativado</string>
@@ -58,6 +67,7 @@
     <string name="gestures_disabled">❌ Gestos desativados</string>
     <string name="logos_online_enabled">✅ Logos online ativados</string>
     <string name="logos_online_disabled">❌ Logos online desativados</string>
+    <string name="under_study">Em estudo</string>
     <string name="night_mode_manual_blocked">Desative o Modo Noturno automático para escolher o tema manualmente</string>
     <string name="auto_hide_controls">Ocultar controlos automaticamente</string>
     <string name="auto_hide_enabled">✅ Ocultar controlos ativado</string>
@@ -113,6 +123,7 @@
     <string name="engine_mtk">MediaTek Genérico</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_jancar">Jancar IVI (8227L / IRadio)</string>
     <string name="engine_k706_can">K706 CAN-Bus</string>
     <string name="engine_standard">Android Padrão</string>
     <string name="am_band_enabled">✅ Banda AM ativada</string>
@@ -177,6 +188,7 @@
     <string name="version">Versão %1$s</string>
     
     <!-- Engineering Mode -->
+    <string name="eng_dev_autoscan_toggle">Modo AutoScan (botão de varredura na interface principal)</string>
     <string name="radio_engine_label">⚙ MOTOR RÁDIO: %1$s</string>
     <string name="freq_no_service">FREQ: SEM_SERVICO\nBAND: ---\nFLAGS: ---</string>
     <string name="freq_error_read">FREQ: ERRO_LEITURA\nBAND: ---\n%1$s</string>
@@ -192,7 +204,7 @@
     <string name="my_favorites">Meus Favoritos</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.12 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Este serviço permite que o OpenRadioFM se sobreponha quando você pressiona o botão físico RADIO em unidades Android compatíveis (ex.: K706), ignorando o app de fábrica.</string>
     <string name="all_favorites_deleted">✅ Todos os favoritos apagados</string>
     <string name="category_app_options">Opções da App</string>

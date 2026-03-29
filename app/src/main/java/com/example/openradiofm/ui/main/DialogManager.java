@@ -350,6 +350,7 @@ public class DialogManager {
                         mActivity.mNightModeManager.resetNightModeColors(mActivity.mLastFreq);
                     }
                 }
+                try { mActivity.refreshDataActivityIndicator(); } catch (Exception ignored) {}
             });
         }
 
@@ -463,10 +464,24 @@ public class DialogManager {
         View rowIconPack = dialog.findViewById(R.id.rowIconPack);
         TextView tvCurrentIconPack = dialog.findViewById(R.id.tvCurrentIconPack);
         if (tvCurrentIconPack != null) {
-            int pack = mActivity.mPrefs.getInt("pref_icon_pack", 0); // 0=default, 1=color(p2)
-            tvCurrentIconPack.setText(pack == 1
-                    ? mActivity.getString(R.string.icon_pack_color)
-                    : mActivity.getString(R.string.icon_pack_default));
+            int pack = mActivity.mPrefs.getInt("pref_icon_pack", 0);
+            String label;
+            if (pack == 1) {
+                label = mActivity.getString(R.string.icon_pack_color);
+            } else if (pack == 2) {
+                label = mActivity.getString(R.string.icon_pack_google);
+            } else if (pack == 3) {
+                label = mActivity.getString(R.string.icon_pack_lucide);
+            } else if (pack == 4) {
+                label = mActivity.getString(R.string.icon_pack_remix);
+            } else if (pack == 5) {
+                label = mActivity.getString(R.string.icon_pack_awesome);
+            } else if (pack == 6) {
+                label = mActivity.getString(R.string.icon_pack_tabler);
+            } else {
+                label = mActivity.getString(R.string.icon_pack_default);
+            }
+            tvCurrentIconPack.setText(label);
         }
         if (rowIconPack != null) {
             rowIconPack.setOnClickListener(v -> {
@@ -849,7 +864,12 @@ public class DialogManager {
     public void showIconPackSelector() {
         String[] options = {
                 mActivity.getString(R.string.icon_pack_default),
-                mActivity.getString(R.string.icon_pack_color)
+                mActivity.getString(R.string.icon_pack_color),
+                mActivity.getString(R.string.icon_pack_google),
+                mActivity.getString(R.string.icon_pack_lucide),
+                mActivity.getString(R.string.icon_pack_remix),
+                mActivity.getString(R.string.icon_pack_awesome),
+                mActivity.getString(R.string.icon_pack_tabler),
         };
         int currentIdx = mActivity.mPrefs.getInt("pref_icon_pack", 0);
         showGridSelector(mActivity.getString(R.string.select_icon_pack), options, currentIdx, which -> {

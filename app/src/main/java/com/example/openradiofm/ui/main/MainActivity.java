@@ -641,6 +641,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (isNight && mNightModeManager != null) {
                 mNightModeManager.applyNightModeColors(mLastFreq);
             }
+            updateDataActivityUI();
             
             // V5.2: Actualizar Widget al cambiar de banda
             if (mEngine != null) {
@@ -705,10 +706,18 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     /**
+     * Icono cloud: delega en {@link #updateDataActivityUI()} (p. ej. tras diálogos de tema).
+     */
+    public void refreshDataActivityIndicator() {
+        updateDataActivityUI();
+    }
+
+    /**
      * V16.2: Actualiza el estado visual del icono de actividad de datos.
      * - Oculto si logos online desactivados.
      * - Visible: opacidad plena con internet; atenuado ({@link #CLOUD_DATA_OFFLINE_ALPHA}) sin internet.
      * - Parpadeando si hay actividad (download/upload) y hay conectividad.
+     * - Color: rojo (streaming), amarillo (buffer), blanco/azul noche en FM idle (coherente con packs).
      */
     private void updateDataActivityUI() {
         if (ivDataActivity == null) return;
@@ -746,26 +755,32 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
         }
 
-        // V17.0: Indicador visual de Streaming Online activo
+        // V17.0: Color cloud — streaming (rojo/amarillo) gana; idle FM según skin (noche / CLEAR / default).
+        // Aplica a todos los packs (PNG, SVG Google/Lucide/Remix). No mezclar con applyClearButtonIconTint
+        // para no pisar rojo/amarillo en skin CLEAR.
         if (ivDataActivityIcon == null) ivDataActivityIcon = findViewById(R.id.ivDataActivityIcon);
-        
-        if (mOnlineStreamManager != null && (ivDataActivityIcon != null)) {
-            if (mOnlineStreamManager.isPlaying()) {
-                // Streaming active -> RED
-                setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
-                setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
-            } else if (mOnlineStreamManager.isLoading()) {
-                // Loading -> YELLOW
-                setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
-                setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
+        if (ivDataActivityIcon == null) return;
+
+        boolean playing = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
+        boolean loading = mOnlineStreamManager != null && mOnlineStreamManager.isLoading();
+
+        if (playing) {
+            setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
+            setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else if (loading) {
+            setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
+            setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else {
+            setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
+            com.example.openradiofm.ui.theme.ThemeManager.Skin skin = mThemeManager != null
+                    ? mThemeManager.getActiveSkin() : null;
+            if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+                setColorFilterIfChanged(ivDataActivityIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+            } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
+                setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.BLACK, android.graphics.PorterDuff.Mode.SRC_IN);
             } else {
-                // Inactive -> Respect Night Mode or Clear
-                if (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                    int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                    setColorFilterIfChanged(ivDataActivityIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-                } else {
-                    setColorFilterIfChanged(ivDataActivityIcon, null, null);
-                }
+                setColorFilterIfChanged(ivDataActivityIcon, null, null);
             }
         }
     }
@@ -811,6 +826,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         });
 
         if (ivDataActivity != null) {
+            // Feedback visual al pulsar (el drawable del pack no usa selector de estado).
+            ivDataActivity.setOnTouchListener((v, event) -> {
+                if (ivDataActivityIcon == null) ivDataActivityIcon = findViewById(R.id.ivDataActivityIcon);
+                if (ivDataActivityIcon == null) return false;
+                switch (event.getActionMasked()) {
+                    case MotionEvent.ACTION_DOWN:
+                        ivDataActivityIcon.setAlpha(0.42f);
+                        break;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        ivDataActivityIcon.setAlpha(1.0f);
+                        break;
+                    default:
+                        break;
+                }
+                return false;
+            });
+
             ivDataActivity.setOnClickListener(v -> {
                 // V21.4: Permitir siempre detener el stream si ya está sonando, independientemente de si la radio nativa murió (freq <= 0)
                 if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
@@ -1052,20 +1085,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mSessionController != null) {
             mSessionController.onDxLocalChanged(isLocal);
         }
-        runOnUiThread(() -> {
-            if (btnLocDx != null) {
-                btnLocDx.setSelected(isLocal);
-                btnLocDx.setAlpha(1.0f);
-                // V9: LOCAL=radio_loc_p (active/filled), DX=radio_loc_n (normal/outline)
-                setImageResourceIfChanged(btnLocDx, isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
-                // Reaplicar pack si existe (evita volver a default al cambiar estado)
-                if (mIconPackManager != null) {
-                    mIconPackManager.apply(btnLocDx,
-                            isLocal ? "radio_loc_p" : "radio_loc_n",
-                            isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
-                }
-            }
-        });
+        runOnUiThread(() -> syncLocDxButtonVisual(isLocal));
     }
 
     @Override
@@ -1787,12 +1807,69 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     /**
+     * Tras cambiar drawables de pack (PNG/SVG), reaplica tintes de skin (noche, CLEAR)
+     * y el icono cloud (streaming / idle / modo noche).
+     */
+    private void reapplySkinTintsAfterIconPack() {
+        if (mThemeManager == null) {
+            updateDataActivityUI();
+            return;
+        }
+        boolean isNight = mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE;
+        boolean isClear = mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR;
+        if (mNightModeManager != null) {
+            if (isNight) {
+                mNightModeManager.applyNightModeColors(mLastFreq);
+            } else {
+                mNightModeManager.resetNightModeColors(mLastFreq);
+            }
+        }
+        if (!isNight) {
+            applyClearButtonIconTint(isClear);
+        }
+        updateDataActivityUI();
+    }
+
+    /**
+     * Re-tinta un control tras sustituir el drawable (pack); coherente con modo noche / CLEAR.
+     */
+    void retintControlButtonForCurrentSkin(ImageView iv) {
+        if (iv == null || mThemeManager == null) return;
+        com.example.openradiofm.ui.theme.ThemeManager.Skin skin = mThemeManager.getActiveSkin();
+        if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+            int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+            setColorFilterIfChanged(iv, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
+            setColorFilterIfChanged(iv, android.graphics.Color.BLACK, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else {
+            setColorFilterIfChanged(iv, null, null);
+        }
+    }
+
+    /**
+     * Sincroniza el botón LOC/DX con el estado del motor (drawable por defecto, pack y tinte de skin).
+     */
+    void syncLocDxButtonVisual(boolean isLocal) {
+        if (btnLocDx == null) return;
+        btnLocDx.setSelected(isLocal);
+        btnLocDx.setAlpha(1.0f);
+        setImageResourceIfChanged(btnLocDx, isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+        if (mIconPackManager != null) {
+            mIconPackManager.apply(btnLocDx,
+                    isLocal ? "radio_loc_p" : "radio_loc_n",
+                    isLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
+        }
+        retintControlButtonForCurrentSkin(btnLocDx);
+    }
+
+    /**
      * Aplica el pack de iconos seleccionado a los ImageButtons/ImageViews visibles.
      * Si un PNG del pack no existe, se mantiene el drawable resource actual.
      */
     public void applyIconPack() {
         if (mIconPackManager == null) return;
         try {
+            boolean loc = mEngine != null && mEngine.isDxLocal();
             // Controles comunes (Layout V2/V3)
             mIconPackManager.apply((ImageView) findViewById(R.id.btnSeekDown), "seek_down", R.drawable.seek_down);
             mIconPackManager.apply((ImageView) findViewById(R.id.btnSeekUp), "seek_up", R.drawable.seek_up);
@@ -1801,7 +1878,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             mIconPackManager.apply((ImageView) findViewById(R.id.btnSettings), "radio_eq_n", R.drawable.radio_eq_n);
             mIconPackManager.apply((ImageView) findViewById(R.id.btnBand), "radio_band_n", R.drawable.radio_band_n);
-            mIconPackManager.apply((ImageView) findViewById(R.id.btnLocDx), "radio_loc_n", R.drawable.radio_loc_n);
+            mIconPackManager.apply((ImageView) findViewById(R.id.btnLocDx),
+                    loc ? "radio_loc_p" : "radio_loc_n",
+                    loc ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
             mIconPackManager.apply((ImageView) findViewById(R.id.btnAutoScan), "radio_scan_icon_f", R.drawable.radio_scan_icon_f);
             mIconPackManager.apply((ImageView) findViewById(R.id.btnMute), "radio_mute_n", R.drawable.radio_mute_n);
             mIconPackManager.apply((ImageView) findViewById(R.id.btnGps), "radio_gps", R.drawable.radio_gps);
@@ -1812,6 +1891,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mIconPackManager.apply((ImageView) findViewById(R.id.ivDataActivityIcon), "cloud", R.drawable.cloud);
         } catch (Exception ignored) {}
         applyDevAutoScanButtonState();
+        reapplySkinTintsAfterIconPack();
     }
 
     /** Refleja pref_dev_autoscan_enabled en el botón AutoScan (alpha / aspecto “experimental”). */
@@ -2121,6 +2201,22 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 toggleNightMode();
                 return true;
             });
+        }
+
+        // V3: Logo coche (slot superior derecho) = mismos gestos que el reloj: tap cicla skin, largo = modo noche
+        if (mIsV3) {
+            ImageView ivCarLogo = findViewById(R.id.ivCarLogo);
+            if (ivCarLogo != null) {
+                ivCarLogo.setOnClickListener(v -> {
+                    com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
+                    applySkin(next);
+                    showToast("Skin: " + next.displayName);
+                });
+                ivCarLogo.setOnLongClickListener(v -> {
+                    toggleNightMode();
+                    return true;
+                });
+            }
         }
     }
 
@@ -2559,7 +2655,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                        setColorFilterIfChanged(ivStereoIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
                    }
                }
-               if (btnLocDx != null) btnLocDx.setSelected(isLocal);
+               // V22.x: MT8163/HCN a veces no emite callback 106; sincronizar drawable con isDxLocal().
+               syncLocDxButtonVisual(isLocal);
                // V18.6.4: Actualizar color de señal en el path de polling (para MT8163 que no tiene callback activo)
                if (ivSignalLevel != null) {
                    int sigColor = isStereo ? android.graphics.Color.parseColor("#00E676")
@@ -2707,6 +2804,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     if (isNight && mNightModeManager != null) {
                         mNightModeManager.applyNightModeColors(mLastFreq);
                     }
+                    updateDataActivityUI();
                 } else {
                     int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
                     if (isNight) {
@@ -2718,6 +2816,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     }
                     updateFrequencyDisplay(fFreq, rdsName);
                     updateBandImage(fBand);
+                    if (isNight && mNightModeManager != null) {
+                        mNightModeManager.applyNightModeColors(mLastFreq);
+                    }
+                    updateDataActivityUI();
                 }
 
                 if (mMediaSessionManager != null) {
@@ -2726,15 +2828,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     mMediaSessionManager.updateMetadata(rdsName, freqStr, null);
                 }
 
-                if (btnLocDx != null) {
-                    btnLocDx.setSelected(fIsLocal);
-                    setImageResourceIfChanged(btnLocDx, fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
-                    if (mIconPackManager != null) {
-                        mIconPackManager.apply(btnLocDx,
-                                fIsLocal ? "radio_loc_p" : "radio_loc_n",
-                                fIsLocal ? R.drawable.radio_loc_p : R.drawable.radio_loc_n);
-                    }
-                }
+                syncLocDxButtonVisual(fIsLocal);
 
                 sendWidgetUpdateIntent(fFreq, fBand, rdsName);
             });
@@ -2963,6 +3057,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mNightModeManager.resetNightModeColors(mLastFreq);
             }
         }
+        updateDataActivityUI();
 
         // CLEAR: iconos de botones en negro (y al salir, restaurar).
         // V2.6: NO ejecutar cuando isNight — NightModeManager gestiona los filtros de botones.
@@ -3003,10 +3098,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
         }
 
-        // Iconos de estado que se ven como "botones" en algunos layouts
+        // Iconos de estado (cloud: colores en updateDataActivityUI() para no pisar streaming)
         int[] iconIds = {
                 R.id.ivAfIcon, R.id.ivTaIcon, R.id.ivTpIcon,
-                R.id.ivStereoIcon, R.id.ivDataActivityIcon
+                R.id.ivStereoIcon
         };
         for (int id : iconIds) {
             android.view.View v = findViewById(id);
@@ -3549,12 +3644,17 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 tvPty.setText(getString(R.string.pty_none));
             }
 
-            // Clear logos immediately
+            // Clear logos immediately (V3: reset duro Glide + fondo dinámico — evita logo “fantasma” tras la frecuencia)
             if (mLogoManager != null) {
-                ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
-                if (ivMainLogo != null)
-                    mLogoManager.applyFallbackLogo(ivMainLogo);
-                mLogoManager.updateDynamicBackground(null);
+                if (mIsV3) {
+                    mLogoManager.clearLogo();
+                } else {
+                    ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
+                    if (ivMainLogo != null) {
+                        mLogoManager.applyFallbackLogo(ivMainLogo);
+                    }
+                    mLogoManager.updateDynamicBackground(null);
+                }
             }
         });
 
@@ -3725,16 +3825,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     public static void setColorFilterIfChanged(android.widget.ImageView iv, Integer color, android.graphics.PorterDuff.Mode mode) {
         if (iv == null) return;
-        // Nota: No hay un getter directo y fiable para el filtro en APIs antiguas,
-        // pero setFilter con el mismo valor suele ser menos costoso que invalidate() total.
-        // Optamos por un tag para trackear el estado manual.
         Object current = iv.getTag(R.id.tag_color_filter);
         if (color == null) {
             if (current != null) {
                 iv.clearColorFilter();
                 iv.setTag(R.id.tag_color_filter, null);
             }
-        } else if (!color.equals(current)) {
+        } else {
+            // Siempre aplicar si color != null: setImageDrawable/setImageResource puede haber
+            // invalidado el filtro visual manteniendo el tag (packs PNG/SVG, PictureDrawable).
             iv.setColorFilter(color, mode);
             iv.setTag(R.id.tag_color_filter, color);
         }

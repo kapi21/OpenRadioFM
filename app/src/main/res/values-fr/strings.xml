@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.12 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming arrêté. Si la FM ne se comporte pas correctement, fermez complètement OpenRadioFM et rouvrez-la.</string>
     <string name="premium_customization">Menu des options</string>
@@ -21,10 +21,19 @@
     <string name="icon_pack">🎛️ Pack d’icônes</string>
     <string name="icon_pack_default">Par défaut</string>
     <string name="icon_pack_color">Couleur</string>
+    <string name="icon_pack_google">Google (Material)</string>
+    <string name="icon_pack_lucide">Lucide</string>
+    <string name="icon_pack_remix">Remix</string>
+    <string name="icon_pack_awesome">Font Awesome</string>
+    <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Sélectionner pack d’icônes</string>
     <string name="layout2_side_label">Layout V2 (vertical) : côté des presets</string>
     <string name="layout2_side_presets_left">Presets à gauche</string>
     <string name="layout2_side_presets_right">Presets à droite</string>
+    <string name="steering_next_prev_mode">🛞 Volant NEXT/PREV</string>
+    <string name="steering_mode_seek">Recherche (stations)</string>
+    <string name="steering_mode_preset">Préréglage (mémoires)</string>
+    <string name="select_steering_mode">Choisir l\'action NEXT/PREV</string>
     <string name="bg_pure_black">Noir Pur</string>
     <string name="bg_fixed_image">Image Fixe (background.png)</string>
     <string name="bg_dynamic_logo">Logo Station (Dynamique)</string>
@@ -52,6 +61,7 @@
     <string name="auto_hide_controls">Masquer les commandes automatiquement</string>
     <string name="auto_hide_enabled">✅ Masquage automatique activé</string>
     <string name="auto_hide_disabled">❌ Masquage automatique désactivé</string>
+    <string name="under_study">À l\'étude</string>
     <string name="save_load_favorites">💾 Enregistrer/Charger Favoris</string>
     <string name="save_favorites">💾 Enregistrer Favoris</string>
     <string name="load_favorites">📂 Charger Favoris</string>
@@ -101,6 +111,7 @@
     <string name="engine_mtk">MediaTek Générique</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MTK8259 / 8667</string>
+    <string name="engine_jancar">Jancar IVI (8227L / IRadio)</string>
     <string name="engine_k706_can">K706 CAN-Bus</string>
     <string name="engine_standard">Android Standard</string>
     <string name="am_band_enabled">✅ Bande AM activée</string>
@@ -121,7 +132,7 @@
     <string name="status_bar_v2">Afficher la barre d\'état</string>
     <string name="status_bar_enabled">✅ Barre d\'état activée</string>
     <string name="status_bar_disabled">❌ Barre d\'état désactivée</string>
-<string name="pty_none">Aucun PTY</string><string name="pty_news">Nouvelles</string><string name="pty_current_affairs">Actualités</string><string name="pty_information">Information</string><string name="pty_sport">Sports</string><string name="pty_education">Éducation</string><string name="pty_drama">Drame</string><string name="pty_culture">Culture</string><string name="pty_science">Science</string><string name="pty_varied">Varié</string><string name="pty_pop">Musique Pop</string><string name="pty_rock">Musique Rock</string><string name="pty_easy_listening">Écoute Facile</string><string name="pty_light_classical">Classique Légère</string><string name="pty_serious_classical">Classique Sérieuse</string><string name="pty_other_music">Autre Musique</string><string name="pty_weather">Météo</string><string name="pty_finance">Finances</string><string name="pty_children">Enfants</string><string name="pty_social">Social</string><string name="pty_religion">Religion</string><string name="pty_phone_in">Appels entrants</string><string name="pty_travel">Voyages</string><string name="pty_leisure">Loisirs</string><string name="pty_jazz">Jazz</string><string name="pty_country">Country</string><string name="pty_national">National</string><string name="pty_oldies">Vieux succès</string><string name="pty_folk">Folk</string><string name="pty_documentary">Documentaire</string><string name="pty_alarm_test">Test d\'alarme</string><string name="pty_alarm">Alarme</string><string name="edit_station_name">Modifier le nom de la station</string><string name="frequency_label">Fréquence : %1$s MHz</string><string name="searching_next">Recherche du suivant...</string><string name="scanning">Numérisation...</string><string name="scan_completed">Numérisation terminée</string><string name="identifying_rds">Identification de la station (RDS)...</string><string name="version">Version %1$s</string><string name="radio_engine_label">⚙ MOTEUR RADIO : %1$s</string><string name="freq_no_service">FREQ: AUCUN_SERVICE\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ERREUR_LECTURE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: AUCUN_SERVICE</string><string name="sqi_error_read">SQI_INDEX.....: ERREUR_LECTURE</string><string name="af_list_scanning">AF_LIST.......: [NUMÉRISATION]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoris réinitialisés correctement</string>
+<string name="pty_none">Aucun PTY</string><string name="pty_news">Nouvelles</string><string name="pty_current_affairs">Actualités</string><string name="pty_information">Information</string><string name="pty_sport">Sports</string><string name="pty_education">Éducation</string><string name="pty_drama">Drame</string><string name="pty_culture">Culture</string><string name="pty_science">Science</string><string name="pty_varied">Varié</string><string name="pty_pop">Musique Pop</string><string name="pty_rock">Musique Rock</string><string name="pty_easy_listening">Écoute Facile</string><string name="pty_light_classical">Classique Légère</string><string name="pty_serious_classical">Classique Sérieuse</string><string name="pty_other_music">Autre Musique</string><string name="pty_weather">Météo</string><string name="pty_finance">Finances</string><string name="pty_children">Enfants</string><string name="pty_social">Social</string><string name="pty_religion">Religion</string><string name="pty_phone_in">Appels entrants</string><string name="pty_travel">Voyages</string><string name="pty_leisure">Loisirs</string><string name="pty_jazz">Jazz</string><string name="pty_country">Country</string><string name="pty_national">National</string><string name="pty_oldies">Vieux succès</string><string name="pty_folk">Folk</string><string name="pty_documentary">Documentaire</string><string name="pty_alarm_test">Test d\'alarme</string><string name="pty_alarm">Alarme</string><string name="edit_station_name">Modifier le nom de la station</string><string name="frequency_label">Fréquence : %1$s MHz</string><string name="searching_next">Recherche du suivant...</string><string name="scanning">Numérisation...</string><string name="scan_completed">Numérisation terminée</string><string name="identifying_rds">Identification de la station (RDS)...</string><string name="version">Version %1$s</string><string name="eng_dev_autoscan_toggle">Mode AutoScan (bouton scan dans l\'interface principale)</string><string name="radio_engine_label">⚙ MOTEUR RADIO : %1$s</string><string name="freq_no_service">FREQ: AUCUN_SERVICE\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ERREUR_LECTURE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: AUCUN_SERVICE</string><string name="sqi_error_read">SQI_INDEX.....: ERREUR_LECTURE</string><string name="af_list_scanning">AF_LIST.......: [NUMÉRISATION]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoris réinitialisés correctement</string>
     <string name="history_cleared">Historique effacé</string>
     <string name="logo_mode_label">🏎️ Mode Logo Supérieur</string>
     <string name="logo_mode_car">Logo de la Voiture</string>

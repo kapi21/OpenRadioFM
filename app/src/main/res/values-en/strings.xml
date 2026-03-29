@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.12 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system only sends those keys to the launcher.</string>
 
     <string name="mt8163_stream_stopped_restart_hint">Streaming stopped. If FM does not behave correctly, fully close OpenRadioFM and open it again.</string>
@@ -199,10 +199,19 @@
     <string name="icon_pack">🎛️ Icon pack</string>
     <string name="icon_pack_default">Default</string>
     <string name="icon_pack_color">Color</string>
+    <string name="icon_pack_google">Google (Material)</string>
+    <string name="icon_pack_lucide">Lucide</string>
+    <string name="icon_pack_remix">Remix</string>
+    <string name="icon_pack_awesome">Font Awesome</string>
+    <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Select icon pack</string>
     <string name="layout2_side_label">Layout V2 (vertical): preset side</string>
     <string name="layout2_side_presets_left">Presets on left</string>
     <string name="layout2_side_presets_right">Presets on right</string>
+    <string name="steering_next_prev_mode">🛞 Steering wheel NEXT/PREV</string>
+    <string name="steering_mode_seek">Seek (stations)</string>
+    <string name="steering_mode_preset">Preset (memories)</string>
+    <string name="select_steering_mode">Choose NEXT/PREV action</string>
     
     <!-- Settings Categories -->
     <string name="category_premium">Premium Customization</string>

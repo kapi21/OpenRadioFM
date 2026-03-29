@@ -41,10 +41,19 @@
     <string name="icon_pack">🎛️ Paket ikonica</string>
     <string name="icon_pack_default">Podrazumevano</string>
     <string name="icon_pack_color">Boja</string>
+    <string name="icon_pack_google">Google (Material)</string>
+    <string name="icon_pack_lucide">Lucide</string>
+    <string name="icon_pack_remix">Remix</string>
+    <string name="icon_pack_awesome">Font Awesome</string>
+    <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Izaberi paket ikonica</string>
     <string name="layout2_side_label">Layout V2 (vertikalni): strana preseta</string>
     <string name="layout2_side_presets_left">Preseti levo</string>
     <string name="layout2_side_presets_right">Preseti desno</string>
+    <string name="steering_next_prev_mode">🛞 Volan NEXT/PREV</string>
+    <string name="steering_mode_seek">Pretraga (stanice)</string>
+    <string name="steering_mode_preset">Preset (memorije)</string>
+    <string name="select_steering_mode">Izaberite radnju NEXT/PREV</string>
     
     
     <string name="night_mode_enabled">✅ Automatski noćni režim omogućen</string>
@@ -55,6 +64,7 @@
     <string name="gestures_disabled">❌ Gestovi svajpovanja onemogućeni</string>
     <string name="logos_online_enabled">✅ Logotipi na mreži omogućeni</string>
     <string name="logos_online_disabled">❌ Logotipi na mreži onemogućeni</string>
+    <string name="under_study">U proučavanju</string>
     <string name="night_mode_manual_blocked">Onemogućite automatski noćni režim da biste ručno izabrali temu</string>
     <string name="auto_hide_controls">Automatsko sakrivanje kontrola</string>
     <string name="auto_hide_enabled">✅ Automatsko sakrivanje omogućeno</string>
@@ -109,6 +119,7 @@
     <string name="engine_mtk">MediaTek Generic</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MediaTek 8259 / 8667</string>
+    <string name="engine_jancar">Jancar IVI (8227L / IRadio)</string>
     <string name="engine_standard">Standardni Android</string>
     <string name="am_band_enabled">✅ AM opseg omogućen</string>
     <string name="am_band_disabled">❌ AM opseg onemogućen</string>
@@ -162,7 +173,7 @@
     <string name="contrib_cloud">Doprinesi zajednici (HD logotipi)</string>
     <string name="contrib_cloud_desc">Automatski šalji frekvenciju i PI kod lokalnih stanica radi poboljšanja globalne baze podataka.</string>
 <string name="status_bar_v2">Prikaži statusnu traku</string>
-<string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string>    <string name="logo_mode_label">🏎️ Režim Gornjeg Logotipa</string>
+<string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="eng_dev_autoscan_toggle">AutoScan режим (дугме за скенирање на главном интерфејсу)</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string>    <string name="logo_mode_label">🏎️ Režim Gornjeg Logotipa</string>
     <string name="logo_mode_car">Logo Automobila</string>
     <string name="logo_mode_clock">Digitalni Sat</string>
 
@@ -170,7 +181,7 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.12 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
     <string name="all_favorites_deleted">✅ Svi favoriti su obrisani</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>

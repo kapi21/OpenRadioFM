@@ -211,6 +211,21 @@ public class LogoManager {
     }
 
     /**
+     * Quita por completo el arte de emisora del {@link R.id#ivDynamicBackground} (Glide + visibilidad).
+     * Evita “fantasmas” cuando {@code mLastDynamicBgUrl} ya era null pero el ImageView seguía con bitmap.
+     */
+    private void clearDynamicBackdropHard(ImageView ivDynamicBackground) {
+        if (ivDynamicBackground == null) return;
+        try {
+            Glide.with(mActivity.getApplicationContext()).clear(ivDynamicBackground);
+        } catch (Exception ignored) {
+        }
+        mLastDynamicBgUrl = null;
+        MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
+        loadCustomBackground();
+    }
+
+    /**
      * Actualiza el fondo dinámico (difuminado).
      */
     public void updateDynamicBackground(String logoUrl) {
@@ -234,18 +249,15 @@ public class LogoManager {
                             .into(ivDynamicBackground);
                 }
             } else {
-                if (mLastDynamicBgUrl != null) {
-                    mLastDynamicBgUrl = null;
-                    MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
-                    Glide.with(ivDynamicBackground.getContext()).clear(ivDynamicBackground);
-                    loadCustomBackground();
+                if (mLastDynamicBgUrl != null
+                        || ivDynamicBackground.getVisibility() == View.VISIBLE
+                        || ivDynamicBackground.getDrawable() != null) {
+                    clearDynamicBackdropHard(ivDynamicBackground);
                 }
             }
         } else {
             if (mLastDynamicBgUrl != null || ivDynamicBackground.getVisibility() == View.VISIBLE) {
-                mLastDynamicBgUrl = null;
-                MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
-                loadCustomBackground();
+                clearDynamicBackdropHard(ivDynamicBackground);
             }
         }
     }
@@ -256,6 +268,26 @@ public class LogoManager {
      */
     public void clearLogo() {
         mLastStationLogoUrl = null;
+
+        // Layout V3: el logo de emisora no se muestra en ivMainLogo (GONE), pero Glide/ivDynamicBackground
+        // podían dejar arte detrás del TextView de frecuencia (QS6, zapping). Reset duro al limpiar.
+        if (mActivity.mIsV3) {
+            mActivity.mLastLogoUrl = "";
+            ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
+            if (ivMainLogo != null) {
+                try {
+                    Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
+                } catch (Exception ignored) {
+                }
+                ivMainLogo.setTag(R.id.tag_logo_url, null);
+                ivMainLogo.setImageDrawable(null);
+                MainActivity.setVisibilityIfChanged(ivMainLogo, View.GONE);
+            }
+            ImageView ivDyn = mActivity.findViewById(R.id.ivDynamicBackground);
+            clearDynamicBackdropHard(ivDyn);
+            return;
+        }
+
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         if (ivMainLogo != null) {
             ivMainLogo.setTag(R.id.tag_logo_url, null);
@@ -286,6 +318,11 @@ public class LogoManager {
                 mActivity.mLastLogoUrl = cachedUrl;
                 if (ivMainLogo != null) {
                     if (mActivity.mIsV3) {
+                        try {
+                            Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
+                        } catch (Exception ignored) {
+                        }
+                        ivMainLogo.setImageDrawable(null);
                         ivMainLogo.setVisibility(View.GONE);
                     } else {
                         ivMainLogo.setVisibility(View.VISIBLE);
@@ -359,6 +396,11 @@ public class LogoManager {
                             mActivity.mLogoCachePerBand.put(bandCacheKey, url);
                             if (ivMainLogo != null) {
                                 if (mActivity.mIsV3) {
+                                    try {
+                                        Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
+                                    } catch (Exception ignored) {
+                                    }
+                                    ivMainLogo.setImageDrawable(null);
                                     ivMainLogo.setVisibility(View.GONE);
                                 } else {
                                     ivMainLogo.setVisibility(View.VISIBLE);
