@@ -5,6 +5,7 @@ import android.graphics.PorterDuff;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.TextView;
 import com.example.openradiofm.R;
 import com.example.openradiofm.ui.theme.ThemeManager;
 
@@ -13,7 +14,9 @@ import com.example.openradiofm.ui.theme.ThemeManager;
  */
 public class V3LayoutController extends BaseLayoutController {
     private TextView tvFrequency, tvRdsInfo, tvPty;
-    private ImageView ivBandIndicator, ivSignalLevel, ivUnitLabel;
+    private TextView ivBandIndicator;
+    private ImageView ivSignalLevel;
+    private TextView ivUnitLabel;
     private ImageView ivAfIcon, ivTaIcon, ivTpIcon;
     private ImageView ivFavoriteIndicator, ivStereoIcon;
     private ImageView ivMainLogo;
@@ -109,8 +112,7 @@ public class V3LayoutController extends BaseLayoutController {
         MainActivity.setTextColorIfChanged(tvPty, color);
         
         if (ivUnitLabel != null) {
-            if (isNight) ivUnitLabel.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
-            else ivUnitLabel.clearColorFilter();
+            MainActivity.setTextColorIfChanged(ivUnitLabel, color);
         }
     }
 
@@ -119,8 +121,12 @@ public class V3LayoutController extends BaseLayoutController {
         if (ivFavoriteIndicator == null) return;
         if (isFavorite && presetIdx > 0) {
             ivFavoriteIndicator.setVisibility(View.VISIBLE);
-            int resId = mActivity.getResources().getIdentifier("radio_icon_p" + String.format("%02d", presetIdx), "drawable", mActivity.getPackageName());
-            ivFavoriteIndicator.setImageResource(resId != 0 ? resId : R.drawable.radio_icon_p01);
+            android.graphics.drawable.Drawable d = mActivity.getPresetNumberDrawable(presetIdx);
+            if (d != null) {
+                ivFavoriteIndicator.setImageDrawable(d);
+            } else {
+                ivFavoriteIndicator.setImageResource(mActivity.getPresetNumberResId(presetIdx));
+            }
             
             if (isNight) {
                 ivFavoriteIndicator.setColorFilter(mActivity.getResources().getColor(R.color.night_blue_primary, null), PorterDuff.Mode.SRC_IN);
@@ -137,25 +143,30 @@ public class V3LayoutController extends BaseLayoutController {
     @Override
     public void updateBandIndicator(int band) {
         if (ivBandIndicator == null) return;
-        int drawId;
+        MainActivity.setTextIfChanged(ivBandIndicator, bandText(band));
+        applyBandTextColorForCurrentSkin(ivBandIndicator);
+    }
+
+    private static String bandText(int band) {
         switch (band) {
-            case 0: drawId = R.drawable.radio_fm1; break;
-            case 1: drawId = R.drawable.radio_fm2; break;
-            case 2: drawId = R.drawable.radio_fm3; break;
-            case 3: drawId = R.drawable.radio_am1; break;
-            case 4: drawId = R.drawable.radio_am2; break;
-            default: drawId = R.drawable.radio_fm1; break;
+            case 0: return "FM1";
+            case 1: return "FM2";
+            case 2: return "FM3";
+            case 3: return "AM1";
+            case 4: return "AM2";
+            default: return "FM1";
         }
-        
-        // V2.5: Usar el helper centralizado para preservar el tinte (filtros)
-        MainActivity.setImageResourceIfChanged(ivBandIndicator, drawId);
-        
-        // Re-asegurar tinte si es modo noche (por si el helper no lo detectó en el primer frame)
-        if (mActivity.mThemeManager != null && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.NIGHT_MODE) {
-            ivBandIndicator.setColorFilter(mActivity.getResources().getColor(R.color.night_blue_primary, null), android.graphics.PorterDuff.Mode.SRC_IN);
-        } else {
-            ivBandIndicator.clearColorFilter();
-        }
+    }
+
+    private void applyBandTextColorForCurrentSkin(TextView tv) {
+        if (tv == null) return;
+        int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
+        boolean isNight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.NIGHT_MODE);
+        boolean isLight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        int normal = isLight ? Color.BLACK : Color.WHITE;
+        tv.setTextColor(isNight ? nightBlue : normal);
     }
 
     @Override

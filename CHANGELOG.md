@@ -1,3 +1,17 @@
+## [5.0.14 (Beta)] - 2026-03-30
+*Tipografía aplicada a indicadores (banda + unidad), y números de presets en assets.*
+
+### Added
+- **Números presets**: nueva opción en personalización **🔢 Números presets** con estilo **Por defecto** o **Tabler** (assets `icons_numbers/number-1-small.svg` … `number-18-small.svg`).
+
+### Changed
+- **Indicador de banda**: `FM1/FM2/FM3/AM1/AM2` pasa de iconos a **texto autosize** para respetar la tipografía seleccionada, manteniendo el mismo hueco en layouts V2/V3 (incl. `sw720dp`).
+- **Unidad**: `MHz/kHz` pasa de icono a **texto autosize** (cambia según banda), manteniendo el mismo hueco en layouts.
+- **Assets**: se empaqueta `icons_numbers` como `assets` vía `sourceSets` en `app/build.gradle.kts`.
+- **Versión**: `versionCode 26`, `versionName 5.0.14 (Beta)`.
+
+---
+
 ## [5.0.13 (Beta)] - 2026-03-29
 *Packs de iconos SVG (Material, Lucide, Remix, Font Awesome, Tabler), tintes modo noche / CLEAR / nube, y ajustes UX V3 / MT8163.*
 

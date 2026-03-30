@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.13%20(Beta)-orange.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.14%20(Beta)-orange.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -189,9 +189,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.0.13 **Beta** (Marzo 2026) — `main`
-- **ES:** **OpenRadioFM v5.0.13 Beta** — packs de iconos SVG ampliados (Material, Lucide, Remix, Font Awesome, Tabler) con raster + plantilla blanca; modo noche y colores del icono nube (streaming / buffer / idle) alineados con el resto; sincronía LOC/DX en MT8163; logo coche V3 con mismos gestos que el reloj (skin / modo noche). Detalle en `CHANGELOG.md`.
-- **EN:** **OpenRadioFM v5.0.13 Beta** — extended SVG icon packs (Material, Lucide, Remix, Font Awesome, Tabler) with raster + white template; night mode and cloud icon colors aligned; MT8163 LOC/DX sync; V3 car logo gestures match clock. See `CHANGELOG_EN.md`.
+### v5.0.14 **Beta** (Marzo 2026) — `main`
+- **ES:** **OpenRadioFM v5.0.14 Beta** — indicador de banda (FM1/FM2/FM3/AM1/AM2) y unidad (MHz/kHz) como texto para respetar la tipografía elegida; selector “🔢 Números presets” con estilo por defecto o Tabler (assets). Detalle en `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.14 Beta** — band indicator (FM1/FM2/FM3/AM1/AM2) and unit (MHz/kHz) rendered as text to respect the selected font; “🔢 Preset numbers” selector with Default or Tabler style (assets). See `CHANGELOG_EN.md`.
 
 ### v5.0.12 **Beta** (Marzo 2026) — `main`
 - **ES:** **OpenRadioFM v5.0.12 Beta** — misma base que 5.0.11; se deja de usar la etiqueta *Stable* en `versionName` / `app_name_internal` y se publica como **Beta** hasta considerar la línea suficientemente madura.

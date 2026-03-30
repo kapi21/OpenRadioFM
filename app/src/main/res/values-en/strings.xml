@@ -205,6 +205,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Select icon pack</string>
+    <string name="preset_numbers">🔢 Preset numbers</string>
+    <string name="preset_numbers_default">Default</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">Select preset numbers</string>
     <string name="layout2_side_label">Layout V2 (vertical): preset side</string>
     <string name="layout2_side_presets_left">Presets on left</string>
     <string name="layout2_side_presets_right">Presets on right</string>

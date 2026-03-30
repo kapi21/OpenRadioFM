@@ -11,8 +11,8 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 25
-        versionName = "5.0.13 (Beta)"
+        versionCode = 26
+        versionName = "5.0.14 (Beta)"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -69,6 +69,7 @@ android {
         getByName("main") {
             assets.srcDirs(
                 "src/main/assets",
+                "../icons_numbers",
                 "../icons_color",
                 "../icons_google",
                 "../Icons_lucide",

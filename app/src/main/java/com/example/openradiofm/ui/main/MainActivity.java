@@ -223,6 +223,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public MediaSessionManager mMediaSessionManager;
     public ThemeManager mThemeManager; // V16.2: Skin manager
     public IconPackManager mIconPackManager;
+    public PresetNumberIconManager mPresetNumberIconManager;
+
+    // Números de presets (1..18) para el indicador de favorito
+    public static final String PREF_PRESET_NUMBERS_STYLE = "pref_preset_numbers_style"; // 0=default(drawable), 1=tabler(assets svg)
 
     // V18.5: Reloj Digital
     private android.os.Handler mClockHandler;
@@ -531,7 +535,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     private TextView tvFrequency, tvRdsName, tvRdsInfo;
     private android.view.View boxFrequency;
-    private ImageView ivBandIndicator, ivUnitLabel, ivFavoriteIndicator, ivStereoIcon;
+    private TextView ivBandIndicator;
+    private TextView ivUnitLabel;
+    private ImageView ivFavoriteIndicator, ivStereoIcon;
     private ImageButton btnLocDx, btnBand, btnPowerOff;
 
     // UI Arrays for Presets - REMOVED (Managed by PresetManager)
@@ -625,13 +631,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 updateBandImage(band);
             }
 
-            // Asegurar que el icono de unidad (MHz/KHz) se actualiza SIEMPRE al cambiar de banda,
-            // independientemente de si usamos UiController o el fallback legacy.
+            // Asegurar que la unidad (MHz/kHz) se actualiza SIEMPRE al cambiar de banda.
             if (ivUnitLabel != null) {
-                int unitResId = (band == BAND_AM1 || band == BAND_AM2)
-                        ? R.drawable.radio_khz
-                        : R.drawable.radio_mhz;
-                setImageResourceIfChanged(ivUnitLabel, unitResId);
+                setTextIfChanged(ivUnitLabel, unitShortText(band));
             }
             
             // V2.6: Re-asegurar tinte noche completo tras refrescar presets y unit label.
@@ -1457,6 +1459,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V3.0: Layout Selection
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
         mIconPackManager = new IconPackManager(this, mPrefs);
+        mPresetNumberIconManager = new PresetNumberIconManager(this);
         
         // V21.3: Forzar habilitación de banda AM para evitar inestabilidad en motores HW (MTK8259)
         // Se ha eliminado la opción de desactivarlo en Ajustes Premium.
@@ -2456,6 +2459,37 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         } catch (Exception ignored) {}
     }
 
+    public boolean usesTablerPresetNumbers() {
+        try {
+            return mPrefs != null && mPrefs.getInt(PREF_PRESET_NUMBERS_STYLE, 0) == 1;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Devuelve el drawable para el número de preset (si el estilo lo requiere).
+     * Si devuelve null, el caller debe usar el drawable del APK (radio_icon_pXX).
+     */
+    public Drawable getPresetNumberDrawable(int presetIdx) {
+        if (!usesTablerPresetNumbers()) return null;
+        if (mPresetNumberIconManager == null) return null;
+        return mPresetNumberIconManager.loadNumberSmallSvg(presetIdx);
+    }
+
+    public int getPresetNumberResId(int presetIdx) {
+        try {
+            int resId = getResources().getIdentifier(
+                    "radio_icon_p" + String.format("%02d", presetIdx),
+                    "drawable",
+                    getPackageName()
+            );
+            return resId != 0 ? resId : R.drawable.radio_icon_p01;
+        } catch (Exception ignored) {
+            return R.drawable.radio_icon_p01;
+        }
+    }
+
     /** V16.2: Delegado a ThemeManager */
     public int getSkinDrawableId() {
         return mThemeManager != null ? mThemeManager.getSkinDrawableId() : R.drawable.bg_glass_card_premium;
@@ -2808,10 +2842,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 } else {
                     int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
                     if (isNight) {
-                        setColorFilterIfChanged(ivUnitLabel, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                        setTextColorIfChanged(ivUnitLabel, nightBlue);
                         setTextColorIfChanged(tvFrequency, nightBlue);
                     } else {
-                        setColorFilterIfChanged(ivUnitLabel, null, null);
+                        boolean isLight = mThemeManager != null
+                                && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR;
+                        setTextColorIfChanged(ivUnitLabel, isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
                         setTextColorIfChanged(tvFrequency, android.graphics.Color.WHITE);
                     }
                     updateFrequencyDisplay(fFreq, rdsName);
@@ -2910,28 +2946,30 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * Algoritmo basado en CHIP_RADIO_SNR_RSSI.md
      */
 
-    private void updateBandImage(int band) {
-        int resId;
-        if (band == BAND_FM1) {
-            resId = R.drawable.radio_fm1;
-        } else if (band == BAND_FM2) {
-            resId = R.drawable.radio_fm2;
-        } else if (band == BAND_FM3) {
-            resId = R.drawable.radio_fm3;
-        } else if (band == BAND_AM1) {
-            resId = R.drawable.radio_am1;
-        } else if (band == BAND_AM2) {
-            resId = R.drawable.radio_am2;
-        } else {
-            resId = R.drawable.radio_fm1; // Fallback
-        }
+    private static String bandShortText(int band) {
+        if (band == BAND_FM1) return "FM1";
+        if (band == BAND_FM2) return "FM2";
+        if (band == BAND_FM3) return "FM3";
+        if (band == BAND_AM1) return "AM1";
+        if (band == BAND_AM2) return "AM2";
+        return "FM1";
+    }
 
+    private static String unitShortText(int band) {
+        return (band == BAND_AM1 || band == BAND_AM2) ? "kHz" : "MHz";
+    }
+
+    private void updateBandImage(int band) {
         if (ivBandIndicator != null) {
-            setImageResourceIfChanged(ivBandIndicator, resId);
-            if (btnBand != null)
-                setImageResourceIfChanged(btnBand, R.drawable.radio_band_n);
+            setTextIfChanged(ivBandIndicator, bandShortText(band));
+            // El color (noche/clear) lo gestionan Theme/Night managers y controllers.
+            if (btnBand != null) setImageResourceIfChanged(btnBand, R.drawable.radio_band_n);
         } else if (btnBand != null) {
-            setImageResourceIfChanged(btnBand, resId);
+            // Fallback legacy si falta el view del layout.
+            setImageResourceIfChanged(btnBand, R.drawable.radio_band_n);
+        }
+        if (ivUnitLabel != null) {
+            setTextIfChanged(ivUnitLabel, unitShortText(band));
         }
     }
 

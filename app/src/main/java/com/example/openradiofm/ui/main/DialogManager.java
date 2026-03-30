@@ -490,6 +490,22 @@ public class DialogManager {
             });
         }
 
+        // Preset numbers row (1..18)
+        View rowPresetNumbers = dialog.findViewById(R.id.rowPresetNumbers);
+        TextView tvCurrentPresetNumbers = dialog.findViewById(R.id.tvCurrentPresetNumbers);
+        if (tvCurrentPresetNumbers != null) {
+            int style = mActivity.mPrefs.getInt(MainActivity.PREF_PRESET_NUMBERS_STYLE, 0);
+            tvCurrentPresetNumbers.setText(style == 1
+                    ? mActivity.getString(R.string.preset_numbers_tabler)
+                    : mActivity.getString(R.string.preset_numbers_default));
+        }
+        if (rowPresetNumbers != null) {
+            rowPresetNumbers.setOnClickListener(v -> {
+                showPresetNumbersSelector();
+                dialog.dismiss();
+            });
+        }
+
         cardTheme.setOnClickListener(v -> {
             if (mActivity.mPrefs.getBoolean("pref_night_mode_auto", false)) {
                 mActivity.showToast("Desactiva Modo Noche Automático para elegir skin manualmente");
@@ -875,6 +891,22 @@ public class DialogManager {
         showGridSelector(mActivity.getString(R.string.select_icon_pack), options, currentIdx, which -> {
             mActivity.mPrefs.edit().putInt("pref_icon_pack", which).apply();
             try { mActivity.applyIconPack(); } catch (Exception ignored) {}
+            showPremiumSettingsDialog();
+        });
+    }
+
+    public void showPresetNumbersSelector() {
+        String[] options = {
+                mActivity.getString(R.string.preset_numbers_default),
+                mActivity.getString(R.string.preset_numbers_tabler),
+        };
+        int currentIdx = mActivity.mPrefs.getInt(MainActivity.PREF_PRESET_NUMBERS_STYLE, 0);
+        showGridSelector(mActivity.getString(R.string.select_preset_numbers), options, currentIdx, which -> {
+            mActivity.mPrefs.edit().putInt(MainActivity.PREF_PRESET_NUMBERS_STYLE, which).apply();
+            try {
+                if (mActivity.mPresetNumberIconManager != null) mActivity.mPresetNumberIconManager.clearCache();
+                mActivity.refreshRadioStatus();
+            } catch (Exception ignored) {}
             showPremiumSettingsDialog();
         });
     }

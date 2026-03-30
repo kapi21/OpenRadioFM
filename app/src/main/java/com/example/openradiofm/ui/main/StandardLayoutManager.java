@@ -19,8 +19,8 @@ public class StandardLayoutManager {
     public TextView tvRdsName;
     public TextView tvRdsInfo;
     public TextView tvPty;
-    public ImageView ivBandIndicator;
-    public ImageView ivUnitLabel;
+    public TextView ivBandIndicator;
+    public TextView ivUnitLabel;
     public ImageView ivSignalLevel;
     public ImageView ivAfIcon, ivTaIcon, ivTpIcon;
     public ImageView ivFavoriteIndicator;
@@ -107,14 +107,14 @@ public class StandardLayoutManager {
 
         if (isNight) {
             if (tvFrequency != null) tvFrequency.setTextColor(nightBlue);
-            if (ivUnitLabel != null) ivUnitLabel.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
+            if (ivUnitLabel != null) ivUnitLabel.setTextColor(nightBlue);
             if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
             if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
             if (tvPty != null) tvPty.setTextColor(nightBlue);
             if (btnPowerOff != null) btnPowerOff.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
         } else {
             if (tvFrequency != null) tvFrequency.setTextColor(normalText);
-            if (ivUnitLabel != null) ivUnitLabel.clearColorFilter();
+            if (ivUnitLabel != null) ivUnitLabel.setTextColor(normalText);
             if (tvRdsName != null) tvRdsName.setTextColor(normalText);
             if (tvRdsInfo != null) tvRdsInfo.setTextColor(normalText);
             if (tvPty != null) tvPty.setTextColor(normalText);
@@ -126,8 +126,12 @@ public class StandardLayoutManager {
         if (ivFavoriteIndicator != null) {
             if (isFavorite && idx > 0) {
                 ivFavoriteIndicator.setVisibility(View.VISIBLE);
-                int resId = mActivity.getResources().getIdentifier("radio_icon_p" + String.format("%02d", idx), "drawable", mActivity.getPackageName());
-                ivFavoriteIndicator.setImageResource(resId != 0 ? resId : R.drawable.radio_icon_p01);
+                android.graphics.drawable.Drawable d = mActivity.getPresetNumberDrawable(idx);
+                if (d != null) {
+                    ivFavoriteIndicator.setImageDrawable(d);
+                } else {
+                    ivFavoriteIndicator.setImageResource(mActivity.getPresetNumberResId(idx));
+                }
 
                 int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
                 if (isNight) {
@@ -170,33 +174,31 @@ public class StandardLayoutManager {
 
     public void updateBandImage(int band) {
         if (ivBandIndicator == null) return;
-        
-        int drawId;
-        switch (band) {
-            case 0: drawId = R.drawable.radio_fm1; break;
-            case 1: drawId = R.drawable.radio_fm2; break;
-            case 2: drawId = R.drawable.radio_fm3; break;
-            case 3: 
-                drawId = mActivity.getResources().getIdentifier("radio_am1", "drawable", mActivity.getPackageName());
-                if (drawId == 0) drawId = R.drawable.radio_fm1;
-                break;
-            case 4: 
-                drawId = mActivity.getResources().getIdentifier("radio_am2", "drawable", mActivity.getPackageName());
-                if (drawId == 0) drawId = R.drawable.radio_fm2;
-                break;
-            default: drawId = R.drawable.radio_fm1; break;
-        }
 
-        // Night mode tinting
-        boolean isNight = (mActivity.mThemeManager != null && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-        if (isNight) {
-            ivBandIndicator.setImageResource(drawId);
-            int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
-            ivBandIndicator.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
-        } else {
-            ivBandIndicator.setImageResource(drawId);
-            ivBandIndicator.clearColorFilter();
+        MainActivity.setTextIfChanged(ivBandIndicator, bandText(band));
+        applyBandTextColorForCurrentSkin(ivBandIndicator);
+    }
+
+    private static String bandText(int band) {
+        switch (band) {
+            case 0: return "FM1";
+            case 1: return "FM2";
+            case 2: return "FM3";
+            case 3: return "AM1";
+            case 4: return "AM2";
+            default: return "FM1";
         }
+    }
+
+    private void applyBandTextColorForCurrentSkin(TextView tv) {
+        if (tv == null) return;
+        int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
+        boolean isNight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+        boolean isLight = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        int normal = isLight ? Color.BLACK : Color.WHITE;
+        tv.setTextColor(isNight ? nightBlue : normal);
     }
 
     public void updateStatusIndicator(boolean active, String type) {

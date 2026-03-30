@@ -121,9 +121,9 @@ public class NightModeManager {
         if (tvClock != null) tvClock.setTextColor(nightBlue);
 
         // Icono de banda FM
-        ImageView ivBandIndicator = mActivity.findViewById(R.id.ivBandIndicator);
+        TextView ivBandIndicator = mActivity.findViewById(R.id.ivBandIndicator);
         if (ivBandIndicator != null) {
-            ivBandIndicator.setColorFilter(nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+            ivBandIndicator.setTextColor(nightBlue);
         }
 
         // Iconos de estado y PTY
@@ -210,14 +210,16 @@ public class NightModeManager {
         if (tvClock != null) tvClock.setTextColor(normalText);
 
         // Restaurar iconos
-        ImageView ivBandIndicator = mActivity.findViewById(R.id.ivBandIndicator);
-        if (ivBandIndicator != null) ivBandIndicator.clearColorFilter();
+        TextView ivBandIndicator = mActivity.findViewById(R.id.ivBandIndicator);
+        if (ivBandIndicator != null) {
+            ivBandIndicator.setTextColor(normalText);
+        }
 
         ImageView ivFavoriteIndicator = mActivity.findViewById(R.id.ivFavoriteIndicator);
         if (ivFavoriteIndicator != null) ivFavoriteIndicator.clearColorFilter();
 
-        ImageView ivUnitLabel = mActivity.findViewById(R.id.ivUnitLabel);
-        if (ivUnitLabel != null) ivUnitLabel.clearColorFilter();
+        TextView ivUnitLabel = mActivity.findViewById(R.id.ivUnitLabel);
+        if (ivUnitLabel != null) ivUnitLabel.setTextColor(normalText);
 
         clearImageViewFilter(R.id.ivStereoIcon);
         clearImageViewFilter(R.id.ivAfIcon);

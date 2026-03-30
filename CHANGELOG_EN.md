@@ -4,6 +4,20 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.14 (Beta)] - 2026-03-30
+*Font-respecting indicators (band + unit), plus preset numbers in assets.*
+
+### Added
+- **Preset numbers**: new customization option **🔢 Preset numbers** with **Default** or **Tabler** style (assets `icons_numbers/number-1-small.svg` … `number-18-small.svg`).
+
+### Changed
+- **Band indicator**: `FM1/FM2/FM3/AM1/AM2` switched from icons to **autosized text** to respect the selected font, keeping the same reserved space in V2/V3 layouts (incl. `sw720dp`).
+- **Unit**: `MHz/kHz` switched from icon to **autosized text** (changes with band), keeping the same reserved space in layouts.
+- **Assets**: `icons_numbers` is packaged as `assets` via `sourceSets` in `app/build.gradle.kts`.
+- **Version**: `versionCode 26`, `versionName 5.0.14 (Beta)`.
+
+---
+
 ## [5.0.13 (Beta)] - 2026-03-29
 *SVG icon packs (Material, Lucide, Remix, Font Awesome, Tabler), night/CLEAR/cloud tinting, V3 car logo & MT8163 LOC/DX sync.*
 

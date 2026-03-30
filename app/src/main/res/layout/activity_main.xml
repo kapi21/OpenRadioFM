@@ -153,14 +153,21 @@
         android:elevation="20dp"
         android:translationZ="20dp">
 
-        <ImageView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/ivBandIndicator"
             android:layout_width="78dp"
             android:layout_height="52dp"
             android:layout_marginEnd="8dp"
-            android:adjustViewBounds="true"
-            android:scaleType="fitStart"
-            android:src="@drawable/radio_fm1" />
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:text="FM1"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="10sp"
+            app:autoSizeMaxTextSize="40sp"
+            app:autoSizeStepGranularity="2sp" />
 
         <ImageView
             android:id="@+id/ivStereoIcon"
@@ -246,8 +253,8 @@
             android:src="@drawable/level_signal"
             android:visibility="visible" />
 
-        <!-- MHz: esquina inferior-derecha -->
-        <ImageView
+        <!-- MHz/kHz: esquina inferior-derecha -->
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/ivUnitLabel"
             android:layout_width="56dp"
             android:layout_height="56dp"
@@ -255,8 +262,16 @@
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="0dp"
             android:translationY="10dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/radio_mhz" />
+            android:gravity="center"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:text="MHz"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="8sp"
+            app:autoSizeMaxTextSize="20sp"
+            app:autoSizeStepGranularity="1sp" />
 
 
         <!-- PTY + RDS Status Icons: Barra inferior distribuida con pesos -->
