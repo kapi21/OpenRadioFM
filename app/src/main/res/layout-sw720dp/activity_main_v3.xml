@@ -21,9 +21,9 @@
             android:textColor="@color/white"
             android:textStyle="bold"
             app:autoSizeTextType="uniform"
-            app:autoSizeMinTextSize="12sp"
-            app:autoSizeMaxTextSize="52sp"
-            app:autoSizeStepGranularity="2sp" />
+            app:autoSizeMinTextSize="20.0sp"
+            app:autoSizeMaxTextSize="72.0sp"
+            app:autoSizeStepGranularity="2.0sp" />
   
 
   <ImageView
