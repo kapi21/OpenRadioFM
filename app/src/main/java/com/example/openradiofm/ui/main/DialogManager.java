@@ -3,6 +3,7 @@ package com.example.openradiofm.ui.main;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.util.Log;
@@ -125,6 +126,8 @@ public class DialogManager {
         View viewColorPreview = dialog.findViewById(R.id.viewColorPreview);
         TextView tvFontPreview = dialog.findViewById(R.id.tvFontPreview);
         TextView tvBackgroundStatus = dialog.findViewById(R.id.tvBackgroundStatus);
+        View rowA11yHijack = dialog.findViewById(R.id.rowA11yHijack);
+        TextView tvA11yHijackStatus = dialog.findViewById(R.id.tvA11yHijackStatus);
 
         // Night schedule views
         View rowNightSchedule = dialog.findViewById(R.id.rowNightSchedule);
@@ -149,6 +152,24 @@ public class DialogManager {
             rowLanguage.setOnClickListener(v -> {
                 showNewLanguageSelector();
                 dialog.dismiss();
+            });
+        }
+
+        // HiHack (Accessibility) status + shortcut
+        if (rowA11yHijack != null && tvA11yHijackStatus != null) {
+            boolean enabled = MainActivity.isFactoryRadioHijackerAccessibilityEnabled(mActivity);
+            String state = enabled ? mActivity.getString(R.string.a11y_hihack_enabled)
+                    : mActivity.getString(R.string.a11y_hihack_disabled);
+            tvA11yHijackStatus.setText(state + " • " + mActivity.getString(R.string.a11y_hihack_open_settings));
+            tvA11yHijackStatus.setTextColor(enabled ? Color.parseColor("#44FF44") : Color.parseColor("#FF4444"));
+            rowA11yHijack.setOnClickListener(v -> {
+                try {
+                    Intent i = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    mActivity.startActivity(i);
+                } catch (Exception e) {
+                    mActivity.showStyledToast(mActivity.getString(R.string.error_opening_settings));
+                }
             });
         }
 

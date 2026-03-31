@@ -2,6 +2,10 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema solo envía esas teclas al launcher.</string>
+    <string name="a11y_hihack_title">HiHack (Accesibilidad)</string>
+    <string name="a11y_hihack_enabled">Activado</string>
+    <string name="a11y_hihack_disabled">Desactivado</string>
+    <string name="a11y_hihack_open_settings">Tocar para abrir ajustes de accesibilidad</string>
 
     <!-- MT8163/HCN: aviso tras cerrar streaming online (handoff FM puede quedar inconsistente en algunos firmwares) -->
     <string name="mt8163_stream_stopped_restart_hint">Has cerrado el streaming. Si la FM no responde bien, cierra por completo OpenRadioFM y vuelve a abrirla.</string>

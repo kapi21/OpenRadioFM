@@ -47,6 +47,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Вибрати пакет іконок</string>
+    <string name="preset_numbers">🔢 Номери пресетів</string>
+    <string name="preset_numbers_default">За замовчуванням</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">Вибрати номери пресетів</string>
     <string name="layout2_side_label">Layout V2 (вертикальний): сторона пресетів</string>
     <string name="layout2_side_presets_left">Пресети ліворуч</string>
     <string name="layout2_side_presets_right">Пресети праворуч</string>
@@ -183,6 +187,10 @@
     <string name="about_tech_details">Технічні деталі</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
+    <string name="a11y_hihack_title">HiHack (Доступність)</string>
+    <string name="a11y_hihack_enabled">Увімкнено</string>
+    <string name="a11y_hihack_disabled">Вимкнено</string>
+    <string name="a11y_hihack_open_settings">Торкніться, щоб відкрити налаштування доступності</string>
     <string name="all_favorites_deleted">✅ Усі обрані видалено</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

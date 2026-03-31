@@ -27,6 +27,7 @@ import android.view.MotionEvent;
 import android.graphics.Bitmap;
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.provider.Settings;
 
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -90,6 +91,41 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private static final int PRESETS_COUNT = AppConstants.PRESETS_COUNT; // Fuente única global
     /** Silenciar FM en llamadas (K706): {@link Manifest.permission#READ_PHONE_STATE} */
     private static final int REQ_READ_PHONE_STATE_K706 = 1003;
+
+    public static boolean isFactoryRadioHijackerAccessibilityEnabled(Context context) {
+        try {
+            if (context == null) return false;
+            int a11yEnabled = 0;
+            try {
+                a11yEnabled = Settings.Secure.getInt(
+                        context.getContentResolver(),
+                        Settings.Secure.ACCESSIBILITY_ENABLED
+                );
+            } catch (Exception ignored) {}
+            if (a11yEnabled != 1) return false;
+
+            String enabled = Settings.Secure.getString(
+                    context.getContentResolver(),
+                    Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES
+            );
+            if (enabled == null || enabled.isEmpty()) return false;
+
+            ComponentName cn = new ComponentName(context, com.example.openradiofm.services.FactoryRadioHijackerService.class);
+            String flattened = cn.flattenToString(); // package/class
+
+            // Lista separada por ':' (Settings.Secure)
+            // Comparación case-sensitive (Android almacena así).
+            String[] parts = enabled.split(":");
+            for (String p : parts) {
+                if (flattened.equals(p)) return true;
+                // Algunas ROM guardan el nombre "short" de la clase.
+                if ((context.getPackageName() + "/" + com.example.openradiofm.services.FactoryRadioHijackerService.class.getName()).equals(p)) return true;
+            }
+            return false;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     /**
      * {@link com.example.openradiofm.services.FactoryRadioHijackerService}: si es true, esta activity

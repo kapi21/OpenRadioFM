@@ -426,6 +426,32 @@
             android:text="@string/hardware_settings"
             android:layout_marginTop="16dp"/>
 
+        <!-- HiHack (Accesibilidad) -->
+        <LinearLayout
+            android:id="@+id/rowA11yHijack"
+            style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="@string/a11y_hihack_title"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvA11yHijackStatus"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/a11y_hihack_open_settings"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Forzar Motor de Radio -->
         <LinearLayout
             android:id="@+id/rowEngine"

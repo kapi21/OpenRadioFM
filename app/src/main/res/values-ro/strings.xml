@@ -47,6 +47,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Selectează pachetul de pictograme</string>
+    <string name="preset_numbers">🔢 Numere preset</string>
+    <string name="preset_numbers_default">Implicit</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">Selectează numerele preset</string>
     <string name="layout2_side_label">Layout V2 (vertical): partea preseturilor</string>
     <string name="layout2_side_presets_left">Preseturi în stânga</string>
     <string name="layout2_side_presets_right">Preseturi în dreapta</string>
@@ -184,6 +188,10 @@
     <!-- Missing keys (fallback/translations) -->
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
+    <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
+    <string name="a11y_hihack_enabled">Activat</string>
+    <string name="a11y_hihack_disabled">Dezactivat</string>
+    <string name="a11y_hihack_open_settings">Atinge pentru a deschide setările de accesibilitate</string>
     <string name="all_favorites_deleted">✅ Toate favoritele au fost șterse</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

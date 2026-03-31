@@ -50,6 +50,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Seleziona pack icone</string>
+    <string name="preset_numbers">🔢 Numeri preset</string>
+    <string name="preset_numbers_default">Predefinito</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">Seleziona numeri preset</string>
     <string name="layout2_side_label">Layout V2 (verticale): lato preset</string>
     <string name="layout2_side_presets_left">Preset a sinistra</string>
     <string name="layout2_side_presets_right">Preset a destra</string>
@@ -206,6 +210,10 @@
     <!-- Missing keys (fallback/translations) -->
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Questo servizio permette a OpenRadioFM di sovrapporsi quando premi il pulsante fisico RADIO su unità Android compatibili (es. K706), bypassando l’app di serie.</string>
+    <string name="a11y_hihack_title">HiHack (Accessibilità)</string>
+    <string name="a11y_hihack_enabled">Attivato</string>
+    <string name="a11y_hihack_disabled">Disattivato</string>
+    <string name="a11y_hihack_open_settings">Tocca per aprire le impostazioni di accessibilità</string>
     <string name="all_favorites_deleted">✅ Tutti i preferiti eliminati</string>
     <string name="category_app_options">Opzioni App</string>
     <string name="category_premium">Personalizzazione Premium</string>

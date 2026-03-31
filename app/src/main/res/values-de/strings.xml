@@ -2,6 +2,10 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
+    <string name="a11y_hihack_title">HiHack (Barrierefreiheit)</string>
+    <string name="a11y_hihack_enabled">Aktiviert</string>
+    <string name="a11y_hihack_disabled">Deaktiviert</string>
+    <string name="a11y_hihack_open_settings">Tippen, um Barrierefreiheit-Einstellungen zu öffnen</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming beendet. Wenn UKW nicht richtig reagiert, OpenRadioFM vollständig schließen und erneut öffnen.</string>
     
     <!-- Premium Menu Strings -->
@@ -52,6 +56,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Icon-Pack auswählen</string>
+    <string name="preset_numbers">🔢 Preset-Nummern</string>
+    <string name="preset_numbers_default">Standard</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">Preset-Nummern auswählen</string>
     <string name="layout2_side_label">Layout V2 (vertikal): Preset-Seite</string>
     <string name="layout2_side_presets_left">Presets links</string>
     <string name="layout2_side_presets_right">Presets rechts</string>

@@ -40,6 +40,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">选择图标包</string>
+    <string name="preset_numbers">🔢 预设编号</string>
+    <string name="preset_numbers_default">默认</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">选择预设编号</string>
     <string name="layout2_side_label">Layout V2（纵向）：预设位置</string>
     <string name="layout2_side_presets_left">预设在左侧</string>
     <string name="layout2_side_presets_right">预设在右侧</string>
@@ -132,6 +136,10 @@
     <string name="about_tech_details">技术详情</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">此服务允许在兼容的安卓主机（例如 K706）按下物理 RADIO 按键时，OpenRadioFM 覆盖显示并绕过原厂应用。</string>
+    <string name="a11y_hihack_title">HiHack（无障碍）</string>
+    <string name="a11y_hihack_enabled">已启用</string>
+    <string name="a11y_hihack_disabled">已禁用</string>
+    <string name="a11y_hihack_open_settings">点按打开无障碍设置</string>
     <string name="all_favorites_deleted">✅ 已删除所有收藏</string>
     <string name="language_german">Deutsch</string>
     <string name="language_hungarian">Magyar</string>

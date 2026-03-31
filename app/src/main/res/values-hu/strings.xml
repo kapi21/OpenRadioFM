@@ -49,6 +49,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">Ikon csomag kiválasztása</string>
+    <string name="preset_numbers">🔢 Preset számok</string>
+    <string name="preset_numbers_default">Alapértelmezett</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">Preset számok kiválasztása</string>
     <string name="layout2_side_label">Layout V2 (függőleges): preset oldal</string>
     <string name="layout2_side_presets_left">Presetek balra</string>
     <string name="layout2_side_presets_right">Presetek jobbra</string>
@@ -206,6 +210,10 @@
     <!-- Missing keys (fallback/translations) -->
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
+    <string name="a11y_hihack_title">HiHack (Kisegítő lehetőségek)</string>
+    <string name="a11y_hihack_enabled">Bekapcsolva</string>
+    <string name="a11y_hihack_disabled">Kikapcsolva</string>
+    <string name="a11y_hihack_open_settings">Koppints a kisegítő lehetőségek beállításainak megnyitásához</string>
     <string name="all_favorites_deleted">✅ Az összes kedvenc törölve</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="gestures_enabled">✅ Lapozó gesztusok engedélyezve</string>

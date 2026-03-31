@@ -40,6 +40,10 @@
     <string name="icon_pack_awesome">Font Awesome</string>
     <string name="icon_pack_tabler">Tabler</string>
     <string name="select_icon_pack">アイコンパックを選択</string>
+    <string name="preset_numbers">🔢 プリセット番号</string>
+    <string name="preset_numbers_default">デフォルト</string>
+    <string name="preset_numbers_tabler">Tabler</string>
+    <string name="select_preset_numbers">プリセット番号を選択</string>
     <string name="layout2_side_label">Layout V2 (縦): プリセットの位置</string>
     <string name="layout2_side_presets_left">プリセットを左</string>
     <string name="layout2_side_presets_right">プリセットを右</string>
@@ -132,6 +136,10 @@
     <string name="about_tech_details">技術詳細</string>
     <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
     <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
+    <string name="a11y_hihack_title">HiHack（ユーザー補助）</string>
+    <string name="a11y_hihack_enabled">有効</string>
+    <string name="a11y_hihack_disabled">無効</string>
+    <string name="a11y_hihack_open_settings">タップしてユーザー補助設定を開く</string>
     <string name="all_favorites_deleted">✅ すべてのお気に入りを削除しました</string>
     <string name="language_german">Deutsch</string>
     <string name="language_hungarian">Magyar</string>
