@@ -573,7 +573,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private android.view.View boxFrequency;
     private TextView ivBandIndicator;
     private TextView ivUnitLabel;
-    private ImageView ivFavoriteIndicator, ivStereoIcon;
+    private ImageView ivFavoriteIndicator;
+    private TextView ivStereoIcon;
     private ImageButton btnLocDx, btnBand, btnPowerOff;
 
     // UI Arrays for Presets - REMOVED (Managed by PresetManager)
@@ -2722,7 +2723,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                    // V2.6: Proteger tinte noche al actualizar visibilidad
                    if (fIsNight) {
                        int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                       setColorFilterIfChanged(ivStereoIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+                       setTextColorIfChanged(ivStereoIcon, nightBlue);
                    }
                }
                // V22.x: MT8163/HCN a veces no emite callback 106; sincronizar drawable con isDxLocal().

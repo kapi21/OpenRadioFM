@@ -5,7 +5,6 @@ import android.graphics.PorterDuff;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.TextView;
 import com.example.openradiofm.R;
 import com.example.openradiofm.ui.theme.ThemeManager;
 
@@ -18,7 +17,8 @@ public class V3LayoutController extends BaseLayoutController {
     private ImageView ivSignalLevel;
     private TextView ivUnitLabel;
     private ImageView ivAfIcon, ivTaIcon, ivTpIcon;
-    private ImageView ivFavoriteIndicator, ivStereoIcon;
+    private ImageView ivFavoriteIndicator;
+    private TextView ivStereoIcon;
     private ImageView ivMainLogo;
 
     public V3LayoutController(MainActivity activity) {

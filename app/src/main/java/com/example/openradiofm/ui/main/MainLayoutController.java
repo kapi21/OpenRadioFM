@@ -17,7 +17,8 @@ public class MainLayoutController extends BaseLayoutController {
     private TextView ivUnitLabel;
     private ImageView ivSignalLevel;
     private ImageView ivAfIcon, ivTaIcon, ivTpIcon;
-    private ImageView ivFavoriteIndicator, ivStereoIcon;
+    private ImageView ivFavoriteIndicator;
+    private TextView ivStereoIcon;
 
     public MainLayoutController(MainActivity activity) {
         super(activity);

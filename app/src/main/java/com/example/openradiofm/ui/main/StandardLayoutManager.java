@@ -24,7 +24,7 @@ public class StandardLayoutManager {
     public ImageView ivSignalLevel;
     public ImageView ivAfIcon, ivTaIcon, ivTpIcon;
     public ImageView ivFavoriteIndicator;
-    public ImageView ivStereoIcon;
+    public TextView ivStereoIcon;
     public ImageButton btnPowerOff; // Actually ImageView/ImageButton
 
     public StandardLayoutManager(MainActivity activity) {

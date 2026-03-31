@@ -21,21 +21,28 @@
             android:textColor="@color/white"
             android:textStyle="bold"
             app:autoSizeTextType="uniform"
-            app:autoSizeMinTextSize="20.0sp"
-            app:autoSizeMaxTextSize="72.0sp"
+            app:autoSizeMinTextSize="18.0sp"
+            app:autoSizeMaxTextSize="64.0sp"
             app:autoSizeStepGranularity="2.0sp" />
   
 
-  <ImageView
+  <androidx.appcompat.widget.AppCompatTextView
     android:id="@+id/ivStereoIcon"
     android:visibility="invisible"
     android:layout_width="60dp"
     android:layout_height="36dp"
-    android:src="@drawable/fwt"
-    android:scaleType="fitCenter"
-    android:adjustViewBounds="true"
     android:layout_marginStart="-4dp"
-    android:layout_marginEnd="8dp" />
+    android:layout_marginEnd="8dp"
+    android:gravity="center"
+    android:includeFontPadding="false"
+    android:maxLines="1"
+    android:text="ST"
+    android:textColor="@color/white"
+    android:textStyle="bold"
+    app:autoSizeTextType="uniform"
+    app:autoSizeMinTextSize="10sp"
+    app:autoSizeMaxTextSize="24sp"
+    app:autoSizeStepGranularity="1sp" />
 	
 	</LinearLayout>
     

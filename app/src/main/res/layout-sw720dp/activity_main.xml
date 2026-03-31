@@ -163,17 +163,24 @@
                 android:textStyle="bold"
                 app:autoSizeTextType="uniform"
                 app:autoSizeMinTextSize="10sp"
-                app:autoSizeMaxTextSize="44sp"
+                app:autoSizeMaxTextSize="40sp"
                 app:autoSizeStepGranularity="2sp" />
 
-            <ImageView
+            <androidx.appcompat.widget.AppCompatTextView
                 android:id="@+id/ivStereoIcon"
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_marginEnd="8dp"
-                android:adjustViewBounds="true"
-                android:scaleType="fitCenter"
-                android:src="@drawable/fwt"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:text="ST"
+                android:textColor="@color/white"
+                android:textStyle="bold"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="10sp"
+                app:autoSizeMaxTextSize="26sp"
+                app:autoSizeStepGranularity="1sp"
                 android:visibility="invisible" />
 
             <Space
