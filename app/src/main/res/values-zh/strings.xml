@@ -134,7 +134,7 @@
     <string name="about_info_header">信息</string>
     <string name="about_dev_by">开发者</string>
     <string name="about_tech_details">技术详情</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">此服务允许在兼容的安卓主机（例如 K706）按下物理 RADIO 按键时，OpenRadioFM 覆盖显示并绕过原厂应用。</string>
     <string name="a11y_hihack_title">HiHack（无障碍）</string>
     <string name="a11y_hihack_enabled">已启用</string>
@@ -148,4 +148,14 @@
     <string name="category_app_options">应用选项</string>
     <string name="category_premium">高级个性化</string>
     <string name="night_mode_logos">徽标夜间模式</string>
+
+    <string name="widget_description">无需打开应用即可查看频率、RDS 与预设</string>
+    <string name="widget_cd_open_app">打开 OpenRadioFM</string>
+    <string name="widget_prev_preset">上一预设</string>
+    <string name="widget_next_preset">下一预设</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">覆盖预设</string>
+    <string name="autoscan_confirm_message">此 AutoScan 将清空并用扫描到的电台重新填充当前波段的 1–18 号预设。\n\n是否开始扫描？</string>
+    <string name="autoscan_confirm_start">开始扫描</string>
 </resources>

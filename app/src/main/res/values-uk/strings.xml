@@ -185,7 +185,7 @@
     <string name="about_info_header">ІНФОРМАЦІЯ</string>
     <string name="about_dev_by">Розроблено</string>
     <string name="about_tech_details">Технічні деталі</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
     <string name="a11y_hihack_title">HiHack (Доступність)</string>
     <string name="a11y_hihack_enabled">Увімкнено</string>
@@ -197,4 +197,14 @@
     <string name="category_app_options">Опції застосунку</string>
     <string name="category_premium">Преміум налаштування</string>
     <string name="night_mode_logos">Нічний режим для логотипів</string>
+
+    <string name="widget_description">Частота, RDS і пресети без відкриття застосунку</string>
+    <string name="widget_cd_open_app">Відкрити OpenRadioFM</string>
+    <string name="widget_prev_preset">Попередній пресет</string>
+    <string name="widget_next_preset">Наступний пресет</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">ПЕРЕЗАПИС ПРИСЕТІВ</string>
+    <string name="autoscan_confirm_message">Цей AutoScan очистить і заповнить комірки 1–18 поточного діапазону знайденими станціями.\n\nПочати сканування?</string>
+    <string name="autoscan_confirm_start">Почати сканування</string>
 </resources>

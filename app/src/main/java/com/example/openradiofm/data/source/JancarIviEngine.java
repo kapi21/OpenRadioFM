@@ -26,6 +26,14 @@ public class JancarIviEngine implements RadioEngine {
     private static final String ACTION_MAIN = "com.jancar.services.action.main";
     private static final String ACTION_RADIO = "com.jancar.services.action.radio";
 
+    // 8227L OEM FMService (com.jancar.radio) control intents
+    private static final String PACKAGE_FACTORY_RADIO = "com.jancar.radio";
+    private static final String CLASS_FACTORY_FM_SERVICE = "com.jancar.radio.FmService";
+    private static final String EXTRA_FM_FREQ_VALID = "fmradio.freq.valid"; // expects: freqKhz/10 (e.g. 87500 -> 8750)
+    private static final String ACTION_FM_SEEK_NEXT = "fmradio.seek.next";
+    private static final String ACTION_FM_SEEK_PREVIOUS = "fmradio.seek.previous";
+    private static final String ACTION_FM_TURN_OFF = "fmradio.turnoff";
+
     /** Jancar {@code IVIRadio.Band}: FM=1, AM=0 */
     private static final int J_BAND_FM = 1;
     private static final int J_BAND_AM = 0;
@@ -287,6 +295,57 @@ public class JancarIviEngine implements RadioEngine {
         }
     }
 
+    /**
+     * 8227L quirk: en algunas ROMs, IRadio.setFreq() no cambia el tuner real.
+     * La app OEM usa com.jancar.radio.FmService, que interpreta EXTRA_FM_FREQ_VALID como freqKhz/10.
+     */
+    private void sendFactoryFmServiceTune(int freqKhz) {
+        if (mContext == null) return;
+        if (freqKhz <= 0) return;
+        try {
+            int normalized = normalizeFreqFor8227L(freqKhz);
+            int freqValid = normalized / 10; // 87500->8750, 101700->10170
+            Intent i = new Intent();
+            i.setComponent(new ComponentName(PACKAGE_FACTORY_RADIO, CLASS_FACTORY_FM_SERVICE));
+            i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            i.putExtra(EXTRA_FM_FREQ_VALID, freqValid);
+            mContext.startService(i);
+            Log.d(TAG, "FmService tune: freqKhz=" + freqKhz + " normalized=" + normalized + " fmradio.freq.valid=" + freqValid);
+        } catch (Exception e) {
+            Log.w(TAG, "FmService tune failed", e);
+        }
+    }
+
+    private void sendFactoryFmServiceAction(String action) {
+        if (mContext == null) return;
+        if (action == null || action.trim().isEmpty()) return;
+        try {
+            Intent i = new Intent(action);
+            i.setComponent(new ComponentName(PACKAGE_FACTORY_RADIO, CLASS_FACTORY_FM_SERVICE));
+            i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            mContext.startService(i);
+            Log.d(TAG, "FmService action sent: " + action);
+        } catch (Exception e) {
+            Log.w(TAG, "FmService action failed: " + action, e);
+        }
+    }
+
+    /**
+     * Normaliza a pasos típicos de FM para evitar frecuencias "raras" (p.ej. 87.55)
+     * que el stack OEM puede ignorar.
+     *
+     * OpenRadioFM usa freqKhz en escala ×1000 (87.50MHz -> 87500).
+     */
+    private static int normalizeFreqFor8227L(int freqKhz) {
+        // FM range heuristic: > 20000 => FM in kHz×1 (87.50MHz => 87500)
+        if (freqKhz > 20000) {
+            // Redondeo a 100 kHz (100 en unidades OpenRadioFM)
+            return ((freqKhz + 50) / 100) * 100;
+        }
+        // AM: dejar tal cual (kHz)
+        return freqKhz;
+    }
+
     private void syncStateFromService() {
         if (mRadio == null) return;
         try {
@@ -325,6 +384,8 @@ public class JancarIviEngine implements RadioEngine {
             mOpened = false;
             mRadio = null;
         }
+        // Best-effort: apagar el chip OEM si lo levantamos por FMService
+        sendFactoryFmServiceAction(ACTION_FM_TURN_OFF);
         if (mContext != null && mBound) {
             try {
                 mContext.unbindService(mConnection);
@@ -347,6 +408,8 @@ public class JancarIviEngine implements RadioEngine {
 
     @Override
     public void tune(int freqKhz) {
+        // 8227L: empujar también al FMService OEM (control real del tuner en algunas ROMs)
+        sendFactoryFmServiceTune(freqKhz);
         if (mRadio == null) return;
         try {
             mRadio.setFreq(freqKhz);
@@ -377,6 +440,8 @@ public class JancarIviEngine implements RadioEngine {
 
     @Override
     public void seekUp() {
+        // OEM FmService path (más fiable en 8227L)
+        sendFactoryFmServiceAction(ACTION_FM_SEEK_NEXT);
         if (mRadio == null) return;
         try {
             mRadio.scanUp(1);
@@ -387,6 +452,8 @@ public class JancarIviEngine implements RadioEngine {
 
     @Override
     public void seekDown() {
+        // OEM FmService path (más fiable en 8227L)
+        sendFactoryFmServiceAction(ACTION_FM_SEEK_PREVIOUS);
         if (mRadio == null) return;
         try {
             mRadio.scanDown(1);

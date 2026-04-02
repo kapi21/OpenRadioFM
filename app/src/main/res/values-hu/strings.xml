@@ -208,7 +208,7 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
     <string name="a11y_hihack_title">HiHack (Kisegítő lehetőségek)</string>
     <string name="a11y_hihack_enabled">Bekapcsolva</string>
@@ -222,4 +222,14 @@
     <string name="category_app_options">App Opciók</string>
     <string name="category_premium">Prémium Testreszabás</string>
     <string name="night_mode_logos">Éjszakai mód a logókhoz</string>
+
+    <string name="widget_description">Frekvencia, RDS és memóriák az app megnyitása nélkül</string>
+    <string name="widget_cd_open_app">OpenRadioFM megnyitása</string>
+    <string name="widget_prev_preset">Előző memória</string>
+    <string name="widget_next_preset">Következő memória</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">MEMÓRIÁK FELÜLÍRÁSA</string>
+    <string name="autoscan_confirm_message">Ez az AutoScan törli és újratölti az aktuális sáv 1–18 memóriáit az észlelt állomásokkal.\n\nElindítod a szkennelést?</string>
+    <string name="autoscan_confirm_start">Szkennelés indítása</string>
 </resources>

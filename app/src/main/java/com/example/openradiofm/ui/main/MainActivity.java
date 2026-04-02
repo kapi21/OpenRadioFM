@@ -2973,6 +2973,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             sourceIntent.putExtra("sourceName", "Radio");
             sendBroadcast(sourceIntent);
 
+            com.example.openradiofm.widget.OpenRadioFmWidgetProvider.updateStationDisplay(this, freq, band, rdsName);
+
         } catch (Exception ex) {
             Log.e(TAG, "Error updating launcher widgets", ex);
         }

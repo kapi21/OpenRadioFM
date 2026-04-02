@@ -54,6 +54,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
     /** Start command from UI to force PLAYING MediaSession state. */
     public static final String ACTION_FORCE_PLAY = "com.example.openradiofm.action.FORCE_PLAY";
+    /** Widget escritorio: memorias (no sigue el ajuste del volante seek vs preset). */
+    public static final String ACTION_WIDGET_PREV_PRESET = "com.example.openradiofm.action.WIDGET_PREV_PRESET";
+    public static final String ACTION_WIDGET_NEXT_PRESET = "com.example.openradiofm.action.WIDGET_NEXT_PRESET";
     /**
      * MT8163: al pasar de streaming online a FM, SourceService puede force-stop si nuestra
      * sesión sigue como “reproductor activo” y el mux entrega audio a com.hcn.autoradio.
@@ -397,6 +400,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             handleMt8163FmHandoffComplete();
         }
 
+        if (intent != null && ACTION_WIDGET_PREV_PRESET.equals(intent.getAction())) {
+            handleWidgetPresetSkip(-1);
+        }
+        if (intent != null && ACTION_WIDGET_NEXT_PRESET.equals(intent.getAction())) {
+            handleWidgetPresetSkip(1);
+        }
+
         return START_NOT_STICKY;
     }
 
@@ -710,6 +720,29 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
      * Volante / notificación / Auto: siguiente/anterior según ajuste seek vs preset.
      * @param direction +1 siguiente, -1 anterior.
      */
+    /** Widget: siempre memorias (preset), con fallback a seek si no hay siguiente/previa. */
+    private void handleWidgetPresetSkip(int direction) {
+        if (direction == 0) return;
+        try {
+            if (mEngine != null) {
+                boolean moved = direction > 0 ? playSequentialPreset(+1) : playSequentialPreset(-1);
+                if (!moved) {
+                    if (direction > 0) mEngine.seekUp();
+                    else mEngine.seekDown();
+                }
+                handlePlay();
+            } else {
+                enqueueSkip(direction > 0 ? +1 : -1, true);
+                maybeStartEngine();
+                mIsPlaying = true;
+                setPlaybackState(true);
+                ensureNotificationVisible();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "handleWidgetPresetSkip(" + direction + ") falló", e);
+        }
+    }
+
     private void handleSteeringSkip(int direction) {
         if (direction == 0) return;
         try {

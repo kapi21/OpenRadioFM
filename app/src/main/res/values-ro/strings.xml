@@ -186,7 +186,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>
@@ -198,4 +198,14 @@
     <string name="category_app_options">Opțiuni aplicație</string>
     <string name="category_premium">Setări Premium</string>
     <string name="night_mode_logos">Mod noapte pentru logo-uri</string>
+
+    <string name="widget_description">Frecvență, RDS și memorii fără a deschide aplicația</string>
+    <string name="widget_cd_open_app">Deschide OpenRadioFM</string>
+    <string name="widget_prev_preset">Memorie anterioară</string>
+    <string name="widget_next_preset">Memorie următoare</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">SUPRASCRIERE MEMORII</string>
+    <string name="autoscan_confirm_message">Acest AutoScan șterge și umple memoriile 1–18 ale benzii curente cu posturile detectate.\n\nÎncepi scanarea?</string>
+    <string name="autoscan_confirm_start">Începe scanarea</string>
 </resources>

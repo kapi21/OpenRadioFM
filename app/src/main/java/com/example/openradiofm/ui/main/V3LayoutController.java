@@ -42,6 +42,12 @@ public class V3LayoutController extends BaseLayoutController {
         ivFavoriteIndicator = root.findViewById(R.id.ivFavoriteIndicator);
         ivStereoIcon = root.findViewById(R.id.ivStereoIcon);
         ivMainLogo = root.findViewById(R.id.ivMainLogo);
+
+        // V3: el PS se renderiza en tvFrequency; nunca queremos arte debajo.
+        if (ivMainLogo != null) {
+            ivMainLogo.setImageDrawable(null);
+            ivMainLogo.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -176,13 +182,10 @@ public class V3LayoutController extends BaseLayoutController {
 
     @Override
     public void updateLogo(android.graphics.Bitmap bitmap) {
+        // En V3, el logo de estación se gestiona como fondo dinámico; evitar solapes con PS.
         if (ivMainLogo != null) {
-            if (bitmap != null) {
-                ivMainLogo.setImageBitmap(bitmap);
-                ivMainLogo.setVisibility(View.VISIBLE);
-            } else {
-                ivMainLogo.setVisibility(View.GONE);
-            }
+            ivMainLogo.setImageDrawable(null);
+            ivMainLogo.setVisibility(View.GONE);
         }
     }
 }

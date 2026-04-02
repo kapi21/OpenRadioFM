@@ -185,7 +185,7 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
     <string name="a11y_hihack_title">HiHack (Pristupačnost)</string>
     <string name="a11y_hihack_enabled">Omogućeno</string>
@@ -198,4 +198,14 @@
     <string name="category_app_options">Opcije aplikacije</string>
     <string name="category_premium">Premium podešavanja</string>
     <string name="night_mode_logos">Noćni režim za logotipe</string>
+
+    <string name="widget_description">Frekvencija, RDS i memorije bez otvaranja aplikacije</string>
+    <string name="widget_cd_open_app">Otvori OpenRadioFM</string>
+    <string name="widget_prev_preset">Prethodna memorija</string>
+    <string name="widget_next_preset">Sledeća memorija</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">PREBRISIVANJE MEMORIJA</string>
+    <string name="autoscan_confirm_message">Ovaj AutoScan briše i ponovo popunjava memorije 1–18 trenutnog opsega otkrivenim stanicama.\n\nPokrenuti skeniranje?</string>
+    <string name="autoscan_confirm_start">Pokreni skeniranje</string>
 </resources>

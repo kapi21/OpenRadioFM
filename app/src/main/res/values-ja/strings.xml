@@ -134,7 +134,7 @@
     <string name="about_info_header">情報</string>
     <string name="about_dev_by">開発者</string>
     <string name="about_tech_details">技術詳細</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
     <string name="a11y_hihack_title">HiHack（ユーザー補助）</string>
     <string name="a11y_hihack_enabled">有効</string>
@@ -148,4 +148,14 @@
     <string name="category_app_options">アプリのオプション</string>
     <string name="category_premium">プレミアムカスタマイズ</string>
     <string name="night_mode_logos">ロゴの夜間モード</string>
+
+    <string name="widget_description">アプリを開かずに周波数・RDS・プリセット</string>
+    <string name="widget_cd_open_app">OpenRadioFMを開く</string>
+    <string name="widget_prev_preset">前のプリセット</string>
+    <string name="widget_next_preset">次のプリセット</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">プリセットの上書き</string>
+    <string name="autoscan_confirm_message">この AutoScan は現在のバンドのプリセット 1〜18 を消去し、検出した局で埋め直します。\n\nスキャンを開始しますか？</string>
+    <string name="autoscan_confirm_start">スキャン開始</string>
 </resources>

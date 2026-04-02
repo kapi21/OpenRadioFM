@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema solo envía esas teclas al launcher.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilidad)</string>
     <string name="a11y_hihack_enabled">Activado</string>
@@ -222,4 +222,15 @@
     <string name="category_app_options">Opciones de la App</string>
     <string name="category_premium">Ajustes Premium</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
+
+    <!-- Widget escritorio -->
+    <string name="widget_description">Frecuencia, RDS y memorias sin abrir la app</string>
+    <string name="widget_cd_open_app">Abrir OpenRadioFM</string>
+    <string name="widget_prev_preset">Memoria anterior</string>
+    <string name="widget_next_preset">Memoria siguiente</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">SOBRESCRITURA DE MEMORIAS</string>
+    <string name="autoscan_confirm_message">Este AutoScan borrará y rellenará las memorias 1–18 de la banda actual con las emisoras que vaya detectando.\n\n¿Quieres iniciar el escaneo?</string>
+    <string name="autoscan_confirm_start">Iniciar escaneo</string>
 </resources>

@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.14%20(Beta)-orange.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.15%20(Beta)-orange.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -47,6 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
+**5.0.15 (beta, en curso):** widget de escritorio en launchers estándar; AutoScan lento con confirmación al estilo de los menús premium, barrido FM desde 87,5 MHz y parada en 108 MHz; refuerzo Jancar 8227L vía `FmService` OEM; ajuste de logo en layout V3. La beta sigue abierta a afinaciones.
 
 ---
 

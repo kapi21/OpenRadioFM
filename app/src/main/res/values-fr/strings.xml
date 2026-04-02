@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilité)</string>
     <string name="a11y_hihack_enabled">Activé</string>
@@ -146,4 +146,14 @@
     <string name="logo_mode_car">Logo de la Voiture</string>
     <string name="logo_mode_clock">Horloge Numérique</string>
     <string name="my_favorites">Mes Favoris</string>
+
+    <string name="widget_description">Fréquence, RDS et mémoires sans ouvrir l’app</string>
+    <string name="widget_cd_open_app">Ouvrir OpenRadioFM</string>
+    <string name="widget_prev_preset">Mémoire précédente</string>
+    <string name="widget_next_preset">Mémoire suivante</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">ÉCRASEMENT DES MÉMOIRES</string>
+    <string name="autoscan_confirm_message">Cet AutoScan efface et remplit les mémoires 1 à 18 de la bande actuelle avec les stations détectées.\n\nLancer le balayage ?</string>
+    <string name="autoscan_confirm_start">Lancer le balayage</string>
 </resources>

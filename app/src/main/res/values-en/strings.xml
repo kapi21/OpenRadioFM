@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system only sends those keys to the launcher.</string>
     <string name="a11y_hihack_title">HiHack (Accessibility)</string>
     <string name="a11y_hihack_enabled">Enabled</string>
@@ -224,4 +224,14 @@
     <!-- Settings Categories -->
     <string name="category_premium">Premium Customization</string>
     <string name="category_app_options">App Options</string>
+
+    <string name="widget_description">Frequency, RDS and presets without opening the app</string>
+    <string name="widget_cd_open_app">Open OpenRadioFM</string>
+    <string name="widget_prev_preset">Previous preset</string>
+    <string name="widget_next_preset">Next preset</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">PRESET OVERWRITE</string>
+    <string name="autoscan_confirm_message">This AutoScan will clear and refill presets 1–18 on the current band with stations it finds.\n\nStart scanning?</string>
+    <string name="autoscan_confirm_start">Start scan</string>
 </resources>

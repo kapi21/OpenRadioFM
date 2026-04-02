@@ -186,7 +186,7 @@
     <string name="logo_mode_clock">Цифровые Часы</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Этот сервис позволяет OpenRadioFM открываться поверх при нажатии физической кнопки RADIO на совместимых Android-устройствах (например, K706), обходя штатное радио.</string>
     <string name="a11y_hihack_title">HiHack (Спец. возможности)</string>
     <string name="a11y_hihack_enabled">Включено</string>
@@ -198,4 +198,14 @@
     <string name="category_app_options">Опции приложения</string>
     <string name="category_premium">Премиум настройки</string>
     <string name="night_mode_logos">Ночной режим для логотипов</string>
+
+    <string name="widget_description">Частота, RDS и пресеты без открытия приложения</string>
+    <string name="widget_cd_open_app">Открыть OpenRadioFM</string>
+    <string name="widget_prev_preset">Предыдущий пресет</string>
+    <string name="widget_next_preset">Следующий пресет</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">ПЕРЕЗАПИСЬ ПРИСЕТОВ</string>
+    <string name="autoscan_confirm_message">Этот AutoScan очистит и заполнит ячейки 1–18 текущего диапазона найденными станциями.\n\nНачать сканирование?</string>
+    <string name="autoscan_confirm_start">Начать сканирование</string>
 </resources>

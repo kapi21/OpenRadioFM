@@ -1,11 +1,30 @@
+## [5.0.15 (Beta)] - 2026-04-02
+*Versión en desarrollo (beta); afinación de tiempos AutoScan y detalles pendientes antes de cerrar release.*
+
+### Added
+- **Widget escritorio** (`AppWidget`): frecuencia, RDS PS, icono de app y memorias anterior/siguiente; actualización al ritmo de `MainActivity`; mandos vía `RadioMediaService` + `RadioWidgetActionReceiver` (útil en launchers tipo `com.android.launcher`; muchos launchers de automoción no exponen widgets de terceros).
+- **Cadenas** del widget y del diálogo AutoScan en todas las locales.
+
+### Changed
+- **AutoScan (lento)**: diálogo de confirmación con el mismo lenguaje visual que menús premium (cristal/tema activo, tipografía, botones).
+- **AutoScan (FM)**: arranque siempre en **87,5 MHz** para recorrer la banda completa; cierre automático al alcanzar **108 MHz** o si el tuner hace *wrap* al inicio de FM.
+- **Jancar IVI / 8227L**: refuerzo con `com.jancar.radio.FmService` (`fmradio.freq.valid`, seek next/prev, apagado al cerrar) cuando el tuner real no sigue solo a `IRadio`.
+- **Layout V3**: el logo pequeño se oculta al pintar el logo de emisora como fondo, para no solaparse con el PS.
+- **Versión**: `versionCode 27`, `versionName 5.0.15 (Beta)`; `app_name_internal` **v5.0.15 Beta**.
+
+---
+
 ## [5.0.14 (Beta)] - 2026-03-30
 *Tipografía aplicada a indicadores (banda + unidad), y números de presets en assets.*
 
 ### Added
 - **Números presets**: nueva opción en personalización **🔢 Números presets** con estilo **Por defecto** o **Tabler** (assets `icons_numbers/number-1-small.svg` … `number-18-small.svg`).
+- **HiHack (Accesibilidad)**: indicador de estado (Activado/Desactivado) dentro de ajustes premium, con acceso directo a los ajustes de accesibilidad del sistema.
 
 ### Changed
 - **Indicador de banda**: `FM1/FM2/FM3/AM1/AM2` pasa de iconos a **texto autosize** para respetar la tipografía seleccionada, manteniendo el mismo hueco en layouts V2/V3 (incl. `sw720dp`).
+- **Indicador ST**: el indicador de estéreo pasa de icono a **texto “ST”** manteniendo el hueco reservado y el tinte en modo noche.
+- **Ajuste de tamaños**: se reduce ligeramente el autosize del texto de banda para mejorar proporción visual.
 - **Unidad**: `MHz/kHz` pasa de icono a **texto autosize** (cambia según banda), manteniendo el mismo hueco en layouts.
 - **Assets**: se empaqueta `icons_numbers` como `assets` vía `sourceSets` en `app/build.gradle.kts`.
 - **Versión**: `versionCode 26`, `versionName 5.0.14 (Beta)`.

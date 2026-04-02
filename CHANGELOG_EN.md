@@ -4,14 +4,33 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.15 (Beta)] - 2026-04-02
+*Work-in-progress beta; AutoScan timing and polish may still change before the release is finalized.*
+
+### Added
+- **Home-screen widget** (`AppWidget`): frequency, RDS PS, app icon, and previous/next preset; updates with `MainActivity`; controls via `RadioMediaService` + `RadioWidgetActionReceiver` (works on typical `com.android.launcher` setups; many automotive shells do not list third-party widgets).
+- **Strings** for the widget and AutoScan dialog in all locales.
+
+### Changed
+- **Slow AutoScan**: confirmation dialog matches premium menu styling (glass/active skin, typography, buttons).
+- **AutoScan (FM)**: always starts at **87.5 MHz** to sweep the full band; auto-stops at **108 MHz** or on tuner wrap to the FM low end.
+- **Jancar IVI / 8227L**: additional path through `com.jancar.radio.FmService` (`fmradio.freq.valid`, seek next/prev, power-off on teardown) when the real tuner does not follow `IRadio` alone.
+- **Layout V3**: hide the small logo when the station logo is shown as background to avoid overlapping PS.
+- **Version**: `versionCode 27`, `versionName 5.0.15 (Beta)`; `app_name_internal` **v5.0.15 Beta**.
+
+---
+
 ## [5.0.14 (Beta)] - 2026-03-30
 *Font-respecting indicators (band + unit), plus preset numbers in assets.*
 
 ### Added
 - **Preset numbers**: new customization option **🔢 Preset numbers** with **Default** or **Tabler** style (assets `icons_numbers/number-1-small.svg` … `number-18-small.svg`).
+- **HiHack (Accessibility)**: enabled/disabled status indicator inside premium settings, with a shortcut to the system accessibility settings.
 
 ### Changed
 - **Band indicator**: `FM1/FM2/FM3/AM1/AM2` switched from icons to **autosized text** to respect the selected font, keeping the same reserved space in V2/V3 layouts (incl. `sw720dp`).
+- **ST indicator**: stereo indicator switched from an icon to **“ST” text**, keeping the reserved slot and night-mode tinting behavior.
+- **Sizing tweak**: slightly reduced band text autosize range for a better visual balance.
 - **Unit**: `MHz/kHz` switched from icon to **autosized text** (changes with band), keeping the same reserved space in layouts.
 - **Assets**: `icons_numbers` is packaged as `assets` via `sourceSets` in `app/build.gradle.kts`.
 - **Version**: `versionCode 26`, `versionName 5.0.14 (Beta)`.

@@ -208,7 +208,7 @@
     <string name="my_favorites">Meus Favoritos</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.13 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
     <string name="accessibility_service_description">Este serviço permite que o OpenRadioFM se sobreponha quando você pressiona o botão físico RADIO em unidades Android compatíveis (ex.: K706), ignorando o app de fábrica.</string>
     <string name="a11y_hihack_title">HiHack (Acessibilidade)</string>
     <string name="a11y_hihack_enabled">Ativado</string>
@@ -222,4 +222,14 @@
     <string name="language_hungarian">Magyar</string>
     <string name="language_italian">Italiano</string>
     <string name="language_portuguese">Português</string>
+
+    <string name="widget_description">Frequência, RDS e memórias sem abrir a app</string>
+    <string name="widget_cd_open_app">Abrir OpenRadioFM</string>
+    <string name="widget_prev_preset">Memória anterior</string>
+    <string name="widget_next_preset">Memória seguinte</string>
+
+    <string name="autoscan_confirm_title">AutoScan</string>
+    <string name="autoscan_confirm_subheader">SOBRESCRITA DE MEMÓRIAS</string>
+    <string name="autoscan_confirm_message">Este AutoScan apaga e preenche as memórias 1–18 da banda atual com as estações encontradas.\n\nIniciar a varredura?</string>
+    <string name="autoscan_confirm_start">Iniciar varredura</string>
 </resources>
