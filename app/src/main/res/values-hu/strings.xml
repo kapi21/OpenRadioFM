@@ -240,7 +240,7 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
     <string name="a11y_hihack_title">HiHack (Kisegítő lehetőségek)</string>
     <string name="a11y_hihack_enabled">Bekapcsolva</string>

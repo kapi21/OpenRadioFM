@@ -16,6 +16,10 @@
     <dimen name="padding_standard">4dp</dimen>
     <dimen name="padding_large">8dp</dimen>
     <dimen name="padding_extra_large">12dp</dimen>
+
+    <!-- Layout V2: mismo espacio horizontal entre borde de pantalla, presets y columna central -->
+    <dimen name="layout_v2_column_spacing">8dp</dimen>
+    <dimen name="layout_v2_preset_vertical_margin">8dp</dimen>
     
     <!-- Component Sizes -->
     <dimen name="preset_card_height">90dp</dimen>

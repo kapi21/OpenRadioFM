@@ -182,7 +182,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.15 Beta</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>

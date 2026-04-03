@@ -10,7 +10,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
  * Cliente Retrofit para Supabase.
  */
 public class SupabaseClient {
-    private static final String BASE_URL = "https://hciqxvfvohcaiaqqrvdq.supabase.co/";
+    private static final String BASE_URL = BuildConfig.SUPABASE_URL;
     private static SupabaseApi api;
 
     public static synchronized SupabaseApi getApi() {

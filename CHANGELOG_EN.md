@@ -4,8 +4,8 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
-## [5.0.15 (Beta)] - 2026-04-03
-*Work-in-progress beta — **not finalized yet**; AutoScan timing, copy, and UI may still change before the release.*
+## [5.0.15] - 2026-04-03
+*Release closing the 5.0.15 line (`versionCode` 28).*
 
 ### Added
 - **Home-screen widget** (`AppWidget`): frequency, RDS PS, app icon, and previous/next preset; updates with `MainActivity`; controls via `RadioMediaService` + `RadioWidgetActionReceiver` (works on typical `com.android.launcher` setups; many automotive shells do not list third-party widgets).
@@ -13,6 +13,8 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **Internationalization**: expanded `strings.xml` (toasts, dialogs, AutoScan, scanning, history) with matching keys across `values` and `values-*`; helper scripts under `tools/` to sync/validate keys (`diff_strings.py`, `sync_toast_strings_locales.py`, block insert helpers, etc.).
 - **Dialogs aligned with premium / AutoScan styling**: grid selector (`dialog_language_selector`), `.fav` file picker when loading favorites (`dialog_favorites_file_picker`), station history (`dialog_station_history`); dark frame, **active skin** card, user typography, red **Cancel** on lists; `item_fav_file_row` / `item_language` cells.
 - **Localized layouts**: `dialog_save_load`, `dialog_credits`, `dialog_selective_scan`, and scan rows wired to `@string/`.
+- **Build / Supabase**: credentials via `SUPABASE_URL` and `SUPABASE_ANON_KEY` in root `local.properties`, environment variables, or Gradle `-P` (no defaults committed). `BuildConfig` exposes URL, anon key, and public Storage base URL. Template `local.properties.example`; see [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
+- **Supabase community (data quality)**: centralized quality gate (`isAcceptableForCloudUpsert`, `sanitizePsForCloudUpsert`, PS rules); `CloudContributionGuard` — skip contribution while scanning or ~1.75s after a frequency change; PS must be stable ~4s before upload. `CloudContributionGuard.java`, `RadioRepository`, `MainActivity`, `SupabaseLogoSource`.
 
 ### Changed
 - **Toasts & copy**: hard-coded strings replaced with `getString(R.string.*)` across `MainActivity`, `DialogManager`, `ScanManager`, `ControlPanelManager`, `HardwareManager`, `MinimalLayoutManager`, `StationAdapter`, and related classes.
@@ -23,7 +25,8 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **Layout V3**: hide the small logo when the station logo is shown as background to avoid overlapping PS.
 - **History dialog**: removed `applyPremiumListStyle` on the system list; replaced with a custom unified layout.
 - **Engineering menus** (layouts): scroll / section tweaks for K706, QS6, and standard engineering dialogs.
-- **Version**: `versionCode 27`, `versionName 5.0.15 (Beta)`; `app_name_internal` **v5.0.15 Beta**.
+- **Layout V2**: uniform horizontal spacing (`layout_v2_column_spacing`) between screen edge, preset column, and center guideline.
+- **Version**: `versionCode 28`, `versionName 5.0.15`; `app_name_internal` **v5.0.15**.
 
 ---
 

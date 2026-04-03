@@ -1,7 +1,39 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
 }
+
+// Supabase: obligatorio vía local.properties (raíz), variables de entorno o -P (sin defaults en repo).
+val localProperties = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+
+fun supabaseProp(name: String): String? {
+    return System.getenv(name)
+        ?: localProperties.getProperty(name)
+        ?: (project.findProperty(name) as String?)
+}
+
+fun escapeBuildConfigString(s: String): String =
+    s.replace("\\", "\\\\").replace("\"", "\\\"")
+
+val supabaseUrlRaw = supabaseProp("SUPABASE_URL")?.trim()?.takeIf { it.isNotEmpty() }
+val supabaseAnonKeyRaw = supabaseProp("SUPABASE_ANON_KEY")?.trim()?.takeIf { it.isNotEmpty() }
+if (supabaseUrlRaw.isNullOrEmpty() || supabaseAnonKeyRaw.isNullOrEmpty()) {
+    throw GradleException(
+        "OpenRadioFM: defina SUPABASE_URL y SUPABASE_ANON_KEY.\n" +
+            "  - En desarrollo: añádalas a local.properties en la raíz del repo (véase local.properties.example).\n" +
+            "  - En CI: exporte las variables o pase -PSUPABASE_URL / -PSUPABASE_ANON_KEY.\n" +
+            "  - Documentación: docs/CI_SUPABASE.md",
+    )
+}
+val supabaseUrl: String = supabaseUrlRaw!!.trimEnd('/') + "/"
+val supabaseAnonKey: String = supabaseAnonKeyRaw!!
+val supabaseStoragePublicLogosBase: String =
+    supabaseUrl.trimEnd('/') + "/storage/v1/object/public/station-logos/espana/"
 
 android {
     namespace = "com.example.openradiofm"
@@ -11,10 +43,18 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 27
-        versionName = "5.0.15 (Beta)"
+        versionCode = 28
+        versionName = "5.0.15"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "SUPABASE_URL", "\"${escapeBuildConfigString(supabaseUrl)}\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${escapeBuildConfigString(supabaseAnonKey)}\"")
+        buildConfigField(
+            "String",
+            "SUPABASE_STORAGE_PUBLIC_LOGOS_BASE",
+            "\"${escapeBuildConfigString(supabaseStoragePublicLogosBase)}\"",
+        )
     }
 
     // V4.7: Configuraciones de firma recomendadas para distribución en radios chinas.

@@ -3,6 +3,7 @@ package com.example.openradiofm.data.repository;
 import com.example.openradiofm.data.model.RadioStation;
 import com.example.openradiofm.data.source.PredefinedStationSource;
 import com.example.openradiofm.data.source.RootRDSSource;
+import com.example.openradiofm.data.source.CloudContributionGuard;
 import com.example.openradiofm.data.source.SupabaseLogoSource;
 import com.example.openradiofm.data.source.WebRadioSource;
 import com.example.openradiofm.data.source.network.model.SupabaseLogoResponse;
@@ -23,6 +24,72 @@ public class RadioRepository {
     private final java.util.concurrent.ExecutorService logoExecutor = java.util.concurrent.Executors
             .newFixedThreadPool(3);
     private final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+
+    private CloudContributionGuard cloudContributionGuard;
+
+    public void setCloudContributionGuard(CloudContributionGuard guard) {
+        cloudContributionGuard = guard;
+    }
+
+    private boolean mayContributeCloud() {
+        if (cloudContributionGuard == null) return true;
+        return cloudContributionGuard.allowCloudContributionNow();
+    }
+
+    /**
+     * Plan 3: el mismo PS (junto con frecuencia y PI) debe mantenerse sin cambios al menos
+     * este tiempo antes de contribuir a la nube (evita RDS dinámico / scroll).
+     */
+    private static final long CLOUD_PS_STABLE_MS = 4000L;
+
+    private final Object cloudPsStabilityLock = new Object();
+    private int cloudPsStableFreqKHz = -1;
+    private String cloudPsStablePiNorm = "";
+    private String cloudPsStablePsNorm = "";
+    private long cloudPsStableSinceMs = 0L;
+
+    /**
+     * Llamar desde {@link #saveRdsName} y {@link #saveRdsPi} cuando haya muestra RDS/PI actual.
+     * Si el trío (freq, PI, PS) cambia, se reinicia el reloj de estabilidad.
+     */
+    private void notifyPsSampleForCloudStability(int freqKHz, String piCode, String rdsName) {
+        synchronized (cloudPsStabilityLock) {
+            long now = android.os.SystemClock.elapsedRealtime();
+            String pi = piCode != null ? piCode.trim() : "";
+            String ps = rdsName != null ? rdsName.trim() : "";
+            if (freqKHz != cloudPsStableFreqKHz
+                    || !pi.equals(cloudPsStablePiNorm)
+                    || !ps.equals(cloudPsStablePsNorm)) {
+                cloudPsStableFreqKHz = freqKHz;
+                cloudPsStablePiNorm = pi;
+                cloudPsStablePsNorm = ps;
+                cloudPsStableSinceMs = now;
+            }
+        }
+    }
+
+    /**
+     * @param finalNameForUpsert nombre que se enviará al upsert (prioridad: custom, RDS, root).
+     */
+    private boolean isPsStableForCloudContribution(int freqKHz, String piCode, String finalNameForUpsert) {
+        String fn = finalNameForUpsert != null ? finalNameForUpsert.trim() : "";
+        try {
+            String custom = mPrefs.getString("CUSTOM_" + freqKHz, null);
+            if (custom != null && !custom.trim().isEmpty() && fn.equals(custom.trim())) {
+                return true;
+            }
+        } catch (Exception ignored) {}
+        String pi = piCode != null ? piCode.trim() : "";
+        synchronized (cloudPsStabilityLock) {
+            long now = android.os.SystemClock.elapsedRealtime();
+            if (freqKHz != cloudPsStableFreqKHz
+                    || !pi.equals(cloudPsStablePiNorm)
+                    || !fn.equals(cloudPsStablePsNorm)) {
+                return false;
+            }
+            return now - cloudPsStableSinceMs >= CLOUD_PS_STABLE_MS;
+        }
+    }
 
     // Caché en memoria para evitar recargas de logos al cambiar frecuencia o nombre.
     // V13.6: Key: freqKHz + "_" + stationName, Value: URL o path del logo
@@ -201,10 +268,13 @@ public class RadioRepository {
             android.util.Log.d("RadioRepository", "saveRdsName: ignorando PS solo-ceros (buffer vacío)");
             return;
         }
+        String trimmed = name.trim();
         String existing = mPrefs.getString("RDS_" + freqKHz, "");
-        if (!name.equals(existing)) {
-            mPrefs.edit().putString("RDS_" + freqKHz, name.trim()).apply();
+        if (!trimmed.equals(existing)) {
+            mPrefs.edit().putString("RDS_" + freqKHz, trimmed).apply();
         }
+        String pi = mPrefs.getString("PI_" + freqKHz, null);
+        notifyPsSampleForCloudStability(freqKHz, pi, trimmed);
     }
 
     /**
@@ -223,12 +293,14 @@ public class RadioRepository {
      * V16.0: Guarda el PI Code recibido para una frecuencia.
      */
     public void saveRdsPi(int freqKHz, String pi) {
-        if (pi != null && !pi.trim().isEmpty()) {
-            String existing = mPrefs.getString("PI_" + freqKHz, "");
-            if (!pi.equals(existing)) {
-                mPrefs.edit().putString("PI_" + freqKHz, pi.trim()).apply();
-            }
+        if (pi == null || pi.trim().isEmpty()) return;
+        String trimmed = pi.trim();
+        String existing = mPrefs.getString("PI_" + freqKHz, "");
+        if (!trimmed.equals(existing)) {
+            mPrefs.edit().putString("PI_" + freqKHz, trimmed).apply();
         }
+        String rds = mPrefs.getString("RDS_" + freqKHz, null);
+        notifyPsSampleForCloudStability(freqKHz, trimmed, rds != null ? rds : "");
     }
 
     /**
@@ -296,6 +368,16 @@ public class RadioRepository {
             finalName = rdsPsName;
         } else if (rootName != null && !rootName.isEmpty()) {
             finalName = rootName;
+        }
+
+        // Plan 3: sin RDS en prefs/vivo, el nombre puede venir solo de root — alimentar muestras de estabilidad
+        if (useRoot && rootName != null && !rootName.trim().isEmpty()
+                && (customName == null || customName.isEmpty())
+                && (rdsPsName == null || rdsPsName.trim().isEmpty())) {
+            String fn = finalName != null ? finalName.trim() : "";
+            if (!fn.isEmpty() && fn.equals(rootName.trim())) {
+                notifyPsSampleForCloudStability(freqKHz, piCode, fn);
+            }
         }
 
         RadioStation station = new RadioStation(freqKHz, finalName);
@@ -385,7 +467,10 @@ public class RadioRepository {
             boolean contribCloud = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
                     .getBoolean("pref_cloud_contrib", true);
 
-            if (contribCloud && (piCode != null || (finalName != null && finalName.length() >= 4))) {
+            if (contribCloud && mayContributeCloud()
+                    && isPsStableForCloudContribution(freqKHz, piCode, finalName)
+                    && SupabaseLogoSource.isAcceptableForCloudUpsert(
+                            piCode != null ? piCode : "", finalName != null ? finalName : "")) {
                 final String fPi = piCode;
                 final String fName = finalName;
                 final String fPath = logoPath;
@@ -598,8 +683,12 @@ public class RadioRepository {
             // V16.2: Alimentar servidor central tras descarga exitosa
             boolean onlineAfterDownload = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
                     .getBoolean("pref_logos_online", false);
-            if (onlineAfterDownload) {
-                String pi = mPrefs.getString("PI_" + freqKHz, null);
+            boolean contribCloud = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_cloud_contrib", true);
+            String pi = mPrefs.getString("PI_" + freqKHz, null);
+            if (onlineAfterDownload && contribCloud && mayContributeCloud()
+                    && isPsStableForCloudContribution(freqKHz, pi, rdsName)
+                    && SupabaseLogoSource.isAcceptableForCloudUpsert(pi != null ? pi : "", rdsName != null ? rdsName : "")) {
                 supabaseSource.upsertLogoData(mContext, pi, rdsName, freqKHz, urlString, null);
             }
 

@@ -21,6 +21,7 @@
 .externalNativeBuild/
 .cxx/
 local.properties
+local.properties.bak
 
 # === Depuración, Logs y Herramientas (LOCAL - NO SUBIR) ===
 _DEBUG/

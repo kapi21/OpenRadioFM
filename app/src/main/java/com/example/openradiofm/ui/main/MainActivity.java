@@ -305,6 +305,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     /** Evita arrastre de RDS/logo de la emisora anterior tras un cambio de frecuencia (QS6/NWD). */
     private static final long RDS_TRANSITION_GUARD_MS = 1200L;
     private volatile long mRdsTransitionGuardUntilMs = 0L;
+    /** Margen tras cambiar de frecuencia antes de contribuir metadatos a la nube. */
+    private static final long CLOUD_CONTRIB_FREQ_SETTLE_MS = 1750L;
+    private long mCloudContribAllowedAfterMs = 0L;
     /**
      * QS6/NWD y otros motores con callbacks rápidos: invalida cargas de logo asíncronas al cambiar
      * frecuencia o banda (evita que un Glide/getStationInfo tardío pinte logo de otra emisora).
@@ -1220,6 +1223,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             
                             updateDataActivityUI();
                         });
+                    });
+                    mRepository.setCloudContributionGuard(() -> {
+                        if (mEngine != null && mEngine.isScanning()) return false;
+                        return android.os.SystemClock.elapsedRealtime() >= mCloudContribAllowedAfterMs;
                     });
                 }
 
@@ -3610,6 +3617,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mPrevStationNameBeforeTune = mLastPs != null ? mLastPs : "";
         mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
         mLastFreq = freq;
+        mCloudContribAllowedAfterMs = android.os.SystemClock.elapsedRealtime() + CLOUD_CONTRIB_FREQ_SETTLE_MS;
         mLastBand = mCurrentBand;
         mLastLogoUrl = ""; // Force logo reload
         mCurrentPi = null;

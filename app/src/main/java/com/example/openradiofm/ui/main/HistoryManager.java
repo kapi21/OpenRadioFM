@@ -346,6 +346,12 @@ public class HistoryManager {
             }
 
             editor.apply();
+
+            // Recargar caché en memoria del PresetManager; si no, refreshButtons sigue
+            // mostrando frecuencias antiguas hasta reiniciar o cambiar de layout/banda.
+            if (mActivity.mPresetManager != null) {
+                mActivity.mPresetManager.refreshPresetsCache(mActivity.getCurrentBand());
+            }
             mActivity.refreshPresetButtons();
 
             mActivity.showStyledToast(

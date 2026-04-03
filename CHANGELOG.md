@@ -1,5 +1,5 @@
-## [5.0.15 (Beta)] - 2026-04-03
-*Versión en desarrollo (beta); **no cerrada aún** — siguen posibles afinaciones (AutoScan, textos, UI) antes del release final.*
+## [5.0.15] - 2026-04-03
+*Release de cierre de la línea 5.0.15 (`versionCode` 28).*
 
 ### Added
 - **Widget escritorio** (`AppWidget`): frecuencia, RDS PS, icono de app y memorias anterior/siguiente; actualización al ritmo de `MainActivity`; mandos vía `RadioMediaService` + `RadioWidgetActionReceiver` (útil en launchers tipo `com.android.launcher`; muchos launchers de automoción no exponen widgets de terceros).
@@ -7,6 +7,8 @@
 - **Internacionalización**: ampliación de `strings.xml` (toasts, diálogos, AutoScan, escaneo, historial) con paridad de claves entre `values` y `values-*`; scripts auxiliares en `tools/` para sincronizar/validar claves (`diff_strings.py`, `sync_toast_strings_locales.py`, inserciones de bloques, etc.).
 - **Diálogos alineados con menú premium / AutoScan**: selector en cuadrícula (`dialog_language_selector`), listado de archivos `.fav` al cargar favoritos (`dialog_favorites_file_picker`), historial de emisoras (`dialog_station_history`); marco oscuro, tarjeta con **skin** activo, tipografía del usuario, botón **Cancelar** rojo en listas; celdas `item_fav_file_row` / `item_language`.
 - **Layouts traducibles**: textos de `dialog_save_load`, `dialog_credits`, `dialog_selective_scan` y filas de escaneo enlazados a `@string/`.
+- **Build / Supabase**: credenciales vía `SUPABASE_URL` y `SUPABASE_ANON_KEY` en `local.properties` (raíz), variables de entorno o `-P` Gradle; sin valores por defecto en el repositorio. `BuildConfig` genera URL, clave y base pública de Storage. Plantilla `local.properties.example`; documentación [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
+- **Comunidad Supabase (calidad de datos)**: puerta de calidad centralizada (`isAcceptableForCloudUpsert`, `sanitizePsForCloudUpsert`, reglas de PS); `CloudContributionGuard` — no contribuir en escaneo FM ni durante ~1,75 s tras cambiar de frecuencia; estabilidad del PS (~4 s) antes de contribuir. `CloudContributionGuard.java`, cambios en `RadioRepository`, `MainActivity`, `SupabaseLogoSource`.
 
 ### Changed
 - **Toasts y mensajes**: literales sustituidos por `getString(R.string.*)` en `MainActivity`, `DialogManager`, `ScanManager`, `ControlPanelManager`, `HardwareManager`, `MinimalLayoutManager`, `StationAdapter`, etc.
@@ -17,7 +19,8 @@
 - **Layout V3**: el logo pequeño se oculta al pintar el logo de emisora como fondo, para no solaparse con el PS.
 - **Diálogo de historial**: eliminado `applyPremiumListStyle` sobre lista del sistema; sustituido por layout propio unificado.
 - **Menús ingeniería** (layouts): ajustes de scroll / secciones en diálogos K706, QS6 y modo estándar.
-- **Versión**: `versionCode 27`, `versionName 5.0.15 (Beta)`; `app_name_internal` **v5.0.15 Beta**.
+- **Layout V2**: mismo espacio horizontal (`layout_v2_column_spacing`) entre borde de pantalla, columna de presets y guía central.
+- **Versión**: `versionCode 28`, `versionName 5.0.15`; `app_name_internal` **v5.0.15**.
 
 ---
 

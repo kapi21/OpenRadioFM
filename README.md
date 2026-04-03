@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.15%20(Beta)-orange.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.15-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.0.15 (beta, en curso — aún no cerrada):** widget de escritorio en launchers estándar; AutoScan lento con confirmación al estilo de los menús premium, barrido FM desde 87,5 MHz y parada en 108 MHz; refuerzo Jancar 8227L vía `FmService` OEM; ajuste de logo en layout V3; **i18n** (toasts y textos con paridad de claves en locales) y **diálogos unificados** (skin, tipografía, listas: selector en cuadrícula, cargar `.fav`, historial de emisoras). La beta sigue abierta a afinaciones antes del release final.
+**5.0.15 (abril 2026):** widget de escritorio; AutoScan lento con confirmación premium, barrido FM 87,5–108 MHz; Jancar 8227L vía `FmService` OEM; logo en layout V3 sin solapamiento con PS; **i18n** y diálogos unificados (skin, tipografía, listas). **Comunidad Supabase:** puerta de calidad en upsert, bloqueo de contribución en escaneo / tras sintonizar, estabilidad del PS antes de subir; credenciales Supabase vía `local.properties` / entorno (sin secretos en el código; ver `docs/CI_SUPABASE.md`). **Layout V2:** mismo espacio horizontal entre borde de pantalla, presets y columna central. Detalle en `CHANGELOG.md`.
 
 ---
 
@@ -130,6 +130,9 @@ graph TB
 - JDK 17
 - Gradle 9.x (incluido en wrapper)
 
+### Supabase (obligatorio para compilar)
+Desde **v5.0.15**, la URL y la clave **anon** de Supabase no van en el código: añádelas a `local.properties` en la raíz (junto a `sdk.dir`) o exporta `SUPABASE_URL` y `SUPABASE_ANON_KEY`. Plantilla: `local.properties.example`. Guía CI: [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
+
 ### Build
 ```bash
 # Clonar
@@ -166,6 +169,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [User Manual (English)](_DOCS/manual_user_en.md)
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 - [Compatibilidad de Hardware](docs/HW_COMPATIBILITY.md)
+- [Compilación / CI — credenciales Supabase](docs/CI_SUPABASE.md)
 - [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
 - [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
 - [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md) — incluye **§15 Roadmap motor QS6**
@@ -189,6 +193,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.15 (Abril 2026) — `main`
+- **ES:** **OpenRadioFM v5.0.15** — cierre de línea 5.0.15: widget, AutoScan/i18n/diálogos (ver `CHANGELOG.md`); contribución Supabase más estricta; credenciales Supabase en compilación (`local.properties`); layout V2 presets.
+- **EN:** **OpenRadioFM v5.0.15** — release notes: widget, AutoScan/i18n/dialogs (see `CHANGELOG_EN.md`); stricter Supabase community contribution; build-time Supabase credentials; V2 preset column spacing.
 
 ### v5.0.14 **Beta** (Marzo 2026) — `main`
 - **ES:** **OpenRadioFM v5.0.14 Beta** — indicador de banda (FM1/FM2/FM3/AM1/AM2) y unidad (MHz/kHz) como texto para respetar la tipografía elegida; selector “🔢 Números presets” con estilo por defecto o Tabler (assets). Detalle en `CHANGELOG.md`.

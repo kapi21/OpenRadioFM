@@ -1,0 +1,10 @@
+# Copia este archivo a "local.properties" (raíz del repositorio) y rellena los valores.
+# "local.properties" está en .gitignore.
+#
+# Tras Android Studio / SDK, suele existir ya:
+#   sdk.dir=...
+#
+# Añade (Settings → API en Supabase: Project URL y anon public):
+#
+SUPABASE_URL=https://TU_REFERENCIA.supabase.co/
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

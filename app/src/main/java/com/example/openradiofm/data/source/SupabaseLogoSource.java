@@ -1,5 +1,6 @@
 package com.example.openradiofm.data.source;
 
+import com.example.openradiofm.BuildConfig;
 import com.example.openradiofm.data.source.network.SupabaseApi;
 import com.example.openradiofm.data.source.network.SupabaseClient;
 import com.example.openradiofm.data.source.network.model.SupabaseLogoResponse;
@@ -16,8 +17,9 @@ import retrofit2.Response;
  */
 public class SupabaseLogoSource {
     private final SupabaseApi api;
-    private final String apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjaXF4dmZ2b2hjYWlhcXFydmRxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2MjExNDcsImV4cCI6MjA4ODE5NzE0N30.kE5W3_qHMWMc1nKQQQn_lMb9NXOu6kFjEL5glpIhswM";
-    private final String storageUrl = "https://hciqxvfvohcaiaqqrvdq.supabase.co/storage/v1/object/public/station-logos/espana/";
+    /** Inyectado en compilación (BuildConfig); override con SUPABASE_* en local.properties. */
+    private final String apiKey = BuildConfig.SUPABASE_ANON_KEY;
+    private final String storageUrl = BuildConfig.SUPABASE_STORAGE_PUBLIC_LOGOS_BASE;
 
     public SupabaseLogoSource() {
         this.api = SupabaseClient.getApi();
@@ -52,6 +54,61 @@ public class SupabaseLogoSource {
             if (clean.equals(black)) return true;
         }
         return false;
+    }
+
+    /**
+     * PS que parece ruido (casi solo dígitos / símbolos), típico de buffers o basura RDS.
+     */
+    public static boolean isMostlyDigitsOrNoise(String name) {
+        if (name == null) return false;
+        String t = name.trim();
+        if (t.length() < 4) return false;
+        int letters = 0;
+        for (int i = 0; i < t.length(); i++) {
+            if (Character.isLetter(t.charAt(i))) letters++;
+        }
+        if (letters >= 2) return false;
+        return true;
+    }
+
+    /**
+     * PS aceptable para publicar en la base comunitaria (nombre solo, sin PI).
+     */
+    public static boolean isPsAcceptableForPublishing(String name) {
+        if (name == null) return false;
+        String t = name.trim();
+        if (t.length() < 5) return false;
+        if (isGarbageZeroPs(t)) return false;
+        if (isNameGeneric(t)) return false;
+        if (isMostlyDigitsOrNoise(t)) return false;
+        return true;
+    }
+
+    /**
+     * ¿Tiene sentido un upsert con estos metadatos? (PI válido, o PS que pasa calidad mínima).
+     */
+    public static boolean isAcceptableForCloudUpsert(String piCode, String rdsName) {
+        String pi = (piCode != null) ? piCode.trim() : "";
+        if (!pi.isEmpty()) return true;
+        String n = (rdsName != null) ? rdsName.trim() : "";
+        return isPsAcceptableForPublishing(n);
+    }
+
+    /**
+     * PS seguro para enviar a Supabase: null si no debe persistirse el nombre (basura o corto).
+     * Con PI válido se puede devolver null y el upsert seguirá solo con PI.
+     */
+    public static String sanitizePsForCloudUpsert(String piCode, String rdsName) {
+        if (rdsName == null) return null;
+        String t = rdsName.trim();
+        if (t.isEmpty()) return null;
+        if (isGarbageZeroPs(t)) return null;
+        if (isNameGeneric(t)) return null;
+        if (isMostlyDigitsOrNoise(t)) return null;
+        String pi = (piCode != null) ? piCode.trim() : "";
+        int minLen = pi.isEmpty() ? 5 : 4;
+        if (t.length() < minLen) return null;
+        return t;
     }
 
     public SupabaseApi getSupabaseApi() {
@@ -137,9 +194,16 @@ public class SupabaseLogoSource {
      * V18.5: Añadido soporte para Storage y UserId.
      */
     public void upsertLogoData(android.content.Context context, String piCode, String rdsName, int freqKHz, String logoUrl, String streamUrl) {
-        // V19.0: Logo ya no es estrictamente obligatorio para el upsert (permite base de datos comunitaria)
-        // Pero necesitamos al menos PI o Nombre
-        if ((piCode == null || piCode.isEmpty()) && (rdsName == null || rdsName.isEmpty())) return;
+        String piNorm = (piCode != null) ? piCode.trim() : "";
+        String psForDb = sanitizePsForCloudUpsert(piNorm, rdsName);
+        if (!isAcceptableForCloudUpsert(piNorm, rdsName)) {
+            android.util.Log.d("SupabaseLogoSource", "UPSERT ABORT: quality gate (PI/name)");
+            return;
+        }
+        if (piNorm.isEmpty() && (psForDb == null || psForDb.isEmpty())) return;
+
+        final String fPi = piNorm.isEmpty() ? null : piNorm;
+        final String fPs = psForDb;
 
         new Thread(() -> {
             notifyActivity(true);
@@ -153,7 +217,7 @@ public class SupabaseLogoSource {
                     String localPath = logoUrl.substring(7);
                     File file = new File(localPath);
                     if (file.exists()) {
-                        String fileName = (piCode != null ? piCode : (rdsName != null ? rdsName.replaceAll("[^a-zA-Z0-9]", "") : "station")) 
+                        String fileName = (fPi != null ? fPi : (fPs != null ? fPs.replaceAll("[^a-zA-Z0-9]", "") : "station"))
                                 + "_" + freqKHz + ".png";
                         
                         // V19.4: Añadimos prefijo de carpeta 'espana/' según la estructura del bucket
@@ -188,11 +252,11 @@ public class SupabaseLogoSource {
                 String country = java.util.Locale.getDefault().getCountry();
                 if (country == null || country.isEmpty()) country = "ES";
 
-                if ((finalStreamUrl == null || finalStreamUrl.isEmpty()) && !isNameGeneric(rdsName)) {
-                    android.util.Log.d("SupabaseLogoSource", "SUPABASE ENRICH: Searching stream for " + rdsName);
+                if ((finalStreamUrl == null || finalStreamUrl.isEmpty()) && fPs != null && !isNameGeneric(fPs)) {
+                    android.util.Log.d("SupabaseLogoSource", "SUPABASE ENRICH: Searching stream for " + fPs);
                     WebRadioSource webSource = new WebRadioSource();
                     
-                    com.example.openradiofm.data.source.network.model.StationSearchResponse webStation = webSource.fetchStation(freqKHz, rdsName, country);
+                    com.example.openradiofm.data.source.network.model.StationSearchResponse webStation = webSource.fetchStation(freqKHz, fPs, country);
                     if (webStation != null && webStation.getStreamUrl() != null) {
                         finalStreamUrl = webStation.getStreamUrl();
                         android.util.Log.d("SupabaseLogoSource", "SUPABASE ENRICH: Found stream -> " + finalStreamUrl);
@@ -204,22 +268,16 @@ public class SupabaseLogoSource {
                     }
                 }
 
-                SupabaseLogoResponse data = new SupabaseLogoResponse(piCode, rdsName, freqStr, finalLogoUrl, finalStreamUrl, hwModel, deviceId, country);
-                
-                // V18.8: Filtro mejorado con isNameGeneric para evitar basura en la DB
-                if (piCode == null && (rdsName == null || isNameGeneric(rdsName))) {
-                    android.util.Log.d("SupabaseLogoSource", "UPSERT ABORT: Name '" + rdsName + "' is generic or null and no PI Code.");
-                    return;
-                }
+                SupabaseLogoResponse data = new SupabaseLogoResponse(fPi, fPs, freqStr, finalLogoUrl, finalStreamUrl, hwModel, deviceId, country);
 
-                String conflictColumns = (piCode != null && !piCode.isEmpty()) ? "pi_code,country_code" : "ps_name,country_code";
+                String conflictColumns = (fPi != null && !fPi.isEmpty()) ? "pi_code,country_code" : "ps_name,country_code";
                 
                 // V19.4: Cabecera 'return=minimal,resolution=merge-duplicates' para asegurar compatibilidad con PostgREST
                 Call<Void> call = api.upsertLogo(apiKey, "Bearer " + apiKey, "return=minimal,resolution=merge-duplicates", conflictColumns, data);
                 retrofit2.Response<Void> response = call.execute();
                 
                 if (response.isSuccessful()) {
-                    android.util.Log.d("SupabaseLogoSource", "UPSERT SUCCESS: " + rdsName + " (" + freqStr + ")");
+                    android.util.Log.d("SupabaseLogoSource", "UPSERT SUCCESS: " + fPs + " PI=" + fPi + " (" + freqStr + ")");
                 } else {
                     String errorBody = "";
                     try {
