@@ -7,8 +7,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 
-import androidx.core.view.ViewCompat;
-
 import com.example.openradiofm.R;
 
 /**
@@ -37,7 +35,7 @@ public class ControlPanelManager {
                 if (mActivity.mEngine != null) {
                     mActivity.mEngine.openEq(mActivity);
                 } else {
-                    mActivity.showToast("Ecualizador no disponible (Motor no iniciado)");
+                    mActivity.showToast(mActivity.getString(R.string.toast_eq_unavailable));
                 }
             });
         }
@@ -106,7 +104,8 @@ public class ControlPanelManager {
             btnAutoScan.setImageResource(R.drawable.radio_scan_icon_f);
             btnAutoScan.setOnClickListener(v -> {
                 if (!mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
-                        .getBoolean(DevAutoscanToggleHelper.PREF_DEV_AUTOSCAN_ENABLED, false)) {
+                        .getBoolean(DevAutoscanToggleHelper.PREF_DEV_AUTOSCAN_ENABLED,
+                                DevAutoscanToggleHelper.DEFAULT_DEV_AUTOSCAN_ENABLED)) {
                     mActivity.showToast(mActivity.getString(R.string.under_study));
                     return;
                 }
@@ -140,7 +139,7 @@ public class ControlPanelManager {
                 if (mActivity.mEngine != null) {
                     mActivity.mEngine.bandCycle();
                 } else {
-                    mActivity.showToast("Motor de radio no iniciado");
+                    mActivity.showToast(mActivity.getString(R.string.toast_radio_engine_not_started));
                 }
             });
 
@@ -175,7 +174,7 @@ public class ControlPanelManager {
             });
 
             btnLocDx.setOnLongClickListener(v -> {
-                if (ViewCompat.isAttachedToWindow(v)) {
+                if (v.isAttachedToWindow()) {
                     mActivity.toggleLayoutMode();
                 }
                 return true;
@@ -216,7 +215,7 @@ public class ControlPanelManager {
             mapIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
             mActivity.startActivity(mapIntent);
         } catch (Exception e) {
-            mActivity.showToast("No se encontró aplicación de GPS");
+            mActivity.showToast(mActivity.getString(R.string.toast_no_gps_app));
         }
     }
 
@@ -235,7 +234,7 @@ public class ControlPanelManager {
                     dialog -> mActivity.mQs6EngineeringDialog = null);
             mActivity.mQs6EngineeringDialog.show();
         } else {
-            mActivity.showToast("Modo básico: Menú de ingeniería no disponible");
+            mActivity.showToast(mActivity.getString(R.string.toast_basic_no_engineering));
         }
     }
 

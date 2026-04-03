@@ -10,7 +10,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Radio Android España"
+        android:text="@string/qr_radio_android_title"
         android:textColor="#00E676"
         android:textSize="20sp"
         android:textStyle="bold"
@@ -21,22 +21,16 @@
         android:layout_width="280dp"
         android:layout_height="280dp"
         android:src="@drawable/qr_radio_android_espana"
-        android:contentDescription="QR Radio Android España"
+        android:contentDescription="@string/qr_radio_android_cd"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter" />
 
     <TextView
         android:id="@+id/btnCloseQr"
+        style="@style/DialogCloseButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="Cerrar"
-        android:textColor="#FFD600"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:padding="10dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true" />
+        android:text="@string/close" />
 
 </LinearLayout>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="500dp"
+    android:layout_height="wrap_content"
+    android:background="#E6121212"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/station_history_dialog_root"
+        style="@style/DialogContainerStyle"
+        android:clickable="false"
+        android:focusable="false">
+
+        <LinearLayout
+            style="@style/DialogTitleLayout"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="@null"
+                android:src="@android:drawable/ic_menu_recent_history"
+                app:tint="#00E676" />
+
+            <TextView
+                android:id="@+id/tvStationHistoryTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/station_history"
+                android:textColor="#00E676"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:layout_marginTop="0dp"
+            android:text="@string/touch_to_change"
+            tools:text="…" />
+
+        <LinearLayout
+            style="@style/DialogBoxStyle"
+            android:clickable="false"
+            android:focusable="false">
+
+            <ListView
+                android:id="@+id/lvStationHistory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:divider="@android:color/transparent"
+                android:dividerHeight="8dp"
+                android:maxHeight="400dp"
+                android:scrollbars="vertical"
+                tools:listitem="@layout/item_fav_file_row" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCancelStationHistory"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_submenu_box"
+            android:minHeight="52dp"
+            android:text="@string/cancel"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="#CCFF5555" />
+    </LinearLayout>
+</LinearLayout>

@@ -331,6 +331,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             public void onCustomAction(String action, Bundle extras) {
                 if ("ACTION_UPDATE_METADATA".equals(action) && extras != null) {
                     extras.setClassLoader(MediaMetadataCompat.class.getClassLoader());
+                    //noinspection deprecation
                     MediaMetadataCompat metadata = extras.getParcelable("metadata"); // Simplificado
                     // En la práctica, extraemos los campos del bundle directamente para evitar errores de ClassLoader
                     MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder();

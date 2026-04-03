@@ -53,6 +53,9 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    // (dev) Si necesitas ver warnings exactos de deprecated APIs:
+    // tasks.withType<JavaCompile>().configureEach { options.compilerArgs.add("-Xlint:deprecation") }
+
     buildFeatures {
         aidl = true
         compose = true
@@ -67,15 +70,19 @@ android {
     // Icon packs: empaquetar PNGs de packs como assets (sin mover archivos).
     sourceSets {
         getByName("main") {
-            assets.srcDirs(
-                "src/main/assets",
-                "../icons_numbers",
-                "../icons_color",
-                "../icons_google",
-                "../Icons_lucide",
-                "../icons_remix",
-                "../icons_awesome",
-                "../icons_tabler",
+            // Evitar APIs deprecadas de Kotlin DSL: usar el set 'directories'
+            assets.directories.clear()
+            assets.directories.addAll(
+                listOf(
+                    "src/main/assets",
+                    "../icons_numbers",
+                    "../icons_color",
+                    "../icons_google",
+                    "../Icons_lucide",
+                    "../icons_remix",
+                    "../icons_awesome",
+                    "../icons_tabler",
+                )
             )
         }
     }

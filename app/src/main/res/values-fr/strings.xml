@@ -129,8 +129,6 @@
     <string name="night_start">Début</string>
     <string name="night_end">Fin</string>
     <string name="night_schedule_updated">✅ Horaire mis à jour: %1$s - %2$s</string>
-
-    
     <string name="logo_provider">📡 Fournisseur de Logos</string>
     <string name="provider_supabase">Supabase (Communauté HD)</string>
     <string name="provider_radiobrowser">Radio-Browser (Réserve)</string>
@@ -140,20 +138,170 @@
     <string name="status_bar_v2">Afficher la barre d\'état</string>
     <string name="status_bar_enabled">✅ Barre d\'état activée</string>
     <string name="status_bar_disabled">❌ Barre d\'état désactivée</string>
-<string name="pty_none">Aucun PTY</string><string name="pty_news">Nouvelles</string><string name="pty_current_affairs">Actualités</string><string name="pty_information">Information</string><string name="pty_sport">Sports</string><string name="pty_education">Éducation</string><string name="pty_drama">Drame</string><string name="pty_culture">Culture</string><string name="pty_science">Science</string><string name="pty_varied">Varié</string><string name="pty_pop">Musique Pop</string><string name="pty_rock">Musique Rock</string><string name="pty_easy_listening">Écoute Facile</string><string name="pty_light_classical">Classique Légère</string><string name="pty_serious_classical">Classique Sérieuse</string><string name="pty_other_music">Autre Musique</string><string name="pty_weather">Météo</string><string name="pty_finance">Finances</string><string name="pty_children">Enfants</string><string name="pty_social">Social</string><string name="pty_religion">Religion</string><string name="pty_phone_in">Appels entrants</string><string name="pty_travel">Voyages</string><string name="pty_leisure">Loisirs</string><string name="pty_jazz">Jazz</string><string name="pty_country">Country</string><string name="pty_national">National</string><string name="pty_oldies">Vieux succès</string><string name="pty_folk">Folk</string><string name="pty_documentary">Documentaire</string><string name="pty_alarm_test">Test d\'alarme</string><string name="pty_alarm">Alarme</string><string name="edit_station_name">Modifier le nom de la station</string><string name="frequency_label">Fréquence : %1$s MHz</string><string name="searching_next">Recherche du suivant...</string><string name="scanning">Numérisation...</string><string name="scan_completed">Numérisation terminée</string><string name="identifying_rds">Identification de la station (RDS)...</string><string name="version">Version %1$s</string><string name="eng_dev_autoscan_toggle">Mode AutoScan (bouton scan dans l\'interface principale)</string><string name="radio_engine_label">⚙ MOTEUR RADIO : %1$s</string><string name="freq_no_service">FREQ: AUCUN_SERVICE\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ERREUR_LECTURE\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: AUCUN_SERVICE</string><string name="sqi_error_read">SQI_INDEX.....: ERREUR_LECTURE</string><string name="af_list_scanning">AF_LIST.......: [NUMÉRISATION]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Favoris réinitialisés correctement</string>
+    <string name="pty_none">Aucun PTY</string>
+    <string name="pty_news">Nouvelles</string>
+    <string name="pty_current_affairs">Actualités</string>
+    <string name="pty_information">Information</string>
+    <string name="pty_sport">Sports</string>
+    <string name="pty_education">Éducation</string>
+    <string name="pty_drama">Drame</string>
+    <string name="pty_culture">Culture</string>
+    <string name="pty_science">Science</string>
+    <string name="pty_varied">Varié</string>
+    <string name="pty_pop">Musique Pop</string>
+    <string name="pty_rock">Musique Rock</string>
+    <string name="pty_easy_listening">Écoute Facile</string>
+    <string name="pty_light_classical">Classique Légère</string>
+    <string name="pty_serious_classical">Classique Sérieuse</string>
+    <string name="pty_other_music">Autre Musique</string>
+    <string name="pty_weather">Météo</string>
+    <string name="pty_finance">Finances</string>
+    <string name="pty_children">Enfants</string>
+    <string name="pty_social">Social</string>
+    <string name="pty_religion">Religion</string>
+    <string name="pty_phone_in">Appels entrants</string>
+    <string name="pty_travel">Voyages</string>
+    <string name="pty_leisure">Loisirs</string>
+    <string name="pty_jazz">Jazz</string>
+    <string name="pty_country">Country</string>
+    <string name="pty_national">National</string>
+    <string name="pty_oldies">Vieux succès</string>
+    <string name="pty_folk">Folk</string>
+    <string name="pty_documentary">Documentaire</string>
+    <string name="pty_alarm_test">Test d\'alarme</string>
+    <string name="pty_alarm">Alarme</string>
+    <string name="edit_station_name">Modifier le nom de la station</string>
+    <string name="frequency_label">Fréquence : %1$s MHz</string>
+    <string name="searching_next">Recherche du suivant...</string>
+    <string name="scanning">Numérisation...</string>
+    <string name="scan_completed">Numérisation terminée</string>
+    <string name="identifying_rds">Identification de la station (RDS)...</string>
+    <string name="version">Version %1$s</string>
+    <string name="eng_dev_autoscan_toggle">Mode AutoScan (bouton scan dans l\'interface principale)</string>
+    <string name="eng_dev_autoscan_threshold_label">AutoScan sans RDS : seuil RSSI ou SNR min (0–15)</string>
+    <string name="radio_engine_label">⚙ MOTEUR RADIO : %1$s</string>
+    <string name="freq_no_service">FREQ: AUCUN_SERVICE\nBAND: ---\nFLAGS: ---</string>
+    <string name="freq_error_read">FREQ: ERREUR_LECTURE\nBAND: ---\n%1$s</string>
+    <string name="sqi_no_service">SQI_INDEX.....: AUCUN_SERVICE</string>
+    <string name="sqi_error_read">SQI_INDEX.....: ERREUR_LECTURE</string>
+    <string name="af_list_scanning">AF_LIST.......: [NUMÉRISATION]</string>
+    <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
+    <string name="favorites_reset_complete">Favoris réinitialisés correctement</string>
     <string name="history_cleared">Historique effacé</string>
     <string name="logo_mode_label">🏎️ Mode Logo Supérieur</string>
     <string name="logo_mode_car">Logo de la Voiture</string>
     <string name="logo_mode_clock">Horloge Numérique</string>
     <string name="my_favorites">Mes Favoris</string>
-
     <string name="widget_description">Fréquence, RDS et mémoires sans ouvrir l’app</string>
     <string name="widget_cd_open_app">Ouvrir OpenRadioFM</string>
     <string name="widget_prev_preset">Mémoire précédente</string>
     <string name="widget_next_preset">Mémoire suivante</string>
-
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">ÉCRASEMENT DES MÉMOIRES</string>
     <string name="autoscan_confirm_message">Cet AutoScan efface et remplit les mémoires 1 à 18 de la bande actuelle avec les stations détectées.\n\nLancer le balayage ?</string>
     <string name="autoscan_confirm_start">Lancer le balayage</string>
+    <!-- About / Credits -->
+    <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
+    <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
+    <string name="about_icons_by">Icons by Icons8</string>
+    <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>
+
+    <!-- Acknowledgements / QR -->
+    <string name="ack_title">Remerciements</string>
+    <string name="ack_group_telegram">Groupe Telegram</string>
+    <string name="ack_radio_android_espana">Radio Android España</string>
+    <string name="ack_note">(merci à ses admins et à ses testeurs pour leurs contributions)</string>
+    <string name="qr_radio_android_title">Radio Android España</string>
+    <string name="qr_radio_android_cd">QR Radio Android España</string>
+
+    <!-- AutoScan UI -->
+    <string name="autoscan_scanning_title">SCAN DES STATIONS...</string>
+    <string name="autoscan_results_title">RÉSULTATS AUTOSCAN</string>
+    <string name="autoscan_overwrite_button">ÉCRASER LES PRÉRÉGLAGES</string>
+    <string name="autoscan_saved_to_preset">Enregistré dans le préréglage %1$d : %2$s</string>
+    <string name="autoscan_no_valid_stations">Aucune station valide trouvée.</string>
+    <string name="autoscan_overwrite_title">Écraser les préréglages</string>
+    <string name="autoscan_overwrite_message">Voulez-vous écraser les préréglages 1-18 avec les stations trouvées ? Cela remplacera vos préréglages actuels.</string>
+    <string name="autoscan_overwrite_negative">ANNULER</string>
+    <string name="autoscan_overwrite_positive">OUI, ÉCRASER</string>
+
+    <!-- Supabase connection indicator -->
+    <string name="supabase_status_connecting">• Connexion...</string>
+    <string name="supabase_status_online">• En ligne</string>
+    <string name="supabase_status_offline">• Hors ligne</string>
+    <string name="save_load_section_actions">Available actions</string>
+    <string name="save_load_save_desc_detail">Create .fav backup in /RadioLogos</string>
+    <string name="save_load_load_desc_detail">Restore backup from .fav</string>
+    <string name="save_load_section_danger">Danger zone</string>
+    <string name="save_load_delete_all_title">Delete all favorites</string>
+    <string name="save_load_delete_all_sub">Remove all saved stations</string>
+    <string name="save_load_clear_history_title">Clear history</string>
+    <string name="save_load_clear_history_sub">Clear recent listening history</string>
+    <string name="credits_developed_by">Developed by Jimmy80</string>
+    <string name="btn_ok">OK</string>
+    <string name="selective_scan_title">Balayage des stations…</string>
+    <string name="dialog_btn_save">Enregistrer</string>
+    <string name="dialog_btn_restore_original">Restaurer l’original</string>
+    <string name="scan_rds_searching">Recherche RDS…</string>
+
+        <string name="scan_item_save_to">Enregistrer dans :</string>
+    <string name="selective_scan_freq_placeholder">---.- MHz</string>
+    <string name="selective_scan_waiting_rds">Waiting for RDS…</string>
+    <string name="selective_scan_btn_finish">Finish</string>
+    <string name="selective_scan_btn_next">Next</string>
+
+    <string name="toast_station_name_saved">Name saved: %1$s</string>
+    <string name="toast_station_name_restored">Name restored</string>
+    <string name="toast_logos_online_on_1">Online logos: on (Internet required)</string>
+    <string name="toast_logos_online_on_2">The central database will be queried for HD logos</string>
+    <string name="toast_logos_online_off">Online logos: off</string>
+    <string name="toast_relief_hd_on">HD relief: on</string>
+    <string name="toast_relief_hd_off">HD relief: off</string>
+    <string name="toast_night_mode_auto_on">Automatic night mode: on</string>
+    <string name="toast_night_logos_tint_on">Tint logos in night mode</string>
+    <string name="toast_night_logos_tint_off">Logos without tint in night mode</string>
+    <string name="toast_contrib_on">Community contribution enabled</string>
+    <string name="toast_contrib_off">Community contribution disabled</string>
+    <string name="toast_logo_mode">Logo mode: %1$s</string>
+    <string name="toast_logo_provider">Logo provider: %1$s</string>
+    <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
+    <string name="toast_skin_colon">Skin: %1$s</string>
+    <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="toast_history_deleted_full">History has been cleared</string>
+    <string name="toast_easter_egg">Easter egg activated!</string>
+
+    <string name="toast_no_other_favorites">No other saved favorites</string>
+    <string name="toast_returning_fm">Returning to FM radio…</string>
+    <string name="toast_stream_searching">Looking for streaming link…</string>
+    <string name="toast_stream_starting">Starting online radio…</string>
+    <string name="toast_stream_unavailable">Streaming not available for this station</string>
+    <string name="toast_station_load_error">Error loading station data</string>
+    <string name="toast_station_cache_sync">Station cache cleared. Syncing…</string>
+    <string name="toast_hardware_colon">Hardware: %1$s</string>
+    <string name="toast_app_not_installed">App not installed: %1$s</string>
+    <string name="toast_permissions_granted">Permissions granted</string>
+    <string name="toast_storage_permission_needed">Storage permission is required to save favorites.</string>
+    <string name="toast_phone_mute_on_call">Calls: radio will mute automatically</string>
+    <string name="toast_phone_no_permission_fm">Without phone permission, FM may keep playing during calls</string>
+    <string name="toast_layout_v3">Layout: V3 (horizontal)</string>
+    <string name="toast_layout_simple">Layout: simple (minimal)</string>
+    <string name="toast_layout_v2">Layout: V2 (vertical)</string>
+
+    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
+    <string name="toast_radio_engine_not_started">Radio engine not started</string>
+    <string name="toast_no_gps_app">No maps/GPS app found</string>
+    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+
+    <string name="toast_autoscan_stopped">AutoScan stopped</string>
+    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
+    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+
+    <string name="toast_back_standard_layout">Returning to standard mode…</string>
+    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
+    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
+    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
 </resources>

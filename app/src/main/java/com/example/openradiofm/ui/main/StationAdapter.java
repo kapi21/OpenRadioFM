@@ -21,7 +21,7 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationV
 
     public static class ScannedStation {
         public int frequency;
-        public String name = "Buscando RDS...";
+        public String name;
 
         public ScannedStation(int f) {
             this.frequency = f;
@@ -58,14 +58,17 @@ public class StationAdapter extends RecyclerView.Adapter<StationAdapter.StationV
     public void onBindViewHolder(@NonNull StationViewHolder h, int p) {
         ScannedStation s = mCapturedList.get(p);
         h.freq.setText(String.format(java.util.Locale.US, "%.2f MHz", s.frequency / 1000.0f));
-        h.name.setText(s.name);
+        String rdsS = mActivity.getString(R.string.scan_rds_searching);
+        String rdsW = mActivity.getString(R.string.selective_scan_waiting_rds);
+        h.name.setText(s.name != null && !s.name.isEmpty() ? s.name : rdsS);
         for (int i = 0; i < 18; i++) {
             final int slot = i;
             h.presets[i].setOnClickListener(v -> {
                 if (mActivity.mPresetManager != null) {
-                    mActivity.mPresetManager.savePreset(mActivity.mCurrentBand, slot, s.frequency,
-                            s.name.equals("Buscando RDS...") ? "" : s.name);
-                    mActivity.showToast("Guardado en Slot " + (slot + 1));
+                    String presetName = (s.name != null && !s.name.equals(rdsS) && !s.name.equals(rdsW))
+                            ? s.name : "";
+                    mActivity.mPresetManager.savePreset(mActivity.mCurrentBand, slot, s.frequency, presetName);
+                    mActivity.showToast(mActivity.getString(R.string.toast_saved_to_slot, slot + 1));
                     mActivity.refreshPresetButtons();
                 }
             });

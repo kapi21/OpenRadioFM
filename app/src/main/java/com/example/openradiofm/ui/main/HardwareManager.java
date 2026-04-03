@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.util.Log;
+import com.example.openradiofm.R;
 import com.example.openradiofm.data.source.K706Engine;
 import com.example.openradiofm.data.source.K706RadioManager;
 
@@ -53,7 +54,7 @@ public class HardwareManager {
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 try {
                     k706Manager.enforceAudioChannelRecovery();
-                    mActivity.showToast("Recuperando Audio FM...");
+                    mActivity.showToast(mActivity.getString(R.string.toast_recovering_fm_audio));
                 } catch (Exception e) {
                     Log.e(TAG, "Error recuperando canal FM tras BT", e);
                 }
@@ -83,7 +84,7 @@ public class HardwareManager {
             Log.d(TAG, "MCU Key injected: " + key);
         } catch (Exception e) {
             Log.e(TAG, "Error injecting MCU key", e);
-            mActivity.showToast("Hardware EQ no soportado en este dispositivo");
+            mActivity.showToast(mActivity.getString(R.string.toast_hw_eq_unsupported));
         }
     }
 

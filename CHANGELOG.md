@@ -1,15 +1,22 @@
-## [5.0.15 (Beta)] - 2026-04-02
-*Versión en desarrollo (beta); afinación de tiempos AutoScan y detalles pendientes antes de cerrar release.*
+## [5.0.15 (Beta)] - 2026-04-03
+*Versión en desarrollo (beta); **no cerrada aún** — siguen posibles afinaciones (AutoScan, textos, UI) antes del release final.*
 
 ### Added
 - **Widget escritorio** (`AppWidget`): frecuencia, RDS PS, icono de app y memorias anterior/siguiente; actualización al ritmo de `MainActivity`; mandos vía `RadioMediaService` + `RadioWidgetActionReceiver` (útil en launchers tipo `com.android.launcher`; muchos launchers de automoción no exponen widgets de terceros).
 - **Cadenas** del widget y del diálogo AutoScan en todas las locales.
+- **Internacionalización**: ampliación de `strings.xml` (toasts, diálogos, AutoScan, escaneo, historial) con paridad de claves entre `values` y `values-*`; scripts auxiliares en `tools/` para sincronizar/validar claves (`diff_strings.py`, `sync_toast_strings_locales.py`, inserciones de bloques, etc.).
+- **Diálogos alineados con menú premium / AutoScan**: selector en cuadrícula (`dialog_language_selector`), listado de archivos `.fav` al cargar favoritos (`dialog_favorites_file_picker`), historial de emisoras (`dialog_station_history`); marco oscuro, tarjeta con **skin** activo, tipografía del usuario, botón **Cancelar** rojo en listas; celdas `item_fav_file_row` / `item_language`.
+- **Layouts traducibles**: textos de `dialog_save_load`, `dialog_credits`, `dialog_selective_scan` y filas de escaneo enlazados a `@string/`.
 
 ### Changed
+- **Toasts y mensajes**: literales sustituidos por `getString(R.string.*)` en `MainActivity`, `DialogManager`, `ScanManager`, `ControlPanelManager`, `HardwareManager`, `MinimalLayoutManager`, `StationAdapter`, etc.
+- **RDS en listas de escaneo**: placeholders `scan_rds_searching` / `selective_scan_waiting_rds` coherentes con el idioma (sin mezclar español fijo en la UI).
 - **AutoScan (lento)**: diálogo de confirmación con el mismo lenguaje visual que menús premium (cristal/tema activo, tipografía, botones).
 - **AutoScan (FM)**: arranque siempre en **87,5 MHz** para recorrer la banda completa; cierre automático al alcanzar **108 MHz** o si el tuner hace *wrap* al inicio de FM.
 - **Jancar IVI / 8227L**: refuerzo con `com.jancar.radio.FmService` (`fmradio.freq.valid`, seek next/prev, apagado al cerrar) cuando el tuner real no sigue solo a `IRadio`.
 - **Layout V3**: el logo pequeño se oculta al pintar el logo de emisora como fondo, para no solaparse con el PS.
+- **Diálogo de historial**: eliminado `applyPremiumListStyle` sobre lista del sistema; sustituido por layout propio unificado.
+- **Menús ingeniería** (layouts): ajustes de scroll / secciones en diálogos K706, QS6 y modo estándar.
 - **Versión**: `versionCode 27`, `versionName 5.0.15 (Beta)`; `app_name_internal` **v5.0.15 Beta**.
 
 ---

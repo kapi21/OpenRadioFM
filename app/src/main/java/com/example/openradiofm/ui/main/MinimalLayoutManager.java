@@ -55,7 +55,7 @@ public class MinimalLayoutManager {
             
             ivMainLogo.setOnLongClickListener(v -> {
                 // Volver a modo estándar o settings
-                mActivity.showToast("Volviendo a modo Estándar...");
+                mActivity.showToast(mActivity.getString(R.string.toast_back_standard_layout));
                 mActivity.mPrefs.edit().putBoolean("pref_layout_minimal", false).apply();
                 mActivity.recreate();
                 return true;

@@ -112,8 +112,6 @@
     <string name="night_start">開始</string>
     <string name="night_end">終了</string>
     <string name="night_schedule_updated">✅ スケジュールを更新しました: %1$s - %2$s</string>
-
-    
     <string name="logo_provider">📡 ロゴプロバイダー</string>
     <string name="provider_supabase">Supabase (HDコミュニティ)</string>
     <string name="provider_radiobrowser">Radio-Browser (フォールバック)</string>
@@ -123,7 +121,55 @@
     <string name="status_bar_v2">ステータスバーを表示</string>
     <string name="status_bar_enabled">✅ ステータスバーを有効にしました</string>
     <string name="status_bar_disabled">❌ ステータスバーを無効にしました</string>
-<string name="pty_none">PTYなし</string><string name="pty_news">ニュース</string><string name="pty_current_affairs">時事問題</string><string name="pty_information">情報</string><string name="pty_sport">スポーツ</string><string name="pty_education">教育</string><string name="pty_drama">ドラマ</string><string name="pty_culture">文化</string><string name="pty_science">科学</string><string name="pty_varied">その他</string><string name="pty_pop">ポップミュージック</string><string name="pty_rock">ロックミュージック</string><string name="pty_easy_listening">ライトミュージック</string><string name="pty_light_classical">ライトクラシック</string><string name="pty_serious_classical">クラシック</string><string name="pty_other_music">その他の音楽</string><string name="pty_weather">天気</string><string name="pty_finance">金融</string><string name="pty_children">子供</string><string name="pty_social">社会</string><string name="pty_religion">宗教</string><string name="pty_phone_in">電話参加</string><string name="pty_travel">旅行</string><string name="pty_leisure">レジャー</string><string name="pty_jazz">ジャズ</string><string name="pty_country">カントリー</string><string name="pty_national">国内</string><string name="pty_oldies">オールディーズ</string><string name="pty_folk">フォーク</string><string name="pty_documentary">ドキュメンタリー</string><string name="pty_alarm_test">アラームテスト</string><string name="pty_alarm">アラーム</string><string name="edit_station_name">放送局名を編集</string><string name="frequency_label">周波数: %1$s MHz</string><string name="searching_next">次を検索中...</string><string name="scanning">スキャン中...</string><string name="scan_completed">スキャン完了</string><string name="identifying_rds">放送局を識別中 (RDS)...</string><string name="version">バージョン %1$s</string><string name="eng_dev_autoscan_toggle">AutoScanモード（メイン画面のスキャンボタン）</string><string name="radio_engine_label">⚙ ラジオエンジン : %1$s</string><string name="freq_no_service">FREQ: サービスなし\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: 読み取りエラー\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: サービスなし</string><string name="sqi_error_read">SQI_INDEX.....: 読み取りエラー</string><string name="af_list_scanning">AF_LIST.......: [スキャン中]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">お気に入りが正しくリセットされました</string>
+    <string name="pty_none">PTYなし</string>
+    <string name="pty_news">ニュース</string>
+    <string name="pty_current_affairs">時事問題</string>
+    <string name="pty_information">情報</string>
+    <string name="pty_sport">スポーツ</string>
+    <string name="pty_education">教育</string>
+    <string name="pty_drama">ドラマ</string>
+    <string name="pty_culture">文化</string>
+    <string name="pty_science">科学</string>
+    <string name="pty_varied">その他</string>
+    <string name="pty_pop">ポップミュージック</string>
+    <string name="pty_rock">ロックミュージック</string>
+    <string name="pty_easy_listening">ライトミュージック</string>
+    <string name="pty_light_classical">ライトクラシック</string>
+    <string name="pty_serious_classical">クラシック</string>
+    <string name="pty_other_music">その他の音楽</string>
+    <string name="pty_weather">天気</string>
+    <string name="pty_finance">金融</string>
+    <string name="pty_children">子供</string>
+    <string name="pty_social">社会</string>
+    <string name="pty_religion">宗教</string>
+    <string name="pty_phone_in">電話参加</string>
+    <string name="pty_travel">旅行</string>
+    <string name="pty_leisure">レジャー</string>
+    <string name="pty_jazz">ジャズ</string>
+    <string name="pty_country">カントリー</string>
+    <string name="pty_national">国内</string>
+    <string name="pty_oldies">オールディーズ</string>
+    <string name="pty_folk">フォーク</string>
+    <string name="pty_documentary">ドキュメンタリー</string>
+    <string name="pty_alarm_test">アラームテスト</string>
+    <string name="pty_alarm">アラーム</string>
+    <string name="edit_station_name">放送局名を編集</string>
+    <string name="frequency_label">周波数: %1$s MHz</string>
+    <string name="searching_next">次を検索中...</string>
+    <string name="scanning">スキャン中...</string>
+    <string name="scan_completed">スキャン完了</string>
+    <string name="identifying_rds">放送局を識別中 (RDS)...</string>
+    <string name="version">バージョン %1$s</string>
+    <string name="eng_dev_autoscan_toggle">AutoScanモード（メイン画面のスキャンボタン）</string>
+    <string name="eng_dev_autoscan_threshold_label">RDSなしAutoScan：RSSIまたはSNRの最低しきい値（0–15）</string>
+    <string name="radio_engine_label">⚙ ラジオエンジン : %1$s</string>
+    <string name="freq_no_service">FREQ: サービスなし\nBAND: ---\nFLAGS: ---</string>
+    <string name="freq_error_read">FREQ: 読み取りエラー\nBAND: ---\n%1$s</string>
+    <string name="sqi_no_service">SQI_INDEX.....: サービスなし</string>
+    <string name="sqi_error_read">SQI_INDEX.....: 読み取りエラー</string>
+    <string name="af_list_scanning">AF_LIST.......: [スキャン中]</string>
+    <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
+    <string name="favorites_reset_complete">お気に入りが正しくリセットされました</string>
     <string name="history_cleared">履歴がクリアされました</string>
     <string name="logo_mode_label">🏎️ 上部ロゴモード</string>
     <string name="logo_mode_car">車ロゴ</string>
@@ -148,14 +194,116 @@
     <string name="category_app_options">アプリのオプション</string>
     <string name="category_premium">プレミアムカスタマイズ</string>
     <string name="night_mode_logos">ロゴの夜間モード</string>
-
     <string name="widget_description">アプリを開かずに周波数・RDS・プリセット</string>
     <string name="widget_cd_open_app">OpenRadioFMを開く</string>
     <string name="widget_prev_preset">前のプリセット</string>
     <string name="widget_next_preset">次のプリセット</string>
-
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">プリセットの上書き</string>
     <string name="autoscan_confirm_message">この AutoScan は現在のバンドのプリセット 1〜18 を消去し、検出した局で埋め直します。\n\nスキャンを開始しますか？</string>
     <string name="autoscan_confirm_start">スキャン開始</string>
+    <!-- About / Credits -->
+    <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
+    <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
+    <string name="about_icons_by">Icons by Icons8</string>
+    <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>
+
+    <!-- Acknowledgements / QR -->
+    <string name="ack_title">謝辞</string>
+    <string name="ack_group_telegram">Telegramグループ</string>
+    <string name="ack_radio_android_espana">Radio Android España</string>
+    <string name="ack_note">(管理者とテスターの貢献に感謝します)</string>
+    <string name="qr_radio_android_title">Radio Android España</string>
+    <string name="qr_radio_android_cd">QR Radio Android España</string>
+
+    <!-- AutoScan UI -->
+    <string name="autoscan_scanning_title">局をスキャン中...</string>
+    <string name="autoscan_results_title">AUTOSCAN 結果</string>
+    <string name="autoscan_overwrite_button">プリセットを上書き</string>
+    <string name="autoscan_saved_to_preset">プリセット%1$dに保存: %2$s</string>
+    <string name="autoscan_no_valid_stations">有効な局が見つかりませんでした。</string>
+    <string name="autoscan_overwrite_title">プリセットを上書き</string>
+    <string name="autoscan_overwrite_message">見つかった局でプリセット1-18を上書きしますか？現在のプリセットが置き換えられます。</string>
+    <string name="autoscan_overwrite_negative">キャンセル</string>
+    <string name="autoscan_overwrite_positive">はい、上書き</string>
+
+    <!-- Supabase connection indicator -->
+    <string name="supabase_status_connecting">• 接続中...</string>
+    <string name="supabase_status_online">• Online</string>
+    <string name="supabase_status_offline">• Offline</string>
+    <string name="save_load_section_actions">Available actions</string>
+    <string name="save_load_save_desc_detail">Create .fav backup in /RadioLogos</string>
+    <string name="save_load_load_desc_detail">Restore backup from .fav</string>
+    <string name="save_load_section_danger">Danger zone</string>
+    <string name="save_load_delete_all_title">Delete all favorites</string>
+    <string name="save_load_delete_all_sub">Remove all saved stations</string>
+    <string name="save_load_clear_history_title">Clear history</string>
+    <string name="save_load_clear_history_sub">Clear recent listening history</string>
+    <string name="credits_developed_by">Developed by Jimmy80</string>
+    <string name="btn_ok">OK</string>
+    <string name="selective_scan_title">局をスキャン中…</string>
+    <string name="dialog_btn_save">保存</string>
+    <string name="dialog_btn_restore_original">元に戻す</string>
+    <string name="scan_rds_searching">RDSを検索中…</string>
+
+        <string name="scan_item_save_to">保存先:</string>
+    <string name="selective_scan_freq_placeholder">---.- MHz</string>
+    <string name="selective_scan_waiting_rds">Waiting for RDS…</string>
+    <string name="selective_scan_btn_finish">Finish</string>
+    <string name="selective_scan_btn_next">Next</string>
+
+    <string name="toast_station_name_saved">Name saved: %1$s</string>
+    <string name="toast_station_name_restored">Name restored</string>
+    <string name="toast_logos_online_on_1">Online logos: on (Internet required)</string>
+    <string name="toast_logos_online_on_2">The central database will be queried for HD logos</string>
+    <string name="toast_logos_online_off">Online logos: off</string>
+    <string name="toast_relief_hd_on">HD relief: on</string>
+    <string name="toast_relief_hd_off">HD relief: off</string>
+    <string name="toast_night_mode_auto_on">Automatic night mode: on</string>
+    <string name="toast_night_logos_tint_on">Tint logos in night mode</string>
+    <string name="toast_night_logos_tint_off">Logos without tint in night mode</string>
+    <string name="toast_contrib_on">Community contribution enabled</string>
+    <string name="toast_contrib_off">Community contribution disabled</string>
+    <string name="toast_logo_mode">Logo mode: %1$s</string>
+    <string name="toast_logo_provider">Logo provider: %1$s</string>
+    <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
+    <string name="toast_skin_colon">Skin: %1$s</string>
+    <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="toast_history_deleted_full">History has been cleared</string>
+    <string name="toast_easter_egg">Easter egg activated!</string>
+
+    <string name="toast_no_other_favorites">No other saved favorites</string>
+    <string name="toast_returning_fm">Returning to FM radio…</string>
+    <string name="toast_stream_searching">Looking for streaming link…</string>
+    <string name="toast_stream_starting">Starting online radio…</string>
+    <string name="toast_stream_unavailable">Streaming not available for this station</string>
+    <string name="toast_station_load_error">Error loading station data</string>
+    <string name="toast_station_cache_sync">Station cache cleared. Syncing…</string>
+    <string name="toast_hardware_colon">Hardware: %1$s</string>
+    <string name="toast_app_not_installed">App not installed: %1$s</string>
+    <string name="toast_permissions_granted">Permissions granted</string>
+    <string name="toast_storage_permission_needed">Storage permission is required to save favorites.</string>
+    <string name="toast_phone_mute_on_call">Calls: radio will mute automatically</string>
+    <string name="toast_phone_no_permission_fm">Without phone permission, FM may keep playing during calls</string>
+    <string name="toast_layout_v3">Layout: V3 (horizontal)</string>
+    <string name="toast_layout_simple">Layout: simple (minimal)</string>
+    <string name="toast_layout_v2">Layout: V2 (vertical)</string>
+
+    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
+    <string name="toast_radio_engine_not_started">Radio engine not started</string>
+    <string name="toast_no_gps_app">No maps/GPS app found</string>
+    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+
+    <string name="toast_autoscan_stopped">AutoScan stopped</string>
+    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
+    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+
+    <string name="toast_back_standard_layout">Returning to standard mode…</string>
+    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
+    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
+    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
 </resources>

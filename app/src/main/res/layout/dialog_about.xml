@@ -83,13 +83,13 @@
                     android:layout_height="wrap_content"
                     android:textColor="#AAAAAA"
                     android:textSize="14sp"
-                    android:text="Jimmy80 (Multi-Language Support)"/>
+                    android:text="@string/about_contrib_jimmy80"/>
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:textColor="#AAAAAA"
                     android:textSize="14sp"
-                    android:text="Csaba (MTK8259 Engine Support and more)"/>
+                    android:text="@string/about_contrib_csaba"/>
             </LinearLayout>
 
             <View 
@@ -118,7 +118,7 @@
                     android:textColor="#AAAAAA"
                     android:textSize="14sp"
                     android:lineSpacingExtra="4dp"
-                    android:text="Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos"/>
+                    android:text="@string/about_tech_details_value"/>
             </LinearLayout>
 
             <View 
@@ -135,7 +135,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="#AAAAAA"
                 android:textSize="13sp"
-                android:text="Icons by Icons8"
+                android:text="@string/about_icons_by"
                 android:layout_gravity="center_horizontal"/>
 
             <TextView
@@ -144,7 +144,7 @@
                 android:layout_height="wrap_content"
                 android:textColor="#AAAAAA"
                 android:textSize="13sp"
-                android:text="Streaming &amp; Logos by TDTchannels"
+                android:text="@string/about_streaming_logos_by"
                 android:layout_gravity="center_horizontal"
                 android:layout_marginTop="4dp"/>
         </LinearLayout>
@@ -152,17 +152,9 @@
         <!-- Close -->
         <TextView
             android:id="@+id/btnClose"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/DialogCloseButton"
             android:text="@string/close"
-            android:gravity="center"
-            android:textColor="#AAAAAA"
-            android:textSize="16sp"
-            android:padding="16dp"
-            android:layout_marginTop="24dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"/>
+            />
 
     </LinearLayout>
 </ScrollView>

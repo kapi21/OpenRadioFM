@@ -168,6 +168,10 @@ public class EngineeringModeDialog extends Dialog {
         }
 
         DevAutoscanToggleHelper.bind(swDevAutoScanEnabled, mActivity);
+        DevAutoscanToggleHelper.bindThresholdSeekBar(
+                (android.widget.SeekBar) findViewById(R.id.sbDevAutoScanThreshold),
+                findViewById(R.id.tvDevAutoScanThresholdValue),
+                mActivity);
     }
 
     private void startUpdateLoop() {

@@ -159,7 +159,7 @@ public class SupabaseLogoSource {
                         // V19.4: Añadimos prefijo de carpeta 'espana/' según la estructura del bucket
                         String storagePath = "espana/" + fileName;
                         
-                        RequestBody requestBody = RequestBody.create(MediaType.parse("image/png"), file);
+                        RequestBody requestBody = RequestBody.create(file, MediaType.parse("image/png"));
                         Call<Void> uploadCall = api.uploadLogoFile(apiKey, "Bearer " + apiKey, storagePath, requestBody);
                         Response<Void> uploadRes = uploadCall.execute();
                         

@@ -190,6 +190,42 @@
                 app:thumbTint="#00FF00"
                 app:trackTint="#3300FF00" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/eng_dev_autoscan_threshold_label"
+                android:textColor="#88FF88"
+                android:textSize="11sp"
+                android:fontFamily="monospace"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp">
+
+                <SeekBar
+                    android:id="@+id/sbDevAutoScanThreshold"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="15"
+                    android:progress="2" />
+
+                <TextView
+                    android:id="@+id/tvDevAutoScanThresholdValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="28dp"
+                    android:gravity="center"
+                    android:text="2"
+                    android:textColor="#00FF00"
+                    android:textSize="14sp"
+                    android:fontFamily="monospace"/>
+            </LinearLayout>
+
             <!-- RDS -->
             <TextView
                 android:layout_width="match_parent"

@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.view.Window;
 import android.graphics.Color;
@@ -133,6 +134,10 @@ public class K706EngineeringDialog extends Dialog {
         });
 
         DevAutoscanToggleHelper.bind((SwitchCompat) findViewById(R.id.swDevAutoScanEnabled), mActivity);
+        DevAutoscanToggleHelper.bindThresholdSeekBar(
+                (SeekBar) findViewById(R.id.sbDevAutoScanThreshold),
+                findViewById(R.id.tvDevAutoScanThresholdValue),
+                mActivity);
     }
 
     private void setupTunerButton(int resId, Runnable action) {

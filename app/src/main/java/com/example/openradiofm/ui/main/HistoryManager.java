@@ -1,7 +1,16 @@
 package com.example.openradiofm.ui.main;
 
+import android.app.AlertDialog;
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.Window;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.model.RadioStation;
@@ -221,13 +230,71 @@ public class HistoryManager {
             }
 
             final File[] finalFavFiles = favFiles;
-            android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(mActivity);
-            builder.setTitle(mActivity.getString(R.string.select_favorites_file));
-            builder.setItems(fileNames, (dialog, which) -> {
-                loadFavoritesFromSpecificFile(finalFavFiles[which]);
-            });
-            builder.setNegativeButton(mActivity.getString(R.string.cancel), null);
-            builder.show();
+
+            LayoutInflater inflater = LayoutInflater.from(mActivity);
+            View dialogView = inflater.inflate(R.layout.dialog_favorites_file_picker, null);
+
+            View rootCard = dialogView.findViewById(R.id.fav_file_dialog_root);
+            if (rootCard != null) {
+                try {
+                    rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+                } catch (Exception ignored) {
+                }
+            }
+
+            TextView tvTitle = dialogView.findViewById(R.id.tvFavPickerTitle);
+            if (tvTitle != null) {
+                try {
+                    tvTitle.setTypeface(mActivity.getSystemTypeface());
+                } catch (Exception ignored) {
+                }
+            }
+
+            ListView lv = dialogView.findViewById(R.id.lvFavFiles);
+            View btnCancel = dialogView.findViewById(R.id.btnCancelFavPicker);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(mActivity, R.layout.item_fav_file_row,
+                    R.id.tvFavFileName, fileNames) {
+                @Override
+                public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                    View v = super.getView(position, convertView, parent);
+                    TextView tv = v.findViewById(R.id.tvFavFileName);
+                    if (tv != null) {
+                        try {
+                            tv.setTypeface(mActivity.getSystemTypeface());
+                        } catch (Exception ignored) {
+                        }
+                    }
+                    return v;
+                }
+            };
+
+            AlertDialog dialog = new AlertDialog.Builder(mActivity).setView(dialogView).create();
+
+            if (lv != null) {
+                lv.setAdapter(adapter);
+                lv.setOnItemClickListener((d, itemView, which, id) -> {
+                    loadFavoritesFromSpecificFile(finalFavFiles[which]);
+                    dialog.dismiss();
+                });
+            }
+
+            if (btnCancel != null) {
+                btnCancel.setOnClickListener(v -> dialog.dismiss());
+            }
+
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setDimAmount(0.7f);
+                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            }
+
+            dialog.show();
+
+            try {
+                mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+            } catch (Exception ignored) {
+            }
 
         } catch (Exception e) {
             mActivity.showStyledToast(

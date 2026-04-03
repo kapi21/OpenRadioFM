@@ -70,6 +70,37 @@
     <string name="all_favorites_deleted">✅ Todos los favoritos eliminados</string>
     <string name="select_favorites_file">📂 Seleccionar archivo de favoritos</string>
     <string name="cancel">Cancelar</string>
+    
+    <!-- About / Credits -->
+    <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
+    <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
+    <string name="about_icons_by">Icons by Icons8</string>
+    <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>
+
+    <!-- Acknowledgements / QR -->
+    <string name="ack_title">Agradecimientos</string>
+    <string name="ack_group_telegram">Grupo telegram</string>
+    <string name="ack_radio_android_espana">Radio Android España</string>
+    <string name="ack_note">(a sus admins y a sus usuarios testeadores por los aportes)</string>
+    <string name="qr_radio_android_title">Radio Android España</string>
+    <string name="qr_radio_android_cd">QR Radio Android España</string>
+
+    <!-- AutoScan UI -->
+    <string name="autoscan_scanning_title">ESCANEANDO EMISORAS...</string>
+    <string name="autoscan_results_title">RESULTADOS DE AUTOSCAN</string>
+    <string name="autoscan_overwrite_button">SOBRESCRIBIR PRESETS</string>
+    <string name="autoscan_saved_to_preset">Guardado en preset %1$d: %2$s</string>
+    <string name="autoscan_no_valid_stations">No se han encontrado emisoras válidas.</string>
+    <string name="autoscan_overwrite_title">Sobrescribir Presets</string>
+    <string name="autoscan_overwrite_message">¿Quieres sobrescribir los presets 1-18 con las emisoras encontradas? Esto reemplazará los presets actuales.</string>
+    <string name="autoscan_overwrite_negative">CANCELAR</string>
+    <string name="autoscan_overwrite_positive">SÍ, SOBRESCRIBIR</string>
+
+    <!-- Supabase connection indicator -->
+    <string name="supabase_status_connecting">• Conectando...</string>
+    <string name="supabase_status_online">• Online</string>
+    <string name="supabase_status_offline">• Offline</string>
     <string name="favorites_saved">✅ Favoritos guardados: %s</string>
     <string name="favorites_loaded" formatted="false">✅ %d favoritos cargados desde %s</string>
     <string name="error_saving_favorites">❌ Error al guardar favoritos: %s</string>
@@ -204,6 +235,7 @@
     
     <!-- Engineering Mode -->
     <string name="eng_dev_autoscan_toggle">Modo AutoScan (botón escaneo en UI principal)</string>
+    <string name="eng_dev_autoscan_threshold_label">AutoScan sin RDS: umbral mín. RSSI o SNR (0–15)</string>
     <string name="radio_engine_label">⚙ RADIO ENGINE: %1$s</string>
     <string name="freq_no_service">FREQ: NO_SERVICE\nBAND: ---\nFLAGS: ---</string>
     <string name="freq_error_read">FREQ: ERROR_READ\nBAND: ---\n%1$s</string>
@@ -233,4 +265,84 @@
     <string name="autoscan_confirm_subheader">SOBRESCRITURA DE MEMORIAS</string>
     <string name="autoscan_confirm_message">Este AutoScan borrará y rellenará las memorias 1–18 de la banda actual con las emisoras que vaya detectando.\n\n¿Quieres iniciar el escaneo?</string>
     <string name="autoscan_confirm_start">Iniciar escaneo</string>
+
+    <!-- Diálogo guardar/cargar: textos que faltaban -->
+    <string name="save_load_section_actions">Acciones disponibles</string>
+    <string name="save_load_save_desc_detail">Crear copia .fav en /RadioLogos</string>
+    <string name="save_load_load_desc_detail">Restaurar copia desde .fav</string>
+    <string name="save_load_section_danger">Zona de peligro</string>
+    <string name="save_load_delete_all_title">Borrar todos los favoritos</string>
+    <string name="save_load_delete_all_sub">Eliminar todas las emisoras guardadas</string>
+    <string name="save_load_clear_history_title">Borrar historial</string>
+    <string name="save_load_clear_history_sub">Borrar historial de escucha reciente</string>
+
+    <!-- Créditos easter egg / diálogo -->
+    <string name="credits_developed_by">Desarrollado por Jimmy80</string>
+    <string name="btn_ok">OK</string>
+
+    <!-- Escaneo selectivo (layout por defecto) -->
+    <string name="selective_scan_title">Escaneando emisoras…</string>
+    <string name="dialog_btn_save">Guardar</string>
+    <string name="dialog_btn_restore_original">Restaurar original</string>
+    <string name="scan_rds_searching">Buscando RDS…</string>
+    <string name="scan_item_save_to">Guardar en:</string>
+    <string name="selective_scan_freq_placeholder">---.- MHz</string>
+    <string name="selective_scan_waiting_rds">Esperando RDS…</string>
+    <string name="selective_scan_btn_finish">Finalizar</string>
+    <string name="selective_scan_btn_next">Siguiente</string>
+
+    <!-- Toasts y mensajes (UI) -->
+    <string name="toast_station_name_saved">Nombre guardado: %1$s</string>
+    <string name="toast_station_name_restored">Nombre restaurado</string>
+    <string name="toast_logos_online_on_1">Logos online: activado (requiere Internet)</string>
+    <string name="toast_logos_online_on_2">Se consultará la base de datos centralizada para buscar logos HD</string>
+    <string name="toast_logos_online_off">Logos online: desactivado</string>
+    <string name="toast_relief_hd_on">Relieve HD: activado</string>
+    <string name="toast_relief_hd_off">Relieve HD: desactivado</string>
+    <string name="toast_night_mode_auto_on">Modo noche automático: activado</string>
+    <string name="toast_night_logos_tint_on">Teñir logos en modo noche</string>
+    <string name="toast_night_logos_tint_off">Logos sin tinte en modo noche</string>
+    <string name="toast_contrib_on">Contribución activada</string>
+    <string name="toast_contrib_off">Contribución desactivada</string>
+    <string name="toast_logo_mode">Modo de logo: %1$s</string>
+    <string name="toast_logo_provider">Proveedor de logos: %1$s</string>
+    <string name="toast_steering_mode">Mandos volante NEXT/PREV: %1$s</string>
+    <string name="toast_skin_colon">Skin: %1$s</string>
+    <string name="toast_skin_night_mode">Skin: modo noche</string>
+    <string name="toast_history_deleted_full">El historial ha sido borrado</string>
+    <string name="toast_easter_egg">¡Easter egg activado!</string>
+
+    <string name="toast_no_other_favorites">No hay otros favoritos guardados</string>
+    <string name="toast_returning_fm">Volviendo a radio FM…</string>
+    <string name="toast_stream_searching">Buscando enlace de streaming…</string>
+    <string name="toast_stream_starting">Iniciando radio online…</string>
+    <string name="toast_stream_unavailable">Streaming no disponible para esta emisora</string>
+    <string name="toast_station_load_error">Error al cargar datos de emisora</string>
+    <string name="toast_station_cache_sync">Caché de emisora borrada. Sincronizando…</string>
+    <string name="toast_hardware_colon">Hardware: %1$s</string>
+    <string name="toast_app_not_installed">App no instalada: %1$s</string>
+    <string name="toast_permissions_granted">Permisos concedidos</string>
+    <string name="toast_storage_permission_needed">Se requieren permisos de almacenamiento para guardar favoritos.</string>
+    <string name="toast_phone_mute_on_call">Llamadas: la radio se silenciará automáticamente</string>
+    <string name="toast_phone_no_permission_fm">Sin permiso de teléfono la FM puede seguir sonando durante llamadas</string>
+    <string name="toast_layout_v3">Layout: V3 (horizontal)</string>
+    <string name="toast_layout_simple">Layout: simple (minimalista)</string>
+    <string name="toast_layout_v2">Layout: V2 (vertical)</string>
+
+    <string name="toast_eq_unavailable">Ecualizador no disponible (motor no iniciado)</string>
+    <string name="toast_radio_engine_not_started">Motor de radio no iniciado</string>
+    <string name="toast_no_gps_app">No se encontró aplicación de GPS</string>
+    <string name="toast_basic_no_engineering">Modo básico: menú de ingeniería no disponible</string>
+
+    <string name="toast_autoscan_stopped">AutoScan detenido</string>
+    <string name="toast_autoscan_slow">AutoScan lento: buscando emisoras… (pulsa de nuevo para parar)</string>
+    <string name="toast_autoscan_start_failed">No se pudo iniciar AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan terminado (%1$d memorias)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · memorias 1–18</string>
+    <string name="toast_presets_overwritten">Presets sobrescritos (%1$d emisoras).</string>
+
+    <string name="toast_back_standard_layout">Volviendo a modo estándar…</string>
+    <string name="toast_recovering_fm_audio">Recuperando audio FM…</string>
+    <string name="toast_hw_eq_unsupported">Hardware EQ no soportado en este dispositivo</string>
+    <string name="toast_saved_to_slot">Guardado en memoria %1$d</string>
 </resources>

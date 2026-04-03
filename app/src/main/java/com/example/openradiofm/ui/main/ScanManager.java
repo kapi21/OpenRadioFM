@@ -14,6 +14,11 @@ import android.widget.Button;
 import android.os.Handler;
 import android.os.Looper;
 import com.example.openradiofm.R;
+import com.example.openradiofm.data.source.JancarIviEngine;
+import com.example.openradiofm.data.source.K706Engine;
+import com.example.openradiofm.data.source.MT8163Engine;
+import com.example.openradiofm.data.source.MTK8259_8667Engine;
+import com.example.openradiofm.data.source.QS6Engine;
 import com.example.openradiofm.data.source.RadioEngineCallback;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,10 +46,6 @@ public class ScanManager {
     private static final int FM_BAND_START_KHZ = 87500;
     /** Fin de banda FM (108,0 MHz). Al alcanzarlo, el autoscan lento termina solo. */
     private static final int FM_BAND_END_KHZ = 108000;
-    // Umbrales suaves: si no hay señal, preferimos PS confirmado.
-    private static final int MIN_RSSI_ACCEPT = 4;
-    private static final int MIN_SNR_ACCEPT = 4;
-
     private final MainActivity mActivity;
     private final List<StationAdapter.ScannedStation> mCapturedList = new ArrayList<>();
     private StationAdapter mStationAdapter;
@@ -58,12 +59,15 @@ public class ScanManager {
         int snr;
         String ps;
         boolean accepted;
+        /** Invalida validaciones RDS diferidas al reiniciar AutoScan. */
+        final int autoScanSessionId;
 
-        Pending(int freqKhz, long nowMs, int rssi, int snr) {
+        Pending(int freqKhz, long nowMs, int rssi, int snr, int sessionId) {
             this.freqKhz = freqKhz;
             this.firstSeenMs = nowMs;
             this.rssi = rssi;
             this.snr = snr;
+            this.autoScanSessionId = sessionId;
         }
     }
 
@@ -80,8 +84,12 @@ public class ScanManager {
     private Button mBtnStopScan;
     private Button mBtnNextScan;
     private int mLastScanFreq = 0;
+    /** Se incrementa al cada nuevo AutoScan lento; evita RDS/guardados de la sesión anterior. */
+    private int mAutoScanSessionId = 0;
     private boolean mAutoOverwritePresets = false;
     private int mNextAutoPresetSlot = 0;
+    /** Memorias escritas en disco durante esta sesión (puede abarcar FM1+FM2+FM3). */
+    private int mTotalAutoScanPresetsSaved = 0;
     /** true = AutoScan usa seekUp periódico (lento); no llamar engine.scan() ni stopScan() OEM. */
     private boolean mSlowSeekAutoScan = false;
     private boolean mSlowFinishPosted = false;
@@ -91,6 +99,9 @@ public class ScanManager {
             if (!mIsScanning || !mAutoOverwritePresets || !mSlowSeekAutoScan) return;
             if (mActivity == null || mActivity.mEngine == null) return;
             if (mNextAutoPresetSlot >= MAX_RESULTS) {
+                if (tryContinueAutoScanOnNextFmBand()) {
+                    return;
+                }
                 finishSlowAutoScanInternal(null);
                 return;
             }
@@ -167,12 +178,12 @@ public class ScanManager {
                 mAutoOverwritePresets = false;
                 mIsScanning = false;
                 applyScanButtonVisual(false, btn);
-                mActivity.showToast("AutoScan detenido");
+                mActivity.showToast(mActivity.getString(R.string.toast_autoscan_stopped));
             } else {
                 mActivity.mEngine.stopScan();
                 mIsScanning = false;
                 applyScanButtonVisual(false, btn);
-                mActivity.showToast("AutoScan detenido");
+                mActivity.showToast(mActivity.getString(R.string.toast_autoscan_stopped));
             }
         }
     }
@@ -224,9 +235,12 @@ public class ScanManager {
 
     private void startAutoScanOverwrite(ImageButton btn) {
         if (mActivity.mEngine == null) return;
+        mAutoScanSessionId++;
         mAutoOverwritePresets = true;
         mSlowFinishPosted = false;
         mNextAutoPresetSlot = 0;
+        mTotalAutoScanPresetsSaved = 0;
+        mLastScanFreq = 0;
         mAutoSavedByKey.clear();
         mCapturedList.clear();
         mPendingByKey.clear();
@@ -246,7 +260,7 @@ public class ScanManager {
             mIsScanning = true;
             mSlowSeekAutoScan = true;
             applyScanButtonVisual(true, btn);
-            mActivity.showToast("AutoScan lento: buscando emisoras… (pulsa de nuevo para parar)");
+            mActivity.showToast(mActivity.getString(R.string.toast_autoscan_slow));
 
             final boolean fmUi = isFmBandUi();
             if (fmUi) {
@@ -257,8 +271,10 @@ public class ScanManager {
             }
 
             // Primera captura: en FM tras sintonizar 87,5 MHz; fallback si el motor aún no informa freq.
+            final int sessionCapture = mAutoScanSessionId;
             mMainHandler.postDelayed(() -> {
                 if (!mIsScanning || !mAutoOverwritePresets) return;
+                if (sessionCapture != mAutoScanSessionId) return;
                 try {
                     int f = mActivity.mEngine.getCurrentFreq();
                     if (f > 0) {
@@ -276,7 +292,7 @@ public class ScanManager {
             mIsScanning = false;
             mSlowSeekAutoScan = false;
             applyScanButtonVisual(false, btn);
-            mActivity.showToast("No se pudo iniciar AutoScan");
+            mActivity.showToast(mActivity.getString(R.string.toast_autoscan_start_failed));
         }
     }
 
@@ -287,10 +303,11 @@ public class ScanManager {
         mSlowSeekAutoScan = false;
         mAutoOverwritePresets = false;
         mIsScanning = false;
+        mLastScanFreq = 0;
         ImageButton target = btn != null ? btn : mActivity.findViewById(R.id.btnAutoScan);
         applyScanButtonVisual(false, target);
-        int saved = mNextAutoPresetSlot;
-        mActivity.showToast("AutoScan terminado (" + saved + " memorias)");
+        int saved = mTotalAutoScanPresetsSaved > 0 ? mTotalAutoScanPresetsSaved : mNextAutoPresetSlot;
+        mActivity.showToast(mActivity.getString(R.string.toast_autoscan_finished, saved));
     }
 
     /** VXX: Alimentado desde MainActivity.onSignalUpdate durante el escaneo. */
@@ -330,6 +347,9 @@ public class ScanManager {
         }
 
         if (mCapturedList.size() >= MAX_RESULTS) {
+            if (mSlowSeekAutoScan && tryContinueAutoScanOnNextFmBand()) {
+                return;
+            }
             if (mSlowSeekAutoScan) {
                 finishSlowAutoScanInternal(null);
             } else {
@@ -344,7 +364,7 @@ public class ScanManager {
         Pending p = mPendingByKey.get(key);
         if (p == null) {
             final long now = android.os.SystemClock.elapsedRealtime();
-            p = new Pending(freqKhz, now, mLastRssi, mLastSnr);
+            p = new Pending(freqKhz, now, mLastRssi, mLastSnr, mAutoScanSessionId);
             mPendingByKey.put(key, p);
             final Pending pRef = p;
             mMainHandler.postDelayed(() -> validatePending(pRef), RDS_WAIT_MS);
@@ -368,7 +388,7 @@ public class ScanManager {
         for (int i = 0; i < mCapturedList.size(); i++) {
             StationAdapter.ScannedStation s = mCapturedList.get(i);
             if (Math.abs(s.frequency - freqKhz) < TOLERANCE_KHZ) {
-                if (s.name == null || s.name.equals("Buscando RDS...") || s.name.equals("Esperando RDS...")) {
+                if (s.name == null || s.name.equals(rdsSearchingLabel()) || s.name.equals(rdsWaitingLabel())) {
                     s.name = name;
                     if (mStationAdapter != null) mStationAdapter.notifyItemChanged(i);
                 }
@@ -380,13 +400,112 @@ public class ScanManager {
         final int key = normalizeKey(freqKhz);
         Pending p = mPendingByKey.get(key);
         if (p == null) {
-            p = new Pending(freqKhz, android.os.SystemClock.elapsedRealtime(), mLastRssi, mLastSnr);
+            p = new Pending(freqKhz, android.os.SystemClock.elapsedRealtime(), mLastRssi, mLastSnr, mAutoScanSessionId);
             mPendingByKey.put(key, p);
         }
         p.ps = name;
         if (!p.accepted) {
             acceptStation(freqKhz, name);
             p.accepted = true;
+        }
+    }
+
+    /**
+     * 18 memorias llenas en FM1/FM2 y el barrido no ha llegado a 108 MHz: pasar a FM2 o FM3 y seguir.
+     * QS6: {@link QS6Engine#tuneWithBand(int, int)}. K706/MT8163/MTK8259: un {@code bandCycle()} + sintonía 87,5 MHz.
+     * Jancar (una sola FM en UI) y otros: no aplica.
+     */
+    private boolean tryContinueAutoScanOnNextFmBand() {
+        if (!mSlowSeekAutoScan || !mAutoOverwritePresets) return false;
+        if (mActivity == null || mActivity.mEngine == null) return false;
+        if (mActivity.mEngine instanceof JancarIviEngine) return false;
+
+        int b = mActivity.mCurrentBand;
+        if (b < 0 || b > 2) return false;
+        if (b >= 2) return false;
+
+        final int nextBand = b + 1;
+
+        try {
+            if (mActivity.mEngine instanceof QS6Engine) {
+                ((QS6Engine) mActivity.mEngine).tuneWithBand(FM_BAND_START_KHZ, nextBand);
+            } else if (mActivity.mEngine instanceof K706Engine
+                    || mActivity.mEngine instanceof MT8163Engine
+                    || mActivity.mEngine instanceof MTK8259_8667Engine) {
+                mActivity.mEngine.bandCycle();
+                mActivity.mEngine.tune(FM_BAND_START_KHZ);
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            return false;
+        }
+
+        int resolved = mActivity.mEngine.getCurrentBand();
+        if (resolved < 0 || resolved > 2) {
+            return false;
+        }
+
+        try {
+            if (mActivity.mPresetManager != null) {
+                for (int i = 0; i < MAX_RESULTS; i++) {
+                    mActivity.mPresetManager.savePreset(resolved, i, 0, "");
+                }
+            }
+        } catch (Exception ignored) {
+        }
+
+        mCapturedList.clear();
+        mPendingByKey.clear();
+        mAutoSavedByKey.clear();
+        mNextAutoPresetSlot = 0;
+        mLastScanFreq = 0;
+        if (mStationAdapter != null) {
+            try {
+                mStationAdapter.notifyDataSetChanged();
+            } catch (Exception ignored) {
+            }
+        }
+
+        mActivity.mCurrentBand = resolved;
+        mActivity.runOnUiThread(() -> {
+            try {
+                mActivity.refreshPresetButtons();
+            } catch (Exception ignored) {
+            }
+        });
+
+        mActivity.showToast(mActivity.getString(R.string.toast_autoscan_band_presets,
+                fmBandShortLabel(resolved)));
+
+        final int sidBand = mAutoScanSessionId;
+        mMainHandler.postDelayed(() -> {
+            if (!mIsScanning || !mAutoOverwritePresets) return;
+            if (sidBand != mAutoScanSessionId) return;
+            try {
+                int f = mActivity.mEngine.getCurrentFreq();
+                if (f > 0) {
+                    onScanFrequencyChanged(f);
+                } else {
+                    onScanFrequencyChanged(FM_BAND_START_KHZ);
+                }
+            } catch (Exception ignored) {
+            }
+        }, 800);
+
+        return true;
+    }
+
+    private static String fmBandShortLabel(int band) {
+        switch (band) {
+            case 0:
+                return "FM1";
+            case 1:
+                return "FM2";
+            case 2:
+                return "FM3";
+            default:
+                return "?";
         }
     }
 
@@ -408,12 +527,14 @@ public class ScanManager {
     }
 
     private boolean isStrongEnough(int rssi, int snr) {
-        return (rssi >= MIN_RSSI_ACCEPT) || (snr >= MIN_SNR_ACCEPT);
+        int min = DevAutoscanToggleHelper.getAutoScanSignalThreshold(mActivity);
+        return (rssi >= min) || (snr >= min);
     }
 
     private void validatePending(Pending p) {
         if (!mIsScanning) return;
         if (p == null || p.accepted) return;
+        if (p.autoScanSessionId != mAutoScanSessionId) return;
         if (mCapturedList.size() >= MAX_RESULTS) return;
         if (isAlreadyAccepted(p.freqKhz)) {
             p.accepted = true;
@@ -428,7 +549,7 @@ public class ScanManager {
         }
 
         if (isStrongEnough(p.rssi, p.snr)) {
-            acceptStation(p.freqKhz, "Esperando RDS...");
+            acceptStation(p.freqKhz, rdsWaitingLabel());
             p.accepted = true;
         } else {
             // Débil y sin RDS → ruido: descartar.
@@ -451,11 +572,15 @@ public class ScanManager {
                 mAutoSavedByKey.put(key, true);
                 final int slot = mNextAutoPresetSlot;
                 mNextAutoPresetSlot++;
-                mMainHandler.postDelayed(() -> autoSaveToPreset(slot, freqKhz), AUTOSAVE_HOLD_MS);
+                final int saveSession = mAutoScanSessionId;
+                mMainHandler.postDelayed(() -> autoSaveToPreset(slot, freqKhz, saveSession), AUTOSAVE_HOLD_MS);
             }
         }
 
         if (mCapturedList.size() >= MAX_RESULTS) {
+            if (mSlowSeekAutoScan && tryContinueAutoScanOnNextFmBand()) {
+                return;
+            }
             if (mSlowSeekAutoScan) {
                 finishSlowAutoScanInternal(null);
             } else {
@@ -464,8 +589,9 @@ public class ScanManager {
         }
     }
 
-    private void autoSaveToPreset(int slot, int freqKhz) {
+    private void autoSaveToPreset(int slot, int freqKhz, int sessionId) {
         if (!mIsScanning) return;
+        if (sessionId != mAutoScanSessionId) return;
         if (slot < 0 || slot >= MAX_RESULTS) return;
         if (mActivity == null || mActivity.mPresetManager == null) return;
 
@@ -476,7 +602,7 @@ public class ScanManager {
                 if (Math.abs(s.frequency - freqKhz) <= TOLERANCE_KHZ) {
                     if (s.name != null) {
                         String n = s.name.trim();
-                        if (!n.isEmpty() && !n.equals("Esperando RDS...") && !n.equals("Buscando RDS...")) {
+                        if (!n.isEmpty() && !n.equals(rdsWaitingLabel()) && !n.equals(rdsSearchingLabel())) {
                             bestName = n;
                         }
                     }
@@ -496,12 +622,15 @@ public class ScanManager {
         try {
             final int band = mActivity.mCurrentBand;
             mActivity.mPresetManager.savePreset(band, slot, freqKhz, bestName != null ? bestName : "");
+            if (mAutoOverwritePresets) {
+                mTotalAutoScanPresetsSaved++;
+            }
             mActivity.runOnUiThread(() -> {
                 try { mActivity.refreshPresetButtons(); } catch (Exception ignored) {}
             });
             if (mTvScanStatus != null) {
                 final String label = (bestName != null && !bestName.trim().isEmpty()) ? bestName.trim() : (freqKhz / 1000.0) + " MHz";
-                mTvScanStatus.setText("Guardado en preset " + (slot + 1) + ": " + label);
+                mTvScanStatus.setText(mActivity.getString(R.string.autoscan_saved_to_preset, (slot + 1), label));
             }
         } catch (Exception ignored) {}
     }
@@ -530,7 +659,7 @@ public class ScanManager {
         mBtnStopScan = view.findViewById(R.id.btnStopScan);
         mBtnNextScan = view.findViewById(R.id.btnNextScan);
 
-        if (mTvScanTitle != null) mTvScanTitle.setText("ESCANEANDO EMISORAS...");
+        if (mTvScanTitle != null) mTvScanTitle.setText(mActivity.getString(R.string.autoscan_scanning_title));
         if (mTvScanStatus != null) mTvScanStatus.setText(mActivity.getString(R.string.searching_next));
 
         mCapturedList.clear();
@@ -565,19 +694,19 @@ public class ScanManager {
 
     private void onSmartScanFinished() {
         if (mAutoScanDialog == null || !mAutoScanDialog.isShowing()) return;
-        if (mTvScanTitle != null) mTvScanTitle.setText("RESULTADOS DE AUTOSCAN");
+        if (mTvScanTitle != null) mTvScanTitle.setText(mActivity.getString(R.string.autoscan_results_title));
         if (mTvScanStatus != null) mTvScanStatus.setText(mActivity.getString(R.string.scan_completed));
         if (mLastScanFreq > 0 && mTvScanFreq != null) {
             mTvScanFreq.setText(String.format(java.util.Locale.US, "%.2f MHz", (double) mLastScanFreq / 1000.0));
         }
         if (mBtnStopScan != null) {
-            mBtnStopScan.setText("CERRAR");
+            mBtnStopScan.setText(mActivity.getString(R.string.close));
             mBtnStopScan.setOnClickListener(v -> {
                 try { mAutoScanDialog.dismiss(); } catch (Exception ignored) {}
             });
         }
         if (mBtnNextScan != null) {
-            mBtnNextScan.setText("SOBRESCRIBIR PRESETS");
+            mBtnNextScan.setText(mActivity.getString(R.string.autoscan_overwrite_button));
             mBtnNextScan.setOnClickListener(v -> confirmOverwritePresets());
         }
     }
@@ -585,14 +714,14 @@ public class ScanManager {
     private void confirmOverwritePresets() {
         if (mActivity == null) return;
         if (mCapturedList.isEmpty()) {
-            mActivity.showToast("No se han encontrado emisoras válidas.");
+            mActivity.showToast(mActivity.getString(R.string.autoscan_no_valid_stations));
             return;
         }
         new AlertDialog.Builder(mActivity)
-                .setTitle("Sobrescribir Presets")
-                .setMessage("¿Quieres sobrescribir los presets 1-18 con las emisoras encontradas? Esto reemplazará los presets actuales.")
-                .setNegativeButton("CANCELAR", (d, w) -> {})
-                .setPositiveButton("SÍ, SOBRESCRIBIR", (d, w) -> overwritePresets18())
+                .setTitle(mActivity.getString(R.string.autoscan_overwrite_title))
+                .setMessage(mActivity.getString(R.string.autoscan_overwrite_message))
+                .setNegativeButton(mActivity.getString(R.string.autoscan_overwrite_negative), (d, w) -> {})
+                .setPositiveButton(mActivity.getString(R.string.autoscan_overwrite_positive), (d, w) -> overwritePresets18())
                 .show();
     }
 
@@ -603,7 +732,7 @@ public class ScanManager {
         for (int i = 0; i < MAX_RESULTS; i++) {
             if (i < mCapturedList.size()) {
                 StationAdapter.ScannedStation s = mCapturedList.get(i);
-                String name = (s.name != null && !s.name.equals("Buscando RDS...") && !s.name.equals("Esperando RDS..."))
+                String name = (s.name != null && !s.name.equals(rdsSearchingLabel()) && !s.name.equals(rdsWaitingLabel()))
                         ? s.name : "";
                 mActivity.mPresetManager.savePreset(band, i, s.frequency, name);
                 written++;
@@ -613,7 +742,7 @@ public class ScanManager {
             }
         }
         mActivity.refreshPresetButtons();
-        mActivity.showToast("Presets sobrescritos (" + written + " emisoras).");
+        mActivity.showToast(mActivity.getString(R.string.toast_presets_overwritten, written));
         try { if (mAutoScanDialog != null) mAutoScanDialog.dismiss(); } catch (Exception ignored) {}
     }
 
@@ -677,7 +806,7 @@ public class ScanManager {
             public void onRdsName(String name) {
                 mActivity.runOnUiThread(() -> {
                     if (!mCapturedList.isEmpty() && (mCapturedList.get(0).name == null
-                            || mCapturedList.get(0).name.equals("Buscando RDS..."))) {
+                            || mCapturedList.get(0).name.equals(rdsSearchingLabel()))) {
                         mCapturedList.get(0).name = name;
                         if (mStationAdapter != null)
                             mStationAdapter.notifyItemChanged(0);
@@ -723,5 +852,13 @@ public class ScanManager {
 
         dialog.show();
         mActivity.mEngine.seekUp();
+    }
+
+    private String rdsSearchingLabel() {
+        return mActivity.getString(R.string.scan_rds_searching);
+    }
+
+    private String rdsWaitingLabel() {
+        return mActivity.getString(R.string.selective_scan_waiting_rds);
     }
 }

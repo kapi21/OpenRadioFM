@@ -31,7 +31,7 @@
         <!-- SUBHEADER -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="ACCIONES DISPONIBLES"
+            android:text="@string/save_load_section_actions"
             android:textColor="#FFD600"
             android:textSize="14sp"
             android:fontFamily="sans-serif-medium"
@@ -82,7 +82,7 @@
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="Crear backup .fav en /RadioLogos"/>
+                        android:text="@string/save_load_save_desc_detail"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -125,7 +125,7 @@
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="Restaurar backup desde .fav"/>
+                        android:text="@string/save_load_load_desc_detail"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
@@ -133,7 +133,7 @@
         <!-- SUBHEADER DANGER ZONE -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="DANGER ZONE"
+            android:text="@string/save_load_section_danger"
             android:textColor="#FF1744"
             android:textSize="14sp"
             android:fontFamily="sans-serif-medium"
@@ -178,14 +178,14 @@
                         android:textColor="#FF1744"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:text="Delete All Favorites"
+                        android:text="@string/save_load_delete_all_title"
                         android:layout_marginBottom="2dp"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="Remove all saved stations"/>
+                        android:text="@string/save_load_delete_all_sub"/>
                 </LinearLayout>
             </LinearLayout>
 
@@ -221,14 +221,14 @@
                         android:textColor="#FF1744"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:text="Clear History"
+                        android:text="@string/save_load_clear_history_title"
                         android:layout_marginBottom="2dp"/>
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="Wipe recent listening history"/>
+                        android:text="@string/save_load_clear_history_sub"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

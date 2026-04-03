@@ -10,7 +10,7 @@
         android:id="@+id/tvAckTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Agradecimientos"
+        android:text="@string/ack_title"
         android:textColor="#00E676"
         android:textSize="22sp"
         android:textStyle="bold" />
@@ -19,7 +19,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="12dp"
-        android:text="Grupo telegram "
+        android:text="@string/ack_group_telegram"
         android:textColor="#DDDDDD"
         android:textSize="16sp" />
 
@@ -27,7 +27,7 @@
         android:id="@+id/tvRadioAndroidLink"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Radio Android España"
+        android:text="@string/ack_radio_android_espana"
         android:textColor="#4DA3FF"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -41,23 +41,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
-        android:text="(a sus admins y a sus usuarios testeadores por los aportes)"
+        android:text="@string/ack_note"
         android:textColor="#CCCCCC"
         android:textSize="14sp" />
 
     <TextView
         android:id="@+id/btnCloseAcknowledgements"
+        style="@style/DialogCloseButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
         android:layout_marginTop="18dp"
-        android:text="Cerrar"
-        android:textColor="#FFD600"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:padding="10dp"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:focusable="true" />
+        android:text="@string/close" />
 
 </LinearLayout>

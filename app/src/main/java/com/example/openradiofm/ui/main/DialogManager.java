@@ -11,11 +11,17 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
-import android.text.Html;
 import android.text.method.LinkMovementMethod;
+import android.graphics.drawable.ColorDrawable;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.core.text.HtmlCompat;
+
 import com.example.openradiofm.R;
 
 /**
@@ -50,12 +56,12 @@ public class DialogManager {
 
         builder.setView(input);
 
-        builder.setPositiveButton("Guardar", (dialog, which) -> {
+        builder.setPositiveButton(mActivity.getString(R.string.dialog_btn_save), (dialog, which) -> {
             String newName = input.getText().toString().trim();
             if (!newName.isEmpty()) {
                 // V16.4: Usar setCustomName (CUSTOM_) en vez de saveRdsName (RDS_)
                 mActivity.mRepository.setCustomName(currentFreq, newName);
-                mActivity.showToast("Nombre guardado: " + newName);
+                mActivity.showToast(mActivity.getString(R.string.toast_station_name_saved, newName));
 
                 // V16.4: Notificar al RDSManager para que el custom tenga prioridad
                 if (mActivity.mRdsManager != null) {
@@ -79,12 +85,12 @@ public class DialogManager {
             }
         });
 
-        builder.setNegativeButton("Cancelar", (dialog, which) -> dialog.cancel());
+        builder.setNegativeButton(mActivity.getString(R.string.cancel), (dialog, which) -> dialog.cancel());
 
-        builder.setNeutralButton("Restaurar Original", (dialog, which) -> {
+        builder.setNeutralButton(mActivity.getString(R.string.dialog_btn_restore_original), (dialog, which) -> {
             // V16.4: Limpiar nombre custom
             mActivity.mRepository.setCustomName(currentFreq, null);
-            mActivity.showToast("Nombre restaurado");
+            mActivity.showToast(mActivity.getString(R.string.toast_station_name_restored));
 
             // V16.4: Limpiar override en RDSManager
             if (mActivity.mRdsManager != null) {
@@ -190,17 +196,17 @@ public class DialogManager {
         TextView tvSupabaseStatus = dialog.findViewById(R.id.tvSupabaseStatus);
         if (tvSupabaseStatus != null) {
             tvSupabaseStatus.setVisibility(View.VISIBLE);
-            tvSupabaseStatus.setText("• Conectando...");
+            tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_connecting));
             tvSupabaseStatus.setTextColor(Color.parseColor("#888888"));
 
             mActivity.mRepository.getSupabaseSource().checkConnection(connected -> {
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed() || !dialog.isShowing()) return;
                     if (connected) {
-                        tvSupabaseStatus.setText("• Online");
+                        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_online));
                         tvSupabaseStatus.setTextColor(Color.parseColor("#44FF44")); // Verde
                     } else {
-                        tvSupabaseStatus.setText("• Offline");
+                        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_offline));
                         tvSupabaseStatus.setTextColor(Color.parseColor("#FF4444")); // Rojo
                     }
                 });
@@ -220,10 +226,10 @@ public class DialogManager {
             swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
                 if (checked) {
-                    mActivity.showToast("Logos Online: Activado (Requiere Internet)");
-                    mActivity.showToast("Se consultará la base de datos centralizada para buscar logos HD");
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_1));
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_2));
                 } else {
-                    mActivity.showToast("Logos Online: Desactivado");
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_off));
                 }
             });
         }
@@ -277,7 +283,8 @@ public class DialogManager {
             swReliefHd.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_relief_hd", checked).apply();
                 mActivity.applyReliefHd(checked);
-                mActivity.showToast(checked ? "Relieve HD: Activado" : "Relieve HD: Desactivado");
+                mActivity.showToast(checked ? mActivity.getString(R.string.toast_relief_hd_on)
+                        : mActivity.getString(R.string.toast_relief_hd_off));
             });
         }
 
@@ -292,7 +299,7 @@ public class DialogManager {
                     rowNightSchedule.setVisibility(checked ? View.VISIBLE : View.GONE);
                 if (checked) {
                     mActivity.checkAndApplyNightMode();
-                    mActivity.showToast("Modo Noche Automático: Activado");
+                    mActivity.showToast(mActivity.getString(R.string.toast_night_mode_auto_on));
                 }
             });
         }
@@ -356,7 +363,8 @@ public class DialogManager {
 
             swNightLogos.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_night_logos", checked).apply();
-                mActivity.showToast(checked ? "Teñir logos en modo noche" : "Logos sin tinte en modo noche");
+                mActivity.showToast(checked ? mActivity.getString(R.string.toast_night_logos_tint_on)
+                        : mActivity.getString(R.string.toast_night_logos_tint_off));
 
                 // Aplicar inmediatamente el cambio sobre el estado visual actual
                 if (mActivity.mNightModeManager != null) {
@@ -404,7 +412,8 @@ public class DialogManager {
             swCloudContrib.setChecked(mActivity.mPrefs.getBoolean("pref_cloud_contrib", true));
             swCloudContrib.setOnCheckedChangeListener((v, isChecked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_cloud_contrib", isChecked).apply();
-                mActivity.showStyledToast(isChecked ? "Contribución activada" : "Contribución desactivada");
+                mActivity.showStyledToast(isChecked ? mActivity.getString(R.string.toast_contrib_on)
+                        : mActivity.getString(R.string.toast_contrib_off));
             });
         }
 
@@ -529,7 +538,7 @@ public class DialogManager {
 
         cardTheme.setOnClickListener(v -> {
             if (mActivity.mPrefs.getBoolean("pref_night_mode_auto", false)) {
-                mActivity.showToast("Desactiva Modo Noche Automático para elegir skin manualmente");
+                mActivity.showToast(mActivity.getString(R.string.night_mode_manual_blocked));
                 return;
             }
             showThemeSelector(dialog, viewColorPreview, tvFontPreview);
@@ -562,22 +571,41 @@ public class DialogManager {
 
         AlertDialog dialog = builder.create();
 
+        View rootCard = dialogView.findViewById(R.id.grid_selector_root);
+        if (rootCard != null) {
+            try {
+                rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+            } catch (Exception ignored) {
+            }
+        }
+
         TextView tvTitle = dialogView.findViewById(R.id.tvSelectTitle);
-        if (tvTitle != null) tvTitle.setText(title);
+        if (tvTitle != null) {
+            tvTitle.setText(title);
+            try {
+                tvTitle.setTypeface(mActivity.getSystemTypeface());
+            } catch (Exception ignored) {
+            }
+        }
 
         android.widget.GridView gvOptions = dialogView.findViewById(R.id.gvOptions);
-        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelSelect);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelSelect);
 
         android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(mActivity, R.layout.item_language, options) {
             @Override
             public View getView(int position, View convertView, android.view.ViewGroup parent) {
                 TextView tv = (TextView) super.getView(position, convertView, parent);
+                try {
+                    tv.setTypeface(mActivity.getSystemTypeface());
+                } catch (Exception ignored) {
+                }
                 if (position == currentIndex) {
                     tv.setBackgroundResource(R.drawable.bg_glass_card_blue);
                     boolean isLight = (mActivity.mThemeManager != null
                             && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
                     tv.setTextColor(isLight ? Color.BLACK : Color.WHITE);
                 } else {
+                    tv.setBackgroundResource(R.drawable.bg_submenu_box);
                     boolean isLight = (mActivity.mThemeManager != null
                             && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
                     tv.setTextColor(Color.parseColor(isLight ? "#BB000000" : "#BBFFFFFF"));
@@ -600,11 +628,16 @@ public class DialogManager {
 
         Window window = dialog.getWindow();
         if (window != null) {
-            window.setDimAmount(0.8f);
+            window.setDimAmount(0.7f);
             window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
         }
 
         dialog.show();
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {
+        }
     }
 
     public void showThemeSelector(android.app.Dialog parentDialog, View colorPreview, TextView fontPreview) {
@@ -689,20 +722,6 @@ public class DialogManager {
             mActivity.showStyledToast(String.format(mActivity.getString(R.string.language_changed), selectedLangName));
             mActivity.recreate();
         });
-    }
-
-    private void applyPremiumListStyle(AlertDialog dialog) {
-        if (dialog == null)
-            return;
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setBackgroundDrawable(mActivity.getResources().getDrawable(R.drawable.bg_submenu_box));
-            window.setDimAmount(0.6f);
-        }
-
-        // V15.6: Aplicar fuente del sistema a la vista raíz del diálogo usando
-        // MainActivity
-        mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
     }
 
     public void showAboutDialog() {
@@ -805,11 +824,7 @@ public class DialogManager {
     }
 
     private void applyHtmlLink(TextView textView, String html) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-            textView.setText(Html.fromHtml(html, Html.FROM_HTML_MODE_LEGACY));
-        } else {
-            textView.setText(Html.fromHtml(html));
-        }
+        textView.setText(HtmlCompat.fromHtml(html, HtmlCompat.FROM_HTML_MODE_LEGACY));
         textView.setMovementMethod(LinkMovementMethod.getInstance());
     }
 
@@ -829,7 +844,7 @@ public class DialogManager {
 
         showGridSelector(mActivity.getString(R.string.radio_engine), options, currentIdx, which -> {
             mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
-            mActivity.showToast("Motor cambiado: " + options[which]);
+            mActivity.showToast(mActivity.getString(R.string.engine_changed, options[which]));
             mActivity.mServiceController.start();
         });
     }
@@ -843,7 +858,7 @@ public class DialogManager {
 
         showGridSelector(mActivity.getString(R.string.logo_mode_label), options, currentIdx, which -> {
             mActivity.mPrefs.edit().putInt("pref_logo_mode", which).apply();
-            mActivity.showToast("Modo de logo: " + options[which]);
+            mActivity.showToast(mActivity.getString(R.string.toast_logo_mode, options[which]));
             
             // V18.5: Aplicar cambio inmediatamente
             mActivity.applyLogoModePreference();
@@ -879,7 +894,7 @@ public class DialogManager {
 
         showGridSelector(mActivity.getString(R.string.logo_provider), options, currentIdx, which -> {
             mActivity.mPrefs.edit().putInt("pref_logo_provider", which).apply();
-            mActivity.showToast("Proveedor de logos: " + options[which]);
+            mActivity.showToast(mActivity.getString(R.string.toast_logo_provider, options[which]));
             // Reabrir ajustes para ver el cambio (opcional)
             showPremiumSettingsDialog();
         });
@@ -893,7 +908,7 @@ public class DialogManager {
         int currentIdx = mActivity.mPrefs.getInt("pref_steering_next_prev_mode", 0);
         showGridSelector(mActivity.getString(R.string.select_steering_mode), options, currentIdx, which -> {
             mActivity.mPrefs.edit().putInt("pref_steering_next_prev_mode", which).apply();
-            mActivity.showToast("Mandos volante NEXT/PREV: " + options[which]);
+            mActivity.showToast(mActivity.getString(R.string.toast_steering_mode, options[which]));
             showPremiumSettingsDialog();
         });
     }
@@ -946,16 +961,72 @@ public class DialogManager {
             displayNames[i] = String.format("%.2f MHz", f / 1000.0f);
         }
 
-        AlertDialog dialog = new AlertDialog.Builder(mActivity)
-                .setTitle(mActivity.getString(R.string.station_history))
-                .setItems(displayNames, (d, w) -> {
-                    if (mActivity.mEngine != null) {
-                        mActivity.mEngine.tune(Integer.parseInt(freqs[w]));
-                    }
-                }).create();
+        LayoutInflater inflater = LayoutInflater.from(mActivity);
+        View dialogView = inflater.inflate(R.layout.dialog_station_history, null);
 
-        applyPremiumListStyle(dialog);
+        View rootCard = dialogView.findViewById(R.id.station_history_dialog_root);
+        if (rootCard != null) {
+            try {
+                rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+            } catch (Exception ignored) {
+            }
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvStationHistoryTitle);
+        if (tvTitle != null) {
+            try {
+                tvTitle.setTypeface(mActivity.getSystemTypeface());
+            } catch (Exception ignored) {
+            }
+        }
+
+        ListView lv = dialogView.findViewById(R.id.lvStationHistory);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelStationHistory);
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(mActivity, R.layout.item_fav_file_row,
+                R.id.tvFavFileName, displayNames) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View v = super.getView(position, convertView, parent);
+                TextView tv = v.findViewById(R.id.tvFavFileName);
+                if (tv != null) {
+                    try {
+                        tv.setTypeface(mActivity.getSystemTypeface());
+                    } catch (Exception ignored) {
+                    }
+                }
+                return v;
+            }
+        };
+
+        AlertDialog dialog = new AlertDialog.Builder(mActivity).setView(dialogView).create();
+
+        if (lv != null) {
+            lv.setAdapter(adapter);
+            lv.setOnItemClickListener((parent, itemView, which, id) -> {
+                if (mActivity.mEngine != null) {
+                    mActivity.mEngine.tune(Integer.parseInt(freqs[which]));
+                }
+                dialog.dismiss();
+            });
+        }
+
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.7f);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+        }
+
         dialog.show();
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {
+        }
     }
 
     public void showSaveLoadFavoritesDialog() {
@@ -994,7 +1065,7 @@ public class DialogManager {
         dialog.findViewById(R.id.btnClearHistory).setOnClickListener(v -> {
             if (mActivity.mHistoryManager != null) {
                 mActivity.mHistoryManager.clearHistory();
-                mActivity.showToast("El historial ha sido borrado");
+                mActivity.showToast(mActivity.getString(R.string.toast_history_deleted_full));
             }
             dialog.dismiss();
         });
@@ -1027,7 +1098,7 @@ public class DialogManager {
                 public void onClick(View v) {
                     clicks++;
                     if (clicks >= 7) {
-                        mActivity.showToast("Easter Egg Activated!");
+                        mActivity.showToast(mActivity.getString(R.string.toast_easter_egg));
                         clicks = 0;
                     }
                 }

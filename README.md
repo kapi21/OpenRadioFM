@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.0.15 (beta, en curso):** widget de escritorio en launchers estándar; AutoScan lento con confirmación al estilo de los menús premium, barrido FM desde 87,5 MHz y parada en 108 MHz; refuerzo Jancar 8227L vía `FmService` OEM; ajuste de logo en layout V3. La beta sigue abierta a afinaciones.
+**5.0.15 (beta, en curso — aún no cerrada):** widget de escritorio en launchers estándar; AutoScan lento con confirmación al estilo de los menús premium, barrido FM desde 87,5 MHz y parada en 108 MHz; refuerzo Jancar 8227L vía `FmService` OEM; ajuste de logo en layout V3; **i18n** (toasts y textos con paridad de claves en locales) y **diálogos unificados** (skin, tipografía, listas: selector en cuadrícula, cargar `.fav`, historial de emisoras). La beta sigue abierta a afinaciones antes del release final.
 
 ---
 

@@ -1,39 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="500dp"
     android:layout_height="wrap_content"
+    android:background="#E6121212"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#E6121212">
+    android:padding="16dp">
 
-    <TextView
-        android:id="@+id/tvSelectTitle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textColor="#FFFFFF"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:paddingBottom="16dp"
-        android:gravity="center_horizontal" />
+    <LinearLayout
+        android:id="@+id/grid_selector_root"
+        style="@style/DialogContainerStyle"
+        android:clickable="false"
+        android:focusable="false">
 
-    <GridView
-        android:id="@+id/gvOptions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:numColumns="2"
-        android:verticalSpacing="12dp"
-        android:horizontalSpacing="12dp"
-        android:stretchMode="columnWidth"
-        android:gravity="center"
-        android:minHeight="200dp" />
+        <TextView
+            android:id="@+id/tvSelectTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center_horizontal"
+            android:paddingBottom="12dp"
+            android:textColor="#00E676"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            tools:text="@string/select_language" />
 
-    <Button
-        android:id="@+id/btnCancelSelect"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginTop="16dp"
-        android:text="@string/cancel"
-        android:backgroundTint="#33FFFFFF"
-        android:textColor="#FFFFFF" />
+        <LinearLayout
+            style="@style/DialogBoxStyle"
+            android:clickable="false"
+            android:focusable="false">
+
+            <GridView
+                android:id="@+id/gvOptions"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:maxHeight="440dp"
+                android:gravity="center"
+                android:horizontalSpacing="10dp"
+                android:minHeight="200dp"
+                android:numColumns="2"
+                android:stretchMode="columnWidth"
+                android:verticalSpacing="10dp"
+                tools:listitem="@layout/item_language" />
+        </LinearLayout>
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCancelSelect"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="@drawable/bg_submenu_box"
+            android:minHeight="52dp"
+            android:text="@string/cancel"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:backgroundTint="@null" />
+    </LinearLayout>
 </LinearLayout>

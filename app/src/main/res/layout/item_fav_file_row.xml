@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/tvLanguageItem"
+    android:id="@+id/tvFavFileName"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@drawable/bg_submenu_box"
-    android:gravity="center"
-    android:minHeight="52dp"
+    android:gravity="center_vertical"
+    android:minHeight="48dp"
     android:padding="12dp"
-    android:textColor="#BBFFFFFF"
+    android:textColor="@color/white"
     android:textSize="15sp"
     android:textStyle="bold" />

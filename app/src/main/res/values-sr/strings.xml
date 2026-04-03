@@ -2,7 +2,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
     <string name="mt8163_stream_stopped_restart_hint">Striming je zaustavljen. Ako FM ne radi kako treba, potpuno zatvorite OpenRadioFM i ponovo ga otvorite.</string>
-    
     <string name="premium_customization">Meni opcija</string>
     <string name="theme_colors">Boje Teme</string>
     <string name="typography">Tipografija</string>
@@ -15,21 +14,15 @@
     <string name="select_font">🔤 Izaberi Tipografiju</string>
     <string name="font_applied">Font primenjen</string>
     <string name="bg_mode_updated">Režim pozadine ažuriran</string>
-    
-    
     <string name="bg_pure_black">Potpuno Crna</string>
     <string name="bg_fixed_image">Slika background.png</string>
     <string name="bg_dynamic_logo">Logo Stanice (Dinamički)</string>
-
-    
     <string name="font_default">Podrazumevano (Sistem)</string>
     <string name="font_bebas">Robotski (Bebas)</string>
     <string name="font_digital">Digitalni (LED)</string>
     <string name="font_modern">Moderni (Inter)</string>
     <string name="font_orbitron">Futuristički (Orbitron)</string>
     <string name="font_formula1">Trkački (Formula 1)</string>
-    
-    
     <string name="app_options">Opcije Aplikacije</string>
     <string name="night_mode_auto">Automatski Noćni Režim</string>
     <string name="relief_hd">HD Reljef</string>
@@ -58,8 +51,6 @@
     <string name="steering_mode_seek">Pretraga (stanice)</string>
     <string name="steering_mode_preset">Preset (memorije)</string>
     <string name="select_steering_mode">Izaberite radnju NEXT/PREV</string>
-    
-    
     <string name="night_mode_enabled">✅ Automatski noćni režim omogućen</string>
     <string name="night_mode_disabled">❌ Automatski noćni režim onemogućen</string>
     <string name="history_enabled">✅ Istorija stanica omogućena</string>
@@ -73,8 +64,6 @@
     <string name="auto_hide_controls">Automatsko sakrivanje kontrola</string>
     <string name="auto_hide_enabled">✅ Automatsko sakrivanje omogućeno</string>
     <string name="auto_hide_disabled">❌ Automatsko sakrivanje onemogućeno</string>
-    
-    
     <string name="save_load_favorites">💾 Sačuvaj/Učitaj Omiljeno</string>
     <string name="save_favorites">💾 Sačuvaj Omiljeno</string>
     <string name="load_favorites">📂 Učitaj Omiljeno</string>
@@ -86,15 +75,9 @@
     <string name="error_loading_favorites">❌ Greška pri učitavanju omiljenih: %s</string>
     <string name="folder_not_found">❌ Fascikla RadioLogos nije pronađena</string>
     <string name="no_favorites_files">❌ Nisu pronađene datoteke omiljenih</string>
-    
-    
     <string name="error_opening_settings">Neuspešno otvaranje Podešavanja</string>
-    
-    
     <string name="history_empty">Istorija je prazna</string>
     <string name="station_history">📜 Istorija Stanica</string>
-    
-    
     <string name="app_language">🌐 Jezik Aplikacije</string>
     <string name="select_language">Izaberi Jezik</string>
     <string name="language_spanish">Španski</string>
@@ -111,8 +94,6 @@
     <string name="language_changed">✅ Jezik promenjen na %s</string>
     <string name="about_openradio">ℹ️ O OpenRadioFM</string>
     <string name="touch_to_change">Dodirnite da biste promenili</string>
-
-    
     <string name="hardware_settings">⚙️ Hardverska Podešavanja</string>
     <string name="enable_am_band">Omogući AM Opseg</string>
     <string name="radio_engine">⚙️ Radio Motor</string>
@@ -128,14 +109,10 @@
     <string name="am_band_enabled">✅ AM opseg omogućen</string>
     <string name="am_band_disabled">❌ AM opseg onemogućen</string>
     <string name="engine_changed">✅ Radio motor promenjen u %s</string>
-
-    
     <string name="night_schedule">Raspored Noćnog Režima</string>
     <string name="night_start">Početak</string>
     <string name="night_end">Završetak</string>
     <string name="night_schedule_updated">✅ Raspored ažuriran: %1$s - %2$s</string>
-
-    
     <string name="pty_none">Nema PTY</string>
     <string name="pty_news">Vesti</string>
     <string name="pty_current_affairs">Aktuelnosti</string>
@@ -168,16 +145,35 @@
     <string name="pty_documentary">Dokumentarni program</string>
     <string name="pty_alarm_test">Test alarma</string>
     <string name="pty_alarm">Alarm</string>
-
-    
     <string name="logo_provider">📡 Добављач логотипа</string>
     <string name="provider_supabase">Supabase (HD заједница)</string>
     <string name="provider_radiobrowser">Radio-Browser (Резерва)</string>
     <string name="provider_both">Kombinovano (Supabase &gt; Web)</string>
     <string name="contrib_cloud">Doprinesi zajednici (HD logotipi)</string>
     <string name="contrib_cloud_desc">Automatski šalji frekvenciju i PI kod lokalnih stanica radi poboljšanja globalne baze podataka.</string>
-<string name="status_bar_v2">Prikaži statusnu traku</string>
-<string name="status_bar_enabled">✅ Статусна трака омогућена</string><string name="status_bar_disabled">❌ Статусна трака онемогућена</string><string name="edit_station_name">Уреди име станице</string><string name="frequency_label">Фреквенција: %1$s MHz</string><string name="searching_next">Тражење следеће...</string><string name="scanning">Скенирање...</string><string name="scan_completed">Скенирање завршено</string><string name="identifying_rds">Идентификација станице (RDS)...</string><string name="version">Верзија %1$s</string><string name="eng_dev_autoscan_toggle">AutoScan режим (дугме за скенирање на главном интерфејсу)</string><string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string><string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string><string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string><string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string><string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string><string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string><string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string><string name="favorites_reset_complete">Омиљено успешно ресетовано</string><string name="history_cleared">Историја обрисана</string><string name="my_favorites">Моје омиљено</string>    <string name="logo_mode_label">🏎️ Režim Gornjeg Logotipa</string>
+    <string name="status_bar_v2">Prikaži statusnu traku</string>
+    <string name="status_bar_enabled">✅ Статусна трака омогућена</string>
+    <string name="status_bar_disabled">❌ Статусна трака онемогућена</string>
+    <string name="edit_station_name">Уреди име станице</string>
+    <string name="frequency_label">Фреквенција: %1$s MHz</string>
+    <string name="searching_next">Тражење следеће...</string>
+    <string name="scanning">Скенирање...</string>
+    <string name="scan_completed">Скенирање завршено</string>
+    <string name="identifying_rds">Идентификација станице (RDS)...</string>
+    <string name="version">Верзија %1$s</string>
+    <string name="eng_dev_autoscan_toggle">AutoScan режим (дугме за скенирање на главном интерфејсу)</string>
+    <string name="eng_dev_autoscan_threshold_label">AutoScan без RDS: мин. праг RSSI или SNR (0–15)</string>
+    <string name="radio_engine_label">⚙ РАДИО МОТОР : %1$s</string>
+    <string name="freq_no_service">FREQ: НЕМА_СЕРВИСА\nBAND: ---\nFLAGS: ---</string>
+    <string name="freq_error_read">FREQ: ГРЕШКА_ЧИТАЊА\nBAND: ---\n%1$s</string>
+    <string name="sqi_no_service">SQI_INDEX.....: НЕМА_СЕРВИСА</string>
+    <string name="sqi_error_read">SQI_INDEX.....: ГРЕШКА_ЧИТАЊА</string>
+    <string name="af_list_scanning">AF_LIST.......: [СКЕНИРАЊЕ]</string>
+    <string name="chipset_mtk">DETECTED_CHIPSET..: MTK8163_NATIVE</string>
+    <string name="favorites_reset_complete">Омиљено успешно ресетовано</string>
+    <string name="history_cleared">Историја обрисана</string>
+    <string name="my_favorites">Моје омиљено</string>
+    <string name="logo_mode_label">🏎️ Režim Gornjeg Logotipa</string>
     <string name="logo_mode_car">Logo Automobila</string>
     <string name="logo_mode_clock">Digitalni Sat</string>
 
@@ -198,14 +194,116 @@
     <string name="category_app_options">Opcije aplikacije</string>
     <string name="category_premium">Premium podešavanja</string>
     <string name="night_mode_logos">Noćni režim za logotipe</string>
-
     <string name="widget_description">Frekvencija, RDS i memorije bez otvaranja aplikacije</string>
     <string name="widget_cd_open_app">Otvori OpenRadioFM</string>
     <string name="widget_prev_preset">Prethodna memorija</string>
     <string name="widget_next_preset">Sledeća memorija</string>
-
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">PREBRISIVANJE MEMORIJA</string>
     <string name="autoscan_confirm_message">Ovaj AutoScan briše i ponovo popunjava memorije 1–18 trenutnog opsega otkrivenim stanicama.\n\nPokrenuti skeniranje?</string>
     <string name="autoscan_confirm_start">Pokreni skeniranje</string>
+    <!-- About / Credits -->
+    <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
+    <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
+    <string name="about_icons_by">Icons by Icons8</string>
+    <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>
+
+    <!-- Acknowledgements / QR -->
+    <string name="ack_title">Zahvalnice</string>
+    <string name="ack_group_telegram">Telegram grupa</string>
+    <string name="ack_radio_android_espana">Radio Android España</string>
+    <string name="ack_note">(hvala adminima i test korisnicima na doprinosima)</string>
+    <string name="qr_radio_android_title">Radio Android España</string>
+    <string name="qr_radio_android_cd">QR Radio Android España</string>
+
+    <!-- AutoScan UI -->
+    <string name="autoscan_scanning_title">SKENIRANJE STANICA...</string>
+    <string name="autoscan_results_title">AUTOSCAN REZULTATI</string>
+    <string name="autoscan_overwrite_button">PREPIŠI PRESETE</string>
+    <string name="autoscan_saved_to_preset">Sačuvano u preset %1$d: %2$s</string>
+    <string name="autoscan_no_valid_stations">Nisu pronađene validne stanice.</string>
+    <string name="autoscan_overwrite_title">Prepiši presete</string>
+    <string name="autoscan_overwrite_message">Da li želiš da prepišeš presete 1-18 pronađenim stanicama? Ovo će zameniti trenutne presete.</string>
+    <string name="autoscan_overwrite_negative">OTKAŽI</string>
+    <string name="autoscan_overwrite_positive">DA, PREPIŠI</string>
+
+    <!-- Supabase connection indicator -->
+    <string name="supabase_status_connecting">• Povezivanje...</string>
+    <string name="supabase_status_online">• Online</string>
+    <string name="supabase_status_offline">• Offline</string>
+    <string name="save_load_section_actions">Available actions</string>
+    <string name="save_load_save_desc_detail">Create .fav backup in /RadioLogos</string>
+    <string name="save_load_load_desc_detail">Restore backup from .fav</string>
+    <string name="save_load_section_danger">Danger zone</string>
+    <string name="save_load_delete_all_title">Delete all favorites</string>
+    <string name="save_load_delete_all_sub">Remove all saved stations</string>
+    <string name="save_load_clear_history_title">Clear history</string>
+    <string name="save_load_clear_history_sub">Clear recent listening history</string>
+    <string name="credits_developed_by">Developed by Jimmy80</string>
+    <string name="btn_ok">OK</string>
+    <string name="selective_scan_title">Skeniranje stanica…</string>
+    <string name="dialog_btn_save">Sačuvaj</string>
+    <string name="dialog_btn_restore_original">Vrati original</string>
+    <string name="scan_rds_searching">Traženje RDS…</string>
+
+        <string name="scan_item_save_to">Sačuvaj u:</string>
+    <string name="selective_scan_freq_placeholder">---.- MHz</string>
+    <string name="selective_scan_waiting_rds">Waiting for RDS…</string>
+    <string name="selective_scan_btn_finish">Finish</string>
+    <string name="selective_scan_btn_next">Next</string>
+
+    <string name="toast_station_name_saved">Name saved: %1$s</string>
+    <string name="toast_station_name_restored">Name restored</string>
+    <string name="toast_logos_online_on_1">Online logos: on (Internet required)</string>
+    <string name="toast_logos_online_on_2">The central database will be queried for HD logos</string>
+    <string name="toast_logos_online_off">Online logos: off</string>
+    <string name="toast_relief_hd_on">HD relief: on</string>
+    <string name="toast_relief_hd_off">HD relief: off</string>
+    <string name="toast_night_mode_auto_on">Automatic night mode: on</string>
+    <string name="toast_night_logos_tint_on">Tint logos in night mode</string>
+    <string name="toast_night_logos_tint_off">Logos without tint in night mode</string>
+    <string name="toast_contrib_on">Community contribution enabled</string>
+    <string name="toast_contrib_off">Community contribution disabled</string>
+    <string name="toast_logo_mode">Logo mode: %1$s</string>
+    <string name="toast_logo_provider">Logo provider: %1$s</string>
+    <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
+    <string name="toast_skin_colon">Skin: %1$s</string>
+    <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="toast_history_deleted_full">History has been cleared</string>
+    <string name="toast_easter_egg">Easter egg activated!</string>
+
+    <string name="toast_no_other_favorites">No other saved favorites</string>
+    <string name="toast_returning_fm">Returning to FM radio…</string>
+    <string name="toast_stream_searching">Looking for streaming link…</string>
+    <string name="toast_stream_starting">Starting online radio…</string>
+    <string name="toast_stream_unavailable">Streaming not available for this station</string>
+    <string name="toast_station_load_error">Error loading station data</string>
+    <string name="toast_station_cache_sync">Station cache cleared. Syncing…</string>
+    <string name="toast_hardware_colon">Hardware: %1$s</string>
+    <string name="toast_app_not_installed">App not installed: %1$s</string>
+    <string name="toast_permissions_granted">Permissions granted</string>
+    <string name="toast_storage_permission_needed">Storage permission is required to save favorites.</string>
+    <string name="toast_phone_mute_on_call">Calls: radio will mute automatically</string>
+    <string name="toast_phone_no_permission_fm">Without phone permission, FM may keep playing during calls</string>
+    <string name="toast_layout_v3">Layout: V3 (horizontal)</string>
+    <string name="toast_layout_simple">Layout: simple (minimal)</string>
+    <string name="toast_layout_v2">Layout: V2 (vertical)</string>
+
+    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
+    <string name="toast_radio_engine_not_started">Radio engine not started</string>
+    <string name="toast_no_gps_app">No maps/GPS app found</string>
+    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+
+    <string name="toast_autoscan_stopped">AutoScan stopped</string>
+    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
+    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+
+    <string name="toast_back_standard_layout">Returning to standard mode…</string>
+    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
+    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
+    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
 </resources>

@@ -1,6 +1,7 @@
 package com.example.openradiofm.ui.main;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -543,7 +544,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             Log.d(TAG, "Saltando a SIGUIENTE favorito (Secuencial): " + nextFreq);
             gotoFreq(nextFreq);
         } else {
-            showToast("No hay otros favoritos guardados");
+            showToast(getString(R.string.toast_no_other_favorites));
         }
     }
 
@@ -563,7 +564,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             Log.d(TAG, "Saltando a ANTERIOR favorito (Secuencial): " + prevFreq);
             gotoFreq(prevFreq);
         } else {
-            showToast("No hay otros favoritos guardados");
+            showToast(getString(R.string.toast_no_other_favorites));
         }
     }
 
@@ -887,7 +888,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 // V21.4: Permitir siempre detener el stream si ya está sonando, independientemente de si la radio nativa murió (freq <= 0)
                 if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
                     mOnlineStreamManager.stopStream();
-                    showToast("Volviendo a Radio FM...");
+                    showToast(getString(R.string.toast_returning_fm));
                     return;
                 }
 
@@ -903,7 +904,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         if (url == null || url.isEmpty()) {
                             runOnUiThread(() -> {
                                 if (!isFinishing()) {
-                                    showToast("Buscando enlace de streaming…");
+                                    showToast(getString(R.string.toast_stream_searching));
                                 }
                             });
                             url = mRepository.resolveStreamUrlForFrequency(freq);
@@ -913,15 +914,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             if (isFinishing() || isDestroyed()) return;
                             if (streamUrl != null && !streamUrl.isEmpty()) {
                                 mOnlineStreamManager.startStream(streamUrl);
-                                showToast("Iniciando Radio Online...");
+                                showToast(getString(R.string.toast_stream_starting));
                             } else {
-                                showToast("Streaming no disponible para esta emisora");
+                                showToast(getString(R.string.toast_stream_unavailable));
                             }
                         });
                     } catch (Exception e) {
                         Log.e(TAG, "Streaming: getStationInfo falló", e);
                         runOnUiThread(() -> {
-                            if (!isFinishing()) { showToast("Error al cargar datos de emisora"); }
+                            if (!isFinishing()) { showToast(getString(R.string.toast_station_load_error)); }
                         });
                     }
                 }, "OpenRadioFM-streamMeta").start();
@@ -931,7 +932,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             ivDataActivity.setOnLongClickListener(v -> {
                 int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
                 if (freq > 0) {
-                    showToast("Caché de emisora borrada. Sincronizando...");
+                    showToast(getString(R.string.toast_station_cache_sync));
                     mRepository.clearCacheForFrequency(freq);
                     
                     // Asegurar que forzamos también la recarga visual deteniendo el posible stream actual
@@ -1375,7 +1376,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 runOnUiThread(() -> {
                     if (isFinishing() || isDestroyed()) return;
                     if (mEngine != null) {
-                        showToast("Hardware: " + mEngine.getEngineName());
+                        showToast(getString(R.string.toast_hardware_colon, mEngine.getEngineName()));
                         refreshPresetsCache();
                         refreshPresetButtons();
                         refreshRadioStatus();
@@ -1786,7 +1787,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             ivCarLogo.setOnClickListener(v -> {
                 com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
                 applySkin(next);
-                showToast("Skin: " + next.displayName);
+                showToast(getString(R.string.toast_skin_colon, next.displayName));
             });
             ivCarLogo.setOnLongClickListener(v -> {
                 if (mDialogManager != null) mDialogManager.showHistoryDialog();
@@ -1944,7 +1945,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         try {
             android.content.SharedPreferences p = mPrefs != null ? mPrefs
                     : getSharedPreferences("RadioPresets", Context.MODE_PRIVATE);
-            on = p.getBoolean(DevAutoscanToggleHelper.PREF_DEV_AUTOSCAN_ENABLED, false);
+            on = p.getBoolean(DevAutoscanToggleHelper.PREF_DEV_AUTOSCAN_ENABLED,
+                    DevAutoscanToggleHelper.DEFAULT_DEV_AUTOSCAN_ENABLED);
         } catch (Exception ignored) {}
         btn.setAlpha(on ? 1f : 0.45f);
     }
@@ -2218,7 +2220,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             ivMainLogo.setOnClickListener(v -> {
                 com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
                 applySkin(next);
-                showToast("Skin: " + next.displayName);
+                showToast(getString(R.string.toast_skin_colon, next.displayName));
             });
 
             // Long click: Modo Noche (toggle)
@@ -2234,7 +2236,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             tvDigitalClock.setOnClickListener(v -> {
                 com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
                 applySkin(next);
-                showToast("Skin: " + next.displayName);
+                showToast(getString(R.string.toast_skin_colon, next.displayName));
             });
             // Long click: Modo Noche (toggle)
             tvDigitalClock.setOnLongClickListener(v -> {
@@ -2250,7 +2252,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 ivCarLogo.setOnClickListener(v -> {
                     com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
                     applySkin(next);
-                    showToast("Skin: " + next.displayName);
+                    showToast(getString(R.string.toast_skin_colon, next.displayName));
                 });
                 ivCarLogo.setOnLongClickListener(v -> {
                     toggleNightMode();
@@ -2288,7 +2290,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 }
                 mThemeManager.setSkin(prev);
                 applySkin(prev);
-                showToast("Skin: " + prev.displayName);
+                showToast(getString(R.string.toast_skin_colon, prev.displayName));
             } else {
                 // Recordar el skin persistido (no el active) para restauración consistente
                 com.example.openradiofm.ui.theme.ThemeManager.Skin current = mThemeManager.getCurrentSkin();
@@ -2299,7 +2301,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 }
                 mThemeManager.setSkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
                 applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-                showToast("Skin: Night Mode");
+                showToast(getString(R.string.toast_skin_night_mode));
             }
         } catch (Exception ignored) {}
     }
@@ -2466,7 +2468,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         Drawable relief = null;
         if (enabled) {
             try {
-                relief = getResources().getDrawable(R.drawable.fg_logo_relief);
+                relief = ContextCompat.getDrawable(this, R.drawable.fg_logo_relief);
             } catch (Exception ignored) {
                 // Si el drawable no está disponible por algún motivo, no romper UI.
                 relief = null;
@@ -3067,7 +3069,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (intent != null) {
             startActivity(intent);
         } else {
-            showToast("App no instalada: " + packageName);
+            showToast(getString(R.string.toast_app_not_installed, packageName));
         }
     }
 
@@ -3233,85 +3235,6 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     }
 
     /**
-     * V4.0: Aplica el idioma seleccionado por el usuario.
-     * Ya no necesitamos actualizar Resources manualmente aquí,
-     * MyContextWrapper lo hace en attachBaseContext al recrear.
-     */
-    private void setLocale(String languageCode) {
-        mPrefs.edit().putString("app_language", languageCode).apply();
-    }
-
-    /**
-     * V4.0: Muestra diálogo para seleccionar idioma
-     */
-    private void showLanguageSelector() {
-        String[] languages = {
-                getString(R.string.language_spanish),
-                getString(R.string.language_english),
-                getString(R.string.language_russian),
-                getString(R.string.language_romanian),
-                getString(R.string.language_ukrainian),
-                getString(R.string.language_serbian),
-                getString(R.string.language_french),
-                getString(R.string.language_chinese),
-                getString(R.string.language_japanese),
-                getString(R.string.language_hungarian)
-        };
-
-        String[] languageCodes = { "es", "en", "ru", "ro", "uk", "sr", "fr", "zh", "ja", "hu" };
-        
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        android.view.LayoutInflater inflater = getLayoutInflater();
-        android.view.View dialogView = inflater.inflate(R.layout.dialog_language_selector, null);
-        builder.setView(dialogView);
-
-        android.app.AlertDialog dialog = builder.create();
-        
-        android.widget.GridView gvLanguages = dialogView.findViewById(R.id.gvOptions);
-        android.widget.Button btnCancel = dialogView.findViewById(R.id.btnCancelSelect);
-
-        // Adaptador simple para el GridView
-        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(this, R.layout.item_language, languages) {
-            @Override
-            public android.view.View getView(int position, android.view.View convertView, android.view.ViewGroup parent) {
-                TextView tv = (TextView) super.getView(position, convertView, parent);
-                String currentLang = mPrefs.getString("app_language", "es");
-                if (languageCodes[position].equals(currentLang)) {
-                    tv.setBackgroundResource(R.drawable.bg_glass_card_blue); // Resaltar actual
-                    boolean isLight = (mThemeManager != null
-                            && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
-                    tv.setTextColor(isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
-                }
-                return tv;
-            }
-        };
-
-        gvLanguages.setAdapter(adapter);
-        gvLanguages.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedLang = languageCodes[position];
-            String selectedLangName = languages[position];
-
-            setLocale(selectedLang);
-            showStyledToast(String.format(getString(R.string.language_changed), selectedLangName));
-
-            dialog.dismiss();
-            recreate();
-        });
-
-        if (btnCancel != null) {
-            btnCancel.setOnClickListener(v -> dialog.dismiss());
-        }
-
-        android.view.Window window = dialog.getWindow();
-        if (window != null) {
-            window.setDimAmount(0.8f);
-            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT));
-        }
-        
-        dialog.show();
-    }
-
-    /**
      * V4.0: Actualiza el texto del idioma actual en el menú Premium
      */
     public void updateCurrentLanguageText(TextView tvCurrentLanguage) {
@@ -3408,20 +3331,20 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == 1001) {
             if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                showToast("Permisos concedidos");
+                showToast(getString(R.string.toast_permissions_granted));
                 if (mDialogManager != null)
                     mDialogManager.showSaveLoadFavoritesDialog();
             } else {
-                showToast("Se requieren permisos de almacenamiento para guardar favoritos.");
+                showToast(getString(R.string.toast_storage_permission_needed));
             }
         } else if (requestCode == REQ_READ_PHONE_STATE_K706) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (mEngine instanceof K706Engine) {
                     ((K706Engine) mEngine).registerPhoneStateListenerIfPermitted();
                 }
-                showToast("Llamadas: la radio se silenciará automáticamente");
+                showToast(getString(R.string.toast_phone_mute_on_call));
             } else {
-                showToast("Sin permiso de teléfono la FM puede seguir sonando durante llamadas");
+                showToast(getString(R.string.toast_phone_no_permission_fm));
             }
         }
     }
@@ -3860,13 +3783,13 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public void toggleLayoutMode() {
         if (!mIsV3 && !mIsSimpleLayout) { // Estamos en V2 -> Ir a V3
             mPrefs.edit().putBoolean("pref_layout_v3", true).putBoolean("pref_layout_simple", false).apply();
-            showToast("Layout: V3 (Horizontal)");
+            showToast(getString(R.string.toast_layout_v3));
         } else if (mIsV3) { // Estamos en V3 -> Ir a Simple
             mPrefs.edit().putBoolean("pref_layout_v3", false).putBoolean("pref_layout_simple", true).apply();
-            showToast("Layout: Simple (Minimalista)");
+            showToast(getString(R.string.toast_layout_simple));
         } else { // Estamos en Simple -> Ir a V2
             mPrefs.edit().putBoolean("pref_layout_v3", false).putBoolean("pref_layout_simple", false).apply();
-            showToast("Layout: V2 (Vertical)");
+            showToast(getString(R.string.toast_layout_v2));
         }
         
         // V20.1: Pequeña pausa de seguridad antes de recrear para permitir que las SharedPreferences persistan 

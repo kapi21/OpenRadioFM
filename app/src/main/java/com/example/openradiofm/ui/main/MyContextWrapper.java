@@ -38,6 +38,7 @@ public class MyContextWrapper extends ContextWrapper {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             context = context.createConfigurationContext(config);
         } else {
+            //noinspection deprecation
             context.getResources().updateConfiguration(config, context.getResources().getDisplayMetrics());
         }
         
