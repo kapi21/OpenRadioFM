@@ -12,7 +12,7 @@ def main():
     import shutil
 
     shutil.copy2(
-        ROOT / "_ASSETS" / "v5_extracted.png",
+        ROOT / "build" / "tooling" / "v5_extracted.png",
         ROOT / "app" / "src" / "main" / "res" / "drawable-nodpi" / "ic_app_logo.png",
     )
     print("OK: drawable-nodpi/ic_app_logo.png actualizado")

@@ -5,7 +5,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SVG = ROOT / "v5.svg"
-OUT_PNG = ROOT / "_ASSETS" / "v5_extracted.png"
+OUT_PNG = ROOT / "build" / "tooling" / "v5_extracted.png"
 
 
 def main():

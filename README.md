@@ -18,8 +18,8 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
   <img src="docs/img/screenshot2.png" width="45%" alt="Layout V3 (v4.7)">
   <br><br>
   <p align="center"><b>【 NUEVO LAYOUT V3 - Stability Beta 5.0 】</b></p>
-  <img src="_ASSETS/v18_layout1.png" width="45%" alt="Simple Layout Night Mode">
-  <img src="_ASSETS/v18_layout2.png" width="45%" alt="Standard Layout Premium">
+  <img src="docs/img/v18_layout1.png" width="45%" alt="Simple Layout Night Mode">
+  <img src="docs/img/v18_layout2.png" width="45%" alt="Standard Layout Premium">
   <br><br>
   <p align="center"><b>【 PRESENTACIÓN V5 - ESTABILIDAD BETA 】</b></p>
   <img src="docs/img/v5 español.png" width="90%" alt="Presentación V5">

@@ -97,7 +97,7 @@ public class MTK8259_8667RadioManager {
      * Referencia APK OpenRadioFM v5.0 (Stability Beta): {@code setOnlineStreamingActive} en el engine
      * era no-op; solo {@code switchToAndroidAudio()} llamaba a {@code CloseRadioCh()} (sin
      * {@code EnterMode}). Si Csaba/OEM reporta regresión con esta ruta, valorar fallback solo
-     * {@code CloseRadioCh()} o pref OEM (comparar con smali en {@code _ASSETS/v5_apktool}).
+     * {@code CloseRadioCh()} o pref OEM (comparar con smali de una descompilación local, no versionada).
      */
     public void switchMixerToAndroidAudio() {
         try {

@@ -4,7 +4,8 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / "_ASSETS" / "v5_extracted.png"
+# Salida intermedia de extract_v5_png.py (carpeta ignorada por git).
+SRC = ROOT / "build" / "tooling" / "v5_extracted.png"
 RES = ROOT / "app" / "src" / "main" / "res"
 
 # Misma resolución en px que xxxhdpi (192×192) en todas las carpetas mipmap:
