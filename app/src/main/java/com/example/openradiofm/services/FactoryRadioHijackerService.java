@@ -10,6 +10,7 @@ import android.view.accessibility.AccessibilityEvent;
 
 import com.example.openradiofm.service.RadioMediaService;
 import com.example.openradiofm.ui.main.MainActivity;
+import com.example.openradiofm.util.HiHackBootReminder;
 
 /**
  * Servicio de Accesibilidad para "secuestrar" el Intent de la radio de fábrica (K706 etc).
@@ -90,9 +91,9 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     }
 
     /**
-     * K706/Topway: con el launcher al frente las teclas MEDIA van como {@code KeyEvent} al launcher,
-     * no como {@code ACTION_MEDIA_BUTTON} a {@link RadioMediaService}. Reenviamos solo cuando
-     * {@link MainActivity} no está en ciclo started (app en segundo plano).
+     * K706 / QS6 (NWD): con el launcher al frente las teclas MEDIA suelen ir como {@code KeyEvent}
+     * al foco, no como {@code ACTION_MEDIA_BUTTON} a {@link RadioMediaService}. Reenviamos solo cuando
+     * {@link MainActivity} no está en ciclo started (app en segundo plano) y el motor es K706 o QS6.
      */
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
@@ -101,7 +102,7 @@ public class FactoryRadioHijackerService extends AccessibilityService {
             if (MainActivity.sMainActivityStarted) {
                 return false;
             }
-            if (!MainActivity.sK706WheelBridgeActive) {
+            if (!MainActivity.sWheelMediaBridgeActive) {
                 return false;
             }
             SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
@@ -142,6 +143,7 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     @Override
     protected void onServiceConnected() {
         super.onServiceConnected();
+        HiHackBootReminder.persistEverEnabled(this);
         Log.i(TAG, "FactoryRadioHijackerService conectado y monitorizando");
     }
 }

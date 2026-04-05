@@ -182,12 +182,17 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>
     <string name="a11y_hihack_disabled">Dezactivat</string>
     <string name="a11y_hihack_open_settings">Atinge pentru a deschide setările de accesibilitate</string>
+    <string name="a11y_hihack_boot_reminder_switch">Anunță dacă HiHack se oprește după repornire</string>
+    <string name="a11y_hihack_reboot_dialog_title">HiHack dezactivat</string>
+    <string name="a11y_hihack_reboot_dialog_message">Pe multe unități Android, serviciile de accesibilitate se dezactivează după o repornire completă. Reactivează HiHack (OpenRadioFM) din Setări → Accesibilitate pentru butonul RADIO și volan.</string>
+    <string name="a11y_hihack_reboot_dialog_open_settings">Deschide accesibilitatea</string>
+    <string name="a11y_hihack_reboot_dialog_later">Nu acum</string>
     <string name="all_favorites_deleted">✅ Toate favoritele au fost șterse</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

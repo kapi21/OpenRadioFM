@@ -153,20 +153,25 @@ public class LogoManager {
         File logoFile = resolveExistingFile("car_logo.png");
         if (logoFile != null && logoFile.exists()) {
             iv.setVisibility(View.VISIBLE);
-            // V2.4: Only reload if needed
             String path = logoFile.getAbsolutePath();
-            Object lastTag = iv.getTag(R.id.tag_logo_url);
-            if (lastTag == null || !path.equals(lastTag)) {
-                iv.setImageDrawable(null); // Clear to avoid overlapping during load
-                Glide.with(iv)
-                        .load(logoFile)
-                        .diskCacheStrategy(DiskCacheStrategy.NONE)
-                        .skipMemoryCache(true)
-                        .transform(new RoundedCorners(24))
-                        .transition(DrawableTransitionOptions.withCrossFade())
-                        .into(iv);
-                iv.setTag(R.id.tag_logo_url, path);
+            // No confiar en tag_logo_url para omitir carga: updateStationLogo() pinta el logo de emisora
+            // con Glide pero no actualiza el tag, que suele seguir siendo la ruta de car_logo. El “skip”
+            // dejaba el bitmap de la emisora anterior visible (K706/V2) hasta el siguiente logo; step +/- sí
+            // llamaba antes a clearLogo() (tag=null) y por eso ahí sí aparecía el coche.
+            iv.setTag(R.id.tag_logo_url, null);
+            try {
+                Glide.with(iv).clear(iv);
+            } catch (Exception ignored) {
             }
+            iv.setImageDrawable(null);
+            Glide.with(iv)
+                    .load(logoFile)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .skipMemoryCache(true)
+                    .transform(new RoundedCorners(24))
+                    .transition(DrawableTransitionOptions.withCrossFade())
+                    .into(iv);
+            iv.setTag(R.id.tag_logo_url, path);
         } else {
             // UX: no usar el icono de la app como fallback en el logo principal.
             // Si no hay car_logo.png, ocultar el ivMainLogo para evitar confusión/solapamiento.
@@ -291,14 +296,18 @@ public class LogoManager {
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         if (ivMainLogo != null) {
             ivMainLogo.setTag(R.id.tag_logo_url, null);
-            // Importante: si no existe car_logo.png, NO vaciar/ocultar el ivMainLogo durante transitorios
-            // (QS6 puede llamar a clearLogo() mientras aún está llegando el logo correcto).
             File car = resolveExistingFile("car_logo.png");
             if (car != null && car.exists()) {
                 applyFallbackLogo(ivMainLogo);
             } else {
-                // Mantener el drawable actual como placeholder para evitar "flash" vacío.
-                MainActivity.setVisibilityIfChanged(ivMainLogo, View.VISIBLE);
+                // Sin car_logo: igual hay que quitar el arte de la emisora anterior (K706/V2, zapping).
+                // Mantener el bitmap viejo como "placeholder" dejaba el logo pegado hasta el siguiente fetch.
+                try {
+                    Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
+                } catch (Exception ignored) {
+                }
+                ivMainLogo.setImageDrawable(null);
+                MainActivity.setVisibilityIfChanged(ivMainLogo, View.GONE);
             }
         }
         updateDynamicBackground(null);
@@ -313,58 +322,64 @@ public class LogoManager {
         String bandCacheKey = band + "_" + freq;
 
         if (cachedUrl != null) {
-            if (!cachedUrl.equals(mActivity.mLastLogoUrl)) {
-                if (!isLogoRequestStillValid(logoGen, freq, band)) return;
+            if (!isLogoRequestStillValid(logoGen, freq, band)) return;
+            // Misma URL que ya mostrábamos: igual hay que reaplicar Glide (un updateStationLogo(null) intermedio
+            // pudo pintar car_logo encima; QS6 ~1–2s tras sintonizar).
+            boolean sameUrlAsLast = cachedUrl.equals(mActivity.mLastLogoUrl);
+            if (!sameUrlAsLast) {
                 mActivity.mLastLogoUrl = cachedUrl;
-                if (ivMainLogo != null) {
-                    if (mActivity.mIsV3) {
-                        try {
-                            Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
-                        } catch (Exception ignored) {
-                        }
-                        ivMainLogo.setImageDrawable(null);
-                        ivMainLogo.setVisibility(View.GONE);
-                    } else {
-                        ivMainLogo.setVisibility(View.VISIBLE);
-                        // Importante: si el logo nuevo tiene transparencia, NO podemos usar el anterior como placeholder
-                        // porque se vería “debajo”. Limpiamos la imagen para evitar arrastre.
+                mActivity.mLogoCachePerBand.put(bandCacheKey, cachedUrl);
+            }
+            if (ivMainLogo != null) {
+                if (mActivity.mIsV3) {
+                    try {
+                        Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
+                    } catch (Exception ignored) {
+                    }
+                    ivMainLogo.setImageDrawable(null);
+                    ivMainLogo.setVisibility(View.GONE);
+                } else {
+                    ivMainLogo.setVisibility(View.VISIBLE);
+                    if (!sameUrlAsLast) {
                         ivMainLogo.setImageDrawable(null);
                     }
-                    
-                    // V18.6.2: Gestión Unificada de Glide para evitar solapamientos y suavizar transiciones
-                    Glide.with(ivMainLogo)
-                            .asBitmap()
-                            .load(cachedUrl)
-                            .transform(new RoundedCorners(24))
-                            // Animación más larga para sensación premium (800ms)
-                            .transition(BitmapTransitionOptions.withCrossFade(800))
-                            // No usar placeholder con el logo anterior (transparencias).
-                            .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
-                                @Override
-                                public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
-                                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                                    if (!isLogoRequestStillValid(logoGen, freq, band)) return;
-                                    super.onResourceReady(resource, transition);
-                                    
-                                    // Notificar a otros componentes una vez el bitmap está listo
-                                    if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
-                                        // SimpleLayoutManager ya no necesita hacer su propio setImageBitmap
-                                        // pero sí necesita el bitmap para la paleta y el fondo.
-                                        mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
-                                    }
-                                    
-                                    if (mActivity.mMediaSessionManager != null) {
-                                        String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
-                                        String freqStr = String.format("%.1f MHz", freq / 1000.0f);
-                                        mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
-                                    }
-                                }
-                            });
                 }
-                updateDynamicBackground(cachedUrl);
+
+                Glide.with(ivMainLogo)
+                        .asBitmap()
+                        .load(cachedUrl)
+                        .transform(new RoundedCorners(24))
+                        .transition(sameUrlAsLast
+                                ? BitmapTransitionOptions.withCrossFade(0)
+                                : BitmapTransitionOptions.withCrossFade(800))
+                        .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
+                            @Override
+                            public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                                if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                                if (!isLogoRequestStillValid(logoGen, freq, band)) return;
+                                super.onResourceReady(resource, transition);
+
+                                if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
+                                    mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
+                                }
+
+                                if (mActivity.mMediaSessionManager != null) {
+                                    String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
+                                    String freqStr = String.format("%.1f MHz", freq / 1000.0f);
+                                    mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
+                                }
+                            }
+                        });
             }
+            updateDynamicBackground(cachedUrl);
         } else {
             if (mActivity.mRepository == null) return;
+            // Ya tenemos URL para band+freq: no pasar por lookup async ni pintar coche intermedio.
+            String cachedForSlot = mActivity.mLogoCachePerBand.get(bandCacheKey);
+            if (cachedForSlot != null && !cachedForSlot.trim().isEmpty()) {
+                updateStationLogo(freq, band, cachedForSlot);
+                return;
+            }
             String livePs = null;
             if (mActivity.mRdsManager != null && mActivity.mEngine != null && freq == mActivity.mEngine.getCurrentFreq()) {
                 String cn = mActivity.mRdsManager.getConfirmedName();
@@ -391,49 +406,51 @@ public class LogoManager {
                     if (!isLogoRequestStillValid(logoGen, freq, band)) return;
 
                     if (url != null) {
-                        if (!url.equals(mActivity.mLastLogoUrl)) {
+                        boolean sameAsLast = url.equals(mActivity.mLastLogoUrl);
+                        if (!sameAsLast) {
                             mActivity.mLastLogoUrl = url;
                             mActivity.mLogoCachePerBand.put(bandCacheKey, url);
-                            if (ivMainLogo != null) {
-                                if (mActivity.mIsV3) {
-                                    try {
-                                        Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
-                                    } catch (Exception ignored) {
-                                    }
-                                    ivMainLogo.setImageDrawable(null);
-                                    ivMainLogo.setVisibility(View.GONE);
-                                } else {
-                                    ivMainLogo.setVisibility(View.VISIBLE);
-                                    // Importante: evitar que un logo previo quede “debajo” con transparencias.
+                        }
+                        if (ivMainLogo != null) {
+                            if (mActivity.mIsV3) {
+                                try {
+                                    Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
+                                } catch (Exception ignored) {
+                                }
+                                ivMainLogo.setImageDrawable(null);
+                                ivMainLogo.setVisibility(View.GONE);
+                            } else {
+                                ivMainLogo.setVisibility(View.VISIBLE);
+                                if (!sameAsLast) {
                                     ivMainLogo.setImageDrawable(null);
                                 }
-                                
-                                // V18.6.2: Aplicar la misma transición premium en la búsqueda asíncrona
-                                Glide.with(ivMainLogo)
-                                        .asBitmap()
-                                        .load(url)
-                                        .transform(new RoundedCorners(24))
-                                        .transition(BitmapTransitionOptions.withCrossFade(800))
-                                        // No usar placeholder con el logo anterior (transparencias).
-                                        .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
-                                            @Override
-                                            public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
-                                                if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                                                if (!isLogoRequestStillValid(logoGen, freq, band)) return;
-                                                super.onResourceReady(resource, transition);
-                                                if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
-                                                    mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
-                                                }
-                                                if (mActivity.mMediaSessionManager != null) {
-                                                    String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
-                                                    String freqStr = String.format("%.1f MHz", freq / 1000.0f);
-                                                    mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
-                                                }
-                                            }
-                                        });
                             }
-                            updateDynamicBackground(url);
+
+                            Glide.with(ivMainLogo)
+                                    .asBitmap()
+                                    .load(url)
+                                    .transform(new RoundedCorners(24))
+                                    .transition(sameAsLast
+                                            ? BitmapTransitionOptions.withCrossFade(0)
+                                            : BitmapTransitionOptions.withCrossFade(800))
+                                    .into(new com.bumptech.glide.request.target.BitmapImageViewTarget(ivMainLogo) {
+                                        @Override
+                                        public void onResourceReady(Bitmap resource, com.bumptech.glide.request.transition.Transition<? super Bitmap> transition) {
+                                            if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                                            if (!isLogoRequestStillValid(logoGen, freq, band)) return;
+                                            super.onResourceReady(resource, transition);
+                                            if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
+                                                mActivity.mSimpleLayoutManager.updateLogoPalette(resource);
+                                            }
+                                            if (mActivity.mMediaSessionManager != null) {
+                                                String rdsName = (mActivity.mLastPs != null) ? mActivity.mLastPs : "";
+                                                String freqStr = String.format("%.1f MHz", freq / 1000.0f);
+                                                mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, resource);
+                                            }
+                                        }
+                                    });
                         }
+                        updateDynamicBackground(url);
                     } else {
                         mActivity.mLastLogoUrl = "";
                         mActivity.mLogoCachePerBand.remove(bandCacheKey);

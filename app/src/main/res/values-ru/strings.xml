@@ -182,12 +182,17 @@
     <string name="logo_mode_clock">Цифровые Часы</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
     <string name="accessibility_service_description">Этот сервис позволяет OpenRadioFM открываться поверх при нажатии физической кнопки RADIO на совместимых Android-устройствах (например, K706), обходя штатное радио.</string>
     <string name="a11y_hihack_title">HiHack (Спец. возможности)</string>
     <string name="a11y_hihack_enabled">Включено</string>
     <string name="a11y_hihack_disabled">Выключено</string>
     <string name="a11y_hihack_open_settings">Нажмите, чтобы открыть настройки специальных возможностей</string>
+    <string name="a11y_hihack_boot_reminder_switch">Уведомлять, если HiHack отключился после перезагрузки</string>
+    <string name="a11y_hihack_reboot_dialog_title">HiHack отключён</string>
+    <string name="a11y_hihack_reboot_dialog_message">На многих Android-головных устройствах службы спецвозможностей сбрасываются после полной перезагрузки. Снова включите HiHack (OpenRadioFM) в Настройки → Спецвозможности для кнопки RADIO и руля.</string>
+    <string name="a11y_hihack_reboot_dialog_open_settings">Открыть спецвозможности</string>
+    <string name="a11y_hihack_reboot_dialog_later">Не сейчас</string>
     <string name="all_favorites_deleted">✅ Все избранные удалены</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

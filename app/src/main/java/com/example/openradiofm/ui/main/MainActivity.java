@@ -135,10 +135,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public static volatile boolean sMainActivityStarted = false;
 
     /**
-     * True mientras esta activity exista y el modo sea K706: habilita reenvío de teclas MEDIA vía
-     * accesibilidad con la app en segundo plano (no aplica a QS6/MT8163).
+     * True con motor K706 o QS6: {@link com.example.openradiofm.services.FactoryRadioHijackerService}
+     * reenvía teclas MEDIA al volante a {@link com.example.openradiofm.service.RadioMediaService} cuando
+     * esta activity no está en {@code onStart} (segundo plano). No aplica a MT8163 u otros.
      */
-    public static volatile boolean sK706WheelBridgeActive = false;
+    public static volatile boolean sWheelMediaBridgeActive = false;
 
     // Band Constants
     private static final int BAND_FM1 = 0;
@@ -733,7 +734,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mRdsManager.onRdsName(name);
                 mHasRdsLock = mRdsManager.hasRdsLock();
                 if (mMediaSessionManager != null) {
-                    String freqText = String.format(java.util.Locale.US, "%.2f MHz", (mEngine != null ? mEngine.getCurrentFreq() : 0) / 1000.0);
+                    // Mismo formato que refreshRadioStatus (evita dos metadata por 94.20 vs 94.2).
+                    String freqText = String.format(java.util.Locale.US, "%.1f MHz", (mEngine != null ? mEngine.getCurrentFreq() : 0) / 1000.0f);
                     mMediaSessionManager.updateMetadata(name, freqText, null);
                 }
             }
@@ -1203,7 +1205,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         @Override
         public void onModeDetected(FmMode mode) {
             mMode = mode; // Se asigna sincronamente antes de volver a la cola de eventos
-            sK706WheelBridgeActive = (mMode == FmMode.FM_K706);
+            sWheelMediaBridgeActive = (mMode == FmMode.FM_K706 || mMode == FmMode.FM_QS6);
             runOnUiThread(() -> {
                 if (isFinishing() || isDestroyed()) return;
                 Log.d(TAG, "Modo de funcionamiento detectado: " + mMode);
@@ -2085,7 +2087,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     @Override
     protected void onResume() {
         super.onResume();
-        sK706WheelBridgeActive = (mMode == FmMode.FM_K706);
+        sWheelMediaBridgeActive = (mMode == FmMode.FM_K706 || mMode == FmMode.FM_QS6);
+        if (mPrefs != null) {
+            com.example.openradiofm.util.HiHackBootReminder.onAppResumed(this, mPrefs);
+        }
         // Algunas ROM OEM (MTK8259/Topway) reimponen fullscreen al volver al frente.
         applyStatusBarVisibility();
         
@@ -2166,9 +2171,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         sMainActivityStarted = false;
         boolean liveActive = mOnlineStreamManager != null
                 && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
-        // K706: al pasar a launcher las teclas van a la ventana enfocada; reforzar FGS + PLAYING en
-        // RadioMediaService para que el sistema enrute MEDIA_BUTTON aquí (no solo dispatchKeyEvent en la Activity).
-        if (!liveActive && mMode == FmMode.FM_K706 && mPlaybackManager != null && !mPlaybackManager.isMuted()) {
+        // K706 / QS6: al pasar a launcher las teclas suelen ir a la ventana enfocada o a la radio OEM;
+        // reforzar FGS + PLAYING en RadioMediaService para enrutar MEDIA_BUTTON aquí.
+        if (!liveActive && (mMode == FmMode.FM_K706 || mMode == FmMode.FM_QS6)
+                && mPlaybackManager != null && !mPlaybackManager.isMuted()) {
             try {
                 Intent media = new Intent(this, RadioMediaService.class);
                 media.setAction(RadioMediaService.ACTION_FORCE_PLAY);
@@ -2178,7 +2184,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     startService(media);
                 }
             } catch (Exception e) {
-                android.util.Log.w(TAG, "onStop: K706 elevate RadioMediaService for steering", e);
+                android.util.Log.w(TAG, "onStop: elevate RadioMediaService for steering (K706/QS6)", e);
             }
         }
         if (!liveActive && mEngine != null && !isChangingConfigurations()) {
@@ -2315,7 +2321,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     protected void onDestroy() {
-        sK706WheelBridgeActive = false;
+        sWheelMediaBridgeActive = false;
         // V21.0: Cancel all pending UI tasks immediately
         mMainHandler.removeCallbacksAndMessages(null);
         if (mAutoHideHandler != null) mAutoHideHandler.removeCallbacksAndMessages(null);
@@ -3653,16 +3659,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
 
             // Clear logos immediately (V3: reset duro Glide + fondo dinámico — evita logo “fantasma” tras la frecuencia)
+            // V2: usar clearLogo() (no solo applyFallback): resetea estado y fuerza Glide.clear + car_logo; antes
+            // applyFallback podía no recargar si tag_logo_url seguía siendo la ruta del coche con bitmap de emisora encima.
             if (mLogoManager != null) {
-                if (mIsV3) {
-                    mLogoManager.clearLogo();
-                } else {
-                    ImageView ivMainLogo = findViewById(R.id.ivMainLogo);
-                    if (ivMainLogo != null) {
-                        mLogoManager.applyFallbackLogo(ivMainLogo);
-                    }
-                    mLogoManager.updateDynamicBackground(null);
-                }
+                mLogoManager.clearLogo();
             }
         });
 

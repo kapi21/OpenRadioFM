@@ -4,6 +4,24 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+## [5.0.16] - 2026-04-03
+*Hotfix on top of 5.0.15 (`versionCode` 29). **Still pending verification on real K706 and MT8163 hardware.***
+
+### Added
+- **HiHack / reboot**: `HihackBootReminderReceiver` + `HiHackBootReminder`, preferences, reminder on app launch, and toggle in premium settings; strings in all locales.
+
+### Fixed
+- **Streaming / MT8163 (HCN)**: `OnlineStreamManager` marshals `stopStream()` / `release()` to the main looper; when deferred MT8163 handoff applies, `ExoPlayer.release` is postponed to avoid overlapping two streams.
+- **Logo (Layout V3 / QS6)**: per-band logo cache, re-apply load when the URL is unchanged after `applyFallbackLogo`; `clearLogo()` on frequency changes to avoid a “stuck” logo or artifacts behind RDS PS.
+- **Background steering (QS6)**: same bridge path as K706 (`sWheelMediaBridgeActive`, `onStop`, `ACTION_FORCE_PLAY`); `RadioMediaService` / FGS and `FactoryRadioHijackerService` cover QS6; `RadioServiceController.isSteeringWheelMediaBridgeMode()`.
+- **RDS / MediaSession / notifications**: subtitle normalization (MHz) for metadata dedup in `MediaSessionManager`; `onRdsName` uses `%.1f MHz` when refreshing status; `RadioMediaService` skips `notify()` without notification permission or when notifications are disabled (**widget** still uses `AppWidgetManager` + prefs).
+- **UI thread / logos**: if `RadioRepository.getStationInfo(..., callback != null)` is called on the UI thread, work runs on `logoExecutor` (`getStationInfoImpl`).
+
+### Version
+- `versionCode 29`, `versionName 5.0.16`; `app_name_internal` **v5.0.16**.
+
+---
+
 ## [5.0.15] - 2026-04-03
 *Release closing the 5.0.15 line (`versionCode` 28).*
 

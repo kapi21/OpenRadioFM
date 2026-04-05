@@ -13,6 +13,10 @@ import android.util.Log;
 
 import com.example.openradiofm.service.RadioMediaService;
 
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * V16: Gestor de la Sesión de Medios.
  * Sincroniza el estado de la UI (Frecuencia, RDS, Logos) con la MediaSession
@@ -30,6 +34,28 @@ public class MediaSessionManager {
     private String mLastSubtitle = "";
     private Bitmap mLastLogo = null;
     private String mLastRds = "";
+
+    private static final Pattern FREQ_SUBTITLE_PATTERN = Pattern.compile(
+            "^\\s*([0-9]+)\\s*([.,])\\s*([0-9]+)\\s*MHz\\s*$", Pattern.CASE_INSENSITIVE);
+
+    /** Unifica "94,2 MHz" / "94.20 MHz" / "94.2 MHz" para no duplicar envíos a MediaSession. */
+    private static String normalizeFreqMHzSubtitle(String subtitle) {
+        if (subtitle == null) return "";
+        Matcher m = FREQ_SUBTITLE_PATTERN.matcher(subtitle.trim());
+        if (!m.matches()) return subtitle.trim();
+        try {
+            double v = Double.parseDouble(m.group(1) + "." + m.group(3));
+            return String.format(Locale.US, "%.1f MHz", v);
+        } catch (NumberFormatException e) {
+            return subtitle.trim();
+        }
+    }
+
+    private static String metadataDedupKey(String title, String subtitle) {
+        String t = title != null ? title.trim().replaceAll("\\s+", " ") : "";
+        String s = subtitle != null ? normalizeFreqMHzSubtitle(subtitle) : "";
+        return t + "\u0001" + s;
+    }
 
     public MediaSessionManager(MainActivity activity) {
         this.mActivity = activity;
@@ -64,10 +90,9 @@ public class MediaSessionManager {
     public void updateMetadata(String title, String subtitle, Bitmap logo) {
         if (mMediaController == null) return;
 
-        // V2.4: Guard against identical updates to prevent notification flickering
-        if (title != null && title.equals(mLastTitle) && 
-            subtitle != null && subtitle.equals(mLastSubtitle) && 
-            ((logo == null && mLastLogo == null) || (logo != null && logo.sameAs(mLastLogo)))) {
+        // V2.4: Guard (título + MHz normalizado + logo) evita ráfagas por locale/comas/decimales.
+        boolean logoSame = (logo == null && mLastLogo == null) || (logo != null && mLastLogo != null && logo.sameAs(mLastLogo));
+        if (metadataDedupKey(title, subtitle).equals(metadataDedupKey(mLastTitle, mLastSubtitle)) && logoSame) {
             return;
         }
 

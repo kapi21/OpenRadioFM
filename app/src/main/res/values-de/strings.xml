@@ -1,11 +1,16 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
     <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
     <string name="a11y_hihack_title">HiHack (Barrierefreiheit)</string>
     <string name="a11y_hihack_enabled">Aktiviert</string>
     <string name="a11y_hihack_disabled">Deaktiviert</string>
     <string name="a11y_hihack_open_settings">Tippen, um Barrierefreiheit-Einstellungen zu öffnen</string>
+    <string name="a11y_hihack_boot_reminder_switch">Hinweis, wenn HiHack nach Neustart aus ist</string>
+    <string name="a11y_hihack_reboot_dialog_title">HiHack deaktiviert</string>
+    <string name="a11y_hihack_reboot_dialog_message">Viele Android-Radios deaktivieren Bedienungshilfen nach einem vollständigen Neustart. Aktiviere HiHack (OpenRadioFM) erneut unter Einstellungen → Bedienungshilfen für die RADIO-Taste und das Lenkrad.</string>
+    <string name="a11y_hihack_reboot_dialog_open_settings">Bedienungshilfen öffnen</string>
+    <string name="a11y_hihack_reboot_dialog_later">Später</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming beendet. Wenn UKW nicht richtig reagiert, OpenRadioFM vollständig schließen und erneut öffnen.</string>
     
     <!-- Premium Menu Strings -->

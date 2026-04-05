@@ -16,14 +16,17 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 import androidx.media.session.MediaButtonReceiver;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
 import android.media.AudioManager;
@@ -362,11 +365,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         // Entramos en foreground con una notificación "pausada" y salimos si procede.
         try {
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
-            // K706: si la FM sigue “al aire” (!userPaused + playing), mantener FGS aunque onStartCommand
+            // K706 / QS6: si la FM sigue “al aire” (!userPaused + playing), mantener FGS aunque onStartCommand
             // se dispare con intent vacío; si no, Android no enruta MEDIA_BUTTON al volante en segundo plano.
-            boolean k706KeepFg = mRadioServiceController != null && mRadioServiceController.isK706Mode()
+            boolean steeringKeepFg = mRadioServiceController != null
+                    && mRadioServiceController.isSteeringWheelMediaBridgeMode()
                     && !mUserPaused && mIsPlaying;
-            if (!mIsPlaying && !k706KeepFg) {
+            if (!mIsPlaying && !steeringKeepFg) {
                 stopForeground(false); // mantener notificación visible
             }
         } catch (Exception e) {
@@ -827,26 +831,32 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
     }
 
-    private boolean isK706SteeringPlatform() {
+    private boolean isSteeringMediaBackgroundPlatform() {
         try {
-            if (mEngine != null && "K706".equals(mEngine.getEngineName())) return true;
+            if (mEngine != null) {
+                String n = mEngine.getEngineName();
+                if (n != null) {
+                    if ("K706".equals(n)) return true;
+                    if (n.toUpperCase(Locale.US).contains("QS6")) return true;
+                }
+            }
         } catch (Exception ignored) {}
-        return mRadioServiceController != null && mRadioServiceController.isK706Mode();
+        return mRadioServiceController != null && mRadioServiceController.isSteeringWheelMediaBridgeMode();
     }
 
     /**
-     * K706: al ir a launcher el SoC suele emitir LOSS; bajar la MediaSession a PAUSED hace que el
-     * sistema envíe KEYCODE_MEDIA al Launcher en lugar de ACTION_MEDIA_BUTTON a esta app.
+     * K706 / QS6: al ir a launcher el SoC puede emitir LOSS; si la sesión queda PAUSED, el sistema
+     * envía KEYCODE_MEDIA al launcher / OEM en lugar de ACTION_MEDIA_BUTTON aquí.
      */
-    private void refreshK706SteeringSessionAndForeground() {
-        if (!isK706SteeringPlatform() || mUserPaused || mMediaSession == null) return;
+    private void refreshSteeringMediaSessionAndForeground() {
+        if (!isSteeringMediaBackgroundPlatform() || mUserPaused || mMediaSession == null) return;
         try {
             mIsPlaying = true;
             setPlaybackState(true);
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
-            Log.d(TAG, "K706: sesión PLAYING+FGS mantenida para mandos en segundo plano");
+            Log.d(TAG, "Steering: sesión PLAYING+FGS mantenida para mandos en segundo plano (K706/QS6)");
         } catch (Exception e) {
-            Log.w(TAG, "refreshK706SteeringSessionAndForeground", e);
+            Log.w(TAG, "refreshSteeringMediaSessionAndForeground", e);
         }
     }
 
@@ -860,10 +870,10 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             switch (event) {
                 case K706RadioManager.EVENT_LOSS:
                 case K706RadioManager.EVENT_LOSS_TRANSIENT:
-                    if (isK706SteeringPlatform() && !mUserPaused) {
+                    if (isSteeringMediaBackgroundPlatform() && !mUserPaused) {
                         if (mIsPlaying) mWasPlayingBeforeFocusLoss = true;
                         writeOemStateToPrefs(event);
-                        refreshK706SteeringSessionAndForeground();
+                        refreshSteeringMediaSessionAndForeground();
                         ensureNotificationVisible();
                         break;
                     }
@@ -904,7 +914,27 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         } catch (Exception ignored) {}
     }
 
+    /**
+     * Algunas ROM bloquean notificaciones (log "Not allowed show notification"); evitar spam de {@code notify}.
+     * {@link #startForeground(int, Notification)} sigue llamándose donde la política del servicio lo exige.
+     */
+    private boolean mayPostNotifications() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                return ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                        == PackageManager.PERMISSION_GRANTED;
+            }
+            if (mNotificationManager != null) {
+                return mNotificationManager.areNotificationsEnabled();
+            }
+        } catch (Exception ignored) {}
+        return true;
+    }
+
     private void ensureNotificationVisible() {
+        if (!mayPostNotifications()) {
+            return;
+        }
         try {
             mNotificationManager.notify(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
         } catch (Exception e) {
@@ -1204,6 +1234,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         mLastNotifiedArtist = artist;
         mLastNotifiedLogo = logo;
 
+        if (!mayPostNotifications()) {
+            return;
+        }
         mNotificationManager.notify(NOTIFICATION_ID, buildNotification(title, artist, logo));
     }
 

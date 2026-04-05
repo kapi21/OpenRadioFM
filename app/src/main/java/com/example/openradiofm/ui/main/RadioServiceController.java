@@ -121,6 +121,15 @@ public class RadioServiceController {
         return detectMode() == MainActivity.FmMode.FM_K706;
     }
 
+    /**
+     * K706 y QS6 (NWD): el sistema suele enrutar teclas MEDIA / volante al reproductor “activo” o al
+     * launcher si nuestra {@code MediaSession} no está en foreground; misma mitigación que K706.
+     */
+    public boolean isSteeringWheelMediaBridgeMode() {
+        MainActivity.FmMode m = detectMode();
+        return m == MainActivity.FmMode.FM_K706 || m == MainActivity.FmMode.FM_QS6;
+    }
+
     /** Jancar IVI ({@code com.jancar.services} + IRadio). */
     public boolean isJancarIviMode() {
         return detectMode() == MainActivity.FmMode.FM_JANCAR_IVI;

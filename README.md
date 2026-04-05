@@ -1,6 +1,6 @@
 # OpenRadioFM - Community Logo Edition 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.15-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.0.16-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.0.15 (abril 2026):** widget de escritorio; AutoScan lento con confirmación premium, barrido FM 87,5–108 MHz; Jancar 8227L vía `FmService` OEM; logo en layout V3 sin solapamiento con PS; **i18n** y diálogos unificados (skin, tipografía, listas). **Comunidad Supabase:** puerta de calidad en upsert, bloqueo de contribución en escaneo / tras sintonizar, estabilidad del PS antes de subir; credenciales Supabase vía `local.properties` / entorno (sin secretos en el código; ver `docs/CI_SUPABASE.md`). **Layout V2:** mismo espacio horizontal entre borde de pantalla, presets y columna central. Detalle en `CHANGELOG.md`.
+**5.0.16 (abril 2026, hotfix):** estabilidad de streaming en MT8163 (liberación de `ExoPlayer` coordinada), logos en V3/QS6 sin quedarse “pegados”, volante en segundo plano también en **QS6**, metadatos/notificaciones más coherentes (sin `notify()` si no hay permiso), `getStationInfo` desde UI en segundo plano, recordatorio **HiHack** tras reinicio. **Pendiente validar en hardware real K706 y MT8163.** La base **5.0.15** incluye widget, AutoScan/i18n, Supabase en build, etc.; detalle en `CHANGELOG.md`.
 
 ---
 
@@ -153,7 +153,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ---
 
-## ⚠️ Problemas Conocidos (Marzo 2026)
+## ⚠️ Problemas Conocidos (Abril 2026)
+- **Verificación v5.0.16**: los cambios de la **5.0.16** aún deben probarse en **K706** y **MT8163** en condiciones reales (streaming, volante, logos, notificaciones).
 - **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
 - **Volante en segundo plano (K706)**: En muchas ROM, con el **launcher u otra app al frente**, las teclas del volante llegan como `KeyEvent` al foco y la **radio OEM** sigue recibiendo mandos por **MCU/QuickFish**. OpenRadioFM no puede usar ese canal sin integración OEM; a partir de **v5.0.10** el servicio de accesibilidad **Factory Radio Hijacker** puede **capturar y reenviar** esas teclas a la app (activar el servicio en Ajustes → Accesibilidad). Opcional (avanzado): en SharedPreferences **RadioPresets**, `pref_a11y_forward_media_keys=false` desactiva el reenvío (por defecto está activo).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
@@ -193,6 +194,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.0.16 (Abril 2026) — `main` — hotfix
+- **ES:** **OpenRadioFM v5.0.16** — hotfix: streaming MT8163, logos V3/QS6, volante QS6 en segundo plano, MediaSession/notificaciones, `RadioRepository` en UI, HiHack tras reinicio. **Pendiente verificación en K706 y MT8163.** Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.16** — hotfix: MT8163 streaming, V3/QS6 logos, QS6 background steering, MediaSession/notifications, UI-thread `getStationInfo`, HiHack reboot reminder. **K706 + MT8163 verification still pending.** See `CHANGELOG_EN.md`.
 
 ### v5.0.15 (Abril 2026) — `main`
 - **ES:** **OpenRadioFM v5.0.15** — cierre de línea 5.0.15: widget, AutoScan/i18n/diálogos (ver `CHANGELOG.md`); contribución Supabase más estricta; credenciales Supabase en compilación (`local.properties`); layout V2 presets.

@@ -240,12 +240,17 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
     <string name="a11y_hihack_title">HiHack (Kisegítő lehetőségek)</string>
     <string name="a11y_hihack_enabled">Bekapcsolva</string>
     <string name="a11y_hihack_disabled">Kikapcsolva</string>
     <string name="a11y_hihack_open_settings">Koppints a kisegítő lehetőségek beállításainak megnyitásához</string>
+    <string name="a11y_hihack_boot_reminder_switch">Értesítés, ha újraindítás után ki van kapcsolva a HiHack</string>
+    <string name="a11y_hihack_reboot_dialog_title">HiHack ki van kapcsolva</string>
+    <string name="a11y_hihack_reboot_dialog_message">Sok Android fejegységen a kisegítő szolgáltatások teljes újraindítás után kikapcsolódnak. Kapcsold be újra a HiHack-et (OpenRadioFM) a Beállítások → Kisegítő lehetőségek menüben a RADIO gombhoz és a kormányhoz.</string>
+    <string name="a11y_hihack_reboot_dialog_open_settings">Kisegítő lehetőségek megnyitása</string>
+    <string name="a11y_hihack_reboot_dialog_later">Most nem</string>
     <string name="all_favorites_deleted">✅ Az összes kedvenc törölve</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="gestures_enabled">✅ Lapozó gesztusok engedélyezve</string>

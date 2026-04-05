@@ -23,6 +23,7 @@ import android.widget.Toast;
 import androidx.core.text.HtmlCompat;
 
 import com.example.openradiofm.R;
+import com.example.openradiofm.util.HiHackBootReminder;
 
 /**
  * V15: Gestor de Diálogos para reducir carga en MainActivity.
@@ -148,6 +149,7 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
         androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
         androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
+        androidx.appcompat.widget.SwitchCompat swHihackBootReminder = dialog.findViewById(R.id.switchHihackBootReminder);
         // androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm); // Removed v21.3
 
         // Language Row
@@ -177,6 +179,11 @@ public class DialogManager {
                     mActivity.showStyledToast(mActivity.getString(R.string.error_opening_settings));
                 }
             });
+        }
+        if (swHihackBootReminder != null) {
+            swHihackBootReminder.setChecked(mActivity.mPrefs.getBoolean(HiHackBootReminder.PREF_BOOT_REMINDER, true));
+            swHihackBootReminder.setOnCheckedChangeListener((bv, checked) ->
+                    mActivity.mPrefs.edit().putBoolean(HiHackBootReminder.PREF_BOOT_REMINDER, checked).apply());
         }
 
         // Previews

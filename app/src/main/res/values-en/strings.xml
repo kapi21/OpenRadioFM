@@ -1,11 +1,16 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
-    <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system only sends those keys to the launcher.</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
+    <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway and QS6 (NWD) units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system often sends those keys to the launcher or the OEM radio app.</string>
     <string name="a11y_hihack_title">HiHack (Accessibility)</string>
     <string name="a11y_hihack_enabled">Enabled</string>
     <string name="a11y_hihack_disabled">Disabled</string>
     <string name="a11y_hihack_open_settings">Tap to open accessibility settings</string>
+    <string name="a11y_hihack_boot_reminder_switch">Notify if HiHack turns off after reboot</string>
+    <string name="a11y_hihack_reboot_dialog_title">HiHack disabled</string>
+    <string name="a11y_hihack_reboot_dialog_message">Many Android head units clear accessibility services after a full reboot. Turn HiHack (OpenRadioFM) back on under Settings → Accessibility for the RADIO button and steering wheel.</string>
+    <string name="a11y_hihack_reboot_dialog_open_settings">Open accessibility</string>
+    <string name="a11y_hihack_reboot_dialog_later">Not now</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming stopped. If FM does not behave correctly, fully close OpenRadioFM and open it again.</string>
     
     <!-- Premium Menu Strings -->

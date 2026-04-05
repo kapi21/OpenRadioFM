@@ -240,12 +240,17 @@
     <string name="my_favorites">Meus Favoritos</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.15</string>
+    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
     <string name="accessibility_service_description">Este serviço permite que o OpenRadioFM se sobreponha quando você pressiona o botão físico RADIO em unidades Android compatíveis (ex.: K706), ignorando o app de fábrica.</string>
     <string name="a11y_hihack_title">HiHack (Acessibilidade)</string>
     <string name="a11y_hihack_enabled">Ativado</string>
     <string name="a11y_hihack_disabled">Desativado</string>
     <string name="a11y_hihack_open_settings">Toque para abrir as configurações de acessibilidade</string>
+    <string name="a11y_hihack_boot_reminder_switch">Avisar se o HiHack desligar após reiniciar</string>
+    <string name="a11y_hihack_reboot_dialog_title">HiHack desativado</string>
+    <string name="a11y_hihack_reboot_dialog_message">Em muitas unidades Android, os serviços de acessibilidade são desativados após reinício completo. Reative o HiHack (OpenRadioFM) em Definições → Acessibilidade para o botão RADIO e o volante.</string>
+    <string name="a11y_hihack_reboot_dialog_open_settings">Abrir acessibilidade</string>
+    <string name="a11y_hihack_reboot_dialog_later">Agora não</string>
     <string name="all_favorites_deleted">✅ Todos os favoritos apagados</string>
     <string name="category_app_options">Opções da App</string>
     <string name="category_premium">Personalização Premium</string>

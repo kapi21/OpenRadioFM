@@ -15,6 +15,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     
     <!-- V16: Permisos QS6/NWD para intentar eludir el error de apertura del socket /dev/audio-dsp -->
     <uses-permission android:name="android.permission.ACCESS_FM_RADIO" />
@@ -106,6 +107,16 @@
         <receiver
             android:name=".widget.RadioWidgetActionReceiver"
             android:exported="false" />
+
+        <!-- HiHack: muchas ROM apagan accesibilidad al reiniciar; recordatorio al abrir la app -->
+        <receiver
+            android:name=".receiver.HihackBootReminderReceiver"
+            android:exported="true"
+            android:directBootAware="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <!-- V16.2: Radio Hijacker Service (Accessibility) -->
         <service android:name=".services.FactoryRadioHijackerService"

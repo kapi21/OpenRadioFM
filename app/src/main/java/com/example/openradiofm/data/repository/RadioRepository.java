@@ -313,10 +313,10 @@ public class RadioRepository {
      * IMPORTANTE - RECOMENDACIÓN DE THREAD:
      * - Este método accede a disco (SharedPreferences, archivos) y puede ser lento.
      * - Se RECOMIENDA llamarlo desde un hilo de fondo para no bloquear la UI.
-     * - Si se detecta que se llama desde el UI thread, se loguea un warning pero NO
-     * se lanza excepción.
-     * - El callback de logo se ejecuta SIEMPRE en un hilo de fondo; la Activity
-     * debe hacer runOnUiThread() al actualizar vistas.
+     * - Si se llama desde el UI thread con {@code callback != null}, el trabajo pesado se
+     *   difiere a {@link #logoExecutor} (evita lag y spam de warnings).
+     * - Si se llama desde el UI thread con {@code callback == null}, se loguea warning (API síncrona).
+     * - La Activity debe usar runOnUiThread() en el callback al tocar vistas.
      */
     public RadioStation getStationInfo(int freqKHz, LogoCallback callback) {
         return getStationInfo(freqKHz, callback, null);
@@ -328,13 +328,23 @@ public class RadioRepository {
      *                         que compartía la misma frecuencia).
      */
     public RadioStation getStationInfo(int freqKHz, LogoCallback callback, String liveRdsPsOverride) {
-        // Warning si se llama desde UI thread (pero no matamos la app)
-        if (android.os.Looper.getMainLooper().getThread() == Thread.currentThread()) {
+        final boolean onUi = android.os.Looper.getMainLooper().getThread() == Thread.currentThread();
+        if (callback != null && onUi) {
+            if (logoExecutor != null && !logoExecutor.isShutdown()) {
+                logoExecutor.execute(() -> getStationInfoImpl(freqKHz, callback, liveRdsPsOverride));
+            }
+            return new RadioStation(freqKHz, "");
+        }
+        if (onUi && callback == null) {
             android.util.Log.w("RadioRepository",
                     "WARNING: getStationInfo() llamado desde UI thread. " +
                             "Esto puede causar lag en la interfaz. " +
                             "Considera ejecutarlo en un hilo de fondo.");
         }
+        return getStationInfoImpl(freqKHz, callback, liveRdsPsOverride);
+    }
+
+    private RadioStation getStationInfoImpl(int freqKHz, LogoCallback callback, String liveRdsPsOverride) {
         // V9: Prioridad de nombre
         // 1. Custom (Usuario)
         // 2. RDS PS (Capturado en vivo)

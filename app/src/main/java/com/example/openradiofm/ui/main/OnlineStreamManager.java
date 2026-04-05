@@ -267,6 +267,13 @@ public class OnlineStreamManager {
     }
 
     public void stopStream() {
+        // ExoPlayer debe crearse, pararse y liberarse en el mismo hilo (típicamente principal).
+        // K706 (y otros): onFrequencyChanged llega desde el binder AIDL; stopStream() desde ahí
+        // dejaba el player sin liberar bien y al abrir otro stream podían sonar dos a la vez.
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            mMainHandler.post(() -> stopStreamInternal(true));
+            return;
+        }
         stopStreamInternal(true);
     }
 
@@ -304,7 +311,10 @@ public class OnlineStreamManager {
 
         updateUI();
 
-        if (mt8163 && mExoPlayer != null) {
+        // Solo aplazar release cuando volvemos a FM (notify=true). Si notify=false venimos de
+        // startStreamDirect() al cambiar de URL: liberar ya; si no, el nuevo ExoPlayer coexiste
+        // con el anterior y se mezclan dos streams.
+        if (mt8163 && mExoPlayer != null && notifyMt8163DeferredHcn) {
             mMainHandler.postDelayed(
                     () -> finishStreamStopAfterExoRelease(notifyMt8163DeferredHcn),
                     MT8163_EXO_RELEASE_AFTER_HANDOFF_MS);
@@ -402,14 +412,21 @@ public class OnlineStreamManager {
     }
 
     public void release() {
-        mIsLoading = false;
-        mIsPlaying = false;
-        if (mExoPlayer != null) {
-            try {
-                mExoPlayer.stop();
-                mExoPlayer.release();
-            } catch (Exception e) {}
-            mExoPlayer = null;
+        Runnable r = () -> {
+            mIsLoading = false;
+            mIsPlaying = false;
+            if (mExoPlayer != null) {
+                try {
+                    mExoPlayer.stop();
+                    mExoPlayer.release();
+                } catch (Exception e) {}
+                mExoPlayer = null;
+            }
+        };
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            r.run();
+        } else {
+            mMainHandler.post(r);
         }
         // No llamamos a stopStream() completo para evitar reconectar el mixer de hardware FM
         // si la aplicación se está cerrando o apagando (onDestroy).
