@@ -104,6 +104,8 @@ scripts/
 icons_*/
 Icons_lucide/
 logo.png
+!docs/editor/logo.png
+!docs/editor/README.md
 *.lnk
 *.fav
 *copia*
