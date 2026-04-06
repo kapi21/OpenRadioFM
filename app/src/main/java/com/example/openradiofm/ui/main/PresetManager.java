@@ -10,7 +10,9 @@ import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.target.Target;
+import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
+import com.bumptech.glide.request.RequestOptions;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.repository.RadioRepository;
 import com.example.openradiofm.data.model.RadioStation;
@@ -199,6 +201,9 @@ public class PresetManager {
                     if (ivPresets[fIndex] == null) return;
                     Glide.with(ivPresets[fIndex])
                             .load(immediateLogo)
+                            .apply(new RequestOptions()
+                                    .format(DecodeFormat.PREFER_ARGB_8888)
+                                    .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
                             .transform(new RoundedCorners(20))
                             .listener(new RequestListener<android.graphics.drawable.Drawable>() {
                                 @Override
@@ -232,6 +237,9 @@ public class PresetManager {
                         ivPresets[fIndex].setBackground(null);
                         Glide.with(ivPresets[fIndex])
                                 .load(logoUrl)
+                                .apply(new RequestOptions()
+                                        .format(DecodeFormat.PREFER_ARGB_8888)
+                                        .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
                                 .transform(new RoundedCorners(20))
                                 .listener(new RequestListener<android.graphics.drawable.Drawable>() {
                                     @Override

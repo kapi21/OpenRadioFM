@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="ic_launcher_background">#000000</color>
+    <!-- Widget -->
+    <color name="widget_bg">#E6121212</color>
+    <color name="widget_text_primary">#FFFFFF</color>
+    <color name="widget_text_secondary">#B3FFFFFF</color>
     <!-- Brand Colors (Neon Orange) -->
     <color name="brand_orange">#FF8C00</color>
     <color name="brand_orange_light">#FFA500</color>

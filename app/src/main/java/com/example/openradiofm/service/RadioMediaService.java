@@ -60,6 +60,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     /** Widget escritorio: memorias (no sigue el ajuste del volante seek vs preset). */
     public static final String ACTION_WIDGET_PREV_PRESET = "com.example.openradiofm.action.WIDGET_PREV_PRESET";
     public static final String ACTION_WIDGET_NEXT_PRESET = "com.example.openradiofm.action.WIDGET_NEXT_PRESET";
+    /** Widget escritorio: seek directo (sin presets). */
+    public static final String ACTION_WIDGET_SEEK_DOWN = "com.example.openradiofm.action.WIDGET_SEEK_DOWN";
+    public static final String ACTION_WIDGET_SEEK_UP = "com.example.openradiofm.action.WIDGET_SEEK_UP";
+    /** Widget escritorio: mute/unmute (play/pause). */
+    public static final String ACTION_WIDGET_TOGGLE_MUTE = "com.example.openradiofm.action.WIDGET_TOGGLE_MUTE";
     /**
      * MT8163: al pasar de streaming online a FM, SourceService puede force-stop si nuestra
      * sesión sigue como “reproductor activo” y el mux entrega audio a com.hcn.autoradio.
@@ -411,8 +416,42 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         if (intent != null && ACTION_WIDGET_NEXT_PRESET.equals(intent.getAction())) {
             handleWidgetPresetSkip(1);
         }
+        if (intent != null && ACTION_WIDGET_SEEK_DOWN.equals(intent.getAction())) {
+            handleWidgetSeek(-1);
+        }
+        if (intent != null && ACTION_WIDGET_SEEK_UP.equals(intent.getAction())) {
+            handleWidgetSeek(1);
+        }
+        if (intent != null && ACTION_WIDGET_TOGGLE_MUTE.equals(intent.getAction())) {
+            handleWidgetToggleMute();
+        }
 
         return START_NOT_STICKY;
+    }
+
+    private void handleWidgetSeek(int direction) {
+        try {
+            maybeStartEngine();
+            if (mEngine != null) {
+                if (direction > 0) mEngine.seekUp();
+                else mEngine.seekDown();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "handleWidgetSeek(" + direction + ") falló", e);
+        }
+    }
+
+    private void handleWidgetToggleMute() {
+        try {
+            // Reutilizar semántica de PLAY/PAUSE: PLAY=unmute, PAUSE=mute.
+            if (mUserPaused) {
+                handlePlay();
+            } else {
+                handlePause();
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "handleWidgetToggleMute falló", e);
+        }
     }
 
     private void handleMt8163FmHandoff() {

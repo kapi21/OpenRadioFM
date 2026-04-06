@@ -1085,6 +1085,53 @@ public class DialogManager {
         dialog.show();
     }
 
+    public void showBackupStateDialog() {
+        if (!mActivity.checkStoragePermissions()) {
+            mActivity.requestStoragePermissions();
+            return;
+        }
+
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_backup_state);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+        }
+
+        dialog.findViewById(R.id.btnBackupMenuExport).setOnClickListener(v -> {
+            if (mActivity.mHistoryManager != null) {
+                mActivity.mHistoryManager.saveMenuOptionsToFile();
+            }
+            dialog.dismiss();
+        });
+        dialog.findViewById(R.id.btnBackupMenuImport).setOnClickListener(v -> {
+            if (mActivity.mHistoryManager != null) {
+                mActivity.mHistoryManager.loadMenuOptionsFromFile();
+            }
+            dialog.dismiss();
+        });
+        dialog.findViewById(R.id.btnBackupFullExport).setOnClickListener(v -> {
+            if (mActivity.mHistoryManager != null) {
+                mActivity.mHistoryManager.saveFullBackupToZip();
+            }
+            dialog.dismiss();
+        });
+        dialog.findViewById(R.id.btnBackupFullImport).setOnClickListener(v -> {
+            if (mActivity.mHistoryManager != null) {
+                mActivity.mHistoryManager.loadFullBackupFromZip();
+            }
+            dialog.dismiss();
+        });
+
+        dialog.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
+
+        mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        dialog.show();
+    }
+
 
     public void showCreditsDialog() {
         android.app.Dialog dialog = new android.app.Dialog(mActivity);

@@ -16,8 +16,10 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions;
 import com.example.openradiofm.R;
 import com.bumptech.glide.request.target.CustomTarget;
 import com.bumptech.glide.request.transition.Transition;
+import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.request.target.Target;
 import java.io.File;
 
 /**
@@ -249,6 +251,9 @@ public class LogoManager {
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
                     Glide.with(ivDynamicBackground)
                             .load(logoUrl)
+                            .apply(new RequestOptions()
+                                    .format(DecodeFormat.PREFER_ARGB_8888)
+                                    .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
                             .centerCrop()
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(ivDynamicBackground);
@@ -348,6 +353,9 @@ public class LogoManager {
                 Glide.with(ivMainLogo)
                         .asBitmap()
                         .load(cachedUrl)
+                        .apply(new RequestOptions()
+                                .format(DecodeFormat.PREFER_ARGB_8888)
+                                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
                         .transform(new RoundedCorners(24))
                         .transition(sameUrlAsLast
                                 ? BitmapTransitionOptions.withCrossFade(0)
@@ -429,6 +437,9 @@ public class LogoManager {
                             Glide.with(ivMainLogo)
                                     .asBitmap()
                                     .load(url)
+                                    .apply(new RequestOptions()
+                                            .format(DecodeFormat.PREFER_ARGB_8888)
+                                            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
                                     .transform(new RoundedCorners(24))
                                     .transition(sameAsLast
                                             ? BitmapTransitionOptions.withCrossFade(0)

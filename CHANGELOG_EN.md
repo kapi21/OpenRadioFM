@@ -4,6 +4,22 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
+---
+## [Unreleased]
+
+### Added
+- **Backups (app state)**: long-press on **Save/Load Favorites** opens a **Backup** menu with export/import:
+  - **Menu options only** to `.ors` (settings `pref_*` + `ThemePrefs`)
+  - **Full backup** to `.orzip` (ZIP with `state.json` + `RadioLogos/` images)
+  Includes progress + **Cancel**, and prompts the user to **restart** after restore so layout/theme changes apply.
+- **Home-screen widget**: compact/expanded layouts, band label, extra actions (seek/mute) and PS tap for quick info; on launchers without resize the simple widget maps buttons back to **SEEK** (regression avoided).
+- **Launcher icon (QS6/NWD)**: `android:icon` / `roundIcon` now point to `@drawable` with a high-res `drawable-nodpi-v4` fallback (matching the OEM radio approach).
+
+### Fixed
+- **Logo quality**: avoid saving downloaded logos as 512×512 (pixelated when scaled up); decode/load using ARGB8888 and original size where applicable.
+
+---
+
 ## [5.0.16] - 2026-04-03
 *Hotfix on top of 5.0.15 (`versionCode` 29). **Still pending verification on real K706 and MT8163 hardware.***
 

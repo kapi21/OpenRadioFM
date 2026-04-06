@@ -24,4 +24,8 @@
     <!-- Component Sizes -->
     <dimen name="preset_card_height">90dp</dimen>
     <dimen name="v3_preset_card_size">140dp</dimen>
+
+    <!-- Widget -->
+    <dimen name="widget_corner_radius">12dp</dimen>
+    <dimen name="widget_button_size">48dp</dimen>
 </resources>

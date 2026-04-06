@@ -657,11 +657,14 @@ public class RadioRepository {
     private String downloadAndSaveLogo(String urlString, int freqKHz, String rdsName) {
         try {
             ensureRadioLogosFolderExists();
-            // V21.1: Usar Glide para downsample + decode seguro (evita OOM)
+            // Resolución nativa del recurso (sin reescalar a 512²: evita logos pixelados al mostrarlos grandes).
             android.graphics.Bitmap bitmap = com.bumptech.glide.Glide.with(mContext)
                     .asBitmap()
                     .load(urlString)
-                    .submit(512, 512)
+                    .apply(new com.bumptech.glide.request.RequestOptions()
+                            .format(com.bumptech.glide.load.DecodeFormat.PREFER_ARGB_8888))
+                    .submit(com.bumptech.glide.request.target.Target.SIZE_ORIGINAL,
+                            com.bumptech.glide.request.target.Target.SIZE_ORIGINAL)
                     .get();
 
             // V3.0: Guardar con nombre RDS si está disponible

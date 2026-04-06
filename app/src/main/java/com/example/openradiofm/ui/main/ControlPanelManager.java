@@ -206,6 +206,11 @@ public class ControlPanelManager {
             btnExtra2.setOnClickListener(v -> {
                 if (mActivity.mDialogManager != null) mActivity.mDialogManager.showSaveLoadFavoritesDialog();
             });
+            // Long press: Backups (opciones / copia completa)
+            btnExtra2.setOnLongClickListener(v -> {
+                if (mActivity.mDialogManager != null) mActivity.mDialogManager.showBackupStateDialog();
+                return true;
+            });
         }
     }
 

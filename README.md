@@ -47,7 +47,9 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.0.16 (abril 2026, hotfix):** estabilidad de streaming en MT8163 (liberación de `ExoPlayer` coordinada), logos en V3/QS6 sin quedarse “pegados”, volante en segundo plano también en **QS6**, metadatos/notificaciones más coherentes (sin `notify()` si no hay permiso), `getStationInfo` desde UI en segundo plano, recordatorio **HiHack** tras reinicio. **Pendiente validar en hardware real K706 y MT8163.** La base **5.0.15** incluye widget, AutoScan/i18n, Supabase en build, etc.; detalle en `CHANGELOG.md`.
+**5.0.16 (abril 2026, hotfix):** estabilidad de streaming en MT8163 (liberación de `ExoPlayer` coordinada), logos en V3/QS6 sin quedarse “pegados”, volante en segundo plano también en **QS6**, metadatos/notificaciones más coherentes (sin `notify()` si no hay permiso), `getStationInfo` desde UI en segundo plano, recordatorio **HiHack** tras reinicio. **Pendiente validar en hardware real K706 y MT8163.**
+
+**Unreleased (WIP):** mejoras del **widget** (logo dinámico, banda, seek/mute, UX para launchers sin resize), **backups** de estado (opciones o copia completa con `RadioLogos/`), y icono launcher estilo OEM con `drawable-nodpi-v4` para evitar pixelado en QS6/NWD. Ver `CHANGELOG.md`.
 
 ---
 

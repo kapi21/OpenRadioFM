@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="420dp"
+    android:layout_height="wrap_content"
+    android:background="#E6121212"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout style="@style/DialogContainerStyle">
+
+        <TextView
+            android:id="@+id/tvBackupProgressTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/backup_state_title"
+            android:textColor="#00E676"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif-medium"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/tvBackupProgressMessage"
+            style="@style/DialogSubheaderText"
+            android:text="@string/under_study"
+            android:layout_marginTop="0dp"
+            android:layout_marginBottom="12dp" />
+
+        <ProgressBar
+            android:id="@+id/pbBackup"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="false"
+            android:max="100"
+            android:progress="0" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnCancelBackup"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_glass_card_red"
+            android:minHeight="52dp"
+            android:text="@string/cancel"
+            android:textAllCaps="true"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+    </LinearLayout>
+</LinearLayout>

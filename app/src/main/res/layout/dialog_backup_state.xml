@@ -9,7 +9,6 @@
 
     <LinearLayout style="@style/DialogContainerStyle">
 
-        <!-- Header -->
         <LinearLayout style="@style/DialogTitleLayout"
             android:layout_marginBottom="16dp">
             <ImageView
@@ -21,17 +20,16 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/save_load_favorites"
+                android:text="@string/backup_state_title"
                 android:textColor="#00E676"
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium" />
         </LinearLayout>
 
-        <!-- SUBHEADER -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="@string/save_load_section_actions"
+            android:text="@string/backup_state_section_menu"
             android:textColor="#FFD600"
             android:textSize="14sp"
             android:fontFamily="sans-serif-medium"
@@ -45,9 +43,8 @@
             android:background="#222222"
             android:padding="12dp">
 
-            <!-- Option 1: Save -->
             <LinearLayout
-                android:id="@+id/btnSave"
+                android:id="@+id/btnBackupMenuExport"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -56,7 +53,7 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true">
-                
+
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
@@ -68,27 +65,25 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical">
-                    
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#FFFFFF"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:text="@string/save_favorites"
-                        android:layout_marginBottom="2dp"/>
+                        android:text="@string/backup_state_menu_export" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="@string/save_load_save_desc_detail"/>
+                        android:text="@string/backup_state_menu_export_desc"/>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Option 2: Load -->
             <LinearLayout
-                android:id="@+id/btnLoad"
+                android:id="@+id/btnBackupMenuImport"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -98,11 +93,11 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true">
-                
+
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@android:drawable/stat_sys_download" 
+                    android:src="@android:drawable/stat_sys_download"
                     app:tint="@color/white"
                     android:layout_marginEnd="16dp"/>
 
@@ -111,30 +106,28 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical">
-                    
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#FFFFFF"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:text="@string/load_favorites"
-                        android:layout_marginBottom="2dp"/>
+                        android:text="@string/backup_state_menu_import" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="@string/save_load_load_desc_detail"/>
+                        android:text="@string/backup_state_menu_import_desc"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- SUBHEADER DANGER ZONE -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="@string/save_load_section_danger"
-            android:textColor="#FF1744"
+            android:text="@string/backup_state_section_full"
+            android:textColor="#FFD600"
             android:textSize="14sp"
             android:fontFamily="sans-serif-medium"
             android:layout_marginTop="16dp"
@@ -147,9 +140,8 @@
             android:background="#222222"
             android:padding="12dp">
 
-            <!-- Option 3: Delete All Favorites -->
             <LinearLayout
-                android:id="@+id/btnDeleteAllFavs"
+                android:id="@+id/btnBackupFullExport"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -158,12 +150,11 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true">
-                
+
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@android:drawable/ic_menu_delete" 
-                    app:tint="#FF1744"
+                    android:src="@drawable/ic_save_load"
                     android:layout_marginEnd="16dp"/>
 
                 <LinearLayout
@@ -171,27 +162,25 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical">
-                    
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#FF1744"
+                        android:textColor="#FFFFFF"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:text="@string/save_load_delete_all_title"
-                        android:layout_marginBottom="2dp"/>
+                        android:text="@string/backup_state_full_export" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="@string/save_load_delete_all_sub"/>
+                        android:text="@string/backup_state_full_export_desc"/>
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Option 4: Clear History -->
             <LinearLayout
-                android:id="@+id/btnClearHistory"
+                android:id="@+id/btnBackupFullImport"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -201,12 +190,12 @@
                 android:background="?android:attr/selectableItemBackground"
                 android:clickable="true"
                 android:focusable="true">
-                
+
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@android:drawable/ic_menu_recent_history" 
-                    app:tint="#FF1744"
+                    android:src="@android:drawable/stat_sys_download"
+                    app:tint="@color/white"
                     android:layout_marginEnd="16dp"/>
 
                 <LinearLayout
@@ -214,26 +203,24 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:orientation="vertical">
-                    
+
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#FF1744"
+                        android:textColor="#FFFFFF"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:text="@string/save_load_clear_history_title"
-                        android:layout_marginBottom="2dp"/>
+                        android:text="@string/backup_state_full_import" />
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="#AAAAAA"
                         android:textSize="12sp"
-                        android:text="@string/save_load_clear_history_sub"/>
+                        android:text="@string/backup_state_full_import_desc"/>
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Close -->
         <TextView
             android:id="@+id/btnClose"
             style="@style/DialogCloseButton"

@@ -66,13 +66,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:background="@drawable/bg_submenu_box"
+            android:background="@drawable/bg_glass_card_red"
             android:minHeight="52dp"
             android:text="@string/cancel"
             android:textAllCaps="true"
             android:textColor="@color/white"
             android:textSize="14sp"
-            android:textStyle="bold"
-            app:backgroundTint="#CCFF5555" />
+            android:textStyle="bold" />
     </LinearLayout>
 </LinearLayout>

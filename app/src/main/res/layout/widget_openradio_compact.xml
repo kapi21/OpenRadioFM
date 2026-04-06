@@ -33,7 +33,7 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="—"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/widget_text_primary"
             android:textSize="20sp"
             android:textStyle="bold" />
 
@@ -44,27 +44,27 @@
             android:ellipsize="end"
             android:maxLines="1"
             android:text="—"
-            android:textColor="#B3FFFFFF"
+            android:textColor="@color/widget_text_secondary"
             android:textSize="14sp" />
     </LinearLayout>
 
     <ImageButton
         android:id="@+id/widget_btn_prev"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
+        android:layout_width="@dimen/widget_button_size"
+        android:layout_height="@dimen/widget_button_size"
         android:background="@android:color/transparent"
         android:contentDescription="@string/widget_prev_preset"
-        android:padding="6dp"
+        android:padding="8dp"
         android:scaleType="fitCenter"
         android:src="@drawable/btn_previous_n" />
 
     <ImageButton
         android:id="@+id/widget_btn_next"
-        android:layout_width="44dp"
-        android:layout_height="44dp"
+        android:layout_width="@dimen/widget_button_size"
+        android:layout_height="@dimen/widget_button_size"
         android:background="@android:color/transparent"
         android:contentDescription="@string/widget_next_preset"
-        android:padding="6dp"
+        android:padding="8dp"
         android:scaleType="fitCenter"
         android:src="@drawable/btn_next_n" />
 </LinearLayout>

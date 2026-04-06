@@ -75,6 +75,24 @@
     <string name="all_favorites_deleted">✅ Todos los favoritos eliminados</string>
     <string name="select_favorites_file">📂 Seleccionar archivo de favoritos</string>
     <string name="cancel">Cancelar</string>
+
+    <!-- Backup / Restore (App State) -->
+    <string name="backup_state_title">🗂️ Copia de seguridad</string>
+    <string name="backup_state_section_menu">Opciones (solo menú)</string>
+    <string name="backup_state_menu_export">Guardar opciones</string>
+    <string name="backup_state_menu_export_desc">Exporta ajustes (tema, logos online, layout, etc.) sin incluir logos.</string>
+    <string name="backup_state_menu_import">Cargar opciones</string>
+    <string name="backup_state_menu_import_desc">Restaura ajustes desde un archivo de opciones.</string>
+    <string name="backup_state_section_full">Copia completa</string>
+    <string name="backup_state_full_export">Guardar copia completa</string>
+    <string name="backup_state_full_export_desc">Incluye opciones + presets/nombres + carpeta RadioLogos (logos).</string>
+    <string name="backup_state_full_import">Cargar copia completa</string>
+    <string name="backup_state_full_import_desc">Restaura opciones y (opcionalmente) logos desde un ZIP.</string>
+
+    <string name="backup_saved">✅ Copia guardada: %s</string>
+    <string name="backup_loaded">✅ Copia cargada: %s</string>
+    <string name="backup_no_files">❌ No se encontraron copias</string>
+    <string name="backup_error">❌ Error en copia: %s</string>
     
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>

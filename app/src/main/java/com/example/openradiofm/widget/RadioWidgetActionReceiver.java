@@ -19,7 +19,10 @@ public class RadioWidgetActionReceiver extends BroadcastReceiver {
         String action = intent.getAction();
         if (action == null) return;
         if (!RadioMediaService.ACTION_WIDGET_PREV_PRESET.equals(action)
-                && !RadioMediaService.ACTION_WIDGET_NEXT_PRESET.equals(action)) {
+                && !RadioMediaService.ACTION_WIDGET_NEXT_PRESET.equals(action)
+                && !RadioMediaService.ACTION_WIDGET_SEEK_DOWN.equals(action)
+                && !RadioMediaService.ACTION_WIDGET_SEEK_UP.equals(action)
+                && !RadioMediaService.ACTION_WIDGET_TOGGLE_MUTE.equals(action)) {
             return;
         }
         Intent svc = new Intent(context, RadioMediaService.class);

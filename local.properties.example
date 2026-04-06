@@ -8,3 +8,10 @@
 #
 SUPABASE_URL=https://TU_REFERENCIA.supabase.co/
 SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Opcional — firma release (assembleRelease / AAB). Rutas absolutas o relativas a la raíz del repo.
+# Si no existen o faltan, Gradle firma release con el keystore debug (solo pruebas locales).
+# RELEASE_STORE_FILE=C\:\\ruta\\a\\openradiofm.jks
+# RELEASE_STORE_PASSWORD=tu_store_password
+# RELEASE_KEY_ALIAS=tu_alias
+# RELEASE_KEY_PASSWORD=tu_key_password

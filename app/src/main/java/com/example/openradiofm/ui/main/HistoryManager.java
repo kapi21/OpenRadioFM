@@ -1,6 +1,7 @@
 package com.example.openradiofm.ui.main;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -17,15 +18,25 @@ import com.example.openradiofm.data.model.RadioStation;
 import com.example.openradiofm.data.repository.RadioRepository;
 
 import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /**
  * V16: Gestor de Historial y Exportación/Importación de Favoritos.
@@ -64,6 +75,450 @@ public class HistoryManager {
     public HistoryManager(MainActivity activity, SharedPreferences prefs) {
         this.mActivity = activity;
         this.mPrefs = prefs;
+    }
+
+    // ==========================
+    // === Backup estado app ====
+    // ==========================
+
+    public void saveMenuOptionsToFile() {
+        try {
+            File dir = getPreferredRadioLogosDir();
+            if (!dir.exists()) dir.mkdirs();
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+            File out = new File(dir, "opciones_" + timestamp + ".ors"); // OpenRadio Settings
+
+            org.json.JSONObject root = new org.json.JSONObject();
+            root.put("schemaVersion", 1);
+            root.put("timestamp", timestamp);
+            root.put("type", "menu_only");
+
+            // RadioPresets: solo claves de opciones (pref_*)
+            root.put("RadioPresets", dumpPrefsFiltered("RadioPresets", true));
+            // ThemePrefs: completo (solo opciones)
+            root.put("ThemePrefs", dumpPrefsFiltered("ThemePrefs", false));
+
+            FileWriter w = new FileWriter(out);
+            w.write(root.toString(2));
+            w.close();
+
+            mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_saved), out.getName()));
+        } catch (Exception e) {
+            mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
+            Log.e(TAG, "saveMenuOptionsToFile", e);
+        }
+    }
+
+    public void loadMenuOptionsFromFile() {
+        try {
+            File legacy = getLegacyRadioLogosDir();
+            File dir = (legacy.exists() && legacy.isDirectory()) ? legacy : getPreferredRadioLogosDir();
+            File[] files = dir.listFiles((d, name) -> name.endsWith(".ors"));
+            if (files == null || files.length == 0) {
+                mActivity.showStyledToast(mActivity.getString(R.string.backup_no_files));
+                return;
+            }
+            Arrays.sort(files, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+            String[] names = new String[files.length];
+            for (int i = 0; i < files.length; i++) names[i] = files[i].getName();
+
+            final File[] finalFiles = files;
+            LayoutInflater inflater = LayoutInflater.from(mActivity);
+            View dialogView = inflater.inflate(R.layout.dialog_favorites_file_picker, null);
+            TextView tvTitle = dialogView.findViewById(R.id.tvFavPickerTitle);
+            if (tvTitle != null) tvTitle.setText(mActivity.getString(R.string.backup_state_menu_import));
+            ListView lv = dialogView.findViewById(R.id.lvFavFiles);
+            View btnCancel = dialogView.findViewById(R.id.btnCancelFavPicker);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(mActivity, R.layout.item_fav_file_row,
+                    R.id.tvFavFileName, names);
+            if (lv != null) {
+                lv.setAdapter(adapter);
+                lv.setOnItemClickListener((parent, itemView, which, id) -> {
+                    try {
+                        boolean layoutChanged = applyMenuOptionsFromJson(finalFiles[which]);
+                        mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_loaded), finalFiles[which].getName()));
+                        promptRestartAfterImport(layoutChanged);
+                    } catch (Exception e) {
+                        mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
+                    }
+                });
+            }
+            AlertDialog dialog = new AlertDialog.Builder(mActivity).setView(dialogView).create();
+            if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setDimAmount(0.7f);
+                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            }
+            dialog.show();
+            try { mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface()); } catch (Exception ignored) {}
+        } catch (Exception e) {
+            mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
+            Log.e(TAG, "loadMenuOptionsFromFile", e);
+        }
+    }
+
+    public void saveFullBackupToZip() {
+        new Thread(() -> {
+            android.app.Dialog progress = null;
+            try {
+                File dir = getPreferredRadioLogosDir();
+                if (!dir.exists()) dir.mkdirs();
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                File out = new File(dir, "backup_" + timestamp + ".orzip");
+
+                final java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean(false);
+                // CRÍTICO: el diálogo debe crearse en el hilo UI (si no, "Can't create handler inside thread...").
+                progress = createAndShowProgressOnUiThread(
+                        mActivity.getString(R.string.backup_state_full_export),
+                        mActivity.getString(R.string.backup_state_full_export_desc),
+                        cancelled
+                );
+
+                org.json.JSONObject root = new org.json.JSONObject();
+                root.put("schemaVersion", 1);
+                root.put("timestamp", timestamp);
+                root.put("type", "full");
+                root.put("RadioPresets", dumpPrefsFiltered("RadioPresets", false));
+                root.put("ThemePrefs", dumpPrefsFiltered("ThemePrefs", false));
+                root.put("RadioStationNames", dumpPrefsFiltered("RadioStationNames", false));
+                root.put("OpenRadioFmWidget", dumpPrefsFiltered("OpenRadioFmWidget", false));
+
+                ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(out)));
+                byte[] jsonBytes = root.toString(2).getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                zos.putNextEntry(new ZipEntry("state.json"));
+                zos.write(jsonBytes);
+                zos.closeEntry();
+
+                File logosDir = dir;
+                zipFolderImagesWithProgress(zos, logosDir, "RadioLogos/", progress, cancelled);
+                zos.close();
+
+                android.app.Dialog doneProgress = progress;
+                mActivity.runOnUiThread(() -> {
+                    try { doneProgress.dismiss(); } catch (Exception ignored) {}
+                    mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_saved), out.getName()));
+                });
+            } catch (Exception e) {
+                android.app.Dialog errProgress = progress;
+                mActivity.runOnUiThread(() -> {
+                    try { if (errProgress != null) errProgress.dismiss(); } catch (Exception ignored) {}
+                    mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
+                });
+                Log.e(TAG, "saveFullBackupToZip", e);
+            }
+        }).start();
+    }
+
+    public void loadFullBackupFromZip() {
+        try {
+            File legacy = getLegacyRadioLogosDir();
+            File dir = (legacy.exists() && legacy.isDirectory()) ? legacy : getPreferredRadioLogosDir();
+            File[] files = dir.listFiles((d, name) -> name.endsWith(".orzip"));
+            if (files == null || files.length == 0) {
+                mActivity.showStyledToast(mActivity.getString(R.string.backup_no_files));
+                return;
+            }
+            Arrays.sort(files, (f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+            String[] names = new String[files.length];
+            for (int i = 0; i < files.length; i++) names[i] = files[i].getName();
+
+            final File[] finalFiles = files;
+            LayoutInflater inflater = LayoutInflater.from(mActivity);
+            View dialogView = inflater.inflate(R.layout.dialog_favorites_file_picker, null);
+            TextView tvTitle = dialogView.findViewById(R.id.tvFavPickerTitle);
+            if (tvTitle != null) tvTitle.setText(mActivity.getString(R.string.backup_state_full_import));
+            ListView lv = dialogView.findViewById(R.id.lvFavFiles);
+            View btnCancel = dialogView.findViewById(R.id.btnCancelFavPicker);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(mActivity, R.layout.item_fav_file_row,
+                    R.id.tvFavFileName, names);
+            AlertDialog dialog = new AlertDialog.Builder(mActivity).setView(dialogView).create();
+            if (lv != null) {
+                lv.setAdapter(adapter);
+                lv.setOnItemClickListener((parent, itemView, which, id) -> {
+                    try {
+                        final java.util.concurrent.atomic.AtomicBoolean cancelled = new java.util.concurrent.atomic.AtomicBoolean(false);
+                        final android.app.Dialog progress = buildBackupProgressDialog(mActivity.getString(R.string.backup_state_full_import),
+                                mActivity.getString(R.string.backup_state_full_import_desc), cancelled);
+                        mActivity.runOnUiThread(() -> {
+                            try { progress.show(); } catch (Exception ignored) {}
+                        });
+                        new Thread(() -> {
+                            boolean layoutChanged = false;
+                            try {
+                                layoutChanged = applyFullBackupFromZip(finalFiles[which], getPreferredRadioLogosDir(), progress, cancelled);
+                                final boolean finalLayoutChanged = layoutChanged;
+                                mActivity.runOnUiThread(() -> {
+                                    try { progress.dismiss(); } catch (Exception ignored) {}
+                                    mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_loaded), finalFiles[which].getName()));
+                                    promptRestartAfterImport(finalLayoutChanged);
+                                });
+                            } catch (Exception e) {
+                                mActivity.runOnUiThread(() -> {
+                                    try { progress.dismiss(); } catch (Exception ignored) {}
+                                    mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
+                                });
+                            }
+                        }).start();
+                    } catch (Exception e) {
+                        mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
+                    }
+                    dialog.dismiss();
+                });
+            }
+            if (btnCancel != null) btnCancel.setOnClickListener(v -> dialog.dismiss());
+            Window window = dialog.getWindow();
+            if (window != null) {
+                window.setDimAmount(0.7f);
+                window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            }
+            dialog.show();
+            try { mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface()); } catch (Exception ignored) {}
+        } catch (Exception e) {
+            mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
+            Log.e(TAG, "loadFullBackupFromZip", e);
+        }
+    }
+
+    private org.json.JSONObject dumpPrefsFiltered(String name, boolean onlyMenuKeys) throws Exception {
+        SharedPreferences p = mActivity.getSharedPreferences(name, Context.MODE_PRIVATE);
+        Map<String, ?> all = p.getAll();
+        org.json.JSONObject o = new org.json.JSONObject();
+        for (String k : all.keySet()) {
+            if (onlyMenuKeys) {
+                if (!k.startsWith("pref_")) continue;
+            }
+            Object v = all.get(k);
+            if (v instanceof Boolean || v instanceof Integer || v instanceof Long || v instanceof Float || v instanceof String) {
+                o.put(k, v);
+            } else if (v instanceof java.util.Set) {
+                org.json.JSONArray arr = new org.json.JSONArray();
+                for (Object it : (java.util.Set<?>) v) arr.put(String.valueOf(it));
+                o.put(k, arr);
+            }
+        }
+        return o;
+    }
+
+    private boolean applyMenuOptionsFromJson(File f) throws Exception {
+        boolean beforeV3 = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_v3", false);
+        boolean beforeSimple = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_simple", false);
+
+        StringBuilder sb = new StringBuilder();
+        BufferedReader r = new BufferedReader(new FileReader(f));
+        String line;
+        while ((line = r.readLine()) != null) sb.append(line).append("\n");
+        r.close();
+        org.json.JSONObject root = new org.json.JSONObject(sb.toString());
+        if (root.has("RadioPresets")) applyPrefsObject("RadioPresets", root.getJSONObject("RadioPresets"), true);
+        if (root.has("ThemePrefs")) applyPrefsObject("ThemePrefs", root.getJSONObject("ThemePrefs"), false);
+
+        boolean afterV3 = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_v3", false);
+        boolean afterSimple = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_simple", false);
+        return beforeV3 != afterV3 || beforeSimple != afterSimple;
+    }
+
+    private void applyPrefsObject(String prefsName, org.json.JSONObject obj, boolean onlyMenuKeys) throws Exception {
+        SharedPreferences p = mActivity.getSharedPreferences(prefsName, Context.MODE_PRIVATE);
+        SharedPreferences.Editor e = p.edit();
+        java.util.Iterator<String> it = obj.keys();
+        while (it.hasNext()) {
+            String k = it.next();
+            if (onlyMenuKeys && !k.startsWith("pref_")) continue;
+            Object v = obj.get(k);
+            if (v instanceof Boolean) e.putBoolean(k, (Boolean) v);
+            else if (v instanceof Integer) e.putInt(k, (Integer) v);
+            else if (v instanceof Long) e.putLong(k, (Long) v);
+            else if (v instanceof Double) e.putFloat(k, ((Double) v).floatValue());
+            else if (v instanceof String) e.putString(k, (String) v);
+            else if (v instanceof org.json.JSONArray) {
+                java.util.HashSet<String> set = new java.util.HashSet<>();
+                org.json.JSONArray arr = (org.json.JSONArray) v;
+                for (int i = 0; i < arr.length(); i++) set.add(arr.getString(i));
+                e.putStringSet(k, set);
+            }
+        }
+        e.apply();
+    }
+
+    private void zipFolderImages(ZipOutputStream zos, File folder, String prefix) throws Exception {
+        if (folder == null || !folder.exists() || !folder.isDirectory()) return;
+        File[] list = folder.listFiles();
+        if (list == null) return;
+        for (File f : list) {
+            if (f.isDirectory()) continue;
+            String n = f.getName().toLowerCase(Locale.ROOT);
+            boolean ok = n.endsWith(".png") || n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".webp");
+            if (!ok) continue;
+            ZipEntry ze = new ZipEntry(prefix + f.getName());
+            zos.putNextEntry(ze);
+            copy(new BufferedInputStream(new FileInputStream(f)), zos);
+            zos.closeEntry();
+        }
+    }
+
+    private boolean applyFullBackupFromZip(File zip, File targetDir, android.app.Dialog progress,
+                                          java.util.concurrent.atomic.AtomicBoolean cancelled) throws Exception {
+        // Detectar cambio de layout (por si hay que reiniciar)
+        boolean beforeV3 = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_v3", false);
+        boolean beforeSimple = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_simple", false);
+
+        ZipInputStream zis = new ZipInputStream(new BufferedInputStream(new FileInputStream(zip)));
+        ZipEntry ze;
+        String stateJson = null;
+        int filesDone = 0;
+        while ((ze = zis.getNextEntry()) != null) {
+            if (cancelled != null && cancelled.get()) {
+                try { zis.close(); } catch (Exception ignored) {}
+                throw new Exception("Cancelado");
+            }
+            String name = ze.getName();
+            if ("state.json".equals(name)) {
+                java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+                copy(zis, baos);
+                stateJson = baos.toString("UTF-8");
+            } else if (name.startsWith("RadioLogos/") && !ze.isDirectory()) {
+                String fileName = name.substring("RadioLogos/".length());
+                File out = new File(targetDir, fileName);
+                OutputStream os = new BufferedOutputStream(new FileOutputStream(out));
+                copy(zis, os);
+                os.close();
+                filesDone++;
+                updateProgressDialog(progress, "Restaurando logos… " + filesDone, -1);
+            }
+            zis.closeEntry();
+        }
+        zis.close();
+        if (stateJson != null) {
+            org.json.JSONObject root = new org.json.JSONObject(stateJson);
+            if (root.has("RadioPresets")) applyPrefsObject("RadioPresets", root.getJSONObject("RadioPresets"), false);
+            if (root.has("ThemePrefs")) applyPrefsObject("ThemePrefs", root.getJSONObject("ThemePrefs"), false);
+            if (root.has("RadioStationNames")) applyPrefsObject("RadioStationNames", root.getJSONObject("RadioStationNames"), false);
+            if (root.has("OpenRadioFmWidget")) applyPrefsObject("OpenRadioFmWidget", root.getJSONObject("OpenRadioFmWidget"), false);
+        }
+
+        boolean afterV3 = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_v3", false);
+        boolean afterSimple = mActivity.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                .getBoolean("pref_layout_simple", false);
+        return beforeV3 != afterV3 || beforeSimple != afterSimple;
+    }
+
+    private void zipFolderImagesWithProgress(ZipOutputStream zos, File folder, String prefix,
+                                            android.app.Dialog progress,
+                                            java.util.concurrent.atomic.AtomicBoolean cancelled) throws Exception {
+        if (folder == null || !folder.exists() || !folder.isDirectory()) return;
+        File[] list = folder.listFiles();
+        if (list == null) return;
+        // Solo imágenes
+        java.util.ArrayList<File> imgs = new java.util.ArrayList<>();
+        for (File f : list) {
+            if (f.isDirectory()) continue;
+            String n = f.getName().toLowerCase(Locale.ROOT);
+            boolean ok = n.endsWith(".png") || n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".webp");
+            if (ok) imgs.add(f);
+        }
+        int total = imgs.size();
+        for (int i = 0; i < total; i++) {
+            if (cancelled != null && cancelled.get()) throw new Exception("Cancelado");
+            File f = imgs.get(i);
+            updateProgressDialog(progress, "Empaquetando logos… " + (i + 1) + "/" + total,
+                    total == 0 ? 0 : (int) (((i + 1) * 100f) / total));
+            ZipEntry ze = new ZipEntry(prefix + f.getName());
+            zos.putNextEntry(ze);
+            copy(new BufferedInputStream(new FileInputStream(f)), zos);
+            zos.closeEntry();
+        }
+    }
+
+    private android.app.Dialog buildBackupProgressDialog(String title, String initialMessage,
+                                                        java.util.concurrent.atomic.AtomicBoolean cancelled) {
+        android.app.Dialog d = new android.app.Dialog(mActivity);
+        d.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        d.setContentView(R.layout.dialog_backup_progress);
+        d.setCancelable(false);
+        try {
+            TextView tvT = d.findViewById(R.id.tvBackupProgressTitle);
+            TextView tvM = d.findViewById(R.id.tvBackupProgressMessage);
+            android.widget.ProgressBar pb = d.findViewById(R.id.pbBackup);
+            if (tvT != null) tvT.setText(title);
+            if (tvM != null) tvM.setText(initialMessage);
+            if (pb != null) {
+                pb.setIndeterminate(false);
+                pb.setProgress(0);
+            }
+            View btn = d.findViewById(R.id.btnCancelBackup);
+            if (btn != null) {
+                btn.setOnClickListener(v -> {
+                    if (cancelled != null) cancelled.set(true);
+                });
+            }
+        } catch (Exception ignored) {}
+        return d;
+    }
+
+    private android.app.Dialog createAndShowProgressOnUiThread(String title, String initialMessage,
+                                                               java.util.concurrent.atomic.AtomicBoolean cancelled) throws Exception {
+        final java.util.concurrent.CountDownLatch latch = new java.util.concurrent.CountDownLatch(1);
+        final android.app.Dialog[] holder = new android.app.Dialog[1];
+        final Exception[] err = new Exception[1];
+        mActivity.runOnUiThread(() -> {
+            try {
+                android.app.Dialog d = buildBackupProgressDialog(title, initialMessage, cancelled);
+                holder[0] = d;
+                try { d.show(); } catch (Exception ignored) {}
+            } catch (Exception e) {
+                err[0] = e;
+            } finally {
+                latch.countDown();
+            }
+        });
+        latch.await();
+        if (err[0] != null) throw err[0];
+        return holder[0];
+    }
+
+    private void updateProgressDialog(android.app.Dialog d, String message, int percent) {
+        if (d == null) return;
+        mActivity.runOnUiThread(() -> {
+            try {
+                TextView tvM = d.findViewById(R.id.tvBackupProgressMessage);
+                android.widget.ProgressBar pb = d.findViewById(R.id.pbBackup);
+                if (tvM != null && message != null) tvM.setText(message);
+                if (pb != null && percent >= 0) pb.setProgress(percent);
+            } catch (Exception ignored) {}
+        });
+    }
+
+    private void promptRestartAfterImport(boolean layoutChanged) {
+        try {
+            String msg = layoutChanged
+                    ? "Ajustes cargados. Para aplicar el cambio de layout, reinicia la app."
+                    : "Ajustes cargados. Algunas opciones pueden requerir reiniciar la app.";
+            new AlertDialog.Builder(mActivity)
+                    .setTitle("OpenRadioFM")
+                    .setMessage(msg)
+                    .setPositiveButton("Reiniciar ahora", (d, w) -> mActivity.restartAppForSettings())
+                    .setNegativeButton("Más tarde", null)
+                    .show();
+        } catch (Exception ignored) {}
+    }
+
+    private static void copy(InputStream in, OutputStream out) throws Exception {
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = in.read(buf)) >= 0) {
+            out.write(buf, 0, n);
+        }
+        out.flush();
     }
 
     // ========================

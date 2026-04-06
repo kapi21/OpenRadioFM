@@ -2082,6 +2082,39 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         super.onNewIntent(intent);
         setIntent(intent);
         Log.d(TAG, "onNewIntent: App ya activa, refrescando parámetros (Single Instance).");
+        handleWidgetDeepLinks(intent);
+    }
+
+    private void handleWidgetDeepLinks(Intent intent) {
+        if (intent == null) return;
+        try {
+            if (intent.getBooleanExtra(com.example.openradiofm.widget.OpenRadioFmWidgetProvider.EXTRA_WIDGET_SHOW_INFO, false)) {
+                int freq = intent.getIntExtra("freq_khz", 0);
+                int band = intent.getIntExtra("band", 0);
+                String ps = intent.getStringExtra("ps");
+                String bandTxt;
+                if (band == BAND_FM1) bandTxt = "FM1";
+                else if (band == BAND_FM2) bandTxt = "FM2";
+                else if (band == BAND_FM3) bandTxt = "FM3";
+                else if (band == BAND_AM1) bandTxt = "AM1";
+                else if (band == BAND_AM2) bandTxt = "AM2";
+                else bandTxt = "FM1";
+                String freqTxt = (freq > 0)
+                        ? ((band == BAND_AM1 || band == BAND_AM2) ? (freq + " kHz") : String.format(java.util.Locale.US, "%.2f MHz", freq / 1000.0))
+                        : "—";
+                String psTxt = (ps != null && !ps.trim().isEmpty()) ? ps.trim() : "—";
+                new android.app.AlertDialog.Builder(this)
+                        .setTitle("OpenRadioFM")
+                        .setMessage(bandTxt + " · " + freqTxt + "\n" + psTxt)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            }
+            if (intent.getBooleanExtra(com.example.openradiofm.widget.OpenRadioFmWidgetProvider.EXTRA_WIDGET_OPEN_FAVORITES_DIALOG, false)) {
+                if (mDialogManager != null) {
+                    mDialogManager.showSaveLoadFavoritesDialog();
+                }
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -2988,7 +3021,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             sourceIntent.putExtra("sourceName", "Radio");
             sendBroadcast(sourceIntent);
 
+            // Actualizar widget propio (texto inmediato) y luego inyectar logo cuando esté disponible.
             com.example.openradiofm.widget.OpenRadioFmWidgetProvider.updateStationDisplay(this, freq, band, rdsName);
+            if (mRepository != null) {
+                mRepository.getStationInfo(freq, logoUrl -> {
+                    com.example.openradiofm.widget.OpenRadioFmWidgetProvider
+                            .updateStationDisplay(this, freq, band, rdsName, logoUrl);
+                }, rdsName);
+            }
 
         } catch (Exception ex) {
             Log.e(TAG, "Error updating launcher widgets", ex);
@@ -3075,6 +3115,19 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     public void showToast(String msg) {
         showStyledToast(msg);
+    }
+
+    public void restartAppForSettings() {
+        try {
+            Intent i = new Intent(this, MainActivity.class);
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(i);
+            finish();
+        } catch (Exception e) {
+            try {
+                recreate();
+            } catch (Exception ignored) {}
+        }
     }
 
     private void launchExternalApp(String packageName) {

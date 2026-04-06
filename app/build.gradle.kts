@@ -1,3 +1,4 @@
+import java.io.File
 import java.util.Properties
 
 plugins {
@@ -35,6 +36,15 @@ val supabaseAnonKey: String = supabaseAnonKeyRaw!!
 val supabaseStoragePublicLogosBase: String =
     supabaseUrl.trimEnd('/') + "/storage/v1/object/public/station-logos/espana/"
 
+// Firma release: opcional vía local.properties (RELEASE_*). Si no hay keystore válido, se usa la firma
+// debug para que assembleRelease no falle (evita externalOverride / rutas IDE rotas como key_openradiofm).
+fun releaseStoreFile(): File? {
+    val path = localProperties.getProperty("RELEASE_STORE_FILE")?.trim()?.takeIf { it.isNotEmpty() }
+        ?: return null
+    val f = rootProject.file(path)
+    return if (f.isFile) f else null
+}
+
 android {
     namespace = "com.example.openradiofm"
     compileSdk = 35
@@ -61,13 +71,17 @@ android {
     // Usar V1 y V2 asegura compatibilidad con Android 4.4 hasta 14.
     signingConfigs {
         create("release") {
-            // Para automatizar la firma, rellena estos campos y apunta a tu archivo .jks
-            // storeFile = file("ruta/a/tu/llave.jks")
-            // storePassword = "password"
-            // keyAlias = "alias"
-            // keyPassword = "password"
             enableV1Signing = true
             enableV2Signing = true
+            val store = releaseStoreFile()
+            if (store != null) {
+                storeFile = store
+                storePassword =
+                    localProperties.getProperty("RELEASE_STORE_PASSWORD")?.trim().orEmpty()
+                keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")?.trim().orEmpty()
+                keyPassword =
+                    localProperties.getProperty("RELEASE_KEY_PASSWORD")?.trim().orEmpty()
+            }
         }
     }
 
@@ -82,9 +96,19 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            
-            // Vincular con la firma si se configura arriba
-            // signingConfig = signingConfigs.getByName("release")
+
+            // Anula firma inyectada (externalOverride) si el keystore no existe: release local firma con debug.
+            val releaseCfg = signingConfigs.getByName("release")
+            signingConfig =
+                if (releaseCfg.storeFile != null && releaseCfg.storeFile!!.exists()) {
+                    releaseCfg
+                } else {
+                    logger.lifecycle(
+                        "OpenRadioFM: sin RELEASE_STORE_FILE válido en local.properties; " +
+                            "release usa firma debug (APK no válida para Play Store).",
+                    )
+                    signingConfigs.getByName("debug")
+                }
         }
     }
 

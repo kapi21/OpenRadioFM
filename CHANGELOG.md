@@ -1,3 +1,18 @@
+## [Unreleased]
+
+### Added
+- **Backups (estado de app)**: Long press en **Guardar/Cargar Favoritos** abre un menú de **Copia de seguridad** con export/import de:
+  - **Opciones (solo menú)** a `.ors` (ajustes `pref_*` + `ThemePrefs`)
+  - **Copia completa** a `.orzip` (ZIP con `state.json` + imágenes de `RadioLogos/`)
+  Incluye progreso y botón **Cancelar**, y sugiere **reinicio** tras restaurar para aplicar layouts/tema.
+- **Widget escritorio**: 2 layouts (compacto/expandido), indicador de banda, acciones extra (seek/mute) y pulsación en PS para info rápida; en launchers sin resize el widget simple vuelve a **SEEK** (regresión evitada).
+- **Icono launcher (QS6/NWD)**: `android:icon` y `roundIcon` apuntan a `@drawable` con fallback `drawable-nodpi-v4` (alta resolución) al estilo de la radio OEM.
+
+### Fixed
+- **Calidad logos**: evitar guardado de logos descargados a 512×512 (causaba pixelado al ampliar); cargar/decodificar con ARGB8888 y tamaño original donde aplica.
+
+---
+
 ## [5.0.16] - 2026-04-03
 *Hotfix sobre la línea 5.0.15 (`versionCode` 29). **Pendiente verificación en hardware real K706 y MT8163.***
 
