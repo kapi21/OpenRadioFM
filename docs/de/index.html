@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRadioFM | Automotive Open Source</title>
+    <meta name="description"
+        content="OpenRadioFM V.5.0.0: Die ultimative Firmware für Hardware-Hacking- und Android-Radio-Enthusiasten.">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="carbon-bg">
+    <div class="lang-selector">
+        <a href="../es/index.html">ES</a> | <a href="../en/index.html">EN</a> | <a href="../ru/index.html">RU</a> | <a
+            href="../fr/index.html">FR</a> | <span class="active">DE</span> | <a href="../it/index.html">IT</a> | <a
+            href="../pt/index.html">PT</a>
+    </div>
+
+    <header class="container">
+        <nav>
+            <div class="logo-container">
+                <img src="../img/app_icon.png" alt="OpenRadioFM V.5 Logo" class="main-logo">
+                <div class="logo-text orbitron-text">
+                    OPENRADIOFM <span>V5.0.0</span> <span
+                        style="font-size: 0.8rem; color: #FF8C00; font-weight: bold; text-shadow: 0 0 10px rgba(255,140,0,0.5);">
+                        (STABILITY BETA)</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="https://github.com/kapi21/OpenRadioFM" class="nav-link bebas-text">GitHub Repo</a>
+                <a href="#hardware" class="nav-link bebas-text">Hardware</a>
+                <a href="#support" class="btn btn-primary bebas-text">Unterstützen</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-text">
+                <h1 class="orbitron-text">OPENRADIOFM</h1>
+                <span class="slogan">Dein Radio, Deine Regeln</span>
+                <p class="app-desc">
+                    Passen Sie die Instrumentierung Ihres Fahrzeugs mit Low-Level-Power an. Extrahieren Sie Firmware,
+                    prüfen Sie RDS und übernehmen Sie die volle Kontrolle. Optimiert für Bildschirme ab
+                    <strong>1024x600</strong>.
+                </p>
+                <div class="hero-actions">
+                    <a href="https://github.com/kapi21/OpenRadioFM/releases" class="btn btn-primary">APK
+                        Herunterladen</a>
+                    <a href="https://github.com/kapi21/OpenRadioFM/wiki" class="btn btn-outline">Technisches Wiki</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="app-widget">
+                    <div class="status-bar digital-text">
+                        <span>BT</span>
+                        <span>GPS</span>
+                        <span>17:50</span>
+                    </div>
+                    <div class="dial-container">
+                        <div class="orbitron-text"
+                            style="font-size: 0.9rem; color: var(--primary); margin-bottom: 0.3rem; letter-spacing: 3px;">
+                            FM1</div>
+                        <div class="digital-text dial-number">93.50</div>
+                        <div class="orbitron-text dial-unit">MHz</div>
+                        <div id="waveform"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <h2 class="orbitron-text section-title">Premium-Funktionen</h2>
+            <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem; color: var(--text-muted);">
+                Extreme Anpassung für Ihr Radio. Ihr Stil, Ihre Regeln.
+            </p>
+            <div class="features-grid">
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🎨</span>
+                    <h3 class="bebas-text">Benutzerdefinierte Logos</h3>
+                    <p>Verwalten Sie Senderlogos. Laden Sie eigene Designs, Markenlogos und dynamische Hintergründe mit
+                        Blur-Effekt hoch.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">✏️</span>
+                    <h3 class="bebas-text">Erweiterte RDS-Bearbeitung</h3>
+                    <p>RDS-Dekodierung in Echtzeit. Passen Sie Sendernamen und PS/RT-Text präzise an.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">☁️</span>
+                    <h3 class="bebas-text">Crowdsourcing Cloud</h3>
+                    <p>Tragen Sie zur Community bei. Die App lädt Senderdaten automatisch hoch, damit alle aktuelle
+                        HD-Logos haben.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🌍</span>
+                    <h3 class="bebas-text">12 Sprachen</h3>
+                    <p>Interface und Handbücher in Deutsch, Englisch, Spanisch, Russisch, Französisch, Italienisch,
+                        Portugiesisch und mehr.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Screenshot Gallery -->
+        <section class="gallery">
+            <h2 class="orbitron-text section-title">v5.0 Screenshot-Galerie</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/screenshot_v49_1.png" alt="Layout V2 Night Mode" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                        <h3 class="bebas-text" style="margin: 0; color: #FF8C00;">Aktuell - V5.0.0 (Stability Beta)</h3>
+                    <p style="color: var(--text-muted);">Interface optimiert für Nachtfahrten mit Premium-Tönen.</p>
+                </div>
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/screenshot_v49_2.png" alt="Layout V3 Premium" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                    <h3 class="bebas-text">Layout V3 - Standard Premium</h3>
+                    <p style="color: var(--text-muted);">Maximale RDS-Sichtbarkeit und hochauflösende Abstimmung.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- V5 Showcase Section -->
+        <section class="gallery">
+            <h2 class="orbitron-text section-title">V5 Präsentation & Logo-Leitfaden</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/v5%20ingles.png" alt="V5 Präsentation" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                    <h3 class="bebas-text">V5 Launch-Präsentation</h3>
+                    <p style="color: var(--text-muted);">Hauptmerkmale und Stabilitätsverbesserungen in der neuen Version V5.0.0.</p>
+                </div>
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/Instrucciones%20logos%20v5%20ingles.png" alt="Logo-System-Leitfaden V5" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                    <h3 class="bebas-text">Logo-System-Leitfaden</h3>
+                    <p style="color: var(--text-muted);">Verwalten von Online- und manuellen Logos im Hybridsystem.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="stats-section"
+            style="text-align: center; padding: 3rem 0; background: rgba(255, 126, 0, 0.05); border-radius: 12px; margin: 4rem 0;">
+            <h2 class="orbitron-text section-title">OpenRadioFM in Zahlen</h2>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">12</div>
+                    <div style="color: var(--text-muted);">Sprachen</div>
+                </div>
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">12</div>
+                    <div style="color: var(--text-muted);">Favoriten/Band</div>
+                </div>
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">5</div>
+                    <div style="color: var(--text-muted);">Premium-Themes</div>
+                </div>
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">100%</div>
+                    <div style="color: var(--text-muted);">Open Source</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hardware Specs Section -->
+        <section id="hardware" class="hardware-specs ui-panel">
+            <h2 class="orbitron-text">Hardware-Spezifikationen</h2>
+            <ul class="specs-list">
+                <li><span class="bebas-text">Hardware:</span> Kompatibel mit MT8163, K706 und Radio NWD G5 (QS6).</li>
+                <li><span class="bebas-text">Radio-Chip:</span> NXP TEF6686 mit vollem RDS-Support.</li>
+                <li><span class="bebas-text">Firmware:</span> Android 8.1+. Root empfohlen.</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="container">
+        <p>&copy; 2026 OpenRadioFM. Open Source Projekt unter MIT-Lizenz.</p>
+        <p>Entwickelt mit ❤️ von der Hardware-Hacking-Community.</p>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+
+</html>

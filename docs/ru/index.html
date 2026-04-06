@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRadioFM | Automotive Open Source</title>
+    <meta name="description"
+        content="OpenRadioFM V.5.0.0: Окончательная прошивка для энтузиастов хардверного хакинга и Android радио.">
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body class="carbon-bg">
+    <div class="lang-selector">
+        <a href="../es/index.html">ES</a> | <a href="../en/index.html">EN</a> | <span class="active">RU</span> | <a
+            href="../fr/index.html">FR</a> | <a href="../de/index.html">DE</a> | <a href="../it/index.html">IT</a> | <a
+            href="../pt/index.html">PT</a>
+    </div>
+
+    <header class="container">
+        <nav>
+            <div class="logo-container">
+                <img src="../img/app_icon.png" alt="OpenRadioFM V.5 Logo" class="main-logo">
+                <div class="logo-text orbitron-text">
+                    OPENRADIOFM <span>V5.0.0</span> <span
+                        style="font-size: 0.8rem; color: #FF8C00; font-weight: bold; text-shadow: 0 0 10px rgba(255,140,0,0.5);">
+                        (STABILITY BETA)</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="https://github.com/kapi21/OpenRadioFM" class="nav-link bebas-text">GitHub Repo</a>
+                <a href="#hardware" class="nav-link bebas-text">Характеристики</a>
+                <a href="#support" class="btn btn-primary bebas-text">Поддержать проект</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-text">
+                <h1 class="orbitron-text">OPENRADIOFM</h1>
+                <span class="slogan">Ваше радио, ваши правила</span>
+                <p class="app-desc">
+                    Настройте приборную панель вашего автомобиля с низкоуровневой мощностью. Извлекайте прошивку,
+                    аудируйте RDS и получите полный контроль. Оптимизировано для экранов <strong>1024x600 и
+                        выше</strong>.
+                </p>
+                <div class="hero-actions">
+                    <a href="https://github.com/kapi21/OpenRadioFM/releases" class="btn btn-primary">Скачать
+                        приложение (APK)</a>
+                    <a href="https://github.com/kapi21/OpenRadioFM/wiki" class="btn btn-outline">Техническая Wiki</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="app-widget">
+                    <div class="status-bar digital-text">
+                        <span>BT</span>
+                        <span>GPS</span>
+                        <span>17:50</span>
+                    </div>
+                    <div class="dial-container">
+                        <div class="orbitron-text"
+                            style="font-size: 0.9rem; color: var(--primary); margin-bottom: 0.3rem; letter-spacing: 3px;">
+                            FM1</div>
+                        <div class="digital-text dial-number">93.50</div>
+                        <div class="orbitron-text dial-unit">MHz</div>
+                        <div id="waveform"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features">
+            <h2 class="orbitron-text section-title">Премиум функции</h2>
+            <p style="text-align: center; margin-bottom: 2rem; font-size: 1.1rem; color: var(--text-muted);">
+                Экстремальная настройка для вашего радио. Ваш стиль, ваши правила.
+            </p>
+            <div class="features-grid">
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🎨</span>
+                    <h3 class="bebas-text">Пользовательские логотипы</h3>
+                    <p>Редактируйте и управляйте логотипами станций. Загружайте свои дизайны, логотипы автомобильных
+                        марок и динамические фоны с эффектом размытия.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">✏️</span>
+                    <h3 class="bebas-text">Расширенное редактирование RDS</h3>
+                    <p>Декодирование и редактирование данных RDS в реальном времени. Настройка названий станций и текста
+                        PS/RT с максимальной точностью.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">⭐</span>
+                    <h3 class="bebas-text">12 избранных на диапазон</h3>
+                    <p>Сохраните до 12 избранных станций на FM диапазон. Система Save/Load для резервного копирования и
+                        обмена списками (.fav).</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🌌</span>
+                    <h3 class="bebas-text">5 тем V.4</h3>
+                    <p>Выберите из 5 премиум шрифтов: System, Bebas, Digital, Inter и Orbitron. Ночной режим с
+                        автоматическим синим оттенком.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🗺️</span>
+                    <h3 class="bebas-text">Адаптивные макеты</h3>
+                    <p>Вертикальный (V2) и горизонтальный (V3) макеты, оптимизированные для экранов 1024x600. Дизайн
+                        glassmorphism с премиум эффектами.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">☁️</span>
+                    <h3 class="bebas-text">Облачный краудсорсинг</h3>
+                    <p>Внесите свой вклад в сообщество. Приложение автоматически отправляет данные о станциях (PI
+                        Code/PS), чтобы у всех были свежие HD-логотипы.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🌍</span>
+                    <h3 class="bebas-text">12 языков</h3>
+                    <p>Полный интерфейс и руководства на испанском, английском, русском, французском, немецком,
+                        итальянском, португальском и других языках.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">⚙️</span>
+                    <h3 class="bebas-text">Полный контроль</h3>
+                    <p>Низкоуровневый доступ для экстремальной настройки. Премиум меню с расширенными эстетическими и
+                        функциональными настройками.</p>
+                </div>
+                <div class="ui-panel feature-card">
+                    <span class="feature-icon">🛠️</span>
+                    <h3 class="bebas-text">Взламываемый</h3>
+                    <p>Разработан для энтузиастов, которые хотят выйти за рамки программного обеспечения. Открытый
+                        исходный код и модифицируемый.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Screenshot Gallery -->
+        <section class="gallery">
+            <h2 class="orbitron-text section-title">v5.0 Галерея Скриншотов</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/screenshot_v49_1.png" alt="Layout V2 Night Mode" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                    <h3 class="bebas-text">Layout V2 - Ночной Синий Режим</h3>
+                    <p style="color: var(--text-muted);">Интерфейс оптимизирован для ночной езды с премиальными тонами.</p>
+                </div>
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/screenshot_v49_2.png" alt="Layout V3 Premium" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                    <h3 class="bebas-text">Layout V3 - Стандарт Премиум</h3>
+                    <p style="color: var(--text-muted);">Максимальная видимость RDS и настройка в высоком разрешении.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- V5 Showcase Section -->
+        <section class="gallery">
+            <h2 class="orbitron-text section-title">Презентация V5 и руководство по логотипам</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/v5%20ingles.png" alt="Презентация V5" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                    <h3 class="bebas-text">Презентация запуска V5</h3>
+                    <p style="color: var(--text-muted);">Ключевые особенности и улучшения стабильности в новой версии V5.0.0.</p>
+                </div>
+                <div class="ui-panel" style="padding: 1rem; text-align: center;">
+                    <img src="../img/Instrucciones%20logos%20v5%20ingles.png" alt="Руководство по системе логотипов V5" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
+                    <h3 class="bebas-text">Руководство по системе логотипов</h3>
+                    <p style="color: var(--text-muted);">Как управлять онлайн и ручными логотипами в гибридной системе.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- YouTube Video Demo -->
+        <section class="video-preview">
+            <h2 class="orbitron-text section-title">Техническая демонстрация</h2>
+            <div class="video-grid" style="max-width: 800px; margin: 0 auto; text-align: center;">
+                <div class="ui-panel" style="padding: 3rem;">
+                    <p style="margin-bottom: 1.5rem; font-size: 1.1rem;">Посмотрите полную демонстрацию OpenRadioFM v3.0
+                        в действии</p>
+                    <a href="https://www.youtube.com/watch?v=8CsXbaCsRGM" target="_blank" rel="noopener noreferrer"
+                        class="btn btn-primary" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                        ▶ Смотреть видео на YouTube
+                    </a>
+                    <p style="margin-top: 1.5rem; font-size: 0.95rem; opacity: 0.8;">Благодарности каналу <a
+                            href="https://www.youtube.com/@mekumadrid" target="_blank"
+                            style="color: var(--primary-color); text-decoration: none;">@mekumadrid</a></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resources Section -->
+        <section class="resources">
+            <h2 class="orbitron-text section-title">Ресурсы</h2>
+            <div class="resources-grid">
+                <a href="https://github.com/kapi21/OpenRadioFM/tree/master/_DOCS" class="ui-panel resource-btn">
+                    <h3 class="bebas-text">Руководства</h3>
+                    <p>Пошаговые руководства по использованию и настройке.</p>
+                </a>
+                <a href="https://github.com/kapi21/OpenRadioFM/blob/master/CHANGELOG.md" class="ui-panel resource-btn">
+                    <h3 class="bebas-text">Changelog</h3>
+                    <p>История изменений и новые версии.</p>
+                </a>
+                <a href="https://github.com/kapi21/OpenRadioFM/wiki" class="ui-panel resource-btn">
+                    <h3 class="bebas-text">Wiki</h3>
+                    <p>Репозиторий технических знаний.</p>
+                </a>
+            </div>
+        </section>
+
+        <!-- Links of Interest Section -->
+        <section class="links-interest">
+            <h2 class="orbitron-text section-title">Полезные ссылки</h2>
+            <div class="ui-panel" style="padding: 2rem;">
+                <ul style="list-style: none; padding: 0; display: grid; gap: 1.5rem;">
+                    <li
+                        style="padding: 1.5rem; background: rgba(255,126,0,0.05); border-left: 4px solid var(--primary); border-radius: 8px;">
+                        <h3 class="bebas-text" style="margin: 0 0 0.5rem 0; font-size: 1.3rem;">💬 Telegram группа
+                            Android Head Units</h3>
+                        <p style="margin: 0 0 1rem 0; color: var(--text-muted);">Сообщество Android автомагнитол</p>
+                        <a href="https://t.me/Randroides" target="_blank" class="btn btn-outline"
+                            style="display: inline-block;">
+                            Присоединиться к группе
+                        </a>
+                    </li>
+                    <li
+                        style="padding: 1.5rem; background: rgba(255,126,0,0.05); border-left: 4px solid var(--primary); border-radius: 8px;">
+                        <h3 class="bebas-text" style="margin: 0 0 0.5rem 0; font-size: 1.3rem;">🇷🇺 Русский форум
+                            MT8163</h3>
+                        <p style="margin: 0 0 1rem 0; color: var(--text-muted);">Сообщество, посвященное устройствам
+                            MT8163</p>
+                        <a href="https://4pda.to/forum/index.php?showtopic=1065206" target="_blank"
+                            class="btn btn-outline" style="display: inline-block;">
+                            Посетить форум 4PDA
+                        </a>
+                    </li>
+                    <li
+                        style="padding: 1.5rem; background: rgba(255,126,0,0.05); border-left: 4px solid var(--primary); border-radius: 8px;">
+                        <h3 class="bebas-text" style="margin: 0 0 0.5rem 0; font-size: 1.3rem;">🔧 Форум Junsun V1/Pro
+                            MT8163</h3>
+                        <p style="margin: 0 0 1rem 0; color: var(--text-muted);">Технические обсуждения Junsun V1/Pro
+                        </p>
+                        <a href="https://xdaforums.com/t/junsun-v1-pro-mt8163-thread.4692130/#post-89707906"
+                            target="_blank" class="btn btn-outline" style="display: inline-block;">
+                            Посетить XDA Forums
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- Statistics Section -->
+        <section class="stats-section"
+            style="text-align: center; padding: 3rem 0; background: rgba(255, 126, 0, 0.05); border-radius: 12px; margin: 4rem 0;">
+            <h2 class="orbitron-text section-title">OpenRadioFM в цифрах</h2>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">12</div>
+                    <div style="color: var(--text-muted); margin-top: 0.5rem;">Языков</div>
+                </div>
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">12</div>
+                    <div style="color: var(--text-muted); margin-top: 0.5rem;">Избранных/Диапазон</div>
+                </div>
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">5</div>
+                    <div style="color: var(--text-muted); margin-top: 0.5rem;">Премиум тем</div>
+                </div>
+                <div>
+                    <div class="digital-text" style="font-size: 3rem; color: var(--primary);">100%</div>
+                    <div style="color: var(--text-muted); margin-top: 0.5rem;">Открытый код</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Comparison Section -->
+        <section class="comparison">
+            <h2 class="orbitron-text section-title">Стоковое радио vs OpenRadioFM</h2>
+            <div class="ui-panel" style="padding: 2rem; margin-top: 2rem; overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="border-bottom: 2px solid var(--primary);">
+                            <th style="padding: 1rem; text-align: left; color: var(--text-muted);">Характеристика</th>
+                            <th style="padding: 1rem; text-align: center; color: #ff4444;">Стоковое радио</th>
+                            <th style="padding: 1rem; text-align: center; color: var(--primary);">OpenRadioFM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid var(--border-ui);">
+                            <td style="padding: 1rem;">Настройка логотипов</td>
+                            <td style="padding: 1rem; text-align: center;">❌</td>
+                            <td style="padding: 1rem; text-align: center;">✅ Без ограничений</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-ui);">
+                            <td style="padding: 1rem;">Темы интерфейса</td>
+                            <td style="padding: 1rem; text-align: center;">❌ 1 фиксированная</td>
+                            <td style="padding: 1rem; text-align: center;">✅ 5 премиум</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-ui);">
+                            <td style="padding: 1rem;">Доступные языки</td>
+                            <td style="padding: 1rem; text-align: center;">❌ 1 язык</td>
+                            <td style="padding: 1rem; text-align: center;">✅ 12 языков</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-ui);">
+                            <td style="padding: 1rem;">Редактирование RDS</td>
+                            <td style="padding: 1rem; text-align: center;">❌</td>
+                            <td style="padding: 1rem; text-align: center;">✅ Полное</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border-ui);">
+                            <td style="padding: 1rem;">Адаптивные макеты</td>
+                            <td style="padding: 1rem; text-align: center;">❌</td>
+                            <td style="padding: 1rem; text-align: center;">✅ V2 + V3</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 1rem;">Открытый код</td>
+                            <td style="padding: 1rem; text-align: center;">❌ Закрытый</td>
+                            <td style="padding: 1rem; text-align: center;">✅ 100% Open Source</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Roadmap Section -->
+        <section class="roadmap">
+            <h2 class="orbitron-text section-title">Дорожная карта V.5</h2>
+            <p style="text-align: center; margin-bottom: 2rem; color: var(--text-muted);">Будущее OpenRadioFM</p>
+            <div style="display: grid; gap: 1.5rem; margin-top: 2rem;">
+                <div class="ui-panel" style="padding: 1.5rem; border-left: 4px solid #00ff00;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.5rem;">✅</span>
+                        <h3 class="bebas-text" style="margin: 0; color: #FF8C00;">Завершено - V3.0</h3>
+                    </div>
+                    <p style="color: var(--text-muted); margin: 0;">Адаптивные макеты V2/V3, пользовательские логотипы,
+                        5
+                        тем, мультиязычность, система избранного</p>
+                </div>
+                <div class="ui-panel" style="padding: 1.5rem; border-left: 4px solid #00ff00;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.5rem;">✅</span>
+                        <h3 class="bebas-text" style="margin: 0; color: #FF8C00;">Текущая - V5.0.0 (Stability Beta)</h3>
+                    </div>
+                    <p style="color: var(--text-muted); margin: 0;">Estabilidad crítica MTK8259, protección de banda AM, Skin Blanco (Light Mode) y corrección de crashes en MT8163.</p>
+                    <div style="margin-top: 1rem; background: rgba(0,255,0,0.1); border-radius: 8px; overflow: hidden;">
+                        <div style="background: #00ff00; height: 8px; width: 100%; transition: width 0.3s;"></div>
+                    </div>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #FF8C00;">100% завершено - Доступно сейчас!</p>
+                </div>
+                <div class="ui-panel" style="padding: 1.5rem; border-left: 4px solid #888;">
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                        <span style="font-size: 1.5rem;">📋</span>
+                        <h3 class="bebas-text" style="margin: 0; color: #888;">Запланировано - V5.1+</h3>
+                    </div>
+                    <p style="color: var(--text-muted); margin: 0;">Поддержка большего количества радиочипов, интеграция
+                        Android Auto, расширенный эквалайзер, режим спектра в реальном времени</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Donation Section -->
+        <section id="support" class="donation-section"
+            style="text-align: center; padding: 4rem 2rem; background: linear-gradient(135deg, rgba(255,126,0,0.1), rgba(255,126,0,0.05)); border-radius: 12px; margin: 4rem 0;">
+            <h2 class="orbitron-text section-title">Поддержите разработку OpenRadioFM</h2>
+            <p style="font-size: 1.2rem; color: var(--text-muted); margin: 1rem 0 2rem 0;">Ваше пожертвование помогает
+                продолжать улучшать приложение</p>
+            <a href="https://paypal.me/kapitostes" target="_blank" class="btn btn-primary"
+                style="font-size: 1.3rem; padding: 1.2rem 3rem; margin-top: 1rem;">
+                💛 Пожертвовать через PayPal
+            </a>
+            <p style="margin-top: 2rem; font-size: 0.95rem; color: var(--text-muted);">Ваше пожертвование помогает: ✅
+                Поддержка большего количества оборудования ✅ Новые функции ✅ Частые обновления</p>
+        </section>
+
+        <!-- Community Feedback Section -->
+        <section class="community">
+            <h2 class="orbitron-text section-title">Сообщество и предложения</h2>
+            <p style="text-align: center; margin-bottom: 2rem; color: var(--text-muted);">Ваше мнение важно для
+                улучшения OpenRadioFM</p>
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem;">
+                <div class="ui-panel" style="padding: 2rem; text-align: center;">
+                    <span style="font-size: 3rem;">💬</span>
+                    <h3 class="bebas-text" style="margin: 1rem 0;">Предложения и идеи</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Есть идея по улучшению приложения?
+                        Поделитесь ею с сообществом</p>
+                    <a href="https://github.com/kapi21/OpenRadioFM/issues/new?title=[ИДЕЯ]" target="_blank"
+                        class="btn btn-outline">
+                        Предложить идею
+                    </a>
+                </div>
+                <div class="ui-panel" style="padding: 2rem; text-align: center;">
+                    <span style="font-size: 3rem;">❓</span>
+                    <h3 class="bebas-text" style="margin: 1rem 0;">Вопросы и сомнения</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Задайте вопросы об установке, настройке
+                        или использовании</p>
+                    <a href="https://github.com/kapi21/OpenRadioFM/issues/new?title=[ВОПРОС]" target="_blank"
+                        class="btn btn-outline">
+                        Задать вопрос
+                    </a>
+                </div>
+                <div class="ui-panel" style="padding: 2rem; text-align: center;">
+                    <span style="font-size: 3rem;">🐛</span>
+                    <h3 class="bebas-text" style="margin: 1rem 0;">Сообщить о проблемах</h3>
+                    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Нашли ошибку? Сообщите нам, чтобы мы
+                        могли ее исправить</p>
+                    <a href="https://github.com/kapi21/OpenRadioFM/issues/new" target="_blank" class="btn btn-outline">
+                        Сообщить об ошибке
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Hardware Specs Section -->
+        <section id="hardware" class="hardware-specs ui-panel">
+            <h2 class="orbitron-text">Технические характеристики</h2>
+            <ul class="specs-list">
+                <li><span class="bebas-text">Оборудование:</span> Совместимо с устройствами MT8163, K706 и Radio NWD G5
+                    (QS6).</li>
+                <li><span class="bebas-text">Разрешение:</span> Оптимизировано для экранов 1024x600 и выше.</li>
+                <li><span class="bebas-text">Радиочип:</span> NXP TEF6686 с полной поддержкой RDS.</li>
+                <li><span class="bebas-text">Прошивка:</span> Android 8.1+. Работает с root или без него (лучше с root).
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="container">
+        <p>&copy; 2026 OpenRadioFM. Проект с открытым исходным кодом под лицензией MIT.</p>
+        <p>Разработано с ❤️ сообществом энтузиастов хардверного хакинга.</p>
+    </footer>
+
+    <script src="../js/main.js"></script>
+</body>
+
+</html>
