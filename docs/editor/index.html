@@ -8,7 +8,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="ORF Editor">
     <link rel="manifest" href="manifest.webmanifest">
-    <link rel="apple-touch-icon" href="logo.png">
+    <link rel="apple-touch-icon" href="logo_editor.png">
     <title>OpenRadioFM Editor | Premium Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,12 +18,14 @@
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
-    <div class="lang-selector">
-        <button onclick="setLanguage('es')" class="lang-btn active" id="lang-es">ES</button>
-        <button onclick="setLanguage('en')" class="lang-btn" id="lang-en">EN</button>
-    </div>
     <header>
-        <img src="logo.png" alt="OpenRadioFM Logo" class="main-logo">
+        <div class="header-toolbar">
+            <div class="lang-selector">
+                <button onclick="setLanguage('es')" class="lang-btn active" id="lang-es">ES</button>
+                <button onclick="setLanguage('en')" class="lang-btn" id="lang-en">EN</button>
+            </div>
+        </div>
+        <img src="logo_editor.png" alt="OpenRadioFM Editor" class="main-logo">
         <h2 class="app-name">OpenRadioFM</h2>
         <h1 class="page-title" data-i18n="pageTitle">Gestión de favoritos</h1>
     </header>

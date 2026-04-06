@@ -62,15 +62,25 @@ body {
 }
 
 header {
-    padding: 2.5rem 2rem;
+    padding: 1rem 1.25rem 1.25rem;
     text-align: center;
     border-bottom: 1px solid var(--glass-border);
     background: rgba(0, 0, 0, 0.4);
     backdrop-filter: blur(10px);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    overflow: hidden; /* Vital for scanline */
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.header-toolbar {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.5rem;
 }
 
 header::after {
@@ -96,7 +106,7 @@ header:has(.main-logo:hover)::after {
 .main-logo {
     max-height: 80px;
     width: auto;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
     filter: drop-shadow(0 0 10px rgba(0, 242, 255, 0.4));
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
@@ -106,12 +116,9 @@ header:has(.main-logo:hover)::after {
 }
 
 .lang-selector {
-    position: fixed;
-    top: 1.5rem;
-    right: 2rem;
+    position: relative;
     display: flex;
     gap: 0.5rem;
-    z-index: 1001;
     background: rgba(255, 255, 255, 0.05);
     padding: 4px;
     border-radius: 8px;
@@ -137,7 +144,7 @@ header:has(.main-logo:hover)::after {
 }
 
 .app-name {
-    font-size: 3rem;
+    font-size: clamp(1.5rem, 5vw, 3rem);
     font-weight: 800;
     letter-spacing: -2px;
     background: linear-gradient(to right, var(--accent), var(--accent-secondary));
@@ -149,12 +156,26 @@ header:has(.main-logo:hover)::after {
 }
 
 .page-title {
-    font-size: 1.2rem;
+    font-size: clamp(0.95rem, 2.5vw, 1.2rem);
     font-weight: 400;
     color: var(--text-secondary);
     letter-spacing: 2px;
     text-transform: uppercase;
     opacity: 0.8;
+}
+
+@media (max-width: 900px) {
+    header {
+        padding: 0.65rem 0.85rem 0.85rem;
+    }
+
+    .main-logo {
+        max-height: 52px;
+    }
+
+    .header-toolbar {
+        margin-bottom: 0.35rem;
+    }
 }
 
 
