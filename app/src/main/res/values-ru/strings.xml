@@ -69,6 +69,23 @@
     <string name="load_favorites">📂 Загрузить Избранное</string>
     <string name="select_favorites_file">📂 Выбрать файл избранного</string>
     <string name="cancel">Отмена</string>
+    
+    <!-- Backup / Restore (App State) -->
+    <string name="backup_state_title">🗂️ Резервная копия</string>
+    <string name="backup_state_section_menu">Параметры (только меню)</string>
+    <string name="backup_state_menu_export">Сохранить параметры</string>
+    <string name="backup_state_menu_export_desc">Экспорт настроек (тема, онлайн‑логотипы, макет и т. д.) без логотипов.</string>
+    <string name="backup_state_menu_import">Загрузить параметры</string>
+    <string name="backup_state_menu_import_desc">Восстановление настроек из файла параметров.</string>
+    <string name="backup_state_section_full">Полная копия</string>
+    <string name="backup_state_full_export">Сохранить полную копию</string>
+    <string name="backup_state_full_export_desc">Включает параметры + пресеты/имена + папку RadioLogos (логотипы).</string>
+    <string name="backup_state_full_import">Загрузить полную копию</string>
+    <string name="backup_state_full_import_desc">Восстановление настроек и (при необходимости) логотипов из ZIP.</string>
+    <string name="backup_saved">✅ Копия сохранена: %s</string>
+    <string name="backup_loaded">✅ Копия загружена: %s</string>
+    <string name="backup_no_files">❌ Резервные копии не найдены</string>
+    <string name="backup_error">❌ Ошибка резервного копирования: %s</string>
     <string name="favorites_saved">✅ Избранное сохранено: %s</string>
     <string name="favorites_loaded" formatted="false">✅ %d избранных загружено из %s</string>
     <string name="error_saving_favorites">❌ Ошибка сохранения избранного: %s</string>

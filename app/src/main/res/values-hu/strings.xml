@@ -80,6 +80,23 @@
     <string name="load_favorites">📂 Kedvencek Betöltése</string>
     <string name="select_favorites_file">📂 Kedvencek fájl kiválasztása</string>
     <string name="cancel">Mégse</string>
+    
+    <!-- Backup / Restore (App State) -->
+    <string name="backup_state_title">🗂️ Biztonsági mentés</string>
+    <string name="backup_state_section_menu">Beállítások (csak menü)</string>
+    <string name="backup_state_menu_export">Beállítások mentése</string>
+    <string name="backup_state_menu_export_desc">Beállítások exportálása (téma, online logók, elrendezés stb.) logók nélkül.</string>
+    <string name="backup_state_menu_import">Beállítások betöltése</string>
+    <string name="backup_state_menu_import_desc">Beállítások visszaállítása beállításfájlból.</string>
+    <string name="backup_state_section_full">Teljes mentés</string>
+    <string name="backup_state_full_export">Teljes mentés mentése</string>
+    <string name="backup_state_full_export_desc">Tartalmazza: beállítások + presetek/nevek + RadioLogos mappa (logók).</string>
+    <string name="backup_state_full_import">Teljes mentés betöltése</string>
+    <string name="backup_state_full_import_desc">Beállítások és (opcionálisan) logók visszaállítása ZIP-ből.</string>
+    <string name="backup_saved">✅ Mentés elkészült: %s</string>
+    <string name="backup_loaded">✅ Mentés betöltve: %s</string>
+    <string name="backup_no_files">❌ Nem található mentés</string>
+    <string name="backup_error">❌ Mentési hiba: %s</string>
     <string name="favorites_saved">✅ Kedvencek mentve: %s</string>
     <string name="favorites_loaded" formatted="false">✅ %d kedvenc betöltve innen: %s</string>
     <string name="error_saving_favorites">❌ Hiba a mentéskor: %s</string>

@@ -83,6 +83,23 @@
     <string name="load_favorites">📂 Carregar Favoritos</string>
     <string name="select_favorites_file">📂 Selecionar arquivo de favoritos</string>
     <string name="cancel">Cancelar</string>
+    
+    <!-- Backup / Restore (App State) -->
+    <string name="backup_state_title">🗂️ Backup</string>
+    <string name="backup_state_section_menu">Opções (somente menu)</string>
+    <string name="backup_state_menu_export">Salvar opções</string>
+    <string name="backup_state_menu_export_desc">Exporta configurações (tema, logos online, layout, etc.) sem incluir logos.</string>
+    <string name="backup_state_menu_import">Carregar opções</string>
+    <string name="backup_state_menu_import_desc">Restaura configurações a partir de um arquivo de opções.</string>
+    <string name="backup_state_section_full">Backup completo</string>
+    <string name="backup_state_full_export">Salvar backup completo</string>
+    <string name="backup_state_full_export_desc">Inclui opções + presets/nomes + pasta RadioLogos (logos).</string>
+    <string name="backup_state_full_import">Carregar backup completo</string>
+    <string name="backup_state_full_import_desc">Restaura configurações e (opcionalmente) logos a partir de um ZIP.</string>
+    <string name="backup_saved">✅ Backup salvo: %s</string>
+    <string name="backup_loaded">✅ Backup carregado: %s</string>
+    <string name="backup_no_files">❌ Nenhum backup encontrado</string>
+    <string name="backup_error">❌ Erro no backup: %s</string>
     <string name="favorites_saved">✅ Favoritos salvos: %s</string>
     <string name="favorites_loaded" formatted="false">✅ %d favoritos carregados de %s</string>
     <string name="error_saving_favorites">❌ Erro ao salvar favoritos: %s</string>
