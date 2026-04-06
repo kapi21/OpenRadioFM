@@ -71,6 +71,8 @@ docs/**
 !docs/pt/index.html
 !docs/ru/
 !docs/ru/index.html
+!docs/editor/
+!docs/editor/**
 docs/**/*.md
 v5/
 .gemini/

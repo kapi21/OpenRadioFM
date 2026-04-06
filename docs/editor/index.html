@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenRadioFM Editor | Premium Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="lang-selector">
+        <button onclick="setLanguage('es')" class="lang-btn active" id="lang-es">ES</button>
+        <button onclick="setLanguage('en')" class="lang-btn" id="lang-en">EN</button>
+    </div>
+    <header>
+        <img src="logo.png" alt="OpenRadioFM Logo" class="main-logo">
+        <h2 class="app-name">OpenRadioFM</h2>
+        <h1 class="page-title" data-i18n="pageTitle">Gestión de favoritos</h1>
+    </header>
+
+    <main class="container">
+        <div class="empty-state" id="emptyState">
+            <i data-lucide="radio"></i>
+            <h2 data-i18n="emptyState">Carga un archivo para empezar</h2>
+        </div>
+
+        <!-- Drop Zone -->
+        <div id="dropZone" class="drop-zone">
+            <i data-lucide="upload-cloud"></i>
+            <h2 data-i18n="dropTitle">Arrastra tu archivo .fav aquí</h2>
+            <p data-i18n="dropText">o haz click para seleccionar</p>
+            <input type="file" id="fileInput" accept=".fav" style="display: none;">
+        </div>
+
+        <!-- Initial hidden area, shown after file load -->
+        <div id="editorArea" style="display: none;">
+            <div class="action-bar">
+                <div class="stats">
+                    <div class="stat-item">
+                        <span data-i18n="totalPresets">Total de Presets:</span> <strong id="totalPresets">0</strong>
+                    </div>
+                    <div class="stat-item">
+                        <span data-i18n="fileLoaded">Archivo:</span> <strong id="fileNameDisplay">-</strong>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" id="addBtn">
+                        <i data-lucide="plus"></i> <span data-i18n="btnNew">Nuevo Preset</span>
+                    </button>
+                    <button class="btn btn-secondary" id="saveBtn">
+                        <i data-lucide="download"></i> <span data-i18n="btnSave">Guardar nuevo .fav</span>
+                    </button>
+                </div>
+            </div>
+
+            <div id="presetGrid" class="preset-grid-container">
+                <!-- Bands will be generated here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal for adding/editing -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle" data-i18n="modalTitle">Editar Preset</h2>
+            </div>
+            <form id="presetForm">
+                <input type="hidden" id="editIndex">
+                <div class="form-group">
+                    <label data-i18n="labelName">Nombre (RDS PS - Máx 8)</label>
+                    <input type="text" id="formName" placeholder="Ej: ROCK FM" maxlength="8" required>
+                </div>
+                <div class="form-group">
+                    <label data-i18n="labelFreq">Frecuencia</label>
+                    <input type="text" id="formFreq" placeholder="Ej: 87.6 o 87,6" required>
+                    <small id="helpFreq" data-i18n="helpFreq" style="color: var(--text-secondary); margin-top: 4px; display: block;">Pon el número como lo ves en la radio (87.6 para FM o 531 para AM)</small>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label data-i18n="labelBand">Banda</label>
+                        <select id="formBand" required>
+                            <option value="0">FM1</option>
+                            <option value="1">FM2</option>
+                            <option value="2">FM3</option>
+                            <option value="3">AM1</option>
+                            <option value="4">AM2</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="labelSlot">Slot (Preset #)</label>
+                        <input type="number" id="formPresetNum" min="1" max="18" required>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" id="cancelBtn" data-i18n="btnCancel">Cancelar</button>
+                    <button type="submit" class="btn btn-primary" data-i18n="btnSaveChange">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
