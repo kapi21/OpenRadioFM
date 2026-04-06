@@ -1131,7 +1131,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 }
             }
 
-            // V7.2c: Registrar ITunerTool para capturar el código PI
+            // V7.2c+: Registrar ITunerTool (QFTunerManager callbacks).
+            // Importante: RT (RadioText) suele llegar por este canal en K706,
+            // no necesariamente por paquetes MCU (0xB7) según firmware.
             try {
                 Class<?> itunerToolClass = Class.forName("com.qf.clientsdk.ITunerTool");
                 Method setTunerTool = clazz.getMethod("setTunerTool", itunerToolClass);
@@ -1150,20 +1152,71 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             }
                             Log.d(TAG, "🔬 [RESEARCH] ITunerTool Call: " + method.getName() + "(" + argStr.toString().trim() + ")");
 
-                            if (method.getName().equals("onCurrentFrequencyPICodeChange")) {
-                                if (args != null && args.length > 0) {
+                            final String name = method.getName();
+
+                            // PI Code
+                            if ("onCurrentFrequencyPICodeChange".equals(name)) {
+                                if (args != null && args.length > 0 && args[0] instanceof Integer) {
                                     int pi = (Integer) args[0];
                                     Log.d(TAG, "PI Code Detected via ITunerTool: 0x" + Integer.toHexString(pi).toUpperCase());
-                                    // Notificamos como evento 107 (PI Code)
                                     fireEvent(107, String.valueOf(pi));
                                 }
+                                return null;
+                            }
+
+                            // PS (Program Service) byte[] path
+                            if ("onTuneRdsPSInfo".equals(name)) {
+                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
+                                    String ps = safeDecodeRdsBytes((byte[]) args[0], /*startOffset=*/1);
+                                    if (ps != null && !ps.trim().isEmpty()) {
+                                        Log.d(TAG, "RDS PS via ITunerTool: '" + ps + "'");
+                                        fireEvent(103, ps.trim());
+                                    }
+                                }
+                                return null;
+                            }
+
+                            // RT (RadioText) byte[] path
+                            if ("onTuneRdsRTInfo".equals(name)) {
+                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
+                                    String rt = safeDecodeRdsBytes((byte[]) args[0], /*startOffset=*/1);
+                                    if (rt != null && !rt.trim().isEmpty()) {
+                                        Log.d(TAG, "RDS RT via ITunerTool: '" + rt + "'");
+                                        fireEvent(104, rt.trim());
+                                    }
+                                }
+                                return null;
+                            }
+
+                            // RT string path (algunos firmwares también lo emiten así)
+                            if ("rds_stationRawTextChange".equals(name)) {
+                                if (args != null && args.length > 0 && args[0] instanceof String) {
+                                    String rt = ((String) args[0]).trim();
+                                    if (!rt.isEmpty()) {
+                                        Log.d(TAG, "RDS RT via ITunerTool (string): '" + rt + "'");
+                                        fireEvent(104, rt);
+                                    }
+                                }
+                                return null;
+                            }
+
+                            // PTY
+                            if ("onTuneRdsPtyTypeInfo".equals(name)) {
+                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
+                                    byte[] b = (byte[]) args[0];
+                                    if (b.length > 2) {
+                                        int pty = b[2] & 0xFF;
+                                        fireEvent(105, String.valueOf(pty));
+                                    }
+                                }
+                                return null;
                             }
                             return null;
                         }
                     });
                 
                 setTunerTool.invoke(mTunerManager, proxyTunerTool);
-                Log.d(TAG, "  → ITunerTool Listener (PI Capture): REGISTERED");
+                Log.d(TAG, "  → ITunerTool Listener (RDS/PI): REGISTERED");
             } catch (Exception e) {
                 Log.w(TAG, "  → setTunerTool NOT AVAILABLE or Proxy error: " + e.getMessage());
             }
@@ -1172,6 +1225,42 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Log.w(TAG, "QFTunerManager class not found - sendCmd MCU directo será el único canal");
         } catch (Exception e) {
             Log.e(TAG, "Error connecting to QFTunerManager", e);
+        }
+    }
+
+    /**
+     * Decodifica payloads RDS de QF/MCU intentando conservar caracteres (evitar filtro ASCII agresivo).
+     * RDS clásico suele estar en ISO-8859-1; algunos firmwares empaquetan un byte de estado/len al inicio.
+     */
+    private String safeDecodeRdsBytes(byte[] data, int defaultStartOffset) {
+        if (data == null || data.length <= defaultStartOffset) return null;
+        try {
+            int startOffset = Math.max(0, Math.min(defaultStartOffset, data.length - 1));
+
+            // Heurística OEM: si el primer byte tras el header parece "len/status" pequeño, saltamos uno más.
+            if (data.length > startOffset + 1) {
+                int b = data[startOffset] & 0xFF;
+                if (b < 10 && data.length > startOffset + 2) {
+                    startOffset += 1;
+                }
+            }
+
+            int len = data.length - startOffset;
+            if (len <= 0) return null;
+
+            String s;
+            try {
+                s = new String(data, startOffset, len, "ISO-8859-1");
+            } catch (Exception e) {
+                s = new String(data, startOffset, len, "UTF-8");
+            }
+
+            // Limpiar NULs y control chars, pero mantener caracteres extendidos.
+            s = s.replace('\u0000', ' ').trim();
+            s = s.replaceAll("[\\p{Cntrl}&&[^\r\n\t]]", "");
+            return s.trim();
+        } catch (Exception e) {
+            return null;
         }
     }
     
