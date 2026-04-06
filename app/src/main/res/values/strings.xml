@@ -11,6 +11,10 @@
     <string name="a11y_hihack_reboot_dialog_message">En muchas radios Android el sistema quita los servicios de accesibilidad al reiniciar la unidad. Vuelve a activar HiHack (OpenRadioFM) en Ajustes → Accesibilidad para el botón RADIO y el volante.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Abrir accesibilidad</string>
     <string name="a11y_hihack_reboot_dialog_later">Ahora no</string>
+    <string name="a11y_hihack_not_working_title">HiHack no funciona</string>
+    <string name="a11y_hihack_not_working_message">HiHack está activado, pero el sistema parece haber detenido el servicio. En Accesibilidad puede aparecer como “No funciona”. Entra en Ajustes → Accesibilidad y apágalo/enciéndelo para reiniciarlo.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Abrir accesibilidad</string>
+    <string name="a11y_hihack_not_working_later">Ahora no</string>
 
     <!-- MT8163/HCN: aviso tras cerrar streaming online (handoff FM puede quedar inconsistente en algunos firmwares) -->
     <string name="mt8163_stream_stopped_restart_hint">Has cerrado el streaming. Si la FM no responde bien, cierra por completo OpenRadioFM y vuelve a abrirla.</string>
@@ -44,6 +48,7 @@
     
     <!-- V4.0: App Options -->
     <string name="app_options">Opciones de la App</string>
+    <string name="app_country">📍 País</string>
     <string name="night_mode_auto">Modo Noche Automático</string>
     <string name="relief_hd">Relieve HD</string>
     <string name="save_history">Guardar Historial de Emisoras</string>
@@ -75,6 +80,21 @@
     <string name="all_favorites_deleted">✅ Todos los favoritos eliminados</string>
     <string name="select_favorites_file">📂 Seleccionar archivo de favoritos</string>
     <string name="cancel">Cancelar</string>
+
+    <!-- Country selector -->
+    <string name="select_country_title">Seleccionar país</string>
+    <string name="select_country_desc">Este país se usa para mejorar la búsqueda de logos y streaming (filtrado por país). Puedes cambiarlo más tarde en Opciones.</string>
+    <string name="country_saved">✅ País guardado: %s</string>
+    <string name="country_es">España (ES)</string>
+    <string name="country_ru">Россия (RU)</string>
+    <string name="country_it">Italia (IT)</string>
+    <string name="country_gr">Ελλάδα (GR)</string>
+    <string name="country_ro">România (RO)</string>
+    <string name="country_hu">Magyarország (HU)</string>
+    <string name="country_pt">Portugal (PT)</string>
+    <string name="country_de">Deutschland (DE)</string>
+    <string name="country_pl">Polska (PL)</string>
+    <string name="country_other">Otro (OT)</string>
 
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Copia de seguridad</string>

@@ -34,6 +34,25 @@ public interface SupabaseApi {
             @Query("select") String select
     );
 
+    // Secondary catalog fed from Radio-Browser snapshots (streaming stations)
+    @GET("rest/v1/stations_radiobrowser")
+    Call<List<SupabaseLogoResponse>> getRadioBrowserByName(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("ps_name") String nameFilter,
+            @Query("country_code") String countryFilter,
+            @Query("select") String select
+    );
+
+    @GET("rest/v1/stations_radiobrowser")
+    Call<List<SupabaseLogoResponse>> getRadioBrowserByStreamUrl(
+            @Header("apikey") String apiKey,
+            @Header("Authorization") String auth,
+            @Query("stream_url") String streamFilter,
+            @Query("country_code") String countryFilter,
+            @Query("select") String select
+    );
+
     @GET("rest/v1/stations")
     Call<List<SupabaseLogoResponse>> getLogosByFreq(
             @Header("apikey") String apiKey,

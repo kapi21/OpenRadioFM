@@ -69,6 +69,22 @@
     <string name="load_favorites">📂 Učitaj Omiljeno</string>
     <string name="select_favorites_file">📂 Izaberi datoteku omiljenih</string>
     <string name="cancel">Otkaži</string>
+
+    <!-- Country selector -->
+    <string name="app_country">📍 Zemlja</string>
+    <string name="select_country_title">Izaberi zemlju</string>
+    <string name="select_country_desc">Ova zemlja poboljšava pretragu logotipa i striminga (filter po zemlji). Možeš je promeniti kasnije u Opcijama.</string>
+    <string name="country_saved">✅ Zemlja sačuvana: %s</string>
+    <string name="country_es">Španija (ES)</string>
+    <string name="country_ru">Rusija (RU)</string>
+    <string name="country_it">Italija (IT)</string>
+    <string name="country_gr">Grčka (GR)</string>
+    <string name="country_ro">Rumunija (RO)</string>
+    <string name="country_hu">Mađarska (HU)</string>
+    <string name="country_pt">Portugal (PT)</string>
+    <string name="country_de">Nemačka (DE)</string>
+    <string name="country_pl">Poljska (PL)</string>
+    <string name="country_other">Drugo (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Rezervna kopija</string>
@@ -209,6 +225,10 @@
     <string name="a11y_hihack_reboot_dialog_message">Na mnogim Android jedinicama servisi pristupačnosti se isključe posle potpunog restarta. Ponovo uključi HiHack (OpenRadioFM) u Podešavanja → Pristupačnost za RADIO dugme i volan.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Otvori pristupačnost</string>
     <string name="a11y_hihack_reboot_dialog_later">Kasnije</string>
+    <string name="a11y_hihack_not_working_title">HiHack ne radi</string>
+    <string name="a11y_hihack_not_working_message">HiHack je uključen, ali sistem je izgleda zaustavio servis. U Pristupačnosti može pisati „Ne radi“. Idi u Podešavanja → Pristupačnost i preklopi OFF/ON da ga ponovo pokreneš.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Otvori pristupačnost</string>
+    <string name="a11y_hihack_not_working_later">Kasnije</string>
     <string name="all_favorites_deleted">✅ Svi favoriti su obrisani</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

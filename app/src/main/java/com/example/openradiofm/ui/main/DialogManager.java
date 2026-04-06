@@ -163,6 +163,20 @@ public class DialogManager {
             });
         }
 
+        // Country Row (under language)
+        View rowCountry = dialog.findViewById(R.id.rowCountry);
+        TextView tvCurrentCountry = dialog.findViewById(R.id.tvCurrentCountry);
+        if (tvCurrentCountry != null) {
+            String cc = com.example.openradiofm.utils.CountryPrefs.getCountry(mActivity);
+            tvCurrentCountry.setText(mActivity.countryLabelForCode(cc));
+        }
+        if (rowCountry != null) {
+            rowCountry.setOnClickListener(v -> {
+                mActivity.showCountrySelectorDialog(false);
+                dialog.dismiss();
+            });
+        }
+
         // HiHack (Accessibility) status + shortcut
         if (rowA11yHijack != null && tvA11yHijackStatus != null) {
             boolean enabled = MainActivity.isFactoryRadioHijackerAccessibilityEnabled(mActivity);
@@ -729,6 +743,124 @@ public class DialogManager {
             mActivity.showStyledToast(String.format(mActivity.getString(R.string.language_changed), selectedLangName));
             mActivity.recreate();
         });
+    }
+
+    /** Variante forzada (primer inicio): no se puede cancelar, y el callback decide qué hacer. */
+    public void showLanguageSelector(boolean forceChoose, java.util.function.Consumer<String> onLangSelected) {
+        String[] languages = {
+                "Español (ES)", "English (EN)", "Français (FR)", "Deutsch (DE)",
+                "Português (PT)", "Italiano (IT)", "Русский (RU)", "Română (RO)",
+                "Українська (UK)", "Srpski (SR)", "中文 (ZH)", "日本語 (JA)", "Magyar (HU)"
+        };
+        String[] codes = { "es", "en", "fr", "de", "pt", "it", "ru", "ro", "uk", "sr", "zh", "ja", "hu" };
+        String currentLang = mActivity.mPrefs.getString("app_language", "es");
+        int currentIndex = 0;
+        for (int i = 0; i < codes.length; i++) {
+            if (codes[i].equals(currentLang)) {
+                currentIndex = i;
+                break;
+            }
+        }
+        showGridSelector(mActivity.getString(R.string.select_language), languages, currentIndex, w -> {
+            int idx = Math.max(0, Math.min(w, codes.length - 1));
+            if (onLangSelected != null) onLangSelected.accept(codes[idx]);
+        }, forceChoose);
+    }
+
+    public void showCountrySelector(
+            boolean forceChoose,
+            String[] labels,
+            String[] codes,
+            int currentIndex,
+            java.util.function.Consumer<String> onSelectedCode
+    ) {
+        showGridSelector(mActivity.getString(R.string.select_country_title), labels, currentIndex, w -> {
+            int idx = Math.max(0, Math.min(w, codes.length - 1));
+            if (onSelectedCode != null) onSelectedCode.accept(codes[idx]);
+            mActivity.showStyledToast(String.format(mActivity.getString(R.string.country_saved), labels[idx]));
+        }, forceChoose);
+    }
+
+    private void showGridSelector(String title, String[] options, int currentIndex, java.util.function.Consumer<Integer> onSelect, boolean forceChoose) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+        LayoutInflater inflater = LayoutInflater.from(mActivity);
+        View dialogView = inflater.inflate(R.layout.dialog_language_selector, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+
+        View rootCard = dialogView.findViewById(R.id.grid_selector_root);
+        if (rootCard != null) {
+            try {
+                rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+            } catch (Exception ignored) {
+            }
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvSelectTitle);
+        if (tvTitle != null) {
+            tvTitle.setText(title);
+            try {
+                tvTitle.setTypeface(mActivity.getSystemTypeface());
+            } catch (Exception ignored) {
+            }
+        }
+
+        android.widget.GridView gvOptions = dialogView.findViewById(R.id.gvOptions);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelSelect);
+        if (btnCancel != null) {
+            btnCancel.setVisibility(forceChoose ? View.GONE : View.VISIBLE);
+        }
+
+        android.widget.ArrayAdapter<String> adapter = new android.widget.ArrayAdapter<String>(mActivity, R.layout.item_language, options) {
+            @Override
+            public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                TextView tv = (TextView) super.getView(position, convertView, parent);
+                try {
+                    tv.setTypeface(mActivity.getSystemTypeface());
+                } catch (Exception ignored) {
+                }
+                if (position == currentIndex) {
+                    tv.setBackgroundResource(R.drawable.bg_glass_card_blue);
+                    boolean isLight = (mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+                    tv.setTextColor(isLight ? Color.BLACK : Color.WHITE);
+                } else {
+                    tv.setBackgroundResource(R.drawable.bg_submenu_box);
+                    boolean isLight = (mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+                    tv.setTextColor(Color.parseColor(isLight ? "#BB000000" : "#BBFFFFFF"));
+                }
+                return tv;
+            }
+        };
+
+        if (gvOptions != null) {
+            gvOptions.setAdapter(adapter);
+            gvOptions.setOnItemClickListener((parent, view, position, id) -> {
+                onSelect.accept(position);
+                dialog.dismiss();
+            });
+        }
+
+        if (!forceChoose && btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setDimAmount(0.7f);
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+        }
+
+        dialog.setCancelable(!forceChoose);
+        dialog.setCanceledOnTouchOutside(!forceChoose);
+        dialog.show();
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {
+        }
     }
 
     public void showAboutDialog() {

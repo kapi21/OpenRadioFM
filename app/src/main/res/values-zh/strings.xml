@@ -69,6 +69,22 @@
     <string name="load_favorites">📂 加载收藏</string>
     <string name="select_favorites_file">📂 选择收藏文件</string>
     <string name="cancel">取消</string>
+
+    <!-- Country selector -->
+    <string name="app_country">📍 国家</string>
+    <string name="select_country_title">选择国家</string>
+    <string name="select_country_desc">该国家用于提升台标与流媒体搜索效果（国家过滤）。你可稍后在选项中修改。</string>
+    <string name="country_saved">✅ 国家已保存: %s</string>
+    <string name="country_es">西班牙 (ES)</string>
+    <string name="country_ru">俄罗斯 (RU)</string>
+    <string name="country_it">意大利 (IT)</string>
+    <string name="country_gr">希腊 (GR)</string>
+    <string name="country_ro">罗马尼亚 (RO)</string>
+    <string name="country_hu">匈牙利 (HU)</string>
+    <string name="country_pt">葡萄牙 (PT)</string>
+    <string name="country_de">德国 (DE)</string>
+    <string name="country_pl">波兰 (PL)</string>
+    <string name="country_other">其他 (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ 备份</string>
@@ -208,6 +224,10 @@
     <string name="a11y_hihack_reboot_dialog_message">许多安卓车机在完全重启后会清除无障碍服务。请在 设置 → 无障碍 中重新开启 HiHack（OpenRadioFM），以恢复物理 RADIO 键与方向盘控制。</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">打开无障碍</string>
     <string name="a11y_hihack_reboot_dialog_later">稍后</string>
+    <string name="a11y_hihack_not_working_title">HiHack 无法工作</string>
+    <string name="a11y_hihack_not_working_message">HiHack 已启用，但系统似乎停止了该服务。在无障碍中可能显示为“无法工作”。请进入 设置 → 无障碍，将其关闭再开启以重启服务。</string>
+    <string name="a11y_hihack_not_working_open_accessibility">打开无障碍</string>
+    <string name="a11y_hihack_not_working_later">稍后</string>
     <string name="all_favorites_deleted">✅ 已删除所有收藏</string>
     <string name="language_german">Deutsch</string>
     <string name="language_hungarian">Magyar</string>

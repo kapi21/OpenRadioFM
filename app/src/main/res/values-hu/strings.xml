@@ -31,6 +31,7 @@
     
     <!-- V4.0: App Options -->
     <string name="app_options">App Opciók</string>
+    <string name="app_country">📍 Ország</string>
     <string name="night_mode_auto">Automatikus Éjszakai Mód</string>
     <string name="relief_hd">HD Domborítás</string>
     <string name="save_history">Adóelőzmények mentése</string>
@@ -80,6 +81,21 @@
     <string name="load_favorites">📂 Kedvencek Betöltése</string>
     <string name="select_favorites_file">📂 Kedvencek fájl kiválasztása</string>
     <string name="cancel">Mégse</string>
+
+    <!-- Country selector -->
+    <string name="select_country_title">Ország kiválasztása</string>
+    <string name="select_country_desc">Ez az ország javítja a logók és streaming keresését (ország szűrés). Később az Opciókban módosítható.</string>
+    <string name="country_saved">✅ Ország mentve: %s</string>
+    <string name="country_es">Spanyolország (ES)</string>
+    <string name="country_ru">Oroszország (RU)</string>
+    <string name="country_it">Olaszország (IT)</string>
+    <string name="country_gr">Görögország (GR)</string>
+    <string name="country_ro">Románia (RO)</string>
+    <string name="country_hu">Magyarország (HU)</string>
+    <string name="country_pt">Portugália (PT)</string>
+    <string name="country_de">Németország (DE)</string>
+    <string name="country_pl">Lengyelország (PL)</string>
+    <string name="country_other">Egyéb (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Biztonsági mentés</string>
@@ -268,6 +284,10 @@
     <string name="a11y_hihack_reboot_dialog_message">Sok Android fejegységen a kisegítő szolgáltatások teljes újraindítás után kikapcsolódnak. Kapcsold be újra a HiHack-et (OpenRadioFM) a Beállítások → Kisegítő lehetőségek menüben a RADIO gombhoz és a kormányhoz.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Kisegítő lehetőségek megnyitása</string>
     <string name="a11y_hihack_reboot_dialog_later">Most nem</string>
+    <string name="a11y_hihack_not_working_title">HiHack nem működik</string>
+    <string name="a11y_hihack_not_working_message">A HiHack be van kapcsolva, de a rendszer úgy tűnik leállította a szolgáltatást. A Kisegítő lehetőségekben „Nem működik” jelenhet meg. Nyisd meg a Beállítások → Kisegítő lehetőségek menüt, és kapcsold KI/BE a szolgáltatást az újraindításhoz.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Kisegítő lehetőségek megnyitása</string>
+    <string name="a11y_hihack_not_working_later">Most nem</string>
     <string name="all_favorites_deleted">✅ Az összes kedvenc törölve</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="gestures_enabled">✅ Lapozó gesztusok engedélyezve</string>

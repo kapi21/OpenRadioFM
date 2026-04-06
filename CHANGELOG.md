@@ -1,15 +1,6 @@
 ## [Unreleased]
 
-### Added
-- **Backups (estado de app)**: Long press en **Guardar/Cargar Favoritos** abre un menú de **Copia de seguridad** con export/import de:
-  - **Opciones (solo menú)** a `.ors` (ajustes `pref_*` + `ThemePrefs`)
-  - **Copia completa** a `.orzip` (ZIP con `state.json` + imágenes de `RadioLogos/`)
-  Incluye progreso y botón **Cancelar**, y sugiere **reinicio** tras restaurar para aplicar layouts/tema.
-- **Widget escritorio**: 2 layouts (compacto/expandido), indicador de banda, acciones extra (seek/mute) y pulsación en PS para info rápida; en launchers sin resize el widget simple vuelve a **SEEK** (regresión evitada).
-- **Icono launcher (QS6/NWD)**: `android:icon` y `roundIcon` apuntan a `@drawable` con fallback `drawable-nodpi-v4` (alta resolución) al estilo de la radio OEM.
-
-### Fixed
-- **Calidad logos**: evitar guardado de logos descargados a 512×512 (causaba pixelado al ampliar); cargar/decodificar con ARGB8888 y tamaño original donde aplica.
+*(sin entradas nuevas; todo lo reciente está documentado en 5.0.16)*
 
 ---
 
@@ -18,6 +9,12 @@
 
 ### Added
 - **HiHack / reinicio del sistema**: `HihackBootReminderReceiver` + `HiHackBootReminder`, preferencias, recordatorio al abrir la app e interruptor en ajustes premium; cadenas en todas las locales.
+- **Backups (estado de app)**: pulsación larga en **Guardar/Cargar Favoritos** abre un menú de **Copia de seguridad** con export/import de:
+  - **Opciones (solo menú)** a `.ors` (ajustes `pref_*` + `ThemePrefs`)
+  - **Copia completa** a `.orzip` (ZIP con `state.json` + imágenes de `RadioLogos/`)
+  Incluye progreso y botón **Cancelar**, y sugiere **reinicio** tras restaurar para aplicar layouts/tema.
+- **Widget escritorio**: 2 layouts (compacto/expandido), indicador de banda, acciones extra (seek/mute) y pulsación en PS para info rápida; en launchers sin resize el widget simple vuelve a **SEEK** (regresión evitada).
+- **Icono launcher (QS6/NWD)**: `android:icon` y `roundIcon` apuntan a `@drawable` con fallback `drawable-nodpi-v4` (alta resolución) al estilo de la radio OEM.
 
 ### Fixed
 - **Streaming / MT8163 (HCN)**: en `OnlineStreamManager`, `stopStream()` / `release()` coordinados con el *main looper*; si aplica handoff MT8163 diferido, se retrasa `ExoPlayer.release` para evitar solapes de dos streams.
@@ -25,6 +22,7 @@
 - **Volante en segundo plano (QS6)**: misma ruta de puente que K706 (`sWheelMediaBridgeActive`, `onStop`, `ACTION_FORCE_PLAY`); `RadioMediaService` / FGS y `FactoryRadioHijackerService` contemplan QS6; `RadioServiceController.isSteeringWheelMediaBridgeMode()`.
 - **RDS / MediaSession / notificaciones**: normalización de subtítulo (MHz) para deduplicar metadatos en `MediaSessionManager`; frecuencia en `onRdsName` con formato `%.1f MHz` al refrescar estado; `RadioMediaService` evita `notify()` si no hay permiso de notificaciones o están desactivadas (el **widget** sigue usando `AppWidgetManager` + preferencias).
 - **Hilo UI / logos**: si `RadioRepository.getStationInfo(..., callback != null)` se invoca desde el hilo de UI, el trabajo va a `logoExecutor` (`getStationInfoImpl`).
+- **Calidad logos**: evitar guardado de logos descargados a 512×512 (causaba pixelado al ampliar); cargar/decodificar con ARGB8888 y tamaño original donde aplica.
 
 ### Versión
 - `versionCode 29`, `versionName 5.0.16`; `app_name_internal` **v5.0.16**.

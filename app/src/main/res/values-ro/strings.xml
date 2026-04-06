@@ -24,6 +24,7 @@
     <string name="font_orbitron">Futurist (Orbitron)</string>
     <string name="font_formula1">Curse (Formula 1)</string>
     <string name="app_options">Opțiuni Aplicație</string>
+    <string name="app_country">📍 Țară</string>
     <string name="night_mode_auto">Mod Noapte Automat</string>
     <string name="relief_hd">Relief HD</string>
     <string name="save_history">Salvează Istoricul Stațiilor</string>
@@ -69,6 +70,21 @@
     <string name="load_favorites">📂 Încarcă Favorite</string>
     <string name="select_favorites_file">📂 Selectează fișier favorite</string>
     <string name="cancel">Anulează</string>
+
+    <!-- Country selector -->
+    <string name="select_country_title">Selectează țara</string>
+    <string name="select_country_desc">Această țară îmbunătățește căutarea de logo-uri și streaming (filtru pe țară). O poți schimba mai târziu în Opțiuni.</string>
+    <string name="country_saved">✅ Țară salvată: %s</string>
+    <string name="country_es">Spania (ES)</string>
+    <string name="country_ru">Rusia (RU)</string>
+    <string name="country_it">Italia (IT)</string>
+    <string name="country_gr">Grecia (GR)</string>
+    <string name="country_ro">România (RO)</string>
+    <string name="country_hu">Ungaria (HU)</string>
+    <string name="country_pt">Portugalia (PT)</string>
+    <string name="country_de">Germania (DE)</string>
+    <string name="country_pl">Polonia (PL)</string>
+    <string name="country_other">Altul (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Copie de siguranță</string>
@@ -210,6 +226,10 @@
     <string name="a11y_hihack_reboot_dialog_message">Pe multe unități Android, serviciile de accesibilitate se dezactivează după o repornire completă. Reactivează HiHack (OpenRadioFM) din Setări → Accesibilitate pentru butonul RADIO și volan.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Deschide accesibilitatea</string>
     <string name="a11y_hihack_reboot_dialog_later">Nu acum</string>
+    <string name="a11y_hihack_not_working_title">HiHack nu funcționează</string>
+    <string name="a11y_hihack_not_working_message">HiHack este activat, dar sistemul pare să fi oprit serviciul. În Accesibilitate poate apărea ca „Nu funcționează”. Mergi la Setări → Accesibilitate și fă OFF/ON pentru a-l reporni.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Deschide accesibilitatea</string>
+    <string name="a11y_hihack_not_working_later">Nu acum</string>
     <string name="all_favorites_deleted">✅ Toate favoritele au fost șterse</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

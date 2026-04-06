@@ -11,6 +11,10 @@
     <string name="a11y_hihack_reboot_dialog_message">Viele Android-Radios deaktivieren Bedienungshilfen nach einem vollständigen Neustart. Aktiviere HiHack (OpenRadioFM) erneut unter Einstellungen → Bedienungshilfen für die RADIO-Taste und das Lenkrad.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Bedienungshilfen öffnen</string>
     <string name="a11y_hihack_reboot_dialog_later">Später</string>
+    <string name="a11y_hihack_not_working_title">HiHack funktioniert nicht</string>
+    <string name="a11y_hihack_not_working_message">HiHack ist aktiviert, aber das System scheint den Dienst gestoppt zu haben. In den Bedienungshilfen kann „Funktioniert nicht“ angezeigt werden. Öffne Einstellungen → Bedienungshilfen und schalte es AUS/AN, um es neu zu starten.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Bedienungshilfen öffnen</string>
+    <string name="a11y_hihack_not_working_later">Später</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming beendet. Wenn UKW nicht richtig reagiert, OpenRadioFM vollständig schließen und erneut öffnen.</string>
     
     <!-- Premium Menu Strings -->
@@ -42,6 +46,7 @@
     
     <!-- V4.0: App Options -->
     <string name="app_options">App-Optionen</string>
+    <string name="app_country">📍 Land</string>
     <string name="night_mode_auto">Automatischer Nachtmodus</string>
     <string name="relief_hd">HD-Relief</string>
     <string name="save_history">Senderverlauf speichern</string>
@@ -95,6 +100,21 @@
     <string name="all_favorites_deleted">✅ Alle Favoriten gelöscht</string>
     <string name="select_favorites_file">📂 Favoritendatei auswählen</string>
     <string name="cancel">Abbrechen</string>
+
+    <!-- Country selector -->
+    <string name="select_country_title">Land auswählen</string>
+    <string name="select_country_desc">Dieses Land wird verwendet, um die Suche nach Logos und Streaming zu verbessern (Länderfilter). Du kannst es später in den Optionen ändern.</string>
+    <string name="country_saved">✅ Land gespeichert: %s</string>
+    <string name="country_es">Spanien (ES)</string>
+    <string name="country_ru">Russland (RU)</string>
+    <string name="country_it">Italien (IT)</string>
+    <string name="country_gr">Griechenland (GR)</string>
+    <string name="country_ro">Rumänien (RO)</string>
+    <string name="country_hu">Ungarn (HU)</string>
+    <string name="country_pt">Portugal (PT)</string>
+    <string name="country_de">Deutschland (DE)</string>
+    <string name="country_pl">Polen (PL)</string>
+    <string name="country_other">Andere (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Sicherung</string>

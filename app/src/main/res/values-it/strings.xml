@@ -31,6 +31,7 @@
     
     <!-- V4.0: App Options -->
     <string name="app_options">Opzioni dell\'App</string>
+    <string name="app_country">📍 Paese</string>
     <string name="night_mode_auto">Modalità Notturna Automatica</string>
     <string name="relief_hd">Rilievo HD</string>
     <string name="save_history">Salva Cronologia Stazioni</string>
@@ -83,6 +84,21 @@
     <string name="load_favorites">📂 Carica Preferiti</string>
     <string name="select_favorites_file">📂 Seleziona file dei preferiti</string>
     <string name="cancel">Annulla</string>
+
+    <!-- Country selector -->
+    <string name="select_country_title">Seleziona paese</string>
+    <string name="select_country_desc">Questo paese migliora la ricerca di loghi e streaming (filtro per paese). Puoi cambiarlo più tardi nelle Opzioni.</string>
+    <string name="country_saved">✅ Paese salvato: %s</string>
+    <string name="country_es">Spagna (ES)</string>
+    <string name="country_ru">Russia (RU)</string>
+    <string name="country_it">Italia (IT)</string>
+    <string name="country_gr">Grecia (GR)</string>
+    <string name="country_ro">Romania (RO)</string>
+    <string name="country_hu">Ungheria (HU)</string>
+    <string name="country_pt">Portogallo (PT)</string>
+    <string name="country_de">Germania (DE)</string>
+    <string name="country_pl">Polonia (PL)</string>
+    <string name="country_other">Altro (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Backup</string>
@@ -268,6 +284,10 @@
     <string name="a11y_hihack_reboot_dialog_message">Su molte autoradio Android i servizi di accessibilità vengono rimossi dopo un riavvio completo. Riattiva HiHack (OpenRadioFM) in Impostazioni → Accessibilità per il tasto RADIO e il volante.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Apri accessibilità</string>
     <string name="a11y_hihack_reboot_dialog_later">Non ora</string>
+    <string name="a11y_hihack_not_working_title">HiHack non funziona</string>
+    <string name="a11y_hihack_not_working_message">HiHack è attivo, ma il sistema sembra aver fermato il servizio. In Accessibilità potrebbe apparire come “Non funziona”. Vai su Impostazioni → Accessibilità e fai OFF/ON per riavviarlo.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Apri accessibilità</string>
+    <string name="a11y_hihack_not_working_later">Non ora</string>
     <string name="all_favorites_deleted">✅ Tutti i preferiti eliminati</string>
     <string name="category_app_options">Opzioni App</string>
     <string name="category_premium">Personalizzazione Premium</string>

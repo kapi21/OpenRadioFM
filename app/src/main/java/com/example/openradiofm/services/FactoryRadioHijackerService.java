@@ -36,6 +36,22 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     private long lastLaunchTime = 0;
     private static final long COOLDOWN_MS = 2000;
 
+    /** Heartbeat para detectar “activo pero no funciona” en algunas ROM (Android 9 Junsun). */
+    public static final String PREF_HIHACK_HEARTBEAT_MS = "pref_hihack_heartbeat_ms";
+    private static final long HEARTBEAT_INTERVAL_MS = 30_000L;
+    private final android.os.Handler mHbHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private final java.lang.Runnable mHeartbeat = new java.lang.Runnable() {
+        @Override public void run() {
+            try {
+                SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
+                p.edit().putLong(PREF_HIHACK_HEARTBEAT_MS, System.currentTimeMillis()).apply();
+            } catch (Exception ignored) {}
+            try {
+                mHbHandler.postDelayed(this, HEARTBEAT_INTERVAL_MS);
+            } catch (Exception ignored) {}
+        }
+    };
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         if (event == null || event.getPackageName() == null) {
@@ -144,6 +160,21 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         HiHackBootReminder.persistEverEnabled(this);
+        // Start heartbeat
+        try { mHbHandler.removeCallbacks(mHeartbeat); } catch (Exception ignored) {}
+        try { mHbHandler.post(mHeartbeat); } catch (Exception ignored) {}
         Log.i(TAG, "FactoryRadioHijackerService conectado y monitorizando");
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        try { mHbHandler.removeCallbacks(mHeartbeat); } catch (Exception ignored) {}
+        return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onDestroy() {
+        try { mHbHandler.removeCallbacks(mHeartbeat); } catch (Exception ignored) {}
+        super.onDestroy();
     }
 }

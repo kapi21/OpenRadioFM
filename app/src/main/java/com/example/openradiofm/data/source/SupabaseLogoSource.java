@@ -145,8 +145,16 @@ public class SupabaseLogoSource {
      */
     public String fetchLogo(String piCode, String rdsName, int freqKHz) {
         notifyActivity(true);
-        String country = java.util.Locale.getDefault().getCountry();
-        if (country == null || country.isEmpty()) country = "ES";
+        // Preferencia explícita del usuario (más fiable que Locale en muchas head units)
+        String country = com.example.openradiofm.utils.CountryPrefs.DEFAULT_COUNTRY;
+        try {
+            // No tenemos Context aquí; los fetch directos desde Repository ya pasan country.
+            // Este fetch se usa en rutas antiguas; mantener fallback a Locale.
+            String c = java.util.Locale.getDefault().getCountry();
+            if (c != null && !c.isEmpty()) country = c;
+        } catch (Exception ignored) {}
+        if (country == null || country.isEmpty()) country = com.example.openradiofm.utils.CountryPrefs.DEFAULT_COUNTRY;
+        country = country.toUpperCase();
         
         android.util.Log.d("SupabaseLogoSource", "FETCH START: PI=" + piCode + ", Name=" + rdsName + ", Freq=" + freqKHz + ", Country=" + country);
         try {
@@ -249,8 +257,9 @@ public class SupabaseLogoSource {
 
                 // Enriquecer con Stream URL si no viene definido (auto-populación de la base comunitaria)
                 String finalStreamUrl = streamUrl;
-                String country = java.util.Locale.getDefault().getCountry();
-                if (country == null || country.isEmpty()) country = "ES";
+                String country = com.example.openradiofm.utils.CountryPrefs.getCountry(appContext != null ? appContext : context);
+                // Permitir "OT" (Otro) para no forzar ES si el usuario está fuera de lista.
+                // En ese caso, el dato se etiqueta con OT y no contamina países existentes.
 
                 if ((finalStreamUrl == null || finalStreamUrl.isEmpty()) && fPs != null && !isNameGeneric(fPs)) {
                     android.util.Log.d("SupabaseLogoSource", "SUPABASE ENRICH: Searching stream for " + fPs);
@@ -314,6 +323,41 @@ public class SupabaseLogoSource {
                 return res.body().get(0).getLogoUrl();
             }
         } catch (Exception ignored) {}
+        // Fallback: secondary table fed from Radio-Browser snapshots
+        try {
+            Call<List<SupabaseLogoResponse>> call2 = api.getRadioBrowserByName(apiKey, "Bearer " + apiKey, "ilike." + name, "eq." + country, "*");
+            Response<List<SupabaseLogoResponse>> res2 = call2.execute();
+            if (res2.isSuccessful() && res2.body() != null && !res2.body().isEmpty()) {
+                return res2.body().get(0).getLogoUrl();
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    /**
+     * Secondary lookup by stream URL (Radio-Browser catalog).
+     * This is used only as a fallback and does not replace the main stations table.
+     */
+    public String fetchRadioBrowserLogoByStreamUrl(String streamUrl, String country) {
+        if (streamUrl == null || streamUrl.trim().isEmpty()) return null;
+        String c = (country == null || country.trim().isEmpty()) ? "ES" : country.trim();
+        notifyActivity(true);
+        try {
+            Call<List<SupabaseLogoResponse>> call = api.getRadioBrowserByStreamUrl(
+                    apiKey,
+                    "Bearer " + apiKey,
+                    "eq." + streamUrl.trim(),
+                    "eq." + c,
+                    "*"
+            );
+            Response<List<SupabaseLogoResponse>> res = call.execute();
+            if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
+                return res.body().get(0).getLogoUrl();
+            }
+        } catch (Throwable ignored) {
+        } finally {
+            notifyActivity(false);
+        }
         return null;
     }
 

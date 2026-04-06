@@ -278,6 +278,32 @@
             </LinearLayout>
         </LinearLayout>
 
+        <!-- País -->
+        <LinearLayout
+            android:id="@+id/rowCountry"
+            style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="@string/app_country"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tvCurrentCountry"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/country_es"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp"/>
+            </LinearLayout>
+        </LinearLayout>
+
         <!-- Logos Online -->
         <LinearLayout style="@style/SettingsRowStyle">
             <TextView

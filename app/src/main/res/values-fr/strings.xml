@@ -12,6 +12,10 @@
     <string name="a11y_hihack_reboot_dialog_message">Sur beaucoup d’unités Android, les services d’accessibilité sont désactivés après un redémarrage complet. Réactive HiHack (OpenRadioFM) dans Réglages → Accessibilité pour le bouton RADIO et le volant.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Ouvrir l’accessibilité</string>
     <string name="a11y_hihack_reboot_dialog_later">Plus tard</string>
+    <string name="a11y_hihack_not_working_title">HiHack ne fonctionne pas</string>
+    <string name="a11y_hihack_not_working_message">HiHack est activé, mais le système semble avoir arrêté le service. Dans Accessibilité, il peut apparaître comme « Ne fonctionne pas ». Va dans Réglages → Accessibilité et bascule-le OFF/ON pour le redémarrer.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Ouvrir l’accessibilité</string>
+    <string name="a11y_hihack_not_working_later">Plus tard</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming arrêté. Si la FM ne se comporte pas correctement, fermez complètement OpenRadioFM et rouvrez-la.</string>
     <string name="premium_customization">Menu des options</string>
     <string name="theme_colors">Couleurs du Thème</string>
@@ -57,6 +61,7 @@
     <string name="font_orbitron">Futuriste (Orbitron)</string>
     <string name="font_formula1">Course (Formula 1)</string>
     <string name="app_options">Options de l\'App</string>
+    <string name="app_country">📍 Pays</string>
     <string name="night_mode_auto">Mode Nuit Automatique</string>
     <string name="relief_hd">Relief HD</string>
     <string name="save_history">Enregistrer l\'Historique</string>
@@ -81,6 +86,21 @@
     <string name="all_favorites_deleted">✅ Tous les favoris supprimés</string>
     <string name="select_favorites_file">📂 Sélectionner fichier favoris</string>
     <string name="cancel">Annuler</string>
+
+    <!-- Country selector -->
+    <string name="select_country_title">Sélectionner le pays</string>
+    <string name="select_country_desc">Ce pays améliore la recherche de logos et de streaming (filtre par pays). Tu peux le modifier plus tard dans Options.</string>
+    <string name="country_saved">✅ Pays enregistré : %s</string>
+    <string name="country_es">Espagne (ES)</string>
+    <string name="country_ru">Russie (RU)</string>
+    <string name="country_it">Italie (IT)</string>
+    <string name="country_gr">Grèce (GR)</string>
+    <string name="country_ro">Roumanie (RO)</string>
+    <string name="country_hu">Hongrie (HU)</string>
+    <string name="country_pt">Portugal (PT)</string>
+    <string name="country_de">Allemagne (DE)</string>
+    <string name="country_pl">Pologne (PL)</string>
+    <string name="country_other">Autre (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Sauvegarde</string>

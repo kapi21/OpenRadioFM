@@ -69,6 +69,22 @@
     <string name="load_favorites">📂 Загрузить Избранное</string>
     <string name="select_favorites_file">📂 Выбрать файл избранного</string>
     <string name="cancel">Отмена</string>
+
+    <!-- Country selector -->
+    <string name="app_country">📍 Страна</string>
+    <string name="select_country_title">Выбрать страну</string>
+    <string name="select_country_desc">Эта страна улучшает поиск логотипов и стриминга (фильтр по стране). Её можно изменить позже в Опциях.</string>
+    <string name="country_saved">✅ Страна сохранена: %s</string>
+    <string name="country_es">Испания (ES)</string>
+    <string name="country_ru">Россия (RU)</string>
+    <string name="country_it">Италия (IT)</string>
+    <string name="country_gr">Греция (GR)</string>
+    <string name="country_ro">Румыния (RO)</string>
+    <string name="country_hu">Венгрия (HU)</string>
+    <string name="country_pt">Португалия (PT)</string>
+    <string name="country_de">Германия (DE)</string>
+    <string name="country_pl">Польша (PL)</string>
+    <string name="country_other">Другое (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Резервная копия</string>
@@ -210,6 +226,10 @@
     <string name="a11y_hihack_reboot_dialog_message">На многих Android-головных устройствах службы спецвозможностей сбрасываются после полной перезагрузки. Снова включите HiHack (OpenRadioFM) в Настройки → Спецвозможности для кнопки RADIO и руля.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Открыть спецвозможности</string>
     <string name="a11y_hihack_reboot_dialog_later">Не сейчас</string>
+    <string name="a11y_hihack_not_working_title">HiHack не работает</string>
+    <string name="a11y_hihack_not_working_message">HiHack включён, но система, похоже, остановила службу. В Спецвозможностях может отображаться «Не работает». Открой Настройки → Спецвозможности и переключи OFF/ON, чтобы перезапустить.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Открыть спецвозможности</string>
+    <string name="a11y_hihack_not_working_later">Не сейчас</string>
     <string name="all_favorites_deleted">✅ Все избранные удалены</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

@@ -69,6 +69,22 @@
     <string name="load_favorites">📂 Завантажити Вибране</string>
     <string name="select_favorites_file">📂 Вибрати файл вибраного</string>
     <string name="cancel">Скасувати</string>
+
+    <!-- Country selector -->
+    <string name="app_country">📍 Країна</string>
+    <string name="select_country_title">Вибрати країну</string>
+    <string name="select_country_desc">Ця країна покращує пошук логотипів і стримінгу (фільтр за країною). Її можна змінити пізніше в Опціях.</string>
+    <string name="country_saved">✅ Країну збережено: %s</string>
+    <string name="country_es">Іспанія (ES)</string>
+    <string name="country_ru">Росія (RU)</string>
+    <string name="country_it">Італія (IT)</string>
+    <string name="country_gr">Греція (GR)</string>
+    <string name="country_ro">Румунія (RO)</string>
+    <string name="country_hu">Угорщина (HU)</string>
+    <string name="country_pt">Португалія (PT)</string>
+    <string name="country_de">Німеччина (DE)</string>
+    <string name="country_pl">Польща (PL)</string>
+    <string name="country_other">Інше (OT)</string>
     
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Резервна копія</string>
@@ -210,6 +226,10 @@
     <string name="a11y_hihack_reboot_dialog_message">На багатьох Android-пристроях служби доступності скидаються після повного перезавантаження. Увімкніть знову HiHack (OpenRadioFM) у Налаштування → Доступність для кнопки RADIO та керма.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Відкрити доступність</string>
     <string name="a11y_hihack_reboot_dialog_later">Не зараз</string>
+    <string name="a11y_hihack_not_working_title">HiHack не працює</string>
+    <string name="a11y_hihack_not_working_message">HiHack увімкнено, але система, схоже, зупинила сервіс. У доступності може показуватися «Не працює». Відкрий Налаштування → Доступність та перемкни OFF/ON, щоб перезапустити.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Відкрити доступність</string>
+    <string name="a11y_hihack_not_working_later">Не зараз</string>
     <string name="all_favorites_deleted">✅ Усі обрані видалено</string>
     <string name="engine_k706_can">HCN / Vento (K706 CAN-Bus)</string>
     <string name="language_hungarian">Magyar</string>

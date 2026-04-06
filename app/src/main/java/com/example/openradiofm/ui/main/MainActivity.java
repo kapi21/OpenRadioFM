@@ -1533,6 +1533,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             applyLayout2SidePreference();
         }
 
+        // Primer inicio tras instalación: solicitar idioma y país.
+        // Explicación: mejora la selección de logos y streaming (filtrado por country_code en Supabase).
+        ensureFirstRunLanguageAndCountry();
+
         // V21.0: Initialize the active UI Controller
         if (mUiController != null) {
             mUiController.initViews(findViewById(android.R.id.content));
@@ -1856,6 +1860,107 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         adjustLayoutForDPI();
     }
 
+    private static final String PREF_ONBOARDING_DONE = "pref_onboarding_lang_country_done";
+    private static final String PREF_ONBOARDING_LANG_DONE = "pref_onboarding_lang_done";
+    private static final String PREF_ONBOARDING_COUNTRY_DONE = "pref_onboarding_country_done";
+
+    private void ensureFirstRunLanguageAndCountry() {
+        try {
+            if (mPrefs == null) return;
+            if (mPrefs.getBoolean(PREF_ONBOARDING_DONE, false)) return;
+
+            boolean langDone = mPrefs.getBoolean(PREF_ONBOARDING_LANG_DONE, false);
+            boolean countryDone = mPrefs.getBoolean(PREF_ONBOARDING_COUNTRY_DONE, false)
+                    || com.example.openradiofm.utils.CountryPrefs.isCountrySet(this);
+
+            // Paso 1: Idioma (forzado) si no se ha completado aún.
+            if (!langDone) {
+                DialogManager dm = (mDialogManager != null) ? mDialogManager : new DialogManager(this);
+                dm.showLanguageSelector(true, selectedLang -> {
+                    try {
+                        if (selectedLang == null || selectedLang.trim().isEmpty()) return;
+                        mPrefs.edit().putString("app_language", selectedLang.trim()).putBoolean(PREF_ONBOARDING_LANG_DONE, true).apply();
+                        recreate(); // reaplicar contexto/strings
+                    } catch (Exception ignored) {}
+                });
+                return;
+            }
+
+            // Paso 2: País (forzado) si no se ha completado aún.
+            if (!countryDone) {
+                showCountrySelectorDialog(true);
+                return;
+            }
+
+            mPrefs.edit().putBoolean(PREF_ONBOARDING_COUNTRY_DONE, true).putBoolean(PREF_ONBOARDING_DONE, true).apply();
+        } catch (Exception ignored) {}
+    }
+
+    /** Si {@code forceChoose} es true, el diálogo no se puede cancelar. */
+    public void showCountrySelectorDialog(boolean forceChoose) {
+        try {
+            final String[] codes = new String[] { "ES", "RU", "IT", "GR", "RO", "HU", "PT", "DE", "PL", "OT" };
+            final String[] labels = new String[] {
+                    getString(R.string.country_es),
+                    getString(R.string.country_ru),
+                    getString(R.string.country_it),
+                    getString(R.string.country_gr),
+                    getString(R.string.country_ro),
+                    getString(R.string.country_hu),
+                    getString(R.string.country_pt),
+                    getString(R.string.country_de),
+                    getString(R.string.country_pl),
+                    getString(R.string.country_other)
+            };
+
+            String current = com.example.openradiofm.utils.CountryPrefs.getCountry(this);
+            int checked = 0;
+            for (int i = 0; i < codes.length; i++) {
+                if (codes[i].equalsIgnoreCase(current)) { checked = i; break; }
+            }
+            final int[] selected = new int[] { checked };
+
+            // Usar el mismo estilo “grid selector” que el resto de menús (idioma/tema/fuentes)
+            DialogManager dm = (mDialogManager != null) ? mDialogManager : new DialogManager(this);
+            dm.showCountrySelector(forceChoose, labels, codes, checked, selectedCode -> {
+                try {
+                    com.example.openradiofm.utils.CountryPrefs.setCountry(this, selectedCode);
+                    if (mPrefs != null) {
+                        boolean langDone = mPrefs.getBoolean(PREF_ONBOARDING_LANG_DONE, false);
+                        mPrefs.edit()
+                                .putBoolean(PREF_ONBOARDING_COUNTRY_DONE, true)
+                                .putBoolean(PREF_ONBOARDING_DONE, langDone)
+                                .apply();
+                    }
+                } catch (Exception ignored) {}
+            });
+
+            // Si es parte del onboarding, marcarlo como completado (se guarda al seleccionar).
+            if (forceChoose && mPrefs != null) {
+                // Se marca definitivamente cuando ya haya un país configurado.
+                // Esto evita dar por completado el paso si el usuario no selecciona nada.
+                // (El selector forzado no tiene cancelar).
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public String countryLabelForCode(String countryCode) {
+        String cc = (countryCode == null) ? "" : countryCode.trim().toUpperCase();
+        switch (cc) {
+            case "RU": return getString(R.string.country_ru);
+            case "IT": return getString(R.string.country_it);
+            case "GR": return getString(R.string.country_gr);
+            case "RO": return getString(R.string.country_ro);
+            case "HU": return getString(R.string.country_hu);
+            case "PT": return getString(R.string.country_pt);
+            case "DE": return getString(R.string.country_de);
+            case "PL": return getString(R.string.country_pl);
+            case "OT": return getString(R.string.country_other);
+            case "ES":
+            default: return getString(R.string.country_es);
+        }
+    }
+
     /**
      * Tras cambiar drawables de pack (PNG/SVG), reaplica tintes de skin (noche, CLEAR)
      * y el icono cloud (streaming / idle / modo noche).
@@ -2124,6 +2229,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mPrefs != null) {
             com.example.openradiofm.util.HiHackBootReminder.onAppResumed(this, mPrefs);
         }
+        try {
+            maybeWarnHihackNotWorking();
+        } catch (Exception ignored) {}
         // Algunas ROM OEM (MTK8259/Topway) reimponen fullscreen al volver al frente.
         applyStatusBarVisibility();
         
@@ -2178,6 +2286,44 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mIsScanning = scanning;
             mScanManager.applyEngineScanState(scanning);
         }
+    }
+
+    private static final String PREF_HIHACK_HEALTH_WARNED_AT_MS = "pref_hihack_health_warned_at_ms";
+    private static final long HIHACK_HEARTBEAT_STALE_MS = 2 * 60_000L; // 2 min
+
+    private void maybeWarnHihackNotWorking() {
+        if (mPrefs == null) return;
+        if (!isFactoryRadioHijackerAccessibilityEnabled(this)) return;
+
+        long lastHb;
+        try {
+            lastHb = mPrefs.getLong(com.example.openradiofm.services.FactoryRadioHijackerService.PREF_HIHACK_HEARTBEAT_MS, 0L);
+        } catch (Exception e) {
+            return;
+        }
+        if (lastHb <= 0L) return;
+
+        long now = System.currentTimeMillis();
+        if (now - lastHb <= HIHACK_HEARTBEAT_STALE_MS) return;
+
+        long lastWarn = 0L;
+        try { lastWarn = mPrefs.getLong(PREF_HIHACK_HEALTH_WARNED_AT_MS, 0L); } catch (Exception ignored) {}
+        if (now - lastWarn < 10 * 60_000L) return; // no spamear (10 min)
+
+        mPrefs.edit().putLong(PREF_HIHACK_HEALTH_WARNED_AT_MS, now).apply();
+
+        new androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle(getString(R.string.a11y_hihack_not_working_title))
+                .setMessage(getString(R.string.a11y_hihack_not_working_message))
+                .setPositiveButton(getString(R.string.a11y_hihack_not_working_open_accessibility), (d, w) -> {
+                    try {
+                        Intent i = new Intent(android.provider.Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                        i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(i);
+                    } catch (Exception ignored) {}
+                })
+                .setNegativeButton(getString(R.string.a11y_hihack_not_working_later), null)
+                .show();
     }
 
     @Override

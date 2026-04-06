@@ -11,6 +11,10 @@
     <string name="a11y_hihack_reboot_dialog_message">Many Android head units clear accessibility services after a full reboot. Turn HiHack (OpenRadioFM) back on under Settings → Accessibility for the RADIO button and steering wheel.</string>
     <string name="a11y_hihack_reboot_dialog_open_settings">Open accessibility</string>
     <string name="a11y_hihack_reboot_dialog_later">Not now</string>
+    <string name="a11y_hihack_not_working_title">HiHack not working</string>
+    <string name="a11y_hihack_not_working_message">HiHack is enabled, but the system seems to have stopped the service. In Accessibility it may show as “Not working”. Go to Settings → Accessibility and toggle it OFF/ON to restart it.</string>
+    <string name="a11y_hihack_not_working_open_accessibility">Open accessibility</string>
+    <string name="a11y_hihack_not_working_later">Not now</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming stopped. If FM does not behave correctly, fully close OpenRadioFM and open it again.</string>
     
     <!-- Premium Menu Strings -->
@@ -42,6 +46,7 @@
     
     <!-- V4.0: App Options -->
     <string name="app_options">App Options</string>
+    <string name="app_country">📍 Country</string>
     <string name="night_mode_auto">Automatic Night Mode</string>
     <string name="relief_hd">HD Relief</string>
     <string name="save_history">Save Station History</string>
@@ -70,6 +75,21 @@
     <string name="all_favorites_deleted">✅ All favorites deleted</string>
     <string name="select_favorites_file">📂 Select favorites file</string>
     <string name="cancel">Cancel</string>
+
+    <!-- Country selector -->
+    <string name="select_country_title">Select country</string>
+    <string name="select_country_desc">This country is used to improve logo and streaming search (country filtering). You can change it later in Options.</string>
+    <string name="country_saved">✅ Country saved: %s</string>
+    <string name="country_es">Spain (ES)</string>
+    <string name="country_ru">Russia (RU)</string>
+    <string name="country_it">Italy (IT)</string>
+    <string name="country_gr">Greece (GR)</string>
+    <string name="country_ro">Romania (RO)</string>
+    <string name="country_hu">Hungary (HU)</string>
+    <string name="country_pt">Portugal (PT)</string>
+    <string name="country_de">Germany (DE)</string>
+    <string name="country_pl">Poland (PL)</string>
+    <string name="country_other">Other (OT)</string>
 
     <!-- Backup / Restore (App State) -->
     <string name="backup_state_title">🗂️ Backup</string>

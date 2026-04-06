@@ -732,8 +732,7 @@ public class RadioRepository {
 
     private String getCountryCode() {
         try {
-            String country = java.util.Locale.getDefault().getCountry();
-            return (country != null && !country.isEmpty()) ? country.toUpperCase() : "ES";
+            return com.example.openradiofm.utils.CountryPrefs.getCountry(mContext);
         } catch (Exception e) {
             return "ES";
         }

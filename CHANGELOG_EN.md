@@ -7,16 +7,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ---
 ## [Unreleased]
 
-### Added
-- **Backups (app state)**: long-press on **Save/Load Favorites** opens a **Backup** menu with export/import:
-  - **Menu options only** to `.ors` (settings `pref_*` + `ThemePrefs`)
-  - **Full backup** to `.orzip` (ZIP with `state.json` + `RadioLogos/` images)
-  Includes progress + **Cancel**, and prompts the user to **restart** after restore so layout/theme changes apply.
-- **Home-screen widget**: compact/expanded layouts, band label, extra actions (seek/mute) and PS tap for quick info; on launchers without resize the simple widget maps buttons back to **SEEK** (regression avoided).
-- **Launcher icon (QS6/NWD)**: `android:icon` / `roundIcon` now point to `@drawable` with a high-res `drawable-nodpi-v4` fallback (matching the OEM radio approach).
-
-### Fixed
-- **Logo quality**: avoid saving downloaded logos as 512×512 (pixelated when scaled up); decode/load using ARGB8888 and original size where applicable.
+*(no new entries; recent changes are documented under 5.0.16)*
 
 ---
 
@@ -25,6 +16,12 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ### Added
 - **HiHack / reboot**: `HihackBootReminderReceiver` + `HiHackBootReminder`, preferences, reminder on app launch, and toggle in premium settings; strings in all locales.
+- **Backups (app state)**: long-press on **Save/Load Favorites** opens a **Backup** menu with export/import:
+  - **Menu options only** to `.ors` (settings `pref_*` + `ThemePrefs`)
+  - **Full backup** to `.orzip` (ZIP with `state.json` + `RadioLogos/` images)
+  Includes progress + **Cancel**, and prompts the user to **restart** after restore so layout/theme changes apply.
+- **Home-screen widget**: compact/expanded layouts, band label, extra actions (seek/mute) and PS tap for quick info; on launchers without resize the simple widget maps buttons back to **SEEK** (regression avoided).
+- **Launcher icon (QS6/NWD)**: `android:icon` / `roundIcon` now point to `@drawable` with a high-res `drawable-nodpi-v4` fallback (matching the OEM radio approach).
 
 ### Fixed
 - **Streaming / MT8163 (HCN)**: `OnlineStreamManager` marshals `stopStream()` / `release()` to the main looper; when deferred MT8163 handoff applies, `ExoPlayer.release` is postponed to avoid overlapping two streams.
@@ -32,6 +29,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **Background steering (QS6)**: same bridge path as K706 (`sWheelMediaBridgeActive`, `onStop`, `ACTION_FORCE_PLAY`); `RadioMediaService` / FGS and `FactoryRadioHijackerService` cover QS6; `RadioServiceController.isSteeringWheelMediaBridgeMode()`.
 - **RDS / MediaSession / notifications**: subtitle normalization (MHz) for metadata dedup in `MediaSessionManager`; `onRdsName` uses `%.1f MHz` when refreshing status; `RadioMediaService` skips `notify()` without notification permission or when notifications are disabled (**widget** still uses `AppWidgetManager` + prefs).
 - **UI thread / logos**: if `RadioRepository.getStationInfo(..., callback != null)` is called on the UI thread, work runs on `logoExecutor` (`getStationInfoImpl`).
+- **Logo quality**: avoid saving downloaded logos as 512×512 (pixelated when scaled up); decode/load using ARGB8888 and original size where applicable.
 
 ### Version
 - `versionCode 29`, `versionName 5.0.16`; `app_name_internal` **v5.0.16**.
