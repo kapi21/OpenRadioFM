@@ -126,6 +126,23 @@ nav {
 .logo-text {
     font-size: 1.8rem;
     font-weight: 800;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+    line-height: 1.15;
+}
+
+.logo-title-line {
+    display: inline-block;
+}
+
+.logo-tagline {
+    font-size: 0.8rem;
+    color: #ff8c00;
+    font-weight: bold;
+    text-shadow: 0 0 10px rgba(255, 140, 0, 0.5);
+    letter-spacing: 0.02em;
 }
 
 .v4 {
