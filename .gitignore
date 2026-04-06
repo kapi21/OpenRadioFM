@@ -45,6 +45,10 @@ radiobrowser_stations_*.json
 _DOCS/*
 !_DOCS/manual_*.md
 !_DOCS/manual_usuario.md
+docs/
+README.md
+CHANGELOG.md
+CHANGELOG_EN.md
 v5/
 .gemini/
 .antigravity/
@@ -69,9 +73,20 @@ platform.x509.pem
 # === Archivos temporales, assets y personales ===
 _ASSETS/
 /recursos/
+_tools/
+tools/
+scripts/
+icons_*/
+Icons_lucide/
+logo.png
 *.lnk
 *.fav
 *copia*
+
+# === Configuración de Cursor (LOCAL) ===
+.cursor/
+.cursorignore
+.cursorrules
 
 # === Kotlin ===
 .kotlin/

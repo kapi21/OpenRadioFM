@@ -1,7 +1,0 @@
-{
-  "plugins": {
-    "supabase": {
-      "enabled": true
-    }
-  }
-}
