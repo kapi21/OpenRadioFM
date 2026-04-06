@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.0.16 (abril 2026, hotfix):** estabilidad de streaming en MT8163 (liberación de `ExoPlayer` coordinada), logos en V3/QS6 sin quedarse “pegados”, volante en segundo plano también en **QS6**, metadatos/notificaciones más coherentes (sin `notify()` si no hay permiso), `getStationInfo` desde UI en segundo plano, recordatorio **HiHack** tras reinicio, **widget** mejorado (logo/banda/seek/mute y mejor UX en launchers sin resize), **backups** de estado (opciones `.ors` o copia completa `.orzip` con `RadioLogos/`, progreso + cancelar + sugerencia de reinicio), e **icono launcher** estilo OEM (`drawable-nodpi-v4`) para evitar pixelado en QS6/NWD. **Pendiente validar en hardware real K706 y MT8163.**
+**5.0.16 “Setup & Stability Hotfix” (abril 2026):** estabilidad de streaming en MT8163 (liberación de `ExoPlayer` coordinada), logos en V3/QS6 sin quedarse “pegados”, volante en segundo plano también en **QS6**, metadatos/notificaciones más coherentes (sin `notify()` si no hay permiso), `getStationInfo` desde UI en segundo plano, recordatorio **HiHack** tras reinicio, **widget** mejorado (logo/banda/seek/mute y mejor UX en launchers sin resize), **backups** de estado (opciones `.ors` o copia completa `.orzip` con `RadioLogos/`, progreso + cancelar + sugerencia de reinicio), e **icono launcher** estilo OEM (`drawable-nodpi-v4`) para evitar pixelado en QS6/NWD. **Pendiente validar en hardware real K706 y MT8163.**
 
 ---
 
@@ -205,9 +205,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.0.16 (Abril 2026) — `main` — hotfix
-- **ES:** **OpenRadioFM v5.0.16** — hotfix: streaming MT8163, logos V3/QS6, volante QS6 en segundo plano, MediaSession/notificaciones, `RadioRepository` en UI, HiHack tras reinicio, **widget** mejorado (logo/banda/seek/mute; PS→info; compatibilidad con launchers sin resize), **backups** de estado (opciones `.ors` y copia completa `.orzip` con logos + progreso/cancelar), e **icono launcher** OEM (`drawable-nodpi-v4`) para evitar pixelado. **Pendiente verificación en K706 y MT8163.** Ver `CHANGELOG.md`.
-- **EN:** **OpenRadioFM v5.0.16** — hotfix: MT8163 streaming, V3/QS6 logos, QS6 background steering, MediaSession/notifications, UI-thread `getStationInfo`, HiHack reboot reminder, **widget** improvements (logo/band/seek/mute; PS→info; non-resizable launcher UX), **app-state backups** (options `.ors` and full `.orzip` with logos + progress/cancel), and **OEM-style launcher icon** (`drawable-nodpi-v4`) to avoid pixelation. **K706 + MT8163 verification still pending.** See `CHANGELOG_EN.md`.
+### v5.0.16 (Abril 2026) — `main` — “Setup & Stability Hotfix”
+- **ES:** **OpenRadioFM v5.0.16** — “Setup & Stability Hotfix”: streaming MT8163, logos V3/QS6, volante QS6 en segundo plano, MediaSession/notificaciones, `RadioRepository` en UI, HiHack tras reinicio, **widget** mejorado (logo/banda/seek/mute; PS→info; compatibilidad con launchers sin resize), **backups** de estado (opciones `.ors` y copia completa `.orzip` con logos + progreso/cancelar), e **icono launcher** OEM (`drawable-nodpi-v4`) para evitar pixelado. **Pendiente verificación en K706 y MT8163.** Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.0.16** — “Setup & Stability Hotfix”: MT8163 streaming, V3/QS6 logos, QS6 background steering, MediaSession/notifications, UI-thread `getStationInfo`, HiHack reboot reminder, **widget** improvements (logo/band/seek/mute; PS→info; non-resizable launcher UX), **app-state backups** (options `.ors` and full `.orzip` with logos + progress/cancel), and **OEM-style launcher icon** (`drawable-nodpi-v4`) to avoid pixelation. **K706 + MT8163 verification still pending.** See `CHANGELOG_EN.md`.
 
 ### v5.0.15 (Abril 2026) — `main`
 - **ES:** **OpenRadioFM v5.0.15** — cierre de línea 5.0.15: widget, AutoScan/i18n/diálogos (ver `CHANGELOG.md`); contribución Supabase más estricta; credenciales Supabase en compilación (`local.properties`); layout V2 presets.

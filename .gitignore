@@ -27,6 +27,7 @@ local.properties.bak
 _DEBUG/
 _BUILD_LOGS/
 _BACKUPS/
+local-data/
 *.logcat
 *.log
 *.txt
@@ -36,6 +37,9 @@ massive_upload.py
 *.csv
 *.sql
 *.ps1
+
+# === Datasets locales grandes (NO SUBIR) ===
+radiobrowser_stations_*.json
 
 # === Documentación y Estudios (LOCAL - NO SUBIR) ===
 _DOCS/*

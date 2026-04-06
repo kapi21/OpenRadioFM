@@ -4,7 +4,7 @@
 
 ---
 
-## [5.0.16] - 2026-04-03
+## [5.0.16] - 2026-04-03 — “Setup & Stability Hotfix”
 *Hotfix sobre la línea 5.0.15 (`versionCode` 29). **Pendiente verificación en hardware real K706 y MT8163.***
 
 ### Added

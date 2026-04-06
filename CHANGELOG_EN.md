@@ -11,7 +11,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
-## [5.0.16] - 2026-04-03
+## [5.0.16] - 2026-04-03 — “Setup & Stability Hotfix”
 *Hotfix on top of 5.0.15 (`versionCode` 29). **Still pending verification on real K706 and MT8163 hardware.***
 
 ### Added
