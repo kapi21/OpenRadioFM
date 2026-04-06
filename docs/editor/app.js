@@ -348,3 +348,10 @@ elements.saveBtn.onclick = () => {
     
     alert(translations[currentLang].successSave);
 };
+
+// PWA: registro del service worker (HTTPS o localhost; necesario para “Instalar app” en Chrome/Android)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(() => {});
+    });
+}
