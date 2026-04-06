@@ -46,9 +46,6 @@ _DOCS/*
 !_DOCS/manual_*.md
 !_DOCS/manual_usuario.md
 docs/
-README.md
-CHANGELOG.md
-CHANGELOG_EN.md
 v5/
 .gemini/
 .antigravity/
