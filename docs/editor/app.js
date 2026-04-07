@@ -70,7 +70,26 @@ const translations = {
         orzipSaved: "Archivo .orzip generado y listo para descargar.",
         imgInvalid: "Imagen no válida. Solo PNG o JPG.",
         imgTooLarge: "Imagen demasiado grande para este campo.",
-        zipMissingLib: "No se pudo cargar JSZip (librería ZIP)."
+        zipMissingLib: "No se pudo cargar JSZip (librería ZIP).",
+        tipCountry: "Código de país (mercado). Afecta a defaults y servicios dependientes del país.",
+        tipAppLang: "Idioma de la interfaz de la app.",
+        tipFont: "Tipografía usada en la UI.",
+        tipIconPack: "Pack de iconos de la app.",
+        tipBgMode: "0: negro puro. 1: usa background.png/jpg. 2: fondo dinámico basado en el logo de emisora.",
+        tipLastBand: "Banda que se seleccionará al arrancar/volver a abrir la app.",
+        tipLastFreq: "Frecuencia de arranque. Puedes escribir 87.6 / 87,6 / 87600 (kHz) / 531 (AM kHz).",
+        tipSkin: "Color/skin del estilo visual (ThemePrefs).",
+        tipLogosOnline: "Si está activado, la app puede buscar logos online.",
+        tipAutoHide: "Oculta automáticamente controles tras unos segundos.",
+        tipLayoutV3: "Activa el layout V3.",
+        tipLayoutSimple: "Activa el layout simple.",
+        tipOnboardLangDone: "Marca el onboarding de idioma como completado.",
+        tipOnboardCountryDone: "Marca el onboarding de país como completado.",
+        tipOnboardLangCountryDone: "Marca el onboarding combinado idioma+país como completado.",
+        tipStationHistory: "Historial de frecuencias en kHz, separado por comas. Solo afecta a la lista de recientes.",
+        tipCarLogo: "Imagen del logo del coche. Se guarda como RadioLogos/car_logo.png (máx 300×300).",
+        tipBackground: "Imagen de fondo de la app. Se guarda como RadioLogos/background.png o .jpg (máx 1920×1080).",
+        tipStationLogos: "Logos por preset. Se guardan como RadioLogos/FREQkHz_NOMBRE.png (o FREQkHz.png)."
     },
     en: {
         pageTitle: "Favorites Management",
@@ -135,7 +154,26 @@ const translations = {
         orzipSaved: ".orzip file generated and ready to download.",
         imgInvalid: "Invalid image. Only PNG or JPG.",
         imgTooLarge: "Image too large for this field.",
-        zipMissingLib: "JSZip library not loaded."
+        zipMissingLib: "JSZip library not loaded.",
+        tipCountry: "Country/market code. Affects defaults and country-dependent services.",
+        tipAppLang: "App UI language.",
+        tipFont: "UI font family preset.",
+        tipIconPack: "App icon pack.",
+        tipBgMode: "0: pure black. 1: uses background.png/jpg. 2: dynamic background from station logo.",
+        tipLastBand: "Band selected on app start.",
+        tipLastFreq: "Startup frequency. You can type 87.6 / 87,6 / 87600 (kHz) / 531 (AM kHz).",
+        tipSkin: "Theme skin (ThemePrefs).",
+        tipLogosOnline: "When enabled, the app may fetch logos online.",
+        tipAutoHide: "Auto-hides controls after a few seconds.",
+        tipLayoutV3: "Enable V3 layout.",
+        tipLayoutSimple: "Enable simple layout.",
+        tipOnboardLangDone: "Marks language onboarding as completed.",
+        tipOnboardCountryDone: "Marks country onboarding as completed.",
+        tipOnboardLangCountryDone: "Marks combined language+country onboarding as completed.",
+        tipStationHistory: "History list in kHz, comma-separated. Affects recents only.",
+        tipCarLogo: "Car logo image saved as RadioLogos/car_logo.png (max 300×300).",
+        tipBackground: "Background image saved as RadioLogos/background.png or .jpg (max 1920×1080).",
+        tipStationLogos: "Preset logos saved as RadioLogos/FREQkHz_NAME.png (or FREQkHz.png)."
     }
 };
 
@@ -209,8 +247,26 @@ function setLanguage(lang) {
         }
     });
 
+    // Tooltips (icono i)
+    document.querySelectorAll('[data-tip]').forEach(el => {
+        const key = el.getAttribute('data-tip');
+        if (translations[lang][key]) {
+            el.setAttribute('title', translations[lang][key]);
+            el.setAttribute('aria-label', translations[lang][key]);
+        }
+    });
+
     // Re-render dynamic content
     if (currentData.presets.length > 0) render();
+}
+
+function parseUserFreqToKHz(raw) {
+    const s = String(raw || '').trim().replace(',', '.');
+    if (!s) return 0;
+    const n = Number(s);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    const isMHzLike = s.includes('.') || n < 200;
+    return isMHzLike ? Math.round(n * 1000) : Math.round(n);
 }
 
 // Init language
@@ -311,7 +367,7 @@ function nowTimestamp() {
 function buildOrsJsonFromForm() {
     const timestamp = nowTimestamp();
     const RadioPresets = {
-        pref_font_type: parseInt(orsControls.fontType.value || '5', 10),
+        pref_font_type: parseInt(orsControls.fontType.value || '1', 10),
         pref_country_code: String(orsControls.country.value || 'ES'),
         pref_onboarding_lang_country_done: !!orsControls.onboardLangCountryDone.checked,
         pref_logos_online: !!orsControls.logosOnline.checked,
@@ -319,13 +375,13 @@ function buildOrsJsonFromForm() {
         pref_last_band: parseInt(orsControls.lastBand.value || '0', 10),
         pref_bg_mode: parseInt(orsControls.bgMode.value || '2', 10),
         pref_station_history: String(orsControls.stationHistory.value || '').trim(),
-        pref_last_freq: parseInt(orsControls.lastFreq.value || '0', 10),
-        pref_icon_pack: parseInt(orsControls.iconPack.value || '0', 10),
+        pref_last_freq: parseUserFreqToKHz(orsControls.lastFreq.value),
+        pref_icon_pack: parseInt(orsControls.iconPack.value || '1', 10),
         pref_layout_simple: !!orsControls.layoutSimple.checked,
         pref_onboarding_lang_done: !!orsControls.onboardLangDone.checked,
         pref_onboarding_country_done: !!orsControls.onboardCountryDone.checked,
         pref_layout_v3: !!orsControls.layoutV3.checked,
-        app_language: String(orsControls.appLang.value || 'es')
+        app_language: String(orsControls.appLang.value || 'es').toLowerCase()
     };
 
     const ThemePrefs = {
@@ -347,12 +403,13 @@ function fillOrsForm(obj) {
         const rp = obj.RadioPresets || {};
         const tp = obj.ThemePrefs || {};
         orsControls.country.value = rp.pref_country_code || 'ES';
-        orsControls.appLang.value = rp.app_language || 'es';
-        orsControls.fontType.value = rp.pref_font_type ?? 5;
-        orsControls.iconPack.value = rp.pref_icon_pack ?? 0;
+        orsControls.appLang.value = (rp.app_language || 'es').toLowerCase();
+        orsControls.fontType.value = rp.pref_font_type ?? 1;
+        orsControls.iconPack.value = rp.pref_icon_pack ?? 1;
         orsControls.bgMode.value = rp.pref_bg_mode ?? 0;
         orsControls.lastBand.value = rp.pref_last_band ?? 0;
-        orsControls.lastFreq.value = rp.pref_last_freq ?? 0;
+        const lf = Number(rp.pref_last_freq ?? 0);
+        orsControls.lastFreq.value = lf >= 30000 ? (lf / 1000).toFixed(1) : String(lf || '');
         orsControls.skin.value = tp.selected_skin || 'CLASSIC';
         orsControls.logosOnline.checked = !!rp.pref_logos_online;
         orsControls.autoHide.checked = !!rp.pref_auto_hide_controls;
@@ -511,11 +568,13 @@ function renderOrzipPresetList() {
                 <div style="margin-top:0.5rem;">
                     <input type="file" accept="image/png,image/jpeg" data-orzip-preset="${key}">
                 </div>
+                <img class="row-preview" alt="" />
             </div>
         `;
         elements.orzipPresetLogos.appendChild(row);
 
         const input = row.querySelector('input[type="file"]');
+        const preview = row.querySelector('.row-preview');
         input.addEventListener('change', async (e) => {
             const f = e.target.files && e.target.files[0];
             if (!f) return;
@@ -524,6 +583,10 @@ function renderOrzipPresetList() {
                 const sanitized = sanitizeStationName(p.custom_name || '');
                 const fileName = sanitized ? `${p.frequency}_${sanitized}.png` : `${p.frequency}.png`;
                 orzipState.stationLogos.set(key, { blob, filename: fileName });
+                if (preview) {
+                    preview.src = URL.createObjectURL(blob);
+                    preview.classList.add('show');
+                }
             } catch (err) {
                 alert(translations[currentLang].errorRead + (err?.message || err));
             }
@@ -537,6 +600,11 @@ elements.carLogoInput?.addEventListener('change', async (e) => {
     try {
         const blob = await loadAndResizeImage(f, 300, 300, 'image/png');
         orzipState.carLogo = { blob, filename: 'car_logo.png' };
+        const pv = document.getElementById('carLogoPreview');
+        if (pv) {
+            pv.src = URL.createObjectURL(blob);
+            pv.classList.add('show');
+        }
     } catch (err) {
         alert(translations[currentLang].errorRead + (err?.message || err));
     }
@@ -550,6 +618,11 @@ elements.backgroundInput?.addEventListener('change', async (e) => {
         const blob = await loadAndResizeImage(f, 1920, 1080, outType);
         const ext = outType === 'image/jpeg' ? 'jpg' : 'png';
         orzipState.background = { blob, filename: `background.${ext}` };
+        const pv = document.getElementById('backgroundPreview');
+        if (pv) {
+            pv.src = URL.createObjectURL(blob);
+            pv.classList.add('show');
+        }
     } catch (err) {
         alert(translations[currentLang].errorRead + (err?.message || err));
     }

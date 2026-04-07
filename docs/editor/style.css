@@ -257,6 +257,51 @@ header:has(.main-logo:hover)::after {
     height: 18px;
 }
 
+/* Info tooltip icon */
+.info {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 900;
+    margin-left: 0.35rem;
+    cursor: help;
+    user-select: none;
+}
+
+.info:hover {
+    color: #000;
+    background: var(--accent);
+    border-color: transparent;
+}
+
+.img-preview {
+    margin-top: 0.6rem;
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.02);
+    display: none;
+}
+
+.img-preview.wide {
+    width: 100%;
+    max-width: 520px;
+    height: 140px;
+}
+
+.img-preview.show {
+    display: block;
+}
+
 .orzip-presets {
     display: grid;
     grid-template-columns: repeat(2, minmax(320px, 1fr));
@@ -288,6 +333,21 @@ header:has(.main-logo:hover)::after {
 
 .orzip-row input[type="file"] {
     width: 100%;
+}
+
+.orzip-row .row-preview {
+    margin-top: 0.5rem;
+    width: 110px;
+    height: 110px;
+    object-fit: cover;
+    border-radius: 14px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.02);
+    display: none;
+}
+
+.orzip-row .row-preview.show {
+    display: block;
 }
 
 .orzip-row .badge {

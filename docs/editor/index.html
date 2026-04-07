@@ -73,55 +73,97 @@
             <div class="ui-card">
                 <div class="ors-grid">
                     <div class="form-group">
-                        <label data-i18n="optCountry">País</label>
+                        <label><span data-i18n="optCountry">País</span> <span class="info" data-tip="tipCountry">i</span></label>
                         <select id="optCountry">
                             <option value="ES">ES</option>
-                            <option value="PT">PT</option>
-                            <option value="FR">FR</option>
-                            <option value="DE">DE</option>
+                            <option value="RU">RU</option>
                             <option value="IT">IT</option>
-                            <option value="UK">UK</option>
-                            <option value="US">US</option>
+                            <option value="GR">GR</option>
+                            <option value="RO">RO</option>
+                            <option value="HU">HU</option>
+                            <option value="PT">PT</option>
+                            <option value="DE">DE</option>
+                            <option value="PL">PL</option>
+                            <option value="OT">OT</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="optAppLang">Idioma app</label>
+                        <label><span data-i18n="optAppLang">Idioma app</span> <span class="info" data-tip="tipAppLang">i</span></label>
                         <select id="optAppLang">
-                            <option value="es">es</option>
-                            <option value="en">en</option>
-                            <option value="fr">fr</option>
-                            <option value="de">de</option>
-                            <option value="it">it</option>
-                            <option value="pt">pt</option>
-                            <option value="ru">ru</option>
+                            <option value="es">ES</option>
+                            <option value="en">EN</option>
+                            <option value="fr">FR</option>
+                            <option value="de">DE</option>
+                            <option value="pt">PT</option>
+                            <option value="it">IT</option>
+                            <option value="ru">RU</option>
+                            <option value="ro">RO</option>
+                            <option value="uk">UK</option>
+                            <option value="sr">SR</option>
+                            <option value="zh">ZH</option>
+                            <option value="ja">JA</option>
+                            <option value="hu">HU</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="optFont">Fuente (tipo)</label>
-                        <input type="number" id="optFontType" min="0" max="9" step="1" value="5">
+                        <label><span data-i18n="optFont">Fuente</span> <span class="info" data-tip="tipFont">i</span></label>
+                        <select id="optFontType">
+                            <option value="1">1 - Defecto (System)</option>
+                            <option value="2">2 - Robotica (Bebas)</option>
+                            <option value="3">3 - Digital (LED)</option>
+                            <option value="4">4 - Moderna (Inter)</option>
+                            <option value="5">5 - Futurista (Orbitron)</option>
+                            <option value="6">6 - Carreras (Formula 1)</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="optIconPack">Icon pack</label>
-                        <input type="number" id="optIconPack" min="0" max="9" step="1" value="4">
+                        <label><span data-i18n="optIconPack">Iconos</span> <span class="info" data-tip="tipIconPack">i</span></label>
+                        <select id="optIconPack">
+                            <option value="1">1 - Default</option>
+                            <option value="2">2 - Color</option>
+                            <option value="3">3 - Google (Material)</option>
+                            <option value="4">4 - Lucide</option>
+                            <option value="5">5 - Remix</option>
+                            <option value="6">6 - Font Awesome</option>
+                            <option value="7">7 - Tabler</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="optBgMode">Modo fondo</label>
-                        <input type="number" id="optBgMode" min="0" max="9" step="1" value="2">
+                        <label><span data-i18n="optBgMode">Modo fondo</span> <span class="info" data-tip="tipBgMode">i</span></label>
+                        <select id="optBgMode">
+                            <option value="0">0 - Negro puro</option>
+                            <option value="1">1 - Imagen background</option>
+                            <option value="2">2 - Logo emisora (dinámico)</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="optLastBand">Última banda</label>
-                        <input type="number" id="optLastBand" min="0" max="4" step="1" value="0">
+                        <label><span data-i18n="optLastBand">Última banda</span> <span class="info" data-tip="tipLastBand">i</span></label>
+                        <select id="optLastBand">
+                            <option value="0">0 = FM1</option>
+                            <option value="1">1 = FM2</option>
+                            <option value="2">2 = FM3</option>
+                            <option value="3">3 = AM1</option>
+                            <option value="4">4 = AM2</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="optLastFreq">Última frecuencia (kHz)</label>
-                        <input type="number" id="optLastFreq" min="0" step="1" value="87600">
+                        <label><span data-i18n="optLastFreq">Última frecuencia</span> <span class="info" data-tip="tipLastFreq">i</span></label>
+                        <input type="text" id="optLastFreq" placeholder="87.6 / 87,6 / 87600 / 531" value="87.6">
                     </div>
                     <div class="form-group">
-                        <label data-i18n="optSkin">Skin</label>
+                        <label><span data-i18n="optSkin">Skin</span> <span class="info" data-tip="tipSkin">i</span></label>
                         <select id="optSkin">
-                            <option value="CLASSIC">CLASSIC</option>
-                            <option value="NEON">NEON</option>
-                            <option value="CARBON">CARBON</option>
+                            <option value="NIGHT_MODE">Night Mode</option>
+                            <option value="CLASSIC">Classic</option>
+                            <option value="ORANGE">Orange</option>
+                            <option value="BLUE">Blue</option>
+                            <option value="GREEN">Green</option>
+                            <option value="PURPLE">Purple</option>
+                            <option value="RED">Red</option>
+                            <option value="YELLOW">Yellow</option>
+                            <option value="CYAN">Cyan</option>
+                            <option value="PINK">Pink</option>
+                            <option value="WHITE">White</option>
                         </select>
                     </div>
                 </div>
@@ -129,36 +171,36 @@
                 <div class="ors-toggles">
                     <label class="toggle">
                         <input type="checkbox" id="optLogosOnline" checked>
-                        <span data-i18n="optLogosOnline">Logos online</span>
+                        <span><span data-i18n="optLogosOnline">Logos online</span> <span class="info" data-tip="tipLogosOnline">i</span></span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="optAutoHide" checked>
-                        <span data-i18n="optAutoHide">Auto ocultar controles</span>
+                        <span><span data-i18n="optAutoHide">Auto ocultar controles</span> <span class="info" data-tip="tipAutoHide">i</span></span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="optLayoutV3" checked>
-                        <span data-i18n="optLayoutV3">Layout V3</span>
+                        <span><span data-i18n="optLayoutV3">Layout V3</span> <span class="info" data-tip="tipLayoutV3">i</span></span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="optLayoutSimple">
-                        <span data-i18n="optLayoutSimple">Layout simple</span>
+                        <span><span data-i18n="optLayoutSimple">Layout simple</span> <span class="info" data-tip="tipLayoutSimple">i</span></span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="optOnboardLangDone" checked>
-                        <span data-i18n="optOnboardLangDone">Onboarding idioma OK</span>
+                        <span><span data-i18n="optOnboardLangDone">Onboarding idioma OK</span> <span class="info" data-tip="tipOnboardLangDone">i</span></span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="optOnboardCountryDone" checked>
-                        <span data-i18n="optOnboardCountryDone">Onboarding país OK</span>
+                        <span><span data-i18n="optOnboardCountryDone">Onboarding país OK</span> <span class="info" data-tip="tipOnboardCountryDone">i</span></span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="optOnboardLangCountryDone" checked>
-                        <span data-i18n="optOnboardLangCountryDone">Onboarding idioma+país OK</span>
+                        <span><span data-i18n="optOnboardLangCountryDone">Onboarding idioma+país OK</span> <span class="info" data-tip="tipOnboardLangCountryDone">i</span></span>
                     </label>
                 </div>
 
                 <div class="form-group" style="margin-top: 1rem;">
-                    <label data-i18n="optStationHistory">Historial (pref_station_history)</label>
+                    <label><span data-i18n="optStationHistory">Historial (pref_station_history)</span> <span class="info" data-tip="tipStationHistory">i</span></label>
                     <textarea id="optStationHistory" rows="3"
                         placeholder="94900,87650,87700..."></textarea>
                     <small data-i18n="optStationHistoryHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
@@ -186,15 +228,17 @@
             <div class="ui-card">
                 <div class="ors-grid">
                     <div class="form-group">
-                        <label data-i18n="orzipCarLogo">Logo del coche (car_logo.png)</label>
+                        <label><span data-i18n="orzipCarLogo">Logo del coche (car_logo.png)</span> <span class="info" data-tip="tipCarLogo">i</span></label>
                         <input type="file" id="carLogoInput" accept="image/png,image/jpeg">
+                        <img id="carLogoPreview" class="img-preview" alt="" />
                         <small data-i18n="orzipCarLogoHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
                             PNG/JPG, máximo 300×300.
                         </small>
                     </div>
                     <div class="form-group">
-                        <label data-i18n="orzipBackground">Fondo (background.png/jpg)</label>
+                        <label><span data-i18n="orzipBackground">Fondo (background.png/jpg)</span> <span class="info" data-tip="tipBackground">i</span></label>
                         <input type="file" id="backgroundInput" accept="image/png,image/jpeg">
+                        <img id="backgroundPreview" class="img-preview wide" alt="" />
                         <small data-i18n="orzipBackgroundHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
                             PNG/JPG, máximo 1920×1080.
                         </small>
@@ -202,7 +246,7 @@
                 </div>
 
                 <div class="form-group" style="margin-top: 1rem;">
-                    <label data-i18n="orzipStationLogos">Logos por preset</label>
+                    <label><span data-i18n="orzipStationLogos">Logos por preset</span> <span class="info" data-tip="tipStationLogos">i</span></label>
                     <div id="orzipPresetLogos" class="orzip-presets">
                         <!-- generated via JS -->
                     </div>
