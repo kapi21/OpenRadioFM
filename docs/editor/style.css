@@ -677,6 +677,11 @@ header:has(.main-logo:hover)::after {
     padding-left: 56px;
 }
 
+.preset-card.has-logo {
+    justify-content: flex-start;
+    padding-top: 0.55rem;
+}
+
 .preset-card.has-logo .name {
     max-width: calc(100% - 56px);
 }

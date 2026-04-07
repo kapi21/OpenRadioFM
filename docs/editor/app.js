@@ -556,6 +556,23 @@ const orzipState = {
     background: null // { blob, filename }
 };
 
+function applyLogoToGridCard(key, url) {
+    if (!key) return;
+    const card = document.querySelector(`.preset-card[data-orzip-key="${key}"]`);
+    if (!card) return;
+    const img = card.querySelector('img.preset-logo');
+    if (!img) return;
+    if (url) {
+        img.src = url;
+        img.classList.add('show');
+        card.classList.add('has-logo');
+    } else {
+        img.removeAttribute('src');
+        img.classList.remove('show');
+        card.classList.remove('has-logo');
+    }
+}
+
 function setOrzipStationLogo(key, blob, filename) {
     if (!key) return;
     const prev = orzipState.stationLogos.get(key);
@@ -564,6 +581,8 @@ function setOrzipStationLogo(key, blob, filename) {
     } catch (_) {}
     const url = blob ? URL.createObjectURL(blob) : '';
     orzipState.stationLogos.set(key, { blob, filename, url });
+    // Aplicar al grid principal sin obligar a recargar el archivo
+    applyLogoToGridCard(key, url);
 }
 
 function sanitizeStationName(name) {
@@ -875,6 +894,7 @@ function createCard(p, index) {
     const isAM = p.band >= 3;
     const logoUrl = orzipState.stationLogos.get(`${p.band}-${p.preset}`)?.url || '';
     div.className = `preset-card band-${p.band} ${isAM ? 'is-am' : 'is-fm'} ${logoUrl ? 'has-logo' : ''}`;
+    div.setAttribute('data-orzip-key', `${p.band}-${p.preset}`);
     
     // Frequency logic: AM (kHz) vs FM (MHz)
     const freqDisplay = isAM ? p.frequency : (p.frequency / 1000).toFixed(1);
