@@ -208,6 +208,8 @@ const elements = {
     cancelBtn: document.getElementById('cancelBtn')
 };
 
+const manualLink = document.getElementById('manualLink');
+
 // ORS controls
 const orsControls = {
     country: document.getElementById('optCountry'),
@@ -263,6 +265,11 @@ function setLanguage(lang) {
 
     // Re-render dynamic content
     if (currentData.presets.length > 0) render();
+
+    // Manual link (según idioma)
+    if (manualLink) {
+        manualLink.href = (lang === 'en') ? 'manual_en.html' : 'manual_es.html';
+    }
 }
 
 function parseUserFreqToKHz(raw) {

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0c" />
+  <title>Manual — OpenRadioFM Editor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-toolbar">
+      <div class="header-left-actions">
+        <a class="toolbar-link" href="./" title="Back to editor" aria-label="Back to editor">↩</a>
+        <a class="toolbar-link" href="../" title="Main website" aria-label="Main website">🏠</a>
+      </div>
+      <div class="lang-selector">
+        <a class="lang-btn" href="manual_es.html">ES</a>
+        <a class="lang-btn active" href="manual_en.html">EN</a>
+      </div>
+    </div>
+    <h2 class="app-name">OpenRadioFM</h2>
+    <h1 class="page-title">Web editor manual</h1>
+  </header>
+
+  <main class="container">
+    <div class="ui-card">
+      <h2 style="margin-bottom: 0.75rem;">What this website is</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+        This editor lets you create and modify OpenRadioFM files directly in the browser (and install it as a web app on Android).
+      </p>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Install on Android (PWA)</h2>
+      <ol style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>Open the editor in Chrome.</li>
+        <li>Menu ⋮ → <strong>Install app</strong> / <strong>Add to Home screen</strong>.</li>
+        <li>You’ll get an icon in the app drawer and it will open like an app.</li>
+      </ol>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Tabs</h2>
+      <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li><strong>Favorites (.fav)</strong>: create/edit presets by band (FM1–FM3, AM1–AM2) and download the file.</li>
+        <li><strong>Options (.ors)</strong>: generate a file with menu settings (language, skin, icons, background, etc.).</li>
+        <li><strong>Backup (.orzip)</strong>: generate a full backup (options + presets + logos/background) in a ZIP.</li>
+      </ul>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Favorites (.fav)</h2>
+      <ol style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>Click <strong>New Preset</strong> or edit an existing one.</li>
+        <li>Fill name (max 8), band and frequency.</li>
+        <li>Click <strong>Save new .fav</strong>.</li>
+      </ol>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Options (.ors)</h2>
+      <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>You can <strong>load</strong> an existing `.ors` and the form will be filled.</li>
+        <li>The <strong>(i)</strong> icon explains each field.</li>
+        <li><strong>Layout</strong>: only one can be active (normal / V3 / simple).</li>
+        <li><strong>Last frequency</strong>: type 87.6 / 87,6 / 87600 / 531; it will be converted to kHz.</li>
+      </ul>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Full backup (.orzip)</h2>
+      <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>You need a loaded/created `.fav` so the backup includes your presets.</li>
+        <li>Optional uploads: <strong>car logo</strong>, <strong>background</strong>, and <strong>preset logos</strong>.</li>
+        <li>Images are resized automatically: presets/car max <strong>300×300</strong>, background max <strong>1920×1080</strong>.</li>
+      </ul>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Using the files in OpenRadioFM</h2>
+      <p style="color: var(--text-secondary);">
+        Copy the generated files into the device <strong>RadioLogos</strong> folder (the one used by the app).
+        Then use OpenRadioFM’s <strong>import/load</strong> actions.
+      </p>
+    </div>
+  </main>
+</body>
+</html>
+

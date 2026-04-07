@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0a0a0c" />
+  <title>Manual — OpenRadioFM Editor</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="header-toolbar">
+      <div class="header-left-actions">
+        <a class="toolbar-link" href="./" title="Volver al editor" aria-label="Volver al editor">↩</a>
+        <a class="toolbar-link" href="../" title="Web principal" aria-label="Web principal">🏠</a>
+      </div>
+      <div class="lang-selector">
+        <a class="lang-btn active" href="manual_es.html">ES</a>
+        <a class="lang-btn" href="manual_en.html">EN</a>
+      </div>
+    </div>
+    <h2 class="app-name">OpenRadioFM</h2>
+    <h1 class="page-title">Manual del editor web</h1>
+  </header>
+
+  <main class="container">
+    <div class="ui-card">
+      <h2 style="margin-bottom: 0.75rem;">Qué es esta web</h2>
+      <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+        Este editor te permite crear y modificar archivos para OpenRadioFM directamente desde el navegador (y también
+        instalarlo como app web en Android).
+      </p>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Instalar en Android (PWA)</h2>
+      <ol style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>Abre el editor en Chrome.</li>
+        <li>Menú ⋮ → <strong>Instalar app</strong> / <strong>Añadir a pantalla de inicio</strong>.</li>
+        <li>Aparecerá un icono en el cajón de apps y se abrirá como una app.</li>
+      </ol>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Pestañas</h2>
+      <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li><strong>Favoritos (.fav)</strong>: crea/edita presets por banda (FM1–FM3, AM1–AM2) y descarga el archivo.</li>
+        <li><strong>Opciones (.ors)</strong>: genera un archivo con ajustes del menú (idioma, skin, iconos, fondo, etc.).</li>
+        <li><strong>Backup (.orzip)</strong>: genera un backup completo (opciones + presets + logos/fondo) en un ZIP.</li>
+      </ul>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Favoritos (.fav)</h2>
+      <ol style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>Pulsa <strong>Nuevo Preset</strong> o edita uno existente.</li>
+        <li>Introduce nombre (máx 8), banda y frecuencia.</li>
+        <li>Pulsa <strong>Guardar nuevo .fav</strong>.</li>
+      </ol>
+      <p style="color: var(--text-secondary); margin-top: 0.5rem;">
+        Nota: en FM la frecuencia se guarda internamente en kHz (por ejemplo 87.6 → 87600).
+      </p>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Opciones (.ors)</h2>
+      <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>Puedes <strong>cargar</strong> un `.ors` existente y se rellenará el formulario.</li>
+        <li>El icono <strong>(i)</strong> explica cada campo.</li>
+        <li><strong>Layout</strong>: solo puede estar activo uno (normal / V3 / simple).</li>
+        <li><strong>Última frecuencia</strong>: puedes escribir 87.6 / 87,6 / 87600 / 531; se convertirá a kHz.</li>
+      </ul>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Backup completo (.orzip)</h2>
+      <ul style="color: var(--text-secondary); padding-left: 1.2rem;">
+        <li>Necesitas tener un `.fav` cargado/creado para que el backup incluya tus presets.</li>
+        <li>Opcionalmente puedes subir: <strong>logo del coche</strong>, <strong>background</strong> y <strong>logos por preset</strong>.</li>
+        <li>Los logos se reescalan automáticamente: presets/coche máx <strong>300×300</strong>, fondo máx <strong>1920×1080</strong>.</li>
+      </ul>
+
+      <h2 style="margin: 1.25rem 0 0.75rem;">Cómo usar los archivos en OpenRadioFM</h2>
+      <p style="color: var(--text-secondary);">
+        Copia los archivos generados a la carpeta <strong>RadioLogos</strong> del dispositivo (la misma que usa la app).
+        Luego usa las opciones de <strong>importar/cargar</strong> dentro de OpenRadioFM.
+      </p>
+    </div>
+  </main>
+</body>
+</html>
+
