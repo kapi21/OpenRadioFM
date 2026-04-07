@@ -1,7 +1,7 @@
 {
-  "name": "OpenRadioFM — Editor .fav",
-  "short_name": "ORF Editor",
-  "description": "Editor de archivos .fav para OpenRadioFM",
+  "name": "OpenRadioFM — Backup Studio",
+  "short_name": "Backup Studio",
+  "description": "Editor y generador de backups (.fav/.ors/.orzip) para OpenRadioFM",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

@@ -8,7 +8,7 @@ let currentLang = 'es';
 
 const translations = {
     es: {
-        pageTitle: "Gestión de favoritos",
+        pageTitle: "Estudio de Backups",
         emptyState: "Carga un archivo para empezar",
         dropTitle: "Arrastra tu archivo .fav aquí",
         dropText: "o haz click para seleccionar",
@@ -97,7 +97,7 @@ const translations = {
         tipStationLogos: "Logos por preset. Se guardan como RadioLogos/FREQkHz_NOMBRE.png (o FREQkHz.png)."
     },
     en: {
-        pageTitle: "Favorites Management",
+        pageTitle: "Backup Studio",
         emptyState: "Upload a file to start",
         dropTitle: "Drag your .fav file here",
         dropText: "or click to select",
