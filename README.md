@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.0.16-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.1.0-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.0.16 “Setup & Stability Hotfix” (abril 2026):** estabilidad de streaming en MT8163 (liberación de `ExoPlayer` coordinada), logos en V3/QS6 sin quedarse “pegados”, volante en segundo plano también en **QS6**, metadatos/notificaciones más coherentes (sin `notify()` si no hay permiso), `getStationInfo` desde UI en segundo plano, recordatorio **HiHack** tras reinicio, **widget** mejorado (logo/banda/seek/mute y mejor UX en launchers sin resize), **backups** de estado (opciones `.ors` o copia completa `.orzip` con `RadioLogos/`, progreso + cancelar + sugerencia de reinicio), e **icono launcher** estilo OEM (`drawable-nodpi-v4`) para evitar pixelado en QS6/NWD. **Pendiente validar en hardware real K706 y MT8163.**
+**5.1.0 “Backup Studio + Web Tools” (abril 2026):** integración del **OpenRadioFM Backup Studio** (web instalable) para **crear/editar/importar/exportar** `.fav`, generar **opciones** `.ors` y **backup completo** `.orzip` (ZIP con `state.json` + `RadioLogos/`), con previsualización y límites de imágenes. En la app, acceso directo al editor desde **Guardar/Cargar Favoritos**. Ver `CHANGELOG.md`.
 
 ---
 
@@ -179,6 +179,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [Manual de Usuario (Español)](_DOCS/manual_usuario.md)
 - [User Manual (English)](_DOCS/manual_user_en.md)
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
+- **OpenRadioFM Backup Studio (web/PWA)**: `https://kapi21.github.io/OpenRadioFM/editor/` (incluye manual ES/EN dentro de la web)
 - [Compatibilidad de Hardware](docs/HW_COMPATIBILITY.md)
 - [Compilación / CI — credenciales Supabase](docs/CI_SUPABASE.md)
 - [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
@@ -204,6 +205,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.1.0 (Abril 2026) — `main` — “Backup Studio + Web Tools”
+- **ES:** **OpenRadioFM v5.1.0** — acceso al editor web desde Guardar/Cargar; **Backup Studio** (web instalable) con generación/carga de `.fav`, `.ors` y `.orzip`, previsualizaciones, tooltips y manual ES/EN. Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.1.0** — web editor link from Save/Load; installable **Backup Studio** web app with `.fav/.ors/.orzip` create/load, previews, tooltips and ES/EN manual. See `CHANGELOG_EN.md`.
 
 ### v5.0.16 (Abril 2026) — `main` — “Setup & Stability Hotfix”
 - **ES:** **OpenRadioFM v5.0.16** — “Setup & Stability Hotfix”: streaming MT8163, logos V3/QS6, volante QS6 en segundo plano, MediaSession/notificaciones, `RadioRepository` en UI, HiHack tras reinicio, **widget** mejorado (logo/banda/seek/mute; PS→info; compatibilidad con launchers sin resize), **backups** de estado (opciones `.ors` y copia completa `.orzip` con logos + progreso/cancelar), e **icono launcher** OEM (`drawable-nodpi-v4`) para evitar pixelado. **Pendiente verificación en K706 y MT8163.** Ver `CHANGELOG.md`.

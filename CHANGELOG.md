@@ -1,6 +1,23 @@
 ## [Unreleased]
 
-*(sin entradas nuevas; todo lo reciente está documentado en 5.0.16)*
+*(sin entradas nuevas; todo lo reciente está documentado en 5.1.0)*
+
+---
+
+## [5.1.0] - 2026-04-07 — “Backup Studio + Web Tools”
+*Release centrada en herramientas de backup/importación y entorno web instalable (`versionCode` 30).*
+
+### Added
+- **Acceso al editor web**: en el diálogo **Guardar/Cargar Favoritos** se añade un botón **✏️** que abre `https://kapi21.github.io/OpenRadioFM/editor/`.
+- **Backup Studio (web/PWA)**: web instalable en Android con soporte para:
+  - **Favoritos `.fav`**: crear/editar presets por banda y exportar.
+  - **Opciones `.ors`**: formulario guiado + carga/descarga.
+  - **Backup completo `.orzip`**: generar/cargar ZIP con `state.json` + `RadioLogos/` (logos por preset, `car_logo.png`, `background.*`), con reescalado automático y previsualización.
+  - **Manual ES/EN** integrado en la propia web y botones de navegación (volver a web principal + manual).
+  - Tooltips **(i)** por campo para documentación de opciones.
+
+### Changed
+- **Versionado app**: `versionCode 30`, `versionName 5.1.0`; `app_name_internal` **v5.1.0**.
 
 ---
 
