@@ -1,6 +1,6 @@
 {
-  "name": "OpenRadioFM — Backup Studio",
-  "short_name": "Backup Studio",
+  "name": "ORFm Backup Studio",
+  "short_name": "ORFm Backup",
   "description": "Editor y generador de backups (.fav/.ors/.orzip) para OpenRadioFM",
   "start_url": "./",
   "scope": "./",

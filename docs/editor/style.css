@@ -601,6 +601,11 @@ header:has(.main-logo:hover)::after {
     justify-content: center;
 }
 
+.preset-card::before,
+.preset-card::after {
+    pointer-events: none;
+}
+
 .preset-card::before {
     content: '';
     position: absolute;
@@ -628,30 +633,8 @@ header:has(.main-logo:hover)::after {
     opacity: 0.5;
 }
 
-.preset-card::after {
-    content: '';
-    position: absolute;
-    top: -100%;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(
-        to bottom,
-        transparent,
-        rgba(255, 255, 255, 0.05),
-        transparent
-    );
-    transition: none;
-}
-
-.preset-card:not(.empty):hover::after {
-    animation: scanline 2s linear infinite;
-}
-
-@keyframes scanline {
-    0% { top: -100%; }
-    100% { top: 100%; }
-}
+/* Quitado efecto "radio antigua" (scanline) para evitar bloquear clicks. */
+.preset-card::after { content: none; }
 
 .preset-card:not(.empty):hover {
     border-color: var(--accent);
@@ -667,6 +650,26 @@ header:has(.main-logo:hover)::after {
     font-size: 0.8rem;
     color: var(--text-secondary);
     opacity: 0.6;
+}
+
+.preset-logo {
+    position: absolute;
+    left: 0.55rem;
+    top: 0.55rem;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    object-fit: cover;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
+    opacity: 0;
+    transform: scale(0.98);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.preset-logo.show {
+    opacity: 1;
+    transform: scale(1);
 }
 
 .preset-card .frequency {
@@ -716,6 +719,39 @@ header:has(.main-logo:hover)::after {
     padding: 0.25rem;
     font-size: 0.7rem;
     border-radius: 4px;
+}
+
+.mini-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.2s;
+}
+
+.mini-toggle:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+}
+
+.mini-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+}
+
+/* Por defecto, ocultamos los logos en tarjetas si no está activado el modo */
+body:not(.show-card-logos) .preset-logo {
+    display: none !important;
 }
 
 

@@ -6,10 +6,10 @@
     <meta name="theme-color" content="#0a0a0c">
     <meta name="description" content="Editor y generador de backups (.fav/.ors/.orzip) para OpenRadioFM">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="ORF Editor">
+    <meta name="apple-mobile-web-app-title" content="ORFm Backup Studio">
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="apple-touch-icon" href="logo_editor.png">
-    <title>OpenRadioFM Backup Studio | Premium Dashboard</title>
+    <title>ORFm Backup Studio | Premium Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
@@ -288,7 +288,11 @@
                         <span data-i18n="fileLoaded">Archivo:</span> <strong id="fileNameDisplay">-</strong>
                     </div>
                 </div>
-                <div style="display: flex; gap: 1rem;">
+                <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                    <label class="mini-toggle" title="Mostrar/ocultar logos en las tarjetas">
+                        <input type="checkbox" id="toggleCardLogos" checked>
+                        <span>🖼️ Logos</span>
+                    </label>
                     <button class="btn btn-primary" id="addBtn">
                         <i data-lucide="plus"></i> <span data-i18n="btnNew">Nuevo Preset</span>
                     </button>

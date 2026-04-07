@@ -213,10 +213,31 @@ const elements = {
     presetForm: document.getElementById('presetForm'),
     saveBtn: document.getElementById('saveBtn'),
     addBtn: document.getElementById('addBtn'),
-    cancelBtn: document.getElementById('cancelBtn')
+    cancelBtn: document.getElementById('cancelBtn'),
+    toggleCardLogos: document.getElementById('toggleCardLogos')
 };
 
 const manualLink = document.getElementById('manualLink');
+
+// UI prefs
+const PREF_SHOW_CARD_LOGOS = 'orfm_show_card_logos';
+
+function setShowCardLogos(enabled) {
+    const on = !!enabled;
+    try { localStorage.setItem(PREF_SHOW_CARD_LOGOS, on ? '1' : '0'); } catch (_) {}
+    document.body.classList.toggle('show-card-logos', on);
+    if (elements.toggleCardLogos) elements.toggleCardLogos.checked = on;
+}
+
+// Init UI prefs ASAP
+(() => {
+    let on = true;
+    try {
+        const raw = localStorage.getItem(PREF_SHOW_CARD_LOGOS);
+        if (raw === '0') on = false;
+    } catch (_) {}
+    setShowCardLogos(on);
+})();
 
 // ORS controls
 const orsControls = {
@@ -477,6 +498,10 @@ function showEditor() {
     elements.emptyState.style.display = 'none';
 }
 
+elements.toggleCardLogos?.addEventListener('change', (e) => {
+    setShowCardLogos(!!e.target.checked);
+});
+
 function render() {
     elements.presetGrid.innerHTML = '';
     elements.totalPresets.textContent = currentData.presets.length;
@@ -526,10 +551,20 @@ function render() {
 // ==========================
 
 const orzipState = {
-    stationLogos: new Map(), // key: `${band}-${preset}` => { blob: Blob, filename: string }
+    stationLogos: new Map(), // key: `${band}-${preset}` => { blob: Blob, filename: string, url?: string }
     carLogo: null, // { blob, filename }
     background: null // { blob, filename }
 };
+
+function setOrzipStationLogo(key, blob, filename) {
+    if (!key) return;
+    const prev = orzipState.stationLogos.get(key);
+    try {
+        if (prev?.url) URL.revokeObjectURL(prev.url);
+    } catch (_) {}
+    const url = blob ? URL.createObjectURL(blob) : '';
+    orzipState.stationLogos.set(key, { blob, filename, url });
+}
 
 function sanitizeStationName(name) {
     return String(name || '')
@@ -601,6 +636,17 @@ function renderOrzipPresetList() {
 
         const input = row.querySelector('input[type="file"]');
         const preview = row.querySelector('.row-preview');
+
+        // Si hemos cargado un .orzip con logos, mostrar el logo ya existente en su tarjeta.
+        // (El usuario puede cambiarlo después seleccionando otro archivo).
+        try {
+            const existing = orzipState.stationLogos.get(key);
+            if (existing?.url && preview) {
+                preview.src = existing.url;
+                preview.classList.add('show');
+            }
+        } catch (_) {}
+
         input.addEventListener('change', async (e) => {
             const f = e.target.files && e.target.files[0];
             if (!f) return;
@@ -608,9 +654,9 @@ function renderOrzipPresetList() {
                 const blob = await loadAndResizeImage(f, 300, 300, 'image/png');
                 const sanitized = sanitizeStationName(p.custom_name || '');
                 const fileName = sanitized ? `${p.frequency}_${sanitized}.png` : `${p.frequency}.png`;
-                orzipState.stationLogos.set(key, { blob, filename: fileName });
+                setOrzipStationLogo(key, blob, fileName);
                 if (preview) {
-                    preview.src = URL.createObjectURL(blob);
+                    preview.src = orzipState.stationLogos.get(key)?.url || URL.createObjectURL(blob);
                     preview.classList.add('show');
                 }
             } catch (err) {
@@ -808,7 +854,7 @@ elements.orzipInput?.addEventListener('change', async (e) => {
                 const sanitized = sanitizeStationName(p.custom_name || '');
                 const expected = sanitized ? `${p.frequency}_${sanitized}.png` : `${p.frequency}.png`;
                 if (base === expected) {
-                    orzipState.stationLogos.set(`${p.band}-${p.preset}`, { blob, filename: expected });
+                    setOrzipStationLogo(`${p.band}-${p.preset}`, blob, expected);
                     break;
                 }
             }
@@ -832,9 +878,11 @@ function createCard(p, index) {
     // Frequency logic: AM (kHz) vs FM (MHz)
     const freqDisplay = isAM ? p.frequency : (p.frequency / 1000).toFixed(1);
     const unit = isAM ? 'kHz' : 'MHz';
+    const logoUrl = orzipState.stationLogos.get(`${p.band}-${p.preset}`)?.url || '';
     
     div.innerHTML = `
         <span class="number">P-${p.preset}</span>
+        <img class="preset-logo ${logoUrl ? 'show' : ''}" alt="" src="${logoUrl}">
         <div class="name">${p.custom_name || translations[currentLang].noName}</div>
         <div class="frequency">${freqDisplay} <span>${unit}</span></div>
         <div class="card-actions">
