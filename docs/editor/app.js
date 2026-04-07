@@ -8,7 +8,7 @@ let currentLang = 'es';
 
 const translations = {
     es: {
-        pageTitle: "Estudio de Backups",
+        pageTitle: "ESTUDIO DE BACKUP",
         emptyState: "Carga un archivo para empezar",
         dropTitle: "Arrastra tu archivo .fav aquí",
         dropText: "o haz click para seleccionar",
