@@ -38,6 +38,7 @@ const translations = {
         optAutoHide: "Auto ocultar controles",
         optLayoutV3: "Layout V3",
         optLayoutSimple: "Layout simple",
+        optLayoutNone: "Layout 2 (normal)",
         optOnboardLangDone: "Onboarding idioma OK",
         optOnboardCountryDone: "Onboarding país OK",
         optOnboardLangCountryDone: "Onboarding idioma+país OK",
@@ -83,6 +84,7 @@ const translations = {
         tipAutoHide: "Oculta automáticamente controles tras unos segundos.",
         tipLayoutV3: "Activa el layout V3.",
         tipLayoutSimple: "Activa el layout simple.",
+        tipLayoutNone: "Layout por defecto (Layout 2). Solo puede estar activo un layout: normal, V3 o simple.",
         tipOnboardLangDone: "Marca el onboarding de idioma como completado.",
         tipOnboardCountryDone: "Marca el onboarding de país como completado.",
         tipOnboardLangCountryDone: "Marca el onboarding combinado idioma+país como completado.",
@@ -122,6 +124,7 @@ const translations = {
         optAutoHide: "Auto-hide controls",
         optLayoutV3: "Layout V3",
         optLayoutSimple: "Simple layout",
+        optLayoutNone: "Layout 2 (normal)",
         optOnboardLangDone: "Language onboarding OK",
         optOnboardCountryDone: "Country onboarding OK",
         optOnboardLangCountryDone: "Language+country onboarding OK",
@@ -167,6 +170,7 @@ const translations = {
         tipAutoHide: "Auto-hides controls after a few seconds.",
         tipLayoutV3: "Enable V3 layout.",
         tipLayoutSimple: "Enable simple layout.",
+        tipLayoutNone: "Default layout (Layout 2). Only one layout can be active: normal, V3 or simple.",
         tipOnboardLangDone: "Marks language onboarding as completed.",
         tipOnboardCountryDone: "Marks country onboarding as completed.",
         tipOnboardLangCountryDone: "Marks combined language+country onboarding as completed.",
@@ -216,6 +220,7 @@ const orsControls = {
     skin: document.getElementById('optSkin'),
     logosOnline: document.getElementById('optLogosOnline'),
     autoHide: document.getElementById('optAutoHide'),
+    layoutNone: document.getElementById('optLayoutNone'),
     layoutV3: document.getElementById('optLayoutV3'),
     layoutSimple: document.getElementById('optLayoutSimple'),
     onboardLangDone: document.getElementById('optOnboardLangDone'),
@@ -366,6 +371,7 @@ function nowTimestamp() {
 
 function buildOrsJsonFromForm() {
     const timestamp = nowTimestamp();
+    const layoutMode = orsControls.layoutV3?.checked ? 'v3' : (orsControls.layoutSimple?.checked ? 'simple' : 'none');
     const RadioPresets = {
         // Android mapping (MainActivity.getSystemTypeface): 0=System, 1=Bebas, 2=Digital, 3=Inter, 4=Orbitron, 5=Formula1
         pref_font_type: parseInt(orsControls.fontType.value || '0', 10),
@@ -379,10 +385,10 @@ function buildOrsJsonFromForm() {
         pref_last_freq: parseUserFreqToKHz(orsControls.lastFreq.value),
         // Android mapping (DialogManager.showIconPackSelector): 0=Default, 1=Color, 2=Google, 3=Lucide, 4=Remix, 5=Awesome, 6=Tabler
         pref_icon_pack: parseInt(orsControls.iconPack.value || '0', 10),
-        pref_layout_simple: !!orsControls.layoutSimple.checked,
+        pref_layout_simple: layoutMode === 'simple',
         pref_onboarding_lang_done: !!orsControls.onboardLangDone.checked,
         pref_onboarding_country_done: !!orsControls.onboardCountryDone.checked,
-        pref_layout_v3: !!orsControls.layoutV3.checked,
+        pref_layout_v3: layoutMode === 'v3',
         app_language: String(orsControls.appLang.value || 'es').toLowerCase()
     };
 
@@ -415,8 +421,11 @@ function fillOrsForm(obj) {
         orsControls.skin.value = tp.selected_skin || 'CLASSIC';
         orsControls.logosOnline.checked = !!rp.pref_logos_online;
         orsControls.autoHide.checked = !!rp.pref_auto_hide_controls;
-        orsControls.layoutV3.checked = !!rp.pref_layout_v3;
-        orsControls.layoutSimple.checked = !!rp.pref_layout_simple;
+        const isV3 = !!rp.pref_layout_v3;
+        const isSimple = !!rp.pref_layout_simple;
+        if (orsControls.layoutV3) orsControls.layoutV3.checked = isV3;
+        if (orsControls.layoutSimple) orsControls.layoutSimple.checked = !isV3 && isSimple;
+        if (orsControls.layoutNone) orsControls.layoutNone.checked = !isV3 && !isSimple;
         orsControls.onboardLangDone.checked = !!rp.pref_onboarding_lang_done;
         orsControls.onboardCountryDone.checked = !!rp.pref_onboarding_country_done;
         orsControls.onboardLangCountryDone.checked = !!rp.pref_onboarding_lang_country_done;
