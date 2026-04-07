@@ -367,7 +367,8 @@ function nowTimestamp() {
 function buildOrsJsonFromForm() {
     const timestamp = nowTimestamp();
     const RadioPresets = {
-        pref_font_type: parseInt(orsControls.fontType.value || '1', 10),
+        // Android mapping (MainActivity.getSystemTypeface): 0=System, 1=Bebas, 2=Digital, 3=Inter, 4=Orbitron, 5=Formula1
+        pref_font_type: parseInt(orsControls.fontType.value || '0', 10),
         pref_country_code: String(orsControls.country.value || 'ES'),
         pref_onboarding_lang_country_done: !!orsControls.onboardLangCountryDone.checked,
         pref_logos_online: !!orsControls.logosOnline.checked,
@@ -376,7 +377,8 @@ function buildOrsJsonFromForm() {
         pref_bg_mode: parseInt(orsControls.bgMode.value || '2', 10),
         pref_station_history: String(orsControls.stationHistory.value || '').trim(),
         pref_last_freq: parseUserFreqToKHz(orsControls.lastFreq.value),
-        pref_icon_pack: parseInt(orsControls.iconPack.value || '1', 10),
+        // Android mapping (DialogManager.showIconPackSelector): 0=Default, 1=Color, 2=Google, 3=Lucide, 4=Remix, 5=Awesome, 6=Tabler
+        pref_icon_pack: parseInt(orsControls.iconPack.value || '0', 10),
         pref_layout_simple: !!orsControls.layoutSimple.checked,
         pref_onboarding_lang_done: !!orsControls.onboardLangDone.checked,
         pref_onboarding_country_done: !!orsControls.onboardCountryDone.checked,
@@ -404,8 +406,8 @@ function fillOrsForm(obj) {
         const tp = obj.ThemePrefs || {};
         orsControls.country.value = rp.pref_country_code || 'ES';
         orsControls.appLang.value = (rp.app_language || 'es').toLowerCase();
-        orsControls.fontType.value = rp.pref_font_type ?? 1;
-        orsControls.iconPack.value = rp.pref_icon_pack ?? 1;
+        orsControls.fontType.value = rp.pref_font_type ?? 0;
+        orsControls.iconPack.value = rp.pref_icon_pack ?? 0;
         orsControls.bgMode.value = rp.pref_bg_mode ?? 0;
         orsControls.lastBand.value = rp.pref_last_band ?? 0;
         const lf = Number(rp.pref_last_freq ?? 0);
