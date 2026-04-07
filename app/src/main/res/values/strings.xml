@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.0</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway y QS6 (NWD) también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema suele mandar esas teclas al launcher o a la radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilidad)</string>
     <string name="a11y_hihack_enabled">Activado</string>
@@ -74,7 +74,7 @@
     <string name="auto_hide_disabled">❌ Ocultar controles desactivado</string>
     
     <!-- V4.0: Save/Load Favorites -->
-    <string name="save_load_favorites">💾 Guardar/Cargar Favoritos</string>
+    <string name="save_load_favorites">Guardar/Cargar Favoritos</string>
     <string name="save_favorites">💾 Guardar Favoritos</string>
     <string name="load_favorites">📂 Cargar Favoritos</string>
     <string name="all_favorites_deleted">✅ Todos los favoritos eliminados</string>
@@ -318,6 +318,8 @@
     <string name="save_load_delete_all_sub">Eliminar todas las emisoras guardadas</string>
     <string name="save_load_clear_history_title">Borrar historial</string>
     <string name="save_load_clear_history_sub">Borrar historial de escucha reciente</string>
+    <string name="save_load_fav_editor_url" translatable="false">https://kapi21.github.io/OpenRadioFM/editor/</string>
+    <string name="save_load_open_editor">Abrir editor web de archivos .fav</string>
 
     <!-- Créditos easter egg / diálogo -->
     <string name="credits_developed_by">Desarrollado por Jimmy80</string>

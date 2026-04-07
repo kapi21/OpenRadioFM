@@ -65,7 +65,7 @@
     <string name="auto_hide_controls">Ascunde controalele automat</string>
     <string name="auto_hide_enabled">✅ Ascundere automată activată</string>
     <string name="auto_hide_disabled">❌ Ascundere automată dezactivată</string>
-    <string name="save_load_favorites">💾 Salvează/Încarcă Favorite</string>
+    <string name="save_load_favorites">Salvează/Încarcă Favorite</string>
     <string name="save_favorites">💾 Salvează Favorite</string>
     <string name="load_favorites">📂 Încarcă Favorite</string>
     <string name="select_favorites_file">📂 Selectează fișier favorite</string>
@@ -215,7 +215,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.0</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>
@@ -282,6 +282,8 @@
     <string name="save_load_delete_all_sub">Remove all saved stations</string>
     <string name="save_load_clear_history_title">Clear history</string>
     <string name="save_load_clear_history_sub">Clear recent listening history</string>
+    <string name="save_load_open_editor">Deschide editorul web .fav</string>
+    <string name="save_load_fav_editor_url" translatable="false">https://kapi21.github.io/OpenRadioFM/editor/</string>
     <string name="credits_developed_by">Developed by Jimmy80</string>
     <string name="btn_ok">OK</string>
     <string name="selective_scan_title">Se scanează stațiile…</string>

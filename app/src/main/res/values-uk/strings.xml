@@ -64,7 +64,7 @@
     <string name="auto_hide_controls">Автоматичне приховування керування</string>
     <string name="auto_hide_enabled">✅ Авто-приховування увімкнено</string>
     <string name="auto_hide_disabled">❌ Авто-приховування вимкнено</string>
-    <string name="save_load_favorites">💾 Зберегти/Завантажити Вибране</string>
+    <string name="save_load_favorites">Зберегти/Завантажити Вибране</string>
     <string name="save_favorites">💾 Зберегти Вибране</string>
     <string name="load_favorites">📂 Завантажити Вибране</string>
     <string name="select_favorites_file">📂 Вибрати файл вибраного</string>
@@ -215,7 +215,7 @@
     <string name="about_info_header">ІНФОРМАЦІЯ</string>
     <string name="about_dev_by">Розроблено</string>
     <string name="about_tech_details">Технічні деталі</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.0</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
     <string name="a11y_hihack_title">HiHack (Доступність)</string>
     <string name="a11y_hihack_enabled">Увімкнено</string>
@@ -282,6 +282,8 @@
     <string name="save_load_delete_all_sub">Remove all saved stations</string>
     <string name="save_load_clear_history_title">Clear history</string>
     <string name="save_load_clear_history_sub">Clear recent listening history</string>
+    <string name="save_load_open_editor">Відкрити веб-редактор .fav</string>
+    <string name="save_load_fav_editor_url" translatable="false">https://kapi21.github.io/OpenRadioFM/editor/</string>
     <string name="credits_developed_by">Developed by Jimmy80</string>
     <string name="btn_ok">OK</string>
     <string name="selective_scan_title">Сканування станцій…</string>

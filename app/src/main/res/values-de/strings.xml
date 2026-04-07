@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.0</string>
     <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
     <string name="a11y_hihack_title">HiHack (Barrierefreiheit)</string>
     <string name="a11y_hihack_enabled">Aktiviert</string>
@@ -94,7 +94,7 @@
     <string name="auto_hide_disabled">❌ Automatisches Ausblenden deaktiviert</string>
     
     <!-- V4.0: Save/Load Favorites -->
-    <string name="save_load_favorites">💾 Favoriten Speichern/Laden</string>
+    <string name="save_load_favorites">Favoriten Speichern/Laden</string>
     <string name="save_favorites">💾 Favoriten speichern</string>
     <string name="load_favorites">📂 Favoriten laden</string>
     <string name="all_favorites_deleted">✅ Alle Favoriten gelöscht</string>
@@ -310,6 +310,8 @@
     <string name="save_load_delete_all_sub">Remove all saved stations</string>
     <string name="save_load_clear_history_title">Clear history</string>
     <string name="save_load_clear_history_sub">Clear recent listening history</string>
+    <string name="save_load_open_editor">Web-Editor für .fav-Dateien öffnen</string>
+    <string name="save_load_fav_editor_url" translatable="false">https://kapi21.github.io/OpenRadioFM/editor/</string>
     <string name="credits_developed_by">Developed by Jimmy80</string>
     <string name="btn_ok">OK</string>
     <string name="selective_scan_title">Sender werden gescannt…</string>

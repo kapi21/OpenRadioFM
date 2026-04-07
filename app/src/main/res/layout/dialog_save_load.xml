@@ -9,14 +9,9 @@
 
     <LinearLayout style="@style/DialogContainerStyle">
 
-        <!-- Header -->
+        <!-- Header: título + acceso editor web (.fav) -->
         <LinearLayout style="@style/DialogTitleLayout"
             android:layout_marginBottom="16dp">
-            <ImageView
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:src="@drawable/ic_save_load"
-                android:layout_marginEnd="12dp"/>
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -26,6 +21,19 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium" />
+            <TextView
+                android:id="@+id/btnOpenFavEditor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:minWidth="48dp"
+                android:minHeight="48dp"
+                android:gravity="center"
+                android:text="✏️"
+                android:textSize="22sp"
+                android:contentDescription="@string/save_load_open_editor"
+                android:background="?android:attr/selectableItemBackground"
+                android:focusable="true"
+                android:clickable="true" />
         </LinearLayout>
 
         <!-- SUBHEADER -->

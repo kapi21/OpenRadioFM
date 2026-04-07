@@ -64,7 +64,7 @@
     <string name="auto_hide_controls">Автоматическое скрытие управления</string>
     <string name="auto_hide_enabled">✅ Авто-скрытие включено</string>
     <string name="auto_hide_disabled">❌ Авто-скрытие выключено</string>
-    <string name="save_load_favorites">💾 Сохранить/Загрузить Избранное</string>
+    <string name="save_load_favorites">Сохранить/Загрузить Избранное</string>
     <string name="save_favorites">💾 Сохранить Избранное</string>
     <string name="load_favorites">📂 Загрузить Избранное</string>
     <string name="select_favorites_file">📂 Выбрать файл избранного</string>
@@ -215,7 +215,7 @@
     <string name="logo_mode_clock">Цифровые Часы</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.0.16</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.0</string>
     <string name="accessibility_service_description">Этот сервис позволяет OpenRadioFM открываться поверх при нажатии физической кнопки RADIO на совместимых Android-устройствах (например, K706), обходя штатное радио.</string>
     <string name="a11y_hihack_title">HiHack (Спец. возможности)</string>
     <string name="a11y_hihack_enabled">Включено</string>
@@ -282,6 +282,8 @@
     <string name="save_load_delete_all_sub">Remove all saved stations</string>
     <string name="save_load_clear_history_title">Clear history</string>
     <string name="save_load_clear_history_sub">Clear recent listening history</string>
+    <string name="save_load_open_editor">Открыть веб-редактор .fav</string>
+    <string name="save_load_fav_editor_url" translatable="false">https://kapi21.github.io/OpenRadioFM/editor/</string>
     <string name="credits_developed_by">Developed by Jimmy80</string>
     <string name="btn_ok">OK</string>
     <string name="selective_scan_title">Сканирование станций…</string>

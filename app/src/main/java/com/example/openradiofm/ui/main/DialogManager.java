@@ -5,6 +5,7 @@ import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.Uri;
 import android.graphics.Typeface;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -1210,6 +1211,19 @@ public class DialogManager {
         });
 
         dialog.findViewById(R.id.btnClose).setOnClickListener(v -> dialog.dismiss());
+
+        View btnEditor = dialog.findViewById(R.id.btnOpenFavEditor);
+        if (btnEditor != null) {
+            btnEditor.setOnClickListener(v -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse(mActivity.getString(R.string.save_load_fav_editor_url)));
+                    mActivity.startActivity(intent);
+                } catch (Exception e) {
+                    Log.w(TAG, "open fav editor url", e);
+                }
+            });
+        }
 
         // V15.6: Aplicar fuente recursiva al diálogo Save/Load usando MainActivity
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
