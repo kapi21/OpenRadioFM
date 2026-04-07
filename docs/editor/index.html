@@ -36,6 +36,133 @@
             <h2 data-i18n="emptyState">Carga un archivo para empezar</h2>
         </div>
 
+        <!-- Mode switcher -->
+        <div class="mode-switcher" role="tablist" aria-label="Editor modes">
+            <button class="mode-tab active" id="tab-fav" type="button">
+                <span>⭐</span> <span data-i18n="tabFav">Favoritos (.fav)</span>
+            </button>
+            <button class="mode-tab" id="tab-ors" type="button">
+                <span>⚙️</span> <span data-i18n="tabOptions">Opciones (.ors)</span>
+            </button>
+        </div>
+
+        <!-- ORS generator -->
+        <section id="orsArea" class="ors-area" style="display: none;">
+            <div class="action-bar">
+                <div class="stats">
+                    <div class="stat-item">
+                        <span data-i18n="orsTitle">Generador de opciones</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn" id="loadOrsBtn" type="button">
+                        <i data-lucide="upload"></i> <span data-i18n="btnLoadOrs">Cargar .ors</span>
+                    </button>
+                    <button class="btn btn-secondary" id="downloadOrsBtn" type="button">
+                        <i data-lucide="download"></i> <span data-i18n="btnSaveOrs">Guardar .ors</span>
+                    </button>
+                    <input type="file" id="orsInput" accept=".ors,application/json" style="display: none;">
+                </div>
+            </div>
+
+            <div class="ui-card">
+                <div class="ors-grid">
+                    <div class="form-group">
+                        <label data-i18n="optCountry">País</label>
+                        <select id="optCountry">
+                            <option value="ES">ES</option>
+                            <option value="PT">PT</option>
+                            <option value="FR">FR</option>
+                            <option value="DE">DE</option>
+                            <option value="IT">IT</option>
+                            <option value="UK">UK</option>
+                            <option value="US">US</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="optAppLang">Idioma app</label>
+                        <select id="optAppLang">
+                            <option value="es">es</option>
+                            <option value="en">en</option>
+                            <option value="fr">fr</option>
+                            <option value="de">de</option>
+                            <option value="it">it</option>
+                            <option value="pt">pt</option>
+                            <option value="ru">ru</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="optFont">Fuente (tipo)</label>
+                        <input type="number" id="optFontType" min="0" max="9" step="1" value="5">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="optIconPack">Icon pack</label>
+                        <input type="number" id="optIconPack" min="0" max="9" step="1" value="4">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="optBgMode">Modo fondo</label>
+                        <input type="number" id="optBgMode" min="0" max="9" step="1" value="2">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="optLastBand">Última banda</label>
+                        <input type="number" id="optLastBand" min="0" max="4" step="1" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="optLastFreq">Última frecuencia (kHz)</label>
+                        <input type="number" id="optLastFreq" min="0" step="1" value="87600">
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="optSkin">Skin</label>
+                        <select id="optSkin">
+                            <option value="CLASSIC">CLASSIC</option>
+                            <option value="NEON">NEON</option>
+                            <option value="CARBON">CARBON</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ors-toggles">
+                    <label class="toggle">
+                        <input type="checkbox" id="optLogosOnline" checked>
+                        <span data-i18n="optLogosOnline">Logos online</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="optAutoHide" checked>
+                        <span data-i18n="optAutoHide">Auto ocultar controles</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="optLayoutV3" checked>
+                        <span data-i18n="optLayoutV3">Layout V3</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="optLayoutSimple">
+                        <span data-i18n="optLayoutSimple">Layout simple</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="optOnboardLangDone" checked>
+                        <span data-i18n="optOnboardLangDone">Onboarding idioma OK</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="optOnboardCountryDone" checked>
+                        <span data-i18n="optOnboardCountryDone">Onboarding país OK</span>
+                    </label>
+                    <label class="toggle">
+                        <input type="checkbox" id="optOnboardLangCountryDone" checked>
+                        <span data-i18n="optOnboardLangCountryDone">Onboarding idioma+país OK</span>
+                    </label>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label data-i18n="optStationHistory">Historial (pref_station_history)</label>
+                    <textarea id="optStationHistory" rows="3"
+                        placeholder="94900,87650,87700..."></textarea>
+                    <small data-i18n="optStationHistoryHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
+                        Lista separada por comas en kHz (se puede dejar vacío).
+                    </small>
+                </div>
+            </div>
+        </section>
+
         <!-- Drop Zone -->
         <div id="dropZone" class="drop-zone">
             <i data-lucide="upload-cloud"></i>

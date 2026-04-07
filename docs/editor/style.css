@@ -187,6 +187,94 @@ header:has(.main-logo:hover)::after {
     flex-grow: 1;
 }
 
+/* Mode switcher */
+.mode-switcher {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+}
+
+.mode-tab {
+    border: 1px solid var(--glass-border);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    padding: 0.6rem 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s;
+}
+
+.mode-tab.active {
+    color: #000;
+    background: var(--accent);
+    border-color: transparent;
+}
+
+.mode-tab:hover {
+    transform: translateY(-1px);
+}
+
+.ui-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.25rem;
+    backdrop-filter: blur(10px);
+}
+
+.ors-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.ors-toggles {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 0.75rem 1rem;
+    margin-top: 1rem;
+}
+
+.toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--glass-border);
+    padding: 0.6rem 0.75rem;
+    border-radius: 12px;
+    color: var(--text-secondary);
+}
+
+.toggle input {
+    width: 18px;
+    height: 18px;
+}
+
+@media (max-width: 1100px) {
+    .ors-grid {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+    .ors-toggles {
+        grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .ors-grid {
+        grid-template-columns: 1fr;
+    }
+    .ors-toggles {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* File Drop Zone */
 .drop-zone {
     border: 2px dashed var(--glass-border);

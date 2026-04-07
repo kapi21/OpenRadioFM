@@ -12,6 +12,28 @@ const translations = {
         emptyState: "Carga un archivo para empezar",
         dropTitle: "Arrastra tu archivo .fav aquí",
         dropText: "o haz click para seleccionar",
+        tabFav: "Favoritos (.fav)",
+        tabOptions: "Opciones (.ors)",
+        orsTitle: "Generador de opciones",
+        btnLoadOrs: "Cargar .ors",
+        btnSaveOrs: "Guardar .ors",
+        optCountry: "País",
+        optAppLang: "Idioma app",
+        optFont: "Fuente (tipo)",
+        optIconPack: "Icon pack",
+        optBgMode: "Modo fondo",
+        optLastBand: "Última banda",
+        optLastFreq: "Última frecuencia (kHz)",
+        optSkin: "Skin",
+        optLogosOnline: "Logos online",
+        optAutoHide: "Auto ocultar controles",
+        optLayoutV3: "Layout V3",
+        optLayoutSimple: "Layout simple",
+        optOnboardLangDone: "Onboarding idioma OK",
+        optOnboardCountryDone: "Onboarding país OK",
+        optOnboardLangCountryDone: "Onboarding idioma+país OK",
+        optStationHistory: "Historial (pref_station_history)",
+        optStationHistoryHelp: "Lista separada por comas en kHz (se puede dejar vacío).",
         totalPresets: "Total de Presets:",
         fileLoaded: "Archivo:",
         btnNew: "Nuevo Preset",
@@ -32,13 +54,37 @@ const translations = {
         invalidFile: "Formato no válido",
         errorRead: "Error al leer el archivo: ",
         invalidFreq: "Por favor introduce una frecuencia válida",
-        newPresetTitle: "Nuevo Preset"
+        newPresetTitle: "Nuevo Preset",
+        orsInvalid: "Formato .ors no válido",
+        orsSaved: "Archivo .ors generado y listo para descargar."
     },
     en: {
         pageTitle: "Favorites Management",
         emptyState: "Upload a file to start",
         dropTitle: "Drag your .fav file here",
         dropText: "or click to select",
+        tabFav: "Favorites (.fav)",
+        tabOptions: "Options (.ors)",
+        orsTitle: "Options generator",
+        btnLoadOrs: "Load .ors",
+        btnSaveOrs: "Save .ors",
+        optCountry: "Country",
+        optAppLang: "App language",
+        optFont: "Font (type)",
+        optIconPack: "Icon pack",
+        optBgMode: "Background mode",
+        optLastBand: "Last band",
+        optLastFreq: "Last frequency (kHz)",
+        optSkin: "Skin",
+        optLogosOnline: "Online logos",
+        optAutoHide: "Auto-hide controls",
+        optLayoutV3: "Layout V3",
+        optLayoutSimple: "Simple layout",
+        optOnboardLangDone: "Language onboarding OK",
+        optOnboardCountryDone: "Country onboarding OK",
+        optOnboardLangCountryDone: "Language+country onboarding OK",
+        optStationHistory: "History (pref_station_history)",
+        optStationHistoryHelp: "Comma-separated list in kHz (can be empty).",
         totalPresets: "Total Presets:",
         fileLoaded: "File:",
         btnNew: "New Preset",
@@ -59,11 +105,19 @@ const translations = {
         invalidFile: "Invalid format",
         errorRead: "Error reading file: ",
         invalidFreq: "Please enter a valid frequency",
-        newPresetTitle: "New Preset"
+        newPresetTitle: "New Preset",
+        orsInvalid: "Invalid .ors format",
+        orsSaved: ".ors file generated and ready to download."
     }
 };
 
 const elements = {
+    tabFav: document.getElementById('tab-fav'),
+    tabOrs: document.getElementById('tab-ors'),
+    orsArea: document.getElementById('orsArea'),
+    loadOrsBtn: document.getElementById('loadOrsBtn'),
+    downloadOrsBtn: document.getElementById('downloadOrsBtn'),
+    orsInput: document.getElementById('orsInput'),
     dropZone: document.getElementById('dropZone'),
     fileInput: document.getElementById('fileInput'),
     presetGrid: document.getElementById('presetGrid'),
@@ -76,6 +130,26 @@ const elements = {
     saveBtn: document.getElementById('saveBtn'),
     addBtn: document.getElementById('addBtn'),
     cancelBtn: document.getElementById('cancelBtn')
+};
+
+// ORS controls
+const orsControls = {
+    country: document.getElementById('optCountry'),
+    appLang: document.getElementById('optAppLang'),
+    fontType: document.getElementById('optFontType'),
+    iconPack: document.getElementById('optIconPack'),
+    bgMode: document.getElementById('optBgMode'),
+    lastBand: document.getElementById('optLastBand'),
+    lastFreq: document.getElementById('optLastFreq'),
+    skin: document.getElementById('optSkin'),
+    logosOnline: document.getElementById('optLogosOnline'),
+    autoHide: document.getElementById('optAutoHide'),
+    layoutV3: document.getElementById('optLayoutV3'),
+    layoutSimple: document.getElementById('optLayoutSimple'),
+    onboardLangDone: document.getElementById('optOnboardLangDone'),
+    onboardCountryDone: document.getElementById('optOnboardCountryDone'),
+    onboardLangCountryDone: document.getElementById('optOnboardLangCountryDone'),
+    stationHistory: document.getElementById('optStationHistory')
 };
 
 function setLanguage(lang) {
@@ -111,6 +185,22 @@ setTimeout(() => setLanguage(savedLang), 10);
 
 // --- Initialization ---
 
+function setMode(mode) {
+    const isFav = mode === 'fav';
+    if (elements.tabFav && elements.tabOrs) {
+        elements.tabFav.classList.toggle('active', isFav);
+        elements.tabOrs.classList.toggle('active', !isFav);
+    }
+    if (elements.orsArea) elements.orsArea.style.display = isFav ? 'none' : 'block';
+    elements.dropZone.style.display = isFav ? '' : 'none';
+    // En modo opciones ocultamos el editor de presets si estaba abierto
+    elements.editorArea.style.display = isFav ? elements.editorArea.style.display : 'none';
+    if (!isFav) elements.emptyState.style.display = 'none';
+}
+
+elements.tabFav?.addEventListener('click', () => setMode('fav'));
+elements.tabOrs?.addEventListener('click', () => setMode('ors'));
+
 elements.dropZone.addEventListener('click', () => elements.fileInput.click());
 elements.fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
 
@@ -128,6 +218,112 @@ elements.dropZone.addEventListener('drop', (e) => {
     elements.dropZone.classList.remove('dragover');
     handleFile(e.dataTransfer.files[0]);
 });
+
+// ORS load/save
+elements.loadOrsBtn?.addEventListener('click', () => elements.orsInput?.click());
+elements.orsInput?.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+        try {
+            const obj = JSON.parse(String(r.result || ''));
+            if (!obj || obj.schemaVersion !== 1 || !obj.RadioPresets || !obj.ThemePrefs) {
+                throw new Error(translations[currentLang].orsInvalid);
+            }
+            fillOrsForm(obj);
+        } catch (err) {
+            alert(translations[currentLang].errorRead + (err?.message || err));
+        }
+    };
+    r.readAsText(f);
+});
+
+elements.downloadOrsBtn?.addEventListener('click', () => {
+    const ors = buildOrsJsonFromForm();
+    const blob = new Blob([JSON.stringify(ors, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `opciones_${ors.timestamp}.ors`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert(translations[currentLang].orsSaved);
+});
+
+function nowTimestamp() {
+    // yyyyMMdd_HHmmss
+    const d = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const yyyy = d.getFullYear();
+    const MM = pad(d.getMonth() + 1);
+    const dd = pad(d.getDate());
+    const HH = pad(d.getHours());
+    const mm = pad(d.getMinutes());
+    const ss = pad(d.getSeconds());
+    return `${yyyy}${MM}${dd}_${HH}${mm}${ss}`;
+}
+
+function buildOrsJsonFromForm() {
+    const timestamp = nowTimestamp();
+    const RadioPresets = {
+        pref_font_type: parseInt(orsControls.fontType.value || '5', 10),
+        pref_country_code: String(orsControls.country.value || 'ES'),
+        pref_onboarding_lang_country_done: !!orsControls.onboardLangCountryDone.checked,
+        pref_logos_online: !!orsControls.logosOnline.checked,
+        pref_auto_hide_controls: !!orsControls.autoHide.checked,
+        pref_last_band: parseInt(orsControls.lastBand.value || '0', 10),
+        pref_bg_mode: parseInt(orsControls.bgMode.value || '2', 10),
+        pref_station_history: String(orsControls.stationHistory.value || '').trim(),
+        pref_last_freq: parseInt(orsControls.lastFreq.value || '0', 10),
+        pref_icon_pack: parseInt(orsControls.iconPack.value || '0', 10),
+        pref_layout_simple: !!orsControls.layoutSimple.checked,
+        pref_onboarding_lang_done: !!orsControls.onboardLangDone.checked,
+        pref_onboarding_country_done: !!orsControls.onboardCountryDone.checked,
+        pref_layout_v3: !!orsControls.layoutV3.checked,
+        app_language: String(orsControls.appLang.value || 'es')
+    };
+
+    const ThemePrefs = {
+        selected_skin: String(orsControls.skin.value || 'CLASSIC'),
+        prev_skin_before_night: String(orsControls.skin.value || 'CLASSIC')
+    };
+
+    return {
+        schemaVersion: 1,
+        timestamp,
+        type: 'menu_only',
+        RadioPresets,
+        ThemePrefs
+    };
+}
+
+function fillOrsForm(obj) {
+    try {
+        const rp = obj.RadioPresets || {};
+        const tp = obj.ThemePrefs || {};
+        orsControls.country.value = rp.pref_country_code || 'ES';
+        orsControls.appLang.value = rp.app_language || 'es';
+        orsControls.fontType.value = rp.pref_font_type ?? 5;
+        orsControls.iconPack.value = rp.pref_icon_pack ?? 0;
+        orsControls.bgMode.value = rp.pref_bg_mode ?? 0;
+        orsControls.lastBand.value = rp.pref_last_band ?? 0;
+        orsControls.lastFreq.value = rp.pref_last_freq ?? 0;
+        orsControls.skin.value = tp.selected_skin || 'CLASSIC';
+        orsControls.logosOnline.checked = !!rp.pref_logos_online;
+        orsControls.autoHide.checked = !!rp.pref_auto_hide_controls;
+        orsControls.layoutV3.checked = !!rp.pref_layout_v3;
+        orsControls.layoutSimple.checked = !!rp.pref_layout_simple;
+        orsControls.onboardLangDone.checked = !!rp.pref_onboarding_lang_done;
+        orsControls.onboardCountryDone.checked = !!rp.pref_onboarding_country_done;
+        orsControls.onboardLangCountryDone.checked = !!rp.pref_onboarding_lang_country_done;
+        orsControls.stationHistory.value = rp.pref_station_history || '';
+    } catch (e) {
+        // noop
+    }
+}
 
 // --- Logic functions ---
 
