@@ -16,6 +16,8 @@
     <link rel="stylesheet" href="style.css">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- JSZip (generación .orzip en navegador) -->
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
     <header>
@@ -43,6 +45,9 @@
             </button>
             <button class="mode-tab" id="tab-ors" type="button">
                 <span>⚙️</span> <span data-i18n="tabOptions">Opciones (.ors)</span>
+            </button>
+            <button class="mode-tab" id="tab-orzip" type="button">
+                <span>📦</span> <span data-i18n="tabBackup">Backup (.orzip)</span>
             </button>
         </div>
 
@@ -158,6 +163,51 @@
                         placeholder="94900,87650,87700..."></textarea>
                     <small data-i18n="optStationHistoryHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
                         Lista separada por comas en kHz (se puede dejar vacío).
+                    </small>
+                </div>
+            </div>
+        </section>
+
+        <!-- ORZIP generator -->
+        <section id="orzipArea" class="orzip-area" style="display: none;">
+            <div class="action-bar">
+                <div class="stats">
+                    <div class="stat-item">
+                        <span data-i18n="orzipTitle">Generador de backup completo</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" id="downloadOrzipBtn" type="button">
+                        <i data-lucide="package"></i> <span data-i18n="btnSaveOrzip">Guardar .orzip</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="ui-card">
+                <div class="ors-grid">
+                    <div class="form-group">
+                        <label data-i18n="orzipCarLogo">Logo del coche (car_logo.png)</label>
+                        <input type="file" id="carLogoInput" accept="image/png,image/jpeg">
+                        <small data-i18n="orzipCarLogoHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
+                            PNG/JPG, máximo 300×300.
+                        </small>
+                    </div>
+                    <div class="form-group">
+                        <label data-i18n="orzipBackground">Fondo (background.png/jpg)</label>
+                        <input type="file" id="backgroundInput" accept="image/png,image/jpeg">
+                        <small data-i18n="orzipBackgroundHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
+                            PNG/JPG, máximo 1920×1080.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label data-i18n="orzipStationLogos">Logos por preset</label>
+                    <div id="orzipPresetLogos" class="orzip-presets">
+                        <!-- generated via JS -->
+                    </div>
+                    <small data-i18n="orzipStationLogosHelp" style="color: var(--text-secondary); display:block; margin-top:6px;">
+                        Para FM se guardará como <code>FREQkHz_NOMBRE.png</code> (nombre sanitizado A-Z0-9). Máximo 300×300.
                     </small>
                 </div>
             </div>

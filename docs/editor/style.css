@@ -257,12 +257,62 @@ header:has(.main-logo:hover)::after {
     height: 18px;
 }
 
+.orzip-presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(320px, 1fr));
+    gap: 0.75rem 1rem;
+}
+
+.orzip-row {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid var(--glass-border);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.orzip-row .row-title {
+    font-weight: 800;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+}
+
+.orzip-row .row-sub {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    margin-top: 0.15rem;
+}
+
+.orzip-row input[type="file"] {
+    width: 100%;
+}
+
+.orzip-row .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid var(--glass-border);
+    background: rgba(0, 242, 255, 0.07);
+    color: var(--accent);
+    padding: 0.25rem 0.55rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    font-size: 0.75rem;
+}
+
 @media (max-width: 1100px) {
     .ors-grid {
         grid-template-columns: repeat(2, minmax(180px, 1fr));
     }
     .ors-toggles {
         grid-template-columns: repeat(2, minmax(220px, 1fr));
+    }
+    .orzip-presets {
+        grid-template-columns: 1fr;
     }
 }
 

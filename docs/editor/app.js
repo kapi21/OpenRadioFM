@@ -14,9 +14,18 @@ const translations = {
         dropText: "o haz click para seleccionar",
         tabFav: "Favoritos (.fav)",
         tabOptions: "Opciones (.ors)",
+        tabBackup: "Backup (.orzip)",
         orsTitle: "Generador de opciones",
         btnLoadOrs: "Cargar .ors",
         btnSaveOrs: "Guardar .ors",
+        orzipTitle: "Generador de backup completo",
+        btnSaveOrzip: "Guardar .orzip",
+        orzipCarLogo: "Logo del coche (car_logo.png)",
+        orzipCarLogoHelp: "PNG/JPG, máximo 300×300.",
+        orzipBackground: "Fondo (background.png/jpg)",
+        orzipBackgroundHelp: "PNG/JPG, máximo 1920×1080.",
+        orzipStationLogos: "Logos por preset",
+        orzipStationLogosHelp: "Para FM se guardará como FREQkHz_NOMBRE.png (nombre sanitizado A-Z0-9). Máximo 300×300.",
         optCountry: "País",
         optAppLang: "Idioma app",
         optFont: "Fuente (tipo)",
@@ -56,7 +65,12 @@ const translations = {
         invalidFreq: "Por favor introduce una frecuencia válida",
         newPresetTitle: "Nuevo Preset",
         orsInvalid: "Formato .ors no válido",
-        orsSaved: "Archivo .ors generado y listo para descargar."
+        orsSaved: "Archivo .ors generado y listo para descargar.",
+        orzipNeedFav: "Primero carga o crea un archivo .fav para poder generar el backup completo.",
+        orzipSaved: "Archivo .orzip generado y listo para descargar.",
+        imgInvalid: "Imagen no válida. Solo PNG o JPG.",
+        imgTooLarge: "Imagen demasiado grande para este campo.",
+        zipMissingLib: "No se pudo cargar JSZip (librería ZIP)."
     },
     en: {
         pageTitle: "Favorites Management",
@@ -65,9 +79,18 @@ const translations = {
         dropText: "or click to select",
         tabFav: "Favorites (.fav)",
         tabOptions: "Options (.ors)",
+        tabBackup: "Backup (.orzip)",
         orsTitle: "Options generator",
         btnLoadOrs: "Load .ors",
         btnSaveOrs: "Save .ors",
+        orzipTitle: "Full backup generator",
+        btnSaveOrzip: "Save .orzip",
+        orzipCarLogo: "Car logo (car_logo.png)",
+        orzipCarLogoHelp: "PNG/JPG, max 300×300.",
+        orzipBackground: "Background (background.png/jpg)",
+        orzipBackgroundHelp: "PNG/JPG, max 1920×1080.",
+        orzipStationLogos: "Station logos per preset",
+        orzipStationLogosHelp: "For FM it will be saved as FREQkHz_NAME.png (sanitized A-Z0-9). Max 300×300.",
         optCountry: "Country",
         optAppLang: "App language",
         optFont: "Font (type)",
@@ -107,17 +130,28 @@ const translations = {
         invalidFreq: "Please enter a valid frequency",
         newPresetTitle: "New Preset",
         orsInvalid: "Invalid .ors format",
-        orsSaved: ".ors file generated and ready to download."
+        orsSaved: ".ors file generated and ready to download.",
+        orzipNeedFav: "Load or create a .fav first to generate the full backup.",
+        orzipSaved: ".orzip file generated and ready to download.",
+        imgInvalid: "Invalid image. Only PNG or JPG.",
+        imgTooLarge: "Image too large for this field.",
+        zipMissingLib: "JSZip library not loaded."
     }
 };
 
 const elements = {
     tabFav: document.getElementById('tab-fav'),
     tabOrs: document.getElementById('tab-ors'),
+    tabOrzip: document.getElementById('tab-orzip'),
     orsArea: document.getElementById('orsArea'),
+    orzipArea: document.getElementById('orzipArea'),
     loadOrsBtn: document.getElementById('loadOrsBtn'),
     downloadOrsBtn: document.getElementById('downloadOrsBtn'),
     orsInput: document.getElementById('orsInput'),
+    downloadOrzipBtn: document.getElementById('downloadOrzipBtn'),
+    carLogoInput: document.getElementById('carLogoInput'),
+    backgroundInput: document.getElementById('backgroundInput'),
+    orzipPresetLogos: document.getElementById('orzipPresetLogos'),
     dropZone: document.getElementById('dropZone'),
     fileInput: document.getElementById('fileInput'),
     presetGrid: document.getElementById('presetGrid'),
@@ -187,11 +221,15 @@ setTimeout(() => setLanguage(savedLang), 10);
 
 function setMode(mode) {
     const isFav = mode === 'fav';
+    const isOrs = mode === 'ors';
+    const isOrzip = mode === 'orzip';
     if (elements.tabFav && elements.tabOrs) {
         elements.tabFav.classList.toggle('active', isFav);
-        elements.tabOrs.classList.toggle('active', !isFav);
+        elements.tabOrs.classList.toggle('active', isOrs);
     }
-    if (elements.orsArea) elements.orsArea.style.display = isFav ? 'none' : 'block';
+    if (elements.tabOrzip) elements.tabOrzip.classList.toggle('active', isOrzip);
+    if (elements.orsArea) elements.orsArea.style.display = isOrs ? 'block' : 'none';
+    if (elements.orzipArea) elements.orzipArea.style.display = isOrzip ? 'block' : 'none';
     elements.dropZone.style.display = isFav ? '' : 'none';
     // En modo opciones ocultamos el editor de presets si estaba abierto
     elements.editorArea.style.display = isFav ? elements.editorArea.style.display : 'none';
@@ -200,6 +238,10 @@ function setMode(mode) {
 
 elements.tabFav?.addEventListener('click', () => setMode('fav'));
 elements.tabOrs?.addEventListener('click', () => setMode('ors'));
+elements.tabOrzip?.addEventListener('click', () => {
+    setMode('orzip');
+    renderOrzipPresetList();
+});
 
 elements.dropZone.addEventListener('click', () => elements.fileInput.click());
 elements.fileInput.addEventListener('change', (e) => handleFile(e.target.files[0]));
@@ -392,7 +434,192 @@ function render() {
     });
     
     lucide.createIcons();
+    // Si el usuario está en la pestaña de backup, refrescar la lista
+    renderOrzipPresetList();
 }
+
+// ==========================
+// === ORZIP (full backup) ==
+// ==========================
+
+const orzipState = {
+    stationLogos: new Map(), // key: `${band}-${preset}` => { blob: Blob, filename: string }
+    carLogo: null, // { blob, filename }
+    background: null // { blob, filename }
+};
+
+function sanitizeStationName(name) {
+    return String(name || '')
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '');
+}
+
+async function loadAndResizeImage(file, maxW, maxH, outType) {
+    if (!file) return null;
+    const isOk = file.type === 'image/png' || file.type === 'image/jpeg';
+    if (!isOk) throw new Error(translations[currentLang].imgInvalid);
+
+    const bitmap = await createImageBitmap(file);
+    let w = bitmap.width;
+    let h = bitmap.height;
+
+    const scale = Math.min(1, maxW / w, maxH / h);
+    const outW = Math.max(1, Math.round(w * scale));
+    const outH = Math.max(1, Math.round(h * scale));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = outW;
+    canvas.height = outH;
+    const ctx = canvas.getContext('2d', { alpha: true });
+    ctx.drawImage(bitmap, 0, 0, outW, outH);
+
+    const type = outType || (file.type === 'image/jpeg' ? 'image/jpeg' : 'image/png');
+    const quality = type === 'image/jpeg' ? 0.92 : undefined;
+    const blob = await new Promise((resolve) => canvas.toBlob(resolve, type, quality));
+    if (!blob) throw new Error('toBlob failed');
+    return blob;
+}
+
+function renderOrzipPresetList() {
+    if (!elements.orzipPresetLogos) return;
+    if (!currentData || !Array.isArray(currentData.presets) || currentData.presets.length === 0) {
+        elements.orzipPresetLogos.innerHTML = `<div style="color: var(--text-secondary);">${translations[currentLang].orzipNeedFav}</div>`;
+        return;
+    }
+
+    const presetsSorted = [...currentData.presets].sort((a, b) => (a.band - b.band) || (a.preset - b.preset));
+    elements.orzipPresetLogos.innerHTML = '';
+
+    presetsSorted.forEach((p) => {
+        const key = `${p.band}-${p.preset}`;
+        const isAM = p.band >= 3;
+        const freqDisplay = isAM ? p.frequency : (p.frequency / 1000).toFixed(1);
+        const unit = isAM ? 'kHz' : 'MHz';
+        const n = p.custom_name || translations[currentLang].noName;
+
+        const row = document.createElement('div');
+        row.className = 'orzip-row';
+        row.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:0.35rem;">
+                <span class="badge">P${p.preset}</span>
+                <span class="badge">${isAM ? 'AM' : 'FM'}${isAM ? (p.band - 2) : (p.band + 1)}</span>
+            </div>
+            <div>
+                <div class="row-title">${n}</div>
+                <div class="row-sub">${freqDisplay} ${unit}</div>
+                <div style="margin-top:0.5rem;">
+                    <input type="file" accept="image/png,image/jpeg" data-orzip-preset="${key}">
+                </div>
+            </div>
+        `;
+        elements.orzipPresetLogos.appendChild(row);
+
+        const input = row.querySelector('input[type="file"]');
+        input.addEventListener('change', async (e) => {
+            const f = e.target.files && e.target.files[0];
+            if (!f) return;
+            try {
+                const blob = await loadAndResizeImage(f, 300, 300, 'image/png');
+                const sanitized = sanitizeStationName(p.custom_name || '');
+                const fileName = sanitized ? `${p.frequency}_${sanitized}.png` : `${p.frequency}.png`;
+                orzipState.stationLogos.set(key, { blob, filename: fileName });
+            } catch (err) {
+                alert(translations[currentLang].errorRead + (err?.message || err));
+            }
+        });
+    });
+}
+
+elements.carLogoInput?.addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+        const blob = await loadAndResizeImage(f, 300, 300, 'image/png');
+        orzipState.carLogo = { blob, filename: 'car_logo.png' };
+    } catch (err) {
+        alert(translations[currentLang].errorRead + (err?.message || err));
+    }
+});
+
+elements.backgroundInput?.addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    try {
+        const outType = f.type === 'image/jpeg' ? 'image/jpeg' : 'image/png';
+        const blob = await loadAndResizeImage(f, 1920, 1080, outType);
+        const ext = outType === 'image/jpeg' ? 'jpg' : 'png';
+        orzipState.background = { blob, filename: `background.${ext}` };
+    } catch (err) {
+        alert(translations[currentLang].errorRead + (err?.message || err));
+    }
+});
+
+function buildFullBackupStateJson() {
+    const timestamp = nowTimestamp();
+    const ors = buildOrsJsonFromForm(); // base opciones
+
+    // RadioPresets = opciones + presets Pn_Bb
+    const RadioPresets = { ...(ors.RadioPresets || {}) };
+    (currentData.presets || []).forEach((p) => {
+        RadioPresets[`P${p.preset}_B${p.band}`] = p.frequency;
+    });
+
+    // RadioStationNames: CUSTOM_{freq} => custom_name
+    const RadioStationNames = {};
+    (currentData.presets || []).forEach((p) => {
+        const n = (p.custom_name || '').trim();
+        if (n) RadioStationNames[`CUSTOM_${p.frequency}`] = n;
+    });
+
+    return {
+        schemaVersion: 1,
+        timestamp,
+        type: 'full',
+        RadioPresets,
+        ThemePrefs: ors.ThemePrefs || { selected_skin: 'CLASSIC', prev_skin_before_night: 'CLASSIC' },
+        RadioStationNames,
+        OpenRadioFmWidget: {}
+    };
+}
+
+elements.downloadOrzipBtn?.addEventListener('click', async () => {
+    if (!currentData || !Array.isArray(currentData.presets) || currentData.presets.length === 0) {
+        alert(translations[currentLang].orzipNeedFav);
+        return;
+    }
+    if (typeof JSZip === 'undefined') {
+        alert(translations[currentLang].zipMissingLib);
+        return;
+    }
+
+    try {
+        const state = buildFullBackupStateJson();
+        const zip = new JSZip();
+        zip.file('state.json', JSON.stringify(state, null, 2));
+
+        // assets en RadioLogos/
+        for (const v of orzipState.stationLogos.values()) {
+            zip.file(`RadioLogos/${v.filename}`, v.blob);
+        }
+        if (orzipState.carLogo) zip.file(`RadioLogos/${orzipState.carLogo.filename}`, orzipState.carLogo.blob);
+        if (orzipState.background) zip.file(`RadioLogos/${orzipState.background.filename}`, orzipState.background.blob);
+
+        const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `backup_${state.timestamp}.orzip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        alert(translations[currentLang].orzipSaved);
+    } catch (err) {
+        alert(translations[currentLang].errorRead + (err?.message || err));
+    }
+});
 
 function createCard(p, index) {
     const div = document.createElement('div');
