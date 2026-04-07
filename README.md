@@ -1,4 +1,4 @@
-# OpenRadioFM - Community Logo Edition 📻
+# OpenRadioFM 📻
 
 [![Version](https://img.shields.io/badge/version-v5.0.16-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
