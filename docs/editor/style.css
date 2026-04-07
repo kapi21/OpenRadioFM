@@ -46,6 +46,66 @@ body {
     overflow-x: hidden;
 }
 
+.toast-host {
+    position: fixed;
+    left: 50%;
+    bottom: 18px;
+    transform: translateX(-50%);
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    width: min(560px, calc(100% - 24px));
+}
+
+.toast {
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(10, 10, 12, 0.85);
+    backdrop-filter: blur(10px);
+    color: var(--text-primary);
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: var(--accent);
+    box-shadow: 0 0 10px rgba(0,242,255,0.35);
+    flex: 0 0 auto;
+}
+
+.toast.warn .dot {
+    background: #ff8c00;
+    box-shadow: 0 0 10px rgba(255,140,0,0.35);
+}
+
+.toast.err .dot {
+    background: var(--danger);
+    box-shadow: 0 0 10px rgba(255,77,77,0.35);
+}
+
+.toast .msg {
+    font-weight: 700;
+    color: rgba(255,255,255,0.92);
+    line-height: 1.2;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar {
     width: 8px;

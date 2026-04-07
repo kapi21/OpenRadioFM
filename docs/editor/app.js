@@ -219,6 +219,21 @@ const elements = {
 
 const manualLink = document.getElementById('manualLink');
 
+function showToast(message, type = 'info', ttlMs = 2200) {
+    const host = document.getElementById('toastHost');
+    if (!host) return;
+    const t = document.createElement('div');
+    t.className = `toast ${type === 'err' ? 'err' : type === 'warn' ? 'warn' : ''}`;
+    t.innerHTML = `<span class="dot" aria-hidden="true"></span><div class="msg"></div>`;
+    t.querySelector('.msg').textContent = String(message || '');
+    host.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    window.setTimeout(() => {
+        t.classList.remove('show');
+        window.setTimeout(() => t.remove(), 220);
+    }, Math.max(900, ttlMs));
+}
+
 // UI prefs
 const PREF_SHOW_CARD_LOGOS = 'orfm_show_card_logos';
 
@@ -372,7 +387,7 @@ elements.orsInput?.addEventListener('change', (e) => {
             }
             fillOrsForm(obj);
         } catch (err) {
-            alert(translations[currentLang].errorRead + (err?.message || err));
+            showToast(translations[currentLang].errorRead + (err?.message || err), 'err', 3200);
         }
     };
     r.readAsText(f);
@@ -389,7 +404,7 @@ elements.downloadOrsBtn?.addEventListener('click', () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    alert(translations[currentLang].orsSaved);
+    showToast(translations[currentLang].orsSaved, 'info');
 });
 
 function nowTimestamp() {
@@ -486,7 +501,7 @@ function handleFile(file) {
             render();
             showEditor();
         } catch (err) {
-            alert(translations[currentLang].errorRead + err.message);
+            showToast(translations[currentLang].errorRead + err.message, 'err', 3200);
         }
     };
     reader.readAsText(file);
@@ -573,7 +588,7 @@ function applyLogoToGridCard(key, url) {
     }
 }
 
-function setOrzipStationLogo(key, blob, filename) {
+function setOrzipStationLogo(key, blob, filename, applyToGrid = true) {
     if (!key) return;
     const prev = orzipState.stationLogos.get(key);
     try {
@@ -582,7 +597,7 @@ function setOrzipStationLogo(key, blob, filename) {
     const url = blob ? URL.createObjectURL(blob) : '';
     orzipState.stationLogos.set(key, { blob, filename, url });
     // Aplicar al grid principal sin obligar a recargar el archivo
-    applyLogoToGridCard(key, url);
+    if (applyToGrid) applyLogoToGridCard(key, url);
 }
 
 function sanitizeStationName(name) {
@@ -679,7 +694,7 @@ function renderOrzipPresetList() {
                     preview.classList.add('show');
                 }
             } catch (err) {
-                alert(translations[currentLang].errorRead + (err?.message || err));
+                showToast(translations[currentLang].errorRead + (err?.message || err), 'err', 3200);
             }
         });
     });
@@ -697,7 +712,7 @@ elements.carLogoInput?.addEventListener('change', async (e) => {
             pv.classList.add('show');
         }
     } catch (err) {
-        alert(translations[currentLang].errorRead + (err?.message || err));
+        showToast(translations[currentLang].errorRead + (err?.message || err), 'err', 3200);
     }
 });
 
@@ -715,7 +730,7 @@ elements.backgroundInput?.addEventListener('change', async (e) => {
             pv.classList.add('show');
         }
     } catch (err) {
-        alert(translations[currentLang].errorRead + (err?.message || err));
+        showToast(translations[currentLang].errorRead + (err?.message || err), 'err', 3200);
     }
 });
 
@@ -749,11 +764,11 @@ function buildFullBackupStateJson() {
 
 elements.downloadOrzipBtn?.addEventListener('click', async () => {
     if (!currentData || !Array.isArray(currentData.presets) || currentData.presets.length === 0) {
-        alert(translations[currentLang].orzipNeedFav);
+        showToast(translations[currentLang].orzipNeedFav, 'warn', 2600);
         return;
     }
     if (typeof JSZip === 'undefined') {
-        alert(translations[currentLang].zipMissingLib);
+        showToast(translations[currentLang].zipMissingLib, 'err', 3200);
         return;
     }
 
@@ -779,9 +794,9 @@ elements.downloadOrzipBtn?.addEventListener('click', async () => {
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        alert(translations[currentLang].orzipSaved);
+        showToast(translations[currentLang].orzipSaved, 'info');
     } catch (err) {
-        alert(translations[currentLang].errorRead + (err?.message || err));
+        showToast(translations[currentLang].errorRead + (err?.message || err), 'err', 3200);
     }
 });
 
@@ -791,7 +806,7 @@ elements.orzipInput?.addEventListener('change', async (e) => {
     const f = e.target.files && e.target.files[0];
     if (!f) return;
     if (typeof JSZip === 'undefined') {
-        alert(translations[currentLang].zipMissingLib);
+        showToast(translations[currentLang].zipMissingLib, 'err', 3200);
         return;
     }
     try {
@@ -833,11 +848,6 @@ elements.orzipInput?.addEventListener('change', async (e) => {
             timestamp: state.timestamp || ""
         };
 
-        // Show editor area and render
-        elements.fileNameDisplay.textContent = f.name;
-        showEditor();
-        render();
-
         // Load images from RadioLogos/
         orzipState.stationLogos.clear();
         orzipState.carLogo = null;
@@ -873,17 +883,28 @@ elements.orzipInput?.addEventListener('change', async (e) => {
                 const sanitized = sanitizeStationName(p.custom_name || '');
                 const expected = sanitized ? `${p.frequency}_${sanitized}.png` : `${p.frequency}.png`;
                 if (base === expected) {
-                    setOrzipStationLogo(`${p.band}-${p.preset}`, blob, expected);
+                    // Guardar primero; aplicaremos al grid tras renderizar (evita “cargar 2 veces”).
+                    setOrzipStationLogo(`${p.band}-${p.preset}`, blob, expected, false);
                     break;
                 }
             }
         }
 
+        // Show editor area and render (una vez que ya tenemos logos en memoria)
+        elements.fileNameDisplay.textContent = f.name;
+        showEditor();
+        render();
+
+        // Aplicar todos los logos al grid ya renderizado
+        for (const [key, v] of orzipState.stationLogos.entries()) {
+            if (v?.url) applyLogoToGridCard(key, v.url);
+        }
+
         // Refresh backup tab list + previews
         renderOrzipPresetList();
-        alert(translations[currentLang].orzipLoaded);
+        showToast(translations[currentLang].orzipLoaded, 'info');
     } catch (err) {
-        alert(translations[currentLang].errorRead + (err?.message || err));
+        showToast(translations[currentLang].errorRead + (err?.message || err), 'err', 3200);
     } finally {
         try { e.target.value = ''; } catch (_) {}
     }
@@ -991,7 +1012,7 @@ elements.presetForm.onsubmit = (e) => {
     const userFreq = parseFloat(rawFreq);
     
     if (isNaN(userFreq)) {
-        alert(translations[currentLang].invalidFreq);
+        showToast(translations[currentLang].invalidFreq, 'warn', 2400);
         return;
     }
 
@@ -1040,7 +1061,7 @@ elements.saveBtn.onclick = () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    alert(translations[currentLang].successSave);
+    showToast(translations[currentLang].successSave, 'info');
 };
 
 // PWA: registro del service worker (HTTPS o localhost; necesario para “Instalar app” en Chrome/Android)
