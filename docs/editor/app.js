@@ -20,6 +20,7 @@ const translations = {
         btnSaveOrs: "Guardar .ors",
         orzipTitle: "Generador de backup completo",
         btnSaveOrzip: "Guardar .orzip",
+        btnLoadOrzip: "Cargar .orzip",
         orzipCarLogo: "Logo del coche (car_logo.png)",
         orzipCarLogoHelp: "PNG/JPG, máximo 300×300.",
         orzipBackground: "Fondo (background.png/jpg)",
@@ -72,6 +73,8 @@ const translations = {
         imgInvalid: "Imagen no válida. Solo PNG o JPG.",
         imgTooLarge: "Imagen demasiado grande para este campo.",
         zipMissingLib: "No se pudo cargar JSZip (librería ZIP).",
+        orzipInvalid: "Formato .orzip no válido (falta state.json).",
+        orzipLoaded: "Backup cargado correctamente.",
         tipCountry: "Código de país (mercado). Afecta a defaults y servicios dependientes del país.",
         tipAppLang: "Idioma de la interfaz de la app.",
         tipFont: "Tipografía usada en la UI.",
@@ -106,6 +109,7 @@ const translations = {
         btnSaveOrs: "Save .ors",
         orzipTitle: "Full backup generator",
         btnSaveOrzip: "Save .orzip",
+        btnLoadOrzip: "Load .orzip",
         orzipCarLogo: "Car logo (car_logo.png)",
         orzipCarLogoHelp: "PNG/JPG, max 300×300.",
         orzipBackground: "Background (background.png/jpg)",
@@ -158,6 +162,8 @@ const translations = {
         imgInvalid: "Invalid image. Only PNG or JPG.",
         imgTooLarge: "Image too large for this field.",
         zipMissingLib: "JSZip library not loaded.",
+        orzipInvalid: "Invalid .orzip format (missing state.json).",
+        orzipLoaded: "Backup loaded successfully.",
         tipCountry: "Country/market code. Affects defaults and country-dependent services.",
         tipAppLang: "App UI language.",
         tipFont: "UI font family preset.",
@@ -191,6 +197,8 @@ const elements = {
     downloadOrsBtn: document.getElementById('downloadOrsBtn'),
     orsInput: document.getElementById('orsInput'),
     downloadOrzipBtn: document.getElementById('downloadOrzipBtn'),
+    loadOrzipBtn: document.getElementById('loadOrzipBtn'),
+    orzipInput: document.getElementById('orzipInput'),
     carLogoInput: document.getElementById('carLogoInput'),
     backgroundInput: document.getElementById('backgroundInput'),
     orzipPresetLogos: document.getElementById('orzipPresetLogos'),
@@ -709,6 +717,110 @@ elements.downloadOrzipBtn?.addEventListener('click', async () => {
         alert(translations[currentLang].orzipSaved);
     } catch (err) {
         alert(translations[currentLang].errorRead + (err?.message || err));
+    }
+});
+
+// ORZIP load
+elements.loadOrzipBtn?.addEventListener('click', () => elements.orzipInput?.click());
+elements.orzipInput?.addEventListener('change', async (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) return;
+    if (typeof JSZip === 'undefined') {
+        alert(translations[currentLang].zipMissingLib);
+        return;
+    }
+    try {
+        const zip = await JSZip.loadAsync(f);
+        const stateEntry = zip.file('state.json');
+        if (!stateEntry) throw new Error(translations[currentLang].orzipInvalid);
+        const stateText = await stateEntry.async('string');
+        const state = JSON.parse(stateText);
+
+        // Fill options (ORS) from state.json
+        fillOrsForm({
+            schemaVersion: 1,
+            RadioPresets: state.RadioPresets || {},
+            ThemePrefs: state.ThemePrefs || {}
+        });
+
+        // Build currentData (.fav-like) from Pn_Bb keys + custom names
+        const rp = state.RadioPresets || {};
+        const names = state.RadioStationNames || {};
+        const presets = [];
+        Object.keys(rp).forEach((k) => {
+            const m = /^P(\d+)_B(\d+)$/.exec(k);
+            if (!m) return;
+            const presetNum = parseInt(m[1], 10);
+            const band = parseInt(m[2], 10);
+            const freq = parseInt(String(rp[k]), 10);
+            if (!Number.isFinite(presetNum) || !Number.isFinite(band) || !Number.isFinite(freq) || freq <= 0) return;
+            const custom = names[`CUSTOM_${freq}`];
+            presets.push({
+                preset: presetNum,
+                band,
+                frequency: freq,
+                ...(custom ? { custom_name: String(custom) } : {})
+            });
+        });
+        currentData = {
+            presets,
+            version: "1.1",
+            timestamp: state.timestamp || ""
+        };
+
+        // Show editor area and render
+        elements.fileNameDisplay.textContent = f.name;
+        showEditor();
+        render();
+
+        // Load images from RadioLogos/
+        orzipState.stationLogos.clear();
+        orzipState.carLogo = null;
+        orzipState.background = null;
+
+        // Helper: find entry case-sensitive
+        const entries = zip.filter((relativePath, file) => !file.dir);
+        for (const fileEntry of entries) {
+            const path = fileEntry.name;
+            if (!path.startsWith('RadioLogos/')) continue;
+            const base = path.substring('RadioLogos/'.length);
+            const lower = base.toLowerCase();
+            if (lower === 'car_logo.png') {
+                const blob = await zip.file(path).async('blob');
+                orzipState.carLogo = { blob, filename: 'car_logo.png' };
+                const pv = document.getElementById('carLogoPreview');
+                if (pv) { pv.src = URL.createObjectURL(blob); pv.classList.add('show'); }
+                continue;
+            }
+            if (lower === 'background.png' || lower === 'background.jpg' || lower === 'background.jpeg') {
+                const blob = await zip.file(path).async('blob');
+                const ext = lower.endsWith('.jpg') || lower.endsWith('.jpeg') ? 'jpg' : 'png';
+                orzipState.background = { blob, filename: `background.${ext}` };
+                const pv = document.getElementById('backgroundPreview');
+                if (pv) { pv.src = URL.createObjectURL(blob); pv.classList.add('show'); }
+                continue;
+            }
+
+            // Station logo: try match to a preset by expected filename
+            const blob = await zip.file(path).async('blob');
+            // Find which preset this corresponds to
+            for (const p of currentData.presets) {
+                const sanitized = sanitizeStationName(p.custom_name || '');
+                const expected = sanitized ? `${p.frequency}_${sanitized}.png` : `${p.frequency}.png`;
+                if (base === expected) {
+                    orzipState.stationLogos.set(`${p.band}-${p.preset}`, { blob, filename: expected });
+                    break;
+                }
+            }
+        }
+
+        // Refresh backup tab list + previews
+        renderOrzipPresetList();
+        alert(translations[currentLang].orzipLoaded);
+    } catch (err) {
+        alert(translations[currentLang].errorRead + (err?.message || err));
+    } finally {
+        try { e.target.value = ''; } catch (_) {}
     }
 });
 

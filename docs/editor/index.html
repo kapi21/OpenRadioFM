@@ -227,9 +227,13 @@
                     </div>
                 </div>
                 <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <button class="btn" id="loadOrzipBtn" type="button">
+                        <i data-lucide="upload"></i> <span data-i18n="btnLoadOrzip">Cargar .orzip</span>
+                    </button>
                     <button class="btn btn-secondary" id="downloadOrzipBtn" type="button">
                         <i data-lucide="package"></i> <span data-i18n="btnSaveOrzip">Guardar .orzip</span>
                     </button>
+                    <input type="file" id="orzipInput" accept=".orzip,application/zip" style="display: none;">
                 </div>
             </div>
 
