@@ -873,12 +873,12 @@ elements.orzipInput?.addEventListener('change', async (e) => {
 function createCard(p, index) {
     const div = document.createElement('div');
     const isAM = p.band >= 3;
-    div.className = `preset-card band-${p.band} ${isAM ? 'is-am' : 'is-fm'}`;
+    const logoUrl = orzipState.stationLogos.get(`${p.band}-${p.preset}`)?.url || '';
+    div.className = `preset-card band-${p.band} ${isAM ? 'is-am' : 'is-fm'} ${logoUrl ? 'has-logo' : ''}`;
     
     // Frequency logic: AM (kHz) vs FM (MHz)
     const freqDisplay = isAM ? p.frequency : (p.frequency / 1000).toFixed(1);
     const unit = isAM ? 'kHz' : 'MHz';
-    const logoUrl = orzipState.stationLogos.get(`${p.band}-${p.preset}`)?.url || '';
     
     div.innerHTML = `
         <span class="number">P-${p.preset}</span>

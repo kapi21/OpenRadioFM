@@ -654,10 +654,10 @@ header:has(.main-logo:hover)::after {
 
 .preset-logo {
     position: absolute;
-    left: 0.55rem;
+    left: 0.6rem;
     top: 0.55rem;
-    width: 42px;
-    height: 42px;
+    width: 46px;
+    height: 46px;
     border-radius: 10px;
     object-fit: cover;
     background: rgba(255,255,255,0.06);
@@ -670,6 +670,15 @@ header:has(.main-logo:hover)::after {
 .preset-logo.show {
     opacity: 1;
     transform: scale(1);
+}
+
+.preset-card.has-logo .name,
+.preset-card.has-logo .frequency {
+    padding-left: 56px;
+}
+
+.preset-card.has-logo .name {
+    max-width: calc(100% - 56px);
 }
 
 .preset-card .frequency {
