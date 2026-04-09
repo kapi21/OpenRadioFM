@@ -23,7 +23,8 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:src="@drawable/ic_toast"
-            app:tint="@color/white" />
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true" />
 
         <TextView
             android:id="@+id/toastText"

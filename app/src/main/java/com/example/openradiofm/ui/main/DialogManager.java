@@ -144,6 +144,7 @@ public class DialogManager {
 
         androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swReliefHd = dialog.findViewById(R.id.switchReliefHd);
+        View rowReliefHd = dialog.findViewById(R.id.rowReliefHd);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swNightLogos = dialog.findViewById(R.id.switchNightLogos);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
@@ -299,7 +300,24 @@ public class DialogManager {
             });
         }
 
+        // Dev kill-switch: ocultar opción de relieve si se deshabilita desde Engineering.
+        boolean devReliefUiEnabled = true;
+        try {
+            devReliefUiEnabled = mActivity.mPrefs.getBoolean("pref_dev_relief_hd_enabled", true);
+        } catch (Exception ignored) {}
+        if (rowReliefHd != null) {
+            rowReliefHd.setVisibility(devReliefUiEnabled ? View.VISIBLE : View.GONE);
+        }
         if (swReliefHd != null) {
+            if (!devReliefUiEnabled) {
+                try {
+                    // Forzar estado OFF si se ocultó la opción (evita dejar el relieve “pegado”).
+                    mActivity.mPrefs.edit().putBoolean("pref_relief_hd", false).apply();
+                    mActivity.applyReliefHd(false);
+                } catch (Exception ignored) {}
+                swReliefHd.setChecked(false);
+                swReliefHd.setEnabled(false);
+            }
             boolean reliefEnabled = mActivity.mPrefs.getBoolean("pref_relief_hd", false);
             swReliefHd.setChecked(reliefEnabled);
             swReliefHd.setOnCheckedChangeListener((bv, checked) -> {

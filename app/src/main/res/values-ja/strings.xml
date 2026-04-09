@@ -314,6 +314,16 @@
     <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="day_mode_locked">デイモードが有効な間は、テーマや背景を変更できません。</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI：デイモードを許可（キルスイッチ）</string>
+    <string name="eng_dev_relief_hd_killswitch">UI：設定に Relief HD を表示（キルスイッチ）</string>
+    <string name="eng_dev_file_log_toggle">DEV：RadioLogos/radio_activity_*.log にログ保存</string>
+    <string name="eng_dev_file_log_profile_label">ログプロファイル</string>
+    <string name="eng_dev_file_log_profile_basic">基本</string>
+    <string name="eng_dev_file_log_profile_medium">中</string>
+    <string name="eng_dev_file_log_profile_full">完全</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

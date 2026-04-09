@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Layout V2: “aire” extra en los bordes de pantalla (izq/der) -->
+    <dimen name="layout_v2_screen_edge_padding">18dp</dimen>
+
+    <!-- Layout V3: “aire” extra en presets (inicio izquierda) -->
+    <dimen name="layout_v3_preset_edge_padding_start">18dp</dimen>
+</resources>

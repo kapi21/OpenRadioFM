@@ -303,6 +303,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private static final String PREF_K706_BOOTSTRAP_SANITIZED = "pref_k706_bootstrap_sanitized";
     public String mLastPs = ""; // V18.6: Almacena el nombre RDS/Custom actual
     public boolean mHasRdsLock = false;
+    /** Estado previo para disparar el "tick" visual al enganchar RDS lock (false→true). */
+    private boolean mHadRdsLockForTick = false;
+    /** Anti-spam: evita ticks repetidos por bursts de callbacks. */
+    private long mLastRdsLockTickUptimeMs = 0L;
     public String mCurrentPty = null;
     public String mLastLogoUrl = "";
     private volatile String mPrevStationNameBeforeTune = "";
@@ -349,7 +353,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
     private ImageView ivDataActivityIcon; // El icono real que cambia de color
     private int mActiveDataOps = 0; // V16.2: Concurrent Supabase Operations
-    private android.animation.ObjectAnimator mDataBlinkAnimator;
+    private DataActivityIndicatorManager mDataActivityIndicatorManager;
     private long mLastInternetCheckTime = 0;
     private boolean mLastInternetCache = false;
     /** Opacidad del icono nube cuando hay logos online pero sin conectividad (no ocultar, solo atenuar). */
@@ -474,6 +478,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
                 mLogoUiGeneration.incrementAndGet();
             }
+            try {
+                com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "gotoFreq(" + freq + ") band=" + mCurrentBand);
+            } catch (Exception ignored) {}
             mEngine.tune(freq);
             mUserRequestedFreqKhz = freq;
             mUserRequestedFreqUntilMs = android.os.SystemClock.elapsedRealtime() + 12000L;
@@ -662,14 +669,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } else {
                 updateFrequencyDisplay(freqKhz, null);
             }
-            // DAY_MODE: reaplicar tintes tras cambios de frecuencia.
-            try {
-                if (mThemeManager != null
-                        && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE
-                        && mDayModeManager != null) {
-                    mDayModeManager.applyDayModeColors(mLastFreq);
-                }
-            } catch (Exception ignored) {}
+            // Reaplicar tintes del skin activo tras cambios de frecuencia.
+            reapplyVisualStateForCurrentSkin();
         });
     }
 
@@ -703,20 +704,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             // V2.6: Re-asegurar tinte noche completo tras refrescar presets y unit label.
             // refreshButtons() pone nuevas imágenes/textos en blanco, y setImageResourceIfChanged
             // cambia la imagen de ivUnitLabel. Ambos necesitan re-tintado.
-            boolean isNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
-            if (isNight && mNightModeManager != null) {
-                mNightModeManager.applyNightModeColors(mLastFreq);
-            }
-            updateDataActivityUI();
-
-            // DAY_MODE: reaplicar tintes tras repintados de banda/presets.
-            try {
-                if (mThemeManager != null
-                        && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE
-                        && mDayModeManager != null) {
-                    mDayModeManager.applyDayModeColors(mLastFreq);
-                }
-            } catch (Exception ignored) {}
+            // Reaplicar tintes del skin activo tras repintados de banda/presets.
+            reapplyVisualStateForCurrentSkin();
             
             // V5.2: Actualizar Widget al cambiar de banda
             if (mEngine != null) {
@@ -763,7 +752,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         runOnUiThread(() -> {
             if (mRdsManager != null) {
                 mRdsManager.onRdsName(name);
-                mHasRdsLock = mRdsManager.hasRdsLock();
+                boolean newLock = mRdsManager.hasRdsLock();
+                mHasRdsLock = newLock;
+                maybeTickRdsLock(newLock);
                 if (mMediaSessionManager != null) {
                     // Mismo formato que refreshRadioStatus (evita dos metadata por 94.20 vs 94.2).
                     String freqText = String.format(java.util.Locale.US, "%.1f MHz", (mEngine != null ? mEngine.getCurrentFreq() : 0) / 1000.0f);
@@ -812,57 +803,51 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
         
         if (!onlineEnabled) {
-            setVisibilityIfChanged(ivDataActivity, View.INVISIBLE);
-            stopDataBlink();
+            ensureDataActivityIndicatorManager();
+            if (mDataActivityIndicatorManager != null) {
+                mDataActivityIndicatorManager.render(
+                        false,
+                        isConnected,
+                        mActiveDataOps,
+                        false,
+                        false,
+                        mThemeManager != null ? mThemeManager.getActiveSkin() : null,
+                        CLOUD_DATA_OFFLINE_ALPHA,
+                        getResources().getColor(R.color.night_blue_primary, null)
+                );
+            } else {
+                setVisibilityIfChanged(ivDataActivity, View.INVISIBLE);
+            }
             return;
         }
 
-        setVisibilityIfChanged(ivDataActivity, View.VISIBLE);
-
-        if (!isConnected) {
-            stopDataBlink();
-            ivDataActivity.setAlpha(CLOUD_DATA_OFFLINE_ALPHA);
-        } else {
-            ivDataActivity.setAlpha(1.0f);
-            if (mActiveDataOps > 0) {
-                startDataBlink();
-            } else {
-                stopDataBlink();
-            }
-        }
-
-        // V17.0: Color cloud — streaming (rojo/amarillo) gana; idle FM según skin (noche / CLEAR / default).
-        // Aplica a todos los packs (PNG, SVG Google/Lucide/Remix). No mezclar con applyClearButtonIconTint
-        // para no pisar rojo/amarillo en skin CLEAR.
-        if (ivDataActivityIcon == null) ivDataActivityIcon = findViewById(R.id.ivDataActivityIcon);
-        if (ivDataActivityIcon == null) return;
+        ensureDataActivityIndicatorManager();
+        if (mDataActivityIndicatorManager == null) return;
 
         boolean playing = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
         boolean loading = mOnlineStreamManager != null && mOnlineStreamManager.isLoading();
+        com.example.openradiofm.ui.theme.ThemeManager.Skin skin = mThemeManager != null
+                ? mThemeManager.getActiveSkin() : null;
+        int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
 
-        if (playing) {
-            setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
-            setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.RED, android.graphics.PorterDuff.Mode.SRC_IN);
-        } else if (loading) {
-            setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
-            setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.YELLOW, android.graphics.PorterDuff.Mode.SRC_IN);
-        } else {
-            setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
-            com.example.openradiofm.ui.theme.ThemeManager.Skin skin = mThemeManager != null
-                    ? mThemeManager.getActiveSkin() : null;
-            if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
-                // DAY_MODE: cloud negro con internet; grisáceo sin internet
-                int c = isConnected ? android.graphics.Color.BLACK : android.graphics.Color.parseColor("#FF555555");
-                setColorFilterIfChanged(ivDataActivityIcon, c, android.graphics.PorterDuff.Mode.SRC_IN);
-            } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
-                int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-                setColorFilterIfChanged(ivDataActivityIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
-            } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
-                setColorFilterIfChanged(ivDataActivityIcon, android.graphics.Color.BLACK, android.graphics.PorterDuff.Mode.SRC_IN);
-            } else {
-                setColorFilterIfChanged(ivDataActivityIcon, null, null);
-            }
-        }
+        mDataActivityIndicatorManager.render(
+                true,
+                isConnected,
+                mActiveDataOps,
+                playing,
+                loading,
+                skin,
+                CLOUD_DATA_OFFLINE_ALPHA,
+                nightBlue
+        );
+    }
+
+    private void ensureDataActivityIndicatorManager() {
+        if (mDataActivityIndicatorManager != null) return;
+        if (ivDataActivity == null) return;
+        if (ivDataActivityIcon == null) ivDataActivityIcon = findViewById(R.id.ivDataActivityIcon);
+        if (ivDataActivityIcon == null) return;
+        mDataActivityIndicatorManager = new DataActivityIndicatorManager(ivDataActivity, ivDataActivityIcon);
     }
 
     /**
@@ -1005,23 +990,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
-    private void startDataBlink() {
-        if (mDataBlinkAnimator != null && mDataBlinkAnimator.isRunning()) return;
-        
-        mDataBlinkAnimator = android.animation.ObjectAnimator.ofFloat(ivDataActivity, "alpha", 1.0f, 0.2f);
-        mDataBlinkAnimator.setDuration(500);
-        mDataBlinkAnimator.setRepeatMode(android.animation.ObjectAnimator.REVERSE);
-        mDataBlinkAnimator.setRepeatCount(android.animation.ObjectAnimator.INFINITE);
-        mDataBlinkAnimator.start();
-    }
-
-    private void stopDataBlink() {
-        if (mDataBlinkAnimator != null) {
-            mDataBlinkAnimator.cancel();
-            mDataBlinkAnimator = null;
-        }
-        if (ivDataActivity != null) ivDataActivity.setAlpha(1.0f);
-    }
+    // Blink / alpha / tint del cloud movidos a DataActivityIndicatorManager
 
     private boolean isInternetAvailable() {
         try {
@@ -1046,7 +1015,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         runOnUiThread(() -> {
             if (mRdsManager != null) {
                 mRdsManager.onRdsText(text);
-                mHasRdsLock = mRdsManager.hasRdsLock();
+                boolean newLock = mRdsManager.hasRdsLock();
+                mHasRdsLock = newLock;
+                maybeTickRdsLock(newLock);
                 if (mMediaSessionManager != null) {
                     mMediaSessionManager.updateRds(text);
                 }
@@ -1055,6 +1026,46 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mUiController.updateRDSText(text);
             }
         });
+    }
+
+    /**
+     * Opción A: "tick" visual (flash/fade) cuando se engancha RDS lock.
+     * Dispara solo en flanco de subida y con anti-spam.
+     */
+    private void maybeTickRdsLock(boolean hasLockNow) {
+        long now = android.os.SystemClock.elapsedRealtime();
+        boolean risingEdge = hasLockNow && !mHadRdsLockForTick;
+        mHadRdsLockForTick = hasLockNow;
+        if (!risingEdge) return;
+        if (now - mLastRdsLockTickUptimeMs < 650L) return;
+        mLastRdsLockTickUptimeMs = now;
+
+        android.widget.TextView ps = findViewById(R.id.tvRdsName);
+        android.widget.TextView pty = findViewById(R.id.tvPty);
+        tickFlashText(ps);
+        tickFlashText(pty);
+    }
+
+    private static void tickFlashText(android.widget.TextView tv) {
+        if (tv == null) return;
+        int original = tv.getCurrentTextColor();
+        int highlight = android.graphics.Color.parseColor("#FFFFF59D"); // amarillo suave
+
+        tv.animate().cancel();
+        tv.setAlpha(1.0f);
+
+        // Flash breve: color → original + mini fade.
+        tv.setTextColor(highlight);
+        tv.animate()
+                .alpha(0.55f)
+                .setDuration(90)
+                .withEndAction(() -> {
+                    try {
+                        tv.setTextColor(original);
+                        tv.animate().alpha(1.0f).setDuration(160).start();
+                    } catch (Exception ignored) {}
+                })
+                .start();
     }
 
 
@@ -2016,23 +2027,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * y el icono cloud (streaming / idle / modo noche).
      */
     private void reapplySkinTintsAfterIconPack() {
-        if (mThemeManager == null) {
-            updateDataActivityUI();
-            return;
-        }
-        boolean isNight = mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE;
-        boolean isClear = mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR;
-        if (mNightModeManager != null) {
-            if (isNight) {
-                mNightModeManager.applyNightModeColors(mLastFreq);
-            } else {
-                mNightModeManager.resetNightModeColors(mLastFreq);
-            }
-        }
-        if (!isNight) {
-            applyClearButtonIconTint(isClear);
-        }
-        updateDataActivityUI();
+        reapplyVisualStateForCurrentSkin();
     }
 
     /**
@@ -2722,6 +2717,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             runOnUiThread(() -> {
                 if (mLogoManager != null) mLogoManager.clearLogo();
             });
+            try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "seekUp()"); } catch (Exception ignored) {}
             mEngine.seekUp();
         }
     }
@@ -2731,6 +2727,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             runOnUiThread(() -> {
                 if (mLogoManager != null) mLogoManager.clearLogo();
             });
+            try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "seekDown()"); } catch (Exception ignored) {}
             mEngine.seekDown();
         }
     }
@@ -3424,47 +3421,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
     public void applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
         final com.example.openradiofm.ui.theme.ThemeManager.Skin prevSkinForBg = mLastSkinAppliedForBackground;
+        // Invalida callbacks tardíos de logos/fondos al cambiar skin (zapping rápido entre modos).
+        // No limpia la UI; solo fuerza a que cargas asíncronas viejas no se apliquen.
+        try { mLogoUiGeneration.incrementAndGet(); } catch (Exception ignored) {}
         if (mThemeManager != null) mThemeManager.applySkin(skin);
         
         boolean isNight = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
         boolean isClear = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
         boolean isDay = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE);
 
-        if (mUiController != null) {
-            mUiController.applySkin(isNight);
-        } else if (mIsSimpleLayout && mSimpleLayoutManager != null) {
-            // Legacy/Fallback for SimpleLayoutManager directly
-            mSimpleLayoutManager.applyColors(isNight);
-        }
-        
-        // V2.5: Aplicación centralizada de colores azul noche al final de applySkin
-        if (mNightModeManager != null) {
-            if (isNight) {
-                mNightModeManager.applyNightModeColors(mLastFreq);
-            } else {
-                mNightModeManager.resetNightModeColors(mLastFreq);
-            }
-        }
-        updateDataActivityUI();
-
-        // CLEAR: iconos de botones en negro (y al salir, restaurar).
-        // V2.6: NO ejecutar cuando isNight — NightModeManager gestiona los filtros de botones.
-        // applyClearButtonIconTint(false) borra los filtros Y tags, destruyendo el tintado azul.
-        if (!isNight) {
-            applyClearButtonIconTint(isClear);
-        }
-
-        // DAY_MODE: IMPORTANT - no “resetear” fuera de DAY_MODE porque pisa los tintes del modo noche.
-        // Solo aplicar cuando DAY_MODE está activo, y solo resetear al SALIR de DAY_MODE.
-        try {
-            if (mDayModeManager != null) {
-                if (isDay) {
-                    mDayModeManager.applyDayModeColors(mLastFreq);
-                } else if (prevSkinForBg == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
-                    mDayModeManager.resetDayModeColors(mLastFreq);
-                }
-            }
-        } catch (Exception ignored) {}
+        applyVisualStateForSkin(prevSkinForBg, skin);
 
         // DAY_MODE: forzar refresco del background al entrar/salir (sin depender del menú de personalización).
         // Evita que se quede el background.jpg/dinámico “pegado” hasta el siguiente cambio de fondo manual.
@@ -3490,6 +3456,86 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 }
             }
         }
+    }
+
+    /**
+     * Aplica el “estado visual” completo en un orden único para evitar pisadas:
+     * Theme -> Controllers -> Night/Day -> Clear -> Cloud.
+     */
+    private void applyVisualStateForSkin(com.example.openradiofm.ui.theme.ThemeManager.Skin prevSkin,
+                                         com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
+        boolean isNight = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+        boolean isClear = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+        boolean isDay = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE);
+
+        // Layout V3: nunca mostrar el logo pequeño (evita que reaparezca tras cambios de layout/zapping).
+        try {
+            if (mIsV3) {
+                android.view.View v = findViewById(R.id.ivMainLogo);
+                if (v instanceof android.widget.ImageView) {
+                    android.widget.ImageView iv = (android.widget.ImageView) v;
+                    setVisibilityIfChanged(iv, android.view.View.GONE);
+                    iv.setImageDrawable(null);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // Controllers: textos base (ellos mismos consultan activeSkin para DAY/CLEAR).
+        if (mUiController != null) {
+            mUiController.applySkin(isNight);
+        } else if (mIsSimpleLayout && mSimpleLayoutManager != null) {
+            mSimpleLayoutManager.applyColors(isNight);
+        }
+
+        // Night mode (azul)
+        if (mNightModeManager != null) {
+            if (isNight) mNightModeManager.applyNightModeColors(mLastFreq);
+            else mNightModeManager.resetNightModeColors(mLastFreq);
+        }
+
+        // Day mode (negro). No resetear salvo al salir de DAY_MODE.
+        try {
+            if (mDayModeManager != null) {
+                if (isDay) {
+                    mDayModeManager.applyDayModeColors(mLastFreq);
+                } else if (prevSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+                    mDayModeManager.resetDayModeColors(mLastFreq);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // Clear button tint:
+        // - Nunca ejecutar en isNight (evita borrar tintes azules).
+        // - No ejecutar en isDay: DayModeManager gestiona el tinte negro; llamar con enabled=false lo borraría.
+        if (!isNight && !isDay) {
+            applyClearButtonIconTint(isClear);
+        }
+
+        // Cloud al final (idle/streaming/noche/día/clear).
+        updateDataActivityUI();
+
+        // Reloj: reaplicar siempre aquí para que no se quede “pegado” tras cambios de layout/skin.
+        try {
+            if (tvDigitalClock != null) {
+                if (isNight) {
+                    tvDigitalClock.setTextColor(getResources().getColor(R.color.night_blue_primary, null));
+                } else if (isDay || isClear) {
+                    tvDigitalClock.setTextColor(android.graphics.Color.BLACK);
+                } else {
+                    tvDigitalClock.setTextColor(android.graphics.Color.WHITE);
+                }
+            }
+        } catch (Exception ignored) {}
+    }
+
+    /** Reaplica tintes/colores del skin activo (para repintados por band/freq/icon pack). */
+    private void reapplyVisualStateForCurrentSkin() {
+        if (mThemeManager == null) {
+            updateDataActivityUI();
+            return;
+        }
+        com.example.openradiofm.ui.theme.ThemeManager.Skin s = mThemeManager.getActiveSkin();
+        applyVisualStateForSkin(s, s);
     }
 
     private void applyClearButtonIconTint(boolean enabled) {
@@ -3969,6 +4015,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mCurrentPty = null;
         mLastPs = ""; // V18.6.4: Clear cached RDS name to avoid stale display on new freq
         mHasRdsLock = false;
+        mHadRdsLockForTick = false;
 
         if (mRdsManager != null) {
             // MT8163: handleFrequencyChange puede venir desde un hilo de polling del engine.

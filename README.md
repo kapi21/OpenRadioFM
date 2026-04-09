@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.1.0 “Backup Studio + Web Tools” (abril 2026):** integración del **OpenRadioFM Backup Studio** (web instalable) para **crear/editar/importar/exportar** `.fav`, generar **opciones** `.ors` y **backup completo** `.orzip` (ZIP con `state.json` + `RadioLogos/`), con previsualización y límites de imágenes. En la app, acceso directo al editor desde **Guardar/Cargar Favoritos**. Ver `CHANGELOG.md`.
+**5.1.0 “Backup Studio + Web Tools” (abril 2026):** integración del **OpenRadioFM Backup Studio** (web instalable) para **crear/editar/importar/exportar** `.fav`, generar **opciones** `.ors` y **backup completo** `.orzip` (ZIP con `state.json` + `RadioLogos/`), con previsualización y límites de imágenes. En la app, acceso directo al editor desde **Guardar/Cargar Favoritos**. Además, mejoras UX: indicador de nube con actividad, “tick” al enganchar RDS lock y mayor robustez del fondo dinámico. Ver `CHANGELOG.md`.
 
 ---
 

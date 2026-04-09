@@ -16,6 +16,12 @@
     <dimen name="padding_standard">4dp</dimen>
     <dimen name="padding_large">6dp</dimen>
     <dimen name="padding_extra_large">10dp</dimen>
+
+    <!-- Layout V2 -->
+    <dimen name="layout_v2_screen_edge_padding">16dp</dimen>
+
+    <!-- Layout V3 -->
+    <dimen name="layout_v3_preset_edge_padding_start">16dp</dimen>
     
     <!-- Component Sizes -->
     <dimen name="preset_card_height">85dp</dimen>

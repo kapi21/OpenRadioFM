@@ -23,8 +23,13 @@
 - **Skins**: nuevo **Modo Día** (fondo tono hueso + tintes negros) y refinamiento de **Modo Noche** (consistencia de tintes en Layout 2/3).
 - **Fondos (Layout 2/3)**: mitigado flicker/flash del `background.jpg/png` y aplicado refresco inmediato del fondo al entrar/salir de Modo Día.
 - **Logos**: endurecimiento de carga/limpieza para evitar “arrastre” visual al cambiar de frecuencia/presets (especialmente en QS6 y Layout 3).
+- **Fondo dinámico (bgMode=2)**: reintento de carga cuando el `ivDynamicBackground` queda vacío tras cancelaciones por zapping (evita “a veces no aparece”).
 - **QS6 (NWD)**: al pulsar **PowerOff** se fuerza parada/silencio más robustos de la radio OEM en segundo plano.
+- **QS6 (NWD)**: ajuste del guard anti-bootstrap durante SEEK/AutoScan para evitar “clavarse” en 87.5/87.6 durante el escaneo.
 - **Mandos volante (QS6)**: puente “silencioso” para que NEXT/PREV/SEEK enruten a OpenRadioFM en segundo plano sin forzar audio.
+- **Supabase**: chequeo de conectividad usando `auth/v1/health` para evitar falsos “offline”.
+- **UI**: indicador de nube con parpadeo suave durante actividad online y transición de 200 ms al atenuar por falta de internet.
+- **UI (RDS)**: “tick” visual al enganchar **RDS lock** (flash breve en PS/PTY).
 - **UI**: actualización de iconos (toast + acceso editor web) y ajustes de tintes por skin en layouts.
 
 ---

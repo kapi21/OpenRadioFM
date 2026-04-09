@@ -314,6 +314,16 @@
     <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="day_mode_locked">Nu poți schimba tema sau fundalul cât timp Modul Zi este activ.</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI: permite Modul Zi (kill-switch)</string>
+    <string name="eng_dev_relief_hd_killswitch">UI: afișează Relief HD în Opțiuni (kill-switch)</string>
+    <string name="eng_dev_file_log_toggle">DEV: salvează log în RadioLogos/radio_activity_*.log</string>
+    <string name="eng_dev_file_log_profile_label">Profil log</string>
+    <string name="eng_dev_file_log_profile_basic">DE BAZĂ</string>
+    <string name="eng_dev_file_log_profile_medium">MEDIU</string>
+    <string name="eng_dev_file_log_profile_full">COMPLET</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

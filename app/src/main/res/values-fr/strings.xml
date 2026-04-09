@@ -312,6 +312,16 @@
     <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="day_mode_locked">Impossible de changer le thème ou le fond lorsque le mode Jour est actif.</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI : autoriser le mode Jour (kill-switch)</string>
+    <string name="eng_dev_relief_hd_killswitch">UI : afficher Relief HD dans Options (kill-switch)</string>
+    <string name="eng_dev_file_log_toggle">DEV : enregistrer un log dans RadioLogos/radio_activity_*.log</string>
+    <string name="eng_dev_file_log_profile_label">Profil de log</string>
+    <string name="eng_dev_file_log_profile_basic">BASIQUE</string>
+    <string name="eng_dev_file_log_profile_medium">MOYEN</string>
+    <string name="eng_dev_file_log_profile_full">COMPLET</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

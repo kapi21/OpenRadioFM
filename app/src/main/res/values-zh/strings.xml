@@ -314,6 +314,16 @@
     <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="day_mode_locked">启用日间模式时，无法更改主题或背景。</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI：允许日间模式（开关）</string>
+    <string name="eng_dev_relief_hd_killswitch">UI：在设置中显示 Relief HD（开关）</string>
+    <string name="eng_dev_file_log_toggle">DEV：记录日志到 RadioLogos/radio_activity_*.log</string>
+    <string name="eng_dev_file_log_profile_label">日志档位</string>
+    <string name="eng_dev_file_log_profile_basic">基础</string>
+    <string name="eng_dev_file_log_profile_medium">中等</string>
+    <string name="eng_dev_file_log_profile_full">完整</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

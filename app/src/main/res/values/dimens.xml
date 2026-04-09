@@ -19,7 +19,12 @@
 
     <!-- Layout V2: mismo espacio horizontal entre borde de pantalla, presets y columna central -->
     <dimen name="layout_v2_column_spacing">8dp</dimen>
+    <!-- Layout V2: “aire” extra en los bordes de pantalla (izq/der) -->
+    <dimen name="layout_v2_screen_edge_padding">12dp</dimen>
     <dimen name="layout_v2_preset_vertical_margin">8dp</dimen>
+
+    <!-- Layout V3: “aire” extra en presets (inicio izquierda) -->
+    <dimen name="layout_v3_preset_edge_padding_start">12dp</dimen>
     
     <!-- Component Sizes -->
     <dimen name="preset_card_height">90dp</dimen>

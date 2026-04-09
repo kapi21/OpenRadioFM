@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.content.Context;
 import androidx.appcompat.widget.SwitchCompat;
+import android.widget.SeekBar;
 
 import com.example.openradiofm.R;
 import java.util.Locale;
@@ -50,6 +51,10 @@ public class EngineeringModeDialog extends Dialog {
     private SwitchCompat swMtk8259V5StreamMixerCompat;
     private SwitchCompat swDevAutoScanEnabled;
     private SwitchCompat swDevDayModeEnabled;
+    private SwitchCompat swDevReliefHdEnabled;
+    private SwitchCompat swDevFileLoggingEnabled;
+    private SeekBar sbDevFileLogProfile;
+    private TextView tvDevFileLogProfileValue;
     private android.content.SharedPreferences mPrefs;
     
     private int mLastFreq = -1;
@@ -117,6 +122,10 @@ public class EngineeringModeDialog extends Dialog {
         swMtk8259V5StreamMixerCompat = findViewById(R.id.swMtk8259V5StreamMixerCompat);
         swDevAutoScanEnabled = findViewById(R.id.swDevAutoScanEnabled);
         swDevDayModeEnabled = findViewById(R.id.swDevDayModeEnabled);
+        swDevReliefHdEnabled = findViewById(R.id.swDevReliefHdEnabled);
+        swDevFileLoggingEnabled = findViewById(R.id.swDevFileLoggingEnabled);
+        sbDevFileLogProfile = findViewById(R.id.sbDevFileLogProfile);
+        tvDevFileLogProfileValue = findViewById(R.id.tvDevFileLogProfileValue);
     }
 
     private void setupControls() {
@@ -191,6 +200,65 @@ public class EngineeringModeDialog extends Dialog {
                     }
                 } catch (Exception ignored2) {}
             });
+        }
+
+        // Kill-switch: mostrar/ocultar Relieve HD en Ajustes premium
+        if (swDevReliefHdEnabled != null) {
+            boolean on = true;
+            try { on = mPrefs.getBoolean("pref_dev_relief_hd_enabled", true); } catch (Exception ignored) {}
+            swDevReliefHdEnabled.setChecked(on);
+            swDevReliefHdEnabled.setOnCheckedChangeListener((btn, checked) -> {
+                try { mPrefs.edit().putBoolean("pref_dev_relief_hd_enabled", checked).apply(); } catch (Exception ignored) {}
+                logEvent("DEV", "pref_dev_relief_hd_enabled=" + checked);
+                if (!checked) {
+                    try {
+                        mPrefs.edit().putBoolean("pref_relief_hd", false).apply();
+                        mActivity.applyReliefHd(false);
+                    } catch (Exception ignored2) {}
+                }
+            });
+        }
+
+        // Dev: log a fichero en RadioLogos
+        if (swDevFileLoggingEnabled != null) {
+            boolean on = false;
+            try { on = mPrefs.getBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, false); } catch (Exception ignored) {}
+            swDevFileLoggingEnabled.setChecked(on);
+            swDevFileLoggingEnabled.setOnCheckedChangeListener((btn, checked) -> {
+                try { mPrefs.edit().putBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, checked).apply(); } catch (Exception ignored) {}
+                com.example.openradiofm.utils.RadioActivityFileLogger.onToggleChanged(mActivity, checked);
+                logEvent("DEV", com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED + "=" + checked);
+            });
+        }
+
+        // Perfil (0..2): BASIC / MEDIUM / FULL
+        if (sbDevFileLogProfile != null) {
+            int prof = com.example.openradiofm.utils.RadioActivityFileLogger.PROFILE_BASIC;
+            try { prof = mPrefs.getInt(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_PROFILE,
+                    com.example.openradiofm.utils.RadioActivityFileLogger.PROFILE_BASIC); } catch (Exception ignored) {}
+            if (prof < 0) prof = 0;
+            if (prof > 2) prof = 2;
+            sbDevFileLogProfile.setProgress(prof);
+            if (tvDevFileLogProfileValue != null) tvDevFileLogProfileValue.setText(profileLabel(prof));
+            sbDevFileLogProfile.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    int p = Math.max(0, Math.min(progress, 2));
+                    try { mPrefs.edit().putInt(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_PROFILE, p).apply(); } catch (Exception ignored) {}
+                    if (tvDevFileLogProfileValue != null) tvDevFileLogProfileValue.setText(profileLabel(p));
+                    logEvent("DEV", com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_PROFILE + "=" + p);
+                    try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "DEV", "FILE_LOG_PROFILE=" + profileLabel(p)); } catch (Exception ignored2) {}
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+        }
+    }
+
+    private static String profileLabel(int p) {
+        switch (p) {
+            case 1: return "MEDIUM";
+            case 2: return "FULL";
+            default: return "BASIC";
         }
     }
 

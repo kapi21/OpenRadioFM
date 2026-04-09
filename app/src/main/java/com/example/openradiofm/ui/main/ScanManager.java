@@ -51,6 +51,7 @@ public class ScanManager {
     private StationAdapter mStationAdapter;
     private boolean mIsScanning = false;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
+    private android.animation.ObjectAnimator mAutoScanAnimator;
 
     private static class Pending {
         final int freqKhz;
@@ -141,6 +142,13 @@ public class ScanManager {
     public void applyEngineScanState(boolean scanning) {
         mIsScanning = scanning;
         applyScanButtonVisual(scanning, null);
+        try {
+            com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(
+                    mActivity,
+                    "SCAN",
+                    "applyEngineScanState scanning=" + scanning + " slowSeek=" + mSlowSeekAutoScan + " overwrite=" + mAutoOverwritePresets
+            );
+        } catch (Exception ignored) {}
         if (scanning) {
             if (!mAutoOverwritePresets) {
                 startSmartCaptureUiIfNeeded();
@@ -158,9 +166,42 @@ public class ScanManager {
         }
         if (scanning) {
             target.setColorFilter(SCAN_ACTIVE_COLOR, PorterDuff.Mode.SRC_IN);
+            startAutoScanAnimation(target);
         } else {
+            // Al terminar (o si el motor reporta no-scanning), restaurar el tinte del skin actual.
+            // clearColorFilter() dejaba el icono “sin modo” (p. ej. blanco) tras varios cambios de skin/layout.
+            stopAutoScanAnimation(target);
             target.clearColorFilter();
+            try {
+                mActivity.retintControlButtonForCurrentSkin(target);
+            } catch (Exception ignored) {}
         }
+    }
+
+    private void startAutoScanAnimation(ImageButton target) {
+        try {
+            if (target == null) return;
+            stopAutoScanAnimation(target);
+            // Rotación lenta para indicar actividad (ligera, sin bloquear UI).
+            mAutoScanAnimator = android.animation.ObjectAnimator.ofFloat(target, View.ROTATION, 0f, 360f);
+            mAutoScanAnimator.setDuration(1400L);
+            mAutoScanAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);
+            mAutoScanAnimator.setRepeatMode(android.animation.ValueAnimator.RESTART);
+            mAutoScanAnimator.setInterpolator(new android.view.animation.LinearInterpolator());
+            mAutoScanAnimator.start();
+        } catch (Exception ignored) {}
+    }
+
+    private void stopAutoScanAnimation(ImageButton target) {
+        try {
+            if (mAutoScanAnimator != null) {
+                mAutoScanAnimator.cancel();
+                mAutoScanAnimator = null;
+            }
+        } catch (Exception ignored) {}
+        try {
+            if (target != null) target.setRotation(0f);
+        } catch (Exception ignored) {}
     }
 
     /**
@@ -170,6 +211,7 @@ public class ScanManager {
         if (mActivity.mEngine == null) return;
         
         if (!mIsScanning) {
+            try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "toggleAutoScan START request"); } catch (Exception ignored) {}
             showAutoScanOverwriteConfirm(btn);
         } else {
             if (mSlowSeekAutoScan) {
@@ -179,11 +221,13 @@ public class ScanManager {
                 mIsScanning = false;
                 applyScanButtonVisual(false, btn);
                 mActivity.showToast(mActivity.getString(R.string.toast_autoscan_stopped));
+                try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "toggleAutoScan STOP (slow)"); } catch (Exception ignored) {}
             } else {
                 mActivity.mEngine.stopScan();
                 mIsScanning = false;
                 applyScanButtonVisual(false, btn);
                 mActivity.showToast(mActivity.getString(R.string.toast_autoscan_stopped));
+                try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "toggleAutoScan STOP"); } catch (Exception ignored) {}
             }
         }
     }
@@ -261,6 +305,7 @@ public class ScanManager {
             mSlowSeekAutoScan = true;
             applyScanButtonVisual(true, btn);
             mActivity.showToast(mActivity.getString(R.string.toast_autoscan_slow));
+            try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "startAutoScanOverwrite slowSeek=true band=" + mActivity.mCurrentBand); } catch (Exception ignored) {}
 
             final boolean fmUi = isFmBandUi();
             if (fmUi) {
@@ -308,6 +353,7 @@ public class ScanManager {
         applyScanButtonVisual(false, target);
         int saved = mTotalAutoScanPresetsSaved > 0 ? mTotalAutoScanPresetsSaved : mNextAutoPresetSlot;
         mActivity.showToast(mActivity.getString(R.string.toast_autoscan_finished, saved));
+        try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "finishSlowAutoScan saved=" + saved); } catch (Exception ignored) {}
     }
 
     /** VXX: Alimentado desde MainActivity.onSignalUpdate durante el escaneo. */

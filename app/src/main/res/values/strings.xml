@@ -355,6 +355,15 @@
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: modo noche</string>
     <string name="day_mode_locked">No se puede cambiar el skin o el fondo mientras esté activo el Modo Día.</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI: permitir Modo Día (kill-switch)</string>
+    <string name="eng_dev_relief_hd_killswitch">UI: mostrar Relieve HD en Ajustes (kill-switch)</string>
+    <string name="eng_dev_file_log_toggle">DEV: capturar log a RadioLogos/radio_activity_*.log</string>
+    <string name="eng_dev_file_log_profile_label">Perfil de log</string>
+    <string name="eng_dev_file_log_profile_basic">BÁSICO</string>
+    <string name="eng_dev_file_log_profile_medium">MEDIO</string>
+    <string name="eng_dev_file_log_profile_full">COMPLETO</string>
     <string name="toast_history_deleted_full">El historial ha sido borrado</string>
     <string name="toast_easter_egg">¡Easter egg activado!</string>
 

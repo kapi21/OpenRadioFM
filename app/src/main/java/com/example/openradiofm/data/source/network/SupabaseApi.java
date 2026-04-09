@@ -10,10 +10,13 @@ import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface SupabaseApi {
-    @GET("rest/v1/")
-    Call<Void> ping(
-            @Header("apikey") String apiKey,
-            @Header("Authorization") String auth
+    /**
+     * Health endpoint para comprobar conectividad real con el proyecto.
+     * Evita falsos "offline" que ocurren con /rest/v1/ (puede devolver 404 según config).
+     */
+    @GET("auth/v1/health")
+    Call<Void> health(
+            @Header("apikey") String apiKey
     );
 
     @GET("rest/v1/stations")

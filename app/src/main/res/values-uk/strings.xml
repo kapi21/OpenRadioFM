@@ -314,6 +314,16 @@
     <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="day_mode_locked">Неможливо змінити тему або фон, поки активний Денний режим.</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI: дозволити Денний режим (kill-switch)</string>
+    <string name="eng_dev_relief_hd_killswitch">UI: показувати Relief HD у налаштуваннях (kill-switch)</string>
+    <string name="eng_dev_file_log_toggle">DEV: записувати лог у RadioLogos/radio_activity_*.log</string>
+    <string name="eng_dev_file_log_profile_label">Профіль логу</string>
+    <string name="eng_dev_file_log_profile_basic">БАЗОВИЙ</string>
+    <string name="eng_dev_file_log_profile_medium">СЕРЕДНІЙ</string>
+    <string name="eng_dev_file_log_profile_full">ПОВНИЙ</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

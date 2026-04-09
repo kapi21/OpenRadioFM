@@ -150,11 +150,70 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:text="UI: permitir Modo Día (kill-switch)"
+                android:text="@string/eng_dev_day_mode_killswitch"
                 android:textColor="#00FF00"
                 android:fontFamily="monospace"
                 app:thumbTint="#00FF00"
                 app:trackTint="#3300FF00" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swDevReliefHdEnabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/eng_dev_relief_hd_killswitch"
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                app:thumbTint="#00FF00"
+                app:trackTint="#3300FF00" />
+
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swDevFileLoggingEnabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="@string/eng_dev_file_log_toggle"
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                app:thumbTint="#00FF00"
+                app:trackTint="#3300FF00" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="6dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/eng_dev_file_log_profile_label"
+                    android:textColor="#88FF88"
+                    android:textSize="11sp"
+                    android:fontFamily="monospace"
+                    android:layout_marginEnd="10dp"/>
+
+                <SeekBar
+                    android:id="@+id/sbDevFileLogProfile"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="2"
+                    android:progress="0" />
+
+                <TextView
+                    android:id="@+id/tvDevFileLogProfileValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="70dp"
+                    android:gravity="center"
+                    android:text="@string/eng_dev_file_log_profile_basic"
+                    android:textColor="#00FF00"
+                    android:textSize="12sp"
+                    android:fontFamily="monospace"
+                    android:layout_marginStart="10dp"/>
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"

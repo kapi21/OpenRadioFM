@@ -67,6 +67,8 @@ public class QS6Engine implements RadioEngine {
     private int mRequestedBand = 0;
     private long mRequestedTuneElapsedMs = -1L;
     private int mRequestedTuneReasserts = 0;
+    /** SEEK/AMS cambian frecuencia rápido; evita ENGINE_GUARD bootstrap durante esas acciones. */
+    private volatile boolean mLastRequestWasSeekOrScan = false;
     private int mLastStableFreqKhz = -1;
     private int mLastStableBand = 0;
     private long mLastStableSeenElapsedMs = -1L;
@@ -907,7 +909,12 @@ public class QS6Engine implements RadioEngine {
         boolean protectedRequestedTune = mRequestedFreqKhz > 0
                 && mRequestedTuneElapsedMs > 0
                 && (now - mRequestedTuneElapsedMs) <= REQUESTED_TUNE_PROTECT_WINDOW_MS;
-        if (protectedRequestedTune && looksBootstrap && freqKhz != mRequestedFreqKhz) {
+        // IMPORTANTE:
+        // - Durante AutoScan/scan el motor cambia de frecuencia rápidamente (seekUp periódico).
+        // - El stack NWD puede reportar "rebotes" bootstrap (87.5/87.6) entre pasos.
+        // - Pero si re-afirmamos aquí durante scan, podemos "clavar" la radio en 87.5 (no avanza).
+        // Por eso, desactivamos la re-afirmación del ENGINE_GUARD mientras el motor está escaneando.
+        if (!mIsScanning && !mLastRequestWasSeekOrScan && protectedRequestedTune && looksBootstrap && freqKhz != mRequestedFreqKhz) {
             // El stack NWD nativo a veces reinyecta 87.6 tras haber sintonizado correctamente.
             // Ignoramos ese rebote y re-afirmamos la sintonía solicitada por la app.
             if (mRequestedTuneReasserts < 3) {
@@ -947,6 +954,7 @@ public class QS6Engine implements RadioEngine {
         mLastReportedFreq = freqKhz;
         if (freqKhz == mRequestedFreqKhz) {
             mRequestedTuneReasserts = 0;
+            mLastRequestWasSeekOrScan = false;
         }
         if (ps != null) {
             mLastReportedPs = ps;
@@ -1484,6 +1492,7 @@ public class QS6Engine implements RadioEngine {
      * cuando la restauración de arranque debería quedar en FM2/FM3/AM.
      */
     public void tuneWithBand(int freqKhz, int targetBand) {
+        mLastRequestWasSeekOrScan = false;
         mRequestedFreqKhz = freqKhz;
         mRequestedBand = targetBand;
         mRequestedTuneElapsedMs = SystemClock.elapsedRealtime();
@@ -1529,6 +1538,7 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void seekUp() {
+        mLastRequestWasSeekOrScan = true;
         performAidlCall("seekUp", () -> {
             mNwdService.search(true);
         });
@@ -1541,6 +1551,7 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void seekDown() {
+        mLastRequestWasSeekOrScan = true;
         performAidlCall("seekDown", () -> {
             mNwdService.search(false);
         });
@@ -1566,6 +1577,7 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void scan() {
+        mLastRequestWasSeekOrScan = true;
         performAidlCall("scan", () -> {
             mNwdService.AMS();
         });
@@ -1578,6 +1590,7 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void stopScan() {
+        mLastRequestWasSeekOrScan = true;
         performAidlCall("stopScan", () -> {
             // En NWD, AMS actúa como toggle de auto-scan. changeBand aquí podía
             // derivar al preset nativo #1 (87.6) en algunos arranques.

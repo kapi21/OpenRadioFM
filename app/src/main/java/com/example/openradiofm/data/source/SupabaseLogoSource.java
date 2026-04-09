@@ -379,7 +379,8 @@ public class SupabaseLogoSource {
     public void checkConnection(java.util.function.Consumer<Boolean> callback) {
         AppIoExecutor.execute(() -> {
             try {
-                Call<Void> call = api.ping(apiKey, "Bearer " + apiKey);
+                // Usar health endpoint para evitar falsos negativos.
+                Call<Void> call = api.health(apiKey);
                 retrofit2.Response<Void> res = call.execute();
                 callback.accept(res.isSuccessful());
             } catch (Throwable e) {

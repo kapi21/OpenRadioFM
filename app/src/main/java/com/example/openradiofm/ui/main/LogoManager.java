@@ -38,6 +38,7 @@ public class LogoManager {
     private final File mActiveLogoDir;
     
     private CustomTarget<Drawable> mBackgroundTarget;
+    private CustomTarget<Drawable> mDynamicBgTarget;
 
     // V2.4: State guards to avoid redundant reloads/flicker
     private int mLastFallbackResId = -1;
@@ -93,6 +94,7 @@ public class LogoManager {
      */
     public void loadCustomBackground() {
         if (mActivity.mPrefs == null) return;
+        final int genAtStart = mActivity.mLogoUiGeneration.get();
         // DAY_MODE: fondo siempre blanco (ignorar background.jpg/dinámico).
         try {
             if (mActivity.mThemeManager != null
@@ -159,6 +161,7 @@ public class LogoManager {
                         @Override
                         public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
                             if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                            if (genAtStart != mActivity.mLogoUiGeneration.get()) return;
                             root.setBackground(resource);
                         }
 
@@ -285,6 +288,11 @@ public class LogoManager {
             Glide.with(mActivity.getApplicationContext()).clear(ivDynamicBackground);
         } catch (Exception ignored) {
         }
+        if (mDynamicBgTarget != null) {
+            try { Glide.with(mActivity.getApplicationContext()).clear(mDynamicBgTarget); } catch (Exception ignored) {}
+            mDynamicBgTarget = null;
+        }
+        try { ivDynamicBackground.setImageDrawable(null); } catch (Exception ignored) {}
         mLastDynamicBgUrl = null;
         MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
         // V2.6: No forzar recarga del fondo estático aquí; en bgMode=1 provocaba parpadeo (clear+reload).
@@ -304,9 +312,34 @@ public class LogoManager {
         int bgMode = mActivity.mPrefs.getInt("pref_bg_mode", 1);
         if (bgMode == 2) {
             if (logoUrl != null && !logoUrl.isEmpty()) {
-                if (!logoUrl.equals(mLastDynamicBgUrl)) {
+                // Si la URL es la misma pero el fondo quedó vacío (p. ej. zapping → cancelación → onLoadCleared),
+                // debemos reintentar la carga para evitar "a veces no aparece".
+                boolean needsReload = !logoUrl.equals(mLastDynamicBgUrl)
+                        || ivDynamicBackground.getDrawable() == null
+                        || ivDynamicBackground.getVisibility() != View.VISIBLE
+                        || mDynamicBgTarget == null;
+                if (needsReload) {
+                    final int genAtStart = mActivity.mLogoUiGeneration.get();
                     mLastDynamicBgUrl = logoUrl;
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
+                    if (mDynamicBgTarget != null) {
+                        try { Glide.with(mActivity.getApplicationContext()).clear(mDynamicBgTarget); } catch (Exception ignored) {}
+                        mDynamicBgTarget = null;
+                    }
+                    mDynamicBgTarget = new CustomTarget<Drawable>() {
+                        @Override
+                        public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
+                            if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                            if (genAtStart != mActivity.mLogoUiGeneration.get()) return;
+                            ivDynamicBackground.setImageDrawable(resource);
+                        }
+
+                        @Override
+                        public void onLoadCleared(Drawable placeholder) {
+                            // Evitar “fantasmas” al invalidar por generación
+                            try { ivDynamicBackground.setImageDrawable(null); } catch (Exception ignored) {}
+                        }
+                    };
                     Glide.with(ivDynamicBackground)
                             .load(logoUrl)
                             .apply(new RequestOptions()
@@ -314,7 +347,7 @@ public class LogoManager {
                                     .override(DYNAMIC_BG_MAX_EDGE_PX, DYNAMIC_BG_MAX_EDGE_PX))
                             .centerCrop()
                             .transition(DrawableTransitionOptions.withCrossFade())
-                            .into(ivDynamicBackground);
+                            .into(mDynamicBgTarget);
                 }
             } else {
                 if (mLastDynamicBgUrl != null

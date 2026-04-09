@@ -30,8 +30,13 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **Skins**: added **Day Mode** (bone/off-white background + black tinting) and improved **Night Mode** tint consistency (Layout 2/3).
 - **Backgrounds (Layout 2/3)**: reduced `background.jpg/png` flicker/flash and forced immediate background refresh when entering/leaving Day Mode.
 - **Logos**: hardened load/clear paths to avoid “carry-over” when zapping frequencies/presets (notably on QS6 and Layout 3).
+- **Dynamic background (bgMode=2)**: retry loading when `ivDynamicBackground` ends up empty after zapping/cancelled loads (fixes “sometimes it doesn’t show”).
 - **QS6 (NWD)**: **PowerOff** now performs a more robust stop/mute sequence to prevent OEM radio audio resuming in background.
+- **QS6 (NWD)**: adjusted anti-bootstrap guard during SEEK/AutoScan to avoid getting stuck at 87.5/87.6 while scanning.
 - **Steering wheel (QS6)**: “silent bridge” keeps media routing to OpenRadioFM in background without forcing audio playback.
+- **Supabase**: connectivity check now uses `auth/v1/health` to avoid false “offline”.
+- **UI**: cloud indicator softly blinks during online activity and uses a 200 ms alpha transition when dimming for no internet.
+- **UI (RDS)**: brief “tick” flash when **RDS lock** is acquired (PS/PTY).
 - **UI**: updated toast + web editor shortcut icons; improved per-skin tinting across layouts.
 
 ---

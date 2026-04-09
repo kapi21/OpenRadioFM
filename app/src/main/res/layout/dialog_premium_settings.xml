@@ -154,6 +154,7 @@
 
         <!-- Relieve HD -->
         <LinearLayout
+            android:id="@+id/rowReliefHd"
             style="@style/SettingsRowStyle">
             <TextView
                 style="@style/SettingsLabelStyle"

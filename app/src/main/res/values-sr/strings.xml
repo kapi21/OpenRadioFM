@@ -314,6 +314,16 @@
     <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="day_mode_locked">Ne možeš menjati skin ili pozadinu dok je aktivan Dnevni režim.</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI: dozvoli Dnevni režim (kill-switch)</string>
+    <string name="eng_dev_relief_hd_killswitch">UI: prikaži Reljef HD u podešavanjima (kill-switch)</string>
+    <string name="eng_dev_file_log_toggle">DEV: snimi log u RadioLogos/radio_activity_*.log</string>
+    <string name="eng_dev_file_log_profile_label">Profil loga</string>
+    <string name="eng_dev_file_log_profile_basic">OSNOVNI</string>
+    <string name="eng_dev_file_log_profile_medium">SREDNJI</string>
+    <string name="eng_dev_file_log_profile_full">PUNI</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

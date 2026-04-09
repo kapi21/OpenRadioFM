@@ -344,6 +344,16 @@
     <string name="toast_steering_mode">Steering NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: night mode</string>
+    <string name="day_mode_locked">Nem lehet témát vagy hátteret váltani, amíg a Nappali mód aktív.</string>
+    
+    <!-- Developer logging (Engineering menus) -->
+    <string name="eng_dev_day_mode_killswitch">UI: Nappali mód engedélyezése (kill-switch)</string>
+    <string name="eng_dev_relief_hd_killswitch">UI: HD domborítás megjelenítése a Beállításokban (kill-switch)</string>
+    <string name="eng_dev_file_log_toggle">DEV: log mentése a RadioLogos/radio_activity_*.log fájlba</string>
+    <string name="eng_dev_file_log_profile_label">Log profil</string>
+    <string name="eng_dev_file_log_profile_basic">ALAP</string>
+    <string name="eng_dev_file_log_profile_medium">KÖZEPES</string>
+    <string name="eng_dev_file_log_profile_full">TELJES</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
