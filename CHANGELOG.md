@@ -4,8 +4,8 @@
 
 ---
 
-## [5.1.0] - 2026-04-07 — “Backup Studio + Web Tools”
-*Release centrada en herramientas de backup/importación y entorno web instalable (`versionCode` 30).*
+## [5.1.0] - 2026-04-09 — “Backup Studio + Web Tools”
+*Release centrada en herramientas de backup/importación y entorno web instalable (`versionCode` **31**, `versionName` **5.1.0**).*
 
 ### Added
 - **Acceso al editor web**: en el diálogo **Guardar/Cargar Favoritos** se añade un botón **✏️** que abre `https://kapi21.github.io/OpenRadioFM/editor/`.
@@ -15,9 +15,11 @@
   - **Backup completo `.orzip`**: generar/cargar ZIP con `state.json` + `RadioLogos/` (logos por preset, `car_logo.png`, `background.*`), con reescalado automático y previsualización.
   - **Manual ES/EN** integrado en la propia web y botones de navegación (volver a web principal + manual).
   - Tooltips **(i)** por campo para documentación de opciones.
+- **Backup Studio — más campos `.ors`**: proveedor de logos, cabecera coche/reloj, volante NEXT/PREV, modo noche con horario (casilla que habilita edición de inicio/fin), tintado de logos en noche, barra de estado, relieve HD, guardar historial, presets a la derecha (layout 2); textos más claros del asistente inicial (idioma/país).
+- **Supabase (comunidad)**: si no hay logo pero el **RDS PS es estable y pasa el quality gate**, se puede hacer **upsert “solo metadatos”** (PI/PS + frecuencia) para poblar la base y completar logo/stream más adelante; **solo FM** (≥ 30 MHz), respeta `pref_cloud_contrib` y `CloudContributionGuard`, con **cooldown** en memoria para no spamear upserts.
 
 ### Changed
-- **Versionado app**: `versionCode 30`, `versionName 5.1.0`; `app_name_internal` **v5.1.0**.
+- **Versionado app**: `versionCode 31`, `versionName 5.1.0`; `app_name_internal` **v5.1.0**.
 
 ### Fixed / Improved
 - **Skins**: nuevo **Modo Día** (fondo tono hueso + tintes negros) y refinamiento de **Modo Noche** (consistencia de tintes en Layout 2/3).

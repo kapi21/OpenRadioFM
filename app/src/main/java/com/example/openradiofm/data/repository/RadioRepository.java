@@ -41,12 +41,22 @@ public class RadioRepository {
      * este tiempo antes de contribuir a la nube (evita RDS dinámico / scroll).
      */
     private static final long CLOUD_PS_STABLE_MS = 4000L;
+    /**
+     * Evitar inundar Supabase con upserts "solo PS" si no hay logo todavía.
+     * Es suficiente con una caché en memoria por sesión (siempre se puede volver a contribuir
+     * tras reinicio o tras el cooldown).
+     */
+    private static final long CLOUD_PS_ONLY_UPSERT_COOLDOWN_MS = 6L * 60L * 60L * 1000L; // 6h
 
     private final Object cloudPsStabilityLock = new Object();
     private int cloudPsStableFreqKHz = -1;
     private String cloudPsStablePiNorm = "";
     private String cloudPsStablePsNorm = "";
     private long cloudPsStableSinceMs = 0L;
+
+    // key -> last upsert (elapsedRealtime ms)
+    private final java.util.concurrent.ConcurrentHashMap<String, Long> cloudPsOnlyUpsertCache =
+            new java.util.concurrent.ConcurrentHashMap<>();
 
     /**
      * Llamar desde {@link #saveRdsName} y {@link #saveRdsPi} cuando haya muestra RDS/PI actual.
@@ -89,6 +99,44 @@ public class RadioRepository {
             }
             return now - cloudPsStableSinceMs >= CLOUD_PS_STABLE_MS;
         }
+    }
+
+    /**
+     * Contribuye "solo PS/PI" a Supabase aunque aún no haya logo local/cloud.
+     * Esto permite poblar la base comunitaria con PS fiables y completar logos/streams más adelante.
+     */
+    private void maybeContributePsOnlyToCloud(int freqKHz, String piCode, String finalNameForUpsert) {
+        // No contribuir AM/SW (misma política que logos online)
+        if (freqKHz < 30000) return;
+
+        boolean contribCloud = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                .getBoolean("pref_cloud_contrib", true);
+        if (!contribCloud) return;
+        if (!mayContributeCloud()) return;
+
+        if (!isPsStableForCloudContribution(freqKHz, piCode, finalNameForUpsert)) return;
+        if (!SupabaseLogoSource.isAcceptableForCloudUpsert(piCode != null ? piCode : "",
+                finalNameForUpsert != null ? finalNameForUpsert : "")) {
+            return;
+        }
+
+        // Cooldown por estación/metadata para evitar upserts repetidos (por sesión).
+        final String piNorm = (piCode != null) ? piCode.trim() : "";
+        final String psNorm = (finalNameForUpsert != null) ? finalNameForUpsert.trim() : "";
+        final String key = freqKHz + "|" + piNorm + "|" + psNorm.toUpperCase();
+        final long now = android.os.SystemClock.elapsedRealtime();
+        Long last = cloudPsOnlyUpsertCache.get(key);
+        if (last != null && (now - last) < CLOUD_PS_ONLY_UPSERT_COOLDOWN_MS) return;
+        cloudPsOnlyUpsertCache.put(key, now);
+
+        // Guard: evitar RejectedExecutionException si el executor ya se cerró
+        if (logoExecutor == null || logoExecutor.isShutdown()) return;
+
+        logoExecutor.submit(() -> {
+            try {
+                supabaseSource.upsertLogoData(mContext, piCode, finalNameForUpsert, freqKHz, null, null);
+            } catch (Exception ignored) {}
+        });
     }
 
     // Caché en memoria para evitar recargas de logos al cambiar frecuencia o nombre.
@@ -422,6 +470,10 @@ public class RadioRepository {
                 if (callback != null)
                     callback.onLogoFound(cachedPath);
             }
+            // Si sabemos que NO hay logo, aún podemos contribuir PS estable a la nube.
+            if ("NO_LOGO".equals(cachedPath)) {
+                maybeContributePsOnlyToCloud(freqKHz, piCode, finalName);
+            }
             
             // V16.3: Si tenemos el logo en caché de memoria pero nos falta el streaming, pedirlo en background
             boolean onlineLogosEnabled = mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
@@ -598,6 +650,8 @@ public class RadioRepository {
                         // V16.3: CACHÉ NEGATIVA. Guardar que no hay logo para evitar reintentos inmediatos.
                         logoCache.put(cacheKey, "NO_LOGO");
                         // No ponemos en nameLogoCache para permitir reintentar con otra frecuencia.
+                        // Aun así, si el PS es estable y pasa el quality gate, contribuir "solo PS" para poblar Supabase.
+                        maybeContributePsOnlyToCloud(freqKHz, piCode, stationNameForLambda);
                     }
                 } catch (Exception e) {
                     android.util.Log.e("RadioRepository", "Fatal loop error", e);

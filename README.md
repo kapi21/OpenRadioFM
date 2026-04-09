@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.1.0 “Backup Studio + Web Tools” (abril 2026):** integración del **OpenRadioFM Backup Studio** (web instalable) para **crear/editar/importar/exportar** `.fav`, generar **opciones** `.ors` y **backup completo** `.orzip` (ZIP con `state.json` + `RadioLogos/`), con previsualización y límites de imágenes. En la app, acceso directo al editor desde **Guardar/Cargar Favoritos**. Además, mejoras UX: indicador de nube con actividad, “tick” al enganchar RDS lock y mayor robustez del fondo dinámico. Ver `CHANGELOG.md`.
+**5.1.0 “Backup Studio + Web Tools” (abril 2026, `versionCode` 31):** integración del **OpenRadioFM Backup Studio** (web instalable) para **crear/editar/importar/exportar** `.fav`, generar **opciones** `.ors` (formulario ampliado: noche programada, proveedor de logos, volante, layout 2, etc.) y **backup completo** `.orzip` (ZIP con `state.json` + `RadioLogos/`), con previsualización y límites de imágenes. En la app, acceso directo al editor desde **Guardar/Cargar Favoritos**. **Supabase:** si el PS RDS es fiable y aún no hay logo, la app puede **registrar metadatos** (PI/PS + frecuencia) para completar la ficha más adelante. Además, mejoras UX: indicador de nube con actividad, “tick” al enganchar RDS lock y mayor robustez del fondo dinámico. Ver `CHANGELOG.md`.
 
 ---
 
@@ -206,9 +206,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.1.0 (Abril 2026) — `main` — “Backup Studio + Web Tools”
-- **ES:** **OpenRadioFM v5.1.0** — acceso al editor web desde Guardar/Cargar; **Backup Studio** (web instalable) con generación/carga de `.fav`, `.ors` y `.orzip`, previsualizaciones, tooltips y manual ES/EN. Ver `CHANGELOG.md`.
-- **EN:** **OpenRadioFM v5.1.0** — web editor link from Save/Load; installable **Backup Studio** web app with `.fav/.ors/.orzip` create/load, previews, tooltips and ES/EN manual. See `CHANGELOG_EN.md`.
+### v5.1.0 (Abril 2026) — `main` — “Backup Studio + Web Tools” (`versionCode` 31)
+- **ES:** **OpenRadioFM v5.1.0** — acceso al editor web desde Guardar/Cargar; **Backup Studio** (web instalable) con generación/carga de `.fav`, `.ors` (más opciones de menú) y `.orzip`, previsualizaciones, tooltips y manual ES/EN; **Supabase** puede registrar **PS/PI sin logo** cuando el nombre es estable (semilla para la comunidad). Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.1.0** — web editor link from Save/Load; installable **Backup Studio** with `.fav/.ors/.orzip` (expanded options form), previews, tooltips and ES/EN manual; **Supabase** can **seed PI/PS without a logo** when the PS is stable. See `CHANGELOG_EN.md`.
 
 ### v5.0.16 (Abril 2026) — `main` — “Setup & Stability Hotfix”
 - **ES:** **OpenRadioFM v5.0.16** — “Setup & Stability Hotfix”: streaming MT8163, logos V3/QS6, volante QS6 en segundo plano, MediaSession/notificaciones, `RadioRepository` en UI, HiHack tras reinicio, **widget** mejorado (logo/banda/seek/mute; PS→info; compatibilidad con launchers sin resize), **backups** de estado (opciones `.ors` y copia completa `.orzip` con logos + progreso/cancelar), e **icono launcher** OEM (`drawable-nodpi-v4`) para evitar pixelado. **Pendiente verificación en K706 y MT8163.** Ver `CHANGELOG.md`.

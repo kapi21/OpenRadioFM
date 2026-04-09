@@ -11,8 +11,8 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
-## [5.1.0] - 2026-04-07 — “Backup Studio + Web Tools”
-*Release focused on backup/import tooling and an installable web companion (`versionCode` 30).*
+## [5.1.0] - 2026-04-09 — “Backup Studio + Web Tools”
+*Release focused on backup/import tooling and an installable web companion (`versionCode` **31**, `versionName` **5.1.0**).*
 
 ### Added
 - **Web editor shortcut**: the **Save/Load Favorites** dialog now includes a **✏️** button that opens `https://kapi21.github.io/OpenRadioFM/editor/`.
@@ -22,9 +22,11 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
   - Generate/load full **`.orzip`** backups (ZIP with `state.json` + `RadioLogos/` images: station logos, `car_logo.png`, `background.*`) with automatic resize and previews.
   - Built-in **ES/EN manual** plus navigation buttons (back to main site + manual).
   - Per-field **(i)** tooltips explaining settings.
+- **Backup Studio — expanded `.ors` fields**: logo provider, header car/clock, steering NEXT/PREV, scheduled night mode (checkbox enables start/end editing), night logo tinting, status bar, HD relief, save history, presets on the right (layout 2); clearer first-run wizard copy (language/country).
+- **Supabase (community)**: when **no logo** is available but **RDS PS is stable** and passes the quality gate, the app may **upsert metadata-only** (PI/PS + frequency) to seed the database for later logo/stream enrichment; **FM only** (≥ 30 MHz), honors `pref_cloud_contrib` and `CloudContributionGuard`, with an in-memory **cooldown** to avoid repeated upserts.
 
 ### Changed
-- **App versioning**: `versionCode 30`, `versionName 5.1.0`; `app_name_internal` **v5.1.0**.
+- **App versioning**: `versionCode 31`, `versionName 5.1.0`; `app_name_internal` **v5.1.0**.
 
 ### Fixed / Improved
 - **Skins**: added **Day Mode** (bone/off-white background + black tinting) and improved **Night Mode** tint consistency (Layout 2/3).
