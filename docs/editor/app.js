@@ -94,7 +94,32 @@ const translations = {
         tipStationHistory: "Historial de frecuencias en kHz, separado por comas. Solo afecta a la lista de recientes.",
         tipCarLogo: "Imagen del logo del coche. Se guarda como RadioLogos/car_logo.png (máx 300×300).",
         tipBackground: "Imagen de fondo de la app. Se guarda como RadioLogos/background.png o .jpg (máx 1920×1080).",
-        tipStationLogos: "Logos por preset. Se guardan como RadioLogos/FREQkHz_NOMBRE.png (o FREQkHz.png)."
+        tipStationLogos: "Logos por preset. Se guardan como RadioLogos/FREQkHz_NOMBRE.png (o FREQkHz.png).",
+        optLogoProvider: "Proveedor logos",
+        optLogoMode: "Cabecera (logo)",
+        optSteeringMode: "Volante NEXT/PREV",
+        optNightAuto: "Noche automática",
+        optNightAutoToggle: "Activar ventana nocturna automática",
+        optNightStart: "Inicio (noche)",
+        optNightEnd: "Fin (noche)",
+        optNightLogos: "Tintado logos en noche",
+        optStatusBar: "Barra de estado",
+        optReliefHd: "Relieve HD",
+        optEnableAm: "Banda AM",
+        optSaveHistory: "Guardar historial",
+        optLayout2PresetsRight: "Presets a la derecha (layout 2)",
+        tipLogoProvider: "Origen de logos online: Supabase, RadioBrowser web o ambos (pref_logo_provider).",
+        tipLogoMode: "Icono de cabecera: logo del coche o reloj (pref_logo_mode).",
+        tipSteeringMode: "Teclas NEXT/PREV del volante: buscar emisora o saltar entre presets (pref_steering_next_prev_mode).",
+        tipNightAuto: "Activa el skin nocturno según el rango horario indicado (pref_night_mode_auto).",
+        tipNightStart: "Hora de inicio del modo noche (pref_night_start / pref_night_start_min).",
+        tipNightEnd: "Hora de fin del modo noche (pref_night_end / pref_night_end_min).",
+        tipNightLogos: "Ajusta tinte de logos cuando aplica modo noche (pref_night_logos).",
+        tipStatusBar: "Muestra la barra de estado del sistema (pref_show_status_bar_v2).",
+        tipReliefHd: "Efecto relieve en elementos de la UI (pref_relief_hd).",
+        tipEnableAm: "Permite usar bandas AM (pref_enable_am).",
+        tipSaveHistory: "Guarda frecuencias en historial al sintonizar (pref_save_history).",
+        tipLayout2PresetsRight: "En layout 2, columna de presets a la derecha (pref_layout2_presets_right)."
     },
     en: {
         pageTitle: "Backup Studio",
@@ -183,7 +208,32 @@ const translations = {
         tipStationHistory: "History list in kHz, comma-separated. Affects recents only.",
         tipCarLogo: "Car logo image saved as RadioLogos/car_logo.png (max 300×300).",
         tipBackground: "Background image saved as RadioLogos/background.png or .jpg (max 1920×1080).",
-        tipStationLogos: "Preset logos saved as RadioLogos/FREQkHz_NAME.png (or FREQkHz.png)."
+        tipStationLogos: "Preset logos saved as RadioLogos/FREQkHz_NAME.png (or FREQkHz.png).",
+        optLogoProvider: "Logo provider",
+        optLogoMode: "Header (logo)",
+        optSteeringMode: "Steering NEXT/PREV",
+        optNightAuto: "Auto night mode",
+        optNightAutoToggle: "Enable automatic night window",
+        optNightStart: "Night start",
+        optNightEnd: "Night end",
+        optNightLogos: "Tint logos at night",
+        optStatusBar: "Status bar",
+        optReliefHd: "HD relief",
+        optEnableAm: "AM band",
+        optSaveHistory: "Save history",
+        optLayout2PresetsRight: "Presets on the right (layout 2)",
+        tipLogoProvider: "Online logo source: Supabase, web RadioBrowser, or both (pref_logo_provider).",
+        tipLogoMode: "Header widget: car logo or clock (pref_logo_mode).",
+        tipSteeringMode: "Steering NEXT/PREV: seek stations or switch presets (pref_steering_next_prev_mode).",
+        tipNightAuto: "Apply night skin based on the time window (pref_night_mode_auto).",
+        tipNightStart: "Night window start (pref_night_start / pref_night_start_min).",
+        tipNightEnd: "Night window end (pref_night_end / pref_night_end_min).",
+        tipNightLogos: "Tint logos when night styling applies (pref_night_logos).",
+        tipStatusBar: "Show the system status bar (pref_show_status_bar_v2).",
+        tipReliefHd: "UI relief / elevation effect (pref_relief_hd).",
+        tipEnableAm: "Allow AM bands (pref_enable_am).",
+        tipSaveHistory: "Persist tuned frequencies to history (pref_save_history).",
+        tipLayout2PresetsRight: "In layout 2, preset column on the right (pref_layout2_presets_right)."
     }
 };
 
@@ -264,6 +314,19 @@ const orsControls = {
     lastBand: document.getElementById('optLastBand'),
     lastFreq: document.getElementById('optLastFreq'),
     skin: document.getElementById('optSkin'),
+    logoProvider: document.getElementById('optLogoProvider'),
+    logoMode: document.getElementById('optLogoMode'),
+    steeringMode: document.getElementById('optSteeringMode'),
+    nightAuto: document.getElementById('optNightAuto'),
+    nightStart: document.getElementById('optNightStart'),
+    nightEnd: document.getElementById('optNightEnd'),
+    nightLogos: document.getElementById('optNightLogos'),
+    nightScheduleWrap: document.getElementById('nightScheduleWrap'),
+    statusBar: document.getElementById('optStatusBar'),
+    reliefHd: document.getElementById('optReliefHd'),
+    enableAm: document.getElementById('optEnableAm'),
+    saveHistory: document.getElementById('optSaveHistory'),
+    layout2PresetsRight: document.getElementById('optLayout2PresetsRight'),
     logosOnline: document.getElementById('optLogosOnline'),
     autoHide: document.getElementById('optAutoHide'),
     layoutNone: document.getElementById('optLayoutNone'),
@@ -274,6 +337,39 @@ const orsControls = {
     onboardLangCountryDone: document.getElementById('optOnboardLangCountryDone'),
     stationHistory: document.getElementById('optStationHistory')
 };
+
+function clampPrefsInt(n, lo, hi) {
+    const x = parseInt(String(n), 10);
+    if (!Number.isFinite(x)) return lo;
+    return Math.min(hi, Math.max(lo, x));
+}
+
+function parseTimeControl(el) {
+    const raw = String(el?.value || '00:00').trim();
+    const parts = raw.split(':');
+    const h = clampPrefsInt(parts[0], 0, 23);
+    const m = clampPrefsInt(parts[1] != null ? parts[1] : 0, 0, 59);
+    return { h, m };
+}
+
+function setTimeControl(el, h, m) {
+    if (!el) return;
+    const hh = String(clampPrefsInt(h, 0, 23)).padStart(2, '0');
+    const mm = String(clampPrefsInt(m, 0, 59)).padStart(2, '0');
+    el.value = `${hh}:${mm}`;
+}
+
+function syncNightScheduleVisibility() {
+    const wrap = orsControls.nightScheduleWrap;
+    if (!wrap || !orsControls.nightAuto) return;
+    if (orsControls.nightAuto.checked) wrap.removeAttribute('hidden');
+    else wrap.setAttribute('hidden', '');
+}
+
+if (orsControls.nightAuto) {
+    orsControls.nightAuto.addEventListener('change', syncNightScheduleVisibility);
+}
+syncNightScheduleVisibility();
 
 function setLanguage(lang) {
     currentLang = lang;
@@ -440,7 +536,27 @@ function buildOrsJsonFromForm() {
         pref_onboarding_lang_done: !!orsControls.onboardLangDone.checked,
         pref_onboarding_country_done: !!orsControls.onboardCountryDone.checked,
         pref_layout_v3: layoutMode === 'v3',
-        app_language: String(orsControls.appLang.value || 'es').toLowerCase()
+        app_language: String(orsControls.appLang.value || 'es').toLowerCase(),
+        pref_logo_provider: clampPrefsInt(orsControls.logoProvider?.value, 0, 2),
+        pref_logo_mode: clampPrefsInt(orsControls.logoMode?.value, 0, 1),
+        pref_steering_next_prev_mode: clampPrefsInt(orsControls.steeringMode?.value, 0, 1),
+        pref_night_mode_auto: !!orsControls.nightAuto?.checked,
+        ...(() => {
+            const ns = parseTimeControl(orsControls.nightStart);
+            const ne = parseTimeControl(orsControls.nightEnd);
+            return {
+                pref_night_start: ns.h,
+                pref_night_start_min: ns.m,
+                pref_night_end: ne.h,
+                pref_night_end_min: ne.m
+            };
+        })(),
+        pref_night_logos: !!orsControls.nightLogos?.checked,
+        pref_show_status_bar_v2: !!orsControls.statusBar?.checked,
+        pref_relief_hd: !!orsControls.reliefHd?.checked,
+        pref_enable_am: !!orsControls.enableAm?.checked,
+        pref_save_history: !!orsControls.saveHistory?.checked,
+        pref_layout2_presets_right: !!orsControls.layout2PresetsRight?.checked
     };
 
     const ThemePrefs = {
@@ -481,6 +597,19 @@ function fillOrsForm(obj) {
         orsControls.onboardCountryDone.checked = !!rp.pref_onboarding_country_done;
         orsControls.onboardLangCountryDone.checked = !!rp.pref_onboarding_lang_country_done;
         orsControls.stationHistory.value = rp.pref_station_history || '';
+        if (orsControls.logoProvider) orsControls.logoProvider.value = String(clampPrefsInt(rp.pref_logo_provider, 0, 2));
+        if (orsControls.logoMode) orsControls.logoMode.value = String(clampPrefsInt(rp.pref_logo_mode, 0, 1));
+        if (orsControls.steeringMode) orsControls.steeringMode.value = String(clampPrefsInt(rp.pref_steering_next_prev_mode, 0, 1));
+        if (orsControls.nightAuto) orsControls.nightAuto.checked = !!rp.pref_night_mode_auto;
+        setTimeControl(orsControls.nightStart, rp.pref_night_start ?? 19, rp.pref_night_start_min ?? 0);
+        setTimeControl(orsControls.nightEnd, rp.pref_night_end ?? 7, rp.pref_night_end_min ?? 0);
+        if (orsControls.nightLogos) orsControls.nightLogos.checked = rp.pref_night_logos !== false;
+        if (orsControls.statusBar) orsControls.statusBar.checked = !!rp.pref_show_status_bar_v2;
+        if (orsControls.reliefHd) orsControls.reliefHd.checked = !!rp.pref_relief_hd;
+        if (orsControls.enableAm) orsControls.enableAm.checked = rp.pref_enable_am !== false;
+        if (orsControls.saveHistory) orsControls.saveHistory.checked = rp.pref_save_history !== false;
+        if (orsControls.layout2PresetsRight) orsControls.layout2PresetsRight.checked = !!rp.pref_layout2_presets_right;
+        syncNightScheduleVisibility();
     } catch (e) {
         // noop
     }

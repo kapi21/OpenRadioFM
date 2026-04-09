@@ -328,6 +328,22 @@ header:has(.main-logo:hover)::after {
     gap: 1rem;
 }
 
+.ors-grid .ors-span-all {
+    grid-column: 1 / -1;
+}
+
+.night-schedule-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    align-items: flex-end;
+}
+
+.night-schedule-wrap[hidden] {
+    display: none !important;
+}
+
 .ors-toggles {
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
