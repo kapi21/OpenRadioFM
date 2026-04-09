@@ -20,6 +20,7 @@ public class ThemeManager {
     // Skins disponibles
     public enum Skin {
         NIGHT_MODE("Night Mode", "#2A2A2A"),
+        DAY_MODE("Day Mode", "#FFFFFF"),
         CLASSIC("Classic", "#B0B0B0"),
         ORANGE("Orange", "#FF8C00"),
         BLUE("Blue", "#00A8FF"),
@@ -80,6 +81,14 @@ public class ThemeManager {
             Skin parsed = Skin.valueOf(skinName);
             // CLEAR desactivado por ahora: evitar activación accidental
             if (parsed == Skin.CLEAR) return Skin.CLASSIC;
+            // Dev kill-switch: permitir desactivar Day Mode por si no queda bien.
+            if (parsed == Skin.DAY_MODE) {
+                try {
+                    if (mLayoutPrefs != null && !mLayoutPrefs.getBoolean("pref_dev_day_mode_enabled", true)) {
+                        return Skin.CLASSIC;
+                    }
+                } catch (Exception ignored) {}
+            }
             return parsed;
         } catch (IllegalArgumentException e) {
             return Skin.CLASSIC;
@@ -98,6 +107,14 @@ public class ThemeManager {
         // CLEAR desactivado por ahora: saltarlo en el ciclo
         int guard = 0;
         while (next == Skin.CLEAR && guard++ < all.length) {
+            nextIndex = (nextIndex + 1) % all.length;
+            next = all[nextIndex];
+        }
+        // Dev kill-switch: si Day Mode desactivado, saltarlo también.
+        guard = 0;
+        while (next == Skin.DAY_MODE && mLayoutPrefs != null
+                && !mLayoutPrefs.getBoolean("pref_dev_day_mode_enabled", true)
+                && guard++ < all.length) {
             nextIndex = (nextIndex + 1) % all.length;
             next = all[nextIndex];
         }
@@ -127,6 +144,8 @@ public class ThemeManager {
         switch (mCurrentSkin) {
             case NIGHT_MODE:
                 return R.drawable.bg_glass_card_night;
+            case DAY_MODE:
+                return R.drawable.bg_glass_card_day;
             case ORANGE:
                 return R.drawable.bg_glass_card_orange;
             case BLUE:
@@ -178,6 +197,9 @@ public class ThemeManager {
             int bgColor;
             if (skin == Skin.CLEAR) {
                 bgColor = android.graphics.Color.WHITE;
+            } else if (skin == Skin.DAY_MODE) {
+                // Modo Día: tono hueso (menos brillante que blanco puro)
+                bgColor = android.graphics.Color.parseColor("#FFF5F1E6");
             } else {
                 bgColor = mActivity.getResources().getColor(R.color.black_background, null);
             }
@@ -187,6 +209,12 @@ public class ThemeManager {
         // Detectar layout activo
         boolean isLayoutV3 = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_v3", false);
         boolean isSimpleLayout = mLayoutPrefs != null && mLayoutPrefs.getBoolean("pref_layout_simple", false);
+        // Layout simple: Modo Día no altera botones (se mantiene comportamiento original).
+        if (isSimpleLayout && skin == Skin.DAY_MODE) {
+            skin = Skin.CLASSIC;
+            this.mCurrentSkin = skin;
+            drawableId = getSkinDrawableId();
+        }
 
         // V20.4: Unified skin application for all layouts (V2, V3, Simple)
         // This ensures all boxes (Frequency, RDS, etc.) match the favorite boxes' transparency.
@@ -211,7 +239,9 @@ public class ThemeManager {
             if (freqBox != null) {
                 int pL = freqBox.getPaddingLeft(), pT = freqBox.getPaddingTop();
                 int pR = freqBox.getPaddingRight(), pB = freqBox.getPaddingBottom();
-                freqBox.setBackgroundResource(R.drawable.bg_glass_card_classic);
+                freqBox.setBackgroundResource(skin == Skin.DAY_MODE
+                        ? R.drawable.bg_glass_card_day
+                        : R.drawable.bg_glass_card_classic);
                 freqBox.setPadding(pL, pT, pR, pB);
             }
             

@@ -54,7 +54,7 @@
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">match_parent</item>
         <item name="android:scaleType">fitCenter</item>
-        <item name="android:src">@drawable/ic_station_placeholder</item>
+        <item name="android:src">@drawable/ic_toast</item>
     </style>
 
     <style name="PresetTextStyleV3">

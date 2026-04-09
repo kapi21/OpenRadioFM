@@ -28,6 +28,8 @@ import java.io.File;
  */
 public class LogoManager {
     private static final String TAG = "LogoManager";
+    /** Fondo difuminado: no hace falta píxel a píxel; limitar decode mejora fluidez y RAM en head units lentas. */
+    private static final int DYNAMIC_BG_MAX_EDGE_PX = 1600;
     private final MainActivity mActivity;
     
     // V21.1: Compatibilidad storage (preferir app-specific dir, fallback a legacy /sdcard)
@@ -41,6 +43,8 @@ public class LogoManager {
     private int mLastFallbackResId = -1;
     private String mLastDynamicBgUrl = null;
     private String mLastStationLogoUrl = null;
+    private int mLastBgMode = Integer.MIN_VALUE;
+    private String mLastCustomBgPath = null;
 
     public LogoManager(MainActivity activity) {
         this.mActivity = activity;
@@ -89,12 +93,47 @@ public class LogoManager {
      */
     public void loadCustomBackground() {
         if (mActivity.mPrefs == null) return;
+        // DAY_MODE: fondo siempre blanco (ignorar background.jpg/dinámico).
+        try {
+            if (mActivity.mThemeManager != null
+                    && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+                View root = mActivity.findViewById(R.id.rootLayout);
+                if (root != null) {
+                    if (mBackgroundTarget != null) {
+                        try { Glide.with(mActivity.getApplicationContext()).clear(mBackgroundTarget); } catch (Exception ignored) {}
+                        mBackgroundTarget = null;
+                    }
+                    // Si veníamos de fondo dinámico, ocultarlo y limpiar el bitmap para evitar “mezclas”.
+                    try {
+                        ImageView ivDynamicBackground = mActivity.findViewById(R.id.ivDynamicBackground);
+                        if (ivDynamicBackground != null) {
+                            Glide.with(mActivity.getApplicationContext()).clear(ivDynamicBackground);
+                            ivDynamicBackground.setImageDrawable(null);
+                            MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
+                        }
+                        mLastDynamicBgUrl = null;
+                    } catch (Exception ignored) {}
+                    // Modo Día: tono hueso (menos brillante que blanco puro)
+                    root.setBackgroundColor(Color.parseColor("#FFF5F1E6"));
+                    mLastBgMode = Integer.MIN_VALUE;
+                    mLastCustomBgPath = null;
+                }
+                return;
+            }
+        } catch (Exception ignored) {}
         int bgMode = mActivity.mPrefs.getInt("pref_bg_mode", 1);
         
         View root = mActivity.findViewById(R.id.rootLayout);
         if (root == null) return;
 
         if (bgMode == 0) {
+            if (mLastBgMode == 0) return;
+            mLastBgMode = 0;
+            mLastCustomBgPath = null;
+            if (mBackgroundTarget != null) {
+                try { Glide.with(mActivity.getApplicationContext()).clear(mBackgroundTarget); } catch (Exception ignored) {}
+                mBackgroundTarget = null;
+            }
             root.setBackgroundColor(Color.BLACK);
         } else if (bgMode == 1) {
             try {
@@ -103,8 +142,17 @@ public class LogoManager {
                 File backgroundFile = (bgJpg != null) ? bgJpg : bgPng;
 
                 if (backgroundFile != null) {
+                    final String newPath = backgroundFile.getAbsolutePath();
+                    // V2.6: Evitar flicker: si el fondo ya es el mismo, no reiniciar Glide ni limpiar el drawable.
+                    if (mLastBgMode == 1 && newPath.equals(mLastCustomBgPath) && root.getBackground() != null) {
+                        return;
+                    }
+                    mLastBgMode = 1;
+                    mLastCustomBgPath = newPath;
                     if (mBackgroundTarget != null) {
-                        Glide.with(mActivity).clear(mBackgroundTarget);
+                        // IMPORTANT: clear() dispara onLoadCleared y puede "parpadear" el fondo.
+                        // Solo limpiar cuando realmente vamos a reemplazar el archivo de fondo.
+                        try { Glide.with(mActivity.getApplicationContext()).clear(mBackgroundTarget); } catch (Exception ignored) {}
                         mBackgroundTarget = null;
                     }
                     mBackgroundTarget = new CustomTarget<Drawable>() {
@@ -126,16 +174,28 @@ public class LogoManager {
                     Glide.with(mActivity)
                             .load(backgroundFile)
                             .centerCrop()
-                            .diskCacheStrategy(DiskCacheStrategy.NONE)
-                            .skipMemoryCache(true)
+                            // Archivo local estable: cachear decode (antes NONE recargaba desde disco siempre).
+                            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                             .into(mBackgroundTarget);
                 } else {
+                    if (mLastBgMode == 1 && mLastCustomBgPath == null) return;
+                    mLastBgMode = 1;
+                    mLastCustomBgPath = null;
                     root.setBackgroundResource(R.drawable.bg_grainy_dark);
                 }
             } catch (Exception e) {
+                mLastBgMode = 1;
+                mLastCustomBgPath = null;
                 root.setBackgroundResource(R.drawable.bg_grainy_dark);
             }
         } else {
+            if (mLastBgMode == bgMode) return;
+            mLastBgMode = bgMode;
+            mLastCustomBgPath = null;
+            if (mBackgroundTarget != null) {
+                try { Glide.with(mActivity.getApplicationContext()).clear(mBackgroundTarget); } catch (Exception ignored) {}
+                mBackgroundTarget = null;
+            }
             root.setBackgroundColor(Color.BLACK);
         }
     }
@@ -168,8 +228,7 @@ public class LogoManager {
             iv.setImageDrawable(null);
             Glide.with(iv)
                     .load(logoFile)
-                    .diskCacheStrategy(DiskCacheStrategy.NONE)
-                    .skipMemoryCache(true)
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .transform(new RoundedCorners(24))
                     .transition(DrawableTransitionOptions.withCrossFade())
                     .into(iv);
@@ -202,8 +261,7 @@ public class LogoManager {
                 ivCarLogo.setImageDrawable(null); // Clear overlap
                 Glide.with(ivCarLogo)
                         .load(logoFile)
-                        .diskCacheStrategy(DiskCacheStrategy.NONE)
-                        .skipMemoryCache(true)
+                        .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                         .transform(new RoundedCorners(24))
                         .transition(DrawableTransitionOptions.withCrossFade())
                         .into(ivCarLogo);
@@ -229,7 +287,7 @@ public class LogoManager {
         }
         mLastDynamicBgUrl = null;
         MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.GONE);
-        loadCustomBackground();
+        // V2.6: No forzar recarga del fondo estático aquí; en bgMode=1 provocaba parpadeo (clear+reload).
     }
 
     /**
@@ -253,7 +311,7 @@ public class LogoManager {
                             .load(logoUrl)
                             .apply(new RequestOptions()
                                     .format(DecodeFormat.PREFER_ARGB_8888)
-                                    .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
+                                    .override(DYNAMIC_BG_MAX_EDGE_PX, DYNAMIC_BG_MAX_EDGE_PX))
                             .centerCrop()
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(ivDynamicBackground);

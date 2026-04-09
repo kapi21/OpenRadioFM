@@ -669,6 +669,13 @@ public class DialogManager {
         for (com.example.openradiofm.ui.theme.ThemeManager.Skin s : allSkins) {
             // CLEAR desactivado por ahora: no mostrar en selector
             if (s == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) continue;
+            // Dev kill-switch: ocultar Day Mode si se deshabilitó.
+            if (s == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE
+                    && mActivity != null
+                    && mActivity.mPrefs != null
+                    && !mActivity.mPrefs.getBoolean("pref_dev_day_mode_enabled", true)) {
+                continue;
+            }
             skinValuesList.add(s);
             skinsList.add(s.displayName);
         }

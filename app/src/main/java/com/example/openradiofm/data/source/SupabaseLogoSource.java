@@ -12,6 +12,8 @@ import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Response;
 
+import com.example.openradiofm.util.AppIoExecutor;
+
 /**
  * Fuente de logos centralizada en Supabase.
  */
@@ -213,7 +215,7 @@ public class SupabaseLogoSource {
         final String fPi = piNorm.isEmpty() ? null : piNorm;
         final String fPs = psForDb;
 
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             notifyActivity(true);
             try {
                 String finalLogoUrl = logoUrl;
@@ -301,7 +303,7 @@ public class SupabaseLogoSource {
             } finally {
                 notifyActivity(false);
             }
-        }).start();
+        });
     }
 
     private String queryByPi(String pi, String country) {
@@ -375,7 +377,7 @@ public class SupabaseLogoSource {
     }
 
     public void checkConnection(java.util.function.Consumer<Boolean> callback) {
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             try {
                 Call<Void> call = api.ping(apiKey, "Bearer " + apiKey);
                 retrofit2.Response<Void> res = call.execute();
@@ -383,6 +385,6 @@ public class SupabaseLogoSource {
             } catch (Throwable e) {
                 callback.accept(false);
             }
-        }).start();
+        });
     }
 }

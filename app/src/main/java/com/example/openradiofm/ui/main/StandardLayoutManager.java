@@ -101,9 +101,11 @@ public class StandardLayoutManager {
 
     public void applyColors(boolean isNight) {
         int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
+        boolean isDay = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.DAY_MODE);
         boolean isLight = (mActivity.mThemeManager != null
                 && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
-        int normalText = isLight ? Color.BLACK : Color.WHITE;
+        int normalText = (isLight || isDay) ? Color.BLACK : Color.WHITE;
 
         if (isNight) {
             if (tvFrequency != null) tvFrequency.setTextColor(nightBlue);
@@ -111,6 +113,7 @@ public class StandardLayoutManager {
             if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
             if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
             if (tvPty != null) tvPty.setTextColor(nightBlue);
+            if (ivStereoIcon != null) ivStereoIcon.setTextColor(nightBlue);
             if (btnPowerOff != null) btnPowerOff.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
         } else {
             if (tvFrequency != null) tvFrequency.setTextColor(normalText);
@@ -118,6 +121,7 @@ public class StandardLayoutManager {
             if (tvRdsName != null) tvRdsName.setTextColor(normalText);
             if (tvRdsInfo != null) tvRdsInfo.setTextColor(normalText);
             if (tvPty != null) tvPty.setTextColor(normalText);
+            if (ivStereoIcon != null) ivStereoIcon.setTextColor(normalText);
             if (btnPowerOff != null) btnPowerOff.clearColorFilter();
         }
     }
@@ -137,9 +141,11 @@ public class StandardLayoutManager {
                 if (isNight) {
                     ivFavoriteIndicator.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
                 } else {
+                    boolean isDay = (mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.DAY_MODE);
                     boolean isLight = (mActivity.mThemeManager != null
                             && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
-                    ivFavoriteIndicator.setColorFilter(isLight ? Color.BLACK : Color.WHITE, PorterDuff.Mode.SRC_IN);
+                    ivFavoriteIndicator.setColorFilter((isLight || isDay) ? Color.BLACK : Color.WHITE, PorterDuff.Mode.SRC_IN);
                 }
             } else {
                 // INVISIBLE: hueco fijo junto a la nube (layout 2); no usar GONE para no colapsar.
@@ -195,9 +201,11 @@ public class StandardLayoutManager {
         int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
         boolean isNight = (mActivity.mThemeManager != null
                 && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+        boolean isDay = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.DAY_MODE);
         boolean isLight = (mActivity.mThemeManager != null
                 && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
-        int normal = isLight ? Color.BLACK : Color.WHITE;
+        int normal = (isLight || isDay) ? Color.BLACK : Color.WHITE;
         tv.setTextColor(isNight ? nightBlue : normal);
     }
 

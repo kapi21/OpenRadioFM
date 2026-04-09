@@ -26,6 +26,14 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ### Changed
 - **App versioning**: `versionCode 30`, `versionName 5.1.0`; `app_name_internal` **v5.1.0**.
 
+### Fixed / Improved
+- **Skins**: added **Day Mode** (bone/off-white background + black tinting) and improved **Night Mode** tint consistency (Layout 2/3).
+- **Backgrounds (Layout 2/3)**: reduced `background.jpg/png` flicker/flash and forced immediate background refresh when entering/leaving Day Mode.
+- **Logos**: hardened load/clear paths to avoid “carry-over” when zapping frequencies/presets (notably on QS6 and Layout 3).
+- **QS6 (NWD)**: **PowerOff** now performs a more robust stop/mute sequence to prevent OEM radio audio resuming in background.
+- **Steering wheel (QS6)**: “silent bridge” keeps media routing to OpenRadioFM in background without forcing audio playback.
+- **UI**: updated toast + web editor shortcut icons; improved per-skin tinting across layouts.
+
 ---
 
 ## [5.0.16] - 2026-04-03 — “Setup & Stability Hotfix”

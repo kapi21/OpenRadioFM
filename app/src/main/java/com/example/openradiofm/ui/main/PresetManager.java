@@ -16,6 +16,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.repository.RadioRepository;
 import com.example.openradiofm.data.model.RadioStation;
+import com.example.openradiofm.util.AppIoExecutor;
 
 /**
  * V13: Gestor de Presets para reducir carga en MainActivity.
@@ -150,8 +151,10 @@ public class PresetManager {
                 // Mantenemos el texto actual (normalmente el último válido del slot).
             } else {
             // V18.2: Mover la obtención de info a hilo secundario para evitar congelar la UI
-            new Thread(() -> {
+            final int bgGen = mActivity.getUiWorkGeneration();
+            AppIoExecutor.execute(() -> {
                 if (mActivity == null || mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                if (mActivity.getUiWorkGeneration() != bgGen) return;
                 RadioStation s = null;
                 if (mActivity.mEngine == null || !mActivity.mEngine.isScanning()) {
                     s = mRepository.getStationInfo(fFreq, null);
@@ -160,6 +163,7 @@ public class PresetManager {
                 
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                    if (mActivity.getUiWorkGeneration() != bgGen) return;
                     if (mTextRequestSeqPerSlot[fIndex] != textRequestSeq) return;
                     if (mPresets[fIndex] != fFreqForSlot) return;
                     if (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+")) {
@@ -177,7 +181,7 @@ public class PresetManager {
                     }
                     tvPresets[fIndex].setVisibility(View.VISIBLE);
                 });
-            }).start();
+            });
             }
         }
 
@@ -188,14 +192,17 @@ public class PresetManager {
         if (lockActive && ivPresets[fIndex] != null) {
             // QS6: durante el lock anti-arrastre, intentar resolver logo local/cache al instante
             // para evitar que el box quede vacío 1-2s.
-            new Thread(() -> {
+            final int bgGenLogo = mActivity.getUiWorkGeneration();
+            AppIoExecutor.execute(() -> {
                 if (mActivity == null || mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                if (mActivity.getUiWorkGeneration() != bgGenLogo) return;
                 RadioStation s = mRepository.getStationInfo(fFreqForLogo, null);
                 final String immediateLogo = (s != null) ? s.getLogoUrl() : null;
                 if (immediateLogo == null || immediateLogo.isEmpty()) return;
 
                 mActivity.runOnUiThread(() -> {
                     if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                    if (mActivity.getUiWorkGeneration() != bgGenLogo) return;
                     if (mLogoRequestSeqPerSlot[fIndex] != requestSeq) return;
                     if (mPresets[fIndex] != fFreqForLogo) return;
                     if (ivPresets[fIndex] == null) return;
@@ -222,7 +229,7 @@ public class PresetManager {
                             })
                             .into(ivPresets[fIndex]);
                 });
-            }).start();
+            });
         }
         if (!lockActive && (mActivity.mEngine == null || !mActivity.mEngine.isScanning())) {
             mRepository.getStationInfo(freq, logoUrl -> {

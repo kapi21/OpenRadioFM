@@ -16,6 +16,7 @@ import android.widget.TextView;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.model.RadioStation;
 import com.example.openradiofm.data.repository.RadioRepository;
+import com.example.openradiofm.util.AppIoExecutor;
 
 import java.io.BufferedReader;
 import java.io.BufferedInputStream;
@@ -160,9 +161,12 @@ public class HistoryManager {
     }
 
     public void saveFullBackupToZip() {
-        new Thread(() -> {
+        final int bgGen = mActivity.getUiWorkGeneration();
+        AppIoExecutor.execute(() -> {
             android.app.Dialog progress = null;
             try {
+                if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                if (mActivity.getUiWorkGeneration() != bgGen) return;
                 File dir = getPreferredRadioLogosDir();
                 if (!dir.exists()) dir.mkdirs();
                 String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
@@ -197,18 +201,20 @@ public class HistoryManager {
 
                 android.app.Dialog doneProgress = progress;
                 mActivity.runOnUiThread(() -> {
+                    if (mActivity.getUiWorkGeneration() != bgGen) return;
                     try { doneProgress.dismiss(); } catch (Exception ignored) {}
                     mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_saved), out.getName()));
                 });
             } catch (Exception e) {
                 android.app.Dialog errProgress = progress;
                 mActivity.runOnUiThread(() -> {
+                    if (mActivity.getUiWorkGeneration() != bgGen) return;
                     try { if (errProgress != null) errProgress.dismiss(); } catch (Exception ignored) {}
                     mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
                 });
                 Log.e(TAG, "saveFullBackupToZip", e);
             }
-        }).start();
+        });
     }
 
     public void loadFullBackupFromZip() {
@@ -245,12 +251,16 @@ public class HistoryManager {
                         mActivity.runOnUiThread(() -> {
                             try { progress.show(); } catch (Exception ignored) {}
                         });
-                        new Thread(() -> {
+                        final int bgGenImport = mActivity.getUiWorkGeneration();
+                        AppIoExecutor.execute(() -> {
                             boolean layoutChanged = false;
                             try {
+                                if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                                if (mActivity.getUiWorkGeneration() != bgGenImport) return;
                                 layoutChanged = applyFullBackupFromZip(finalFiles[which], getPreferredRadioLogosDir(), progress, cancelled);
                                 final boolean finalLayoutChanged = layoutChanged;
                                 mActivity.runOnUiThread(() -> {
+                                    if (mActivity.getUiWorkGeneration() != bgGenImport) return;
                                     try { progress.dismiss(); } catch (Exception ignored) {}
                                     mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_loaded), finalFiles[which].getName()));
                                     promptRestartAfterImport(finalLayoutChanged);
@@ -261,7 +271,7 @@ public class HistoryManager {
                                     mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
                                 });
                             }
-                        }).start();
+                        });
                     } catch (Exception e) {
                         mActivity.showStyledToast(String.format(mActivity.getString(R.string.backup_error), e.getMessage()));
                     }

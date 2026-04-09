@@ -63,6 +63,7 @@ public class QS6EngineeringDialog extends Dialog {
     private final SimpleDateFormat timeFormat = new SimpleDateFormat("HH:mm:ss", Locale.US);
 
     private int mLastFreq = -1;
+    private SwitchCompat swDevDayModeEnabled;
 
     public QS6EngineeringDialog(MainActivity activity) {
         super(activity);
@@ -187,6 +188,27 @@ public class QS6EngineeringDialog extends Dialog {
                 (SeekBar) findViewById(R.id.sbDevAutoScanThreshold),
                 findViewById(R.id.tvDevAutoScanThresholdValue),
                 mActivity);
+
+        // Kill-switch para Modo Día (UI)
+        swDevDayModeEnabled = findViewById(R.id.swDevDayModeEnabled);
+        if (swDevDayModeEnabled != null) {
+            android.content.SharedPreferences prefs =
+                    mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
+            boolean on = true;
+            try { on = prefs.getBoolean("pref_dev_day_mode_enabled", true); } catch (Exception ignored) {}
+            swDevDayModeEnabled.setChecked(on);
+            swDevDayModeEnabled.setOnCheckedChangeListener((btn, checked) -> {
+                try { prefs.edit().putBoolean("pref_dev_day_mode_enabled", checked).apply(); } catch (Exception ignored) {}
+                logEvent("DEV", "pref_dev_day_mode_enabled=" + checked);
+                try {
+                    if (!checked && mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+                        mActivity.mThemeManager.setSkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC);
+                        mActivity.applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC);
+                    }
+                } catch (Exception ignored2) {}
+            });
+        }
     }
 
     private void setupTunerButton(int resId, Runnable action) {

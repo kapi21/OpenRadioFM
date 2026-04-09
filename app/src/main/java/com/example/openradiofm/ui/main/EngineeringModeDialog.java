@@ -49,6 +49,7 @@ public class EngineeringModeDialog extends Dialog {
     // Dev toggle (MTK8259)
     private SwitchCompat swMtk8259V5StreamMixerCompat;
     private SwitchCompat swDevAutoScanEnabled;
+    private SwitchCompat swDevDayModeEnabled;
     private android.content.SharedPreferences mPrefs;
     
     private int mLastFreq = -1;
@@ -115,6 +116,7 @@ public class EngineeringModeDialog extends Dialog {
         swMt8163GlobalStreamMute = findViewById(R.id.swMt8163GlobalStreamMute);
         swMtk8259V5StreamMixerCompat = findViewById(R.id.swMtk8259V5StreamMixerCompat);
         swDevAutoScanEnabled = findViewById(R.id.swDevAutoScanEnabled);
+        swDevDayModeEnabled = findViewById(R.id.swDevDayModeEnabled);
     }
 
     private void setupControls() {
@@ -172,6 +174,24 @@ public class EngineeringModeDialog extends Dialog {
                 (android.widget.SeekBar) findViewById(R.id.sbDevAutoScanThreshold),
                 findViewById(R.id.tvDevAutoScanThresholdValue),
                 mActivity);
+
+        // Kill-switch para Modo Día (si queda mal en algún dispositivo)
+        if (swDevDayModeEnabled != null) {
+            boolean on = true;
+            try { on = mPrefs.getBoolean("pref_dev_day_mode_enabled", true); } catch (Exception ignored) {}
+            swDevDayModeEnabled.setChecked(on);
+            swDevDayModeEnabled.setOnCheckedChangeListener((btn, checked) -> {
+                try { mPrefs.edit().putBoolean("pref_dev_day_mode_enabled", checked).apply(); } catch (Exception ignored) {}
+                logEvent("DEV", "pref_dev_day_mode_enabled=" + checked);
+                try {
+                    if (!checked && mActivity.mThemeManager != null
+                            && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+                        mActivity.mThemeManager.setSkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC);
+                        mActivity.applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC);
+                    }
+                } catch (Exception ignored2) {}
+            });
+        }
     }
 
     private void startUpdateLoop() {

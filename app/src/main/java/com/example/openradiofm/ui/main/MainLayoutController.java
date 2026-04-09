@@ -117,15 +117,18 @@ public class MainLayoutController extends BaseLayoutController {
     @Override
     public void applySkin(boolean isNight) {
         int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
+        boolean isDay = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.DAY_MODE);
         boolean isLight = (mActivity.mThemeManager != null
                 && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
-        int normalColor = isLight ? Color.BLACK : Color.WHITE;
+        int normalColor = (isLight || isDay) ? Color.BLACK : Color.WHITE;
         int color = isNight ? nightBlue : normalColor;
 
         MainActivity.setTextColorIfChanged(tvFrequency, color);
         MainActivity.setTextColorIfChanged(tvRdsName, color);
         MainActivity.setTextColorIfChanged(tvRdsInfo, color);
         MainActivity.setTextColorIfChanged(tvPty, color);
+        MainActivity.setTextColorIfChanged(ivStereoIcon, color);
         
         if (ivUnitLabel != null) {
             MainActivity.setTextColorIfChanged(ivUnitLabel, color);
@@ -147,9 +150,11 @@ public class MainLayoutController extends BaseLayoutController {
             if (isNight) {
                 ivFavoriteIndicator.setColorFilter(mActivity.getResources().getColor(R.color.night_blue_primary, null), PorterDuff.Mode.SRC_IN);
             } else {
+                boolean isDay = (mActivity.mThemeManager != null
+                        && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.DAY_MODE);
                 boolean isLight = (mActivity.mThemeManager != null
                         && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR);
-                ivFavoriteIndicator.setColorFilter(isLight ? Color.BLACK : Color.WHITE, PorterDuff.Mode.SRC_IN);
+                ivFavoriteIndicator.setColorFilter((isLight || isDay) ? Color.BLACK : Color.WHITE, PorterDuff.Mode.SRC_IN);
             }
         } else {
             ivFavoriteIndicator.setVisibility(View.INVISIBLE);
@@ -179,9 +184,11 @@ public class MainLayoutController extends BaseLayoutController {
         int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
         boolean isNight = (mActivity.mThemeManager != null
                 && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+        boolean isDay = (mActivity.mThemeManager != null
+                && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE);
         boolean isLight = (mActivity.mThemeManager != null
                 && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
-        int normal = isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE;
+        int normal = (isLight || isDay) ? android.graphics.Color.BLACK : android.graphics.Color.WHITE;
         tv.setTextColor(isNight ? nightBlue : normal);
     }
 

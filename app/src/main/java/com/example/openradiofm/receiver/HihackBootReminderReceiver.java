@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.example.openradiofm.util.HiHackBootReminder;
+import com.example.openradiofm.util.AppIoExecutor;
 
 /**
  * Tras reinicio, muchas ROM apagan HiHack; no se puede volver a encender sin el usuario.
@@ -19,14 +20,15 @@ public class HihackBootReminderReceiver extends BroadcastReceiver {
         }
         final Context app = context.getApplicationContext();
         final PendingResult pendingResult = goAsync();
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             try {
                 Thread.sleep(18_000L);
                 HiHackBootReminder.markPendingIfHihackStillOff(app);
-            } catch (InterruptedException ignored) {
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
             } finally {
                 pendingResult.finish();
             }
-        }, "OpenRadioFM-HiHackBoot").start();
+        });
     }
 }

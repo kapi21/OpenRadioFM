@@ -21,17 +21,15 @@
                 android:textSize="18sp"
                 android:textStyle="bold"
                 android:fontFamily="sans-serif-medium" />
-            <TextView
+            <ImageButton
                 android:id="@+id/btnOpenFavEditor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:minWidth="48dp"
-                android:minHeight="48dp"
-                android:gravity="center"
-                android:text="✏️"
-                android:textSize="22sp"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_fav_editor"
+                android:scaleType="fitCenter"
+                android:padding="0dp"
                 android:contentDescription="@string/save_load_open_editor"
-                android:background="?android:attr/selectableItemBackground"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:focusable="true"
                 android:clickable="true" />
         </LinearLayout>

@@ -10,6 +10,7 @@ import android.widget.Toast;
 
 import com.example.openradiofm.R;
 import com.example.openradiofm.service.RadioMediaService;
+import com.example.openradiofm.util.AppIoExecutor;
 
 import androidx.media3.common.AudioAttributes;
 import androidx.media3.common.C;
@@ -82,7 +83,11 @@ public class OnlineStreamManager {
             Log.d(TAG, "Detectada playlist (" + url + "), resolviendo URL real...");
             mIsLoading = true;
             updateUI();
-            new Thread(() -> {
+            AppIoExecutor.execute(() -> {
+                if (mContext instanceof android.app.Activity) {
+                    android.app.Activity a = (android.app.Activity) mContext;
+                    if (a.isFinishing() || a.isDestroyed()) return;
+                }
                 String resolved = resolvePlaylistUrl(url);
                 if (resolved != null && !resolved.isEmpty()) {
                     Log.d(TAG, "Playlist resuelta: " + resolved);
@@ -96,7 +101,7 @@ public class OnlineStreamManager {
                         if (mListener != null) mListener.onStreamError("No se pudo leer la playlist M3U");
                     });
                 }
-            }).start();
+            });
             return;
         }
 

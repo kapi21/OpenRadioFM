@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.example.openradiofm.data.source.network.SupabaseApi;
 import com.example.openradiofm.data.source.network.SupabaseClient;
+import com.example.openradiofm.util.AppIoExecutor;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -30,27 +31,27 @@ public class SupabaseSyncManager {
      * @param filePath Ruta absoluta al archivo .m3u8
      */
     public void syncFromM3u(String filePath) {
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             try (BufferedReader reader = new BufferedReader(new FileReader(filePath))) {
                 processReader(reader);
             } catch (Exception e) {
                 Log.e(TAG, "Error leyendo archivo M3U", e);
             }
-        }).start();
+        });
     }
 
     /**
      * Procesa un archivo M3U8 desde el directorio raíz del proyecto (para depuración).
      */
     public void syncFromProjectRoot() {
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             String path = "/sdcard/OpenRadioFM/radio.m3u8"; // Ajustar según donde el usuario ponga el archivo
             try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
                 processReader(reader);
             } catch (Exception e) {
                 Log.e(TAG, "Error en sync directo", e);
             }
-        }).start();
+        });
     }
 
     private void processReader(BufferedReader reader) throws Exception {

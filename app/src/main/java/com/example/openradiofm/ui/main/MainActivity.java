@@ -257,6 +257,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     // V16: Managers de Modo Nocturno e Historial
     public NightModeManager mNightModeManager;
+    public DayModeManager mDayModeManager;
+    private com.example.openradiofm.ui.theme.ThemeManager.Skin mLastSkinAppliedForBackground = null;
     public HistoryManager mHistoryManager;
     public MediaSessionManager mMediaSessionManager;
     public ThemeManager mThemeManager; // V16.2: Skin manager
@@ -292,6 +294,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     private int mLastBand = BAND_FM1;
     private int mStartupRetuneAttempts = 0;
     private long mShutdownPersistGuardUntilMs = 0L;
+    /** True solo durante el flujo de PowerOff (evita bridge de volante en onStop). */
+    private volatile boolean mPowerOffRequested = false;
     private int mUserRequestedFreqKhz = -1;
     private long mUserRequestedFreqUntilMs = 0L;
     private static final String PREF_QS6_BOOTSTRAP_SANITIZED = "pref_qs6_bootstrap_sanitized";
@@ -314,6 +318,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * frecuencia o banda (evita que un Glide/getStationInfo tardío pinte logo de otra emisora).
      */
     public final java.util.concurrent.atomic.AtomicInteger mLogoUiGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
+    /**
+     * Se incrementa en {@link #onDestroy()} cuando la activity termina ({@code isFinishing()}), para que
+     * tareas en {@link com.example.openradiofm.util.AppIoExecutor} ligadas a esta instancia aborten cooperativamente.
+     */
+    private final java.util.concurrent.atomic.AtomicInteger mUiWorkGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
+
+    public int getUiWorkGeneration() {
+        return mUiWorkGeneration.get();
+    }
+
     private com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
     private com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
 
@@ -648,6 +662,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } else {
                 updateFrequencyDisplay(freqKhz, null);
             }
+            // DAY_MODE: reaplicar tintes tras cambios de frecuencia.
+            try {
+                if (mThemeManager != null
+                        && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE
+                        && mDayModeManager != null) {
+                    mDayModeManager.applyDayModeColors(mLastFreq);
+                }
+            } catch (Exception ignored) {}
         });
     }
 
@@ -686,6 +708,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 mNightModeManager.applyNightModeColors(mLastFreq);
             }
             updateDataActivityUI();
+
+            // DAY_MODE: reaplicar tintes tras repintados de banda/presets.
+            try {
+                if (mThemeManager != null
+                        && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE
+                        && mDayModeManager != null) {
+                    mDayModeManager.applyDayModeColors(mLastFreq);
+                }
+            } catch (Exception ignored) {}
             
             // V5.2: Actualizar Widget al cambiar de banda
             if (mEngine != null) {
@@ -819,7 +850,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             setVisibilityIfChanged(ivDataActivityIcon, View.VISIBLE);
             com.example.openradiofm.ui.theme.ThemeManager.Skin skin = mThemeManager != null
                     ? mThemeManager.getActiveSkin() : null;
-            if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+            if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+                // DAY_MODE: cloud negro con internet; grisáceo sin internet
+                int c = isConnected ? android.graphics.Color.BLACK : android.graphics.Color.parseColor("#FF555555");
+                setColorFilterIfChanged(ivDataActivityIcon, c, android.graphics.PorterDuff.Mode.SRC_IN);
+            } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
                 int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
                 setColorFilterIfChanged(ivDataActivityIcon, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
             } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
@@ -901,7 +936,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 if (freq <= 0) return;
 
                 // getStationInfo + resolución Supabase en hilo de fondo (URL a menudo aún no en caché).
-                new Thread(() -> {
+                final int bgGen = getUiWorkGeneration();
+                com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+                    if (isFinishing() || isDestroyed()) return;
+                    if (getUiWorkGeneration() != bgGen) return;
                     try {
                         com.example.openradiofm.data.model.RadioStation station =
                                 mRepository.getStationInfo(freq, null);
@@ -917,6 +955,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                         final String streamUrl = url;
                         runOnUiThread(() -> {
                             if (isFinishing() || isDestroyed()) return;
+                            if (getUiWorkGeneration() != bgGen) return;
                             if (streamUrl != null && !streamUrl.isEmpty()) {
                                 mOnlineStreamManager.startStream(streamUrl);
                                 showToast(getString(R.string.toast_stream_starting));
@@ -930,7 +969,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             if (!isFinishing()) { showToast(getString(R.string.toast_station_load_error)); }
                         });
                     }
-                }, "OpenRadioFM-streamMeta").start();
+                });
             });
 
             // V17.1: Pulsación larga para forzar recarga (borrar caché) de Supabase
@@ -946,13 +985,20 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     }
 
                     // Forzar recarga en segundo plano
-                    new Thread(() -> {
+                    final int bgGenCache = getUiWorkGeneration();
+                    com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+                        if (isFinishing() || isDestroyed()) return;
+                        if (getUiWorkGeneration() != bgGenCache) return;
                         mRepository.getStationInfo(freq, logoUrl -> {
                             // V18.6.4: Preservar nombre RDS actual al recargar
                             String name = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
-                            runOnUiThread(() -> updateFrequencyDisplay(freq, name));
+                            runOnUiThread(() -> {
+                                if (isFinishing() || isDestroyed()) return;
+                                if (getUiWorkGeneration() != bgGenCache) return;
+                                updateFrequencyDisplay(freq, name);
+                            });
                         });
-                    }).start();
+                    });
                 }
                 return true;
             });
@@ -1573,6 +1619,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             String currentName = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
             updateFrequencyDisplay(freq, currentName);
         });
+        mDayModeManager = new DayModeManager(this, mPrefs, freq -> {
+            String currentName = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
+            updateFrequencyDisplay(freq, currentName);
+        });
         mHistoryManager = new HistoryManager(this, mPrefs);
         mMediaSessionManager = new MediaSessionManager(this);
         mMediaSessionManager.connect();
@@ -1994,6 +2044,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
             int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
             setColorFilterIfChanged(iv, nightBlue, android.graphics.PorterDuff.Mode.SRC_IN);
+        } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+            setColorFilterIfChanged(iv, android.graphics.Color.BLACK, android.graphics.PorterDuff.Mode.SRC_IN);
         } else if (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
             setColorFilterIfChanged(iv, android.graphics.Color.BLACK, android.graphics.PorterDuff.Mode.SRC_IN);
         } else {
@@ -2352,11 +2404,15 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
         // K706 / QS6: al pasar a launcher las teclas suelen ir a la ventana enfocada o a la radio OEM;
         // reforzar FGS + PLAYING en RadioMediaService para enrutar MEDIA_BUTTON aquí.
-        if (!liveActive && (mMode == FmMode.FM_K706 || mMode == FmMode.FM_QS6)
-                && mPlaybackManager != null && !mPlaybackManager.isMuted()) {
+        if (!mPowerOffRequested
+                && !liveActive
+                && (mMode == FmMode.FM_K706 || mMode == FmMode.FM_QS6)
+                && mPlaybackManager != null) {
             try {
                 Intent media = new Intent(this, RadioMediaService.class);
-                media.setAction(RadioMediaService.ACTION_FORCE_PLAY);
+                // Bridge silencioso: capturar mandos en segundo plano incluso si estamos muteados,
+                // sin reactivar audio.
+                media.setAction(RadioMediaService.ACTION_FORCE_SESSION_ACTIVE);
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                     startForegroundService(media);
                 } else {
@@ -2417,7 +2473,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             // Long click: Modo Noche (toggle)
             ivMainLogo.setOnLongClickListener(v -> {
-                toggleNightMode();
+                cycleClassicNightDay();
                 return true;
             });
         }
@@ -2432,7 +2488,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             });
             // Long click: Modo Noche (toggle)
             tvDigitalClock.setOnLongClickListener(v -> {
-                toggleNightMode();
+                cycleClassicNightDay();
                 return true;
             });
         }
@@ -2447,11 +2503,41 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     showToast(getString(R.string.toast_skin_colon, next.displayName));
                 });
                 ivCarLogo.setOnLongClickListener(v -> {
-                    toggleNightMode();
+                    cycleClassicNightDay();
                     return true;
                 });
             }
         }
+    }
+
+    /**
+     * Cicla rápidamente entre CLASSIC -> NIGHT_MODE -> DAY_MODE -> CLASSIC.
+     * Respeta el kill-switch de desarrollo de Day Mode.
+     */
+    private void cycleClassicNightDay() {
+        if (mThemeManager == null) return;
+        try {
+            com.example.openradiofm.ui.theme.ThemeManager.Skin active = mThemeManager.getActiveSkin();
+            boolean dayEnabled = true;
+            try {
+                dayEnabled = (mPrefs == null) || mPrefs.getBoolean("pref_dev_day_mode_enabled", true);
+            } catch (Exception ignored) {}
+
+            com.example.openradiofm.ui.theme.ThemeManager.Skin next;
+            if (active == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                next = dayEnabled
+                        ? com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE
+                        : com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC;
+            } else if (active == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+                next = com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC;
+            } else {
+                next = com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE;
+            }
+
+            mThemeManager.setSkin(next);
+            applySkin(next);
+            showToast(getString(R.string.toast_skin_colon, next.displayName));
+        } catch (Exception ignored) {}
     }
 
     /**
@@ -2500,6 +2586,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     protected void onDestroy() {
+        if (isFinishing()) {
+            mUiWorkGeneration.incrementAndGet();
+        }
         sWheelMediaBridgeActive = false;
         // V21.0: Cancel all pending UI tasks immediately
         mMainHandler.removeCallbacksAndMessages(null);
@@ -2910,14 +2999,20 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         if (!stateChanged) {
             // Solo actualizamos visibilidades inmediatas (Mute/Stream) y salimos
-            final boolean fIsNight = (mThemeManager != null && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
+            final com.example.openradiofm.ui.theme.ThemeManager.Skin fSkin =
+                    (mThemeManager != null) ? mThemeManager.getActiveSkin() : null;
             runOnUiThread(() -> {
                if (ivStereoIcon != null) {
                    setVisibilityIfChanged(ivStereoIcon, isStereo ? View.VISIBLE : View.INVISIBLE);
-                   // V2.6: Proteger tinte noche al actualizar visibilidad
-                   if (fIsNight) {
+                   // Proteger tinte (noche/día/clear) al actualizar visibilidad
+                   if (fSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
                        int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
                        setTextColorIfChanged(ivStereoIcon, nightBlue);
+                   } else if (fSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE
+                           || fSkin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR) {
+                       setTextColorIfChanged(ivStereoIcon, android.graphics.Color.BLACK);
+                   } else {
+                       setTextColorIfChanged(ivStereoIcon, android.graphics.Color.WHITE);
                    }
                }
                // V22.x: MT8163/HCN a veces no emite callback 106; sincronizar drawable con isDxLocal().
@@ -3328,10 +3423,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * Conservamos el wrapper público para compatibilidad con DialogManager y NightModeManager.
      */
     public void applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
+        final com.example.openradiofm.ui.theme.ThemeManager.Skin prevSkinForBg = mLastSkinAppliedForBackground;
         if (mThemeManager != null) mThemeManager.applySkin(skin);
         
         boolean isNight = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
         boolean isClear = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
+        boolean isDay = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE);
 
         if (mUiController != null) {
             mUiController.applySkin(isNight);
@@ -3357,6 +3454,28 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             applyClearButtonIconTint(isClear);
         }
 
+        // DAY_MODE: IMPORTANT - no “resetear” fuera de DAY_MODE porque pisa los tintes del modo noche.
+        // Solo aplicar cuando DAY_MODE está activo, y solo resetear al SALIR de DAY_MODE.
+        try {
+            if (mDayModeManager != null) {
+                if (isDay) {
+                    mDayModeManager.applyDayModeColors(mLastFreq);
+                } else if (prevSkinForBg == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
+                    mDayModeManager.resetDayModeColors(mLastFreq);
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // DAY_MODE: forzar refresco del background al entrar/salir (sin depender del menú de personalización).
+        // Evita que se quede el background.jpg/dinámico “pegado” hasta el siguiente cambio de fondo manual.
+        try {
+            if (mLogoManager != null && (isDay
+                    || prevSkinForBg == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE)) {
+                mLogoManager.loadCustomBackground();
+            }
+        } catch (Exception ignored) {}
+        mLastSkinAppliedForBackground = skin;
+
         // Shared Clock Visibility Color
         if (tvDigitalClock != null) {
             if (isNight) {
@@ -3364,7 +3483,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             } else {
                 boolean isLight = (mThemeManager != null
                         && mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
-                tvDigitalClock.setTextColor(isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
+                if (isDay) {
+                    tvDigitalClock.setTextColor(android.graphics.Color.BLACK);
+                } else {
+                    tvDigitalClock.setTextColor(isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
+                }
             }
         }
     }
@@ -3741,7 +3864,24 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * no pisen la última emisora guardada.
      */
     public void prepareForPowerOff() {
+        // HiHack: marcar supresión ANTES de que la ROM muestre la OEM (si esperamos a onStop, a veces ya es tarde).
+        try {
+            com.example.openradiofm.services.FactoryRadioHijackerService.markPowerOffForHijack(this);
+        } catch (Exception ignored) {}
         mShutdownPersistGuardUntilMs = android.os.SystemClock.elapsedRealtime() + 9000L;
+        mPowerOffRequested = true;
+
+        // QS6/K706: al cerrar por PowerOff, NO queremos que onStop eleve RadioMediaService a "PLAYING"
+        // (eso puede re-abrir la ruta FM en segundo plano vía MediaSession/steering bridge).
+        try {
+            if (mPlaybackManager != null) {
+                mPlaybackManager.setMute(true);
+            }
+            if (mUiController != null) {
+                mUiController.updateMute(true);
+            }
+        } catch (Exception ignored) {}
+
         if (mPrefs != null && mLastFreq > 0) {
             mPrefs.edit()
                     .putInt("pref_last_freq", mLastFreq)

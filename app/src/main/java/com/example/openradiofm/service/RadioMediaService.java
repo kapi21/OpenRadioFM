@@ -57,6 +57,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
     /** Start command from UI to force PLAYING MediaSession state. */
     public static final String ACTION_FORCE_PLAY = "com.example.openradiofm.action.FORCE_PLAY";
+    /**
+     * QS6/K706: mantener MediaSession "activa" para mandos en segundo plano SIN reactivar audio.
+     * En algunos OEM, si la sesión no está en PLAYING/FGS, NEXT/PREV/SEEK se enrutan a la radio nativa.
+     */
+    public static final String ACTION_FORCE_SESSION_ACTIVE = "com.example.openradiofm.action.FORCE_SESSION_ACTIVE";
     /** Widget escritorio: memorias (no sigue el ajuste del volante seek vs preset). */
     public static final String ACTION_WIDGET_PREV_PRESET = "com.example.openradiofm.action.WIDGET_PREV_PRESET";
     public static final String ACTION_WIDGET_NEXT_PRESET = "com.example.openradiofm.action.WIDGET_NEXT_PRESET";
@@ -401,6 +406,10 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         if (intent != null && ACTION_FORCE_PLAY.equals(intent.getAction())) {
             handlePlay();
         }
+        // Bridge silencioso: solo activar sesión/FGS para capturar MEDIA_BUTTON; no tocar mute/audio route.
+        if (intent != null && ACTION_FORCE_SESSION_ACTIVE.equals(intent.getAction())) {
+            forceSessionActiveForSteering();
+        }
 
         if (intent != null && ACTION_MT8163_FM_HANDOFF.equals(intent.getAction())) {
             handleMt8163FmHandoff();
@@ -427,6 +436,22 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
 
         return START_NOT_STICKY;
+    }
+
+    /**
+     * Activa la sesión en modo "captura" (PLAYING) para que el OEM enrute MEDIA_BUTTON a esta app,
+     * pero sin desmutear ni forzar recuperación de audio.
+     */
+    private void forceSessionActiveForSteering() {
+        try {
+            // No cambiar mUserPaused: solo queremos routing de teclas.
+            mIsPlaying = true;
+            setPlaybackState(true);
+            ensureNotificationVisible();
+            startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+        } catch (Exception e) {
+            Log.w(TAG, "forceSessionActiveForSteering falló", e);
+        }
     }
 
     private void handleWidgetSeek(int direction) {

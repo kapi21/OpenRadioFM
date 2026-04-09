@@ -11,6 +11,8 @@ import android.util.Log;
 import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
 
+import com.example.openradiofm.util.AppIoExecutor;
+
 import android.os.Handler;
 import android.os.HandlerThread;
 
@@ -803,7 +805,7 @@ public class MT8163Engine implements RadioEngine {
         setMute(true);
         
         // V18.5: Ejecutar parámetros de audio en un hilo ligero para no congelar la UI si el hardware tarda
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             if (mAudioManager != null) {
                 try {
                     mAudioManager.setParameters("fm_radio_on=1;fm_mute=1");
@@ -818,7 +820,7 @@ public class MT8163Engine implements RadioEngine {
                 // setMute(false); 
                 // Ya no abandonamos el audio focus para no interferir con SourceService
             }, 300);
-        }).start();
+        });
     }
 
     @Override

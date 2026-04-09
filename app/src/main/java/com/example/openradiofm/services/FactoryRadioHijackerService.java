@@ -1,9 +1,11 @@
 package com.example.openradiofm.services;
 
 import android.accessibilityservice.AccessibilityService;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
@@ -38,7 +40,21 @@ public class FactoryRadioHijackerService extends AccessibilityService {
 
     /** Heartbeat para detectar “activo pero no funciona” en algunas ROM (Android 9 Junsun). */
     public static final String PREF_HIHACK_HEARTBEAT_MS = "pref_hihack_heartbeat_ms";
-    private static final long HEARTBEAT_INTERVAL_MS = 30_000L;
+    /**
+     * Tras cerrar OpenRadioFM ({@code isFinishing()}), la ROM a veces muestra un frame la radio OEM;
+     * sin esto el hijacker re-lanza la app en bucle. No aplica al pulsar HOME (solo al salir con back / matar tarea).
+     */
+    public static final String PREF_HIHACK_SUPPRESS_UNTIL_MS = "pref_hihack_suppress_until_ms";
+    /** Motivo del último cierre (para no “matar” el HiHack normal al salir al launcher). */
+    public static final String PREF_HIHACK_SUPPRESS_REASON = "pref_hihack_suppress_reason";
+    private static final String REASON_POWEROFF = "poweroff";
+    /**
+     * QS6: el “flash” a la OEM al cerrar suele ser de pocos segundos. Mantenerlo corto para que
+     * el botón RADIO vuelva a abrir OpenRadioFM casi inmediatamente tras PowerOff.
+     */
+    private static final long SUPPRESS_AFTER_POWEROFF_MS = 6_000L;
+    /** Menos frecuente = menos escrituras en flash (estabilidad en head units con eMMC lenta). */
+    private static final long HEARTBEAT_INTERVAL_MS = 90_000L;
     private final android.os.Handler mHbHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private final java.lang.Runnable mHeartbeat = new java.lang.Runnable() {
         @Override public void run() {
@@ -71,16 +87,67 @@ public class FactoryRadioHijackerService extends AccessibilityService {
                 TARGET_PACKAGE_MTK_MTK.equals(packageName) ||
                 TARGET_PACKAGE_FYT.equals(packageName)) {
                 long currentTime = System.currentTimeMillis();
-                
+
                 // Evitamos rebotes o múltiples llamadas rápidas
-                if (currentTime - lastLaunchTime > COOLDOWN_MS) {
-                    Log.i(TAG, "¡Radio de fábrica detectada! Interceptando e iniciando OpenRadioFM...");
-                    lastLaunchTime = currentTime;
-                    
-                    launchOpenRadioFM();
+                if (currentTime - lastLaunchTime <= COOLDOWN_MS) {
+                    return;
                 }
+                if (shouldSuppressHijack()) {
+                    return;
+                }
+                lastLaunchTime = currentTime;
+                Log.i(TAG, "¡Radio de fábrica detectada! Interceptando e iniciando OpenRadioFM...");
+                launchOpenRadioFM();
             }
         }
+    }
+
+    /**
+     * Evita bucle al apagar/cerrar: pantalla ya en sleep, o el usuario acaba de cerrar OpenRadioFM
+     * y la OEM parpadea un instante.
+     */
+    private boolean shouldSuppressHijack() {
+        try {
+            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+            if (pm != null && !pm.isInteractive()) {
+                Log.d(TAG, "Hijack omitido: pantalla no interactiva (sleep/apagado)");
+                return true;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "shouldSuppressHijack: PowerManager", e);
+        }
+        try {
+            SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
+            long until = p.getLong(PREF_HIHACK_SUPPRESS_UNTIL_MS, 0L);
+            if (until > 0L) {
+                long now = System.currentTimeMillis();
+                if (now < until) {
+                    String reason = p.getString(PREF_HIHACK_SUPPRESS_REASON, "");
+                    // Suprimir solo si el motivo fue PowerOff (cierre “total”).
+                    if (REASON_POWEROFF.equals(reason)) {
+                        Log.d(TAG, "Hijack omitido: ventana post-poweroff (evita bucle con OEM)");
+                        return true;
+                    }
+                } else {
+                    // Ventana expirada: limpiar claves para no dejar supresión latente.
+                    p.edit()
+                            .remove(PREF_HIHACK_SUPPRESS_UNTIL_MS)
+                            .remove(PREF_HIHACK_SUPPRESS_REASON)
+                            .apply();
+                }
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    /** Llamar al pulsar el botón PowerOff (cierre total). */
+    public static void markPowerOffForHijack(Context context) {
+        try {
+            context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+                    .putString(PREF_HIHACK_SUPPRESS_REASON, REASON_POWEROFF)
+                    .putLong(PREF_HIHACK_SUPPRESS_UNTIL_MS, System.currentTimeMillis() + SUPPRESS_AFTER_POWEROFF_MS)
+                    .apply();
+        } catch (Exception ignored) {}
     }
 
     private void launchOpenRadioFM() {

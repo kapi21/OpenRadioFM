@@ -19,6 +19,14 @@
 ### Changed
 - **Versionado app**: `versionCode 30`, `versionName 5.1.0`; `app_name_internal` **v5.1.0**.
 
+### Fixed / Improved
+- **Skins**: nuevo **Modo Día** (fondo tono hueso + tintes negros) y refinamiento de **Modo Noche** (consistencia de tintes en Layout 2/3).
+- **Fondos (Layout 2/3)**: mitigado flicker/flash del `background.jpg/png` y aplicado refresco inmediato del fondo al entrar/salir de Modo Día.
+- **Logos**: endurecimiento de carga/limpieza para evitar “arrastre” visual al cambiar de frecuencia/presets (especialmente en QS6 y Layout 3).
+- **QS6 (NWD)**: al pulsar **PowerOff** se fuerza parada/silencio más robustos de la radio OEM en segundo plano.
+- **Mandos volante (QS6)**: puente “silencioso” para que NEXT/PREV/SEEK enruten a OpenRadioFM en segundo plano sin forzar audio.
+- **UI**: actualización de iconos (toast + acceso editor web) y ajustes de tintes por skin en layouts.
+
 ---
 
 ## [5.0.16] - 2026-04-03 — “Setup & Stability Hotfix”

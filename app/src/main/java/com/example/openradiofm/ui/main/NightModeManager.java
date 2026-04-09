@@ -106,6 +106,7 @@ public class NightModeManager {
         TextView tvRdsName = mActivity.findViewById(R.id.tvRdsName);
         TextView tvRdsInfo = mActivity.findViewById(R.id.tvRdsInfo);
         TextView tvPty = mActivity.findViewById(R.id.tvPty);
+        TextView ivUnitLabel = mActivity.findViewById(R.id.ivUnitLabel);
 
         // Refreshar frecuencia (respeta colores de favoritos en Night Mode)
         if (lastFreq != -1 && mListener != null) {
@@ -115,6 +116,7 @@ public class NightModeManager {
         if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
         if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
         if (tvPty != null) tvPty.setTextColor(nightBlue);
+        if (ivUnitLabel != null) ivUnitLabel.setTextColor(nightBlue);
 
         // V18.6: Reloj Digital en azul noche
         TextView tvClock = mActivity.findViewById(R.id.tvDigitalClock);
@@ -131,6 +133,8 @@ public class NightModeManager {
         tintImageView(R.id.ivAfIcon, nightBlue);
         tintImageView(R.id.ivTaIcon, nightBlue);
         tintImageView(R.id.ivTpIcon, nightBlue);
+        tintImageView(R.id.ivSignalLevel, nightBlue);
+        tintImageView(R.id.ivFavoriteIndicator, nightBlue);
         
         // Cloud (ivDataActivityIcon): no teñir aquí — rojo/amarillo/azul en idle lo aplica
         // MainActivity.updateDataActivityUI() tras applyNightModeColors (evita pisar streaming).

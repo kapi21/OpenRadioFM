@@ -354,6 +354,7 @@
     <string name="toast_steering_mode">Mandos volante NEXT/PREV: %1$s</string>
     <string name="toast_skin_colon">Skin: %1$s</string>
     <string name="toast_skin_night_mode">Skin: modo noche</string>
+    <string name="day_mode_locked">No se puede cambiar el skin o el fondo mientras esté activo el Modo Día.</string>
     <string name="toast_history_deleted_full">El historial ha sido borrado</string>
     <string name="toast_easter_egg">¡Easter egg activado!</string>
 

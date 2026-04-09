@@ -145,6 +145,17 @@
                 app:thumbTint="#00FF00"
                 app:trackTint="#3300FF00" />
 
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swDevDayModeEnabled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="UI: permitir Modo Día (kill-switch)"
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                app:thumbTint="#00FF00"
+                app:trackTint="#3300FF00" />
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -17,6 +17,7 @@ import android.util.Log;
 
 import java.util.regex.Pattern;
 
+import com.example.openradiofm.util.AppIoExecutor;
 import com.example.openradiofm.utils.MetadataUtils;
 import com.nwd.radio.service.RadioCallback;
 import com.nwd.radio.service.RadioFeature;
@@ -991,7 +992,7 @@ public class QS6Engine implements RadioEngine {
 
             // V17.6: El registro de callbacks y configuración de fondo se hace en un hilo separado
             // para evitar congelar la UI si el servicio remoto está bloqueado inicializando.
-            Thread aidlInit = new Thread(() -> {
+            AppIoExecutor.execute(() -> {
                 Log.d(TAG, "QS6 (Background): Registrando callbacks y modo de fondo...");
                 performAidlCall("registCallback", () -> mNwdService.registCallback(mNwdCallback));
                 performAidlCall("setRadioBackServiceOn", () -> mNwdService.setRadioBackServiceOn(true));
@@ -1023,8 +1024,7 @@ public class QS6Engine implements RadioEngine {
                     performAidlCall("setRadioBackServiceOn(retry)", () -> mNwdService.setRadioBackServiceOn(true));
                     Log.d(TAG, "QS6: Handshake post-AIDL (solo setRadioBackServiceOn, 350ms)");
                 }, 350);
-            }, "QS6-AidlInit");
-            aidlInit.start();
+            });
         }
 
         @Override
@@ -1348,12 +1348,12 @@ public class QS6Engine implements RadioEngine {
 
         // 3. Despertar hardware (sin ACTION_CHANGE_SOURCE aquí: onResume + recovery ya lo hacen;
         // un tercer disparo en init desincronizaba el SourceMgr en QS6).
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             try {
                 requestWakeUp();
                 Thread.sleep(500);
             } catch (Exception e) {}
-        }).start();
+        });
 
         return true;
     }
@@ -1420,25 +1420,40 @@ public class QS6Engine implements RadioEngine {
             // 4. Cambiar fuente a ANDROID (0) - Indica al MCU que deje de rutear el chip de radio
             // V18.4: Cambiado ACTION_CHANGE_SOURCE por ACTION_REQUEST_CHANGE_SOURCE según logs nativos
             requestStopAudio();
+            // 4.1 Señal explícita de salida del camino ARM FM (comando OEM con typo "RAIDO").
+            // Esto replica mejor el "cierre" de la radio nativa que solo mute/source, y evita que el stack
+            // vuelva a reclamar audio al quedar com.nwd.radio en segundo plano.
+            notifyNwdThirdPartyRadioAppInOut(false);
             
             // 5. Notificar salida de aplicación con reset de estado
+            // IMPORTANTE: debe ser implícito (sin setPackage) para que lo procese SourceMgr (com.nwd.setting.service).
             Intent inOutIntent = new Intent("com.nwd.action.ACTION_APP_IN_OUT");
-            inOutIntent.setPackage("com.nwd.radio.service");
+            inOutIntent.putExtra("extra_app_id", NWD_APPLICATION_ID_RADIO);
+            inOutIntent.putExtra("extra_app_operation", 0);
+            inOutIntent.putExtra("extra_app_event", 0);
             inOutIntent.putExtra("extra_app_in_out", 0);
-            inOutIntent.putExtra("extra_app_reset", 1); 
-            mContext.sendBroadcast(inOutIntent);
+            inOutIntent.putExtra("extra_app_reset", 1);
+            sendSourceSystemBroadcast(inOutIntent);
 
             // 5.1 Opcional: Multitask Button State (visto en logs nativos)
             Intent multiTaskIntent = new Intent("com.nwd.action.ACTION_MUTILTASK_BUTTON_STATE_CHANGE");
-            multiTaskIntent.setPackage("com.nwd.radio.service");
-            mContext.sendBroadcast(multiTaskIntent);
+            sendSourceSystemBroadcast(multiTaskIntent);
 
             // 5.2 Opcional: Quitar icono de barra de estado
             Intent iconIntent = new Intent("com.nwd.android.ACTION_SET_STATUSBAR_ICON");
-            iconIntent.setPackage("com.nwd.radio.service");
             iconIntent.putExtra("type", 0);
             iconIntent.putExtra("state", false);
-            mContext.sendBroadcast(iconIntent);
+            sendSourceSystemBroadcast(iconIntent);
+
+            // 5.3 Redundancia: algunos firmwares solo obedecen al segundo "exit" (race con el MCU).
+            try {
+                mMainHandler.postDelayed(() -> {
+                    try {
+                        requestStopAudio();
+                        notifyNwdThirdPartyRadioAppInOut(false);
+                    } catch (Exception ignored) {}
+                }, 350L);
+            } catch (Exception ignored) {}
 
             // 6. Retardo de seguridad EXTENDIDO (1000ms)
             // El MCU de Qualcomm NWD es asíncrono y lento procesando la matriz de audio.
@@ -1811,7 +1826,7 @@ public class QS6Engine implements RadioEngine {
     public void enforceAudioRecovery() {
         Log.d(TAG, "QS6: Forzando recuperación de audio (Recovery V20.0 - Robustness Focus)");
         // V20.0: Incrementar retardos para dar margen al Kernel de Qualcomm (asíncrono)
-        new Thread(() -> {
+        AppIoExecutor.execute(() -> {
             try {
                 requestWakeUp();
                 Thread.sleep(800); // Antes 300ms
@@ -1827,7 +1842,7 @@ public class QS6Engine implements RadioEngine {
             } catch (Exception e) {
                 Log.e(TAG, "Error en secuencia de recuperación de audio QS6", e);
             }
-        }).start();
+        });
     }
 
     @Override
