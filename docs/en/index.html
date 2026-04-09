@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OpenRadioFM | Automotive Open Source</title>
     <meta name="description"
-        content="OpenRadioFM v5.0.16: setup & stability hotfix (MT8163 streaming, widget, backups, HiHack, logo fixes).">
+        content="OpenRadioFM v5.1.0: Backup Studio + Web Tools — expanded backups, browser/PWA editor, day mode, logo and stability improvements.">
     <link rel="stylesheet" href="../css/style.css">
 </head>
 
@@ -21,13 +21,13 @@
         <nav>
             <div class="logo-container">
                 <div class="logo-text orbitron-text">
-                    <span class="logo-title-line">OPENRADIOFM <span>v5.0.16</span></span>
-                    <span class="logo-tagline">(SETUP &amp; STABILITY HOTFIX)</span>
+                    <span class="logo-title-line">OPENRADIOFM <span>v5.1.0</span></span>
+                    <span class="logo-tagline">(BACKUP STUDIO + WEB TOOLS)</span>
                 </div>
             </div>
             <div class="nav-links">
                 <a href="https://github.com/kapi21/OpenRadioFM" class="nav-link bebas-text">GitHub Repo</a>
-                <a href="../editor/" class="nav-link bebas-text">.fav editor</a>
+                <a href="../editor/" class="nav-link bebas-text">Backup Studio (web)</a>
                 <a href="#hardware" class="nav-link bebas-text">Hardware Specs</a>
                 <a href="#support" class="btn btn-primary bebas-text">Support Project</a>
             </div>
@@ -43,6 +43,7 @@
                 <p class="app-desc">
                     Customize your vehicle's instrumentation with low-level power. Extract firmware, audit RDS, and take
                     total control. Optimized for <strong>1024x600 screens and higher</strong>.
+                    <strong>5.1.0</strong> adds <strong>Backup Studio</strong> in the browser for favourites, options and full logo backups — installable as a PWA.
                 </p>
                 <div class="hero-actions">
                     <a href="https://github.com/kapi21/OpenRadioFM/releases/latest" class="btn btn-primary">Download
@@ -83,9 +84,15 @@
                         (.fav).</p>
                 </div>
                 <div class="ui-panel feature-card">
+                    <span class="feature-icon">💾</span>
+                    <h3 class="bebas-text">Backup Studio (5.1.0)</h3>
+                    <p>Back up favourites, options and full state with logos under <strong>RadioLogos</strong>. Edit in the browser; export <code>.fav</code> / <code>.ors</code> / <code>.orzip</code> and install as a PWA. Open from <strong>Save/Load</strong> or
+                        <a href="https://kapi21.github.io/OpenRadioFM/editor/" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">the online editor</a>.</p>
+                </div>
+                <div class="ui-panel feature-card">
                     <span class="feature-icon">🌌</span>
                     <h3 class="bebas-text">5 V.4 Themes</h3>
-                    <p>Choose from 5 premium typefaces: System, Bebas, Digital, Inter, and Orbitron. Night mode with
+                    <p>Choose from 5 premium typefaces: System, Bebas, Digital, Inter, and Orbitron. <strong>Day mode</strong> and night mode with
                         automatic blue tint.</p>
                 </div>
                 <div class="ui-panel feature-card">
@@ -120,20 +127,21 @@
             </div>
         </section>
 
-        <!-- Screenshots Gallery Section -->
+        <!-- Screenshots Gallery Section — OpenRadioFM 5.1.0 -->
         <section class="gallery">
-            <h2 class="orbitron-text section-title">v5.0 Screenshot Gallery</h2>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; margin-top: 2rem;">
-                <div class="ui-panel" style="padding: 1rem; text-align: center;">
-                    <img src="../img/screenshot_v49_1.png" alt="Layout V2 Night Mode" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
-                    <h3 class="bebas-text">Layout V2 - Night Blue Mode</h3>
-                    <p style="color: var(--text-muted);">Interface optimized for night driving with premium tones.</p>
-                </div>
-                <div class="ui-panel" style="padding: 1rem; text-align: center;">
-                    <img src="../img/screenshot_v49_2.png" alt="Layout V3 Premium" style="width: 100%; border-radius: 8px; margin-bottom: 1rem;">
-                    <h3 class="bebas-text">Layout V3 - Standard Premium</h3>
-                    <p style="color: var(--text-muted);">Maximum RDS visibility and high-resolution tuning.</p>
-                </div>
+            <h2 class="orbitron-text section-title">OpenRadioFM 5.1.0 screenshots</h2>
+            <p style="text-align: center; margin-bottom: 2rem; max-width: 820px; margin-left: auto; margin-right: auto; font-size: 1.05rem; color: var(--text-muted); line-height: 1.55;">
+                <strong>Backup Studio + Web Tools</strong>: back up favourites, app options and full packages with logos in <strong>RadioLogos</strong>; edit in the browser and install as a PWA. Direct link:
+                <a href="https://kapi21.github.io/OpenRadioFM/editor/" target="_blank" rel="noopener noreferrer" style="color: var(--primary);">kapi21.github.io/OpenRadioFM/editor/</a>
+                — shortcut from <strong>Save/Load favourites</strong> (top-right). New <strong>day mode</strong>, refined night mode, and logo/stability polish.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                <div class="ui-panel" style="padding: 0.75rem;"><img src="../img/v510_1.png" alt="OpenRadioFM 5.1.0 screenshot 1" style="width: 100%; border-radius: 8px; display: block;"></div>
+                <div class="ui-panel" style="padding: 0.75rem;"><img src="../img/v510_2.png" alt="OpenRadioFM 5.1.0 screenshot 2" style="width: 100%; border-radius: 8px; display: block;"></div>
+                <div class="ui-panel" style="padding: 0.75rem;"><img src="../img/v510_3.png" alt="OpenRadioFM 5.1.0 screenshot 3" style="width: 100%; border-radius: 8px; display: block;"></div>
+                <div class="ui-panel" style="padding: 0.75rem;"><img src="../img/v510_4.png" alt="OpenRadioFM 5.1.0 screenshot 4" style="width: 100%; border-radius: 8px; display: block;"></div>
+                <div class="ui-panel" style="padding: 0.75rem;"><img src="../img/v510_5.png" alt="OpenRadioFM 5.1.0 screenshot 5" style="width: 100%; border-radius: 8px; display: block;"></div>
+                <div class="ui-panel" style="padding: 0.75rem;"><img src="../img/v510_6.png" alt="OpenRadioFM 5.1.0 screenshot 6" style="width: 100%; border-radius: 8px; display: block;"></div>
             </div>
         </section>
 
@@ -321,18 +329,18 @@
                 <div class="ui-panel" style="padding: 1.5rem; border-left: 4px solid #00ff00;">
                     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
                         <span style="font-size: 1.5rem;">✅</span>
-                        <h3 class="bebas-text" style="margin: 0; color: #FF8C00;">Current - V5.0.0 (Stability Beta)</h3>
+                        <h3 class="bebas-text" style="margin: 0; color: #FF8C00;">Current - V5.1.0 (Backup Studio)</h3>
                     </div>
-                    <p style="color: var(--text-muted); margin: 0;">Critical MTK8259 stability, AM band protection, White Skin (Light Mode), and MT8163 crash fixes.</p>
+                    <p style="color: var(--text-muted); margin: 0;">Web/PWA editor, expanded backups (.fav / .ors / .orzip + RadioLogos), day mode, refined night mode, and logo/stability improvements.</p>
                     <div style="margin-top: 1rem; background: rgba(0,255,0,0.1); border-radius: 8px; overflow: hidden;">
                         <div style="background: #00ff00; height: 8px; width: 100%; transition: width 0.3s;"></div>
                     </div>
-                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #FF8C00;">100% complete - Public Beta!</p>
+                    <p style="margin-top: 0.5rem; font-size: 0.9rem; color: #FF8C00;">Released — real hardware testing welcome</p>
                 </div>
                 <div class="ui-panel" style="padding: 1.5rem; border-left: 4px solid #888;">
                     <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
                         <span style="font-size: 1.5rem;">📋</span>
-                        <h3 class="bebas-text" style="margin: 0; color: #888;">Planned - V5.1+</h3>
+                        <h3 class="bebas-text" style="margin: 0; color: #888;">Planned - V5.2+</h3>
                     </div>
                     <p style="color: var(--text-muted); margin: 0;">Advanced Android Auto integration, pro DSP equalizer, 60fps spectrum mode, and enhanced global database.</p>
                 </div>
