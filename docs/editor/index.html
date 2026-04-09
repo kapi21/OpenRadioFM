@@ -193,30 +193,30 @@
                             <option value="1">1 — Presets</option>
                         </select>
                     </div>
-                    <div class="form-group ors-span-all">
-                        <label><span data-i18n="optNightAuto">Noche automática (horario)</span> <span class="info" data-tip="tipNightAuto">i</span></label>
-                        <label class="toggle" style="margin-top: 0.35rem;">
+                    <div class="form-group ors-span-all ors-night-block">
+                        <label class="toggle ors-night-master-toggle">
                             <input type="checkbox" id="optNightAuto">
-                            <span data-i18n="optNightAutoToggle">Activar ventana nocturna automática</span>
+                            <span><span data-i18n="optNightAutoToggle">Modo noche automático</span> <span class="info" data-tip="tipNightAuto">i</span></span>
                         </label>
+                        <p class="ors-hint" data-i18n="optNightAutoHint"></p>
                         <div id="nightScheduleWrap" class="night-schedule-wrap" hidden>
                             <div class="form-group" style="margin: 0;">
                                 <label><span data-i18n="optNightStart">Inicio noche</span> <span class="info" data-tip="tipNightStart">i</span></label>
-                                <input type="time" id="optNightStart" value="19:00" step="60">
+                                <input type="time" id="optNightStart" value="19:00" step="60" disabled>
                             </div>
                             <div class="form-group" style="margin: 0;">
                                 <label><span data-i18n="optNightEnd">Fin noche</span> <span class="info" data-tip="tipNightEnd">i</span></label>
-                                <input type="time" id="optNightEnd" value="07:00" step="60">
+                                <input type="time" id="optNightEnd" value="07:00" step="60" disabled>
                             </div>
                         </div>
-                        <label class="toggle" style="margin-top: 0.75rem;">
-                            <input type="checkbox" id="optNightLogos" checked>
-                            <span><span data-i18n="optNightLogos">Tintado logos en noche</span> <span class="info" data-tip="tipNightLogos">i</span></span>
-                        </label>
                     </div>
                 </div>
 
                 <div class="ors-toggles">
+                    <label class="toggle">
+                        <input type="checkbox" id="optNightLogos" checked>
+                        <span><span data-i18n="optNightLogos">Tintado logos en modo noche</span> <span class="info" data-tip="tipNightLogos">i</span></span>
+                    </label>
                     <label class="toggle">
                         <input type="checkbox" id="optStatusBar">
                         <span><span data-i18n="optStatusBar">Barra de estado</span> <span class="info" data-tip="tipStatusBar">i</span></span>
@@ -224,10 +224,6 @@
                     <label class="toggle">
                         <input type="checkbox" id="optReliefHd">
                         <span><span data-i18n="optReliefHd">Relieve HD</span> <span class="info" data-tip="tipReliefHd">i</span></span>
-                    </label>
-                    <label class="toggle">
-                        <input type="checkbox" id="optEnableAm" checked>
-                        <span><span data-i18n="optEnableAm">Banda AM</span> <span class="info" data-tip="tipEnableAm">i</span></span>
                     </label>
                     <label class="toggle">
                         <input type="checkbox" id="optSaveHistory" checked>

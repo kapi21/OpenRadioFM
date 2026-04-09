@@ -40,9 +40,9 @@ const translations = {
         optLayoutV3: "Layout V3",
         optLayoutSimple: "Layout simple",
         optLayoutNone: "Layout 2 (normal)",
-        optOnboardLangDone: "Onboarding idioma OK",
-        optOnboardCountryDone: "Onboarding país OK",
-        optOnboardLangCountryDone: "Onboarding idioma+país OK",
+        optOnboardLangDone: "Asistente inicial: idioma ya elegido",
+        optOnboardCountryDone: "Asistente inicial: país ya elegido",
+        optOnboardLangCountryDone: "Asistente inicial: idioma y país ya elegidos",
         optStationHistory: "Historial (pref_station_history)",
         optStationHistoryHelp: "Lista separada por comas en kHz (se puede dejar vacío).",
         totalPresets: "Total de Presets:",
@@ -88,9 +88,9 @@ const translations = {
         tipLayoutV3: "Activa el layout V3.",
         tipLayoutSimple: "Activa el layout simple.",
         tipLayoutNone: "Layout por defecto (Layout 2). Solo puede estar activo un layout: normal, V3 o simple.",
-        tipOnboardLangDone: "Marca el onboarding de idioma como completado.",
-        tipOnboardCountryDone: "Marca el onboarding de país como completado.",
-        tipOnboardLangCountryDone: "Marca el onboarding combinado idioma+país como completado.",
+        tipOnboardLangDone: "La app guarda este flag cuando el usuario termina el paso de elegir idioma en el primer arranque. Si lo dejas marcado, no volverá a mostrar ese paso. Desmárcalo solo si quieres que el asistente vuelva a preguntar el idioma (pref_onboarding_lang_done).",
+        tipOnboardCountryDone: "Igual que el de idioma, pero para el paso de país o región del asistente inicial (pref_onboarding_country_done).",
+        tipOnboardLangCountryDone: "Flag combinado del flujo idioma+país en un solo paso; si está marcado, la app considera cerrado ese bloque del tutorial inicial (pref_onboarding_lang_country_done).",
         tipStationHistory: "Historial de frecuencias en kHz, separado por comas. Solo afecta a la lista de recientes.",
         tipCarLogo: "Imagen del logo del coche. Se guarda como RadioLogos/car_logo.png (máx 300×300).",
         tipBackground: "Imagen de fondo de la app. Se guarda como RadioLogos/background.png o .jpg (máx 1920×1080).",
@@ -98,26 +98,24 @@ const translations = {
         optLogoProvider: "Proveedor logos",
         optLogoMode: "Cabecera (logo)",
         optSteeringMode: "Volante NEXT/PREV",
-        optNightAuto: "Noche automática",
-        optNightAutoToggle: "Activar ventana nocturna automática",
+        optNightAutoToggle: "Modo noche automático",
+        optNightAutoHint: "Desmarcado: el horario nocturno no se usa y no puedes editar inicio/fin. Marcado: se activa la ventana horaria y podrás ajustar las horas.",
         optNightStart: "Inicio (noche)",
         optNightEnd: "Fin (noche)",
-        optNightLogos: "Tintado logos en noche",
+        optNightLogos: "Tintado logos en modo noche",
         optStatusBar: "Barra de estado",
         optReliefHd: "Relieve HD",
-        optEnableAm: "Banda AM",
         optSaveHistory: "Guardar historial",
         optLayout2PresetsRight: "Presets a la derecha (layout 2)",
         tipLogoProvider: "Origen de logos online: Supabase, RadioBrowser web o ambos (pref_logo_provider).",
         tipLogoMode: "Icono de cabecera: logo del coche o reloj (pref_logo_mode).",
         tipSteeringMode: "Teclas NEXT/PREV del volante: buscar emisora o saltar entre presets (pref_steering_next_prev_mode).",
-        tipNightAuto: "Activa el skin nocturno según el rango horario indicado (pref_night_mode_auto).",
+        tipNightAuto: "Activa el cambio automático al skin de noche según el intervalo de horas que definas abajo (pref_night_mode_auto). La casilla debe estar marcada para editar inicio y fin.",
         tipNightStart: "Hora de inicio del modo noche (pref_night_start / pref_night_start_min).",
         tipNightEnd: "Hora de fin del modo noche (pref_night_end / pref_night_end_min).",
-        tipNightLogos: "Ajusta tinte de logos cuando aplica modo noche (pref_night_logos).",
+        tipNightLogos: "Si está marcado, en modo noche la app aplica tinte/atenuación a los logos para que se vean mejor (pref_night_logos).",
         tipStatusBar: "Muestra la barra de estado del sistema (pref_show_status_bar_v2).",
         tipReliefHd: "Efecto relieve en elementos de la UI (pref_relief_hd).",
-        tipEnableAm: "Permite usar bandas AM (pref_enable_am).",
         tipSaveHistory: "Guarda frecuencias en historial al sintonizar (pref_save_history).",
         tipLayout2PresetsRight: "En layout 2, columna de presets a la derecha (pref_layout2_presets_right)."
     },
@@ -154,9 +152,9 @@ const translations = {
         optLayoutV3: "Layout V3",
         optLayoutSimple: "Simple layout",
         optLayoutNone: "Layout 2 (normal)",
-        optOnboardLangDone: "Language onboarding OK",
-        optOnboardCountryDone: "Country onboarding OK",
-        optOnboardLangCountryDone: "Language+country onboarding OK",
+        optOnboardLangDone: "First-run: language step already done",
+        optOnboardCountryDone: "First-run: country step already done",
+        optOnboardLangCountryDone: "First-run: language+country already done",
         optStationHistory: "History (pref_station_history)",
         optStationHistoryHelp: "Comma-separated list in kHz (can be empty).",
         totalPresets: "Total Presets:",
@@ -202,9 +200,9 @@ const translations = {
         tipLayoutV3: "Enable V3 layout.",
         tipLayoutSimple: "Enable simple layout.",
         tipLayoutNone: "Default layout (Layout 2). Only one layout can be active: normal, V3 or simple.",
-        tipOnboardLangDone: "Marks language onboarding as completed.",
-        tipOnboardCountryDone: "Marks country onboarding as completed.",
-        tipOnboardLangCountryDone: "Marks combined language+country onboarding as completed.",
+        tipOnboardLangDone: "The app sets this after the user finishes the language step on first launch. If checked, that step will not show again. Uncheck only if you want the wizard to ask for language again (pref_onboarding_lang_done).",
+        tipOnboardCountryDone: "Same idea as language, but for the country/region step (pref_onboarding_country_done).",
+        tipOnboardLangCountryDone: "Combined first-run flag for the language+country flow; when checked, the app treats that block of the tutorial as finished (pref_onboarding_lang_country_done).",
         tipStationHistory: "History list in kHz, comma-separated. Affects recents only.",
         tipCarLogo: "Car logo image saved as RadioLogos/car_logo.png (max 300×300).",
         tipBackground: "Background image saved as RadioLogos/background.png or .jpg (max 1920×1080).",
@@ -212,26 +210,24 @@ const translations = {
         optLogoProvider: "Logo provider",
         optLogoMode: "Header (logo)",
         optSteeringMode: "Steering NEXT/PREV",
-        optNightAuto: "Auto night mode",
-        optNightAutoToggle: "Enable automatic night window",
+        optNightAutoToggle: "Automatic night mode",
+        optNightAutoHint: "Unchecked: night schedule is off and start/end times cannot be edited. Checked: enables the time window so you can set start and end.",
         optNightStart: "Night start",
         optNightEnd: "Night end",
-        optNightLogos: "Tint logos at night",
+        optNightLogos: "Tint logos in night mode",
         optStatusBar: "Status bar",
         optReliefHd: "HD relief",
-        optEnableAm: "AM band",
         optSaveHistory: "Save history",
         optLayout2PresetsRight: "Presets on the right (layout 2)",
         tipLogoProvider: "Online logo source: Supabase, web RadioBrowser, or both (pref_logo_provider).",
         tipLogoMode: "Header widget: car logo or clock (pref_logo_mode).",
         tipSteeringMode: "Steering NEXT/PREV: seek stations or switch presets (pref_steering_next_prev_mode).",
-        tipNightAuto: "Apply night skin based on the time window (pref_night_mode_auto).",
+        tipNightAuto: "Enables automatic switch to the night skin for the time range you set below (pref_night_mode_auto). The box must be checked to edit start and end times.",
         tipNightStart: "Night window start (pref_night_start / pref_night_start_min).",
         tipNightEnd: "Night window end (pref_night_end / pref_night_end_min).",
-        tipNightLogos: "Tint logos when night styling applies (pref_night_logos).",
+        tipNightLogos: "When checked, the app tints/dims logos under night styling for better contrast (pref_night_logos).",
         tipStatusBar: "Show the system status bar (pref_show_status_bar_v2).",
         tipReliefHd: "UI relief / elevation effect (pref_relief_hd).",
-        tipEnableAm: "Allow AM bands (pref_enable_am).",
         tipSaveHistory: "Persist tuned frequencies to history (pref_save_history).",
         tipLayout2PresetsRight: "In layout 2, preset column on the right (pref_layout2_presets_right)."
     }
@@ -324,7 +320,6 @@ const orsControls = {
     nightScheduleWrap: document.getElementById('nightScheduleWrap'),
     statusBar: document.getElementById('optStatusBar'),
     reliefHd: document.getElementById('optReliefHd'),
-    enableAm: document.getElementById('optEnableAm'),
     saveHistory: document.getElementById('optSaveHistory'),
     layout2PresetsRight: document.getElementById('optLayout2PresetsRight'),
     logosOnline: document.getElementById('optLogosOnline'),
@@ -361,9 +356,16 @@ function setTimeControl(el, h, m) {
 
 function syncNightScheduleVisibility() {
     const wrap = orsControls.nightScheduleWrap;
-    if (!wrap || !orsControls.nightAuto) return;
-    if (orsControls.nightAuto.checked) wrap.removeAttribute('hidden');
-    else wrap.setAttribute('hidden', '');
+    const start = orsControls.nightStart;
+    const end = orsControls.nightEnd;
+    if (!orsControls.nightAuto) return;
+    const on = !!orsControls.nightAuto.checked;
+    if (wrap) {
+        if (on) wrap.removeAttribute('hidden');
+        else wrap.setAttribute('hidden', '');
+    }
+    if (start) start.disabled = !on;
+    if (end) end.disabled = !on;
 }
 
 if (orsControls.nightAuto) {
@@ -554,7 +556,6 @@ function buildOrsJsonFromForm() {
         pref_night_logos: !!orsControls.nightLogos?.checked,
         pref_show_status_bar_v2: !!orsControls.statusBar?.checked,
         pref_relief_hd: !!orsControls.reliefHd?.checked,
-        pref_enable_am: !!orsControls.enableAm?.checked,
         pref_save_history: !!orsControls.saveHistory?.checked,
         pref_layout2_presets_right: !!orsControls.layout2PresetsRight?.checked
     };
@@ -606,7 +607,6 @@ function fillOrsForm(obj) {
         if (orsControls.nightLogos) orsControls.nightLogos.checked = rp.pref_night_logos !== false;
         if (orsControls.statusBar) orsControls.statusBar.checked = !!rp.pref_show_status_bar_v2;
         if (orsControls.reliefHd) orsControls.reliefHd.checked = !!rp.pref_relief_hd;
-        if (orsControls.enableAm) orsControls.enableAm.checked = rp.pref_enable_am !== false;
         if (orsControls.saveHistory) orsControls.saveHistory.checked = rp.pref_save_history !== false;
         if (orsControls.layout2PresetsRight) orsControls.layout2PresetsRight.checked = !!rp.pref_layout2_presets_right;
         syncNightScheduleVisibility();

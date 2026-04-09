@@ -344,6 +344,25 @@ header:has(.main-logo:hover)::after {
     display: none !important;
 }
 
+.ors-night-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ors-night-master-toggle {
+    width: fit-content;
+    max-width: 100%;
+}
+
+.ors-hint {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.45;
+    color: var(--text-secondary);
+    padding-left: 0.15rem;
+}
+
 .ors-toggles {
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
