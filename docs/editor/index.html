@@ -193,21 +193,24 @@
                             <option value="1">1 — Presets</option>
                         </select>
                     </div>
-                    <div class="form-group ors-span-all ors-night-block">
-                        <label class="toggle ors-night-master-toggle">
+                </div>
+
+                <div class="ors-night-shell">
+                    <div class="ors-toggles ors-night-check-row">
+                        <label class="toggle">
                             <input type="checkbox" id="optNightAuto">
                             <span><span data-i18n="optNightAutoToggle">Modo noche automático</span> <span class="info" data-tip="tipNightAuto">i</span></span>
                         </label>
-                        <p class="ors-hint" data-i18n="optNightAutoHint"></p>
-                        <div id="nightScheduleWrap" class="night-schedule-wrap" hidden>
-                            <div class="form-group" style="margin: 0;">
-                                <label><span data-i18n="optNightStart">Inicio noche</span> <span class="info" data-tip="tipNightStart">i</span></label>
-                                <input type="time" id="optNightStart" value="19:00" step="60" disabled>
-                            </div>
-                            <div class="form-group" style="margin: 0;">
-                                <label><span data-i18n="optNightEnd">Fin noche</span> <span class="info" data-tip="tipNightEnd">i</span></label>
-                                <input type="time" id="optNightEnd" value="07:00" step="60" disabled>
-                            </div>
+                    </div>
+                    <p class="ors-hint" data-i18n="optNightAutoHint"></p>
+                    <div id="nightScheduleWrap" class="night-schedule-wrap" hidden>
+                        <div class="form-group" style="margin: 0;">
+                            <label><span data-i18n="optNightStart">Inicio noche</span> <span class="info" data-tip="tipNightStart">i</span></label>
+                            <input type="time" id="optNightStart" value="19:00" step="60" disabled>
+                        </div>
+                        <div class="form-group" style="margin: 0;">
+                            <label><span data-i18n="optNightEnd">Fin noche</span> <span class="info" data-tip="tipNightEnd">i</span></label>
+                            <input type="time" id="optNightEnd" value="07:00" step="60" disabled>
                         </div>
                     </div>
                 </div>

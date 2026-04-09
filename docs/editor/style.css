@@ -344,15 +344,16 @@ header:has(.main-logo:hover)::after {
     display: none !important;
 }
 
-.ors-night-block {
+.ors-night-shell {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
+    margin-top: 1rem;
 }
 
-.ors-night-master-toggle {
-    width: fit-content;
-    max-width: 100%;
+.ors-night-check-row {
+    grid-template-columns: 1fr;
+    margin-top: 0;
 }
 
 .ors-hint {
@@ -384,6 +385,16 @@ header:has(.main-logo:hover)::after {
 .toggle input {
     width: 18px;
     height: 18px;
+}
+
+.toggle input[type="checkbox"] {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    accent-color: var(--accent);
+    cursor: pointer;
 }
 
 /* Info tooltip icon */
