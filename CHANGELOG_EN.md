@@ -7,7 +7,20 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ---
 ## [Unreleased]
 
-*(no new entries; recent changes are documented under 5.1.0)*
+*(active development line: **5.1.1**; add items here until the release is cut)*
+
+---
+
+## [5.1.1] - 2026-04-10
+*Patch on top of 5.1.0 (`versionCode` **32**, `versionName` **5.1.1**).*
+
+### Added
+- **Slovenia (SI)**: country in the in-app selector (i18n), `eslovenia/` folder for Storage logos, and Supabase `country_folder` mapping.
+
+### Changed
+- **App versioning**: `versionCode 32`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
+- **BuildConfig**: public logos base URL at the `station-logos` bucket root (per-country subfolders).
+- **Backup Studio (web)**: **SI** option for `pref_country_code` in `.ors`.
 
 ---
 

@@ -216,7 +216,7 @@
     <string name="logo_mode_clock">Цифровые Часы</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.1.0</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.1</string>
     <string name="accessibility_service_description">Этот сервис позволяет OpenRadioFM открываться поверх при нажатии физической кнопки RADIO на совместимых Android-устройствах (например, K706), обходя штатное радио.</string>
     <string name="a11y_hihack_title">HiHack (Спец. возможности)</string>
     <string name="a11y_hihack_enabled">Включено</string>

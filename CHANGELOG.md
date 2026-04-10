@@ -1,6 +1,19 @@
 ## [Unreleased]
 
-*(sin entradas nuevas; todo lo reciente está documentado en 5.1.0)*
+*(línea de desarrollo: **5.1.1**; añade aquí hasta cerrar el release)*
+
+---
+
+## [5.1.1] - 2026-04-10
+*Parche sobre 5.1.0 (`versionCode` **32**, `versionName` **5.1.1**).*
+
+### Added
+- **Eslovenia (SI)**: país en el selector de la app (i18n), carpeta `eslovenia/` para logos en Storage y función Supabase `country_folder` alineada.
+
+### Changed
+- **Versionado app**: `versionCode 32`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
+- **BuildConfig**: URL base pública de logos en la raíz del bucket `station-logos` (subcarpetas por país).
+- **Backup Studio (web)**: código **SI** en el selector de `pref_country_code` del `.ors`.
 
 ---
 
