@@ -84,6 +84,7 @@
     <string name="country_pt">ポルトガル (PT)</string>
     <string name="country_de">ドイツ (DE)</string>
     <string name="country_pl">ポーランド (PL)</string>
+    <string name="country_si">スロベニア (SI)</string>
     <string name="country_other">その他 (OT)</string>
     
     <!-- Backup / Restore (App State) -->

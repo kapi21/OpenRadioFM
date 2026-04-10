@@ -27,6 +27,25 @@ public class SupabaseLogoSource {
         this.api = SupabaseClient.getApi();
     }
 
+    private static String folderForCountry(String countryCode) {
+        String c = (countryCode != null) ? countryCode.trim().toUpperCase() : "OT";
+        switch (c) {
+            case "ES": return "espana";
+            case "PT": return "portugal";
+            case "RU": return "rusia";
+            case "TR": return "turquia";
+            case "GR": return "grecia";
+            case "IT": return "italia";
+            case "RO": return "romania";
+            case "PL": return "polonia";
+            case "HU": return "hungria";
+            case "FR": return "francia";
+            case "SI": return "eslovenia";
+            case "OT":
+            default: return "otros";
+        }
+    }
+
     /**
      * V18.8: Lista negra de nombres genéricos que ensucian la base de datos o causan búsquedas erróneas.
      */
@@ -224,21 +243,26 @@ public class SupabaseLogoSource {
 
                 // Si el logo es local y existe, primero lo subimos al Storage de Supabase
                 if (logoUrl != null && logoUrl.startsWith("file://")) {
+                    // Nunca persistir rutas locales (file://...) en la base comunitaria.
+                    // Si el upload falla, preferimos guardar solo metadatos (PI/PS/freq/stream) sin logo.
+                    finalLogoUrl = null;
                     String localPath = logoUrl.substring(7);
                     File file = new File(localPath);
                     if (file.exists()) {
                         String fileName = (fPi != null ? fPi : (fPs != null ? fPs.replaceAll("[^a-zA-Z0-9]", "") : "station"))
                                 + "_" + freqKHz + ".png";
                         
-                        // V19.4: Añadimos prefijo de carpeta 'espana/' según la estructura del bucket
-                        String storagePath = "espana/" + fileName;
+                        // Reubicar por país para mantener el bucket ordenado.
+                        String countryForFolder = com.example.openradiofm.utils.CountryPrefs.getCountry(appContext != null ? appContext : context);
+                        String folder = folderForCountry(countryForFolder);
+                        String storagePath = folder + "/" + fileName;
                         
                         RequestBody requestBody = RequestBody.create(file, MediaType.parse("image/png"));
                         Call<Void> uploadCall = api.uploadLogoFile(apiKey, "Bearer " + apiKey, storagePath, requestBody);
                         Response<Void> uploadRes = uploadCall.execute();
                         
                         if (uploadRes.isSuccessful() || uploadRes.code() == 409) { // 409 duplicated is okay for us
-                            finalLogoUrl = storageUrl + fileName;
+                            finalLogoUrl = storageUrl + storagePath;
                             android.util.Log.d("SupabaseLogoSource", "UPLOAD SUCCESS: " + finalLogoUrl);
                         } else {
                             String errorBody = "";

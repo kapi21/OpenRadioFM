@@ -34,7 +34,7 @@ if (supabaseUrlRaw.isNullOrEmpty() || supabaseAnonKeyRaw.isNullOrEmpty()) {
 val supabaseUrl: String = supabaseUrlRaw!!.trimEnd('/') + "/"
 val supabaseAnonKey: String = supabaseAnonKeyRaw!!
 val supabaseStoragePublicLogosBase: String =
-    supabaseUrl.trimEnd('/') + "/storage/v1/object/public/station-logos/espana/"
+    supabaseUrl.trimEnd('/') + "/storage/v1/object/public/station-logos/"
 
 // Firma release: opcional vía local.properties (RELEASE_*). Si no hay keystore válido, se usa la firma
 // debug para que assembleRelease no falle (evita externalOverride / rutas IDE rotas como key_openradiofm).

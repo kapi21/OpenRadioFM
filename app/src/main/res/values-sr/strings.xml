@@ -84,6 +84,7 @@
     <string name="country_pt">Portugal (PT)</string>
     <string name="country_de">Nemačka (DE)</string>
     <string name="country_pl">Poljska (PL)</string>
+    <string name="country_si">Slovenija (SI)</string>
     <string name="country_other">Drugo (OT)</string>
     
     <!-- Backup / Restore (App State) -->

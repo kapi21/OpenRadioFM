@@ -1960,7 +1960,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     /** Si {@code forceChoose} es true, el diálogo no se puede cancelar. */
     public void showCountrySelectorDialog(boolean forceChoose) {
         try {
-            final String[] codes = new String[] { "ES", "RU", "IT", "GR", "RO", "HU", "PT", "DE", "PL", "OT" };
+            final String[] codes = new String[] { "ES", "RU", "IT", "GR", "RO", "HU", "PT", "DE", "PL", "SI", "OT" };
             final String[] labels = new String[] {
                     getString(R.string.country_es),
                     getString(R.string.country_ru),
@@ -1971,6 +1971,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     getString(R.string.country_pt),
                     getString(R.string.country_de),
                     getString(R.string.country_pl),
+                    getString(R.string.country_si),
                     getString(R.string.country_other)
             };
 
@@ -2016,6 +2017,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             case "PT": return getString(R.string.country_pt);
             case "DE": return getString(R.string.country_de);
             case "PL": return getString(R.string.country_pl);
+            case "SI": return getString(R.string.country_si);
             case "OT": return getString(R.string.country_other);
             case "ES":
             default: return getString(R.string.country_es);

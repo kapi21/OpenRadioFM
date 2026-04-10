@@ -84,6 +84,7 @@
     <string name="country_pt">葡萄牙 (PT)</string>
     <string name="country_de">德国 (DE)</string>
     <string name="country_pl">波兰 (PL)</string>
+    <string name="country_si">斯洛文尼亚 (SI)</string>
     <string name="country_other">其他 (OT)</string>
     
     <!-- Backup / Restore (App State) -->
