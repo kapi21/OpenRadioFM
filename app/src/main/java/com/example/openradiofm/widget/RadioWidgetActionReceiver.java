@@ -3,6 +3,7 @@ package com.example.openradiofm.widget;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.util.Log;
 
 import androidx.core.content.ContextCompat;
 
@@ -12,6 +13,8 @@ import com.example.openradiofm.service.RadioMediaService;
  * Recibe pulsaciones del widget y arranca {@link RadioMediaService} en foreground (Android 8+).
  */
 public class RadioWidgetActionReceiver extends BroadcastReceiver {
+
+    private static final String TAG = "ORF_WidgetRx";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -25,11 +28,13 @@ public class RadioWidgetActionReceiver extends BroadcastReceiver {
                 && !RadioMediaService.ACTION_WIDGET_TOGGLE_MUTE.equals(action)) {
             return;
         }
+        Log.i(TAG, "onReceive action=" + action + " (widget → service)");
         Intent svc = new Intent(context, RadioMediaService.class);
         svc.setAction(action);
         try {
             ContextCompat.startForegroundService(context, svc);
         } catch (Exception e) {
+            Log.w(TAG, "startForegroundService failed, try startService", e);
             try {
                 context.startService(svc);
             } catch (Exception ignored) {

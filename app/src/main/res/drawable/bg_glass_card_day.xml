@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shape xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Modo Día: solo marco (sin relleno) para que no tape el fondo blanco global -->
+    <!-- Modo Día: solo marco (sin relleno) para que no tape el fondo beige global -->
     <solid android:color="#00000000" />
     <stroke
         android:width="1.2dp"

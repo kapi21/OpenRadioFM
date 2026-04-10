@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.content.SharedPreferences;
 import android.view.View;
 
+import androidx.core.content.ContextCompat;
+
 import com.example.openradiofm.R;
 
 /**
@@ -20,7 +22,7 @@ public class ThemeManager {
     // Skins disponibles
     public enum Skin {
         NIGHT_MODE("Night Mode", "#2A2A2A"),
-        DAY_MODE("Day Mode", "#FFFFFF"),
+        DAY_MODE("Day Mode", "#EDE4D3"),
         CLASSIC("Classic", "#B0B0B0"),
         ORANGE("Orange", "#FF8C00"),
         BLUE("Blue", "#00A8FF"),
@@ -198,8 +200,8 @@ public class ThemeManager {
             if (skin == Skin.CLEAR) {
                 bgColor = android.graphics.Color.WHITE;
             } else if (skin == Skin.DAY_MODE) {
-                // Modo Día: tono hueso (menos brillante que blanco puro)
-                bgColor = android.graphics.Color.parseColor("#FFF5F1E6");
+                // Modo Día: beige suave (@color/day_mode_background)
+                bgColor = ContextCompat.getColor(mActivity, R.color.day_mode_background);
             } else {
                 bgColor = mActivity.getResources().getColor(R.color.black_background, null);
             }

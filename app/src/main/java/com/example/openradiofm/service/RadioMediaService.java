@@ -43,6 +43,7 @@ import com.example.openradiofm.ui.main.PlaybackManager;
 import com.example.openradiofm.ui.main.RadioServiceController;
 import com.example.openradiofm.ui.main.RadioSessionController;
 import com.example.openradiofm.ui.main.RadioSessionState;
+import com.example.openradiofm.widget.OpenRadioFmWidgetProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,6 +119,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private int mPendingSkip = 0; // -1 prev, +1 next
     private boolean mPendingSkipPresetMode = false; // true=presets, false=seek
     private final AtomicBoolean mEngineInitStarted = new AtomicBoolean(false);
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     // Estado OEM para restaurar tras pérdidas de foco en K706
     private boolean mUserPaused = false;
@@ -456,10 +458,15 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     private void handleWidgetSeek(int direction) {
         try {
+            Log.i(TAG, "handleWidgetSeek direction=" + direction + " engine=" + (mEngine != null));
             maybeStartEngine();
             if (mEngine != null) {
                 if (direction > 0) mEngine.seekUp();
                 else mEngine.seekDown();
+                // QS/OEM: el callback de frecuencia puede llegar tarde; refresco diferido por si la Activity no está viva.
+                scheduleHomeWidgetRefreshFallback();
+            } else {
+                Log.w(TAG, "handleWidgetSeek: motor null tras maybeStartEngine (arranque en cola)");
             }
         } catch (Exception e) {
             Log.w(TAG, "handleWidgetSeek(" + direction + ") falló", e);
@@ -513,6 +520,46 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
     }
 
+    /**
+     * Widget propio: la UI solo actualiza desde {@link com.example.openradiofm.ui.main.MainActivity#sendWidgetUpdateIntent};
+     * con la app en segundo plano o sin Activity, el servicio debe refrescar frecuencia/PS (p. ej. seek desde widget en QS6).
+     */
+    private void scheduleHomeWidgetRefreshFallback() {
+        mMainHandler.removeCallbacks(mWidgetRefreshFallbackRunnable);
+        mMainHandler.postDelayed(mWidgetRefreshFallbackRunnable, 450);
+        mMainHandler.postDelayed(mWidgetRefreshFallbackRunnable, 1200);
+    }
+
+    private final Runnable mWidgetRefreshFallbackRunnable = this::updateHomeAppWidgetSync;
+
+    private void updateHomeAppWidgetSync() {
+        try {
+            int freq = getLiveFreqKhzOrDefault(0);
+            int band = getCurrentBandOrDefault(0);
+            String ps = "";
+            if (mSessionController != null) {
+                RadioSessionState s = mSessionController.getCurrentState();
+                if (s != null && s.rdsName != null && !s.rdsName.trim().isEmpty()) {
+                    ps = s.rdsName.trim();
+                }
+            }
+            if (ps.isEmpty() && freq > 0 && mStationNamePrefs != null) {
+                String rds = mStationNamePrefs.getString("RDS_" + freq, null);
+                if (rds != null && !rds.trim().isEmpty()) {
+                    ps = rds.trim();
+                } else {
+                    String custom = mStationNamePrefs.getString("CUSTOM_" + freq, null);
+                    if (custom != null && !custom.trim().isEmpty()) {
+                        ps = custom.trim();
+                    }
+                }
+            }
+            OpenRadioFmWidgetProvider.updateStationDisplay(getApplicationContext(), freq, band, ps);
+        } catch (Exception e) {
+            Log.w(TAG, "updateHomeAppWidgetSync falló", e);
+        }
+    }
+
     private final com.example.openradiofm.data.source.RadioEngineCallback mEngineCallback =
             new com.example.openradiofm.data.source.RadioEngineCallback() {
                 @Override
@@ -523,6 +570,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     if (mSessionController != null) {
                         mSessionController.onFrequencyChanged(freqKhz);
                     }
+                    updateHomeAppWidgetSync();
                 }
 
                 @Override
@@ -530,6 +578,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     if (mSessionController != null) {
                         mSessionController.onBandChanged(band);
                     }
+                    updateHomeAppWidgetSync();
                 }
 
                 @Override
@@ -546,6 +595,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     if (mSessionController != null) {
                         mSessionController.onRdsName(name);
                     }
+                    updateHomeAppWidgetSync();
                 }
 
                 @Override
@@ -800,12 +850,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     else mEngine.seekDown();
                 }
                 handlePlay();
+                scheduleHomeWidgetRefreshFallback();
             } else {
                 enqueueSkip(direction > 0 ? +1 : -1, true);
                 maybeStartEngine();
                 mIsPlaying = true;
                 setPlaybackState(true);
                 ensureNotificationVisible();
+                scheduleHomeWidgetRefreshFallback();
             }
         } catch (Exception e) {
             Log.w(TAG, "handleWidgetPresetSkip(" + direction + ") falló", e);

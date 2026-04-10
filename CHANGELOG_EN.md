@@ -16,11 +16,20 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ### Added
 - **Slovenia (SI)**: country in the in-app selector (i18n), `eslovenia/` folder for Storage logos, and Supabase `country_folder` mapping.
+- **Widget diagnostics**: logging in `RadioWidgetActionReceiver` (tag **`ORF_WidgetRx`**) and traces in `RadioMediaService.handleWidgetSeek`.
 
 ### Changed
 - **App versioning**: `versionCode 32`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
 - **BuildConfig**: public logos base URL at the `station-logos` bucket root (per-country subfolders).
 - **Backup Studio (web)**: **SI** option for `pref_country_code` in `.ors`.
+- **Day Mode**: unified **beige** background (`@color/day_mode_background` **#EDE4D3**) for window + `LogoManager`; `DAY_MODE` skin accent hex aligned.
+
+### Fixed / Improved
+- **Home-screen widget (e.g. QS6)**: `RadioMediaService` refreshes the **OpenRadioFM** widget (freq/band/PS) when tuning changes **without relying on `MainActivity`** (engine callbacks + delayed refresh if the OEM reports late).
+- **Release build**: `SupabaseLogoSource` initializes `applicationContext` at the start of the async block before Storage upload (fixes unresolved `appContext`).
+
+### Known / Pending
+- **Widget**: station logo may appear briefly then fall back to the app icon; follow-up needed (Glide / `RemoteViews` re-render).
 
 ---
 

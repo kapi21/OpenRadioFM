@@ -45,4 +45,7 @@
     <color name="night_blue_accent">#6BB6FF</color>       <!-- Azul más claro para acentos -->
     <color name="night_blue_muted">#3A7BC8</color>        <!-- Azul oscuro para elementos secundarios -->
     <color name="night_background">#0D1117</color>        <!-- Fondo oscuro profundo -->
+
+    <!-- Modo Día: fondo (beige suave; texto/íconos siguen en negro) -->
+    <color name="day_mode_background">#EDE4D3</color>
 </resources>

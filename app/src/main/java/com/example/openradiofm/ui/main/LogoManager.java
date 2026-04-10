@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+
+import androidx.core.content.ContextCompat;
 import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.view.View;
@@ -95,7 +97,7 @@ public class LogoManager {
     public void loadCustomBackground() {
         if (mActivity.mPrefs == null) return;
         final int genAtStart = mActivity.mLogoUiGeneration.get();
-        // DAY_MODE: fondo siempre blanco (ignorar background.jpg/dinámico).
+        // DAY_MODE: fondo beige fijo (ignorar background.jpg/dinámico).
         try {
             if (mActivity.mThemeManager != null
                     && mActivity.mThemeManager.getActiveSkin() == com.example.openradiofm.ui.theme.ThemeManager.Skin.DAY_MODE) {
@@ -115,8 +117,8 @@ public class LogoManager {
                         }
                         mLastDynamicBgUrl = null;
                     } catch (Exception ignored) {}
-                    // Modo Día: tono hueso (menos brillante que blanco puro)
-                    root.setBackgroundColor(Color.parseColor("#FFF5F1E6"));
+                    // Modo Día: mismo beige que la ventana (@color/day_mode_background)
+                    root.setBackgroundColor(ContextCompat.getColor(mActivity, R.color.day_mode_background));
                     mLastBgMode = Integer.MIN_VALUE;
                     mLastCustomBgPath = null;
                 }

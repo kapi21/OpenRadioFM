@@ -9,11 +9,20 @@
 
 ### Added
 - **Eslovenia (SI)**: país en el selector de la app (i18n), carpeta `eslovenia/` para logos en Storage y función Supabase `country_folder` alineada.
+- **Diagnóstico widget**: logs en `RadioWidgetActionReceiver` (tag **`ORF_WidgetRx`**) y trazas en `RadioMediaService.handleWidgetSeek`.
 
 ### Changed
 - **Versionado app**: `versionCode 32`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
 - **BuildConfig**: URL base pública de logos en la raíz del bucket `station-logos` (subcarpetas por país).
 - **Backup Studio (web)**: código **SI** en el selector de `pref_country_code` del `.ors`.
+- **Modo Día**: fondo **beige** unificado (`@color/day_mode_background` **#EDE4D3**) en ventana y `LogoManager`; color de acento del skin `DAY_MODE` alineado.
+
+### Fixed / Improved
+- **Widget (launcher, p. ej. QS6)**: `RadioMediaService` actualiza frecuencia/banda/PS del **widget propio** al variar la sintonía **sin depender de `MainActivity`** (callbacks del motor + refrescos diferidos si el OEM tarda).
+- **Compilación release**: `SupabaseLogoSource` declara `applicationContext` al inicio del bloque async antes de subir a Storage (corrige `appContext` no resuelto).
+
+### Known / Pendiente
+- **Widget**: el logo de emisora puede mostrarse y luego volver al icono de la app; revisión pendiente (carga Glide / re-render del `RemoteViews`).
 
 ---
 

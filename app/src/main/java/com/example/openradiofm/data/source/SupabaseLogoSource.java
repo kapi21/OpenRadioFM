@@ -237,6 +237,9 @@ public class SupabaseLogoSource {
         AppIoExecutor.execute(() -> {
             notifyActivity(true);
             try {
+                // V18.6.3: ApplicationContext antes de cualquier uso (hilo de fondo + subida Storage).
+                android.content.Context appContext = (context != null) ? context.getApplicationContext() : null;
+
                 String finalLogoUrl = logoUrl;
                 // V19.4: Formatear frecuencia a String MHz (ej: 87.50) para coincidir con SQL
                 String freqStr = String.format(java.util.Locale.US, "%.2f", freqKHz / 1000.0);
@@ -277,8 +280,6 @@ public class SupabaseLogoSource {
                 }
 
                 String hwModel = android.os.Build.MODEL; // Identificador del hardware (ej: K706, etc)
-                // V18.6.3: Use ApplicationContext for safety in background threads.
-                android.content.Context appContext = (context != null) ? context.getApplicationContext() : null;
                 String deviceId = com.example.openradiofm.utils.DeviceMetadataUtils.getUniqueDeviceId(appContext != null ? appContext : context);
 
                 // Enriquecer con Stream URL si no viene definido (auto-populación de la base comunitaria)
