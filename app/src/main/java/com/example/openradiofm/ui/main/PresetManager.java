@@ -30,10 +30,13 @@ public class PresetManager {
 
     /** Filas clonadas para scroll en bucle (opcional); mismo slot que el preset principal. */
     private static final class LoopMirror {
+        /** Tarjeta del preset (mismo rol que {@code cardP*}); null si no aplica. */
+        final View card;
         final ImageView iv;
         final TextView tv;
 
-        LoopMirror(ImageView iv, TextView tv) {
+        LoopMirror(View card, ImageView iv, TextView tv) {
+            this.card = card;
             this.iv = iv;
             this.tv = tv;
         }
@@ -84,10 +87,42 @@ public class PresetManager {
         }
     }
 
-    public void registerLoopMirror(int slot, View cardIgnored, ImageView iv, TextView tv) {
+    public void registerLoopMirror(int slot, View card, ImageView iv, TextView tv) {
         if (slot < 0 || slot >= mPresetsCount) return;
         if (iv == null && tv == null) return;
-        mLoopMirrors[slot].add(new LoopMirror(iv, tv));
+        mLoopMirrors[slot].add(new LoopMirror(card, iv, tv));
+    }
+
+    /**
+     * Alinea tarjetas (drawable del skin), color de texto y filtro de logo de los clones del bucle
+     * con los presets principales. Debe llamarse tras montar el bucle y tras cada cambio de skin/noche/día.
+     */
+    public void syncLoopMirrorPresetVisualsWithMainSlots() {
+        if (mActivity == null || mActivity.mThemeManager == null) return;
+        int drawableId = mActivity.mThemeManager.getSkinDrawableId();
+        for (int i = 0; i < mPresetsCount; i++) {
+            if (mLoopMirrors[i].isEmpty()) continue;
+            for (LoopMirror m : mLoopMirrors[i]) {
+                if (m.card != null) {
+                    int pL = m.card.getPaddingLeft();
+                    int pT = m.card.getPaddingTop();
+                    int pR = m.card.getPaddingRight();
+                    int pB = m.card.getPaddingBottom();
+                    m.card.setBackgroundResource(drawableId);
+                    m.card.setPadding(pL, pT, pR, pB);
+                }
+                if (m.tv != null && tvPresets[i] != null) {
+                    m.tv.setTextColor(tvPresets[i].getCurrentTextColor());
+                }
+                if (m.iv != null) {
+                    if (ivPresets[i] != null) {
+                        m.iv.setColorFilter(ivPresets[i].getColorFilter());
+                    } else {
+                        m.iv.clearColorFilter();
+                    }
+                }
+            }
+        }
     }
 
     private void setPresetSlotText(int slot, CharSequence text) {

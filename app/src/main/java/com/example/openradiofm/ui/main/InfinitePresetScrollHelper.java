@@ -194,18 +194,15 @@ public final class InfinitePresetScrollHelper {
             PresetManager pm, int slotIndex) {
         View row = inf.inflate(R.layout.preset_loop_slot_v2, strip, false);
         strip.addView(row);
-        View card = row;
         ImageView iv = row.findViewById(R.id.ivPresetLoop);
         TextView tv = row.findViewById(R.id.tvPresetLoop);
         final int slot = slotIndex;
-        if (card != null) {
-            card.setOnClickListener(v -> activity.gotoPreset(slot));
-            card.setOnLongClickListener(v -> {
-                activity.savePreset(slot);
-                return true;
-            });
-        }
-        pm.registerLoopMirror(slot, card, iv, tv);
+        row.setOnClickListener(v -> activity.gotoPreset(slot));
+        row.setOnLongClickListener(v -> {
+            activity.savePreset(slot);
+            return true;
+        });
+        pm.registerLoopMirror(slot, row, iv, tv);
     }
 
     private static int horizontalPageSpanPx(LinearLayout strip, int from, int count) {

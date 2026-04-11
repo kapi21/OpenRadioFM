@@ -55,11 +55,13 @@ public class NightModeManager {
                 ThemeManager.Skin savedSkin = main.mThemeManager.getCurrentSkin();
 
                 if (isNightTime()) {
-                    // Apply without overwriting the user's saved preference
-                    main.applySkin(ThemeManager.Skin.NIGHT_MODE);
+                    if (main.mThemeManager.getActiveSkin() != ThemeManager.Skin.NIGHT_MODE) {
+                        main.applySkin(ThemeManager.Skin.NIGHT_MODE);
+                    }
                 } else {
-                    // Revert to user's saved skin when day time
-                    main.applySkin(savedSkin);
+                    if (main.mThemeManager.getActiveSkin() != savedSkin) {
+                        main.applySkin(savedSkin);
+                    }
                 }
             }
         }

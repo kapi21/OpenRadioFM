@@ -1301,6 +1301,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                     InfinitePresetScrollHelper.attachIfNeeded(MainActivity.this);
                     mPresetManager.refreshPresetsCache(mCurrentBand);
                     mPresetManager.refreshButtons(mCurrentBand);
+                    mPresetManager.syncLoopMirrorPresetVisualsWithMainSlots();
                 }
 
                 if (mDialogManager == null) {
@@ -3424,10 +3425,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      */
     public void applySkin(com.example.openradiofm.ui.theme.ThemeManager.Skin skin) {
         final com.example.openradiofm.ui.theme.ThemeManager.Skin prevSkinForBg = mLastSkinAppliedForBackground;
-        // Invalida callbacks tardíos de logos/fondos al cambiar skin (zapping rápido entre modos).
-        // No limpia la UI; solo fuerza a que cargas asíncronas viejas no se apliquen.
-        try { mLogoUiGeneration.incrementAndGet(); } catch (Exception ignored) {}
+        com.example.openradiofm.ui.theme.ThemeManager.Skin activeBefore =
+                mThemeManager != null ? mThemeManager.getActiveSkin() : null;
         if (mThemeManager != null) mThemeManager.applySkin(skin);
+        com.example.openradiofm.ui.theme.ThemeManager.Skin activeAfter =
+                mThemeManager != null ? mThemeManager.getActiveSkin() : null;
+        // Solo invalidar Glide (logo / fondo dinámico) si el skin aplicado en tarjetas cambió de verdad.
+        // Si no, checkAndApplyNightMode() periódico llamaba applySkin repetido y vaciaba el fondo dinámico.
+        if (activeBefore != activeAfter) {
+            try { mLogoUiGeneration.incrementAndGet(); } catch (Exception ignored) {}
+        }
         
         boolean isNight = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE);
         boolean isClear = (skin == com.example.openradiofm.ui.theme.ThemeManager.Skin.CLEAR);
@@ -3527,6 +3534,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 } else {
                     tvDigitalClock.setTextColor(android.graphics.Color.WHITE);
                 }
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            if (mPresetManager != null) {
+                mPresetManager.syncLoopMirrorPresetVisualsWithMainSlots();
             }
         } catch (Exception ignored) {}
     }
