@@ -226,7 +226,7 @@
     <string name="about_info_header">ІНФОРМАЦІЯ</string>
     <string name="about_dev_by">Розроблено</string>
     <string name="about_tech_details">Технічні деталі</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.1</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.2</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
     <string name="a11y_hihack_title">HiHack (Доступність)</string>
     <string name="a11y_hihack_enabled">Увімкнено</string>

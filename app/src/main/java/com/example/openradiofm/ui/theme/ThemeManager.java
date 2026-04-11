@@ -225,7 +225,7 @@ public class ThemeManager {
                 R.id.btnSeekUp, R.id.btnSeekDown,
                 R.id.btnFavPrev, R.id.btnFavNext,
                 R.id.tvRdsName, R.id.tvRdsInfo,
-                R.id.btnBand, R.id.btnAutoScan,
+                R.id.btnBand, R.id.btnAutoScan, R.id.boxAutoScan,
                 R.id.boxLogo, R.id.containerBand, R.id.containerRds, R.id.bottomControls,
                 R.id.btnLocDx, R.id.btnMute, R.id.btnSettings, R.id.btnGps,
                 R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff
@@ -278,9 +278,21 @@ public class ThemeManager {
                 }
             }
         } else {
-            // Comportamiento V2 normal: aplica el skin entero a todos los views
+            // Comportamiento V2 normal: aplica el skin entero a todos los views.
+            // Layout 2: el cristal del autoscan va en boxAutoScan; el icono (btnAutoScan) no debe llevar el drawable
+            // para que la animación de giro no rote el recuadro.
             for (int id : viewIds) {
-                View v = mActivity.findViewById(id);
+                if (id == R.id.boxAutoScan) {
+                    View box = mActivity.findViewById(R.id.boxAutoScan);
+                    if (box != null) continue;
+                }
+                View v;
+                if (id == R.id.btnAutoScan) {
+                    View box = mActivity.findViewById(R.id.boxAutoScan);
+                    v = box != null ? box : mActivity.findViewById(R.id.btnAutoScan);
+                } else {
+                    v = mActivity.findViewById(id);
+                }
                 if (v != null) {
                     int pL = v.getPaddingLeft();
                     int pT = v.getPaddingTop();

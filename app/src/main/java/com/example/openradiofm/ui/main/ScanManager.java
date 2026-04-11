@@ -94,6 +94,10 @@ public class ScanManager {
     /** true = AutoScan usa seekUp periódico (lento); no llamar engine.scan() ni stopScan() OEM. */
     private boolean mSlowSeekAutoScan = false;
     private boolean mSlowFinishPosted = false;
+    /** Marca de tiempo de {@link #finishSlowAutoScanInternal}; evita que MainActivity re-sincronice la UI a 108 MHz vía OEM. */
+    private long mSlowAutoscanFinishEpochMs = 0L;
+    /** Última frecuencia vista al tick anterior del barrido lento; si no cambia, fallback stepUp (QS6 search puede quedarse quieto). */
+    private int mLastSlowSeekTickFreq = -1;
     private final Runnable mSlowSeekRunnable = new Runnable() {
         @Override
         public void run() {
@@ -101,6 +105,7 @@ public class ScanManager {
             if (mActivity == null || mActivity.mEngine == null) return;
             if (mNextAutoPresetSlot >= MAX_RESULTS) {
                 if (tryContinueAutoScanOnNextFmBand()) {
+                    mMainHandler.postDelayed(this, SLOW_SEEK_FIRST_MS);
                     return;
                 }
                 finishSlowAutoScanInternal(null);
@@ -112,7 +117,17 @@ public class ScanManager {
                     finishSlowAutoScanInternal(null);
                     return;
                 }
-                mActivity.mEngine.seekUp();
+                boolean stuckSame =
+                        cur > 0
+                                && cur == mLastSlowSeekTickFreq
+                                && isFmBandUi()
+                                && cur < FM_BAND_END_KHZ - 100;
+                if (stuckSame) {
+                    mActivity.mEngine.stepUp();
+                } else {
+                    mActivity.mEngine.seekUp();
+                }
+                mLastSlowSeekTickFreq = cur > 0 ? cur : mLastSlowSeekTickFreq;
             } catch (Exception ignored) {}
             mMainHandler.postDelayed(this, SLOW_SEEK_INTERVAL_MS);
         }
@@ -282,9 +297,11 @@ public class ScanManager {
         mAutoScanSessionId++;
         mAutoOverwritePresets = true;
         mSlowFinishPosted = false;
+        mSlowAutoscanFinishEpochMs = 0L;
         mNextAutoPresetSlot = 0;
         mTotalAutoScanPresetsSaved = 0;
         mLastScanFreq = 0;
+        mLastSlowSeekTickFreq = -1;
         mAutoSavedByKey.clear();
         mCapturedList.clear();
         mPendingByKey.clear();
@@ -341,9 +358,19 @@ public class ScanManager {
         }
     }
 
+    /**
+     * Si el OEM manda {@code onScanStatusChanged(false)} justo al cerrar el autoscan lento,
+     * MainActivity puede omitir el {@code handleFrequencyChange(getCurrentFreq())} que ancla 108 MHz.
+     */
+    public boolean shouldDeferOemFrequencySyncAfterSlowAutoscan() {
+        long elapsed = android.os.SystemClock.elapsedRealtime() - mSlowAutoscanFinishEpochMs;
+        return mSlowAutoscanFinishEpochMs > 0L && elapsed >= 0L && elapsed < 900L;
+    }
+
     private void finishSlowAutoScanInternal(ImageButton btn) {
         if (!mSlowSeekAutoScan || mSlowFinishPosted) return;
         mSlowFinishPosted = true;
+        mSlowAutoscanFinishEpochMs = android.os.SystemClock.elapsedRealtime();
         mMainHandler.removeCallbacks(mSlowSeekRunnable);
         mSlowSeekAutoScan = false;
         mAutoOverwritePresets = false;
@@ -354,6 +381,48 @@ public class ScanManager {
         int saved = mTotalAutoScanPresetsSaved > 0 ? mTotalAutoScanPresetsSaved : mNextAutoPresetSlot;
         mActivity.showToast(mActivity.getString(R.string.toast_autoscan_finished, saved));
         try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "finishSlowAutoScan saved=" + saved); } catch (Exception ignored) {}
+        tuneToFirstAvailablePresetAfterAutoscan();
+    }
+
+    /**
+     * Tras terminar en 108 MHz (u otra condición de fin), no dejar la sintonía arriba del dial.
+     * Retraso: QS6 suele mandar {@code onScanStatusChanged(false)} y MainActivity fuerza
+     * {@code handleFrequencyChange(108)} con el getCurrentFreq() aún viejo; si sintonizamos
+     * en el mismo fotograma, ese refresco pisa la UI o compite con el tune.
+     * No llamar {@code refreshPresetsCache}: {@code savePreset} usa {@code apply()} y prefs
+     * pueden ir detrás de la memoria; refrescar borraría {@code mPresets} correctos con ceros.
+     */
+    private void tuneToFirstAvailablePresetAfterAutoscan() {
+        if (mActivity == null) return;
+        if (!isFmBandUi()) return;
+        final int band = mActivity.mCurrentBand;
+        mMainHandler.postDelayed(() -> {
+            if (mActivity == null || mActivity.isFinishing() || mActivity.isDestroyed()) return;
+            if (mActivity.mCurrentBand != band) return;
+            if (mActivity.mPresetManager == null) return;
+
+            if (!mCapturedList.isEmpty()) {
+                StationAdapter.ScannedStation s = mCapturedList.get(0);
+                if (s != null && s.frequency > 0) {
+                    mActivity.gotoFreq(s.frequency);
+                    try {
+                        com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(
+                                mActivity, "SCAN", "autoscan_end tune first captured freq=" + s.frequency);
+                    } catch (Exception ignored) {}
+                    return;
+                }
+            }
+            for (int i = 0; i < MAX_RESULTS; i++) {
+                if (mActivity.mPresetManager.getFreq(i) > 0) {
+                    mActivity.gotoPreset(i);
+                    try {
+                        com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(
+                                mActivity, "SCAN", "autoscan_end tune first preset slot=" + (i + 1));
+                    } catch (Exception ignored) {}
+                    return;
+                }
+            }
+        }, 450L);
     }
 
     /** VXX: Alimentado desde MainActivity.onSignalUpdate durante el escaneo. */
@@ -506,6 +575,7 @@ public class ScanManager {
         mAutoSavedByKey.clear();
         mNextAutoPresetSlot = 0;
         mLastScanFreq = 0;
+        mLastSlowSeekTickFreq = -1;
         if (mStationAdapter != null) {
             try {
                 mStationAdapter.notifyDataSetChanged();

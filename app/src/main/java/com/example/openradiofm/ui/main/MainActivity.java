@@ -1208,9 +1208,14 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             
             // V13.9: Al terminar el escaneo, forzamos un refresco completo para cargar logos y nombres
             if (!scanning && mEngine != null) {
-                int currentFreq = mEngine.getCurrentFreq();
-                mLastFreq = -1; // Force trigger
-                handleFrequencyChange(currentFreq);
+                if (mScanManager != null && mScanManager.shouldDeferOemFrequencySyncAfterSlowAutoscan()) {
+                    // Autoscan lento por sobrescritura: getCurrentFreq() suele seguir en 108 MHz; el ScanManager
+                    // sintoniza el 1.er preset con retardo. Evitar pisar esa sintonía aquí.
+                } else {
+                    int currentFreq = mEngine.getCurrentFreq();
+                    mLastFreq = -1; // Force trigger
+                    handleFrequencyChange(currentFreq);
+                }
             }
         });
     }

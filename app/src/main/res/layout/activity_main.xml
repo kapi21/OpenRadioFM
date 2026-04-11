@@ -509,24 +509,34 @@
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@id/guideline_col1"
-        app:layout_constraintEnd_toStartOf="@+id/btnAutoScan"
+        app:layout_constraintEnd_toStartOf="@+id/boxAutoScan"
         app:layout_constraintHorizontal_weight="1"/>
-        
-        <ImageButton
-            android:id="@+id/btnAutoScan"
+
+        <!-- Contenedor fijo: el skin/cristal no gira con el icono durante autoscan -->
+        <FrameLayout
+            android:id="@+id/boxAutoScan"
             android:layout_width="0dp"
             android:layout_height="90dp"
             android:layout_marginStart="2dp"
             android:layout_marginEnd="2dp"
             android:layout_marginBottom="8dp"
             android:background="@drawable/bg_glass_card_premium"
-            android:src="@drawable/radio_scan_icon_f"
-            android:scaleType="fitCenter"
-            android:padding="16dp"
+            android:clickable="false"
+            android:focusable="false"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toEndOf="@+id/btnBand"
             app:layout_constraintEnd_toStartOf="@+id/btnLocDx"
-            app:layout_constraintHorizontal_weight="1"/>
+            app:layout_constraintHorizontal_weight="1">
+
+            <ImageButton
+                android:id="@+id/btnAutoScan"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/radio_scan_icon_f"
+                android:scaleType="fitCenter"
+                android:padding="16dp" />
+        </FrameLayout>
 
         <ImageButton
             android:id="@+id/btnLocDx"
@@ -540,7 +550,7 @@
             android:scaleType="fitCenter"
             android:padding="16dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/btnAutoScan"
+            app:layout_constraintStart_toEndOf="@+id/boxAutoScan"
             app:layout_constraintEnd_toStartOf="@id/guideline_col2"
             app:layout_constraintHorizontal_weight="1"/>
 

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.1</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.2</string>
     <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilité)</string>
     <string name="a11y_hihack_enabled">Activé</string>

@@ -6,7 +6,17 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## [Unreleased]
 
-*(empty; last documented release: **5.1.1** — see below.)*
+*(empty; last documented release: **5.1.2** — see below.)*
+
+---
+
+## [5.1.2] - 2026-04-11
+*Patch on top of 5.1.1 (`versionCode` **34**, `versionName` **5.1.2**).*
+
+### Fixed / Improved
+- **Slow autoscan (overwrite / QS6)**: the seek loop is rescheduled when switching FM sub-bands (FM2/FM3); if frequency does not advance between ticks, `stepUp()` is used to unblock searches that could stall.
+- **After slow autoscan**: tune to the **first available preset** (captured list or first slot with a frequency), with a short delay vs OEM callbacks; a short defer window avoids forcing `handleFrequencyChange` from the UI while the stack still reports band top (e.g. 108 MHz).
+- **Layout 2**: **`boxAutoScan`** wrapper holds the glass card; the **`ImageButton`** is icon + ripple only — autoscan animation **spins the icon**, not the frame. `ThemeManager` applies the skin to the wrapper when present.
 
 ---
 

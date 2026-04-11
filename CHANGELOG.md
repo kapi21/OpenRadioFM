@@ -1,6 +1,16 @@
 ## [Unreleased]
 
-*(vacío; último cierre documentado: **5.1.1** — ver abajo.)*
+*(vacío; último cierre documentado: **5.1.2** — ver abajo.)*
+
+---
+
+## [5.1.2] - 2026-04-11
+*Parche sobre 5.1.1 (`versionCode` **34**, `versionName` **5.1.2**).*
+
+### Fixed / Improved
+- **Autoscan lento (sobrescritura / QS6)**: el bucle de seek vuelve a programarse al cambiar de subbanda (FM2/FM3); si la frecuencia no avanza entre ticks se usa `stepUp()` para desbloquear búsquedas que se quedaban clavadas.
+- **Tras autoscan lento**: al finalizar, sintonía al **primer preset** disponible (lista capturada o primer slot con frecuencia), con retardo breve para no perderse frente a callbacks OEM; ventana corta para **no forzar** `handleFrequencyChange` desde la UI cuando aún se reporta el tope de banda (p. ej. 108 MHz).
+- **Layout 2**: contenedor **`boxAutoScan`** con el cristal; el **`ImageButton`** solo lleva el icono y el ripple — la animación de autoscan **gira solo el icono**, no el recuadro. `ThemeManager` aplica el skin al contenedor cuando existe.
 
 ---
 
