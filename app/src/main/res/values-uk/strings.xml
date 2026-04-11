@@ -71,6 +71,9 @@
     <string name="auto_hide_controls">Автоматичне приховування керування</string>
     <string name="auto_hide_enabled">✅ Авто-приховування увімкнено</string>
     <string name="auto_hide_disabled">❌ Авто-приховування вимкнено</string>
+    <string name="preset_scroll_loop_title">Нескінченна прокрутка пресетів</string>
+    <string name="preset_scroll_loop_desc">Після останнього пресета можна продовжити прокрутку й повернутися до першого (V2 і V3).</string>
+    <string name="preset_scroll_loop_recreate_hint">Перезапуск екрана для застосування налаштування…</string>
     <string name="save_load_favorites">Зберегти/Завантажити Вибране</string>
     <string name="save_favorites">💾 Зберегти Вибране</string>
     <string name="load_favorites">📂 Завантажити Вибране</string>

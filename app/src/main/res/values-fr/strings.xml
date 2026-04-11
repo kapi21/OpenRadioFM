@@ -86,6 +86,9 @@
     <string name="auto_hide_controls">Masquer les commandes automatiquement</string>
     <string name="auto_hide_enabled">✅ Masquage automatique activé</string>
     <string name="auto_hide_disabled">❌ Masquage automatique désactivé</string>
+    <string name="preset_scroll_loop_title">Défilement infini des préréglages</string>
+    <string name="preset_scroll_loop_desc">Après le dernier préréglage, continuez à faire défiler pour revenir au premier (V2 et V3).</string>
+    <string name="preset_scroll_loop_recreate_hint">Redémarrage de l’écran pour appliquer le réglage…</string>
     <string name="under_study">À l\'étude</string>
     <string name="save_load_favorites">Enregistrer/Charger Favoris</string>
     <string name="save_favorites">💾 Enregistrer Favoris</string>

@@ -84,7 +84,10 @@
     <string name="auto_hide_controls">Ocultar controlos automaticamente</string>
     <string name="auto_hide_enabled">✅ Ocultar controlos ativado</string>
     <string name="auto_hide_disabled">❌ Ocultar controlos desativado</string>
-    
+    <string name="preset_scroll_loop_title">Deslize infinito dos presets</string>
+    <string name="preset_scroll_loop_desc">Depois do último preset pode continuar a deslizar e voltar ao primeiro (V2 e V3).</string>
+    <string name="preset_scroll_loop_recreate_hint">A reiniciar o ecrã para aplicar a definição…</string>
+
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">Salvar/Carregar Favoritos</string>
     <string name="save_favorites">💾 Salvar Favoritos</string>

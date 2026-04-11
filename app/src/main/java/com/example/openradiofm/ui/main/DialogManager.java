@@ -163,6 +163,8 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
         androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
         androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
+        androidx.appcompat.widget.SwitchCompat swPresetScrollLoop = dialog.findViewById(R.id.swPresetScrollLoop);
+        TextView tvSummaryPresetScrollLoop = dialog.findViewById(R.id.tvSummaryPresetScrollLoop);
         androidx.appcompat.widget.SwitchCompat swHihackBootReminder = dialog.findViewById(R.id.switchHihackBootReminder);
         // androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm); // Removed v21.3
 
@@ -318,6 +320,18 @@ public class DialogManager {
                 // V18.6: Reiniciar el temporizador si se activa
                 if (checked) mActivity.resetAutoHideTimer();
                 else mActivity.showBottomControls();
+            });
+        }
+
+        if (swPresetScrollLoop != null) {
+            swPresetScrollLoop.setChecked(mActivity.mPrefs.getBoolean("pref_preset_scroll_loop", false));
+            bindSwitchSummary(tvSummaryPresetScrollLoop, swPresetScrollLoop.isChecked());
+            swPresetScrollLoop.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_preset_scroll_loop", checked).apply();
+                bindSwitchSummary(tvSummaryPresetScrollLoop, checked);
+                mActivity.showToast(mActivity.getString(R.string.preset_scroll_loop_recreate_hint));
+                dialog.dismiss();
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(mActivity::recreate, 280);
             });
         }
 

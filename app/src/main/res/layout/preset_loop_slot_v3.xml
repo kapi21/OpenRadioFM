@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/PresetContainerV3">
+
+    <LinearLayout
+        android:id="@+id/cardPresetLoop"
+        style="@style/PresetCardStyleV3">
+
+        <ImageView
+            android:id="@+id/ivPresetLoop"
+            style="@style/PresetIconStyleV3" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvPresetLoop"
+        style="@style/PresetTextStyleV3"
+        android:text="---" />
+</LinearLayout>

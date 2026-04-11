@@ -28,6 +28,20 @@ public class PresetManager {
     private final int mPresetsCount;
     private final int[] mPresets;
 
+    /** Filas clonadas para scroll en bucle (opcional); mismo slot que el preset principal. */
+    private static final class LoopMirror {
+        final ImageView iv;
+        final TextView tv;
+
+        LoopMirror(ImageView iv, TextView tv) {
+            this.iv = iv;
+            this.tv = tv;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private final java.util.ArrayList<LoopMirror>[] mLoopMirrors;
+
     // VXX: Guard para evitar tremble QS6 entre nombre y frecuencia en el preset pulsado.
     // Solo bloquea el texto (fallback a frecuencia) durante un corto transitorio.
     private final long[] mPresetTextLockUntilMs;
@@ -58,8 +72,91 @@ public class PresetManager {
         this.mLastVisualFreqPerSlot = new int[count];
         this.mPresetTextLockUntilMs = new long[count];
         this.mPresetLogoForceClearUntilMs = new long[count];
+        mLoopMirrors = new java.util.ArrayList[count];
+        for (int i = 0; i < count; i++) {
+            mLoopMirrors[i] = new java.util.ArrayList<>();
+        }
     }
 
+    public void clearLoopMirrors() {
+        for (int i = 0; i < mPresetsCount; i++) {
+            mLoopMirrors[i].clear();
+        }
+    }
+
+    public void registerLoopMirror(int slot, View cardIgnored, ImageView iv, TextView tv) {
+        if (slot < 0 || slot >= mPresetsCount) return;
+        if (iv == null && tv == null) return;
+        mLoopMirrors[slot].add(new LoopMirror(iv, tv));
+    }
+
+    private void setPresetSlotText(int slot, CharSequence text) {
+        if (slot < 0 || slot >= mPresetsCount) return;
+        if (tvPresets[slot] != null) {
+            tvPresets[slot].setText(text);
+            tvPresets[slot].setVisibility(View.VISIBLE);
+        }
+        for (LoopMirror m : mLoopMirrors[slot]) {
+            if (m.tv != null) {
+                m.tv.setText(text);
+                m.tv.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    private void clearPresetSlotVisuals(int slot) {
+        if (slot < 0 || slot >= mPresetsCount) return;
+        if (tvPresets[slot] != null) {
+            tvPresets[slot].setText("---");
+            tvPresets[slot].setVisibility(View.VISIBLE);
+        }
+        if (ivPresets[slot] != null) {
+            ivPresets[slot].setImageDrawable(null);
+            ivPresets[slot].setBackground(null);
+        }
+        for (LoopMirror mir : mLoopMirrors[slot]) {
+            if (mir.tv != null) {
+                mir.tv.setText("---");
+                mir.tv.setVisibility(View.VISIBLE);
+            }
+            if (mir.iv != null) {
+                mir.iv.setImageDrawable(null);
+                mir.iv.setBackground(null);
+            }
+        }
+    }
+
+    private void glideLogoIntoPresetSlot(int slot, Object model) {
+        if (slot < 0 || slot >= mPresetsCount || model == null) return;
+        java.util.ArrayList<ImageView> targets = new java.util.ArrayList<>(4);
+        if (ivPresets[slot] != null) targets.add(ivPresets[slot]);
+        for (LoopMirror m : mLoopMirrors[slot]) {
+            if (m.iv != null) targets.add(m.iv);
+        }
+        for (ImageView target : targets) {
+            Glide.with(target)
+                    .load(model)
+                    .apply(new RequestOptions()
+                            .format(DecodeFormat.PREFER_ARGB_8888)
+                            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
+                    .transform(new RoundedCorners(20))
+                    .listener(new RequestListener<android.graphics.drawable.Drawable>() {
+                        @Override
+                        public boolean onLoadFailed(GlideException e, Object model,
+                                Target<android.graphics.drawable.Drawable> t, boolean isFirstResource) {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model,
+                                Target<android.graphics.drawable.Drawable> t, DataSource dataSource, boolean isFirstResource) {
+                            target.setBackground(null);
+                            return false;
+                        }
+                    })
+                    .into(target);
+        }
+    }
 
     public void bindViews(View root, boolean isV3) {
         for (int i = 0; i < mPresetsCount; i++) {
@@ -114,14 +211,7 @@ public class PresetManager {
 
         if (freq <= 0) {
             mLastVisualFreqPerSlot[index] = 0;
-            if (tvPresets[index] != null) {
-                tvPresets[index].setText("---");
-                tvPresets[index].setVisibility(View.VISIBLE);
-            }
-            if (ivPresets[index] != null) {
-                ivPresets[index].setImageDrawable(null);
-                ivPresets[index].setBackground(null);
-            }
+            clearPresetSlotVisuals(index);
             return;
         }
         final boolean freqChangedForSlot = mLastVisualFreqPerSlot[index] != freq;
@@ -137,12 +227,16 @@ public class PresetManager {
                 // Solo cuando cambia de emisora en ese slot; evita "temblor" en refrescos repetidos.
                 if (!lockActive) {
                     if (fBand >= 3) {
-                        tvPresets[fIndex].setText(String.valueOf(fFreq));
+                        setPresetSlotText(fIndex, String.valueOf(fFreq));
                     } else {
-                        tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                        setPresetSlotText(fIndex, String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                    }
+                } else {
+                    if (tvPresets[fIndex] != null) tvPresets[fIndex].setVisibility(View.VISIBLE);
+                    for (LoopMirror m : mLoopMirrors[fIndex]) {
+                        if (m.tv != null) m.tv.setVisibility(View.VISIBLE);
                     }
                 }
-                tvPresets[fIndex].setVisibility(View.VISIBLE);
             }
 
             // QS6: durante lock transitorio, no pedir nombre asíncrono para evitar
@@ -167,19 +261,21 @@ public class PresetManager {
                     if (mTextRequestSeqPerSlot[fIndex] != textRequestSeq) return;
                     if (mPresets[fIndex] != fFreqForSlot) return;
                     if (displayName != null && !displayName.isEmpty() && !displayName.matches("\\d+")) {
-                        tvPresets[fIndex].setText(displayName);
+                        setPresetSlotText(fIndex, displayName);
                     } else {
                         // V18.2: Formateo dinámico según banda (AM en kHz sin decimales)
                         boolean lockNow = mPresetTextLockUntilMs[fIndex] > android.os.SystemClock.elapsedRealtime();
                         if (!lockNow) {
                             if (fBand >= 3) { // BAND_AM1 o BAND_AM2 (o SW)
-                                tvPresets[fIndex].setText(String.valueOf(fFreq));
+                                setPresetSlotText(fIndex, String.valueOf(fFreq));
                             } else {
-                                tvPresets[fIndex].setText(String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
+                                setPresetSlotText(fIndex, String.format(java.util.Locale.US, "%.1f", fFreq / 1000.0));
                             }
                         }
                     }
-                    tvPresets[fIndex].setVisibility(View.VISIBLE);
+                    if (tvPresets[fIndex] != null) {
+                        tvPresets[fIndex].setVisibility(View.VISIBLE);
+                    }
                 });
             });
             }
@@ -205,29 +301,8 @@ public class PresetManager {
                     if (mActivity.getUiWorkGeneration() != bgGenLogo) return;
                     if (mLogoRequestSeqPerSlot[fIndex] != requestSeq) return;
                     if (mPresets[fIndex] != fFreqForLogo) return;
-                    if (ivPresets[fIndex] == null) return;
-                    Glide.with(ivPresets[fIndex])
-                            .load(immediateLogo)
-                            .apply(new RequestOptions()
-                                    .format(DecodeFormat.PREFER_ARGB_8888)
-                                    .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
-                            .transform(new RoundedCorners(20))
-                            .listener(new RequestListener<android.graphics.drawable.Drawable>() {
-                                @Override
-                                public boolean onLoadFailed(GlideException e, Object model, Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
-                                    return false;
-                                }
-
-                                @Override
-                                public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, Target<android.graphics.drawable.Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                                    // Quitar el fallback detrás para que no se vea a través del alfa.
-                                    if (ivPresets[fIndex] != null) {
-                                        ivPresets[fIndex].setBackground(null);
-                                    }
-                                    return false;
-                                }
-                            })
-                            .into(ivPresets[fIndex]);
+                    if (ivPresets[fIndex] == null && mLoopMirrors[fIndex].isEmpty()) return;
+                    glideLogoIntoPresetSlot(fIndex, immediateLogo);
                 });
             });
         }
@@ -239,28 +314,13 @@ public class PresetManager {
                     if (mLogoRequestSeqPerSlot[fIndex] != requestSeq) return;
                     if (mPresets[fIndex] != fFreqForLogo) return;
 
-                    if (logoUrl != null && ivPresets[fIndex] != null) {
-                        // Al aplicar logo real, quitar cualquier background residual.
-                        ivPresets[fIndex].setBackground(null);
-                        Glide.with(ivPresets[fIndex])
-                                .load(logoUrl)
-                                .apply(new RequestOptions()
-                                        .format(DecodeFormat.PREFER_ARGB_8888)
-                                        .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
-                                .transform(new RoundedCorners(20))
-                                .listener(new RequestListener<android.graphics.drawable.Drawable>() {
-                                    @Override
-                                    public boolean onLoadFailed(GlideException e, Object model, Target<android.graphics.drawable.Drawable> target, boolean isFirstResource) {
-                                        return false;
-                                    }
-
-                                    @Override
-                                    public boolean onResourceReady(android.graphics.drawable.Drawable resource, Object model, Target<android.graphics.drawable.Drawable> target, DataSource dataSource, boolean isFirstResource) {
-                                        if (ivPresets[fIndex] != null) ivPresets[fIndex].setBackground(null);
-                                        return false;
-                                    }
-                                })
-                                .into(ivPresets[fIndex]);
+                    if (logoUrl != null) {
+                        if (ivPresets[fIndex] != null) {
+                            ivPresets[fIndex].setBackground(null);
+                        }
+                        if (ivPresets[fIndex] != null || !mLoopMirrors[fIndex].isEmpty()) {
+                            glideLogoIntoPresetSlot(fIndex, logoUrl);
+                        }
                     } else if (ivPresets[fIndex] != null) {
                         // Si no hay logo, mantener el que ya esté (estabilidad visual).
                     }
@@ -450,9 +510,14 @@ public class PresetManager {
     }
 
     public void applyFonts(android.graphics.Typeface typeface) {
-        for (TextView tv : tvPresets) {
-            if (tv != null) {
-                tv.setTypeface(typeface);
+        for (int i = 0; i < mPresetsCount; i++) {
+            if (tvPresets[i] != null) {
+                tvPresets[i].setTypeface(typeface);
+            }
+            for (LoopMirror m : mLoopMirrors[i]) {
+                if (m.tv != null) {
+                    m.tv.setTypeface(typeface);
+                }
             }
         }
     }
@@ -461,6 +526,7 @@ public class PresetManager {
      * V18.6.2: Cleanup to avoid memory leaks and pending callbacks.
      */
     public void release() {
+        clearLoopMirrors();
         // V18.6.3: Glide handles this automatically, but if we clear, 
         // we MUST use the view context and NOT the activity to avoid crashes 
         // when this is called from onDestroy().

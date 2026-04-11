@@ -81,7 +81,10 @@
     <string name="auto_hide_controls">Vezérlők automatikus elrejtése</string>
     <string name="auto_hide_enabled">✅ Automatikus elrejtés engedélyezve</string>
     <string name="auto_hide_disabled">❌ Automatikus elrejtés letiltva</string>
-    
+    <string name="preset_scroll_loop_title">Végtelen preset görgetés</string>
+    <string name="preset_scroll_loop_desc">Az utolsó preset után is görgethetsz tovább, és visszajutsz az elsőhöz (V2 és V3).</string>
+    <string name="preset_scroll_loop_recreate_hint">A képernyő újraindítása a beállítás alkalmazásához…</string>
+
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">Kedvencek Mentése/Betöltése</string>
     <string name="save_favorites">💾 Kedvencek Mentése</string>

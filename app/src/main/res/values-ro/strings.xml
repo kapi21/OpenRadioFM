@@ -72,6 +72,9 @@
     <string name="auto_hide_controls">Ascunde controalele automat</string>
     <string name="auto_hide_enabled">✅ Ascundere automată activată</string>
     <string name="auto_hide_disabled">❌ Ascundere automată dezactivată</string>
+    <string name="preset_scroll_loop_title">Derulare infinită a preseturilor</string>
+    <string name="preset_scroll_loop_desc">După ultimul preset poți continua să glisezi și revii la primul (V2 și V3).</string>
+    <string name="preset_scroll_loop_recreate_hint">Se repornește ecranul pentru a aplica setarea…</string>
     <string name="save_load_favorites">Salvează/Încarcă Favorite</string>
     <string name="save_favorites">💾 Salvează Favorite</string>
     <string name="load_favorites">📂 Încarcă Favorite</string>

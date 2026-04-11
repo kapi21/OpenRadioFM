@@ -84,7 +84,10 @@
     <string name="auto_hide_controls">Nascondi controlli automaticamente</string>
     <string name="auto_hide_enabled">✅ Nascondi controlli attivato</string>
     <string name="auto_hide_disabled">❌ Nascondi controlli disattivato</string>
-    
+    <string name="preset_scroll_loop_title">Scorrimento preset a ciclo</string>
+    <string name="preset_scroll_loop_desc">Dopo l’ultimo preset puoi continuare a scorrere e tornare al primo (V2 e V3).</string>
+    <string name="preset_scroll_loop_recreate_hint">Riavvio della schermata per applicare l’impostazione…</string>
+
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">Salva/Carica Preferiti</string>
     <string name="save_favorites">💾 Salva Preferiti</string>

@@ -1298,6 +1298,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 if (mPresetManager == null) {
                     mPresetManager = new PresetManager(MainActivity.this, mRepository, mPrefs, PRESETS_COUNT);
                     mPresetManager.bindViews(findViewById(android.R.id.content), mIsV3);
+                    InfinitePresetScrollHelper.attachIfNeeded(MainActivity.this);
                     mPresetManager.refreshPresetsCache(mCurrentBand);
                     mPresetManager.refreshButtons(mCurrentBand);
                 }
