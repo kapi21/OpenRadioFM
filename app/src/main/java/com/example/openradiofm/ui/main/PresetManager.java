@@ -312,13 +312,14 @@ public class PresetManager {
     }
 
     /**
-     * V14.2/V21.3: Navegación Secuencial - Busca el siguiente slot ocupado.
+     * V14.2/V21.3: Navegación secuencial por slots (0…N-1) con bucle: tras el último ocupado
+     * vuelve al primero. Fuera de un preset (sintonía manual), “siguiente” = primer slot ocupado
+     * en orden creciente de índice.
      */
     public int getNextSequentialFavorite(int currentFreq) {
         int currentIndex = -1;
         int tolerance = 50;
 
-        // 1. Identificar si estamos en un preset conocido
         for (int i = 0; i < mPresetsCount; i++) {
             if (mPresets[i] > 0 && Math.abs(mPresets[i] - currentFreq) <= tolerance) {
                 currentIndex = i;
@@ -326,9 +327,17 @@ public class PresetManager {
             }
         }
 
-        // 2. Buscar el siguiente slot ocupado circularmente
-        for (int i = 1; i <= mPresetsCount; i++) {
-            int nextIdx = (currentIndex + i) % mPresetsCount;
+        if (currentIndex == -1) {
+            for (int s = 0; s < mPresetsCount; s++) {
+                if (mPresets[s] > 0) return mPresets[s];
+            }
+            return -1;
+        }
+
+        // En un preset: recorrer el anillo sin volver al mismo índice hasta agotar el resto
+        // (evita devolver la misma frecuencia si solo hay un preset guardado).
+        for (int step = 1; step < mPresetsCount; step++) {
+            int nextIdx = (currentIndex + step) % mPresetsCount;
             if (mPresets[nextIdx] > 0) {
                 return mPresets[nextIdx];
             }
@@ -337,7 +346,8 @@ public class PresetManager {
     }
 
     /**
-     * V14.2/V21.3: Navegación Secuencial - Busca el slot ocupado anterior.
+     * Igual que {@link #getNextSequentialFavorite} pero hacia atrás: desde el primer slot ocupado
+     * en orden de índice al estar en manual; en un preset, bucle al slot ocupado anterior.
      */
     public int getPreviousSequentialFavorite(int currentFreq) {
         int currentIndex = -1;
@@ -350,11 +360,15 @@ public class PresetManager {
             }
         }
 
-        // Si currentIndex es -1 (frecuencia manual), empezamos desde el final o desde 0
-        int start = (currentIndex == -1) ? 0 : currentIndex;
+        if (currentIndex == -1) {
+            for (int s = mPresetsCount - 1; s >= 0; s--) {
+                if (mPresets[s] > 0) return mPresets[s];
+            }
+            return -1;
+        }
 
-        for (int i = 1; i <= mPresetsCount; i++) {
-            int prevIdx = (start - i + mPresetsCount) % mPresetsCount;
+        for (int step = 1; step < mPresetsCount; step++) {
+            int prevIdx = (currentIndex - step + mPresetsCount) % mPresetsCount;
             if (mPresets[prevIdx] > 0) {
                 return mPresets[prevIdx];
             }
@@ -415,29 +429,20 @@ public class PresetManager {
     }
 
     /**
-     * V16: Reproduce el siguiente favorito disponible.
+     * V16: Misma lógica que los botones prev/next de pantalla (bucle por slots), para volante
+     * y {@link com.example.openradiofm.service.RadioMediaService}.
      */
     public void playNextPreset() {
         if (mActivity == null) return;
-        int currentFreq = (mActivity.mEngine != null) ? mActivity.mEngine.getCurrentFreq() : 0;
-        int next = getNextFavorite(currentFreq);
-        if (next != -1) {
-            final int target = next;
-            mActivity.runOnUiThread(() -> mActivity.gotoFreq(target));
-        }
+        mActivity.runOnUiThread(() -> mActivity.gotoNextFavorite());
     }
 
     /**
-     * V16: Reproduce el favorito anterior disponible.
+     * @see #playNextPreset
      */
     public void playPrevPreset() {
         if (mActivity == null) return;
-        int currentFreq = (mActivity.mEngine != null) ? mActivity.mEngine.getCurrentFreq() : 0;
-        int prev = getPreviousFavorite(currentFreq);
-        if (prev != -1) {
-            final int target = prev;
-            mActivity.runOnUiThread(() -> mActivity.gotoFreq(target));
-        }
+        mActivity.runOnUiThread(() -> mActivity.gotoPreviousFavorite());
     }
 
     public int getFreq(int index) {

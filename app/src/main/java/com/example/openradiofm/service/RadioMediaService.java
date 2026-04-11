@@ -1318,14 +1318,25 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
 
         if (direction > 0) {
-            for (int i = 1; i <= count; i++) {
-                int nextIdx = (currentIndex + i) % count;
+            if (currentIndex == -1) {
+                for (int s = 0; s < count; s++) {
+                    if (presets[s] > 0) return presets[s];
+                }
+                return -1;
+            }
+            for (int step = 1; step < count; step++) {
+                int nextIdx = (currentIndex + step) % count;
                 if (presets[nextIdx] > 0) return presets[nextIdx];
             }
         } else {
-            int start = (currentIndex == -1) ? 0 : currentIndex;
-            for (int i = 1; i <= count; i++) {
-                int prevIdx = (start - i + count) % count;
+            if (currentIndex == -1) {
+                for (int s = count - 1; s >= 0; s--) {
+                    if (presets[s] > 0) return presets[s];
+                }
+                return -1;
+            }
+            for (int step = 1; step < count; step++) {
+                int prevIdx = (currentIndex - step + count) % count;
                 if (presets[prevIdx] > 0) return presets[prevIdx];
             }
         }
