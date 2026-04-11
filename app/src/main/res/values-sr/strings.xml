@@ -3,6 +3,13 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="mt8163_stream_stopped_restart_hint">Striming je zaustavljen. Ako FM ne radi kako treba, potpuno zatvorite OpenRadioFM i ponovo ga otvorite.</string>
     <string name="premium_customization">Meni opcija</string>
+    <string name="settings_section_appearance">Izgled</string>
+    <string name="settings_section_audio_screen">Zvuk i ekran</string>
+    <string name="settings_section_cloud">Oblak i zajednica</string>
+    <string name="settings_section_radio_advanced">Napredni radio</string>
+    <string name="settings_section_about">Informacije</string>
+    <string name="settings_value_on">Uključeno</string>
+    <string name="settings_value_off">Isključeno</string>
     <string name="theme_colors">Boje Teme</string>
     <string name="typography">Tipografija</string>
     <string name="background_mode">🖼️ Režim Pozadine</string>

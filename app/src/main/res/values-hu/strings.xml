@@ -4,6 +4,13 @@
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Beállítások menü</string>
+    <string name="settings_section_appearance">Megjelenés</string>
+    <string name="settings_section_audio_screen">Hang és kijelző</string>
+    <string name="settings_section_cloud">Felhő és közösség</string>
+    <string name="settings_section_radio_advanced">Speciális rádió</string>
+    <string name="settings_section_about">Infó</string>
+    <string name="settings_value_on">Be</string>
+    <string name="settings_value_off">Ki</string>
     <string name="theme_colors">Téma Színek</string>
     <string name="typography">Tipográfia</string>
     <string name="background_mode">🖼️ Háttér Mód</string>

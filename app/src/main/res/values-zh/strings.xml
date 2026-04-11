@@ -3,6 +3,13 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="mt8163_stream_stopped_restart_hint">已停止在线收听。如 FM 异常，请完全关闭 OpenRadioFM 后重新打开。</string>
     <string name="premium_customization">选项菜单</string>
+    <string name="settings_section_appearance">外观</string>
+    <string name="settings_section_audio_screen">音频与屏幕</string>
+    <string name="settings_section_cloud">云端与社区</string>
+    <string name="settings_section_radio_advanced">高级收音机</string>
+    <string name="settings_section_about">信息</string>
+    <string name="settings_value_on">开</string>
+    <string name="settings_value_off">关</string>
     <string name="theme_colors">主题颜色</string>
     <string name="typography">字体设置</string>
     <string name="background_mode">🖼️ 背景模式</string>

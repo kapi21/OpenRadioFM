@@ -3,6 +3,13 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="mt8163_stream_stopped_restart_hint">ストリーミングを停止しました。FMが正常に動作しない場合は、OpenRadioFMを完全に終了してから再度開いてください。</string>
     <string name="premium_customization">オプションメニュー</string>
+    <string name="settings_section_appearance">外観</string>
+    <string name="settings_section_audio_screen">音声と画面</string>
+    <string name="settings_section_cloud">クラウドとコミュニティ</string>
+    <string name="settings_section_radio_advanced">詳細ラジオ設定</string>
+    <string name="settings_section_about">情報</string>
+    <string name="settings_value_on">オン</string>
+    <string name="settings_value_off">オフ</string>
     <string name="theme_colors">テーマカラー</string>
     <string name="typography">タイポグラフィ</string>
     <string name="background_mode">🖼️ 背景モード</string>

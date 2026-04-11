@@ -4,6 +4,13 @@
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Menu de Opções</string>
+    <string name="settings_section_appearance">Aparência</string>
+    <string name="settings_section_audio_screen">Áudio e ecrã</string>
+    <string name="settings_section_cloud">Nuvem e comunidade</string>
+    <string name="settings_section_radio_advanced">Rádio avançado</string>
+    <string name="settings_section_about">Informação</string>
+    <string name="settings_value_on">Ativado</string>
+    <string name="settings_value_off">Desativado</string>
     <string name="theme_colors">Cores do Tema</string>
     <string name="typography">Tipografia</string>
     <string name="background_mode">🖼️ Modo de Fundo</string>

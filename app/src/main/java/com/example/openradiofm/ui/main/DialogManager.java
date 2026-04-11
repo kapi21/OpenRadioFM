@@ -133,14 +133,26 @@ public class DialogManager {
         View cardBackground = dialog.findViewById(R.id.cardBackground);
         View viewColorPreview = dialog.findViewById(R.id.viewColorPreview);
         TextView tvFontPreview = dialog.findViewById(R.id.tvFontPreview);
+        TextView tvThemeSummary = dialog.findViewById(R.id.tvThemeSummary);
+        TextView tvFontNameSummary = dialog.findViewById(R.id.tvFontNameSummary);
         TextView tvBackgroundStatus = dialog.findViewById(R.id.tvBackgroundStatus);
         View rowA11yHijack = dialog.findViewById(R.id.rowA11yHijack);
         TextView tvA11yHijackStatus = dialog.findViewById(R.id.tvA11yHijackStatus);
+
+        TextView tvSummaryReliefHd = dialog.findViewById(R.id.tvSummaryReliefHd);
+        TextView tvSummaryNightMode = dialog.findViewById(R.id.tvSummaryNightMode);
+        TextView tvSummaryNightLogos = dialog.findViewById(R.id.tvSummaryNightLogos);
+        TextView tvSummaryStatusBar = dialog.findViewById(R.id.tvSummaryStatusBar);
+        TextView tvSummaryAutoHide = dialog.findViewById(R.id.tvSummaryAutoHide);
+        TextView tvSummaryLogosOnline = dialog.findViewById(R.id.tvSummaryLogosOnline);
+        TextView tvSummaryCloudContrib = dialog.findViewById(R.id.tvSummaryCloudContrib);
+        TextView tvSummarySaveHistory = dialog.findViewById(R.id.tvSummarySaveHistory);
 
         // Night schedule views
         View rowNightSchedule = dialog.findViewById(R.id.rowNightSchedule);
         TextView tvNightStart = dialog.findViewById(R.id.tvNightStart);
         TextView tvNightEnd = dialog.findViewById(R.id.tvNightEnd);
+        TextView tvNightScheduleSummary = dialog.findViewById(R.id.tvNightScheduleSummary);
 
         androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swReliefHd = dialog.findViewById(R.id.switchReliefHd);
@@ -204,6 +216,8 @@ public class DialogManager {
 
         // Previews
         updateSettingsPreviews(viewColorPreview, tvFontPreview);
+        fillThemeSummary(tvThemeSummary);
+        fillFontNameSummary(tvFontNameSummary);
 
         // Night schedule initial text from prefs
         if (tvNightStart != null && tvNightEnd != null) {
@@ -213,6 +227,7 @@ public class DialogManager {
             int endMin = mActivity.mPrefs.getInt("pref_night_end_min", 0);
             tvNightStart.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", startHour, startMin));
             tvNightEnd.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", endHour, endMin));
+            updateNightScheduleSummary(tvNightScheduleSummary, tvNightStart, tvNightEnd);
         }
 
         // V19.7: Indicador de Conexión a Supabase (Automático)
@@ -246,8 +261,10 @@ public class DialogManager {
         // Switches
         if (swLogosOnline != null) {
             swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", true));
+            bindSwitchSummary(tvSummaryLogosOnline, swLogosOnline.isChecked());
             swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
+                bindSwitchSummary(tvSummaryLogosOnline, checked);
                 if (checked) {
                     mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_1));
                     mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_2));
@@ -280,8 +297,10 @@ public class DialogManager {
 
         if (swStatusBar != null) {
             swStatusBar.setChecked(mActivity.mPrefs.getBoolean("pref_show_status_bar_v2", false));
+            bindSwitchSummary(tvSummaryStatusBar, swStatusBar.isChecked());
             swStatusBar.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_show_status_bar_v2", checked).apply();
+                bindSwitchSummary(tvSummaryStatusBar, checked);
                 mActivity.showToast(checked ? mActivity.getString(R.string.status_bar_enabled)
                         : mActivity.getString(R.string.status_bar_disabled));
                 mActivity.applyStatusBarVisibility();
@@ -290,8 +309,10 @@ public class DialogManager {
 
         if (swAutoHide != null) {
             swAutoHide.setChecked(mActivity.mPrefs.getBoolean("pref_auto_hide_controls", false));
+            bindSwitchSummary(tvSummaryAutoHide, swAutoHide.isChecked());
             swAutoHide.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_auto_hide_controls", checked).apply();
+                bindSwitchSummary(tvSummaryAutoHide, checked);
                 mActivity.showToast(checked ? mActivity.getString(R.string.auto_hide_enabled)
                         : mActivity.getString(R.string.auto_hide_disabled));
                 // V18.6: Reiniciar el temporizador si se activa
@@ -317,11 +338,14 @@ public class DialogManager {
                 } catch (Exception ignored) {}
                 swReliefHd.setChecked(false);
                 swReliefHd.setEnabled(false);
+                bindSwitchSummary(tvSummaryReliefHd, false);
             }
             boolean reliefEnabled = mActivity.mPrefs.getBoolean("pref_relief_hd", false);
             swReliefHd.setChecked(reliefEnabled);
+            bindSwitchSummary(tvSummaryReliefHd, reliefEnabled);
             swReliefHd.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_relief_hd", checked).apply();
+                bindSwitchSummary(tvSummaryReliefHd, checked);
                 mActivity.applyReliefHd(checked);
                 mActivity.showToast(checked ? mActivity.getString(R.string.toast_relief_hd_on)
                         : mActivity.getString(R.string.toast_relief_hd_off));
@@ -331,10 +355,12 @@ public class DialogManager {
         if (swNight != null) {
             boolean nightEnabled = mActivity.mPrefs.getBoolean("pref_night_mode_auto", false);
             swNight.setChecked(nightEnabled);
+            bindSwitchSummary(tvSummaryNightMode, nightEnabled);
             if (rowNightSchedule != null)
                 rowNightSchedule.setVisibility(nightEnabled ? View.VISIBLE : View.GONE);
             swNight.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_night_mode_auto", checked).apply();
+                bindSwitchSummary(tvSummaryNightMode, checked);
                 if (rowNightSchedule != null)
                     rowNightSchedule.setVisibility(checked ? View.VISIBLE : View.GONE);
                 if (checked) {
@@ -361,6 +387,7 @@ public class DialogManager {
                                     .putInt("pref_night_start_min", minute)
                                     .apply();
                             tvNightStart.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", hourOfDay, minute));
+                            updateNightScheduleSummary(tvNightScheduleSummary, tvNightStart, tvNightEnd);
 
                             android.app.TimePickerDialog endDialog = new android.app.TimePickerDialog(
                                     mActivity,
@@ -370,6 +397,7 @@ public class DialogManager {
                                                 .putInt("pref_night_end_min", endMinute)
                                                 .apply();
                                         tvNightEnd.setText(String.format(java.util.Locale.getDefault(), "%02d:%02d", endHourOfDay, endMinute));
+                                        updateNightScheduleSummary(tvNightScheduleSummary, tvNightStart, tvNightEnd);
 
                                         mActivity.showToast(mActivity.getString(
                                                 R.string.night_schedule_updated,
@@ -400,9 +428,11 @@ public class DialogManager {
         if (swNightLogos != null) {
             boolean nightLogos = mActivity.mPrefs.getBoolean("pref_night_logos", true);
             swNightLogos.setChecked(nightLogos);
+            bindSwitchSummary(tvSummaryNightLogos, nightLogos);
 
             swNightLogos.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_night_logos", checked).apply();
+                bindSwitchSummary(tvSummaryNightLogos, checked);
                 mActivity.showToast(checked ? mActivity.getString(R.string.toast_night_logos_tint_on)
                         : mActivity.getString(R.string.toast_night_logos_tint_off));
 
@@ -444,14 +474,19 @@ public class DialogManager {
 
         if (swHistory != null) {
             swHistory.setChecked(mActivity.mPrefs.getBoolean("pref_save_history", true));
-            swHistory.setOnCheckedChangeListener(
-                    (bv, checked) -> mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply());
+            bindSwitchSummary(tvSummarySaveHistory, swHistory.isChecked());
+            swHistory.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply();
+                bindSwitchSummary(tvSummarySaveHistory, checked);
+            });
         }
 
         if (swCloudContrib != null) {
             swCloudContrib.setChecked(mActivity.mPrefs.getBoolean("pref_cloud_contrib", true));
+            bindSwitchSummary(tvSummaryCloudContrib, swCloudContrib.isChecked());
             swCloudContrib.setOnCheckedChangeListener((v, isChecked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_cloud_contrib", isChecked).apply();
+                bindSwitchSummary(tvSummaryCloudContrib, isChecked);
                 mActivity.showStyledToast(isChecked ? mActivity.getString(R.string.toast_contrib_on)
                         : mActivity.getString(R.string.toast_contrib_off));
             });
@@ -581,9 +616,9 @@ public class DialogManager {
                 mActivity.showToast(mActivity.getString(R.string.night_mode_manual_blocked));
                 return;
             }
-            showThemeSelector(dialog, viewColorPreview, tvFontPreview);
+            showThemeSelector(dialog, viewColorPreview, tvFontPreview, tvThemeSummary);
         });
-        cardFonts.setOnClickListener(v -> showFontSelector(dialog, tvFontPreview));
+        cardFonts.setOnClickListener(v -> showFontSelector(dialog, tvFontPreview, tvFontNameSummary));
         cardBackground.setOnClickListener(v -> showBackgroundSelector(dialog, tvBackgroundStatus));
 
         dialog.findViewById(R.id.btnAbout).setOnClickListener(v -> showAboutDialog());
@@ -680,7 +715,8 @@ public class DialogManager {
         }
     }
 
-    public void showThemeSelector(android.app.Dialog parentDialog, View colorPreview, TextView fontPreview) {
+    public void showThemeSelector(android.app.Dialog parentDialog, View colorPreview, TextView fontPreview,
+            TextView themeSummary) {
         com.example.openradiofm.ui.theme.ThemeManager.Skin[] allSkins = com.example.openradiofm.ui.theme.ThemeManager.Skin.values();
         java.util.ArrayList<com.example.openradiofm.ui.theme.ThemeManager.Skin> skinValuesList = new java.util.ArrayList<>();
         java.util.ArrayList<String> skinsList = new java.util.ArrayList<>();
@@ -714,11 +750,12 @@ public class DialogManager {
                 mActivity.mThemeManager.setSkin(skinValues[w]);
                 mActivity.applySkin(skinValues[w]);
                 updateSettingsPreviews(colorPreview, fontPreview);
+                fillThemeSummary(themeSummary);
             }
         });
     }
 
-    public void showFontSelector(android.app.Dialog parentDialog, TextView fontPreview) {
+    public void showFontSelector(android.app.Dialog parentDialog, TextView fontPreview, TextView fontNameSummary) {
         String[] fonts = { mActivity.getString(R.string.font_default), mActivity.getString(R.string.font_bebas),
                 mActivity.getString(R.string.font_digital), mActivity.getString(R.string.font_modern),
                 mActivity.getString(R.string.font_orbitron), mActivity.getString(R.string.font_formula1) };
@@ -728,6 +765,7 @@ public class DialogManager {
             mActivity.mPrefs.edit().putInt("pref_font_type", w).apply();
             mActivity.applyFonts();
             updateSettingsPreviews(null, fontPreview);
+            fillFontNameSummaryAtIndex(fontNameSummary, w);
         });
     }
 
@@ -1357,5 +1395,43 @@ public class DialogManager {
         } catch (Exception ignored) {
         }
         tv.setTypeface(typeface);
+    }
+
+    private void bindSwitchSummary(TextView tv, boolean on) {
+        if (tv == null) return;
+        tv.setText(on ? mActivity.getString(R.string.settings_value_on)
+                : mActivity.getString(R.string.settings_value_off));
+    }
+
+    private void fillThemeSummary(TextView tv) {
+        if (tv == null || mActivity.mThemeManager == null) return;
+        com.example.openradiofm.ui.theme.ThemeManager.Skin s = mActivity.mThemeManager.getCurrentSkin();
+        tv.setText(s != null ? s.displayName : "");
+    }
+
+    private void fillFontNameSummary(TextView tv) {
+        fillFontNameSummaryAtIndex(tv, mActivity.mPrefs.getInt("pref_font_type", 0));
+    }
+
+    private void fillFontNameSummaryAtIndex(TextView tv, int idx) {
+        if (tv == null) return;
+        String[] fonts = {
+                mActivity.getString(R.string.font_default),
+                mActivity.getString(R.string.font_bebas),
+                mActivity.getString(R.string.font_digital),
+                mActivity.getString(R.string.font_modern),
+                mActivity.getString(R.string.font_orbitron),
+                mActivity.getString(R.string.font_formula1)
+        };
+        if (idx >= 0 && idx < fonts.length) {
+            tv.setText(fonts[idx]);
+        } else {
+            tv.setText(fonts[0]);
+        }
+    }
+
+    private static void updateNightScheduleSummary(TextView summary, TextView startTv, TextView endTv) {
+        if (summary == null || startTv == null || endTv == null) return;
+        summary.setText(startTv.getText().toString() + " — " + endTv.getText().toString());
     }
 }

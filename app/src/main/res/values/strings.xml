@@ -21,6 +21,13 @@
     
     <!-- Premium Menu Strings -->
     <string name="premium_customization">Menú de Opciones</string>
+    <string name="settings_section_appearance">Apariencia</string>
+    <string name="settings_section_audio_screen">Audio y pantalla</string>
+    <string name="settings_section_cloud">Nube y comunidad</string>
+    <string name="settings_section_radio_advanced">Radio avanzado</string>
+    <string name="settings_section_about">Información</string>
+    <string name="settings_value_on">Activado</string>
+    <string name="settings_value_off">Desactivado</string>
     <string name="theme_colors">Colores del Tema</string>
     <string name="typography">Tipografía</string>
     <string name="background_mode">🖼️ Modo de Fondo</string>

@@ -3,6 +3,13 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="mt8163_stream_stopped_restart_hint">Стрим остановлен. Если FM ведёт себя неправильно, полностью закройте OpenRadioFM и откройте снова.</string>
     <string name="premium_customization">Меню настроек</string>
+    <string name="settings_section_appearance">Внешний вид</string>
+    <string name="settings_section_audio_screen">Аудио и экран</string>
+    <string name="settings_section_cloud">Облако и сообщество</string>
+    <string name="settings_section_radio_advanced">Расширенные настройки радио</string>
+    <string name="settings_section_about">О приложении</string>
+    <string name="settings_value_on">Вкл.</string>
+    <string name="settings_value_off">Выкл.</string>
     <string name="theme_colors">Цвета Темы</string>
     <string name="typography">Типография</string>
     <string name="background_mode">🖼️ Режим Фона</string>

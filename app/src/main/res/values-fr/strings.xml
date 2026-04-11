@@ -18,6 +18,13 @@
     <string name="a11y_hihack_not_working_later">Plus tard</string>
     <string name="mt8163_stream_stopped_restart_hint">Streaming arrêté. Si la FM ne se comporte pas correctement, fermez complètement OpenRadioFM et rouvrez-la.</string>
     <string name="premium_customization">Menu des options</string>
+    <string name="settings_section_appearance">Apparence</string>
+    <string name="settings_section_audio_screen">Audio et écran</string>
+    <string name="settings_section_cloud">Nuage et communauté</string>
+    <string name="settings_section_radio_advanced">Radio avancée</string>
+    <string name="settings_section_about">Informations</string>
+    <string name="settings_value_on">Activé</string>
+    <string name="settings_value_off">Désactivé</string>
     <string name="theme_colors">Couleurs du Thème</string>
     <string name="typography">Typographie</string>
     <string name="background_mode">🖼️ Mode Arrière-plan</string>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="650dp"
     android:layout_height="wrap_content"
     android:background="#E6121212"
@@ -14,347 +14,460 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/radio_eq_n"
-                android:layout_marginEnd="12dp"/>
+                android:layout_marginEnd="12dp"
+                android:src="@drawable/radio_eq_n" />
             <TextView
                 style="@style/DialogTitleText"
-                android:text="@string/premium_customization"/>
+                android:text="@string/premium_customization" />
         </LinearLayout>
 
-        <!-- SECTION: PERSONALIZACIÓN PREMIUM -->
+        <!-- Apariencia -->
         <TextView
             style="@style/DialogSubheaderText"
-            android:text="@string/premium_customization"/>
+            android:layout_marginTop="0dp"
+            android:text="@string/settings_section_appearance" />
 
-        <!-- Tema -->
         <LinearLayout
             android:id="@+id/cardTheme"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/select_skin"/>
+                android:text="@string/select_skin" />
+            <TextView
+                android:id="@+id/tvThemeSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:textColor="#AAAAAA"
+                android:textSize="13sp"
+                tools:text="Night Mode" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <View
                     android:id="@+id/viewColorPreview"
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:background="@drawable/radio_icon_p01"
-                    android:layout_marginEnd="12dp"/>
+                    android:layout_marginEnd="12dp"
+                    android:background="@drawable/radio_icon_p01" />
                 <TextView
                     style="@style/DialogBoxDesc"
-                    android:text="@string/touch_to_change"/>
+                    android:text="@string/touch_to_change" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Tipografía -->
         <LinearLayout
             android:id="@+id/cardFonts"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/select_font"/>
+                android:text="@string/select_font" />
+            <TextView
+                android:id="@+id/tvFontNameSummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:textColor="#AAAAAA"
+                android:textSize="13sp"
+                tools:text="Defecto (System)" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tvFontPreview"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
                     android:text="Abc 123"
                     android:textColor="@color/white"
-                    android:textSize="20sp"
-                    android:layout_marginEnd="12dp"/>
+                    android:textSize="20sp" />
                 <TextView
                     style="@style/DialogBoxDesc"
-                    android:text="@string/touch_to_change"/>
+                    android:text="@string/touch_to_change" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Modo de Fondo -->
         <LinearLayout
             android:id="@+id/cardBackground"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/background_mode"/>
+                android:text="@string/background_mode" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
-                    android:src="@drawable/ic_app_logo"
-                    android:layout_marginEnd="12dp"/>
+                    android:layout_marginEnd="12dp"
+                    android:src="@drawable/ic_app_logo" />
                 <TextView
                     android:id="@+id/tvBackgroundStatus"
                     style="@style/DialogBoxDesc"
-                    android:text="@string/touch_to_change"/>
+                    android:layout_weight="1"
+                    android:text="@string/touch_to_change" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Pack de iconos -->
         <LinearLayout
             android:id="@+id/rowIconPack"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/icon_pack"/>
+                android:text="@string/icon_pack" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tvCurrentIconPack"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/icon_pack_default"/>
+                    android:text="@string/icon_pack_default" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Números presets -->
         <LinearLayout
             android:id="@+id/rowPresetNumbers"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/preset_numbers"/>
+                android:text="@string/preset_numbers" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tvCurrentPresetNumbers"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/preset_numbers_default"/>
+                    android:text="@string/preset_numbers_default" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Relieve HD -->
         <LinearLayout
             android:id="@+id/rowReliefHd"
             style="@style/SettingsRowStyle">
-            <TextView
-                style="@style/SettingsLabelStyle"
-                android:text="@string/relief_hd"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/relief_hd"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvSummaryReliefHd"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="Desactivado" />
+            </LinearLayout>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchReliefHd"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Modo Noche Automático -->
         <LinearLayout style="@style/SettingsRowStyle">
-            <TextView
-                style="@style/SettingsLabelStyle"
-                android:text="@string/night_mode_auto"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/night_mode_auto"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvSummaryNightMode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="Desactivado" />
+            </LinearLayout>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchNightMode"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Modo Noche para Logos -->
         <LinearLayout style="@style/SettingsRowStyle">
-            <TextView
-                style="@style/SettingsLabelStyle"
-                android:text="@string/night_mode_logos"/>
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/night_mode_logos"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvSummaryNightLogos"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="Activado" />
+            </LinearLayout>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchNightLogos"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Horario Modo Noche -->
         <LinearLayout
             android:id="@+id/rowNightSchedule"
             style="@style/SettingsRowStyle"
             android:visibility="gone">
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/night_schedule"
-                android:textColor="@color/white"/>
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/night_schedule"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvNightScheduleSummary"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="19:00 — 07:00" />
+            </LinearLayout>
+            <!-- Mantener ids para TimePicker (texto no visible; horario en tvNightScheduleSummary) -->
             <TextView
                 android:id="@+id/tvNightStart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="19:00"
-                android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:padding="8dp"/>
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text=" — "
-                android:textColor="#666666"
-                android:textSize="14sp"/>
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
             <TextView
                 android:id="@+id/tvNightEnd"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:visibility="gone" />
+            <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="07:00"
+                android:text="›"
                 android:textColor="#AAAAAA"
-                android:textSize="14sp"
-                android:padding="8dp"/>
+                android:textSize="20sp" />
         </LinearLayout>
 
-        <!-- Barra de Estado -->
         <LinearLayout
-            style="@style/SettingsRowStyle">
+            android:id="@+id/rowLogoMode"
+            style="@style/DialogBoxStyle">
             <TextView
-                style="@style/SettingsLabelStyle"
-                android:text="@string/status_bar_v2"/>
+                style="@style/DialogBoxTitle"
+                android:text="@string/logo_mode_label" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/tvCurrentLogoMode"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/logo_mode_car" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowLayout2Side"
+            style="@style/DialogBoxStyle">
+            <TextView
+                style="@style/DialogBoxTitle"
+                android:text="@string/layout2_side_label" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+                <TextView
+                    android:id="@+id/tvCurrentLayout2Side"
+                    style="@style/DialogBoxDesc"
+                    android:layout_weight="1"
+                    android:text="@string/layout2_side_presets_left" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="›"
+                    android:textColor="#AAAAAA"
+                    android:textSize="20sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Audio y pantalla -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:layout_marginTop="16dp"
+            android:text="@string/settings_section_audio_screen" />
+
+        <LinearLayout style="@style/SettingsRowStyle">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/status_bar_v2"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvSummaryStatusBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="Desactivado" />
+            </LinearLayout>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swStatusBar"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Ocultar Controles Auto -->
-        <LinearLayout
-            style="@style/SettingsRowStyle">
-            <TextView
-                style="@style/SettingsLabelStyle"
-                android:text="@string/auto_hide_controls"/>
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/swAutoHideControls"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-        </LinearLayout>
-
-
-        <!-- SECTION: OPCIONES DE LA APP -->
-        <TextView
-            style="@style/DialogSubheaderText"
-            android:text="@string/app_options"
-            android:layout_marginTop="16dp"/>
-
-        <!-- Idioma -->
-        <LinearLayout
-            android:id="@+id/rowLanguage"
-            style="@style/DialogBoxStyle">
-            <TextView
-                style="@style/DialogBoxTitle"
-                android:text="@string/app_language"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvCurrentLanguage"
-                    style="@style/DialogBoxDesc"
-                    android:layout_weight="1"
-                    android:text="@string/language_spanish"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- País -->
-        <LinearLayout
-            android:id="@+id/rowCountry"
-            style="@style/DialogBoxStyle">
-            <TextView
-                style="@style/DialogBoxTitle"
-                android:text="@string/app_country"/>
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
-                <TextView
-                    android:id="@+id/tvCurrentCountry"
-                    style="@style/DialogBoxDesc"
-                    android:layout_weight="1"
-                    android:text="@string/country_es"/>
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="›"
-                    android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Logos Online -->
         <LinearLayout style="@style/SettingsRowStyle">
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/online_logos"
-                android:textColor="@color/white"/>
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/auto_hide_controls"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvSummaryAutoHide"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="Desactivado" />
+            </LinearLayout>
+            <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swAutoHideControls"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- Nube -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:layout_marginTop="16dp"
+            android:text="@string/settings_section_cloud" />
+
+        <LinearLayout style="@style/SettingsRowStyle">
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/online_logos"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvSummaryLogosOnline"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="Activado" />
+            </LinearLayout>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchLogosOnline"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
-        <!-- Proveedor de Logos -->
         <LinearLayout
             android:id="@+id/rowLogoProvider"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/logo_provider"/>
+                android:text="@string/logo_provider" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tvCurrentLogoProvider"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/provider_supabase"/>
+                    android:text="@string/provider_supabase" />
                 <TextView
                     android:id="@+id/tvSupabaseStatus"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
                     android:text="• Desconectado"
                     android:textColor="#FF4444"
                     android:textSize="11sp"
-                    android:layout_marginEnd="8dp"
-                    android:visibility="gone"/>
+                    android:visibility="gone" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Contribuir a la Comunidad -->
         <LinearLayout style="@style/SettingsRowStyle">
             <LinearLayout
                 android:layout_width="0dp"
@@ -365,212 +478,229 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/contrib_cloud"
-                    android:textColor="@color/white"/>
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/contrib_cloud_desc"
                     android:textColor="#888888"
-                    android:textSize="11sp"/>
+                    android:textSize="11sp" />
+                <TextView
+                    android:id="@+id/tvSummaryCloudContrib"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="#AAAAAA"
+                    android:textSize="12sp"
+                    tools:text="Activado" />
             </LinearLayout>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchCloudContrib"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!-- Radio avanzado -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:layout_marginTop="16dp"
+            android:text="@string/settings_section_radio_advanced" />
 
-        <!-- Modo Logo Superior -->
         <LinearLayout
-            android:id="@+id/rowLogoMode"
+            android:id="@+id/rowLanguage"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/logo_mode_label"/>
+                android:text="@string/app_language" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
-                    android:id="@+id/tvCurrentLogoMode"
+                    android:id="@+id/tvCurrentLanguage"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/logo_mode_car"/>
+                    android:text="@string/language_spanish" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Posición columnas Layout V2 (vertical) -->
         <LinearLayout
-            android:id="@+id/rowLayout2Side"
+            android:id="@+id/rowCountry"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/layout2_side_label"/>
+                android:text="@string/app_country" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
-                    android:id="@+id/tvCurrentLayout2Side"
+                    android:id="@+id/tvCurrentCountry"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/layout2_side_presets_left"/>
+                    android:text="@string/country_es" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Guardar Historial -->
         <LinearLayout style="@style/SettingsRowStyle">
-            <TextView
+            <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/save_history"
-                android:textColor="@color/white"/>
+                android:orientation="vertical">
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/save_history"
+                    android:textColor="@color/white"
+                    android:textSize="16sp" />
+                <TextView
+                    android:id="@+id/tvSummarySaveHistory"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#888888"
+                    android:textSize="12sp"
+                    tools:text="Activado" />
+            </LinearLayout>
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchSaveHistory"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
-
-        <!-- SECTION: AJUSTES DE HARDWARE -->
-        <TextView
-            style="@style/DialogSubheaderText"
-            android:text="@string/hardware_settings"
-            android:layout_marginTop="16dp"/>
-
-        <!-- HiHack (Accesibilidad) -->
         <LinearLayout
             android:id="@+id/rowA11yHijack"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/a11y_hihack_title"/>
+                android:text="@string/a11y_hihack_title" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tvA11yHijackStatus"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/a11y_hihack_open_settings"/>
+                    android:text="@string/a11y_hihack_open_settings" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:layout_marginTop="8dp"
                 android:gravity="center_vertical"
-                android:layout_marginTop="8dp">
+                android:orientation="horizontal">
                 <TextView
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/a11y_hihack_boot_reminder_switch"
                     android:textColor="#CCCCCC"
-                    android:textSize="13sp"/>
+                    android:textSize="13sp" />
                 <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/switchHihackBootReminder"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"/>
+                    android:layout_height="wrap_content" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Forzar Motor de Radio -->
         <LinearLayout
             android:id="@+id/rowEngine"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/radio_engine"/>
+                android:text="@string/radio_engine" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tvCurrentEngine"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/engine_auto"/>
+                    android:text="@string/engine_auto" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Mandos volante NEXT/PREV -->
         <LinearLayout
             android:id="@+id/rowSteeringMode"
             style="@style/DialogBoxStyle">
             <TextView
                 style="@style/DialogBoxTitle"
-                android:text="@string/steering_next_prev_mode"/>
+                android:text="@string/steering_next_prev_mode" />
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
                 <TextView
                     android:id="@+id/tvCurrentSteeringMode"
                     style="@style/DialogBoxDesc"
                     android:layout_weight="1"
-                    android:text="@string/steering_mode_seek"/>
+                    android:text="@string/steering_mode_seek" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="›"
                     android:textColor="#AAAAAA"
-                    android:textSize="20sp"/>
+                    android:textSize="20sp" />
             </LinearLayout>
         </LinearLayout>
 
-
-        <!-- Habilitar AM (Oculto v21.3 por estabilidad hardware) -->
-        <LinearLayout style="@style/SettingsRowStyle"
+        <LinearLayout
+            style="@style/SettingsRowStyle"
             android:visibility="gone">
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/enable_am_band"
-                android:textColor="@color/white"/>
+                android:textColor="@color/white" />
             <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/switchEnableAm"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content" />
         </LinearLayout>
 
+        <!-- Información -->
+        <TextView
+            style="@style/DialogSubheaderText"
+            android:layout_marginTop="16dp"
+            android:text="@string/settings_section_about" />
 
-        <!-- SECTION: ACERCA DE -->
         <LinearLayout
             android:id="@+id/btnAbout"
             style="@style/SettingsRowStyle"
-            android:layout_marginTop="16dp"
             android:clickable="true"
             android:focusable="true">
             <TextView
@@ -578,13 +708,13 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/about_openradio"
-                android:textColor="@color/white"/>
+                android:textColor="@color/white" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="›"
                 android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
+                android:textSize="20sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -597,20 +727,19 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="👏 Agradecimientos"
-                android:textColor="@color/white"/>
+                android:textColor="@color/white" />
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="›"
                 android:textColor="#AAAAAA"
-                android:textSize="20sp"/>
+                android:textSize="20sp" />
         </LinearLayout>
 
-        <!-- Close Button -->
         <TextView
             android:id="@+id/btnCloseSettings"
             style="@style/DialogCloseButton"
-            android:text="@string/close"/>
+            android:text="@string/close" />
 
     </LinearLayout>
 </ScrollView>

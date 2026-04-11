@@ -3,6 +3,13 @@
     <string name="app_name">OpenRadioFM</string>
     <string name="mt8163_stream_stopped_restart_hint">Ai închis streaming-ul. Dacă FM nu răspunde corect, închide complet OpenRadioFM și deschide-l din nou.</string>
     <string name="premium_customization">Meniu opțiuni</string>
+    <string name="settings_section_appearance">Aspect</string>
+    <string name="settings_section_audio_screen">Audio și ecran</string>
+    <string name="settings_section_cloud">Nor și comunitate</string>
+    <string name="settings_section_radio_advanced">Radio avansat</string>
+    <string name="settings_section_about">Informații</string>
+    <string name="settings_value_on">Activat</string>
+    <string name="settings_value_off">Dezactivat</string>
     <string name="theme_colors">Culori Temă</string>
     <string name="typography">Tipografie</string>
     <string name="background_mode">🖼️ Mod Fundal</string>
