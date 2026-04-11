@@ -26,6 +26,16 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
   <br><br>
   <p align="center"><b>【 GUÍA DEL SISTEMA DE LOGOS V5 】</b></p>
   <img src="docs/img/Instrucciones logos español v5.png" width="90%" alt="Guía de Logos V5">
+  <br><br>
+  <p align="center"><b>【 CAPTURAS v5.1.0 — Backup Studio + interfaz 】</b></p>
+  <img src="1.png" width="45%" alt="OpenRadioFM 5.1.0 — captura 1">
+  <img src="2.png" width="45%" alt="OpenRadioFM 5.1.0 — captura 2">
+  <br><br>
+  <img src="3.png" width="45%" alt="OpenRadioFM 5.1.0 — captura 3">
+  <img src="4.png" width="45%" alt="OpenRadioFM 5.1.0 — captura 4">
+  <br><br>
+  <img src="5.png" width="45%" alt="OpenRadioFM 5.1.0 — captura 5">
+  <img src="6.png" width="45%" alt="OpenRadioFM 5.1.0 — captura 6">
 </div>
 
 ---
