@@ -9,6 +9,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.widget.RemoteViews;
 
@@ -28,6 +30,7 @@ import com.example.openradiofm.ui.main.MainActivity;
 public class OpenRadioFmWidgetProvider extends AppWidgetProvider {
 
     private static final String PREFS = "OpenRadioFmWidget";
+    private static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
     public static final String EXTRA_WIDGET_SHOW_INFO = "extra_widget_show_info";
     public static final String EXTRA_WIDGET_OPEN_FAVORITES_DIALOG = "extra_widget_open_favorites_dialog";
 
@@ -146,19 +149,24 @@ public class OpenRadioFmWidgetProvider extends AppWidgetProvider {
         // Cargar logo dinámico si existe (Glide + AppWidgetTarget).
         // Importante: RemoteViews no conserva el bitmap si re-renderizamos el widget, así que
         // debemos recargar aunque la URL no cambie (evita volver al placeholder).
+        // Glide con AppWidgetTarget: ejecutar en el hilo principal (callbacks del repo van en background).
         if (!TextUtils.isEmpty(logoUrl)) {
-            Object model = normalizeLogoModel(logoUrl);
-            AppWidgetTarget target = new AppWidgetTarget(context.getApplicationContext(),
-                    R.id.widget_logo, rv, appWidgetId);
-            Glide.with(context.getApplicationContext())
-                    .asBitmap()
-                    .load(model)
-                    .apply(new RequestOptions()
-                            .format(DecodeFormat.PREFER_ARGB_8888)
-                            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
-                            .dontTransform())
-                    .error(R.drawable.ic_launcher)
-                    .into(target);
+            final Context appCtx = context.getApplicationContext();
+            final RemoteViews rvFinal = rv;
+            MAIN_HANDLER.post(() -> {
+                Object model = normalizeLogoModel(logoUrl);
+                if (model == null) return;
+                AppWidgetTarget target = new AppWidgetTarget(appCtx, R.id.widget_logo, rvFinal, appWidgetId);
+                Glide.with(appCtx)
+                        .asBitmap()
+                        .load(model)
+                        .apply(new RequestOptions()
+                                .format(DecodeFormat.PREFER_ARGB_8888)
+                                .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL)
+                                .dontTransform())
+                        .error(R.drawable.ic_launcher)
+                        .into(target);
+            });
         }
     }
 
@@ -167,27 +175,51 @@ public class OpenRadioFmWidgetProvider extends AppWidgetProvider {
         updateStationDisplay(context, freqKhz, band, ps, null);
     }
 
-    /** Variante que también persiste el logo actual (URL o ruta local). */
+    /**
+     * Persiste frecuencia/PS y opcionalmente el logo.
+     * Si {@code logoUrl} es null: solo borra logo guardado cuando cambian frecuencia o banda
+     * (nueva emisora). Si freq/banda son las mismas, conserva el logo — evita que
+     * {@link com.example.openradiofm.service.RadioMediaService} u otros refrescos sin URL
+     * dejen el widget en el icono de la app.
+     */
     public static void updateStationDisplay(Context context, int freqKhz, int band, String ps, String logoUrl) {
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+        SharedPreferences p = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        int prevFreq = p.getInt("freq_khz", -1);
+        int prevBand = p.getInt("band", -1);
+        String prevLogoStored = p.getString("logo_url", null);
+
+        SharedPreferences.Editor ed = p.edit()
                 .putInt("freq_khz", freqKhz)
                 .putInt("band", band)
-                .putString("ps", ps != null ? ps : "")
-                .putString("logo_url", (logoUrl != null && !logoUrl.trim().isEmpty()) ? logoUrl.trim() : "")
-                .apply();
+                .putString("ps", ps != null ? ps : "");
+
+        final String effectiveLogoUrl;
+        if (logoUrl != null) {
+            String trimmed = logoUrl.trim();
+            ed.putString("logo_url", trimmed);
+            effectiveLogoUrl = trimmed.isEmpty() ? null : trimmed;
+        } else {
+            if (prevFreq != freqKhz || prevBand != band) {
+                ed.putString("logo_url", "");
+                effectiveLogoUrl = null;
+            } else {
+                effectiveLogoUrl = (prevLogoStored != null && !prevLogoStored.isEmpty()) ? prevLogoStored : null;
+            }
+        }
+        ed.apply();
 
         AppWidgetManager awm = AppWidgetManager.getInstance(context);
         ComponentName cn = new ComponentName(context, OpenRadioFmWidgetProvider.class);
         int[] ids = awm.getAppWidgetIds(cn);
         if (ids.length == 0) return;
         for (int id : ids) {
-            updateOne(context, awm, id, freqKhz, band, ps, logoUrl);
+            updateOne(context, awm, id, freqKhz, band, ps, effectiveLogoUrl);
         }
     }
 
     private static Object normalizeLogoModel(String raw) {
         String s = raw != null ? raw.trim() : "";
-        if (s.isEmpty()) return null;
+        if (s.isEmpty() || "NO_LOGO".equals(s)) return null;
         // Aceptamos URLs, file://, content:// y rutas locales absolutas.
         if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("content://") || s.startsWith("file://")) {
             return s;
