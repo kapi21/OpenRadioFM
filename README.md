@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.1.2-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.1.3-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -217,6 +217,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.1.3 (Abril 2026) — `main` — medidor de señal en barras, QS6 0–5 (`versionCode` 35)
+- **ES:** **OpenRadioFM v5.1.3** — opción **barras de señal** (V2/V3) en Ajustes premium; `SignalBarsView` + colores por skin; corrección de lógica (polling, skin, dBm, escala **0–5** QS/NWD). Concepto en `docs/img/concept_signal_bars_main_ui.png`. Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.1.3** — optional **bar signal meter** (V2/V3) in Premium settings; `SignalBarsView` + skin-aware colors; mapping fixes (polling, skin reapply, dBm, QS/NWD **0–5** scale). Concept: `docs/img/concept_signal_bars_main_ui.png`. See `CHANGELOG_EN.md`.
 
 ### v5.1.2 (Abril 2026) — `main` — autoscan lento, primer preset, Layout 2 scan (`versionCode` 34)
 - **ES:** **OpenRadioFM v5.1.2** — autoscan lento (subbandas FM2/FM3, `stepUp` si el seek no avanza); al terminar, salto al **primer preset** y evitar que la UI fije 108 MHz por callbacks OEM; Layout 2: caja de autoscan fija, solo gira el icono. Ver `CHANGELOG.md`.

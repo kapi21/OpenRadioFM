@@ -251,17 +251,29 @@
         app:layout_constraintEnd_toStartOf="@id/guideline_col2"
         app:layout_constraintBottom_toTopOf="@+id/btnSeekDown">
 
-        <!-- Signal: esquina inferior-izquierda -->
-        <ImageView
-            android:id="@+id/ivSignalLevel"
+        <!-- Signal: esquina inferior-izquierda (icono o barras según ajustes) -->
+        <FrameLayout
+            android:id="@+id/frameSignalMeter"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:layout_gravity="bottom|start"
             android:layout_marginStart="8dp"
-            android:layout_marginBottom="6dp"
-            android:scaleType="fitCenter"
-            android:src="@drawable/level_signal"
-            android:visibility="visible" />
+            android:layout_marginBottom="6dp">
+
+            <ImageView
+                android:id="@+id/ivSignalLevel"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="fitCenter"
+                android:src="@drawable/level_signal"
+                android:visibility="visible" />
+
+            <com.example.openradiofm.ui.widget.SignalBarsView
+                android:id="@+id/viewSignalBars"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="gone" />
+        </FrameLayout>
 
         <!-- MHz/kHz: esquina inferior-derecha -->
         <androidx.appcompat.widget.AppCompatTextView

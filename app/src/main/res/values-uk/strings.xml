@@ -74,6 +74,8 @@
     <string name="preset_scroll_loop_title">Нескінченна прокрутка пресетів</string>
     <string name="preset_scroll_loop_desc">Після останнього пресета можна продовжити прокрутку й повернутися до першого (V2 і V3).</string>
     <string name="preset_scroll_loop_recreate_hint">Перезапуск екрана для застосування налаштування…</string>
+    <string name="signal_meter_bars_title">Індикатор сигналу смужками</string>
+    <string name="signal_meter_bars_desc">Замінює класичну піктограму сегментами в блоці частоти (макети 2 і 3). Кольори за скіном: класика (білий із прозорістю), ніч (синій), день (чорний).</string>
     <string name="save_load_favorites">Зберегти/Завантажити Вибране</string>
     <string name="save_favorites">💾 Зберегти Вибране</string>
     <string name="load_favorites">📂 Завантажити Вибране</string>
@@ -226,7 +228,7 @@
     <string name="about_info_header">ІНФОРМАЦІЯ</string>
     <string name="about_dev_by">Розроблено</string>
     <string name="about_tech_details">Технічні деталі</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.2</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
     <string name="a11y_hihack_title">HiHack (Доступність)</string>
     <string name="a11y_hihack_enabled">Увімкнено</string>

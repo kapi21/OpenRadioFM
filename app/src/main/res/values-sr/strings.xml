@@ -74,6 +74,8 @@
     <string name="preset_scroll_loop_title">Beskonačno pomeranje presetova</string>
     <string name="preset_scroll_loop_desc">Posle poslednjeg preset-a možete nastaviti da prevlačite i vratiti se na prvi (V2 i V3).</string>
     <string name="preset_scroll_loop_recreate_hint">Ponovo pokretanje ekrana da bi se primenilo podešavanje…</string>
+    <string name="signal_meter_bars_title">Indikator signala trakama</string>
+    <string name="signal_meter_bars_desc">Menja klasičnu ikonu segmentima u polju frekvencije (rasporedi 2 i 3). Boje prate skin: klasično (belo sa providnošću), noć (plavo), dan (crno).</string>
     <string name="save_load_favorites">Sačuvaj/Učitaj Omiljeno</string>
     <string name="save_favorites">💾 Sačuvaj Omiljeno</string>
     <string name="load_favorites">📂 Učitaj Omiljeno</string>
@@ -225,7 +227,7 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.2</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
     <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
     <string name="a11y_hihack_title">HiHack (Pristupačnost)</string>
     <string name="a11y_hihack_enabled">Omogućeno</string>

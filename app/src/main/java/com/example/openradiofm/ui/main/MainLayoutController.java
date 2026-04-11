@@ -100,6 +100,13 @@ public class MainLayoutController extends BaseLayoutController {
 
     @Override
     public void updateSignal(int level, String label, String color) {
+        if (mActivity.mSignalMeterCoordinator != null && mActivity.mSignalMeterCoordinator.useBars()
+                && color != null) {
+            try {
+                mActivity.mSignalMeterCoordinator.updateFromLegacyIconColor(Color.parseColor(color));
+            } catch (Exception ignored) {}
+            return;
+        }
         if (ivSignalLevel != null && color != null) {
             try {
                 ivSignalLevel.setColorFilter(Color.parseColor(color), PorterDuff.Mode.SRC_IN);

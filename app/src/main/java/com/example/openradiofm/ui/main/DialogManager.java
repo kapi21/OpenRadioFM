@@ -165,6 +165,9 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
         androidx.appcompat.widget.SwitchCompat swPresetScrollLoop = dialog.findViewById(R.id.swPresetScrollLoop);
         TextView tvSummaryPresetScrollLoop = dialog.findViewById(R.id.tvSummaryPresetScrollLoop);
+        View rowSignalMeterBars = dialog.findViewById(R.id.rowSignalMeterBars);
+        androidx.appcompat.widget.SwitchCompat swSignalMeterBars = dialog.findViewById(R.id.swSignalMeterBars);
+        TextView tvSummarySignalMeterBars = dialog.findViewById(R.id.tvSummarySignalMeterBars);
         androidx.appcompat.widget.SwitchCompat swHihackBootReminder = dialog.findViewById(R.id.switchHihackBootReminder);
         // androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm); // Removed v21.3
 
@@ -332,6 +335,19 @@ public class DialogManager {
                 mActivity.showToast(mActivity.getString(R.string.preset_scroll_loop_recreate_hint));
                 dialog.dismiss();
                 new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(mActivity::recreate, 280);
+            });
+        }
+
+        if (rowSignalMeterBars != null) {
+            rowSignalMeterBars.setVisibility(mActivity.mIsSimpleLayout ? View.GONE : View.VISIBLE);
+        }
+        if (swSignalMeterBars != null) {
+            swSignalMeterBars.setChecked(mActivity.mPrefs.getBoolean(SignalMeterCoordinator.PREF_USE_BARS, false));
+            bindSwitchSummary(tvSummarySignalMeterBars, swSignalMeterBars.isChecked());
+            swSignalMeterBars.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean(SignalMeterCoordinator.PREF_USE_BARS, checked).apply();
+                bindSwitchSummary(tvSummarySignalMeterBars, checked);
+                mActivity.applySignalMeterPreferenceFromSettings();
             });
         }
 

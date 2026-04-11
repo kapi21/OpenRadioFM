@@ -75,6 +75,8 @@
     <string name="preset_scroll_loop_title">Derulare infinită a preseturilor</string>
     <string name="preset_scroll_loop_desc">După ultimul preset poți continua să glisezi și revii la primul (V2 și V3).</string>
     <string name="preset_scroll_loop_recreate_hint">Se repornește ecranul pentru a aplica setarea…</string>
+    <string name="signal_meter_bars_title">Indicator de semnal cu bare</string>
+    <string name="signal_meter_bars_desc">Înlocuiește pictograma clasică cu segmente în caseta de frecvență (Layout 2 și 3). Culorile urmează skinul: clasic (alb transparent), noapte (albastru), zi (negru).</string>
     <string name="save_load_favorites">Salvează/Încarcă Favorite</string>
     <string name="save_favorites">💾 Salvează Favorite</string>
     <string name="load_favorites">📂 Încarcă Favorite</string>
@@ -226,7 +228,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.1.2</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>

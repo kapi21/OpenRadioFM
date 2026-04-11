@@ -6,7 +6,21 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## [Unreleased]
 
-*(empty; last documented release: **5.1.2** — see below.)*
+*(empty; last documented release: **5.1.3** — see below.)*
+
+---
+
+## [5.1.3] - 2026-04-12
+*Patch on top of 5.1.2 (`versionCode` **35**, `versionName` **5.1.3**).*
+
+### Added
+- **Bar signal meter** (`pref_signal_meter_bars`): toggle under Premium settings → **Audio & screen**; on **Layout V2/V3** replaces the classic icon with **5 segments** in the frequency box. Colors follow the active skin (classic: white + alpha; night: `night_blue_primary`; day/CLEAR: black + alpha). `SignalBarsView` + `SignalMeterCoordinator`; full i18n.
+
+### Fixed / Improved
+- **Bar meter**: polling no longer applies the legacy yellow tint (it was misclassified as “red” → stuck at 1 bar); `applyModeVisibility` only seeds from stereo/RDS when level is still unset, so RSSI is not wiped on every skin reapply; **negative dBm** path when RSSI/SNR are negative; **QS6/NWD 0–5** OEM scale mapped directly (values 1–3 no longer collapse to one segment via the 0–15 formula); `legacyColorToLit` distinguishes amber/yellow from red.
+
+### Docs
+- Concept art: `docs/img/concept_signal_bars_main_ui.png`.
 
 ---
 

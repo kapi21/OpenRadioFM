@@ -49,6 +49,7 @@ import com.example.openradiofm.ui.theme.ThemeManager;
 import com.example.openradiofm.utils.PtyManager;
 import com.example.openradiofm.utils.MetadataUtils;
 import com.example.openradiofm.R;
+import com.example.openradiofm.ui.widget.SignalBarsView;
 import com.example.openradiofm.AppConstants;
 import com.example.openradiofm.service.RadioMediaService;
 
@@ -349,6 +350,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V5.0: UI Elements (Fixing Compilation Errors)
     private TextView tvPty;
     private ImageView ivSignalLevel;
+    private SignalBarsView mSignalBarsView;
+    public SignalMeterCoordinator mSignalMeterCoordinator;
     private ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
     private android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
     private ImageView ivDataActivityIcon; // El icono real que cambia de color
@@ -726,7 +729,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 ivStereoIcon.setVisibility(stereo ? android.view.View.VISIBLE : android.view.View.INVISIBLE);
             }
             
-            if (ivSignalLevel != null) {
+            if (mSignalMeterCoordinator != null && mSignalMeterCoordinator.useBars()) {
+                mSignalMeterCoordinator.refreshFromEngineFlags();
+            } else if (ivSignalLevel != null) {
                 int color = stereo ? android.graphics.Color.parseColor("#00E676")
                         : android.graphics.Color.parseColor("#FFD600");
                 ivSignalLevel.setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
@@ -1250,6 +1255,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             if (mQs6EngineeringDialog != null && mQs6EngineeringDialog.isShowing()) {
                 mQs6EngineeringDialog.updateSignalQuality(rssi, snr);
             }
+            if (mSignalMeterCoordinator != null) {
+                mSignalMeterCoordinator.onRssiSnr(rssi, snr);
+            }
         });
     }
 
@@ -1596,6 +1604,12 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             mUiController = new MainLayoutController(this);
             applyLayout2SidePreference();
         }
+
+        ivSignalLevel = findViewById(R.id.ivSignalLevel);
+        mSignalBarsView = findViewById(R.id.viewSignalBars);
+        mSignalMeterCoordinator = new SignalMeterCoordinator(this);
+        mSignalMeterCoordinator.bind(ivSignalLevel, mSignalBarsView);
+        mSignalMeterCoordinator.applyModeVisibility();
 
         // Primer inicio tras instalación: solicitar idioma y país.
         // Explicación: mejora la selección de logos y streaming (filtrado por country_code en Supabase).
@@ -3023,8 +3037,10 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                }
                // V22.x: MT8163/HCN a veces no emite callback 106; sincronizar drawable con isDxLocal().
                syncLocDxButtonVisual(isLocal);
-               // V18.6.4: Actualizar color de señal en el path de polling (para MT8163 que no tiene callback activo)
-               if (ivSignalLevel != null) {
+               // V18.6.4: Actualizar color de señal en el path de polling (para MT8163 que no tiene callback activo).
+               // Con barras el nivel lo llevan onSignalUpdate / onStereoChanged (no pisar aquí cada 500 ms).
+               if (ivSignalLevel != null
+                       && (mSignalMeterCoordinator == null || !mSignalMeterCoordinator.useBars())) {
                    int sigColor = isStereo ? android.graphics.Color.parseColor("#00E676")
                            : android.graphics.Color.parseColor("#FFD600");
                    ivSignalLevel.setColorFilter(sigColor, android.graphics.PorterDuff.Mode.SRC_IN);
@@ -3543,9 +3559,27 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         } catch (Exception ignored) {}
 
         try {
+            if (mSignalMeterCoordinator != null) {
+                mSignalMeterCoordinator.applyModeVisibility();
+                mSignalMeterCoordinator.applyBarsAppearanceFromSkin();
+            }
+        } catch (Exception ignored) {}
+
+        try {
             if (mPresetManager != null) {
                 mPresetManager.syncLoopMirrorPresetVisualsWithMainSlots();
             }
+        } catch (Exception ignored) {}
+    }
+
+    /** Tras cambiar la preferencia en Ajustes premium (sin recrear la actividad). */
+    public void applySignalMeterPreferenceFromSettings() {
+        if (mSignalMeterCoordinator != null) {
+            mSignalMeterCoordinator.applyModeVisibility();
+            mSignalMeterCoordinator.applyBarsAppearanceFromSkin();
+        }
+        try {
+            refreshRadioStatus();
         } catch (Exception ignored) {}
     }
 

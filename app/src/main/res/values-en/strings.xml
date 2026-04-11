@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.2</string>
+    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
     <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway and QS6 (NWD) units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system often sends those keys to the launcher or the OEM radio app.</string>
     <string name="a11y_hihack_title">HiHack (Accessibility)</string>
     <string name="a11y_hihack_enabled">Enabled</string>
@@ -77,6 +77,8 @@
     <string name="preset_scroll_loop_title">Infinite preset scrolling</string>
     <string name="preset_scroll_loop_desc">After the last preset you can keep swiping and return to the first (V2 and V3).</string>
     <string name="preset_scroll_loop_recreate_hint">Restarting the screen to apply the setting…</string>
+    <string name="signal_meter_bars_title">Bar signal meter</string>
+    <string name="signal_meter_bars_desc">Replaces the classic icon with segments in the frequency box (Layout 2 and 3). Colors follow the skin: classic (white with transparency), night (blue), and day (black).</string>
 
     <!-- V4.0: Save/Load Favorites -->
     <string name="save_load_favorites">Save/Load Favorites</string>

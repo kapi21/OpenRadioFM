@@ -1,6 +1,20 @@
 ## [Unreleased]
 
-*(vacío; último cierre documentado: **5.1.2** — ver abajo.)*
+*(vacío; último cierre documentado: **5.1.3** — ver abajo.)*
+
+---
+
+## [5.1.3] - 2026-04-12
+*Parche sobre 5.1.2 (`versionCode` **35**, `versionName` **5.1.3**).*
+
+### Added
+- **Indicador de señal en barras** (`pref_signal_meter_bars`): opción en Ajustes premium → **Audio y pantalla**; en Layout **V2 y V3** sustituye el icono clásico por **5 segmentos** en la caja de frecuencia. Colores según skin (classic: blanco + alfas; noche: `night_blue_primary`; día/CLEAR: negro + alfas). Componentes `SignalBarsView` y `SignalMeterCoordinator`; i18n en todas las locales.
+
+### Fixed / Improved
+- **Medidor de barras**: el path de polling ya no aplicaba el color legado amarillo (se mapeaba mal a “rojo” → siempre 1 barra); `applyModeVisibility` solo hace *seed* desde estéreo/RDS cuando aún no hay nivel (`mLastLit` inicial), para no pisar RSSI al cambiar skin; soporte **dBm** cuando RSSI/SNR son negativos; escala **0–5** de **QS6/NWD** tratada de forma directa (antes los valores 1–3 en escala OEM caían casi siempre en 1 segmento con la fórmula 0–15); `legacyColorToLit` distingue ámbar/amarillo de rojo.
+
+### Docs
+- Imagen conceptual del medidor en `docs/img/concept_signal_bars_main_ui.png`.
 
 ---
 
