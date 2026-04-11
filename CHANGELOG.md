@@ -1,28 +1,35 @@
 ## [Unreleased]
 
-*(línea de desarrollo: **5.1.1**; añade aquí hasta cerrar el release)*
+*(vacío; último cierre documentado: **5.1.1** — ver abajo.)*
 
 ---
 
-## [5.1.1] - 2026-04-10
-*Parche sobre 5.1.0 (`versionCode` **32**, `versionName` **5.1.1**).*
+## [5.1.1] - 2026-04-11
+*Parche sobre 5.1.0 (`versionCode` **33**, `versionName` **5.1.1**).*
 
 ### Added
 - **Eslovenia (SI)**: país en el selector de la app (i18n), carpeta `eslovenia/` para logos en Storage y función Supabase `country_folder` alineada.
 - **Diagnóstico widget**: logs en `RadioWidgetActionReceiver` (tag **`ORF_WidgetRx`**) y trazas en `RadioMediaService.handleWidgetSeek`.
+- **Presets en bucle (opcional)**: ajustes de pantalla — desplazamiento infinito de la tira en **Layout V2** y **V3** (`pref_preset_scroll_loop`, recrea la actividad al cambiar); layouts `preset_loop_slot_v2/v3` y `InfinitePresetScrollHelper`.
 
 ### Changed
-- **Versionado app**: `versionCode 32`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
+- **Versionado app**: `versionCode 33`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
 - **BuildConfig**: URL base pública de logos en la raíz del bucket `station-logos` (subcarpetas por país).
 - **Backup Studio (web)**: código **SI** en el selector de `pref_country_code` del `.ors`.
 - **Modo Día**: fondo **beige** unificado (`@color/day_mode_background` **#EDE4D3**) en ventana y `LogoManager`; color de acento del skin `DAY_MODE` alineado.
+- **Ajustes premium**: secciones con títulos y **resumen** Encendido/Apagado en interruptores (mejor lectura del estado).
+- **Presets / volante**: navegación **siguiente–anterior** en modo favoritos por **orden de slots** (1…N) con bucle, alineada con la pantalla activa.
 
 ### Fixed / Improved
 - **Widget (launcher, p. ej. QS6)**: `RadioMediaService` actualiza frecuencia/banda/PS del **widget propio** al variar la sintonía **sin depender de `MainActivity`** (callbacks del motor + refrescos diferidos si el OEM tarda).
+- **Widget — logo**: carga con **Glide en hilo principal** y refresco desde el servicio que evita perder el bitmap al actualizar el `RemoteViews`.
 - **Compilación release**: `SupabaseLogoSource` declara `applicationContext` al inicio del bloque async antes de subir a Storage (corrige `appContext` no resuelto).
+- **Presets en bucle**: clones con el **mismo skin**, color de texto y filtro de logo que los slots principales; **`mLogoUiGeneration`** solo se incrementa si el skin **activo** cambia de verdad (evita vaciar el **fondo dinámico** con comprobaciones periódicas de modo noche).
+- **Modo noche automático**: no invoca `applySkin` si el skin activo ya es el objetivo (menos trabajo y menos invalidaciones).
 
 ### Known / Pendiente
 - **Widget**: el logo de emisora puede mostrarse y luego volver al icono de la app; revisión pendiente (carga Glide / re-render del `RemoteViews`).
+- **Layout 2 / estrés**: bajo zapping rápido y cambios de layout, **`ivMainLogo`** puede mostrar el logo de emisora unos segundos y pasar a fallback o vacío; **pendiente** análisis (carreras `clearLogo` / `getStationInfo` / orden de callbacks).
 
 ---
 

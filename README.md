@@ -47,7 +47,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.1.1** (abril 2026, `versionCode` **32**): además de **Eslovenia (SI)** y ajustes de **Backup Studio** / Storage, incluye **widget** que se actualiza al hacer seek con la app en segundo plano (**QS6** vía `RadioMediaService`), **Modo Día** con fondo **beige**, fix de compilación en **Supabase** (`applicationContext` en subida), y logs **`ORF_WidgetRx`** para diagnosticar taps del widget. *Pendiente:* estabilizar el **logo** en el widget (evitar que vuelva al icono de la app). Ver `CHANGELOG.md`.
+**5.1.1** (abril 2026, `versionCode` **33**): incluye **Eslovenia (SI)**, **Backup Studio** / Storage, **widget** actualizado en seek con la app en segundo plano (**QS6** vía `RadioMediaService`) y **logo del widget** con Glide en hilo principal; **Modo Día** beige; fix **Supabase** en release; logs **`ORF_WidgetRx`**. En UI: **ajustes premium** con resúmenes en interruptores; **presets** siguiente/anterior por **orden de slots** con bucle; **opción** de **tira de presets en bucle** (V2/V3) y coherencia de skin/fondo dinámico con modo noche automático. *Pendiente:* logo del widget bajo ciertos casos; **`ivMainLogo` en layout 2** bajo estrés (zapping/layout). Ver `CHANGELOG.md`.
 
 **5.1.0 “Backup Studio + Web Tools” (abril 2026, `versionCode` 31):** integración del **OpenRadioFM Backup Studio** (web instalable) para **crear/editar/importar/exportar** `.fav`, generar **opciones** `.ors` (formulario ampliado: noche programada, proveedor de logos, volante, layout 2, etc.) y **backup completo** `.orzip` (ZIP con `state.json` + `RadioLogos/`), con previsualización y límites de imágenes. En la app, acceso directo al editor desde **Guardar/Cargar Favoritos**. **Supabase:** si el PS RDS es fiable y aún no hay logo, la app puede **registrar metadatos** (PI/PS + frecuencia) para completar la ficha más adelante. Además, mejoras UX: indicador de nube con actividad, “tick” al enganchar RDS lock y mayor robustez del fondo dinámico. Ver `CHANGELOG.md`.
 
@@ -208,9 +208,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.1.1 (Abril 2026) — `main` — parche widget / modo día / SI (`versionCode` 32)
-- **ES:** **OpenRadioFM v5.1.1** — widget: seek en segundo plano (servicio + callbacks motor); modo día beige; país **SI**; fix `SupabaseLogoSource`; logs widget. Logo del widget aún en revisión. Ver `CHANGELOG.md`.
-- **EN:** **OpenRadioFM v5.1.1** — widget background seek path (service + engine callbacks); beige Day Mode; **SI** country; `SupabaseLogoSource` fix; widget tap logging. Station logo on widget still under review. See `CHANGELOG_EN.md`.
+### v5.1.1 (Abril 2026) — `main` — widget, presets, SI, modo día (`versionCode` 33)
+- **ES:** **OpenRadioFM v5.1.1** — widget (seek en segundo plano, Glide logo en UI thread); modo día beige; **SI**; fix `SupabaseLogoSource`; ajustes con resúmenes ON/OFF; presets secuenciales + opción tira en bucle (V2/V3); menos invalidaciones de fondo dinámico con noche auto. Pendientes: logo widget; `ivMainLogo` L2 bajo estrés. Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.1.1** — widget (background seek, main-thread Glide logo); beige Day Mode; **SI**; `SupabaseLogoSource` fix; settings summaries; sequential presets + optional infinite strip (V2/V3); dynamic background stability with auto night. Pending: widget logo; stressed `ivMainLogo` on layout 2. See `CHANGELOG_EN.md`.
 
 ### v5.1.0 (Abril 2026) — `main` — “Backup Studio + Web Tools” (`versionCode` 31)
 - **ES:** **OpenRadioFM v5.1.0** — acceso al editor web desde Guardar/Cargar; **Backup Studio** (web instalable) con generación/carga de `.fav`, `.ors` (más opciones de menú) y `.orzip`, previsualizaciones, tooltips y manual ES/EN; **Supabase** puede registrar **PS/PI sin logo** cuando el nombre es estable (semilla para la comunidad). Ver `CHANGELOG.md`.

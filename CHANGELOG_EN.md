@@ -4,32 +4,38 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
----
 ## [Unreleased]
 
-*(active development line: **5.1.1**; add items here until the release is cut)*
+*(empty; last documented release: **5.1.1** — see below.)*
 
 ---
 
-## [5.1.1] - 2026-04-10
-*Patch on top of 5.1.0 (`versionCode` **32**, `versionName` **5.1.1**).*
+## [5.1.1] - 2026-04-11
+*Patch on top of 5.1.0 (`versionCode` **33**, `versionName` **5.1.1**).*
 
 ### Added
 - **Slovenia (SI)**: country in the in-app selector (i18n), `eslovenia/` folder for Storage logos, and Supabase `country_folder` mapping.
 - **Widget diagnostics**: logging in `RadioWidgetActionReceiver` (tag **`ORF_WidgetRx`**) and traces in `RadioMediaService.handleWidgetSeek`.
+- **Optional infinite preset strip**: screen settings toggle for **Layout V2/V3** (`pref_preset_scroll_loop`, activity `recreate` on change); `preset_loop_slot_v2/v3` + `InfinitePresetScrollHelper`.
 
 ### Changed
-- **App versioning**: `versionCode 32`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
+- **App versioning**: `versionCode 33`, `versionName 5.1.1`; `app_name_internal` **v5.1.1**.
 - **BuildConfig**: public logos base URL at the `station-logos` bucket root (per-country subfolders).
 - **Backup Studio (web)**: **SI** option for `pref_country_code` in `.ors`.
 - **Day Mode**: unified **beige** background (`@color/day_mode_background` **#EDE4D3**) for window + `LogoManager`; `DAY_MODE` skin accent hex aligned.
+- **Premium settings**: section titles plus **On/Off summaries** on switches.
+- **Presets / steering**: NEXT/PREV in preset mode walks **slot order** (1…N) with wrap, aligned with the active screen.
 
 ### Fixed / Improved
 - **Home-screen widget (e.g. QS6)**: `RadioMediaService` refreshes the **OpenRadioFM** widget (freq/band/PS) when tuning changes **without relying on `MainActivity`** (engine callbacks + delayed refresh if the OEM reports late).
+- **Widget — logo**: **Glide on the main thread** and service refresh path that avoids dropping the bitmap when rebuilding `RemoteViews`.
 - **Release build**: `SupabaseLogoSource` initializes `applicationContext` at the start of the async block before Storage upload (fixes unresolved `appContext`).
+- **Preset loop strip**: loop clones match **skin**, text color, and logo tint of main slots; **`mLogoUiGeneration`** increments only when the **active** skin actually changes (prevents **dynamic background** from clearing on periodic auto-night checks).
+- **Auto night mode**: skips redundant `applySkin` when the active skin already matches the target.
 
 ### Known / Pending
 - **Widget**: station logo may appear briefly then fall back to the app icon; follow-up needed (Glide / `RemoteViews` re-render).
+- **Layout 2 / stress tuning**: **`ivMainLogo`** may show the station logo briefly then revert to fallback/empty under rapid zapping and layout switches; **pending** analysis (`clearLogo` / `getStationInfo` / callback ordering).
 
 ---
 
