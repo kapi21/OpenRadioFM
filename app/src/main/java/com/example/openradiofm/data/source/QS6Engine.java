@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.util.Log;
+import java.io.UnsupportedEncodingException;
 
 import com.example.openradiofm.engine.NWDTunerAdapter;
 import com.example.openradiofm.ui.main.RadioServiceController;
@@ -38,6 +40,14 @@ public class QS6Engine implements RadioEngine {
     private static final String ACTION_REQUEST_CHANGE_SOURCE = "com.nwd.action.ACTION_REQUEST_CHANGE_SOURCE";
     private static final String ACTION_APP_IN_OUT = "com.nwd.action.ACTION_APP_IN_OUT";
     private static final String ACTION_EXIT_ARM_FM_RAIDO = "com.nwd.android.ACTION_EXIT_ARM_FM_RAIDO"; // RE §B.5: Typo RAIDO obligatorio
+    
+    // Claves Settings.System (vía RE Fase D: NWD-D001)
+    private static final String KEY_NWD_RADIO_BACK_SERVICE_ON = "nwd_radio_back_service_on";
+    private static final String KEY_NWD_RADIO_CURRENT_FREQ = "nwd_radio_current_freq";
+    private static final String KEY_NWD_RADIO_CURRENT_BAND = "nwd_radio_current_band";
+    private static final String KEY_NWD_RADIO_CURRENT_PS_DATA = "nwd_radio_current_ps_data";
+    private static final String KEY_MCU_CURRENT_SOURCE = "mcu_current_source";
+
     private static final int SOURCE_RADIO = 0x04;      // RE: 0x04 = Radio
     private static final int SOURCE_ANDROID = 0x00;    // RE: 0x00 = Android/System
     private static final int APP_ID_RADIO = 8;         // RE: AppID 8 activa InitFM()
@@ -58,25 +68,29 @@ public class QS6Engine implements RadioEngine {
             mMainHandler.post(() -> {
                 // V22.4: Mapeo robusto. Algunos firmwares NWD reportan 1-based o 0-based.
                 // OpenRadioFM: 0-2 FM, 3-4 AM.
-                mCurrentBand = bandType;
+                mCurrentBand = (int) bandType;
                 
                 // V22.4: Mapeo robusto. NWD reporta en unidades de 10kHz (ej: 8750 o 10150).
                 // OpenRadioFM usa kHz (ej: 87500 o 101500).
+                int rawFreq = frequency;
                 if (bandType < 3) {
                     // FM: 87.5 - 108.0 MHz
-                    if (frequency < 20000) {
-                        mCurrentFreq = frequency * 10;
-                    } else if (frequency > 500000) {
-                        mCurrentFreq = frequency / 10; // Caso raro: Hz?
+                    if (rawFreq < 20000) {
+                        mCurrentFreq = rawFreq * 10;
+                    } else if (rawFreq > 500000) {
+                        mCurrentFreq = rawFreq / 10; // Caso raro: Hz?
                     } else {
-                        mCurrentFreq = frequency;
+                        mCurrentFreq = rawFreq;
                     }
                     if (mCurrentBand >= 3) mCurrentBand = 0;
                 } else {
                     // AM: 522 - 1620 kHz
-                    mCurrentFreq = frequency;
+                    mCurrentFreq = rawFreq;
                     if (mCurrentBand < 3) mCurrentBand = 3;
                 }
+
+                // V22.5: Independencia Total -> Escribir en Settings.System para que el MCU/OS vean nuestro estado
+                syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, psName);
 
                 if (mCallback != null) {
                     mCallback.onFrequencyChanged(mCurrentFreq);
@@ -137,7 +151,12 @@ public class QS6Engine implements RadioEngine {
         RadioServiceController.clearSharedLocalEngineIfSame(this);
     }
 
-    @Override public void tune(int freqKhz) { mAdapter.tune(freqKhz); mCurrentFreq = freqKhz; }
+    @Override public void tune(int freqKhz) { 
+        mAdapter.tune(freqKhz); 
+        mCurrentFreq = freqKhz;
+        // V22.5: Forzar actualización a Settings para que el MCU reciba la nueva frecuencia vía KernelService
+        syncToNwdSystemSettings(freqKhz, mCurrentBand, "");
+    }
     @Override public void seekUp() { mAdapter.seek(true); }
     @Override public void seekDown() { mAdapter.seek(false); }
     
@@ -252,6 +271,9 @@ public class QS6Engine implements RadioEngine {
             intentApp.putExtra("extra_app_id", APP_ID_RADIO);
             intentApp.putExtra("extra_app_operation", 0); // 0 = EXIT/OUT
             mContext.sendBroadcast(intentApp);
+
+            // 4. Apagar persistencia en settings
+            Settings.System.putInt(mContext.getContentResolver(), KEY_NWD_RADIO_BACK_SERVICE_ON, 0);
         } catch (Exception e) {
             Log.w(TAG, "Error en closeDevice", e);
         }
@@ -259,4 +281,42 @@ public class QS6Engine implements RadioEngine {
     @Override public void gotoPreset(int index) {}
     @Override public void nextFavorite() {}
     @Override public void prevFavorite() {}
+
+    /**
+     * V22.5: Sincroniza el estado de OpenRadioFM con las claves de Settings.System de Nowada.
+     * Esto permite que el MCUDeviceManager del sistema lea nuestra frecuencia y la envíe al MCU/LCD,
+     * logrando independencia total de la app de radio nativa.
+     */
+    private void syncToNwdSystemSettings(int freqKhz, int band, String psName) {
+        try {
+            android.content.ContentResolver cr = mContext.getContentResolver();
+            
+            // 1. Frecuencia (en unidades NWD: décimas de MHz para FM, kHz para AM)
+            int nwdFreq = (band < 3) ? freqKhz / 10 : freqKhz;
+            Settings.System.putInt(cr, KEY_NWD_RADIO_CURRENT_FREQ, nwdFreq);
+            Settings.System.putInt(cr, KEY_NWD_RADIO_CURRENT_BAND, band);
+            Settings.System.putInt(cr, KEY_MCU_CURRENT_SOURCE, SOURCE_RADIO);
+            Settings.System.putInt(cr, KEY_NWD_RADIO_BACK_SERVICE_ON, 1);
+
+            // 2. PS (RDS Name) en formato hexadecimal (RE §D.4)
+            if (psName != null && !psName.isEmpty()) {
+                String hexPs = bytesToHex(psName.getBytes("UTF-8"));
+                if (hexPs.length() > 16) hexPs = hexPs.substring(0, 16); // NWD usa 8 bytes (16 hex)
+                Settings.System.putString(cr, KEY_NWD_RADIO_CURRENT_PS_DATA, hexPs);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "syncToNwdSystemSettings error", e);
+        }
+    }
+
+    private static final char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+    private static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+        }
+        return new String(hexChars);
+    }
 }
