@@ -162,11 +162,11 @@ public class QS6Engine implements RadioEngine {
     
     @Override 
     public void setMute(boolean mute) { 
+        mIsMute = mute; 
         // V22.5: En QS6, sendRadioCommand(0x05) cambia de banda.
         // Implementamos muteo vía cambio de fuente para asegurar silencio absoluto sin efectos secundarios.
         if (mute) switchToAndroidAudio();
         else switchToFmAudio();
-        mIsMute = mute; 
     }
     @Override public void setBand(int band) { mAdapter.setBand(band); mCurrentBand = band; }
     @Override public void bandCycle() { mAdapter.bandCycle(); }
@@ -197,6 +197,9 @@ public class QS6Engine implements RadioEngine {
             intentApp.putExtra("extra_app_event", 0);
             mContext.sendBroadcast(intentApp);
             
+            // V22.6: Asegurar que el sistema vea el cambio de fuente y el servicio activo
+            syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, "");
+            
             return true;
         } catch (Throwable e) {
             Log.e(TAG, "QS6: Error grave activando audio FM", e);
@@ -208,6 +211,11 @@ public class QS6Engine implements RadioEngine {
     public void switchToAndroidAudio() {
         Log.d(TAG, "QS6: switchToAndroidAudio -> SOURCE_ANDROID");
         try {
+            // V22.6: Añadir broadcast de petición para mayor redundancia (simétrico a requestPlayAudio)
+            Intent intentReq = new Intent(ACTION_REQUEST_CHANGE_SOURCE);
+            intentReq.putExtra("extra_source_id", (byte) SOURCE_ANDROID);
+            mContext.sendBroadcast(intentReq);
+
             Intent intent = new Intent(ACTION_CHANGE_SOURCE);
             intent.putExtra("extra_source_id", (byte) SOURCE_ANDROID);
             mContext.sendBroadcast(intent);
@@ -217,6 +225,9 @@ public class QS6Engine implements RadioEngine {
             intentApp.putExtra("extra_app_id", APP_ID_RADIO);
             intentApp.putExtra("extra_app_operation", 0); // 0 = Out
             mContext.sendBroadcast(intentApp);
+            
+            // Forzar sincronización de claves de sistema para que el MCU vea el cambio de fuente
+            syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, "");
         } catch (Exception ignored) {}
     }
 
@@ -295,8 +306,12 @@ public class QS6Engine implements RadioEngine {
             int nwdFreq = (band < 3) ? freqKhz / 10 : freqKhz;
             Settings.System.putInt(cr, KEY_NWD_RADIO_CURRENT_FREQ, nwdFreq);
             Settings.System.putInt(cr, KEY_NWD_RADIO_CURRENT_BAND, band);
-            Settings.System.putInt(cr, KEY_MCU_CURRENT_SOURCE, SOURCE_RADIO);
-            Settings.System.putInt(cr, KEY_NWD_RADIO_BACK_SERVICE_ON, 1);
+            
+            // V22.6: Reflejar el estado de mute en la fuente del sistema para evitar que el MCU
+            // fuerce la apertura del audio de radio durante actualizaciones de estado asíncronas.
+            int source = mIsMute ? SOURCE_ANDROID : SOURCE_RADIO;
+            Settings.System.putInt(cr, KEY_MCU_CURRENT_SOURCE, source);
+            Settings.System.putInt(cr, KEY_NWD_RADIO_BACK_SERVICE_ON, mIsMute ? 0 : 1);
 
             // 2. PS (RDS Name) en formato hexadecimal (RE §D.4)
             if (psName != null && !psName.isEmpty()) {

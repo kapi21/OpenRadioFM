@@ -4,9 +4,13 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
-## [Unreleased]
-
-*(empty; last documented release: **5.1.3** — see below.)*
+## [5.2.0] - 2026-04-12
+### QS6 (Nowada) Critical Stabilization
+- **Master Mode (Independence)**: Direct writes to `Settings.System` (`nwd_radio_current_freq`, `ps_data`) to sync the MCU without needing the native app.
+- **Clean Teardown**: `ACTION_EXIT_ARM_FM_RAIDO` signal implemented to force audio stop on app close.
+- **Mute Fix (Stabilized)**: Resolved issue where Mute failed due to MCU interference. Silence is now guaranteed by forcing `SOURCE_ANDROID` and disabling the radio backup service in `Settings.System` (`KEY_NWD_RADIO_BACK_SERVICE_ON`), ensuring the FM audio channel remains closed until Unmute.
+- **System Sync**: Immediate update of Nowada registry keys on source change, preventing the system from unexpectedly reverting the audio state.
+- **Lifecycle Management**: `RadioMediaService.onDestroy` sync with `QS6Engine.release` to free hardware.
 
 ---
 

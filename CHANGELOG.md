@@ -2,7 +2,8 @@
 ### Estabilización Crítica QS6 (Nowada)
 - **Modo Master (Independencia)**: Implementada escritura directa en `Settings.System` (`nwd_radio_current_freq`, `ps_data`) para sincronizar el MCU y evitar la necesidad de la app nativa.
 - **Cierre Limpio**: Implementada señal `ACTION_EXIT_ARM_FM_RAIDO` para forzar el cese de audio al cerrar la app.
-- **Corrección de Muteo**: Eliminado comando `0x05` que causaba cambios de banda; ahora se usa `SOURCE_ANDROID` para silenciar.
+- **Corrección de Muteo (Estabilizada)**: Solucionado problema donde el Mute fallaba por interferencia del MCU. Ahora se garantiza el silencio forzando `SOURCE_ANDROID` y desactivando el servicio de radio en `Settings.System` (`KEY_NWD_RADIO_BACK_SERVICE_ON`), asegurando que el canal de audio FM permanezca cerrado hasta el Unmute.
+- **Sincronización de Sistema**: Implementada actualización inmediata de claves de registro Nowada al cambiar de fuente, evitando que el sistema revierta el estado de audio inesperadamente.
 - **Gestión de Ciclo de Vida**: Sincronización de `RadioMediaService.onDestroy` con `QS6Engine.release` para liberar hardware.
 - **Diagnóstico**: Añadidos logs detallados de sintonía para depurar saltos de banda (FM3) en el arranque.
 
