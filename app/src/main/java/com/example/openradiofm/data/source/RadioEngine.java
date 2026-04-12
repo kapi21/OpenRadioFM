@@ -91,6 +91,28 @@ public interface RadioEngine {
     void nextFavorite();
     void prevFavorite();
 
+    // === Widget / Launcher OEM ===
+
+    /**
+     * Notifica al motor la frecuencia/banda/RDS actuales para que pueda enviar los
+     * broadcasts OEM específicos de la plataforma (p. ej. {@code com.qf.radio.update_action}
+     * en K706 o {@code com.ts.main.radio.update} en Topway).
+     * <p>
+     * La implementación por defecto es un no-op: los motores que no necesiten broadcasts
+     * propios no deben sobrescribir este método.
+     * </p>
+     *
+     * @param context    Context para sendBroadcast.
+     * @param freqKhz    Frecuencia en kHz (ej. 87500 = 87.5 MHz).
+     * @param band       Índice de banda (0=FM1, 1=FM2, 2=FM3, 3=AM1, 4=AM2).
+     * @param presetIdx  Índice del preset memorizado (-1 si no memorizado).
+     * @param rdsName    Nombre RDS (PS), puede ser null o vacío.
+     */
+    default void notifyWidgetUpdate(Context context, int freqKhz, int band,
+                                    int presetIdx, String rdsName) {
+        // No-op por defecto: los motores no-QF no necesitan broadcasts adicionales.
+    }
+
     // === Callbacks ===
     void setCallback(RadioEngineCallback cb);
 }

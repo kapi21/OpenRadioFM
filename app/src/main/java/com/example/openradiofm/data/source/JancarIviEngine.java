@@ -422,7 +422,7 @@ public class JancarIviEngine implements RadioEngine {
     public void setBand(int band) {
         if (mRadio == null) return;
         try {
-            int jBand = (band < 3) ? J_BAND_FM : J_BAND_AM;
+            int jBand = (band >= 3) ? J_BAND_AM : J_BAND_FM;
             mRadio.setBand(jBand);
         } catch (RemoteException e) {
             Log.w(TAG, "setBand", e);

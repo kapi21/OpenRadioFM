@@ -218,9 +218,9 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📜 Historial de Versiones
 
-### v5.2.0 (Abril 2026) — `main` — Estabilización QS6, Master Mode, Fix Mute (`versionCode` 40)
-- **ES:** **OpenRadioFM v5.2.0** — Estabilización crítica para motores **QS6 (Nowada)**: implementación de **Modo Master** (sincronización directa con `Settings.System`), cierre limpio del canal de audio y **fix de muteo estabilizado** mediante conmutación de fuentes (`SOURCE_ANDROID`) y bloqueo del servicio de radio en segundo plano para evitar interferencias del MCU. Ver `CHANGELOG.md`.
-- **EN:** **OpenRadioFM v5.2.0** — Critical stabilization for **QS6 (Nowada)** engines: **Master Mode** implementation (direct `Settings.System` sync), clean audio channel teardown, and **stabilized mute fix** via source switching (`SOURCE_ANDROID`) and background radio service blocking to prevent MCU interference. See `CHANGELOG_EN.md`.
+### v5.2.0 (Abril 2026) — `main` — Estabilización QS6 + Motores Legados (`versionCode` 40)
+- **ES:** **OpenRadioFM v5.2.0** — Estabilización crítica para motores **QS6 (Nowada)** y restauración de los motores **MT8163, MTK y Jancar** a sus versiones legadas estables. Incluye **Modo Master** en QS6, paridad de bandas en toda la gama y fix de audio v18.6 para MT8163. Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.2.0** — Critical stabilization for **QS6 (Nowada)** and restoration of **MT8163, MTK and Jancar** engines to their stable legacy versions. Includes **Master Mode** for QS6, band parity across the lineup, and v18.6 audio fix for MT8163. See `CHANGELOG_EN.md`.
 
 ### v5.1.3 (Abril 2026) — `main` — medidor de señal en barras, QS6 0–5 (`versionCode` 35)
 - **ES:** **OpenRadioFM v5.1.3** — opción **barras de señal** (V2/V3) en Ajustes premium; `SignalBarsView` + colores por skin; corrección de lógica (polling, skin, dBm, escala **0–5** QS/NWD). Concepto en `docs/img/concept_signal_bars_main_ui.png`. Ver `CHANGELOG.md`.

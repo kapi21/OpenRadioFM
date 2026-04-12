@@ -399,9 +399,60 @@ public class K706Engine implements RadioEngine {
     }
 
     /**
-     * Acceso como IRadioServiceAPI para compatibilidad temporal.
+     * Acceso como IRadioServiceAPI para uso exclusivo del Engineering Dialog.
+     * <b>No llamar desde la UI ni desde otros managers.</b>
+     *
+     * @deprecated Uso interno únicamente. Acceder solo desde {@code K706EngineeringDialog}.
      */
+    @Deprecated
     public IRadioServiceAPI asAidl() {
         return mManager;
     }
+
+    // === Widget / Launcher OEM ===
+
+    /**
+     * V23.0: Envía el broadcast {@code com.qf.radio.update_action} al launcher K706/QuickFish.
+     * Movido aquí desde WidgetBroadcastManager para que la UI no tenga dependencia directa
+     * con clases {@code com.qf.*}.
+     */
+    @Override
+    public void notifyWidgetUpdate(Context context, int freqKhz, int band,
+                                   int presetIdx, String rdsName) {
+        try {
+            final boolean isAm = (band == 3 || band == 4);
+            final String freqStr;
+            final int nativeFreq;
+            if (isAm) {
+                freqStr = String.valueOf(freqKhz);
+                nativeFreq = freqKhz;
+            } else {
+                java.text.DecimalFormat df = new java.text.DecimalFormat("0.00");
+                java.text.DecimalFormatSymbols dfs =
+                        new java.text.DecimalFormatSymbols(java.util.Locale.US);
+                df.setDecimalFormatSymbols(dfs);
+                freqStr = df.format(freqKhz / 1000.0f);
+                nativeFreq = freqKhz / 10;
+            }
+
+            final String widgetName = (rdsName != null && !rdsName.isEmpty()
+                    && !"STATION NAME".equals(rdsName) && !"STATION".equals(rdsName))
+                    ? rdsName : "";
+
+            android.content.Intent qf = new android.content.Intent("com.qf.radio.update_action");
+            qf.putExtra("com.qf.radio.update_action_key",          freqStr);
+            qf.putExtra("com.qf.radio.update_action_freq_key",     nativeFreq);
+            qf.putExtra("com.qf.radio.update_action_band_key",     band);
+            qf.putExtra("com.qf.radio.update_action_preset_key",   presetIdx);
+            qf.putExtra("com.qf.radio.update_action_searching_key", false);
+            qf.putExtra("com.qf.radio.update_action_name_key",     widgetName);
+            qf.setPackage("com.android.auto.autohome");
+            context.sendBroadcast(qf);
+
+            Log.d(TAG, "notifyWidgetUpdate: QF broadcast enviado -> " + freqStr + " band=" + band);
+        } catch (Exception e) {
+            Log.w(TAG, "notifyWidgetUpdate: error enviando broadcast QF", e);
+        }
+    }
 }
+

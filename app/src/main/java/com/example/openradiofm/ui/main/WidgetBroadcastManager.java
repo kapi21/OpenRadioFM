@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.util.Log;
 
 import com.example.openradiofm.data.repository.RadioRepository;
+import com.example.openradiofm.data.source.RadioEngine;
 
 /**
  * V22: Gestiona todos los broadcasts OEM (K706, MTK, Topway) y la actualización
@@ -51,10 +52,12 @@ public class WidgetBroadcastManager {
      * @param presetIdx Índice del preset memorizado (-1 si no memorizado).
      * @param isStereo  Si la recepción es estéreo.
      * @param repo      Repositorio de datos para obtener el logo (puede ser null).
+     * @param engine    Motor activo (puede ser null). Si implementa notifyWidgetUpdate(),
+     *                  el broadcast K706 se delega al propio motor en vez de enviarse aquí.
      */
     public void sendUpdate(Context context, int freq, int band,
                            String rdsName, int presetIdx, boolean isStereo,
-                           RadioRepository repo) {
+                           RadioRepository repo, RadioEngine engine) {
         // Guarda anti-spam (evita Binder flood / "Permission Denial")
         if (freq == mLastBroadcastFreq && band == mLastBroadcastBand
                 && strEquals(rdsName, mLastBroadcastPs)) {
@@ -70,8 +73,13 @@ public class WidgetBroadcastManager {
             int nativeFreqInt = (band == BAND_AM1 || band == BAND_AM2) ? freq : freq / 10;
             String widgetName = sanitizeWidgetName(rdsName);
 
-            // 1. K706 / QuickFish
-            broadcastK706(context, freqStr, nativeFreqInt, band, presetIdx, widgetName);
+            // 1. K706 / QuickFish — delegado al engine si está disponible (desacopla com.qf.* de la UI)
+            if (engine != null) {
+                engine.notifyWidgetUpdate(context, freq, band, presetIdx, rdsName);
+            } else {
+                // Fallback: sin engine, enviar directamente (compatibilidad)
+                broadcastK706(context, freqStr, nativeFreqInt, band, presetIdx, widgetName);
+            }
 
             // 2. Launcher MTK
             broadcastMtk(context, freqStr, band, widgetName, isStereo);
@@ -88,6 +96,17 @@ public class WidgetBroadcastManager {
         } catch (Exception ex) {
             Log.e(TAG, "Error updating launcher widgets", ex);
         }
+    }
+
+    /**
+     * Sobrecarga de compatibilidad para llamadas que aún no pasan el engine.
+     * @deprecated Usar {@link #sendUpdate(Context, int, int, String, int, boolean, RadioRepository, RadioEngine)} en su lugar.
+     */
+    @Deprecated
+    public void sendUpdate(Context context, int freq, int band,
+                           String rdsName, int presetIdx, boolean isStereo,
+                           RadioRepository repo) {
+        sendUpdate(context, freq, band, rdsName, presetIdx, isStereo, repo, null);
     }
 
     // ==================== Broadcasts individuales ====================

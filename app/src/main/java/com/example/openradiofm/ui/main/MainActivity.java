@@ -288,6 +288,7 @@ public class MainActivity extends AppCompatActivity  {
     public PlaybackManager mPlaybackManager;
     public DeviceManager mDeviceManager;
     public HardwareManager mHardwareManager;
+    private WidgetBroadcastManager mWidgetBroadcastManager; // V23.0: Desacoplamiento de widgets OEM
     public RadioSessionController mSessionController;
 
 
@@ -369,11 +370,6 @@ public class MainActivity extends AppCompatActivity  {
     private boolean mLastInternetCache = false;
     /** Opacidad del icono nube cuando hay logos online pero sin conectividad (no ocultar, solo atenuar). */
     private static final float CLOUD_DATA_OFFLINE_ALPHA = 0.38f;
-
-    // V2.5: Broadcast guards
-    private int mLastBroadcastFreq = -1;
-    private int mLastBroadcastBand = -1;
-    private String mLastBroadcastPs = "";
 
     // V2.6: Master Guard for refreshRadioStatus
     private int mLastRefreshFreq = -1;
@@ -1284,6 +1280,9 @@ public class MainActivity extends AppCompatActivity  {
         // V18.6: MCU and BT logic controlled by HardwareManager
         mHardwareManager = new HardwareManager(this);
         mHardwareManager.registerReceivers();
+        
+        // V23.0: Gestor de broadcasts para widgets OEM
+        mWidgetBroadcastManager = new WidgetBroadcastManager();
 
         // V3.0: Layout Selection
         mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
@@ -2543,81 +2542,25 @@ public class MainActivity extends AppCompatActivity  {
     }
 
     /**
-     * V5.2: Broadcast to K706 Launcher Widget
+     * V5.2: Broadcast to K706 Launcher Widget.
+     *
+     * @deprecated Usar {@link #sendWidgetUpdate(int, int, String)} en su lugar.
      */
+    @Deprecated
     public void sendWidgetUpdateIntent(int freq, int band, String rdsName) {
-        // V5.2: Broadcast to K706/MTK/Topway Launcher Widgets
-        
-        // V2.5: Deep Guard to avoid "Permission Denial" Binder flood
-        if (freq == mLastBroadcastFreq && band == mLastBroadcastBand && 
-            ((rdsName == null && mLastBroadcastPs == null) || (rdsName != null && rdsName.equals(mLastBroadcastPs)))) {
-            return;
-        }
+        sendWidgetUpdate(freq, band, rdsName);
+    }
 
-        mLastBroadcastFreq = freq;
-        mLastBroadcastBand = band;
-        mLastBroadcastPs = rdsName;
-
-        try {
-            // 1. BROADCAST ESTÁNDAR K706 / QUICKFISH
-            android.content.Intent qfIntent = new android.content.Intent("com.qf.radio.update_action");
-            String freqStr;
-            int nativeFreqInt;
-            if (band == BAND_AM1 || band == BAND_AM2) {
-                freqStr = String.valueOf(freq);
-                nativeFreqInt = freq;
-            } else {
-                java.text.DecimalFormat df = new java.text.DecimalFormat("0.00");
-                java.text.DecimalFormatSymbols dfs = new java.text.DecimalFormatSymbols(java.util.Locale.US);
-                df.setDecimalFormatSymbols(dfs);
-                freqStr = df.format(freq / 1000.0f);
-                nativeFreqInt = freq / 10; 
-            }
-            qfIntent.putExtra("com.qf.radio.update_action_key", freqStr);
-            qfIntent.putExtra("com.qf.radio.update_action_freq_key", nativeFreqInt);
-            qfIntent.putExtra("com.qf.radio.update_action_band_key", band);
-            qfIntent.putExtra("com.qf.radio.update_action_preset_key", getPresetIndex(freq));
-            qfIntent.putExtra("com.qf.radio.update_action_searching_key", false);
-            String widgetName = (rdsName != null && !rdsName.isEmpty() && !rdsName.equals("STATION NAME")
-                    && !rdsName.equals("STATION")) ? rdsName : "";
-            qfIntent.putExtra("com.qf.radio.update_action_name_key", widgetName);
-            qfIntent.setPackage("com.android.auto.autohome");
-            sendBroadcast(qfIntent);
-
-            // 2. BROADCAST ESTÁNDAR LAUNCHER MTK (Vista Radio Original)
-            android.content.Intent mtkIntent = new android.content.Intent("com.android.launcher.action.UPDATE_RADIO");
-            mtkIntent.putExtra("frequency", freqStr);
-            mtkIntent.putExtra("name", widgetName);
-            mtkIntent.putExtra("band", band < 3 ? "FM" : "AM");
-            mtkIntent.putExtra("isRadio", true);
-            mtkIntent.putExtra("stereo", mEngine != null && mEngine.isStereo());
-            sendBroadcast(mtkIntent);
-
-            // 3. BROADCAST ESPECÍFICO TOPWAY / TS
-            android.content.Intent tsIntent = new android.content.Intent("com.ts.main.radio.update");
-            tsIntent.putExtra("freq", nativeFreqInt);
-            tsIntent.putExtra("band", band);
-            tsIntent.putExtra("name", widgetName);
-            tsIntent.putExtra("isRadio", true);
-            sendBroadcast(tsIntent);
-
-            // 4. ACTUALIZACIÓN DE FUENTE DEL SISTEMA (Para activar widget de Radio)
-            android.content.Intent sourceIntent = new android.content.Intent("com.android.launcher.action.UPDATE_SOURCE");
-            sourceIntent.putExtra("source", 1); // 1 suele ser Radio
-            sourceIntent.putExtra("sourceName", "Radio");
-            sendBroadcast(sourceIntent);
-
-            // Actualizar widget propio (texto inmediato) y luego inyectar logo cuando esté disponible.
-            com.example.openradiofm.widget.OpenRadioFmWidgetProvider.updateStationDisplay(this, freq, band, rdsName);
-            if (mRepository != null) {
-                mRepository.getStationInfo(freq, logoUrl -> {
-                    com.example.openradiofm.widget.OpenRadioFmWidgetProvider
-                            .updateStationDisplay(this, freq, band, rdsName, logoUrl);
-                }, rdsName);
-            }
-
-        } catch (Exception ex) {
-            Log.e(TAG, "Error updating launcher widgets", ex);
+    /**
+     * V23.0: Actualiza los widgets del launcher (OEM y propio).
+     * Delega la lógica de broadcasts específicos al motor de radio activo para
+     * evitar dependencias directas con {@code com.qf.*} u otras plataformas en la UI.
+     */
+    public void sendWidgetUpdate(int freq, int band, String rdsName) {
+        if (mWidgetBroadcastManager != null) {
+            mWidgetBroadcastManager.sendUpdate(this, freq, band, rdsName, 
+                    getPresetIndex(freq), (mEngine != null && mEngine.isStereo()), 
+                    mRepository, mEngine);
         }
     }
 
@@ -3126,7 +3069,19 @@ public class MainActivity extends AppCompatActivity  {
     private Object mCachedQFTunerManager;
     private boolean mQFTunerChecked = false;
 
+    /**
+     * Helper interno: obtiene el singleton {@code QFTunerManager} via reflection.
+     * <b>Solo válido en plataforma K706.</b> En cualquier otro engine devuelve null
+     * sin intentar la reflexión para evitar excepciones innecesarias.
+     *
+     * @deprecated El control del tuner QF debe delegar en {@link K706Engine} cuando sea posible.
+     */
+    @Deprecated
     private Object getQFTunerManager() {
+        // Guard: no intentar reflexión en plataformas que no son K706
+        if (!(mEngine instanceof com.example.openradiofm.data.source.K706Engine)) {
+            return null;
+        }
         if (!mQFTunerChecked) {
             mQFTunerChecked = true;
             try {
@@ -3587,10 +3542,6 @@ public class MainActivity extends AppCompatActivity  {
 
     public OnlineStreamManager getOnlineStreamManager() {
         return mOnlineStreamManager;
-    }
-
-    public void sendWidgetUpdate(int freq, int band, String rdsName) {
-        sendWidgetUpdateIntent(freq, band, rdsName);
     }
 
 }

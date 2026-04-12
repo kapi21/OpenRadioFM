@@ -1,11 +1,12 @@
 ## [5.2.0] - 2026-04-12
-### Estabilización Crítica QS6 (Nowada)
-- **Modo Master (Independencia)**: Implementada escritura directa en `Settings.System` (`nwd_radio_current_freq`, `ps_data`) para sincronizar el MCU y evitar la necesidad de la app nativa.
-- **Cierre Limpio**: Implementada señal `ACTION_EXIT_ARM_FM_RAIDO` para forzar el cese de audio al cerrar la app.
-- **Corrección de Muteo (Estabilizada)**: Solucionado problema donde el Mute fallaba por interferencia del MCU. Ahora se garantiza el silencio forzando `SOURCE_ANDROID` y desactivando el servicio de radio en `Settings.System` (`KEY_NWD_RADIO_BACK_SERVICE_ON`), asegurando que el canal de audio FM permanezca cerrado hasta el Unmute.
-- **Sincronización de Sistema**: Implementada actualización inmediata de claves de registro Nowada al cambiar de fuente, evitando que el sistema revierta el estado de audio inesperadamente.
-- **Gestión de Ciclo de Vida**: Sincronización de `RadioMediaService.onDestroy` con `QS6Engine.release` para liberar hardware.
-- **Diagnóstico**: Añadidos logs detallados de sintonía para depurar saltos de banda (FM3) en el arranque.
+### Estabilización Crítica y Restauración de Motores Legados
+- **QS6 (Nowada)**: Implementación de **Modo Master** (sincronización directa con `Settings.System`), cierre limpio del canal de audio y **fix de muteo estabilizado** mediante conmutación de fuentes.
+- **MT8163 (HCN)**: Revertido a la implementación original estable (HCN native AIDL). Solucionados problemas de regresión en sintonía, RDS y mutes espurios.
+- **MTK8259/8667 (Topway)**: Restaurado sistema de doble vínculo (`ITsCommon` + `ITsSpeechRadio`) para total compatibilidad con MainUI.apk.
+- **Jancar (8227L)**: Revertido al motor original basado en el servicio nativo de Jancar.
+- **Mute Legado (MT8163)**: Restaurada lógica de audio v18.6 (mantenimiento de `fm_radio_on=1`) para evitar ruidos de conmutación.
+- **Paridad RadioEngine**: Implementado `setBand(int)` en todos los motores restaurados para compatibilidad con la interfaz unificada v5.x.
+- **Correcciones de Compilación**: Resueltos 5 fallos críticos de símbolos y métodos abstractos derivados de la restauración de código antiguo.
 
 ## [5.1.8] - 2026-04-12
 ### Solucionado
