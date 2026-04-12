@@ -589,8 +589,10 @@ function fillOrsForm(obj) {
         orsControls.skin.value = tp.selected_skin || 'CLASSIC';
         orsControls.logosOnline.checked = !!rp.pref_logos_online;
         orsControls.autoHide.checked = !!rp.pref_auto_hide_controls;
-        const isV3 = !!rp.pref_layout_v3;
+        let isV3 = !!rp.pref_layout_v3;
         const isSimple = !!rp.pref_layout_simple;
+        // Coherente con MainActivity: Simple gana si un JSON/orzip trae ambos true.
+        if (isSimple && isV3) isV3 = false;
         if (orsControls.layoutV3) orsControls.layoutV3.checked = isV3;
         if (orsControls.layoutSimple) orsControls.layoutSimple.checked = !isV3 && isSimple;
         if (orsControls.layoutNone) orsControls.layoutNone.checked = !isV3 && !isSimple;

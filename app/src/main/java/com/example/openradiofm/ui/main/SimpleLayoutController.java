@@ -3,7 +3,6 @@ package com.example.openradiofm.ui.main;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.view.View;
-import android.widget.ImageView;
 import android.widget.TextView;
 import com.example.openradiofm.R;
 import com.example.openradiofm.ui.theme.ThemeManager;
@@ -13,7 +12,6 @@ import com.example.openradiofm.ui.theme.ThemeManager;
  */
 public class SimpleLayoutController extends BaseLayoutController {
     private TextView tvFrequency, tvRdsInfo;
-    private ImageView ivMainLogo;
 
     public SimpleLayoutController(MainActivity activity) {
         super(activity);
@@ -23,8 +21,7 @@ public class SimpleLayoutController extends BaseLayoutController {
     public void initViews(View root) {
         tvFrequency = root.findViewById(R.id.tvFrequency);
         tvRdsInfo = root.findViewById(R.id.tvRdsInfo);
-        ivMainLogo = root.findViewById(R.id.ivMainLogo);
-        
+
         if (tvRdsInfo != null) {
             tvRdsInfo.setSelected(true); // Para marquee
         }
@@ -104,14 +101,12 @@ public class SimpleLayoutController extends BaseLayoutController {
 
     @Override
     public void updateLogo(android.graphics.Bitmap bitmap) {
-        if (ivMainLogo != null) {
-            if (bitmap != null) {
-                ivMainLogo.setImageBitmap(bitmap);
-                ivMainLogo.setAlpha(1.0f);
-            } else {
-                ivMainLogo.setImageResource(R.drawable.ic_app_logo);
-                ivMainLogo.setAlpha(0.2f);
-            }
+        if (bitmap != null) {
+            // No competir con Glide en ivMainLogo; LogoManager + SimpleLayoutManager llevan la carga y la paleta.
+            return;
+        }
+        if (mActivity.mLogoManager != null) {
+            mActivity.mLogoManager.clearLogo();
         }
     }
 }

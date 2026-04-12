@@ -355,6 +355,22 @@ public class HistoryManager {
             }
         }
         e.apply();
+        if ("RadioPresets".equals(prefsName)) {
+            sanitizeExclusiveLayoutFlags(p);
+        }
+    }
+
+    /**
+     * Tras importar .ors / orzip / JSON, ambas prefs pueden quedar true; la app prioriza Simple en {@link MainActivity}.
+     * Dejamos prefs coherentes para ThemeManager y backups futuros.
+     */
+    private static void sanitizeExclusiveLayoutFlags(SharedPreferences p) {
+        if (p == null) return;
+        boolean simple = p.getBoolean("pref_layout_simple", false);
+        boolean v3 = p.getBoolean("pref_layout_v3", false);
+        if (simple && v3) {
+            p.edit().putBoolean("pref_layout_v3", false).apply();
+        }
     }
 
     private void zipFolderImages(ZipOutputStream zos, File folder, String prefix) throws Exception {

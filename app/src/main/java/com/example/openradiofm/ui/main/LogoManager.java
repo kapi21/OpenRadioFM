@@ -12,8 +12,11 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
+import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.load.resource.bitmap.BitmapTransitionOptions;
 import com.example.openradiofm.R;
 import com.bumptech.glide.request.target.CustomTarget;
@@ -22,6 +25,7 @@ import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
+import androidx.annotation.Nullable;
 import java.io.File;
 
 /**
@@ -73,6 +77,14 @@ public class LogoManager {
         File app = new File(mAppLogoDir, fileName);
         if (app.exists()) return app;
         return null;
+    }
+
+    /** Layout Simple: el logo vive dentro de {@link R.id#boxLogoSimple}; debe quedar visible al cargar emisora. */
+    private void ensureSimpleLogoBoxVisible() {
+        View box = mActivity.findViewById(R.id.boxLogoSimple);
+        if (box != null) {
+            MainActivity.setVisibilityIfChanged(box, View.VISIBLE);
+        }
     }
 
     /**
@@ -205,15 +217,54 @@ public class LogoManager {
         }
     }
 
+    /** Marca en {@link R.id#tag_logo_url} para el fallback del slot principal (no es URL remota). */
+    private static final String FALLBACK_MAIN_LOGO_TAG = "__fallback_ic_toast__";
+
     /**
-     * Aplica un logo de respaldo (Coche > Icono App).
+     * Logo de respaldo cuando no hay logo de emisora.
+     * <ul>
+     *   <li>{@link R.id#ivMainLogo} en V2/Simple: {@code ic_toast} (drawable nodpi; Glide fitCenter, sin recorte redondeado).</li>
+     *   <li>{@link R.id#ivMainLogo} en V3: oculto (emisora va por fondo dinámico).</li>
+     *   <li>Otros {@link ImageView}: {@code car_logo.png} si existe; si no, icono de la app.</li>
+     * </ul>
+     * El slot {@link R.id#ivCarLogo} (marca coche en V3) se carga solo en {@link #loadCarLogo()}.
      */
     public void applyFallbackLogo(ImageView iv) {
         if (iv == null) return;
 
         // V13.9.1: Ocultar logo principal en Layout 3 (V3)
-        if (iv.getId() == R.id.ivMainLogo && mActivity.mIsV3) {
+        if (iv.getId() == R.id.ivMainLogo && mActivity.isV3LayoutActive()) {
             iv.setVisibility(View.GONE);
+            return;
+        }
+
+        // V2/Simple: fallback de emisora = ic_toast (sin RoundedCorners: más nítido al escalar).
+        if (iv.getId() == R.id.ivMainLogo) {
+            iv.setVisibility(View.VISIBLE);
+            iv.setAlpha(1.0f);
+            iv.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            if (mActivity.mIsSimpleLayout) {
+                View box = mActivity.findViewById(R.id.boxLogoSimple);
+                if (box != null) {
+                    MainActivity.setVisibilityIfChanged(box, View.VISIBLE);
+                }
+            }
+            iv.setTag(R.id.tag_logo_url, null);
+            try {
+                Glide.with(iv).clear(iv);
+            } catch (Exception ignored) {
+            }
+            iv.setImageDrawable(null);
+            Glide.with(iv)
+                    .load(R.drawable.ic_toast)
+                    .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    .apply(new RequestOptions()
+                            .format(DecodeFormat.PREFER_ARGB_8888)
+                            .fitCenter()
+                            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
+                    .transition(DrawableTransitionOptions.withCrossFade(0))
+                    .into(iv);
+            iv.setTag(R.id.tag_logo_url, FALLBACK_MAIN_LOGO_TAG);
             return;
         }
 
@@ -221,10 +272,6 @@ public class LogoManager {
         if (logoFile != null && logoFile.exists()) {
             iv.setVisibility(View.VISIBLE);
             String path = logoFile.getAbsolutePath();
-            // No confiar en tag_logo_url para omitir carga: updateStationLogo() pinta el logo de emisora
-            // con Glide pero no actualiza el tag, que suele seguir siendo la ruta de car_logo. El “skip”
-            // dejaba el bitmap de la emisora anterior visible (K706/V2) hasta el siguiente logo; step +/- sí
-            // llamaba antes a clearLogo() (tag=null) y por eso ahí sí aparecía el coche.
             iv.setTag(R.id.tag_logo_url, null);
             try {
                 Glide.with(iv).clear(iv);
@@ -239,19 +286,14 @@ public class LogoManager {
                     .into(iv);
             iv.setTag(R.id.tag_logo_url, path);
         } else {
-            // UX: no usar el icono de la app como fallback en el logo principal.
-            // Si no hay car_logo.png, ocultar el ivMainLogo para evitar confusión/solapamiento.
-            if (iv.getId() == R.id.ivMainLogo) {
-                MainActivity.setVisibilityIfChanged(iv, View.GONE);
-            } else {
-                MainActivity.setImageResourceIfChanged(iv, R.drawable.ic_app_logo);
-                MainActivity.setVisibilityIfChanged(iv, View.VISIBLE);
-            }
+            MainActivity.setImageResourceIfChanged(iv, R.drawable.ic_app_logo);
+            MainActivity.setVisibilityIfChanged(iv, View.VISIBLE);
         }
     }
 
     /**
-     * Carga el logo de la marca del coche.
+     * Carga {@code car_logo.png} en {@link R.id#ivCarLogo} (Layout V3 / reloj vs coche).
+     * El slot {@link R.id#ivMainLogo} en V2/Simple lo rellena {@link #applyFallbackLogo(ImageView)} (ic_toast).
      */
     public void loadCarLogo() {
         ImageView ivCarLogo = mActivity.findViewById(R.id.ivCarLogo);
@@ -374,7 +416,7 @@ public class LogoManager {
 
         // Layout V3: el logo de emisora no se muestra en ivMainLogo (GONE), pero Glide/ivDynamicBackground
         // podían dejar arte detrás del TextView de frecuencia (QS6, zapping). Reset duro al limpiar.
-        if (mActivity.mIsV3) {
+        if (mActivity.isV3LayoutActive()) {
             mActivity.mLastLogoUrl = "";
             ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
             if (ivMainLogo != null) {
@@ -394,19 +436,8 @@ public class LogoManager {
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         if (ivMainLogo != null) {
             ivMainLogo.setTag(R.id.tag_logo_url, null);
-            File car = resolveExistingFile("car_logo.png");
-            if (car != null && car.exists()) {
-                applyFallbackLogo(ivMainLogo);
-            } else {
-                // Sin car_logo: igual hay que quitar el arte de la emisora anterior (K706/V2, zapping).
-                // Mantener el bitmap viejo como "placeholder" dejaba el logo pegado hasta el siguiente fetch.
-                try {
-                    Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
-                } catch (Exception ignored) {
-                }
-                ivMainLogo.setImageDrawable(null);
-                MainActivity.setVisibilityIfChanged(ivMainLogo, View.GONE);
-            }
+            // Fallback de emisora (ic_toast); quita arte Glide anterior sin depender de car_logo.
+            applyFallbackLogo(ivMainLogo);
         }
         updateDynamicBackground(null);
     }
@@ -429,7 +460,7 @@ public class LogoManager {
                 mActivity.mLogoCachePerBand.put(bandCacheKey, cachedUrl);
             }
             if (ivMainLogo != null) {
-                if (mActivity.mIsV3) {
+                if (mActivity.isV3LayoutActive()) {
                     try {
                         Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
                     } catch (Exception ignored) {
@@ -442,6 +473,9 @@ public class LogoManager {
                         ivMainLogo.setImageDrawable(null);
                     }
                 }
+                if (mActivity.mIsSimpleLayout) {
+                    ensureSimpleLogoBoxVisible();
+                }
 
                 Glide.with(ivMainLogo)
                         .asBitmap()
@@ -450,6 +484,7 @@ public class LogoManager {
                                 .format(DecodeFormat.PREFER_ARGB_8888)
                                 .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
                         .transform(new RoundedCorners(24))
+                        .listener(stationLogoLoadFailureListener(logoGen, freq, band, ivMainLogo))
                         .transition(sameUrlAsLast
                                 ? BitmapTransitionOptions.withCrossFade(0)
                                 : BitmapTransitionOptions.withCrossFade(800))
@@ -489,16 +524,12 @@ public class LogoManager {
                 }
             }
 
-            // Cache-first UX: si aún no tenemos URL para esta emisora, no dejar el logo anterior "pegado".
-            // Mostrar fallback inmediato mientras llega el lookup (local/cache/red).
-            if (ivMainLogo != null && !mActivity.mIsV3) {
-                File car = resolveExistingFile("car_logo.png");
-                if (car != null && car.exists()) {
-                    applyFallbackLogo(ivMainLogo);
-                } else {
-                    // Sin car_logo.png: mantener el logo actual como placeholder (no vaciar/ocultar).
-                    MainActivity.setVisibilityIfChanged(ivMainLogo, View.VISIBLE);
+            // Cache-first UX: fallback inmediato (ic_toast) mientras llega el lookup (local/cache/red).
+            if (ivMainLogo != null && !mActivity.isV3LayoutActive()) {
+                if (mActivity.mIsSimpleLayout) {
+                    ensureSimpleLogoBoxVisible();
                 }
+                applyFallbackLogo(ivMainLogo);
             }
 
             mActivity.mRepository.getStationInfo(freq, url -> {
@@ -513,7 +544,7 @@ public class LogoManager {
                             mActivity.mLogoCachePerBand.put(bandCacheKey, url);
                         }
                         if (ivMainLogo != null) {
-                            if (mActivity.mIsV3) {
+                            if (mActivity.isV3LayoutActive()) {
                                 try {
                                     Glide.with(mActivity.getApplicationContext()).clear(ivMainLogo);
                                 } catch (Exception ignored) {
@@ -526,6 +557,9 @@ public class LogoManager {
                                     ivMainLogo.setImageDrawable(null);
                                 }
                             }
+                            if (mActivity.mIsSimpleLayout) {
+                                ensureSimpleLogoBoxVisible();
+                            }
 
                             Glide.with(ivMainLogo)
                                     .asBitmap()
@@ -534,6 +568,7 @@ public class LogoManager {
                                             .format(DecodeFormat.PREFER_ARGB_8888)
                                             .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
                                     .transform(new RoundedCorners(24))
+                                    .listener(stationLogoLoadFailureListener(logoGen, freq, band, ivMainLogo))
                                     .transition(sameAsLast
                                             ? BitmapTransitionOptions.withCrossFade(0)
                                             : BitmapTransitionOptions.withCrossFade(800))
@@ -559,17 +594,46 @@ public class LogoManager {
                         mActivity.mLastLogoUrl = "";
                         mActivity.mLogoCachePerBand.remove(bandCacheKey);
                         if (ivMainLogo != null) {
-                            applyFallbackLogo(ivMainLogo);
-                            if (mActivity.mIsV3) ivMainLogo.setVisibility(View.GONE);
                             if (mActivity.mIsSimpleLayout && mActivity.mSimpleLayoutManager != null) {
                                 mActivity.mSimpleLayoutManager.setDefaultState();
                             }
+                            applyFallbackLogo(ivMainLogo);
+                            if (mActivity.isV3LayoutActive()) ivMainLogo.setVisibility(View.GONE);
                         }
                         updateDynamicBackground(null);
                     }
                 });
             }, livePs);
         }
+    }
+
+    /**
+     * Si falla la descarga/decodificación del logo de emisora, volver al fallback (ic_toast) en V2/Simple
+     * (evita hueco o bitmap “pegado” de un intento anterior).
+     */
+    private RequestListener<android.graphics.Bitmap> stationLogoLoadFailureListener(
+            final int logoGen, final int freq, final int band, final ImageView iv) {
+        return new RequestListener<android.graphics.Bitmap>() {
+            @Override
+            public boolean onLoadFailed(@Nullable GlideException e, Object model,
+                    Target<android.graphics.Bitmap> target, boolean isFirstResource) {
+                if (mActivity.isFinishing() || mActivity.isDestroyed()) return false;
+                if (mActivity.isV3LayoutActive() || iv == null) return false;
+                if (!isLogoRequestStillValid(logoGen, freq, band)) return true;
+                mActivity.runOnUiThread(() -> {
+                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                    if (!isLogoRequestStillValid(logoGen, freq, band)) return;
+                    applyFallbackLogo(iv);
+                });
+                return true;
+            }
+
+            @Override
+            public boolean onResourceReady(android.graphics.Bitmap resource, Object model,
+                    Target<android.graphics.Bitmap> target, DataSource dataSource, boolean isFirstResource) {
+                return false;
+            }
+        };
     }
 
     /**

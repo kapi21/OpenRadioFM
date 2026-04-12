@@ -117,14 +117,9 @@ public class SimpleLayoutManager {
             ivMainLogo.setColorFilter(null);
             ivMainLogo.setAlpha(1.0f);
 
-            // V18.6: Si el fondo dinámico está activo (bgMode == 2), ocultamos el box para evitar mezclas
-            // Accedemos a las SharedPreferences de la actividad directamente
-            android.content.SharedPreferences prefs = mActivity.getSharedPreferences("LayoutPrefs", android.content.Context.MODE_PRIVATE);
-            int bgMode = prefs.getInt("pref_bg_mode", 1);
-            
-            if (bgMode == 2 && boxLogoSimple != null) {
-                boxLogoSimple.setVisibility(View.GONE);
-            } else if (boxLogoSimple != null) {
+            // Siempre mostrar el marco del logo: ocultarlo en bgMode 2 dejaba ivMainLogo vacío aunque Glide
+            // hubiera cargado la emisora (palette solo colorea el fondo; el logo sigue siendo el slot principal).
+            if (boxLogoSimple != null) {
                 boxLogoSimple.setVisibility(View.VISIBLE);
             }
 
@@ -132,13 +127,16 @@ public class SimpleLayoutManager {
         }
     }
 
+    /**
+     * Reset de fondos/paleta del layout Simple. No modifica {@link R.id#ivMainLogo}: lo lleva
+     * {@link LogoManager} (emisora o {@code ic_toast}); si aquí se pintara {@code ic_app_logo} se
+     * pisaba Glide al cambiar de layout (initViews corre después de {@code loadCarLogo()}).
+     */
     public void setDefaultState() {
-        if (ivMainLogo != null) {
-            ivMainLogo.setImageResource(R.drawable.ic_app_logo);
-            ivMainLogo.setColorFilter(null); 
-            ivMainLogo.setAlpha(0.3f);
+        if (boxLogoSimple != null) {
+            boxLogoSimple.setVisibility(View.VISIBLE);
         }
-        
+
         // Reset backgrounds and animations
         if (ivDynamicBackground != null) {
             ivDynamicBackground.animate().cancel();

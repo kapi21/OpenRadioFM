@@ -37,7 +37,7 @@ public final class InfinitePresetScrollHelper {
 
         if (activity.mIsSimpleLayout) return;
 
-        if (activity.mIsV3) {
+        if (activity.isV3LayoutActive()) {
             HorizontalScrollView hsv = activity.findViewById(R.id.horizontalScrollPresets);
             if (hsv != null && !TAG_ATTACHED.equals(hsv.getTag())) {
                 attachHorizontalV3(activity, hsv);

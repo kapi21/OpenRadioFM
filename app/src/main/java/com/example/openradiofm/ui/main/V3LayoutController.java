@@ -197,10 +197,13 @@ public class V3LayoutController extends BaseLayoutController {
 
     @Override
     public void updateLogo(android.graphics.Bitmap bitmap) {
-        // En V3, el logo de estación se gestiona como fondo dinámico; evitar solapes con PS.
-        if (ivMainLogo != null) {
-            ivMainLogo.setImageDrawable(null);
-            ivMainLogo.setVisibility(View.GONE);
+        if (bitmap != null) {
+            // El arte de emisora lo pinta LogoManager (Glide → fondo dinámico); no pisar aquí.
+            return;
+        }
+        // Mismo reset que V2/Simple: Glide, ivDynamicBackground y estado interno (evita “fantasma” al zapear).
+        if (mActivity.mLogoManager != null) {
+            mActivity.mLogoManager.clearLogo();
         }
     }
 }

@@ -122,6 +122,17 @@ public class OpenRadioFmWidgetProvider extends AppWidgetProvider {
         rv.setOnClickPendingIntent(R.id.widget_btn_next, piNext);
 
         if (expanded) {
+            // Fila seek: ids distintos de prev/next preset; sin PendingIntent los toques no hacían nada.
+            Intent seekDown = new Intent(context, RadioWidgetActionReceiver.class);
+            seekDown.setAction(RadioMediaService.ACTION_WIDGET_SEEK_DOWN);
+            PendingIntent piSeekDown = PendingIntent.getBroadcast(context, 3, seekDown, piFlags);
+            rv.setOnClickPendingIntent(R.id.widget_btn_seek_down, piSeekDown);
+
+            Intent seekUp = new Intent(context, RadioWidgetActionReceiver.class);
+            seekUp.setAction(RadioMediaService.ACTION_WIDGET_SEEK_UP);
+            PendingIntent piSeekUp = PendingIntent.getBroadcast(context, 4, seekUp, piFlags);
+            rv.setOnClickPendingIntent(R.id.widget_btn_seek_up, piSeekUp);
+
             Intent mute = new Intent(context, RadioWidgetActionReceiver.class);
             mute.setAction(RadioMediaService.ACTION_WIDGET_TOGGLE_MUTE);
             PendingIntent piMute = PendingIntent.getBroadcast(context, 5, mute, piFlags);

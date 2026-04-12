@@ -26,7 +26,10 @@ public abstract class BaseLayoutController {
     public abstract void updateBandIndicator(int band);
     public abstract void updateMute(boolean muted);
     
-    // V21.0: Helper para actualizar logos si el layout lo soporta
+    /**
+     * {@code null}: reset de arte de emisora antes de una nueva carga (vía {@link LogoManager#clearLogo()} en cada layout).
+     * {@code non-null}: reservado; la app carga logos con Glide desde {@link LogoManager}.
+     */
     public void updateLogo(android.graphics.Bitmap bitmap) {}
 
     /**

@@ -189,6 +189,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     public boolean mIsSimpleLayout = false;
     public boolean mIsV3 = false;
+
+    /** Layout horizontal V3 real (no Simple). Usar en logo/skins para no mezclar flags sueltos. */
+    public boolean isV3LayoutActive() {
+        return mIsV3 && !mIsSimpleLayout;
+    }
     public boolean mIsMinimal = false; // V19.2
     public boolean mControlsHidden = false;
     private android.view.View bottomControls;
@@ -464,7 +469,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
             // V20.0: Limpieza inmediata de UI para evitar logos "pegados" si el hardware falla o es lento
             runOnUiThread(() -> {
-                if (mLogoManager != null) mLogoManager.clearLogo();
+                clearStationLogoUi();
                 if (isQs6Final) {
                     String cachedName = getStableCachedNameForFrequency(freq);
                     // En QS6, fijar la frecuencia objetivo al instante evita mostrar la anterior
@@ -684,6 +689,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
         runOnUiThread(() -> {
             mLogoUiGeneration.incrementAndGet();
+            // V2/V3/Simple: mismo contrato que refreshRadioStatus (LogoManager + vistas según layout).
+            clearStationLogoUi();
             mCurrentBand = band;
             mLastBand = band;
             if (mPrefs != null) {
@@ -1310,7 +1317,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                 // Inicializar Managers que dependen del repo/db
                 if (mPresetManager == null) {
                     mPresetManager = new PresetManager(MainActivity.this, mRepository, mPrefs, PRESETS_COUNT);
-                    mPresetManager.bindViews(findViewById(android.R.id.content), mIsV3);
+                    mPresetManager.bindViews(findViewById(android.R.id.content), isV3LayoutActive());
                     InfinitePresetScrollHelper.attachIfNeeded(MainActivity.this);
                     mPresetManager.refreshPresetsCache(mCurrentBand);
                     mPresetManager.refreshButtons(mCurrentBand);
@@ -1589,6 +1596,16 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         
         mIsV3 = mPrefs.getBoolean("pref_layout_v3", false);
         mIsSimpleLayout = mPrefs.getBoolean("pref_layout_simple", false);
+        // Un solo layout activo: Simple gana. Si ambas prefs quedaron true (migración, backup, bug),
+        // la UI es Simple pero mIsV3=true hacía que LogoManager ocultara ivMainLogo como en V3.
+        if (mIsSimpleLayout) {
+            if (mIsV3) {
+                mPrefs.edit().putBoolean("pref_layout_v3", false).apply();
+            }
+            mIsV3 = false;
+        } else if (mIsV3) {
+            mIsSimpleLayout = false;
+        }
 
         // V4.8: Manejo de Barra de Estado (Fullscreen condicional)
         applyStatusBarVisibility();
@@ -1911,7 +1928,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         mAutoHideRunnable = () -> hideBottomControls();
 
         // En Layout V3, interceptar toques en el fondo para mostrar controles
-        if (mIsV3) {
+        if (isV3LayoutActive()) {
             android.view.View root = findViewById(R.id.rootLayout);
             if (root != null) {
                 root.setOnTouchListener((v, event) -> {
@@ -1938,8 +1955,46 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         if (mServiceController != null)
             mServiceController.start();
 
+        // Tras recreate() (cambio de layout u otra recreación con estado): segundo refresh asentado.
+        scheduleRadioUiResyncAfterRecreation();
+
         // V20.0: Ajuste automático por densidad (DPI)
         adjustLayoutForDPI();
+    }
+
+    /**
+     * Antes de {@link #recreate()} al ciclar V2/V3/Simple: invalida trabajo asíncrono de logo/station-info
+     * y libera Glide en la jerarquía actual para no arrastrar bitmaps ni peticiones al siguiente layout.
+     */
+    private void prepareForLayoutModeRecreate() {
+        try {
+            mLogoUiGeneration.incrementAndGet();
+        } catch (Exception ignored) {}
+        try {
+            int s = mStationInfoSeq.incrementAndGet();
+            mLastStationInfoRequestedSeq = s;
+        } catch (Exception ignored) {}
+        if (mLogoManager != null) {
+            try {
+                mLogoManager.release();
+            } catch (Exception e) {
+                Log.w(TAG, "prepareForLayoutModeRecreate: LogoManager.release", e);
+            }
+        }
+    }
+
+    /**
+     * Si {@link #mIsRecreating} (recreación con estado guardado), fuerza otro {@link #refreshRadioStatus()}
+     * tras un tick para que logo/RDS/presets coincidan con el nuevo XML (el primero puede adelantarse al layout).
+     */
+    private void scheduleRadioUiResyncAfterRecreation() {
+        if (!mIsRecreating) return;
+        mMainHandler.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            mLastRefreshFreq = -1;
+            mLastRefreshBand = -1;
+            refreshRadioStatus();
+        }, 200L);
     }
 
     private static final String PREF_ONBOARDING_DONE = "pref_onboarding_lang_country_done";
@@ -2141,7 +2196,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * - true: presets a la derecha (espejo)
      */
     public void applyLayout2SidePreference() {
-        if (mIsSimpleLayout || mIsV3 || mPrefs == null) return;
+        if (mIsSimpleLayout || isV3LayoutActive() || mPrefs == null) return;
         View root = findViewById(R.id.rootLayout);
         if (!(root instanceof androidx.constraintlayout.widget.ConstraintLayout)) return;
         androidx.constraintlayout.widget.ConstraintLayout cl = (androidx.constraintlayout.widget.ConstraintLayout) root;
@@ -2737,9 +2792,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     public void seekUp() {
         if (mEngine != null) {
-            runOnUiThread(() -> {
-                if (mLogoManager != null) mLogoManager.clearLogo();
-            });
+            runOnUiThread(this::clearStationLogoUi);
             try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "seekUp()"); } catch (Exception ignored) {}
             mEngine.seekUp();
         }
@@ -2747,9 +2800,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     public void seekDown() {
         if (mEngine != null) {
-            runOnUiThread(() -> {
-                if (mLogoManager != null) mLogoManager.clearLogo();
-            });
+            runOnUiThread(this::clearStationLogoUi);
             try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "seekDown()"); } catch (Exception ignored) {}
             mEngine.seekDown();
         }
@@ -2940,6 +2991,19 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         }
     }
 
+    /**
+     * Reset unificado del arte de emisora (logo, fondo dinámico en V3, Glide, etc.).
+     * Delega en {@link BaseLayoutController#updateLogo} cuando hay controlador
+     * (V2/V3/Simple); si no, llama directamente a {@link LogoManager#clearLogo()}.
+     */
+    public void clearStationLogoUi() {
+        if (mUiController != null) {
+            mUiController.updateLogo(null);
+        } else if (mLogoManager != null) {
+            mLogoManager.clearLogo();
+        }
+    }
+
     public void refreshPresetsCache() {
         if (mPresetManager != null) {
             mPresetManager.refreshPresetsCache(mCurrentBand);
@@ -3052,11 +3116,9 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
         // V4.8.6: Limpieza inmediata de UI al cambiar de sintonía (Sin esperar a carga asíncrona)
         runOnUiThread(() -> {
             if (mRdsManager != null) mRdsManager.reset(true);
+            clearStationLogoUi();
             if (mUiController != null) {
-                mUiController.updateLogo(null);
                 mUiController.updateRDS("");
-            } else if (mLogoManager != null) {
-                mLogoManager.clearLogo();
             }
         });
 
@@ -3170,7 +3232,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
                             mLogoManager.updateStationLogo(fFreq, fBand, preferredLogo);
                         } else if (qs6GuardActive) {
                             // En transición QS6 sin caché local: evitar logo "pegado".
-                            mLogoManager.clearLogo();
+                            clearStationLogoUi();
                         } else {
                             mLogoManager.updateStationLogo(fFreq, fBand, null);
                         }
@@ -3501,7 +3563,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
         // Layout V3: nunca mostrar el logo pequeño (evita que reaparezca tras cambios de layout/zapping).
         try {
-            if (mIsV3) {
+            if (isV3LayoutActive()) {
                 android.view.View v = findViewById(R.id.ivMainLogo);
                 if (v instanceof android.widget.ImageView) {
                     android.widget.ImageView iv = (android.widget.ImageView) v;
@@ -3632,9 +3694,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     // V4: Frequency Step Helpers (Manual Tuning)
     public void stepFreqUp() {
         if (mEngine != null) {
-            runOnUiThread(() -> {
-                if (mLogoManager != null) mLogoManager.clearLogo();
-            });
+            runOnUiThread(this::clearStationLogoUi);
             mEngine.stepUp();
             refreshRadioStatus();
         }
@@ -3642,9 +3702,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     public void stepFreqDown() {
         if (mEngine != null) {
-            runOnUiThread(() -> {
-                if (mLogoManager != null) mLogoManager.clearLogo();
-            });
+            runOnUiThread(this::clearStationLogoUi);
             mEngine.stepDown();
             refreshRadioStatus();
         }
@@ -4100,11 +4158,8 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             }
 
             // Clear logos immediately (V3: reset duro Glide + fondo dinámico — evita logo “fantasma” tras la frecuencia)
-            // V2: usar clearLogo() (no solo applyFallback): resetea estado y fuerza Glide.clear + car_logo; antes
-            // applyFallback podía no recargar si tag_logo_url seguía siendo la ruta del coche con bitmap de emisora encima.
-            if (mLogoManager != null) {
-                mLogoManager.clearLogo();
-            }
+            // V2/Simple: clearLogo() fuerza Glide.clear + fallback ic_toast en ivMainLogo; V3 mantiene car_logo en ivCarLogo (loadCarLogo).
+            clearStationLogoUi();
         });
 
         // V13.9: Durante el escaneo, OMITIMOS guardar historial y persistencia para mayor fluidez
@@ -4145,7 +4200,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
     public void resetAutoHideTimer() {
         if (mAutoHideHandler == null || mAutoHideRunnable == null) return;
         mAutoHideHandler.removeCallbacks(mAutoHideRunnable);
-        if (mPrefs.getBoolean("pref_auto_hide_controls", false) && mIsV3) {
+        if (mPrefs.getBoolean("pref_auto_hide_controls", false) && isV3LayoutActive()) {
             mAutoHideHandler.postDelayed(mAutoHideRunnable, 5000); // 5 segundos
         }
     }
@@ -4177,7 +4232,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
 
     @Override
     public boolean dispatchTouchEvent(android.view.MotionEvent ev) {
-        if (mIsV3 && mPrefs.getBoolean("pref_auto_hide_controls", false)) {
+        if (isV3LayoutActive() && mPrefs.getBoolean("pref_auto_hide_controls", false)) {
             if (ev.getAction() == android.view.MotionEvent.ACTION_DOWN) {
                 showBottomControls();
             }
@@ -4241,9 +4296,11 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
             showToast(getString(R.string.toast_layout_v2));
         }
         
-        // V20.1: Pequeña pausa de seguridad antes de recrear para permitir que las SharedPreferences persistan 
-        // y evitar una recreación "sucia" que el sistema pueda interpretar como un crash. (V20.3: Simplificado para evitar saltos de AudioFocus)
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::recreate, 400);
+        // V20.1: Pausa breve para que persistan prefs; antes de recreate invalidar Glide/petitions en curso.
+        mMainHandler.postDelayed(() -> {
+            prepareForLayoutModeRecreate();
+            recreate();
+        }, 400);
     }
 
     /**
@@ -4308,7 +4365,7 @@ public class MainActivity extends AppCompatActivity implements RadioEngineCallba
      * y ajusta las guías y el tamaño de los botones para que no se deformen.
      */
     private void adjustLayoutForDPI() {
-        if (!mIsV3) return; 
+        if (!isV3LayoutActive()) return; 
         
         android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();
         float density = metrics.density;

@@ -231,8 +231,8 @@ public class ThemeManager {
                 R.id.btnExtra1, R.id.btnExtra2, R.id.btnPowerOff
         };
 
-        if (isLayoutV3) {
-            // Layout V3:
+        if (isLayoutV3 && !isSimpleLayout) {
+            // Layout V3 (no Simple aunque pref_layout_v3 quedara true por import):
             // 1. Quitar los bordes a todos (excepto Frequency y Fav) -> No les aplicamos el background.
             //    En el XML ya tienen ?attr/selectableItemBackgroundBorderless. Así que los restauramos o saltamos.
             

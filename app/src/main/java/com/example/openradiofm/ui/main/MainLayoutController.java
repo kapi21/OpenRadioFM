@@ -1,5 +1,6 @@
 package com.example.openradiofm.ui.main;
 
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.view.View;
@@ -203,5 +204,19 @@ public class MainLayoutController extends BaseLayoutController {
     public void updateMute(boolean muted) {
         // En V2 el mute suele ser un ImageButton en el MainActivity que ya se gestiona
         // Pero si el layout tuviera su propio indicador, lo pondríamos aquí.
+    }
+
+    /**
+     * {@code refreshRadioStatus()} y {@link MainActivity#clearStationLogoUi()} llaman aquí con {@code null}
+     * para limpiar antes de la carga asíncrona (delegación directa a {@link LogoManager#clearLogo()}).
+     */
+    @Override
+    public void updateLogo(Bitmap bitmap) {
+        if (bitmap != null) {
+            return;
+        }
+        if (mActivity.mLogoManager != null) {
+            mActivity.mLogoManager.clearLogo();
+        }
     }
 }
