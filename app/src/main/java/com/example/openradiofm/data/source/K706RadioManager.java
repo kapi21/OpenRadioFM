@@ -10,6 +10,7 @@ import android.os.RemoteException;
 import android.util.Log;
 import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
+import com.example.openradiofm.engine.QFTunerAdapter;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -87,18 +88,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private Method mBroadcomSetRdsMode;
 
     // V9.6: QFTunerManager - Canal de alto nivel para seek/scan/RDS
-    // sendCmd (MCU directo) solo funciona fiable para tune/band/fine.
-    // Para seek, scan y RDS la app nativa usa QFTunerManager.
-    private Object mTunerManager; // QFTunerManager singleton
-    private Method mTunerOnSeek;   // onSeek(boolean up)
-    private Method mTunerAutoScan;  // autoScan()
-    private Method mTunerStopScan;  // stopScan()
-    private Method mTunerOnBand;    // onBand(int band)
-    private Method mTunerOnLoc;     // onLoc(int mode)
-    private Method mTunerSetRdsSwitch;   // setRdsSwitch(int state)
-    private Method mTunerSetRdsAF;       // setRdsAFSwitch()
-    private Method mTunerSetRdsTA;       // setRdsTASwitch()
-    private Method mTunerSetRdsPtyType;  // setRdsPtyType(int type)
+    private QFTunerAdapter mQfAdapter;
 
     private IRadioCallBack mCallback;
     /** Cache en unidades OpenRadioFM (×1000 kHz, ej. 87500 = 87.50 MHz). Debe coincidir con {@link #updateFrequency}. */
@@ -1034,197 +1024,70 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
      * sendCmd() vía RPC_SendMcuMsgData solo funciona fiable para tune/band/fine.
      */
     private void initQFTunerManager() {
+        mQfAdapter = QFTunerAdapter.getInstance(mContext);
+        if (mQfAdapter == null) {
+            Log.w(TAG, "QFTunerManager SDK not available - hardware control will use raw MCU commands.");
+            return;
+        }
+
+        Log.d(TAG, "QFTunerAdapter initialized successfully.");
+
+        // V7.2c+: Registrar ITunerTool (QFTunerManager callbacks).
         try {
-            Class<?> clazz = Class.forName("com.qf.clientsdk.QFTunerManager");
-            Method getInstance = clazz.getMethod("getInstance");
-            mTunerManager = getInstance.invoke(null);
-            Log.d(TAG, "QFTunerManager: CONNECTED (" + mTunerManager + ")");
-
-            // Seek: onSeek(boolean up) — true=up, false=down
-            try {
-                mTunerOnSeek = clazz.getMethod("onSeek", boolean.class);
-                Log.d(TAG, "  → onSeek(boolean): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → onSeek not found, trying alternatives");
-                // Fallback: quizás use int (1=up, 0=down)
-                try {
-                    mTunerOnSeek = clazz.getMethod("onSeek", int.class);
-                    Log.d(TAG, "  → onSeek(int): OK (fallback)");
-                } catch (NoSuchMethodException e2) {
-                    Log.w(TAG, "  → onSeek NOT AVAILABLE");
-                }
-            }
-
-            // AutoScan & Stop
-            try {
-                mTunerAutoScan = clazz.getMethod("autoScan");
-                Log.d(TAG, "  → autoScan(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → autoScan NOT AVAILABLE");
-            }
-
-            try {
-                mTunerStopScan = clazz.getMethod("stopScan");
-                Log.d(TAG, "  → stopScan(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → stopScan NOT AVAILABLE");
-            }
-
-            // Band
-            try {
-                mTunerOnBand = clazz.getMethod("onBand", int.class);
-                Log.d(TAG, "  → onBand(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → onBand NOT AVAILABLE");
-            }
-
-            // LOC mode
-            try {
-                mTunerOnLoc = clazz.getMethod("onLoc", int.class);
-                Log.d(TAG, "  → onLoc(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → onLoc NOT AVAILABLE");
-            }
-
-            // RDS Switch
-            try {
-                mTunerSetRdsSwitch = clazz.getMethod("setRdsSwitch", int.class);
-                Log.d(TAG, "  → setRdsSwitch(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsSwitch NOT AVAILABLE");
-            }
-
-            // RDS AF Switch
-            try {
-                mTunerSetRdsAF = clazz.getMethod("setRdsAFSwitch");
-                Log.d(TAG, "  → setRdsAFSwitch(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsAFSwitch NOT AVAILABLE");
-            }
-
-            // RDS TA Switch
-            try {
-                mTunerSetRdsTA = clazz.getMethod("setRdsTASwitch");
-                Log.d(TAG, "  → setRdsTASwitch(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsTASwitch NOT AVAILABLE");
-            }
-
-            // RDS PTY Type
-            try {
-                mTunerSetRdsPtyType = clazz.getMethod("setRdsPtyType", int.class);
-                Log.d(TAG, "  → setRdsPtyType(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsPtyType NOT AVAILABLE");
-            }
-
-            // Log TODOS los métodos del TunerManager para exploración
-            Log.d(TAG, "=== Métodos QFTunerManager ===");
-            for (Method m : clazz.getMethods()) {
-                if (!m.getDeclaringClass().equals(Object.class)) {
-                    StringBuilder params = new StringBuilder();
-                    for (Class<?> p : m.getParameterTypes()) {
-                        if (params.length() > 0) params.append(", ");
-                        params.append(p.getSimpleName());
-                    }
-                    Log.d(TAG, "  " + m.getReturnType().getSimpleName() + " " + m.getName() + "(" + params + ")");
-                }
-            }
-
-            // V7.2c+: Registrar ITunerTool (QFTunerManager callbacks).
-            // Importante: RT (RadioText) suele llegar por este canal en K706,
-            // no necesariamente por paquetes MCU (0xB7) según firmware.
-            try {
-                Class<?> itunerToolClass = Class.forName("com.qf.clientsdk.ITunerTool");
-                Method setTunerTool = clazz.getMethod("setTunerTool", itunerToolClass);
-                
-                Object proxyTunerTool = Proxy.newProxyInstance(
-                    itunerToolClass.getClassLoader(),
-                    new Class<?>[] { itunerToolClass },
-                    new InvocationHandler() {
-                        @Override
-                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            StringBuilder argStr = new StringBuilder();
-                            if (args != null) {
-                                for (Object arg : args) {
-                                    argStr.append(arg != null ? arg.toString() : "null").append(" ");
-                                }
-                            }
-                            Log.d(TAG, "🔬 [RESEARCH] ITunerTool Call: " + method.getName() + "(" + argStr.toString().trim() + ")");
-
-                            final String name = method.getName();
-
-                            // PI Code
-                            if ("onCurrentFrequencyPICodeChange".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof Integer) {
-                                    int pi = (Integer) args[0];
-                                    Log.d(TAG, "PI Code Detected via ITunerTool: 0x" + Integer.toHexString(pi).toUpperCase());
-                                    fireEvent(107, String.valueOf(pi));
-                                }
-                                return null;
-                            }
-
-                            // PS (Program Service) byte[] path
-                            if ("onTuneRdsPSInfo".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
-                                    String ps = safeDecodeRdsBytes((byte[]) args[0], /*startOffset=*/1);
-                                    if (ps != null && !ps.trim().isEmpty()) {
-                                        Log.d(TAG, "RDS PS via ITunerTool: '" + ps + "'");
-                                        fireEvent(103, ps.trim());
-                                    }
-                                }
-                                return null;
-                            }
-
-                            // RT (RadioText) byte[] path
-                            if ("onTuneRdsRTInfo".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
-                                    String rt = safeDecodeRdsBytes((byte[]) args[0], /*startOffset=*/1);
-                                    if (rt != null && !rt.trim().isEmpty()) {
-                                        Log.d(TAG, "RDS RT via ITunerTool: '" + rt + "'");
-                                        fireEvent(104, rt.trim());
-                                    }
-                                }
-                                return null;
-                            }
-
-                            // RT string path (algunos firmwares también lo emiten así)
-                            if ("rds_stationRawTextChange".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof String) {
-                                    String rt = ((String) args[0]).trim();
-                                    if (!rt.isEmpty()) {
-                                        Log.d(TAG, "RDS RT via ITunerTool (string): '" + rt + "'");
-                                        fireEvent(104, rt);
-                                    }
-                                }
-                                return null;
-                            }
-
-                            // PTY
-                            if ("onTuneRdsPtyTypeInfo".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
-                                    byte[] b = (byte[]) args[0];
-                                    if (b.length > 2) {
-                                        int pty = b[2] & 0xFF;
-                                        fireEvent(105, String.valueOf(pty));
-                                    }
-                                }
-                                return null;
-                            }
-                            return null;
+            Class<?> itunerToolClass = Class.forName("com.qf.clientsdk.ITunerTool");
+            Object proxyTunerTool = Proxy.newProxyInstance(
+                itunerToolClass.getClassLoader(),
+                new Class<?>[] { itunerToolClass },
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        final String name = method.getName();
+                        
+                        // Log call for research
+                        StringBuilder argStr = new StringBuilder();
+                        if (args != null) {
+                            for (Object arg : args) argStr.append(arg != null ? arg.toString() : "null").append(" ");
                         }
-                    });
-                
-                setTunerTool.invoke(mTunerManager, proxyTunerTool);
-                Log.d(TAG, "  → ITunerTool Listener (RDS/PI): REGISTERED");
-            } catch (Exception e) {
-                Log.w(TAG, "  → setTunerTool NOT AVAILABLE or Proxy error: " + e.getMessage());
-            }
+                        Log.v(TAG, "🔬 ITunerTool: " + name + "(" + argStr.toString().trim() + ")");
 
-        } catch (ClassNotFoundException e) {
-            Log.w(TAG, "QFTunerManager class not found - sendCmd MCU directo será el único canal");
+                        // PI Code
+                        if ("onCurrentFrequencyPICodeChange".equals(name)) {
+                            if (args != null && args.length > 0 && args[0] instanceof Integer) {
+                                int pi = (Integer) args[0];
+                                fireEvent(107, String.valueOf(pi));
+                            }
+                        }
+                        // PS
+                        else if ("onTuneRdsPSInfo".equals(name)) {
+                            if (args != null && args.length > 0 && args[0] instanceof byte[]) {
+                                String ps = safeDecodeRdsBytes((byte[]) args[0], 1);
+                                if (ps != null && !ps.isEmpty()) fireEvent(103, ps);
+                            }
+                        }
+                        // RT
+                        else if ("onTuneRdsRTInfo".equals(name) || "rds_stationRawTextChange".equals(name)) {
+                            if (args != null && args.length > 0) {
+                                String rt = null;
+                                if (args[0] instanceof byte[]) rt = safeDecodeRdsBytes((byte[]) args[0], 1);
+                                else if (args[0] instanceof String) rt = (String) args[0];
+                                if (rt != null && !rt.isEmpty()) fireEvent(104, rt);
+                            }
+                        }
+                        // PTY
+                        else if ("onTuneRdsPtyTypeInfo".equals(name)) {
+                            if (args != null && args.length > 0 && args[0] instanceof byte[]) {
+                                byte[] b = (byte[]) args[0];
+                                if (b.length > 2) fireEvent(105, String.valueOf(b[2] & 0xFF));
+                            }
+                        }
+                        return null;
+                    }
+                });
+            
+            mQfAdapter.setTunerTool(proxyTunerTool);
+            Log.d(TAG, "ITunerTool Listener (RDS/PI) registered via Adapter.");
         } catch (Exception e) {
-            Log.e(TAG, "Error connecting to QFTunerManager", e);
+            Log.w(TAG, "Failed to register ITunerTool: " + e.getMessage());
         }
     }
 
@@ -1340,9 +1203,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     public void onBandEvent() throws RemoteException {
         mCurrentBand++;
         if (mCurrentBand > BAND_AM2) mCurrentBand = BAND_FM1;
-        // V9.6 (Fix AM band): El comando real para cambiar la banda en MCU es 0x06 (SWITCH_BAND)
-        sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
-        Log.d(TAG, "Band -> " + mCurrentBand + " (sent [0xA0 06 " + String.format("%02X", mCurrentBand) + " 00])");
+        
+        if (mQfAdapter != null) {
+            mQfAdapter.setBand(mCurrentBand);
+            Log.d(TAG, "Band -> " + mCurrentBand + " via QFTunerAdapter");
+        } else {
+            // V9.6 (Fix AM band): El comando real para cambiar la banda en MCU es 0x06 (SWITCH_BAND)
+            sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
+            Log.d(TAG, "Band -> " + mCurrentBand + " (sent [0xA0 06 " + String.format("%02X", mCurrentBand) + " 00])");
+        }
         
         // V13.1: Notificar INMEDIATAMENTE el cambio de banda para que la UI responda rápido
         fireEvent(101, String.valueOf(mCurrentBand));
@@ -1437,18 +1306,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
 
         // 2. CLAVE: Enviar comando "Radio Area" al MCU
-        // V9.6: Usar QFTunerManager.onLoc() si disponible
-        if (mTunerOnLoc != null && mTunerManager != null) {
-            try {
-                mTunerOnLoc.invoke(mTunerManager, 1); // mode=1 (Local)
-                Log.d(TAG, "[2/9] LOC(1) via QFTunerManager.onLoc()");
-            } catch (Exception e) {
-                sendCmd(SUB_TUNE_AREA, (byte) 0x01, (byte) 0x00);
-                Log.d(TAG, "[2/9] LOC(1) fallback sendCmd");
-            }
+        // V9.6: Usar QFTunerAdapter si disponible
+        if (mQfAdapter != null) {
+            mQfAdapter.setLoc(1); // mode=1 (Local)
+            Log.d(TAG, "[2/9] LOC(1) via QFTunerAdapter");
         } else {
             sendCmd(SUB_TUNE_AREA, (byte) 0x01, (byte) 0x00);
-            Log.d(TAG, "[2/9] Radio Area/LOC notification sent (sendCmd)");
+            Log.d(TAG, "[2/9] Radio Area/LOC notification sent (sendCmd fallback)");
         }
 
         // 3. Pedir foco de audio ANTES de SetChannel
@@ -1505,25 +1369,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // OEM: el usuario quiere FM (aunque el sistema intente tumbar canal/mute)
         mUserWantsFmAudio = true;
 
-        // 8. RDS - V9.8: Re-habilitado de forma segura vía QFTunerManager
-        if (mTunerSetRdsSwitch != null && mTunerManager != null) {
-            try {
-                mTunerSetRdsSwitch.invoke(mTunerManager, 1);
-                Log.d(TAG, "[8/9] RDS ON via QFTunerManager.setRdsSwitch(1)");
-            } catch (Exception e) {
-                // Si falla el alto nivel, no enviamos el comando de bajo nivel (0x15) porque causa autoscan/cuelgue
-                Log.w(TAG, "[8/9] Falló setRdsSwitch de QFTunerManager", e);
-            }
+        // 8. RDS - V9.8: Re-habilitado de forma segura vía QFTunerAdapter
+        if (mQfAdapter != null) {
+            mQfAdapter.setRdsEnabled(true);
+            Log.d(TAG, "[8/9] RDS ON via QFTunerAdapter");
         }
 
-        // 9. V9.8: RESET FILTRO PTY - Vía alto nivel
-        if (mTunerSetRdsPtyType != null && mTunerManager != null) {
-            try {
-                mTunerSetRdsPtyType.invoke(mTunerManager, 0); // 0 suele significar "sin filtro / todos"
-                Log.d(TAG, "[9/9] Resetting PTY filter via QFTunerManager.setRdsPtyType(0)");
-            } catch (Exception e) {
-                Log.w(TAG, "[9/9] Falló setRdsPtyType de QFTunerManager", e);
-            }
+        // 9. V9.8: RESET FILTRO PTY - Vía adaptador
+        if (mQfAdapter != null) {
+            mQfAdapter.setPty(0); // 0 suele significar "sin filtro / todos"
+            Log.d(TAG, "[9/9] Resetting PTY filter via QFTunerAdapter");
         }
         
         // V11.6: setRdsTASwitch() ya NO se llama al inicio - lanzaba un TA SEEK scan
@@ -1650,15 +1505,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     @Override
     public void onASEvent() throws RemoteException {
         // V9.6: Auto Store via QFTunerManager
-        if (mTunerAutoScan != null && mTunerManager != null) {
-            try {
-                mTunerAutoScan.invoke(mTunerManager);
-                mIsScanning = true;
-                Log.d(TAG, "AutoStore via QFTunerManager.autoScan()");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.autoScan fallback", e);
-            }
+        if (mQfAdapter != null) {
+            mQfAdapter.autoScan();
+            mIsScanning = true;
+            Log.d(TAG, "AutoStore via QFTunerAdapter");
+            return;
         }
         sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
         mIsScanning = true;
@@ -1668,15 +1519,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     @Override
     public void onPSEvent() throws RemoteException {
         // V9.6: Stop scan via QFTunerManager
-        if (mTunerStopScan != null && mTunerManager != null) {
-            try {
-                mTunerStopScan.invoke(mTunerManager);
-                mIsScanning = false;
-                Log.d(TAG, "StopScan via QFTunerManager.stopScan()");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.stopScan fallback", e);
-            }
+        if (mQfAdapter != null) {
+            mQfAdapter.stopScan();
+            mIsScanning = false;
+            Log.d(TAG, "StopScan via QFTunerAdapter");
+            return;
         }
         sendCmd(SUB_AUTO_SCAN_STOP, (byte) 0, (byte) 0);
         mIsScanning = false;
@@ -1685,29 +1532,27 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public void onLocDxEvent() throws RemoteException {
-        // V9.6: Usar QFTunerManager.onLoc() para LOC/DX
         mIsDxLocal = !mIsDxLocal;
         int mode = mIsDxLocal ? 1 : 0;
         
-        // V9.6: LOC/DX es el comando 0x07 (SWITCH_LOC) según TunerCmdFactory
-        sendCmd(SUB_SWITCH_LOC, (byte) (mIsDxLocal ? 1 : 0), (byte) 0x00);
-        Log.d(TAG, "DX/Local toggle -> " + (mIsDxLocal ? "LOCAL" : "DX") + " (sent [0xA0 07 " + (mIsDxLocal ? "01" : "00") + " 00])");
-        fireEvent(106, String.valueOf(mIsDxLocal ? 1 : 0));
+        if (mQfAdapter != null) {
+            mQfAdapter.setLoc(mode);
+            Log.d(TAG, "DX/Local toggle -> " + (mIsDxLocal ? "LOCAL" : "DX") + " via Adapter");
+        } else {
+            sendCmd(SUB_SWITCH_LOC, (byte) mode, (byte) 0x00);
+            Log.d(TAG, "DX/Local toggle fallback -> " + (mIsDxLocal ? "LOCAL" : "DX") + " (sent [0xA0 07])");
+        }
+        fireEvent(106, String.valueOf(mode));
     }
 
     @Override
     public void onSeekDownEvent() throws RemoteException {
         // V9.6: Seek down real
         // Prefer QFTunerManager if available for better stability and system integration
-        if (mTunerManager != null && mTunerOnSeek != null) {
-            try {
-                mTunerOnSeek.invoke(mTunerManager, false);
-                mIsSeeking = true;
-                Log.d(TAG, "Seek Down via QFTunerManager (onSeek false)");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.onSeek failed, falling back to raw MCU cmd", e);
-            }
+        if (mQfAdapter != null) {
+            mQfAdapter.seek(false);
+            mIsSeeking = true;
+            return;
         }
 
         sendCmd(SUB_SEEK_DOWN, (byte) 0x02, (byte) 0);
@@ -1719,15 +1564,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     public void onSeekUpEvent() throws RemoteException {
         // V9.6: Seek up real (true=0x01/0x02 según param)
         // Prefer QFTunerManager if available
-        if (mTunerManager != null && mTunerOnSeek != null) {
-            try {
-                mTunerOnSeek.invoke(mTunerManager, true);
-                mIsSeeking = true;
-                Log.d(TAG, "Seek Up via QFTunerManager (onSeek true)");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.onSeek failed, falling back to raw MCU cmd", e);
-            }
+        if (mQfAdapter != null) {
+            mQfAdapter.seek(true);
+            mIsSeeking = true;
+            return;
         }
 
         sendCmd(SUB_SEEK_UP, (byte) 0x01, (byte) 0);
@@ -1750,15 +1590,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     @Override
     public void onScanEvent() throws RemoteException {
         // V9.6: Usar QFTunerManager
-        if (mTunerAutoScan != null && mTunerManager != null) {
-            try {
-                mTunerAutoScan.invoke(mTunerManager);
-                mIsScanning = true;
-                Log.d(TAG, "AutoScan via QFTunerManager.autoScan()");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.autoScan fallback to sendCmd", e);
-            }
+        if (mQfAdapter != null) {
+            mQfAdapter.autoScan();
+            mIsScanning = true;
+            return;
         }
         sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
         mIsScanning = true;
@@ -1770,8 +1605,14 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // La freq de OpenRadioFM viene en formato x1000 (ej. 96900 = 96.9 MHz)
         int freqMcu = (freq >= 522 && freq <= 1710) ? freq : (freq / 10); 
         mCurrentFreq = freq;
-        sendCmd(SUB_TUNE_FREQUENCY, (byte) ((freqMcu >> 8) & 0xFF), (byte) (freqMcu & 0xFF));
-        Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ")");
+        
+        if (mQfAdapter != null) {
+            mQfAdapter.tune(freqMcu);
+            Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ") via QFTunerAdapter");
+        } else {
+            sendCmd(SUB_TUNE_FREQUENCY, (byte) ((freqMcu >> 8) & 0xFF), (byte) (freqMcu & 0xFF));
+            Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ") via raw MCU cmd");
+        }
         
         // V13.1: Feedback inmediato a la UI al deslizar el dial
         notifyFreqUpdate();
@@ -1871,8 +1712,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     public void setMute(boolean mute) throws RemoteException {
+        // V11.0: Usar el adaptador QF primero para un silencio total (audio paths)
+        if (mQfAdapter != null) {
+            if (mute) mQfAdapter.mute(); 
+            else mQfAdapter.unMute();
+            Log.d(TAG, "Mute (QF Adapter) set to: " + mute);
+        }
+
+        // También enviamos el comando de volumen al MCU_SERVICE para asegurar el mute del amplificador
         if (mSetMute == null) {
-            Log.w(TAG, "setMute: mSetMute is null");
+            Log.w(TAG, "setMute: mSetMute is null (McuService)");
             return;
         }
         try {
@@ -1881,9 +1730,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             } else {
                 mSetMute.invoke(mMcuManager, mute);
             }
-            Log.d(TAG, "Mute set to: " + mute);
+            Log.d(TAG, "Mute (McuService) set to: " + mute);
         } catch (Exception e) {
-            Log.e(TAG, "Error setting mute", e);
+            Log.e(TAG, "Error setting mute in McuService", e);
         }
     }
     
@@ -1935,19 +1784,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         mBroadcomSetRdsMode.invoke(mFmReceiverService, 1, 0x0F, mIsAfEnabled ? 1 : 0, 10);
                         Log.d(TAG, "Broadcom setRdsMode invoked for Global RDS Switch");
                     }
-                    if (mTunerSetRdsSwitch != null && mTunerManager != null) {
-                        mTunerSetRdsSwitch.invoke(mTunerManager, 1); // 1 = On
-                        Log.d(TAG, "QFTunerManager.setRdsSwitch(1) invoked");
+                    if (mQfAdapter != null) {
+                        mQfAdapter.setRdsEnabled(true);
                     }
                     break;
                 case 1: // AF Switch
                     boolean nextAfState = !mIsAfEnabled;
                     mIsAfEnabled = nextAfState; // V4.6.1: Actualizar estado local ANTES
-                    if (mTunerSetRdsAF != null && mTunerManager != null) {
-                        try {
-                            mTunerSetRdsAF.invoke(mTunerManager);
-                            Log.d(TAG, "QFTunerManager.setRdsAFSwitch() invoked. AF now=" + nextAfState);
-                        } catch (Exception e) { Log.e(TAG, "toggleRdsFeature(AF)", e); }
+                    if (mQfAdapter != null) {
+                        mQfAdapter.toggleAf();
                     } else {
                         // Fallback: Comando MCU directo 0x11
                         byte newState = (byte) (nextAfState ? 1 : 0);
@@ -1977,13 +1822,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     break;
                 case 3: // DX/Local Toggle (V9.9)
                     byte nextLocMode = mIsDxLocal ? (byte) 0 : (byte) 1; // Si es Local (1), pasar a DX (0)
-                    if (mTunerOnLoc != null && mTunerManager != null) {
-                        try {
-                            mTunerOnLoc.invoke(mTunerManager, nextLocMode);
-                            Log.d(TAG, "QFTunerManager.onLoc(" + nextLocMode + ") invoked");
-                        } catch (Exception e) {
-                            Log.e(TAG, "toggleRdsFeature(DX/Local)", e);
-                        }
+                    if (mQfAdapter != null) {
+                        mQfAdapter.setLoc((int) nextLocMode);
                     } else {
                         // Fallback MCU: 0xA0 0x07 [mode] 0x00
                         sendCmd(SUB_SWITCH_LOC, nextLocMode, (byte) 0);

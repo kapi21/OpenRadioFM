@@ -428,93 +428,31 @@ public class RadioServiceController {
 
     private String[][] getAllProviders() {
         return new String[][] {
-                { "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE" }, // 0: MT8163/HCN
+                { "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE" }, // 0: MT8163/HCN (Obsoleto, ahora vía motor modular)
                 { "com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService" }, // 1: MediaTek
                 { "com.android.fmradio", "com.android.fmradio.IFmRadioService" }, // 2: Standard
                 { "com.android.fmradio", "com.android.fmradio.FmRadioService" }, // 3: Standard (Alt)
-                { "com.ts.MainUI", "com.ts.MainUI.radio.IRadioService" }, // 4: TopWay (TS) - Estandarizado MainUI
-                { "com.syu.radio", "com.syu.radio.IRadioService" }, // 5: SYU
-                { "com.nwd.radio.service", "com.nwd.radio.service.ACTION_RADIO_SERVICE" }, // 6: QS6 (NWD)
-                { "com.ts.MainUI", "com.ts.main.common.MainUI" }, // 7: Mediatek 8259/8667 (Speech/TS)
-                { "com.ts.MainUI", "com.ts.tsspeechlib.radio.TsRadioService" } // 8: Mediatek 8259/8667 Additional
+                { "com.syu.radio", "com.syu.radio.IRadioService" } // 5: SYU
         };
     }
 
-    // --- Lógica específica para Mediatek 8259/8667 (Doble vínculo AIDL) ---
-
-    private com.ts.main.common.ITsCommon mTsCommon;
-    private com.ts.tsspeechlib.radio.ITsSpeechRadio mTsSpeechRadio;
-    private boolean mTsCommonBound = false;
-    private boolean mTsSpeechBound = false;
-    private final ServiceConnection mTsCommonConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "TsCommon Connected");
-            mTsCommon = com.ts.main.common.ITsCommon.Stub.asInterface(service);
-            checkAndStartTsEngine();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mTsCommon = null;
-            mTsCommonBound = false;
-        }
-    };
-    private final ServiceConnection mTsSpeechConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mTsSpeechRadio = com.ts.tsspeechlib.radio.ITsSpeechRadio.Stub.asInterface(service);
-            checkAndStartTsEngine();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mTsSpeechRadio = null;
-            mTsSpeechBound = false;
-        }
-    };
-
     private void tryStartTsEngine() {
-        Log.i(TAG, "tryStartTsEngine(): Iniciando vínculo doble TS...");
-        conectarTsCommon();
-        conectarTsSpeechRadio();
-    }
-
-    private void conectarTsCommon() {
-        Log.d(TAG, "conectarTsCommon() ENTER");
-        Intent intent = new Intent();
-        intent.setClassName("com.ts.MainUI", "com.ts.main.common.MainUI");
+        Log.i(TAG, "tryStartTsEngine(): Usando arquitectura modular...");
         try {
-            mTsCommonBound = mContext.bindService(intent, mTsCommonConnection, Context.BIND_AUTO_CREATE);
-        } catch (Exception e) {
-            mTsCommonBound = false;
-            Log.w(TAG, "conectarTsCommon: bindService falló", e);
-        }
-    }
-
-    private void conectarTsSpeechRadio() {
-        Log.d(TAG, "conectarTsSpeechRadio() ENTER");
-        Intent intent = new Intent();
-        intent.setClassName("com.ts.MainUI", "com.ts.tsspeechlib.radio.TsRadioService");
-        try {
-            mTsSpeechBound = mContext.bindService(intent, mTsSpeechConnection, Context.BIND_AUTO_CREATE);
-        } catch (Exception e) {
-            mTsSpeechBound = false;
-            Log.w(TAG, "conectarTsSpeechRadio: bindService falló", e);
-        }
-    }
-
-    private void checkAndStartTsEngine() {
-        if (mTsCommon != null && mTsSpeechRadio != null) {
-            try {
-                com.example.openradiofm.data.source.MTK8259_8667Engine engine = 
-                    new com.example.openradiofm.data.source.MTK8259_8667Engine(mTsCommon, mTsSpeechRadio);
+            synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                if (sSharedLocalEngine instanceof com.example.openradiofm.data.source.MTK8259_8667Engine) {
+                    if (mListener != null) mListener.onEngineReady(sSharedLocalEngine);
+                    return;
+                }
+                com.example.openradiofm.data.source.MTK8259_8667Engine engine =
+                        new com.example.openradiofm.data.source.MTK8259_8667Engine();
                 if (engine.init(mContext)) {
+                    sSharedLocalEngine = engine;
                     if (mListener != null) mListener.onEngineReady(engine);
                 }
-            } catch (Exception e) {
-                Log.e(TAG, "Error iniciando MTK8259_8667Engine", e);
             }
+        } catch (Exception e) {
+            Log.e(TAG, "Error iniciando MTK8259_8667Engine", e);
         }
     }
 
@@ -528,19 +466,5 @@ public class RadioServiceController {
             mBound = false;
             mRadioService = null;
         }
-        try {
-            if (mTsCommonBound) {
-                mContext.unbindService(mTsCommonConnection);
-                mTsCommonBound = false;
-            }
-        } catch (Exception ignored) {}
-        try {
-            if (mTsSpeechBound) {
-                mContext.unbindService(mTsSpeechConnection);
-                mTsSpeechBound = false;
-            }
-        } catch (Exception ignored) {}
-        mTsCommon = null;
-        mTsSpeechRadio = null;
     }
 }

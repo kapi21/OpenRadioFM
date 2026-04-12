@@ -1232,7 +1232,7 @@ public class MainActivity extends AppCompatActivity  {
                     return;
                 }
 
-                RadioEngine engine = new com.example.openradiofm.data.source.MT8163Engine(mRadioService);
+                RadioEngine engine = new com.example.openradiofm.data.source.MT8163Engine();
                 if (engine.init(MainActivity.this)) {
                     onEngineReady(engine);
                 } else {

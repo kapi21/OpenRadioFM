@@ -1,6 +1,15 @@
-## [Unreleased]
+## [5.1.5] - 2026-04-12
+### Added
+- **Arquitectura Modular Total**: Finalización de la migración de todos los motores de radio (`QS6`, `MT8163`, `MTK8259`, `K706`, `Jancar`) a una arquitectura totalmente desacoplada basada en **`TunerAdapter`**.
+- **Motores Refactorizados**:
+    - **QS6 (Nowada)**: Sincronización completa con el SDK de Nowada y soporte de redundancia por Shadow Intents.
+    - **MT8163 (HCN)**: Adaptador modular dedicado con corrección de sintonía fina.
+    - **MTK8259/8667 (TopWay)**: Soporte para doble vínculo (`ITsCommon` + `ITsSpeechRadio`) sincronizado con la API real de TS.
+- **Evolución de Interfaz**: Añadido `setBand(int)` a `RadioEngine` para control unificado de bandas en todos los chips.
 
-*(vacío; último cierre documentado: **5.1.3** — ver abajo.)*
+### Fixed
+- **Estabilidad de Compilación**: Resolución de 51 errores de símbolos y métodos abstractos derivados del desacoplamiento.
+- **RadioServiceController**: No-args initialization para todos los motores modulares.
 
 ---
 

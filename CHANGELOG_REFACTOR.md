@@ -1,23 +1,31 @@
-# Changelog - Refactorización de Arquitectura (Abril 2026)
+# CHANGELOG - Refactorización de Arquitectura Modular (OpenRadioFM)
 
-## [1.0.0-refactor] - 2026-04-12
+## v22.5 - "Total Independence"
+**Fecha:** 12 de Abril, 2026
 
-### Añadido
-- **Arquitectura Modular**: Introducción de un sistema de Coordinadores y Mediadores para reducir la complejidad de `MainActivity`.
-- **UiViewMediator**: Nueva clase que centraliza todas las referencias a vistas (`findViewById`), permitiendo un acceso limpio y seguro desde cualquier componente.
-- **HardwareKeyCoordinator**: Gestor dedicado para eventos de teclas físicas y mandos al volante (Steering Wheel Controls).
-- **LifecycleCoordinator**: Delegación de los métodos del ciclo de vida de Android (`onResume`, `onPause`, `onDestroy`, etc.) para una gestión más limpia de recursos.
-- **EngineCallbackCoordinator**: Aislamiento de los callbacks del motor de radio, desacoplando la lógica de hardware de la interfaz.
-- **SkinCoordinator**: Centralización de la lógica de aplicación de temas y skins visuales.
-- **StatusRefreshCoordinator**: Orquestador de las tareas de refresco de estado (hardware, UI, RDS).
-- **FrequencyStateManager**: Gestión refinada del estado de las frecuencias para evitar parpadeos visuales durante el zapping.
+### 🔄 Resumen de Cambios
+Se ha completado la migración de la lógica de hardware a un patrón de **Adaptador de Sintonizador (TunerAdapter)**, desacoplando totalmente la aplicación de los servicios AIDL nativos específicos de cada fabricante.
 
-### Cambios
-- **MainActivity**: Reducción masiva del tamaño del archivo. La actividad ahora actúa exclusivamente como orquestador de alto nivel.
-- **Orden de Arranque**: Reestructuración del método `onCreate` para garantizar que todos los componentes se inicialicen antes de su primer uso, eliminando condiciones de carrera.
-- **ScanManager**: Actualizado para comunicarse con el nuevo `EngineCallbackCoordinator`.
+### 🛠️ Motores Actualizados
+1.  **QS6 (Nowada)**:
+    *   Migración a `NWDTunerAdapter`.
+    *   Sincronización con el SDK oficial de Nowada (Callbacks corregidos).
+    *   Implementación de comandos de redundancia (Shadow Intents) para Mute y Scan.
+2.  **MT8163 (HCN)**:
+    *   Migración a `MT8163TunerAdapter`.
+    *   Corrección de firmas de métodos de sintonización.
+3.  **MTK8259/8667 (TopWay)**:
+    *   Migración a `TopwayTunerAdapter` (Doble vínculo ITsCommon + ITsSpeechRadio).
+    *   Sincronización con la API real de TS (TurnBandAndFq, seekUp/Dn).
+4.  **K706 & Jancar**:
+    *   Sincronización con la nueva interfaz `RadioEngine` (implementación de `setBand`).
 
-### Corregido
-- **NullPointerException (NPE)**: Corregidos múltiples crashes durante el arranque relacionados con el manejo de la barra de estado en unidades OEM (Android 11+).
-- **Estabilidad de UI**: Blindaje en la vinculación de vistas para prevenir cierres inesperados durante transiciones rápidas de layout.
-- **Codificación**: Limpieza de caracteres corruptos en comentarios y cadenas de texto.
+### 📐 Arquitectura
+*   **RadioEngine Interface**: Evolucionada para incluir `setBand(int)` y estandarizar el retorno de `requestPlayAudio()` a booleano.
+*   **RadioServiceController**: Centralización de la instanciación de motores mediante constructores limpios.
+*   **RadioMediaService**: Eliminación de casquillos de código específicos (casting de motores en callbacks).
+
+### ✅ Estado Final
+*   **Compilación**: Exitosa (APK generada).
+*   **Dependencias**: Reducidas.
+*   **Mantenibilidad**: Alta (Añadir un nuevo chip ahora solo requiere crear un nuevo `TunerAdapter`).

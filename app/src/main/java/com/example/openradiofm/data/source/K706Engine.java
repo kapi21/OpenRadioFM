@@ -94,6 +94,12 @@ public class K706Engine implements RadioEngine {
     }
 
     @Override
+    public void setBand(int band) {
+        if (mManager == null) return;
+        try { mManager.onBandEvent(); } catch (RemoteException e) { Log.e(TAG, "setBand", e); }
+    }
+
+    @Override
     public int getCurrentFreq() {
         if (mManager == null) return 87500;
         try {

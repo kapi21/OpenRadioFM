@@ -29,6 +29,7 @@ public interface RadioEngine {
 
     // === Tuning ===
     void tune(int freqKhz);
+    void setBand(int band);
     int getCurrentFreq();
     int getCurrentBand();
     void seekUp();
