@@ -33,10 +33,14 @@ public class QS6Engine implements RadioEngine {
     private boolean mIsDxLocal = false;
     private boolean mOnlineStreamingActive = false;
 
-    // Constantes NWD
+    // Constantes NWD (Verificadas vía RE Fase B)
     private static final String ACTION_CHANGE_SOURCE = "com.nwd.action.ACTION_CHANGE_SOURCE";
-    private static final int SOURCE_RADIO = 3;
-    private static final int SOURCE_ANDROID = 1;
+    private static final String ACTION_REQUEST_CHANGE_SOURCE = "com.nwd.action.ACTION_REQUEST_CHANGE_SOURCE";
+    private static final String ACTION_APP_IN_OUT = "com.nwd.action.ACTION_APP_IN_OUT";
+    private static final String ACTION_EXIT_ARM_FM_RAIDO = "com.nwd.android.ACTION_EXIT_ARM_FM_RAIDO"; // RE §B.5: Typo RAIDO obligatorio
+    private static final int SOURCE_RADIO = 0x04;      // RE: 0x04 = Radio
+    private static final int SOURCE_ANDROID = 0x00;    // RE: 0x00 = Android/System
+    private static final int APP_ID_RADIO = 8;         // RE: AppID 8 activa InitFM()
 
     @Override
     public boolean init(Context context) {
@@ -52,8 +56,28 @@ public class QS6Engine implements RadioEngine {
 
         @Override public void notifyCurrentFrequency(byte bandType, int frequency, String psName, int prefabIndex) throws RemoteException {
             mMainHandler.post(() -> {
+                // V22.4: Mapeo robusto. Algunos firmwares NWD reportan 1-based o 0-based.
+                // OpenRadioFM: 0-2 FM, 3-4 AM.
                 mCurrentBand = bandType;
-                mCurrentFreq = (mCurrentBand < 3) ? frequency * 10 : frequency;
+                
+                // V22.4: Mapeo robusto. NWD reporta en unidades de 10kHz (ej: 8750 o 10150).
+                // OpenRadioFM usa kHz (ej: 87500 o 101500).
+                if (bandType < 3) {
+                    // FM: 87.5 - 108.0 MHz
+                    if (frequency < 20000) {
+                        mCurrentFreq = frequency * 10;
+                    } else if (frequency > 500000) {
+                        mCurrentFreq = frequency / 10; // Caso raro: Hz?
+                    } else {
+                        mCurrentFreq = frequency;
+                    }
+                    if (mCurrentBand >= 3) mCurrentBand = 0;
+                } else {
+                    // AM: 522 - 1620 kHz
+                    mCurrentFreq = frequency;
+                    if (mCurrentBand < 3) mCurrentBand = 3;
+                }
+
                 if (mCallback != null) {
                     mCallback.onFrequencyChanged(mCurrentFreq);
                     mCallback.onBandChanged(mCurrentBand);
@@ -105,6 +129,7 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public void release() {
+        closeDevice(); // Asegurar cierre de audio antes de desconectar AIDL
         if (mAdapter != null) {
             mAdapter.disconnect();
         }
@@ -115,7 +140,15 @@ public class QS6Engine implements RadioEngine {
     @Override public void tune(int freqKhz) { mAdapter.tune(freqKhz); mCurrentFreq = freqKhz; }
     @Override public void seekUp() { mAdapter.seek(true); }
     @Override public void seekDown() { mAdapter.seek(false); }
-    @Override public void setMute(boolean mute) { mAdapter.setMute(mute); mIsMute = mute; }
+    
+    @Override 
+    public void setMute(boolean mute) { 
+        // V22.5: En QS6, sendRadioCommand(0x05) cambia de banda.
+        // Implementamos muteo vía cambio de fuente para asegurar silencio absoluto sin efectos secundarios.
+        if (mute) switchToAndroidAudio();
+        else switchToFmAudio();
+        mIsMute = mute; 
+    }
     @Override public void setBand(int band) { mAdapter.setBand(band); mCurrentBand = band; }
     @Override public void bandCycle() { mAdapter.bandCycle(); }
 
@@ -126,19 +159,46 @@ public class QS6Engine implements RadioEngine {
 
     @Override
     public boolean requestPlayAudio() {
-        Log.d(TAG, "QS6: requestPlayAudio -> SOURCE_RADIO");
-        Intent intent = new Intent(ACTION_CHANGE_SOURCE);
-        intent.putExtra("extra_source_id", SOURCE_RADIO);
-        mContext.sendBroadcast(intent);
-        return true;
+        Log.d(TAG, "QS6: requestPlayAudio -> SOURCE_RADIO (" + SOURCE_RADIO + ")");
+        try {
+            // 1. Cambio de fuente (Muestra volumen/MCU routing)
+            Intent intentReq = new Intent(ACTION_REQUEST_CHANGE_SOURCE);
+            intentReq.putExtra("extra_source_id", (byte) SOURCE_RADIO);
+            mContext.sendBroadcast(intentReq);
+
+            Intent intentDirect = new Intent(ACTION_CHANGE_SOURCE);
+            intentDirect.putExtra("extra_source_id", (byte) SOURCE_RADIO);
+            mContext.sendBroadcast(intentDirect);
+
+            // 2. Activación de App FM (Crítico para InitFM en Sprd/AW)
+            // RE §B.3: requiere extra_app_id=8 para pasar de launcher (4) a Radio.
+            Intent intentApp = new Intent(ACTION_APP_IN_OUT);
+            intentApp.putExtra("extra_app_id", APP_ID_RADIO);
+            intentApp.putExtra("extra_app_operation", 1);
+            intentApp.putExtra("extra_app_event", 0);
+            mContext.sendBroadcast(intentApp);
+            
+            return true;
+        } catch (Throwable e) {
+            Log.e(TAG, "QS6: Error grave activando audio FM", e);
+            return false;
+        }
     }
 
     @Override
     public void switchToAndroidAudio() {
         Log.d(TAG, "QS6: switchToAndroidAudio -> SOURCE_ANDROID");
-        Intent intent = new Intent(ACTION_CHANGE_SOURCE);
-        intent.putExtra("extra_source_id", SOURCE_ANDROID);
-        mContext.sendBroadcast(intent);
+        try {
+            Intent intent = new Intent(ACTION_CHANGE_SOURCE);
+            intent.putExtra("extra_source_id", (byte) SOURCE_ANDROID);
+            mContext.sendBroadcast(intent);
+
+            // Notificamos salida de la App Radio (opcional, ayuda a liberar ARM FM)
+            Intent intentApp = new Intent(ACTION_APP_IN_OUT);
+            intentApp.putExtra("extra_app_id", APP_ID_RADIO);
+            intentApp.putExtra("extra_app_operation", 0); // 0 = Out
+            mContext.sendBroadcast(intentApp);
+        } catch (Exception ignored) {}
     }
 
     @Override public void enforceAudioRecovery() { requestPlayAudio(); tune(mCurrentFreq); }
@@ -177,7 +237,25 @@ public class QS6Engine implements RadioEngine {
     @Override public boolean isStereo() { return true; }
     @Override public void setStereo(boolean enable) { if(mAdapter!=null) mAdapter.sendRadioCommand(0x04, enable ? 0x01 : 0x00); }
     @Override public void openEq(Context context) {}
-    @Override public void closeDevice() {}
+    @Override 
+    public void closeDevice() {
+        Log.d(TAG, "QS6: closeDevice -> Liberando recursos de audio");
+        try {
+            // 1. Apagar audio en MCU
+            switchToAndroidAudio();
+            
+            // 2. Mandar señal de salida ARM (RE §B.5)
+            mContext.sendBroadcast(new Intent(ACTION_EXIT_ARM_FM_RAIDO));
+            
+            // 3. Notificar salida de App a través de SourceManager
+            Intent intentApp = new Intent(ACTION_APP_IN_OUT);
+            intentApp.putExtra("extra_app_id", APP_ID_RADIO);
+            intentApp.putExtra("extra_app_operation", 0); // 0 = EXIT/OUT
+            mContext.sendBroadcast(intentApp);
+        } catch (Exception e) {
+            Log.w(TAG, "Error en closeDevice", e);
+        }
+    }
     @Override public void gotoPreset(int index) {}
     @Override public void nextFavorite() {}
     @Override public void prevFavorite() {}

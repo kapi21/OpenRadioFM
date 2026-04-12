@@ -101,6 +101,7 @@ public class NWDTunerAdapter {
     public void tune(int freqKhz) {
         int band = (freqKhz > 30000) ? 0 : 3; // Estimación: FM si > 30MHz
         int sdkFreq = (band < 3) ? freqKhz / 10 : freqKhz;
+        Log.d(TAG, "tune: " + freqKhz + "Khz -> sdkFreq: " + sdkFreq + " band: " + band);
         if (mService != null) {
             try {
                 mService.setCurrentFrequency(sdkFreq, (byte) band, 0);
@@ -115,6 +116,7 @@ public class NWDTunerAdapter {
     
     public void tuneWithBand(int freqKhz, int band) {
         int sdkFreq = (band < 3) ? freqKhz / 10 : freqKhz;
+        Log.d(TAG, "tuneWithBand: " + freqKhz + "Khz, band: " + band + " -> sdkFreq: " + sdkFreq);
         if (mService != null) {
             try {
                 mService.setCurrentFrequency(sdkFreq, (byte) band, 0);
@@ -184,9 +186,10 @@ public class NWDTunerAdapter {
     }
 
     public void setMute(boolean mute) {
-        // En Nowada el mute suele ir vía ACTION_CHANGE_SOURCE o comandos directos al MCU.
-        // El SDK no tiene setMute expuesto en RadioFeature.
-        sendRadioCommand(0x05, mute ? 0x01 : 0x00);
+        // V22.5: El comando 0x05 causaba cambio de banda en QS6 G5.
+        // El muteo real se gestiona ahora en QS6Engine vía cambio de fuente (Source Switch),
+        // que es el método oficial de la pila NWD para silenciar la radio.
+        Log.d(TAG, "setMute(" + mute + ") - delegando a engine via source switch");
     }
 
     public void setBand(int band) {

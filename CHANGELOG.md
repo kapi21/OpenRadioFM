@@ -1,3 +1,23 @@
+## [5.2.0] - 2026-04-12
+### Estabilización Crítica QS6 (Nowada)
+- **Cierre Limpio**: Implementada señal `ACTION_EXIT_ARM_FM_RAIDO` para forzar el cese de audio al cerrar la app.
+- **Corrección de Muteo**: Eliminado comando `0x05` que causaba cambios de banda; ahora se usa `SOURCE_ANDROID` para silenciar.
+- **Gestión de Ciclo de Vida**: Sincronización de `RadioMediaService.onDestroy` con `QS6Engine.release` para liberar hardware.
+- **Diagnóstico**: Añadidos logs detallados de sintonía para depurar saltos de banda (FM3) en el arranque.
+
+## [5.1.8] - 2026-04-12
+### Solucionado
+- **QS6 (NWD)**: Sincronización total con Ingeniería Inversa G5 (Fase B).
+- **QS6 (NWD)**: Corregidos IDs de fuente: Radio=4 (0x04), Android=0 (0x00).
+- **QS6 (NWD)**: Implementado broadcast `ACTION_APP_IN_OUT` con **AppID 8**, obligatorio para activar el audio FM en hardware Nowada.
+- **QS6 (NWD)**: Limpieza de constantes conflictivas y mejora de compatibilidad con `InitFM()`.
+
+## [5.1.7] - 2026-04-12
+
+## [5.1.6] - 2026-04-12
+
+---
+
 ## [5.1.5] - 2026-04-12
 ### Added
 - **Arquitectura Modular Total**: Finalización de la migración de todos los motores de radio (`QS6`, `MT8163`, `MTK8259`, `K706`, `Jancar`) a una arquitectura totalmente desacoplada basada en **`TunerAdapter`**.

@@ -1740,8 +1740,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
         } catch (Exception ignored) {}
 
-        mSessionController = null;
-        mEngine = null;
+        try {
+            if (mEngine != null) {
+                mEngine.release();
+                mEngine = null;
+            }
+        } catch (Exception ignored) {}
 
         try {
             unregisterReceiver(mOemFocusReceiver);

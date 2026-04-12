@@ -1206,11 +1206,11 @@ public class MainActivity extends AppCompatActivity  {
                 });
             };
 
-            // V20.0: Retardo de estabilizaci├│n de 500ms espec├¡fico para QS6 (NWD) 
-            // para evitar DeadObjectException durante la transici├│n de layout/inflado.
+            // V22.4: Retardo de estabilización de 1200ms específico para QS6 (NWD) 
+            // para evitar DeadObjectException y asegurar que el servicio de audio esté listo.
             if (mEngine != null && mEngine.getEngineName().contains("QS6")) {
-                Log.d(TAG, "QS6 Startup: Aplicando pausa de estabilizaci├│n de 500ms...");
-                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(postInitAction, 500);
+                Log.d(TAG, "QS6 Startup: Aplicando pausa de estabilización de 1200ms...");
+                new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(postInitAction, 1200);
             } else {
                 postInitAction.run();
             }
@@ -1513,6 +1513,29 @@ public class MainActivity extends AppCompatActivity  {
             }
         }
         mStartupSavedFreqKhz = mLastFreq;
+        
+        // V22.4: Saneo de arranque para prevenir bucles de Startup Reinforce
+        // 1. Corregir escala de frecuencia (unidades NWD 10kHz vs app kHz)
+        if (mMode == FmMode.FM_QS6 && mLastFreq > 0 && mLastFreq < 20000) {
+            Log.w(TAG, "Startup: Detectada frecuencia NWD (10kHz units: " + mLastFreq + "). Escalando a kHz.");
+            mLastFreq *= 10;
+        }
+
+        // 2. Corregir banda incoherente (FM no puede ser banda >= 3)
+        if (mLastFreq > 30000 && mLastBand >= 3) {
+            Log.w(TAG, "Startup: Detectada banda AM (" + mLastBand + ") para frecuencia FM (" + mLastFreq + "). Forzando FM1.");
+            mLastBand = BAND_FM1;
+            mCurrentBand = mLastBand;
+            mPrefs.edit().putInt("pref_last_band", mLastBand).apply();
+        } else if (mLastFreq <= 30000 && mLastBand < 3 && mLastFreq > 0) {
+            Log.w(TAG, "Startup: Detectada banda FM (" + mLastBand + ") para frecuencia AM (" + mLastFreq + "). Forzando AM1.");
+            mLastBand = BAND_AM1;
+            mCurrentBand = mLastBand;
+            mPrefs.edit().putInt("pref_last_band", mLastBand).apply();
+        } else {
+            mCurrentBand = mLastBand;
+        }
+
         mStartupPersistGuardUntilMs = android.os.SystemClock.elapsedRealtime() + 6000L;
         mStartupRetuneAttempts = 0;
 
