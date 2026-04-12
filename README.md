@@ -600,3 +600,9 @@ See LICENSE file for details.
 ---
 
 **Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit.**
+
+
+## Nueva Arquitectura (Refactorización 2026)
+La aplicación ha sido migrada a una arquitectura modular basada en **Coordinadores** y **Mediadores** para mejorar la mantenibilidad y estabilidad.
+
+Consulte el archivo [CHANGELOG_REFACTOR.md](./CHANGELOG_REFACTOR.md) para más detalles técnicos sobre los cambios realizados.

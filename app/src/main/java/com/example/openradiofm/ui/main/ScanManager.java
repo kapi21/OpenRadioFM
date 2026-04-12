@@ -899,7 +899,7 @@ public class ScanManager {
         });
 
         // Al cerrar, restaurar el callback principal a MainActivity
-        dialog.setOnDismissListener(d -> mActivity.mEngine.setCallback(mActivity));
+        dialog.setOnDismissListener(d -> mActivity.mEngine.setCallback(mActivity.mEngineCallbackCoordinator));
 
         // Interceptar eventos de motor durante el escaneo selectivo
         mActivity.mEngine.setCallback(new RadioEngineCallback() {
