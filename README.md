@@ -178,6 +178,8 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## ⚠️ Problemas Conocidos (Abril 2026)
 - **Verificación v5.0.16**: los cambios de la **5.0.16** aún deben probarse en **K706** y **MT8163** en condiciones reales (streaming, volante, logos, notificaciones).
 - **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
+- **K706 / RDS RadioText (RT)**: en algunos firmwares el RT puede llegar como `0xB7` o como `0xB3`. En `MCU2` se soportan ambos casos para que **Now Playing** muestre RT de forma consistente.
+- **K706 / ACC (0x24)**: en `MCU2` se expone el estado de contacto (ACC) y se integra en el estado compartido para facilitar auditoría y futuras políticas de auto-recovery.
 - **Volante en segundo plano (K706)**: En muchas ROM, con el **launcher u otra app al frente**, las teclas del volante llegan como `KeyEvent` al foco y la **radio OEM** sigue recibiendo mandos por **MCU/QuickFish**. OpenRadioFM no puede usar ese canal sin integración OEM; a partir de **v5.0.10** el servicio de accesibilidad **Factory Radio Hijacker** puede **capturar y reenviar** esas teclas a la app (activar el servicio en Ajustes → Accesibilidad). Opcional (avanzado): en SharedPreferences **RadioPresets**, `pref_a11y_forward_media_keys=false` desactiva el reenvío (por defecto está activo).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.

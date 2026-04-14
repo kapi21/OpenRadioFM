@@ -702,7 +702,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB1: // Preset List / Current Station
                     handlePresetList(data);
                     break;
-                case 0xB3: // RDS AF/TA Status Flags (Interruptores)
+                case 0xB3: // RDS RT Info (algunos firmwares) o flags AF/TA (otros firmwares)
+                    // PROTOCOLO_MCU_K706.md: 0xB3 = RDS RT (Radio Text).
+                    // Observación de campo: en ciertos K706/QF, 0xB3 se usa como flags AF/TA.
+                    // Estrategia: si el paquete parece texto, parsear RT; si no, tratarlo como flags.
+                    if (data.length > 2 && looksLikeAsciiTextPayload(data, 1)) {
+                        fireEvent(110, "B3 RT?: " + bytesToHex(data));
+                        handleRdsRt(data);
+                        break;
+                    }
                     if (data.length > 1) {
                         int rdsFlagsB3 = data[1] & 0xFF;
                         Log.d(TAG, "RDS B3 Flags: 0x" + String.format("%02X", rdsFlagsB3));
@@ -777,11 +785,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         Log.d(TAG, "🚗 MCU[0x23] REVERSE: " + (reverse == 1 ? "ACTIVE" : "INACTIVE"));
                     }
                     break;
-                case 0x24: // 🚗 V24.5: Handbrake status (01=ON, 00=OFF)
+                case 0x24: // 🚗 V24.5: ACC status (01=ON, 00=OFF)
                     if (data.length > 1) {
-                        int hbrake = data[1] & 0xFF;
-                        fireEvent(124, String.valueOf(hbrake));
-                        Log.d(TAG, "🚗 MCU[0x24] HANDBRAKE: " + (hbrake == 1 ? "ACTIVE" : "RELEASED"));
+                        int acc = data[1] & 0xFF;
+                        fireEvent(125, String.valueOf(acc));
+                        Log.d(TAG, "🚗 MCU[0x24] ACC: " + (acc == 1 ? "ON" : "OFF"));
                     }
                     break;
                 case 0x29: // V13.1: Heartbeat silencioso del MCU (29 6D)
@@ -936,7 +944,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         try {
             // V9.1: Logging extendido para depurar Radio Text
             // A veces el RadioText viene precedido por un flag o offset extra.
-            String rtRaw = new String(data, 1, data.length - 1, "UTF-8");
+            String rtRaw = new String(data, 1, data.length - 1, "ISO-8859-1");
             Log.d(TAG, "RDS RT Try(1): '" + rtRaw + "'");
             
             // Usualmente RT empieza en el offset 1 o offset 2 en los sistemas chinos (0xB7 0x01 [Texto])
@@ -949,8 +957,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             
             int len = data.length - startOffset;
             if (len > 0) {
-                String rtText = new String(data, startOffset, len, "UTF-8").trim();
-                rtText = rtText.replaceAll("[^\\x20-\\x7E]", "");
+                String rtText = new String(data, startOffset, len, "ISO-8859-1");
+                rtText = rtText.replace('\u0000', ' ').trim();
+                rtText = rtText.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", " ");
+                rtText = rtText.replaceAll("\\s{2,}", " ").trim();
                 
                 if (!rtText.isEmpty() && !rtText.equals("               ")) {
                     Log.d(TAG, "RDS RT Extracted: '" + rtText + "'");
@@ -960,6 +970,24 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.e(TAG, "Error parsing RDS RT", e);
         }
+    }
+
+    /**
+     * Heurística: muchos paquetes de RT vienen como ASCII/Latin1 legible con pocos bytes de control.
+     */
+    private static boolean looksLikeAsciiTextPayload(byte[] data, int offset) {
+        if (data == null || data.length <= offset) return false;
+        int printable = 0;
+        int checked = 0;
+        for (int i = offset; i < data.length && checked < 18; i++, checked++) {
+            int b = data[i] & 0xFF;
+            if (b == 0x00) break;
+            if (b == 0x09 || b == 0x0A || b == 0x0D) { printable++; continue; }
+            if (b >= 0x20 && b <= 0x7E) { printable++; continue; }
+            // Latin1 printable range (áéíóúñ etc.)
+            if (b >= 0xA0 && b <= 0xFF) { printable++; continue; }
+        }
+        return checked >= 6 && printable >= (checked * 3) / 4;
     }
     
     /**

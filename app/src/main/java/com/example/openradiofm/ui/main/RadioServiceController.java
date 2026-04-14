@@ -42,6 +42,41 @@ public class RadioServiceController {
     private static final Object SHARED_LOCAL_ENGINE_LOCK = new Object();
 
     /**
+     * Estado lógico compartido (QS6/K706): evita que MainActivity y RadioMediaService mantengan
+     * estados divergentes (RDS/RT/frecuencia/mute) cuando ambos reciben callbacks del mismo engine.
+     *
+     * Nota: este controlador debe usar {@code getApplicationContext()} y no depender de Activity.
+     */
+    private static volatile RadioSessionController sSharedSessionController;
+    private static final Object SHARED_SESSION_CONTROLLER_LOCK = new Object();
+
+    public static RadioSessionController getOrCreateSharedSessionController(
+            Context context,
+            RadioEngine engine,
+            SharedPreferences presetPrefs,
+            SharedPreferences stationNamePrefs
+    ) {
+        if (engine == null || context == null) return null;
+        synchronized (SHARED_SESSION_CONTROLLER_LOCK) {
+            if (sSharedSessionController != null) return sSharedSessionController;
+            try {
+                // PlaybackManager se mantiene fuera de este estado compartido para no atarlo
+                // a un Service o Activity específico. El control de audio se hace en cada capa.
+                sSharedSessionController = new RadioSessionController(
+                        context.getApplicationContext(),
+                        engine,
+                        null,
+                        presetPrefs,
+                        stationNamePrefs
+                );
+            } catch (Exception e) {
+                Log.w(TAG, "No se pudo crear RadioSessionController compartido", e);
+            }
+            return sSharedSessionController;
+        }
+    }
+
+    /**
      * Llamar desde {@link com.example.openradiofm.data.source.QS6Engine#release()},
      * {@link com.example.openradiofm.data.source.K706Engine#release()} o
      * {@link com.example.openradiofm.data.source.JancarIviEngine#release()} para no reutilizar un motor ya cerrado.
@@ -52,6 +87,13 @@ public class RadioServiceController {
             if (sSharedLocalEngine == engine) {
                 sSharedLocalEngine = null;
                 Log.d(TAG, "Motor local compartido liberado (referencia única)");
+            }
+        }
+        synchronized (SHARED_SESSION_CONTROLLER_LOCK) {
+            // Si el motor se libera, también invalidamos el estado compartido ligado a ese motor.
+            if (sSharedSessionController != null) {
+                sSharedSessionController = null;
+                Log.d(TAG, "RadioSessionController compartido liberado");
             }
         }
     }

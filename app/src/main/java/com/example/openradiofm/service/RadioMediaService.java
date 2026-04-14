@@ -181,13 +181,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     }
                     // Inicializar controlador de sesión compartido (estado lógico de radio)
                     try {
-                        mSessionController = new RadioSessionController(
-                                RadioMediaService.this,
-                                mEngine,
-                                mPlaybackManager,
-                                mPresetPrefs,
-                                mStationNamePrefs
-                        );
+                        mSessionController = com.example.openradiofm.ui.main.RadioServiceController
+                                .getOrCreateSharedSessionController(
+                                        RadioMediaService.this,
+                                        mEngine,
+                                        mPresetPrefs,
+                                        mStationNamePrefs
+                                );
                     } catch (Exception e) {
                         Log.w(TAG, "No se pudo inicializar RadioSessionController en el servicio", e);
                     }
@@ -344,24 +344,10 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
             @Override
             public void onCustomAction(String action, Bundle extras) {
-                if ("ACTION_UPDATE_METADATA".equals(action) && extras != null) {
-                    extras.setClassLoader(MediaMetadataCompat.class.getClassLoader());
-                    //noinspection deprecation
-                    MediaMetadataCompat metadata = extras.getParcelable("metadata"); // Simplificado
-                    // En la práctica, extraemos los campos del bundle directamente para evitar errores de ClassLoader
-                    MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder();
-                    if (extras.containsKey(MediaMetadataCompat.METADATA_KEY_TITLE)) {
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, extras.getString(MediaMetadataCompat.METADATA_KEY_TITLE));
-                    }
-                    if (extras.containsKey(MediaMetadataCompat.METADATA_KEY_ARTIST)) {
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, extras.getString(MediaMetadataCompat.METADATA_KEY_ARTIST));
-                    }
-                    if (extras.containsKey(MediaMetadataCompat.METADATA_KEY_ALBUM)) {
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, extras.getString(MediaMetadataCompat.METADATA_KEY_ALBUM));
-                    }
-                    // Artwork...
-                    mMediaSession.setMetadata(builder.build());
-                    // updateNotification(); // REMOVED: onMetadataChanged will trigger it via callback
+                // Seguridad/consistencia: ignorar updates externos de metadata.
+                // La fuente de verdad es el propio servicio vía callbacks del engine/prefs.
+                if ("ACTION_UPDATE_METADATA".equals(action)) {
+                    Log.d(TAG, "Ignorado ACTION_UPDATE_METADATA (source of truth = RadioMediaService)");
                 }
             }
         });
@@ -655,6 +641,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 public void onSignalUpdate(int rssi, int snr) {
                     if (mSessionController != null) {
                         mSessionController.onSignalUpdate(rssi, snr);
+                    }
+                }
+
+                @Override
+                public void onHwAutomationEvent(int type, boolean active) {
+                    if (mSessionController == null) return;
+                    if (type == 125) { // ACC
+                        mSessionController.onAccChanged(active);
                     }
                 }
             };

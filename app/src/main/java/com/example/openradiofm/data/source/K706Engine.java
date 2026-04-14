@@ -396,6 +396,9 @@ public class K706Engine implements RadioEngine {
             case 124: // Handbrake
                 mCallback.onHwAutomationEvent(124, "1".equals(data));
                 break;
+            case 125: // ACC
+                mCallback.onHwAutomationEvent(125, "1".equals(data));
+                break;
             default:
                 mCallback.onRawEvent(code, data);
                 break;

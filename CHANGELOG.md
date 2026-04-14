@@ -1,3 +1,10 @@
+## [Unreleased] - MCU2
+### K706 / Media (independencia y auditoría)
+- **RDS RT end-to-end (K706)**: compatibilidad con RadioText desde **`0xB7`** (RT) y heurística para firmwares donde RT llega como **`0xB3`**; limpieza de texto más robusta para evitar RT vacío por filtrado.
+- **ACC (K706)**: `0x24` tratado como **ACC** y expuesto como evento `125` (pipeline Engine → UI/Servicio). Se incluye en el estado compartido (`RadioSessionState.accOn`).
+- **Estado único (UI + Service)**: `RadioMediaService` y `MainActivity` comparten el mismo `RadioSessionController` para evitar estados divergentes.
+- **MediaSession**: el servicio es la **fuente de verdad** de metadata/Now Playing; se ignoran updates externos vía `ACTION_UPDATE_METADATA`.
+
 ## [5.2.0] - 2026-04-12
 ### Estabilización Crítica y Restauración de Motores Legados
 - **QS6 (Nowada)**: Implementación de **Modo Master** (sincronización directa con `Settings.System`), cierre limpio del canal de audio y **fix de muteo estabilizado** mediante conmutación de fuentes.

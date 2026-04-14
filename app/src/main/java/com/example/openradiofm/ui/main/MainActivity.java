@@ -1067,10 +1067,9 @@ public class MainActivity extends AppCompatActivity  {
             // Inicializar controlador de sesi├│n compartido usando el mismo motor y playback manager
             try {
                 if (mSessionController == null) {
-                    mSessionController = new RadioSessionController(
+                    mSessionController = RadioServiceController.getOrCreateSharedSessionController(
                             MainActivity.this,
                             mEngine,
-                            mPlaybackManager,
                             mPrefs,
                             getSharedPreferences("RadioStationNames", Context.MODE_PRIVATE)
                     );
@@ -3620,6 +3619,16 @@ public class MainActivity extends AppCompatActivity  {
         } else {
             Log.d(TAG, "HW_AUTO: Handbrake disengaged (Drive Mode)");
         }
+    }
+
+    /** ACC (contacto) ON/OFF. Útil para política de auto-recovery/persistencia. */
+    public void handleHwAccState(boolean accOn) {
+        try {
+            if (mPrefs != null) {
+                mPrefs.edit().putBoolean("pref_hw_acc_on", accOn).apply();
+            }
+        } catch (Exception ignored) {}
+        Log.d(TAG, "HW_AUTO: ACC=" + (accOn ? "ON" : "OFF"));
     }
 }
 

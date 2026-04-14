@@ -69,7 +69,7 @@ public class RadioSessionController {
 
     public void play() {
         updateState(currentState.freqKhz, currentState.band, true, false,
-                currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
         // Audio
         try {
             if (playbackManager != null) {
@@ -84,7 +84,7 @@ public class RadioSessionController {
 
     public void pause() {
         updateState(currentState.freqKhz, currentState.band, false, true,
-                currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
         try {
             if (playbackManager != null) {
                 playbackManager.setMute(true);
@@ -107,7 +107,7 @@ public class RadioSessionController {
         if (freqKhz <= 0) return;
         engine.tune(freqKhz);
         updateState(freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
-                currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
     }
 
     public void nextFavorite() {
@@ -120,7 +120,7 @@ public class RadioSessionController {
 
     public void setBand(int band) {
         updateState(currentState.freqKhz, band, currentState.isPlaying, currentState.isMuted,
-                currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
     }
 
     // endregion
@@ -129,12 +129,12 @@ public class RadioSessionController {
 
     public void onFrequencyChanged(int freqKhz) {
         updateState(freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
-                currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
     }
 
     public void onBandChanged(int band) {
         updateState(currentState.freqKhz, band, currentState.isPlaying, currentState.isMuted,
-                currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
     }
 
     public void onStereoChanged(boolean stereo) {
@@ -143,17 +143,17 @@ public class RadioSessionController {
 
     public void onRdsName(String name) {
         updateState(currentState.freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
-                name, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, name, currentState.rdsText, currentState.pty, currentState.pi);
     }
 
     public void onRdsText(String text) {
         updateState(currentState.freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
-                currentState.rdsName, text, currentState.pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, text, currentState.pty, currentState.pi);
     }
 
     public void onRdsPty(String pty) {
         updateState(currentState.freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
-                currentState.rdsName, currentState.rdsText, pty, currentState.pi);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, pty, currentState.pi);
     }
 
     public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
@@ -162,7 +162,12 @@ public class RadioSessionController {
 
     public void onRdsPi(String piCode) {
         updateState(currentState.freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
-                currentState.rdsName, currentState.rdsText, currentState.pty, piCode);
+                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, piCode);
+    }
+
+    public void onAccChanged(boolean accOn) {
+        updateState(currentState.freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
+                accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
     }
 
     public void onDxLocalChanged(boolean isLocal) {
@@ -190,6 +195,7 @@ public class RadioSessionController {
             int band,
             boolean isPlaying,
             boolean isMuted,
+            Boolean accOn,
             String rdsName,
             String rdsText,
             String pty,
@@ -200,6 +206,7 @@ public class RadioSessionController {
                 band,
                 isPlaying,
                 isMuted,
+                accOn,
                 rdsName,
                 rdsText,
                 pty,

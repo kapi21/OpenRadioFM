@@ -9,6 +9,8 @@ public final class RadioSessionState {
     public final int band;
     public final boolean isPlaying;
     public final boolean isMuted;
+    /** ACC (contacto) ON/OFF. Null si desconocido/no soportado. */
+    public final Boolean accOn;
     public final String rdsName;
     public final String rdsText;
     public final String pty;
@@ -19,6 +21,7 @@ public final class RadioSessionState {
             int band,
             boolean isPlaying,
             boolean isMuted,
+            Boolean accOn,
             String rdsName,
             String rdsText,
             String pty,
@@ -28,6 +31,7 @@ public final class RadioSessionState {
         this.band = band;
         this.isPlaying = isPlaying;
         this.isMuted = isMuted;
+        this.accOn = accOn;
         this.rdsName = rdsName != null ? rdsName : "";
         this.rdsText = rdsText != null ? rdsText : "";
         this.pty = pty != null ? pty : "";
@@ -40,6 +44,7 @@ public final class RadioSessionState {
                 0,
                 false,
                 false,
+                null,
                 "",
                 "",
                 "",

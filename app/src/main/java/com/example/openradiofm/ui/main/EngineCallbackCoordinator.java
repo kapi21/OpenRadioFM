@@ -117,10 +117,7 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
                 boolean newLock = mActivity.mRdsManager.hasRdsLock();
                 mActivity.mHasRdsLock = newLock;
                 maybeTickRdsLock(newLock);
-                if (mActivity.mMediaSessionManager != null) {
-                    String freqText = String.format(java.util.Locale.US, "%.1f MHz", (mActivity.mEngine != null ? mActivity.mEngine.getCurrentFreq() : 0) / 1000.0f);
-                    mActivity.mMediaSessionManager.updateMetadata(name, freqText, null);
-                }
+                // MediaSession/NowPlaying se actualiza desde RadioMediaService (source of truth).
             }
             if (mActivity.mUiController != null) {
                 mActivity.mUiController.updateRDS(name);
@@ -143,9 +140,7 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
                 boolean newLock = mActivity.mRdsManager.hasRdsLock();
                 mActivity.mHasRdsLock = newLock;
                 maybeTickRdsLock(newLock);
-                if (mActivity.mMediaSessionManager != null) {
-                    mActivity.mMediaSessionManager.updateRds(text);
-                }
+                // MediaSession/NowPlaying se actualiza desde RadioMediaService (source of truth).
             }
             if (mActivity.mUiController != null) {
                 mActivity.mUiController.updateRDSText(text);
@@ -347,6 +342,12 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
                     break;
                 case 124: // Handbrake
                     mActivity.handleHwHandbrakeSafety(active);
+                    break;
+                case 125: // ACC
+                    mActivity.handleHwAccState(active);
+                    if (mActivity.mSessionController != null) {
+                        mActivity.mSessionController.onAccChanged(active);
+                    }
                     break;
             }
         });
