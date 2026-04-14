@@ -89,6 +89,9 @@ _RELEASES/
 radio_native_decompiled/
 docs/QS6_Integration/
 
+# === Artefactos locales de otras apps de radio (no versionar ni subir) ===
+_navradio_pull/
+
 # === Certificados de firma (SEGURIDAD) ===
 platform.pk8
 platform.x509.pem
