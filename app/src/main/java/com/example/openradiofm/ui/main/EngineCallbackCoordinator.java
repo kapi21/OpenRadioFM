@@ -334,4 +334,21 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
             }
         });
     }
+
+    @Override
+    public void onHwAutomationEvent(int type, boolean active) {
+        mActivity.runOnUiThread(() -> {
+            switch (type) {
+                case 122: // Lights
+                    mActivity.handleHwLightsAutomation(active);
+                    break;
+                case 123: // Reverse
+                    mActivity.handleHwReverseMute(active);
+                    break;
+                case 124: // Handbrake
+                    mActivity.handleHwHandbrakeSafety(active);
+                    break;
+            }
+        });
+    }
 }

@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.view.View;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.EditText;
 import android.view.Window;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -23,7 +24,7 @@ import java.util.Date;
 import androidx.appcompat.widget.SwitchCompat;
 import android.widget.SeekBar;
 
-public class K706EngineeringDialog extends Dialog {
+public class K706EngineeringDialog extends Dialog implements K706RadioManager.RawMcuListener {
 
     private final MainActivity mActivity;
     private final Handler mHandler = new Handler(Looper.getMainLooper());
@@ -41,6 +42,7 @@ public class K706EngineeringDialog extends Dialog {
     
     // UI Elements - Assets & System
     private TextView tvK706Assets, tvK706McuRaw, tvK706Device;
+    private TextView tvK706Rssi_Real, tvK706Snr_Real, tvK706Usn_Real;
 
     // Log & Controls
     private TextView tvK706Log;
@@ -51,8 +53,8 @@ public class K706EngineeringDialog extends Dialog {
     private SwitchCompat swDevDayModeEnabled;
     private SwitchCompat swDevReliefHdEnabled;
     private SwitchCompat swDevFileLoggingEnabled;
-    private SeekBar sbDevFileLogProfile;
-    private TextView tvDevFileLogProfileValue;
+    private SeekBar sbDevFileLogProfile, sbK706Sensitivity;
+    private TextView tvDevFileLogProfileValue, tvK706SensitivityValue;
 
     public K706EngineeringDialog(MainActivity activity) {
         super(activity);
@@ -74,8 +76,16 @@ public class K706EngineeringDialog extends Dialog {
         setupControls();
         
         mIsRunning = true;
-        logEvent("SYS", "K706_ENGINEERING_MATRIX_V10.0");
-        logEvent("SYS", "MCU_CONNECTION: " + (getK706Manager() != null ? "ACTIVE" : "NONE"));
+        logEvent("SYS", "K706_ENGINEERING_MATRIX_V24.3");
+        
+        K706RadioManager mgr = getK706Manager();
+        if (mgr != null) {
+            mgr.addRawMcuListener(this);
+            logEvent("SYS", "MCU_LISTENER_ATTACHED");
+        } else {
+            logEvent("SYS", "MCU_CONNECTION: ERROR_NONE");
+        }
+        
         startUpdateLoop();
     }
 
@@ -106,8 +116,15 @@ public class K706EngineeringDialog extends Dialog {
         tvK706Log = findViewById(R.id.tvK706Log);
         scrollK706Log = findViewById(R.id.scrollK706Log);
 
+        tvK706Rssi_Real = findViewById(R.id.tvK706Rssi);
+        tvK706Snr_Real = findViewById(R.id.tvK706Snr);
+        tvK706Usn_Real = findViewById(R.id.tvK706Usn);
+
         sbDevFileLogProfile = findViewById(R.id.sbDevFileLogProfile);
         tvDevFileLogProfileValue = findViewById(R.id.tvDevFileLogProfileValue);
+
+        sbK706Sensitivity = findViewById(R.id.sbK706Sensitivity);
+        tvK706SensitivityValue = findViewById(R.id.tvK706SensitivityValue);
     }
 
     private void setupControls() {
@@ -148,7 +165,7 @@ public class K706EngineeringDialog extends Dialog {
                 findViewById(R.id.tvDevAutoScanThresholdValue),
                 mActivity);
 
-        // Kill-switch para Modo Día (UI)
+        // Kill-switch para Modo D├¡a (UI)
         swDevDayModeEnabled = findViewById(R.id.swDevDayModeEnabled);
         if (swDevDayModeEnabled != null) {
             android.content.SharedPreferences prefs =
@@ -227,6 +244,85 @@ public class K706EngineeringDialog extends Dialog {
                 @Override public void onStopTrackingTouch(SeekBar seekBar) {}
             });
         }
+
+        // Tuner Sensitivity Slider (V24.8)
+        if (sbK706Sensitivity != null) {
+            android.content.SharedPreferences prefs =
+                    mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
+            int currentSens = prefs.getInt("pref_k706_tuner_sensitivity", 0);
+            sbK706Sensitivity.setProgress(currentSens);
+            if (tvK706SensitivityValue != null) tvK706SensitivityValue.setText(String.valueOf(currentSens));
+            sbK706Sensitivity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+                @Override
+                public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                    if (tvK706SensitivityValue != null) tvK706SensitivityValue.setText(String.valueOf(progress));
+                    K706RadioManager mgr = getK706Manager();
+                    if (mgr != null) {
+                        mgr.setTunerSensitivity(progress);
+                    }
+                    prefs.edit().putInt("pref_k706_tuner_sensitivity", progress).apply();
+                }
+                @Override public void onStartTrackingTouch(SeekBar seekBar) {}
+                @Override public void onStopTrackingTouch(SeekBar seekBar) {}
+            });
+        }
+
+        // V24.5: HARDWARE_AUTOMATION_MODULE (K706 EXCLUSIVE)
+        SwitchCompat swAutoNight = findViewById(R.id.swAutoNightHw);
+        if (swAutoNight != null) {
+            android.content.SharedPreferences prefs =
+                    mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
+            swAutoNight.setChecked(prefs.getBoolean("pref_hw_auto_night_unlocked", true)); // Default true en K706
+            swAutoNight.setOnCheckedChangeListener((btn, checked) -> {
+                prefs.edit().putBoolean("pref_hw_auto_night_unlocked", checked).apply();
+                logEvent("HW_AUTO", "LIGHTS_AUTOMATION=" + checked);
+            });
+        }
+
+        SwitchCompat swReverse = findViewById(R.id.swReverseMuteHw);
+        if (swReverse != null) {
+            android.content.SharedPreferences prefs =
+                    mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
+            swReverse.setChecked(prefs.getBoolean("pref_hw_reverse_mute_unlocked", true));
+            swReverse.setOnCheckedChangeListener((btn, checked) -> {
+                prefs.edit().putBoolean("pref_hw_reverse_mute_unlocked", checked).apply();
+                logEvent("HW_AUTO", "REVERSE_SYNC=" + checked);
+            });
+        }
+
+        SwitchCompat swHandbrake = findViewById(R.id.swHandbrakeHw);
+        if (swHandbrake != null) {
+            android.content.SharedPreferences prefs =
+                    mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
+            swHandbrake.setChecked(prefs.getBoolean("pref_hw_handbrake_unlocked", true));
+            swHandbrake.setOnCheckedChangeListener((btn, checked) -> {
+                prefs.edit().putBoolean("pref_hw_handbrake_unlocked", checked).apply();
+                logEvent("HW_AUTO", "SAFETY_LOCK=" + checked);
+            });
+        }
+    }
+
+    private void setupQuickCmd(int resId, byte[] cmd, String tag) {
+        View btn = findViewById(resId);
+        if (btn != null) {
+            btn.setOnClickListener(v -> {
+                K706RadioManager mgr = getK706Manager();
+                if (mgr != null) {
+                    mgr.sendRawMcuCommand(cmd);
+                    logEvent("POWER_CMD", tag + " SENT");
+                }
+            });
+        }
+    }
+
+    private byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                                 + Character.digit(s.charAt(i+1), 16));
+        }
+        return data;
     }
 
     private static String profileLabel(int p) {
@@ -285,7 +381,7 @@ public class K706EngineeringDialog extends Dialog {
             int sqi = (rssiRaw != -1) ? Math.min(100, (rssiRaw * 100) / 120) : (mActivity.mHasRdsLock ? 80 : 20);
             StringBuilder bar = new StringBuilder("[");
             int bars = sqi / 10;
-            for(int i=0; i<10; i++) bar.append(i < bars ? "█" : "░");
+            for(int i=0; i<10; i++) bar.append(i < bars ? "Ôûê" : "Ôûæ");
             bar.append("]");
             String dbm = (rssiRaw != -1) ? String.valueOf(-120 + rssiRaw) : "N/A";
             tvK706Rssi.setText(String.format(Locale.US, "[%sdBm] %s", dbm, bar.toString()));
@@ -300,7 +396,7 @@ public class K706EngineeringDialog extends Dialog {
             tvK706Pi.setText(mActivity.mCurrentPi != null ? mActivity.mCurrentPi : "WAITING...");
             tvK706Pty.setText(mActivity.mCurrentPty != null ? mActivity.mCurrentPty : "00");
 
-            // 2.5 OEM Media / AudioFocus status (vía SharedPreferences escrito por RadioMediaService)
+            // 2.5 OEM Media / AudioFocus status (v├¡a SharedPreferences escrito por RadioMediaService)
             try {
                 android.content.SharedPreferences prefs =
                         mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
@@ -371,8 +467,64 @@ public class K706EngineeringDialog extends Dialog {
     }
 
     @Override
+    public void onRawData(byte[] data) {
+        if (!mIsRunning || data == null || data.length == 0) return;
+        
+        int type = data[0] & 0xFF;
+        String hex = bytesToHex(data);
+        
+        mHandler.post(() -> {
+            // Un throttle simple para no inundar si hay muchos paquetes
+            if (type != 0x29) { // Ignorar latidos
+                logEvent("MCU_HEX", hex);
+            }
+            
+            if (type == 0x20 || type == 0x21) {
+                logEvent("SW_KEY", "DETECTED: " + hex);
+            } else if (type == 0x41) {
+                // Telemetr├¡a de se├▒al (Investigaci├│n sugerida)
+                parseSignalData(data);
+            } else if (type == 0xB0) {
+                // Status info
+                updateStatusFlags(data);
+            }
+        });
+    }
+
+    private void parseSignalData(byte[] data) {
+        if (data.length < 3) return;
+        // Basado en el mapping de QF_Framework
+        int rssi = data[1] & 0xFF; // Nivel de campo
+        int snr = data[2] & 0xFF;  // Relaci├│n se├▒al/ruido
+        int usn = (data.length > 3) ? (data[3] & 0xFF) : 0; // Multipath
+        
+        if (tvK706Rssi_Real != null) tvK706Rssi_Real.setText(String.format(Locale.US, "%d dB╬╝V", rssi));
+        if (tvK706Snr_Real != null) tvK706Snr_Real.setText(String.format(Locale.US, "%d dB", snr));
+        if (tvK706Usn_Real != null) tvK706Usn_Real.setText(String.format(Locale.US, "%d (RAW)", usn));
+    }
+
+    private void updateStatusFlags(byte[] data) {
+        if (data.length < 2) return;
+        int flags = data[1] & 0xFF;
+        boolean stereo = (flags & 0x10) != 0;
+        if (tvK706Stereo != null) tvK706Stereo.setText(stereo ? "STOCKED (19KHZ)" : "MONO_ONLY");
+    }
+
+    private String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes) {
+            sb.append(String.format("%02X ", b));
+        }
+        return sb.toString().trim();
+    }
+
+    @Override
     public void dismiss() {
         mIsRunning = false;
+        K706RadioManager mgr = getK706Manager();
+        if (mgr != null) {
+            mgr.removeRawMcuListener(this);
+        }
         mHandler.removeCallbacks(mUpdateRunnable);
         super.dismiss();
     }

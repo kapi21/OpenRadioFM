@@ -657,6 +657,49 @@ public class DialogManager {
             btnAcknowledgements.setOnClickListener(v -> showAcknowledgementsDialog());
         }
         dialog.findViewById(R.id.btnCloseSettings).setOnClickListener(v -> dialog.dismiss());
+        
+        // V24.5: HARDWARE AUTOMATION MODULE BINDING (K706 EXCLUSIVE)
+        boolean devMode = mActivity.mPrefs.getBoolean("pref_dev_mode_enabled", false);
+        View layoutHwAutomation = dialog.findViewById(R.id.layoutHwAutomation);
+        if (layoutHwAutomation != null) {
+            layoutHwAutomation.setVisibility(devMode ? View.VISIBLE : View.GONE);
+            
+            // Auto Night Switch
+            androidx.appcompat.widget.SwitchCompat swHwAutoNight = dialog.findViewById(R.id.swHwAutoNight);
+            TextView tvSummaryHwAutoNight = dialog.findViewById(R.id.tvSummaryHwAutoNight);
+            if (swHwAutoNight != null) {
+                swHwAutoNight.setChecked(mActivity.mPrefs.getBoolean("pref_hw_auto_night", true));
+                bindSwitchSummary(tvSummaryHwAutoNight, swHwAutoNight.isChecked());
+                swHwAutoNight.setOnCheckedChangeListener((btn, checked) -> {
+                    mActivity.mPrefs.edit().putBoolean("pref_hw_auto_night", checked).apply();
+                    bindSwitchSummary(tvSummaryHwAutoNight, checked);
+                });
+            }
+
+            // Reverse Mute Switch
+            androidx.appcompat.widget.SwitchCompat swHwReverseMute = dialog.findViewById(R.id.swHwReverseMute);
+            TextView tvSummaryHwReverseMute = dialog.findViewById(R.id.tvSummaryHwReverseMute);
+            if (swHwReverseMute != null) {
+                swHwReverseMute.setChecked(mActivity.mPrefs.getBoolean("pref_hw_reverse_mute", true));
+                bindSwitchSummary(tvSummaryHwReverseMute, swHwReverseMute.isChecked());
+                swHwReverseMute.setOnCheckedChangeListener((btn, checked) -> {
+                    mActivity.mPrefs.edit().putBoolean("pref_hw_reverse_mute", checked).apply();
+                    bindSwitchSummary(tvSummaryHwReverseMute, checked);
+                });
+            }
+
+            // Handbrake Safety Switch
+            androidx.appcompat.widget.SwitchCompat swHwHandbrake = dialog.findViewById(R.id.swHwHandbrake);
+            TextView tvSummaryHwHandbrake = dialog.findViewById(R.id.tvSummaryHwHandbrake);
+            if (swHwHandbrake != null) {
+                swHwHandbrake.setChecked(mActivity.mPrefs.getBoolean("pref_hw_handbrake", true));
+                bindSwitchSummary(tvSummaryHwHandbrake, swHwHandbrake.isChecked());
+                swHwHandbrake.setOnCheckedChangeListener((btn, checked) -> {
+                    mActivity.mPrefs.edit().putBoolean("pref_hw_handbrake", checked).apply();
+                    bindSwitchSummary(tvSummaryHwHandbrake, checked);
+                });
+            }
+        }
 
         // V15.6: Aplicar fuente de forma recursiva al diálogo de ajustes usando el
         // gestor de MainActivity

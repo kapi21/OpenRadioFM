@@ -67,12 +67,47 @@ public final class SignalMeterCoordinator {
     }
 
     public void onRssiSnr(int rssi, int snr) {
-        if (!useBars() || mBars == null) return;
-        int lit = mapRssiSnrToLitCount(rssi, snr);
-        if (lit != mLastLit) {
-            mLastLit = lit;
-            mBars.setLitCount(lit);
+        if (useBars() && mBars != null) {
+            int lit = mapRssiSnrToLitCount(rssi, snr);
+            if (lit != mLastLit) {
+                mLastLit = lit;
+                mBars.setLitCount(lit);
+            }
         }
+        
+        // V7.2f: Feedback dinámico para el botón ST
+        updateStereoDynamicColor(snr);
+    }
+
+    private void updateStereoDynamicColor(int snr) {
+        if (mActivity == null) return;
+        android.widget.TextView ivStereoIcon = mActivity.findViewById(com.example.openradiofm.R.id.ivStereoIcon);
+        if (ivStereoIcon == null) return;
+
+        int color;
+        // Escala de calidad basada en SNR (0-40+ típica)
+        if (snr > 25) {
+            color = Color.parseColor("#00E5FF"); // Cian Vibrante (Top)
+        } else if (snr > 15) {
+            color = Color.parseColor("#FFD600"); // Amarillo/Ámbar (Medio)
+        } else if (snr > 8) {
+            color = Color.parseColor("#FF3D00"); // Naranja/Rojo (Pobre)
+        } else {
+            color = Color.parseColor("#D50000"); // Rojo Oscuro (Crítico)
+        }
+
+        mActivity.runOnUiThread(() -> {
+            try {
+                ivStereoIcon.setTextColor(color);
+                // Si el skin es Noche, aplicamos un brillo extra
+                if (mActivity.mThemeManager != null && 
+                    mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.NIGHT_MODE) {
+                    ivStereoIcon.setShadowLayer(8f, 0, 0, color);
+                } else {
+                    ivStereoIcon.setShadowLayer(0, 0, 0, 0);
+                }
+            } catch (Exception ignored) {}
+        });
     }
 
     /** Sincroniza barras con estéreo / RDS / banda cuando no hay telemetría numérica reciente. */

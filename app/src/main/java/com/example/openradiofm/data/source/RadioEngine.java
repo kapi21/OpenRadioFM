@@ -115,4 +115,10 @@ public interface RadioEngine {
 
     // === Callbacks ===
     void setCallback(RadioEngineCallback cb);
+
+    /**
+     * V24.8: Ajustar la sensibilidad del sintonizador (umbral de parada en escaneo).
+     * @param level Nivel de sensibilidad (0-15).
+     */
+    default void setTunerSensitivity(int level) {}
 }

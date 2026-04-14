@@ -103,6 +103,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsTaEnabled = false; // V9.6: Estado TA habilitado
     private boolean mIsTpEnabled = false; // V9.6: Estado TP disponible
     private boolean mIsAfEnabled = false; // V9.6: Estado AF habilitado
+    private boolean mIsRdsEnabled = true; // V7.2e: Estado RDS Global
     private byte[] mLastSignalData = null; // V15.7: Último paquete 0x41 (Telemetría RSSI/SNR)
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAudioFocusChangeListener;
@@ -112,6 +113,32 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsRadioActive = false;
     private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
     private boolean mIsTransientFocusLoss = false; // V17.0: Spotify/Android Auto
+    
+    // V24.3: RAW DATA LISTENERS (Engineering)
+    public interface RawMcuListener {
+        void onRawData(byte[] data);
+    }
+    private final java.util.List<RawMcuListener> mRawListeners = new java.util.ArrayList<>();
+    public void addRawMcuListener(RawMcuListener l) { synchronized(mRawListeners) { mRawListeners.add(l); } }
+    public void removeRawMcuListener(RawMcuListener l) { synchronized(mRawListeners) { mRawListeners.remove(l); } }
+    
+    /** V24.8: Enviar comando RAW a la MCU (canal 0x40). */
+    public void sendRawMcuCommand(byte[] data) {
+        if (data == null || data.length == 0 || mMcuManager == null) return;
+        try {
+            if (mSendMcuCmdData != null) {
+                mSendMcuCmdData.invoke(mMcuManager, (Object) data);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending raw MCU command", e);
+        }
+    }
+
+    /** V24.8: Ajustar sensibilidad del sintonizador (0-15). */
+    public void setTunerSensitivity(int level) {
+        // Por ahora lo dejamos como log, hasta confirmar sub-comando exacto.
+        Log.d(TAG, "setTunerSensitivity: " + level);
+    }
     
     // OEM fix: evitar "mute inicial" por pérdidas espurias de AudioFocus (Zlink/Auto al enganchar)
     private long mIgnoreFocusLossUntilUptimeMs = 0L;
@@ -732,28 +759,50 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB8: // RDS PS Preset List (Research)
                     Log.d(TAG, "MCU[0xB8] PS Preset List RAW: " + bytesToHex(data));
                     break;
-                case 0x41: // 🔬 RESEARCH: Posible telemetría de señal (RSSI/SNR)
-                    mLastSignalData = data.clone(); // V15.7: Guardar para Menú Ingeniería
-                    StringBuilder sb41 = new StringBuilder();
-                    for (int i = 1; i < data.length; i++) {
-                        sb41.append(String.format("[%d]=%02X ", i, data[i]));
+                case 0x41: // 🔬 Telemetría de señal (RSSI/SNR)
+                    mLastSignalData = data.clone();
+                    handleSignalQuality(data);
+                    break;
+                case 0x22: // 🚗 V24.5: Lights status (01=ON, 00=OFF)
+                    if (data.length > 1) {
+                        int lights = data[1] & 0xFF;
+                        fireEvent(122, String.valueOf(lights));
+                        Log.d(TAG, "🚗 MCU[0x22] LIGHTS: " + (lights == 1 ? "ON" : "OFF"));
                     }
-                    Log.d(TAG, "🔬 [RESEARCH] MCU[0x41] SIGNAL DATA: " + sb41.toString());
+                    break;
+                case 0x23: // 🚗 V24.5: Reverse gear status (01=ON, 00=OFF)
+                    if (data.length > 1) {
+                        int reverse = data[1] & 0xFF;
+                        fireEvent(123, String.valueOf(reverse));
+                        Log.d(TAG, "🚗 MCU[0x23] REVERSE: " + (reverse == 1 ? "ACTIVE" : "INACTIVE"));
+                    }
+                    break;
+                case 0x24: // 🚗 V24.5: Handbrake status (01=ON, 00=OFF)
+                    if (data.length > 1) {
+                        int hbrake = data[1] & 0xFF;
+                        fireEvent(124, String.valueOf(hbrake));
+                        Log.d(TAG, "🚗 MCU[0x24] HANDBRAKE: " + (hbrake == 1 ? "ACTIVE" : "RELEASED"));
+                    }
                     break;
                 case 0x29: // V13.1: Heartbeat silencioso del MCU (29 6D)
-                    // Ignoramos para evitar que se interprete como frecuencia (0x296D hex = 10605 decimal -> 106.10 MHz)
-                    return; 
+                    // Ignoramos para evitar que se interprete como frecuencia
+                    break; 
                 default:
                     // Log unknown packets for research
                     if (packetType >= 0xB0 && packetType <= 0xBF) {
                         Log.d(TAG, "🔬 [RESEARCH] NEW RDS/TUNER PACKET FOUND: 0x" + String.format("%02X", packetType) + " -> " + bytesToHex(data));
-                    } else {
-                        Log.d(TAG, "Unknown MCU packet type: 0x" + String.format("%02X", packetType));
                     }
                     break;
             }
         } catch (Exception e) {
             Log.e(TAG, "Error parsing MCU data", e);
+        }
+
+        // V24.3: Notify raw data listeners
+        synchronized(mRawListeners) {
+            for (RawMcuListener l : mRawListeners) {
+                l.onRawData(data);
+            }
         }
     }
 
@@ -911,6 +960,25 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.e(TAG, "Error parsing RDS RT", e);
         }
+    }
+    
+    /**
+     * V7.2e: Procesa datos de calidad de señal (0x41)
+     * data[1] = RSSI (0-100 aprox)
+     * data[2] = SNR / Quality
+     */
+    private void handleSignalQuality(byte[] data) {
+        if (data.length < 3) return;
+        
+        int rssi = data[1] & 0xFF; // Fuerza de señal
+        int snr  = data[2] & 0xFF; // Calidad / Relación señal-ruido
+        
+        // Enviar a la UI para pintar barras de colores
+        // 120 -> RSSI, 121 -> SNR/Quality
+        fireEvent(120, String.valueOf(rssi));
+        fireEvent(121, String.valueOf(snr));
+        
+        Log.d(TAG, "Telemetry 0x41 -> RSSI: " + rssi + " | SNR: " + snr);
     }
 
     // V7.1: Helper para enviar eventos al callback de forma segura
@@ -1084,8 +1152,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     }
                 });
             
-            mQfAdapter.setTunerTool(proxyTunerTool);
-            Log.d(TAG, "ITunerTool Listener (RDS/PI) registered via Adapter.");
+            // mQfAdapter.setTunerTool(proxyTunerTool);
+            Log.d(TAG, "V7.2e: ITunerTool Proxy DISABLED (Centralized RDS via handleMcuData)");
         } catch (Exception e) {
             Log.w(TAG, "Failed to register ITunerTool: " + e.getMessage());
         }
@@ -1177,6 +1245,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
+    /**
+     * V7.2f: Envía comando de hardware para forzar modo Mono o permitir Stereo.
+     * @param enable true para Stereo (1), false para Mono (0).
+     */
+    public void setStereoMode(boolean enable) throws RemoteException {
+        // Comando 0x10: 1=Stereo, 0=Mono
+        sendCmd((byte) 0x10, (byte) (enable ? 1 : 0), (byte) 0);
+        Log.d(TAG, "Direct MCU -> StereoMode changed to: " + (enable ? "STEREO" : "MONO") + " (cmd 0xA0 10)");
+    }
+
     // ==========================================
     // AIDL INTERFACE IMPLEMENTATION
     // ==========================================
@@ -1204,16 +1282,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         mCurrentBand++;
         if (mCurrentBand > BAND_AM2) mCurrentBand = BAND_FM1;
         
-        if (mQfAdapter != null) {
-            mQfAdapter.setBand(mCurrentBand);
-            Log.d(TAG, "Band -> " + mCurrentBand + " via QFTunerAdapter");
-        } else {
-            // V9.6 (Fix AM band): El comando real para cambiar la banda en MCU es 0x06 (SWITCH_BAND)
-            sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
-            Log.d(TAG, "Band -> " + mCurrentBand + " (sent [0xA0 06 " + String.format("%02X", mCurrentBand) + " 00])");
-        }
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // El comando para cambiar la banda en MCU es 0x06 (SUB_SWITCH_BAND)
+        sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
+        Log.d(TAG, "Direct MCU -> Change Band to: " + mCurrentBand + " (cmd 0xA0 06)");
         
-        // V13.1: Notificar INMEDIATAMENTE el cambio de banda para que la UI responda rápido
+        // Notificar inmediatamente el cambio a la UI
         fireEvent(101, String.valueOf(mCurrentBand));
     }
 
@@ -1369,17 +1443,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // OEM: el usuario quiere FM (aunque el sistema intente tumbar canal/mute)
         mUserWantsFmAudio = true;
 
-        // 8. RDS - V9.8: Re-habilitado de forma segura vía QFTunerAdapter
-        if (mQfAdapter != null) {
-            mQfAdapter.setRdsEnabled(true);
-            Log.d(TAG, "[8/9] RDS ON via QFTunerAdapter");
-        }
+        // 8. RDS - V7.2e: Re-habilitado vía comando maestro directo
+        sendRdsCmd((byte) (mIsRdsEnabled ? 1 : 0));
+        Log.d(TAG, "[8/9] RDS Master set to " + mIsRdsEnabled + " via cmd 0xA2");
 
-        // 9. V9.8: RESET FILTRO PTY - Vía adaptador
-        if (mQfAdapter != null) {
-            mQfAdapter.setPty(0); // 0 suele significar "sin filtro / todos"
-            Log.d(TAG, "[9/9] Resetting PTY filter via QFTunerAdapter");
-        }
+        // 9. V7.2e: RESET FILTRO PTY (cmd 0x15)
+        sendCmd(SUB_RDS_PTY, (byte) 0, (byte) 0);
+        Log.d(TAG, "[9/9] Resetting PTY filter via direct cmd 0x15");
         
         // V11.6: setRdsTASwitch() ya NO se llama al inicio - lanzaba un TA SEEK scan
         // TA se maneja puramente en software con mIsTaEnabled
@@ -1504,30 +1574,24 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public void onASEvent() throws RemoteException {
-        // V9.6: Auto Store via QFTunerManager
-        if (mQfAdapter != null) {
-            mQfAdapter.autoScan();
-            mIsScanning = true;
-            Log.d(TAG, "AutoStore via QFTunerAdapter");
-            return;
-        }
-        sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
+        // V7.2e: BLOQUEADO Auto Store nativo (0x08). 
+        // No queremos que la MCU machaque sus presets internos.
+        Log.d(TAG, "Native AutoStore (0x08) BLOCKED. Triggering Software AutoScan...");
+        
         mIsScanning = true;
-        Log.d(TAG, "AutoStore fallback sendCmd (0x08)");
+        // Evento 108 (2) -> Escaneo por Software iniciado
+        fireEvent(108, "2"); 
+        // Evento 116 -> Comando para que el Engine empiece la secuencia de Seek & Save
+        fireEvent(116, "START_SOFT_AS");
     }
 
     @Override
     public void onPSEvent() throws RemoteException {
-        // V9.6: Stop scan via QFTunerManager
-        if (mQfAdapter != null) {
-            mQfAdapter.stopScan();
-            mIsScanning = false;
-            Log.d(TAG, "StopScan via QFTunerAdapter");
-            return;
-        }
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Stop Scan es el comando 0x0C (SUB_AUTO_SCAN_STOP)
         sendCmd(SUB_AUTO_SCAN_STOP, (byte) 0, (byte) 0);
         mIsScanning = false;
-        Log.d(TAG, "StopScan fallback sendCmd (0x0C)");
+        Log.d(TAG, "Direct MCU -> Stop Scan requested (cmd 0xA0 0C)");
     }
 
     @Override
@@ -1535,44 +1599,30 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         mIsDxLocal = !mIsDxLocal;
         int mode = mIsDxLocal ? 1 : 0;
         
-        if (mQfAdapter != null) {
-            mQfAdapter.setLoc(mode);
-            Log.d(TAG, "DX/Local toggle -> " + (mIsDxLocal ? "LOCAL" : "DX") + " via Adapter");
-        } else {
-            sendCmd(SUB_SWITCH_LOC, (byte) mode, (byte) 0x00);
-            Log.d(TAG, "DX/Local toggle fallback -> " + (mIsDxLocal ? "LOCAL" : "DX") + " (sent [0xA0 07])");
-        }
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Comando 0xA0 0x07 [mode] 0x00
+        sendCmd(SUB_SWITCH_LOC, (byte) mode, (byte) 0x00);
+        Log.d(TAG, "Direct MCU -> DX/Local set to: " + (mIsDxLocal ? "LOCAL" : "DX") + " (cmd 0xA0 07)");
+        
         fireEvent(106, String.valueOf(mode));
     }
 
     @Override
     public void onSeekDownEvent() throws RemoteException {
-        // V9.6: Seek down real
-        // Prefer QFTunerManager if available for better stability and system integration
-        if (mQfAdapter != null) {
-            mQfAdapter.seek(false);
-            mIsSeeking = true;
-            return;
-        }
-
-        sendCmd(SUB_SEEK_DOWN, (byte) 0x02, (byte) 0);
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Seek Down es el comando 0x02 (SUB_SEEK_DOWN)
+        sendCmd(SUB_SEEK_DOWN, (byte) 0x02, (byte) 0); // param1=0x02 suele indicar dirección down en este MCU
         mIsSeeking = true;
-        Log.d(TAG, "Seek Down (0x02) raw MCU command sent");
+        Log.d(TAG, "Direct MCU -> Seek Down initiated (cmd 0xA0 02)");
     }
 
     @Override
     public void onSeekUpEvent() throws RemoteException {
-        // V9.6: Seek up real (true=0x01/0x02 según param)
-        // Prefer QFTunerManager if available
-        if (mQfAdapter != null) {
-            mQfAdapter.seek(true);
-            mIsSeeking = true;
-            return;
-        }
-
-        sendCmd(SUB_SEEK_UP, (byte) 0x01, (byte) 0);
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Seek Up es el comando 0x01 (SUB_SEEK_UP)
+        sendCmd(SUB_SEEK_UP, (byte) 0x01, (byte) 0); // param1=0x01 suele indicar dirección up
         mIsSeeking = true;
-        Log.d(TAG, "Seek Up (0x01) raw MCU command sent");
+        Log.d(TAG, "Direct MCU -> Seek Up initiated (cmd 0xA0 01)");
     }
 
     @Override
@@ -1589,15 +1639,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public void onScanEvent() throws RemoteException {
-        // V9.6: Usar QFTunerManager
-        if (mQfAdapter != null) {
-            mQfAdapter.autoScan();
-            mIsScanning = true;
-            return;
-        }
-        sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
+        // V7.2e: BLOQUEADO Scan nativo. Redirigiendo a Software Scan.
+        Log.d(TAG, "Native Scan BLOCKED. Using OpenRadioFM SoftScan...");
+        
         mIsScanning = true;
-        Log.d(TAG, "AutoScan fallback sendCmd (0x08)");
+        fireEvent(108, "2"); 
+        fireEvent(116, "START_SOFT_SCAN");
     }
 
     @Override
@@ -1606,13 +1653,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         int freqMcu = (freq >= 522 && freq <= 1710) ? freq : (freq / 10); 
         mCurrentFreq = freq;
         
-        if (mQfAdapter != null) {
-            mQfAdapter.tune(freqMcu);
-            Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ") via QFTunerAdapter");
-        } else {
-            sendCmd(SUB_TUNE_FREQUENCY, (byte) ((freqMcu >> 8) & 0xFF), (byte) (freqMcu & 0xFF));
-            Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ") via raw MCU cmd");
-        }
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Comando 0xA0 0x00 [hi] [lo]
+        sendCmd(SUB_TUNE_FREQUENCY, (byte) ((freqMcu >> 8) & 0xFF), (byte) (freqMcu & 0xFF));
+        Log.d(TAG, "Direct MCU -> Tune to " + freq + " Hz (MCU binary: " + freqMcu + ")");
         
         // V13.1: Feedback inmediato a la UI al deslizar el dial
         notifyFreqUpdate();
@@ -1631,12 +1675,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public void gotoFreqIndex(int index) throws RemoteException {
-        // El index (0-5) corresponde al preset. Extraído: SUB_PRESET_SELECT = 0x0D
-        sendCmd(SUB_PRESET_SELECT, (byte) index, (byte) 0);
-        Log.d(TAG, "Select Preset Index -> " + index);
+        // V7.2e: DESACTIVADO el comando MCU 0x0D para independizarnos de su memoria interna.
+        // Ahora OpenRadioFM gestiona sus propios favoritos por base de datos.
+        // La UI sintonizará por frecuencia directa usando gotoFreq(int freq).
+        Log.d(TAG, "Software Preset Redirect: Index " + index + " requested (MCU 0x0D ignored)");
         
-        // V13.1: Forzamos refresco del estado para que la UI detecte la nueva frecuencia y banda
-        notifyFreqUpdate();
+        // Opcional: Notificar a la UI que use su propia memoria si el index viene de un mando al volante
+        fireEvent(115, String.valueOf(index)); // Código 115: 'Cargar favorito de la app por índice'
     }
 
     public void onNextFavoriteEvent() throws RemoteException {
@@ -1712,16 +1757,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     public void setMute(boolean mute) throws RemoteException {
-        // V11.0: Usar el adaptador QF primero para un silencio total (audio paths)
-        if (mQfAdapter != null) {
-            if (mute) mQfAdapter.mute(); 
-            else mQfAdapter.unMute();
-            Log.d(TAG, "Mute (QF Adapter) set to: " + mute);
-        }
-
-        // También enviamos el comando de volumen al MCU_SERVICE para asegurar el mute del amplificador
+        // V7.2e: Independencia total: Usamos únicamente el método RPC_SetVolumeMute del mcu_service
+        // para asegurar el silencio a nivel de amplificador de hardware.
         if (mSetMute == null) {
-            Log.w(TAG, "setMute: mSetMute is null (McuService)");
+            Log.w(TAG, "setMute: mSetMute is null (McuService NOT ready)");
             return;
         }
         try {
@@ -1730,7 +1769,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             } else {
                 mSetMute.invoke(mMcuManager, mute);
             }
-            Log.d(TAG, "Mute (McuService) set to: " + mute);
+            Log.d(TAG, "Direct MCU -> Volume Mute set to: " + mute);
         } catch (Exception e) {
             Log.e(TAG, "Error setting mute in McuService", e);
         }
@@ -1777,59 +1816,50 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         try {
             switch (type) {
                 case 0: // RDS Switch (Global)
-                    // Intentamos Broadcom primero para el switch global silente
+                    mIsRdsEnabled = !mIsRdsEnabled;
+                    // V7.2e: Comando maestro 0xA2. 0x01 = ON, 0x00 = OFF
+                    sendRdsCmd((byte) (mIsRdsEnabled ? 1 : 0));
+                    Log.d(TAG, "Direct MCU -> RDS Global Switch set to: " + mIsRdsEnabled + " (cmd 0xA2)");
+                    
+                    // Sincronización Broadcom silente opcional
                     if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
-                        // Toggle logic: we need current state. Using a local flag or assuming swap.
-                        // Default to ON (1) if unknown for now, as RDS is almost always wanted.
-                        mBroadcomSetRdsMode.invoke(mFmReceiverService, 1, 0x0F, mIsAfEnabled ? 1 : 0, 10);
-                        Log.d(TAG, "Broadcom setRdsMode invoked for Global RDS Switch");
-                    }
-                    if (mQfAdapter != null) {
-                        mQfAdapter.setRdsEnabled(true);
+                        mBroadcomSetRdsMode.invoke(mFmReceiverService, mIsRdsEnabled ? 1 : 0, 0x0F, mIsAfEnabled ? 1 : 0, 10);
                     }
                     break;
                 case 1: // AF Switch
                     boolean nextAfState = !mIsAfEnabled;
-                    mIsAfEnabled = nextAfState; // V4.6.1: Actualizar estado local ANTES
-                    if (mQfAdapter != null) {
-                        mQfAdapter.toggleAf();
-                    } else {
-                        // Fallback: Comando MCU directo 0x11
-                        byte newState = (byte) (nextAfState ? 1 : 0);
-                        sendCmd(SUB_RDS_AF, newState, (byte)0);
-                        Log.d(TAG, "MCU Fallback: SUB_RDS_AF (0x11) sent with state " + newState);
-                    }
+                    mIsAfEnabled = nextAfState; 
+                    
+                    // V7.2e: Comando directo 0xA0 0x11 [state] 0x00
+                    sendCmd(SUB_RDS_AF, (byte) (nextAfState ? 1 : 0), (byte) 0);
+                    Log.d(TAG, "Direct MCU -> RDS AF set to: " + nextAfState + " (cmd 0xA0 11)");
 
-                    // V11.6d: Notificar a la UI (vía K706Engine case 111) para sincronizar icono
-                    if (mCallback != null) {
-                        try {
-                            mCallback.onEvent(111, "AF:" + (nextAfState ? "1" : "0"));
-                        } catch (Exception ignored) {}
-                    }
+                    // Notificar a la UI
+                    fireEvent(111, "AF:" + (nextAfState ? "1" : "0"));
 
-                    // Sincronizar con Broadcom (Silencioso)
-                    enableSilentlyRdsFeatures(nextAfState, mIsTaEnabled);
+                    // Sincronizar con Broadcom silente
+                    if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
+                        enableSilentlyRdsFeatures(nextAfState, mIsTaEnabled);
+                    }
                     break;
-                case 2: // TA Switch — V11.6: Solo software, setRdsTASwitch() lanza un seek
+                case 2: // TA Switch
                     mIsTaEnabled = !mIsTaEnabled;
-                    Log.d(TAG, "TA toggled (software): mIsTaEnabled=" + mIsTaEnabled);
-                    // Notificar a la UI via código 112 (el que handleCallback espera para TA)
-                    if (mCallback != null) {
-                        try {
-                            mCallback.onEvent(112, "TA_SW:" + (mIsTaEnabled ? "1" : "0"));
-                        } catch (Exception ignored) {}
-                    }
-                    break;
-                case 3: // DX/Local Toggle (V9.9)
-                    byte nextLocMode = mIsDxLocal ? (byte) 0 : (byte) 1; // Si es Local (1), pasar a DX (0)
-                    if (mQfAdapter != null) {
-                        mQfAdapter.setLoc((int) nextLocMode);
-                    } else {
-                        // Fallback MCU: 0xA0 0x07 [mode] 0x00
-                        sendCmd(SUB_SWITCH_LOC, nextLocMode, (byte) 0);
-                    }
-                    break;
+                    
+                    // V7.2e: Comando directo 0xA0 0x12 [state] 0x00
+                    sendCmd(SUB_RDS_TA, (byte) (mIsTaEnabled ? 1 : 0), (byte) 0);
+                    Log.d(TAG, "Direct MCU -> RDS TA set to: " + mIsTaEnabled + " (cmd 0xA0 12)");
 
+                    // Notificar a la UI
+                    fireEvent(112, "TA_SW:" + (mIsTaEnabled ? "1" : "0"));
+                    break;
+                case 3: // DX/Local Toggle
+                    mIsDxLocal = !mIsDxLocal;
+                    byte nextLocMode = mIsDxLocal ? (byte) 1 : (byte) 0;
+                    
+                    // V7.2e: Comando directo 0xA0 0x07
+                    sendCmd(SUB_SWITCH_LOC, nextLocMode, (byte) 0);
+                    Log.d(TAG, "Direct MCU -> DX/Local set to: " + (mIsDxLocal ? "LOCAL" : "DX") + " (cmd 0xA0 07)");
+                    break;
             }
         } catch (Exception e) {
             Log.e(TAG, "Error toggling RDS feature " + type, e);

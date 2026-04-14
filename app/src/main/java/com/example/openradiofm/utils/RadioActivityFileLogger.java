@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.Locale;
 
 /**
- * Logger ligero a fichero (opt-in) para diagnósticos en head units.
+ * Logger ligero a fichero (opt-in) para diagn├│sticos en head units.
  * Escribe en la carpeta RadioLogos (legacy /sdcard o app-specific si no es writable).
  */
 public final class RadioActivityFileLogger {
@@ -67,12 +67,12 @@ public final class RadioActivityFileLogger {
         } catch (Exception ignored) {}
     }
 
-    /** Perfil BÁSICO: eventos imprescindibles para soporte. */
+    /** Perfil B├üSICO: eventos imprescindibles para soporte. */
     public static void logBasic(Context context, String tag, String message) {
         log(context, PROFILE_BASIC, tag, message);
     }
 
-    /** Perfil MEDIO: más detalle (estado + decisiones). */
+    /** Perfil MEDIO: m├ís detalle (estado + decisiones). */
     public static void logMedium(Context context, String tag, String message) {
         log(context, PROFILE_MEDIUM, tag, message);
     }

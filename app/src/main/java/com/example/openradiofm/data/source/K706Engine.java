@@ -172,8 +172,13 @@ public class K706Engine implements RadioEngine {
 
     @Override
     public void setStereo(boolean enable) {
-        // K706 no expone setStereo directo en AIDL
-        Log.d(TAG, "setStereo no disponible en K706");
+        if (mManager == null) return;
+        try {
+            // V7.2f: Comando hardware 0x10 para Stereo (1) / Mono (0)
+            mManager.setStereoMode(enable);
+        } catch (Exception e) {
+            Log.e(TAG, "setStereo error", e);
+        }
     }
 
     @Override
@@ -300,6 +305,13 @@ public class K706Engine implements RadioEngine {
         try { mManager.onPreFavoriteEvent(); } catch (RemoteException e) { Log.e(TAG, "prevFavorite", e); }
     }
 
+    @Override
+    public void setTunerSensitivity(int level) {
+        if (mManager != null) {
+            mManager.setTunerSensitivity(level);
+        }
+    }
+
     // === Callbacks ===
 
     @Override
@@ -374,6 +386,15 @@ public class K706Engine implements RadioEngine {
                     }
                     mCallback.onRdsStatus(mAfEnabled, mTaEnabled, mTpEnabled);
                 }
+                break;
+            case 122: // Lights
+                mCallback.onHwAutomationEvent(122, "1".equals(data));
+                break;
+            case 123: // Reverse
+                mCallback.onHwAutomationEvent(123, "1".equals(data));
+                break;
+            case 124: // Handbrake
+                mCallback.onHwAutomationEvent(124, "1".equals(data));
                 break;
             default:
                 mCallback.onRawEvent(code, data);

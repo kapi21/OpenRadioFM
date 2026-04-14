@@ -298,6 +298,9 @@ public class MainActivity extends AppCompatActivity  {
 
     // V13: Gestor de Presets (Reducci├│n de MainActivity)
     public PresetManager mPresetManager;
+
+    // V24.5: K706 Engineering & Hardware Automation
+    public K706EngineeringDialog mEngineeringDialog = null;
     public int mLastFreq = -1;
     // Guarda de arranque: evita persistir una frecuencia "bootstrap" (p.ej. 87.6)
     // antes de que el motor termine de restaurar la ├║ltima emisora real.
@@ -410,8 +413,6 @@ public class MainActivity extends AppCompatActivity  {
 
     private SignalQuality mCurrentQuality = SignalQuality.NO_SIGNAL;
 
-    // V9.9: RDS Debugging Tracker (K706)
-    public K706EngineeringDialog mEngineeringDialog = null;
     /** Men├║ ingenier├¡a QS6 / NWD (pulsaci├│n larga en GPS). */
     public QS6EngineeringDialog mQs6EngineeringDialog = null;
 
@@ -1548,6 +1549,8 @@ public class MainActivity extends AppCompatActivity  {
             tvFrequency.setEllipsize(null);
             tvFrequency.setSingleLine(false); // Necesario para que el Autosizing no se confunda con ellipsize
             tvFrequency.setMaxLines(1);
+            // V7.2f: El listener real se configura en setupCreditsEasterEgg() para evitar redundancias
+            // y mantener la funcionalidad de historial + créditos.
         }
         tvRdsName = findViewById(R.id.tvRdsName); // V5
         tvRdsInfo = findViewById(R.id.tvRdsInfo);
@@ -1614,6 +1617,31 @@ public class MainActivity extends AppCompatActivity  {
                 animateButton(ivTpIcon);
                 if (mEngine != null)
                     mEngine.toggleRdsFeature(0); // RDS global
+            });
+        }
+
+        // V7.2f: Botón ST dinámico con dos estados (Stereo/Mono)
+        if (ivStereoIcon != null) {
+            ivStereoIcon.setVisibility(View.VISIBLE); // Siempre visible
+            
+            // Cargar preferencia guardada
+            boolean isStereoOn = mPrefs.getBoolean("pref_stereo_mode_on", true);
+            ivStereoIcon.setAlpha(isStereoOn ? 1.0f : 0.4f);
+            
+            ivStereoIcon.setOnClickListener(v -> {
+                animateButton(ivStereoIcon);
+                boolean current = mPrefs.getBoolean("pref_stereo_mode_on", true);
+                boolean next = !current;
+                
+                // Guardar y Aplicar
+                mPrefs.edit().putBoolean("pref_stereo_mode_on", next).apply();
+                ivStereoIcon.setAlpha(next ? 1.0f : 0.4f);
+                
+                if (mEngine != null) {
+                    mEngine.setStereo(next);
+                }
+                
+                showToast(next ? "Modo Stereo Activado" : "Modo Forzar Mono");
             });
         }
 
@@ -3296,7 +3324,10 @@ public class MainActivity extends AppCompatActivity  {
                 tvRdsInfo.setVisibility(View.VISIBLE);
             }
             if (ivStereoIcon != null) {
-                ivStereoIcon.setVisibility(View.INVISIBLE);
+                // V7.2f: No ocultamos, dejamos visible con alpha de espera
+                boolean manualStereo = mPrefs.getBoolean("pref_stereo_mode_on", true);
+                ivStereoIcon.setAlpha(manualStereo ? 0.6f : 0.4f);
+                ivStereoIcon.setVisibility(View.VISIBLE);
             }
             if (tvPty != null) {
                 tvPty.setText(getString(R.string.pty_none));
@@ -3544,6 +3575,52 @@ public class MainActivity extends AppCompatActivity  {
         return mOnlineStreamManager;
     }
 
+    // === V24.5: HARDWARE AUTOMATION HANDLERS (K706 EXCLUSIVE) ===
+
+    public void handleHwLightsAutomation(boolean lightsOn) {
+        if (mPrefs == null || !mPrefs.getBoolean("pref_hw_auto_night", true)) return;
+        
+        if (mThemeManager != null) {
+            com.example.openradiofm.ui.theme.ThemeManager.Skin targetSkin = lightsOn ? 
+                com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE : null;
+            
+            if (targetSkin == null) {
+                // Restaurar el anterior según pref
+                int savedIdx = mPrefs.getInt("pref_skin_v2", 0);
+                targetSkin = com.example.openradiofm.ui.theme.ThemeManager.Skin.values()[savedIdx];
+            }
+            
+            if (mThemeManager.getActiveSkin() != targetSkin) {
+                Log.d(TAG, "HW_AUTO: Syncing skin to " + targetSkin.displayName + " (Lights=" + lightsOn + ")");
+                mThemeManager.setSkin(targetSkin);
+                applySkin(targetSkin);
+            }
+        }
+    }
+
+    public void handleHwReverseMute(boolean reverseOn) {
+        if (mPrefs == null || !mPrefs.getBoolean("pref_hw_reverse_mute", true)) return;
+        
+        if (mPlaybackManager != null) {
+            if (reverseOn) {
+                Log.d(TAG, "HW_AUTO: Reverse gear detected, muting...");
+                mPlaybackManager.setMute(true);
+            } else {
+                Log.d(TAG, "HW_AUTO: Reverse gear off, restoring audio...");
+                mPlaybackManager.setMute(false);
+            }
+        }
+    }
+
+    public void handleHwHandbrakeSafety(boolean engaged) {
+        if (mPrefs == null || !mPrefs.getBoolean("pref_hw_handbrake", true)) return;
+        
+        if (engaged) {
+            Log.d(TAG, "HW_AUTO: Handbrake engaged (Safe)");
+        } else {
+            Log.d(TAG, "HW_AUTO: Handbrake disengaged (Drive Mode)");
+        }
+    }
 }
 
 

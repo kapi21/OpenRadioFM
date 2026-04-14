@@ -7,16 +7,16 @@ import android.widget.TextView;
 import androidx.appcompat.widget.SwitchCompat;
 
 /**
- * Modo desarrollo: activar botón AutoScan en la UI principal y umbral RSSI/SNR sin RDS.
- * El AutoScan en UI está activo por defecto en instalaciones nuevas.
+ * Modo desarrollo: activar bot├│n AutoScan en la UI principal y umbral RSSI/SNR sin RDS.
+ * El AutoScan en UI est├í activo por defecto en instalaciones nuevas.
  */
 public final class DevAutoscanToggleHelper {
 
     public static final String PREF_DEV_AUTOSCAN_ENABLED = "pref_dev_autoscan_enabled";
-    /** Mínimo RSSI o SNR (el que cumpla) para aceptar emisora sin RDS; 0–15 según chip. */
+    /** M├¡nimo RSSI o SNR (el que cumpla) para aceptar emisora sin RDS; 0ÔÇô15 seg├║n chip. */
     public static final String PREF_DEV_AUTOSCAN_SIGNAL_THRESHOLD = "pref_dev_autoscan_signal_threshold";
     public static final int DEFAULT_AUTOSCAN_SIGNAL_THRESHOLD = 2;
-    /** Por defecto el modo AutoScan (botón escaneo) está activo. */
+    /** Por defecto el modo AutoScan (bot├│n escaneo) est├í activo. */
     public static final boolean DEFAULT_DEV_AUTOSCAN_ENABLED = true;
 
     private DevAutoscanToggleHelper() {}
@@ -63,6 +63,10 @@ public final class DevAutoscanToggleHelper {
                 updateThresholdValueText(valueDisplay, progress);
                 if (fromUser) {
                     prefs.edit().putInt(PREF_DEV_AUTOSCAN_SIGNAL_THRESHOLD, progress).apply();
+                    // V24.8: Sincronizar con el hardware si es K706
+                    if (activity.mEngine != null) {
+                        activity.mEngine.setTunerSensitivity(progress);
+                    }
                 }
             }
 

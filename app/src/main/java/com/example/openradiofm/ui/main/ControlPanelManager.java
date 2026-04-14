@@ -225,6 +225,12 @@ public class ControlPanelManager {
     }
 
     private void openEngineeringMenuFromGpsLongPress() {
+        // V24.5: Activar Modo Desarrollador Global (Referencia persistente para menú premium)
+        if (mActivity.mPrefs != null) {
+            mActivity.mPrefs.edit().putBoolean("pref_dev_mode_enabled", true).apply();
+            mActivity.showToast("DEVELOPER_MODE: [UNLOCKED]");
+        }
+
         if (mActivity.mMode == MainActivity.FmMode.FM_K706) {
             mActivity.mEngineeringDialog = new K706EngineeringDialog(mActivity);
             mActivity.mEngineeringDialog.setOnDismissListener(dialog -> mActivity.mEngineeringDialog = null);
