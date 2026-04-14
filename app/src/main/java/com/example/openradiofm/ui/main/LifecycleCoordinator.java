@@ -18,10 +18,10 @@ public class LifecycleCoordinator {
     }
 
     public void onStart() {
-        MainActivity.sMainActivityStarted = true;
     }
 
     public void onResume() {
+        MainActivity.sMainActivityResumed = true;
         boolean liveActive = mActivity.mOnlineStreamManager != null && 
                 (mActivity.mOnlineStreamManager.isPlaying() || mActivity.mOnlineStreamManager.isLoading());
         Log.d(TAG, "onResume: liveActive=" + liveActive);
@@ -72,8 +72,11 @@ public class LifecycleCoordinator {
         }
     }
 
+    public void onPause() {
+        MainActivity.sMainActivityResumed = false;
+    }
+
     public void onStop() {
-        MainActivity.sMainActivityStarted = false;
         boolean liveActive = mActivity.mOnlineStreamManager != null
                 && (mActivity.mOnlineStreamManager.isPlaying() || mActivity.mOnlineStreamManager.isLoading());
         

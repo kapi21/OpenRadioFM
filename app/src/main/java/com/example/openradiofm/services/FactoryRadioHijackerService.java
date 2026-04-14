@@ -21,6 +21,9 @@ import com.example.openradiofm.util.HiHackBootReminder;
  */
 public class FactoryRadioHijackerService extends AccessibilityService {
 
+    /** Extra en el Intent hacia {@link com.example.openradiofm.ui.main.MainActivity} tras interceptar la radio OEM. */
+    public static final String EXTRA_FROM_HIJACKER = "from_hijacker";
+
     private static final String TAG = "RadioHijackerService";
     private static final String PREFS = "RadioPresets";
     /** Si false, no interceptar teclas MEDIA (solo hijack de app de fábrica). */
@@ -160,7 +163,7 @@ public class FactoryRadioHijackerService extends AccessibilityService {
                             
             // Opcional: Extra para saber que venimos del hijacker (útil por si toca mutear la otra app, 
             // aunque en MTK el HW de radio FM suena directamente y simplemente tomamos control de UI)
-            intent.putExtra("from_hijacker", true);
+            intent.putExtra(EXTRA_FROM_HIJACKER, true);
             
             startActivity(intent);
         } catch (Exception e) {
@@ -176,13 +179,13 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     /**
      * K706 / QS6 (NWD): con el launcher al frente las teclas MEDIA suelen ir como {@code KeyEvent}
      * al foco, no como {@code ACTION_MEDIA_BUTTON} a {@link RadioMediaService}. Reenviamos solo cuando
-     * {@link MainActivity} no está en ciclo started (app en segundo plano) y el motor es K706 o QS6.
+     * {@link MainActivity#sMainActivityResumed} es false (p. ej. launcher al frente) y el motor es K706 o QS6.
      */
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
         try {
             if (event == null) return false;
-            if (MainActivity.sMainActivityStarted) {
+            if (MainActivity.sMainActivityResumed) {
                 return false;
             }
             if (!MainActivity.sWheelMediaBridgeActive) {

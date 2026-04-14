@@ -26,6 +26,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
@@ -34,6 +35,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.graphics.Bitmap;
+import android.view.KeyEvent;
 
 import com.example.openradiofm.R;
 import com.example.openradiofm.AppConstants;
@@ -110,6 +112,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     // Preferencias y datos para nombres/presets (sin depender del repositorio/UI)
     private android.content.SharedPreferences mPresetPrefs; // "RadioPresets"
     private android.content.SharedPreferences mStationNamePrefs; // "RadioStationNames"
+
+    /**
+     * Evita doble seek/play cuando el OEM manda KEY_DOWN (lo gestiona super) y luego KEY_UP con el mismo {@link KeyEvent#getDownTime()}.
+     */
+    private long mLastHandledMediaKeyDownTime = Long.MIN_VALUE;
 
     // OEM cold start: cola mínima de comandos hasta que el engine esté listo
     private final Object mCommandLock = new Object();
@@ -318,6 +325,30 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             @Override
             public void onRewind() {
                 handleSteeringSkip(-1);
+            }
+
+            @Override
+            public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
+                KeyEvent ke = extractMediaKeyEvent(mediaButtonIntent);
+                boolean superHandled = super.onMediaButtonEvent(mediaButtonIntent);
+                if (superHandled) {
+                    if (ke != null && ke.getAction() == KeyEvent.ACTION_DOWN) {
+                        mLastHandledMediaKeyDownTime = ke.getDownTime();
+                    }
+                    return true;
+                }
+                if (ke == null) {
+                    return false;
+                }
+                // Algunos launchers/widgets (p. ej. SYU/K706) solo entregan ACTION_UP.
+                if (ke.getAction() == KeyEvent.ACTION_UP
+                        && ke.getDownTime() != mLastHandledMediaKeyDownTime
+                        && !ke.isCanceled()
+                        && dispatchMediaKeyFromOemKeyEvent(ke)) {
+                    mLastHandledMediaKeyDownTime = ke.getDownTime();
+                    return true;
+                }
+                return false;
             }
 
             @Override
@@ -1497,8 +1528,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         if (pkg.contains("android.auto") || pkg.contains("projection.gearhead")) return true; // variantes
         if (pkg.startsWith("com.google.android.gms")) return true; // Servicios Google (Auto)
         if (pkg.startsWith("com.google.android.")) return true; // otros componentes de Auto/Car en OEMs
-        if (pkg.startsWith("com.android.")) return true; // sistema / launcher coche
+        if (pkg.startsWith("com.android.")) return true; // sistema / launcher coche (p. ej. autohome)
         if (pkg.startsWith("android")) return true;
+
+        // K706 / Topway / QuickFish: stack SYU y broadcasts QF no usan prefijo com.android.*
+        if (pkg.startsWith("com.syu.")) return true;
+        if (pkg.startsWith("com.qf.")) return true;
         
         // V21.1: Incluir Zlink (cliente común en hardware OEM para Android Auto por cable/inalámbrico)
         if (pkg.equals("com.zjinnova.zlink")) return true;
@@ -1506,7 +1541,56 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         if (pkg.contains("carlink") || pkg.contains("tlink") || pkg.contains("easyconn")) return true;
         
         // Permitir también la propia app
-        return pkg.equals(getPackageName());
+        if (pkg.equals(getPackageName())) return true;
+
+        // Resto de launchers / IVI preinstalados (paquetes de sistema)
+        try {
+            ApplicationInfo ai = getPackageManager().getApplicationInfo(pkg, 0);
+            int f = ai.flags;
+            if ((f & ApplicationInfo.FLAG_SYSTEM) != 0) return true;
+            if ((f & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) return true;
+        } catch (PackageManager.NameNotFoundException ignored) {}
+        return false;
+    }
+
+    @Nullable
+    private static KeyEvent extractMediaKeyEvent(@Nullable Intent intent) {
+        if (intent == null) return null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent.class);
+        }
+        return intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+    }
+
+    private boolean dispatchMediaKeyFromOemKeyEvent(KeyEvent ke) {
+        switch (ke.getKeyCode()) {
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+            case KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                handleSteeringSkip(+1);
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+            case KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+                handleSteeringSkip(-1);
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+                handlePlay();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                handlePause();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_HEADSETHOOK:
+                if (mIsPlaying) {
+                    handlePause();
+                } else {
+                    handlePlay();
+                }
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override

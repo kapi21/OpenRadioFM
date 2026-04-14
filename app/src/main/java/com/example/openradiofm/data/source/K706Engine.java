@@ -423,6 +423,19 @@ public class K706Engine implements RadioEngine {
     }
 
     /**
+     * Tras el flash de la radio OEM (p. ej. HiHack), el MCU puede dejar de enviar RDS a este proceso.
+     * Re-registra el {@code IMcuListener} sin soltar el resto del HAL.
+     */
+    public void reassertMcuTelemetryListener() {
+        if (mManager == null) return;
+        try {
+            mManager.reassertMcuInfoListener();
+        } catch (Exception e) {
+            Log.w(TAG, "reassertMcuTelemetryListener", e);
+        }
+    }
+
+    /**
      * Acceso como IRadioServiceAPI para uso exclusivo del Engineering Dialog.
      * <b>No llamar desde la UI ni desde otros managers.</b>
      *

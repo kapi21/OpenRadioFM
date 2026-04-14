@@ -130,15 +130,16 @@ public class MainActivity extends AppCompatActivity  {
     }
 
     /**
-     * {@link com.example.openradiofm.services.FactoryRadioHijackerService}: si es true, esta activity
-     * est├í al menos en {@code onStart}; no reenviar teclas MEDIA por accesibilidad (evita doble acci├│n).
+     * {@link com.example.openradiofm.services.FactoryRadioHijackerService}: true entre
+     * {@code onResume} y {@code onPause}. Muchas ROM de cabecera no llaman {@code onStop} al ir al
+     * launcher; el hijacker reenvia teclas MEDIA solo cuando esta bandera es false.
      */
-    public static volatile boolean sMainActivityStarted = false;
+    public static volatile boolean sMainActivityResumed = false;
 
     /**
      * True con motor K706 o QS6: {@link com.example.openradiofm.services.FactoryRadioHijackerService}
-     * reenv├¡a teclas MEDIA al volante a {@link com.example.openradiofm.service.RadioMediaService} cuando
-     * esta activity no est├í en {@code onStart} (segundo plano). No aplica a MT8163 u otros.
+     * reenvia teclas MEDIA a {@link com.example.openradiofm.service.RadioMediaService} cuando
+     * esta activity no esta resumed (launcher al frente). No aplica a MT8163 u otros.
      */
     public static volatile boolean sWheelMediaBridgeActive = false;
 
@@ -1200,6 +1201,16 @@ public class MainActivity extends AppCompatActivity  {
                         }
                     }
                 });
+
+                if (mMode == FmMode.FM_K706 && mEngine instanceof K706Engine
+                        && getIntent() != null
+                        && getIntent().getBooleanExtra(
+                                com.example.openradiofm.services.FactoryRadioHijackerService.EXTRA_FROM_HIJACKER,
+                                false)) {
+                    getIntent().removeExtra(
+                            com.example.openradiofm.services.FactoryRadioHijackerService.EXTRA_FROM_HIJACKER);
+                    scheduleK706McuListenerReassertAfterOem("from_hijacker_cold", 850L);
+                }
             };
 
             // V22.4: Retardo de estabilización de 1200ms específico para QS6 (NWD) 
@@ -2064,7 +2075,35 @@ public class MainActivity extends AppCompatActivity  {
         super.onNewIntent(intent);
         setIntent(intent);
         Log.d(TAG, "onNewIntent: App ya activa, refrescando parámetros (Single Instance).");
+        handleK706McuReassertFromHijackerIntent(intent);
         handleWidgetDeepLinks(intent);
+    }
+
+    /**
+     * La radio OEM registra su propio {@code IMcuListener}; al volver con HiHack hay que volver a
+     * pedir telemetría MCU (RDS 0xB6/B7/…) para OpenRadioFM.
+     */
+    private void handleK706McuReassertFromHijackerIntent(Intent intent) {
+        if (intent == null || mMode != FmMode.FM_K706) return;
+        if (!intent.getBooleanExtra(
+                com.example.openradiofm.services.FactoryRadioHijackerService.EXTRA_FROM_HIJACKER, false)) {
+            return;
+        }
+        intent.removeExtra(com.example.openradiofm.services.FactoryRadioHijackerService.EXTRA_FROM_HIJACKER);
+        scheduleK706McuListenerReassertAfterOem("from_hijacker_warm", 400L);
+    }
+
+    private void scheduleK706McuListenerReassertAfterOem(String reason, long delayMs) {
+        mMainHandler.postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (mMode != FmMode.FM_K706 || !(mEngine instanceof K706Engine)) return;
+            try {
+                ((K706Engine) mEngine).reassertMcuTelemetryListener();
+                Log.i(TAG, "K706: reassert MCU listener (" + reason + ")");
+            } catch (Exception e) {
+                Log.w(TAG, "K706: reassert MCU listener falló (" + reason + ")", e);
+            }
+        }, delayMs);
     }
 
     private void handleWidgetDeepLinks(Intent intent) {
@@ -2103,6 +2142,12 @@ public class MainActivity extends AppCompatActivity  {
     protected void onResume() {
         super.onResume();
         if (mLifecycleCoordinator != null) mLifecycleCoordinator.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        if (mLifecycleCoordinator != null) mLifecycleCoordinator.onPause();
+        super.onPause();
     }
 
     private static final String PREF_HIHACK_HEALTH_WARNED_AT_MS = "pref_hihack_health_warned_at_ms";

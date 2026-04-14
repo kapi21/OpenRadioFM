@@ -442,6 +442,50 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
+    /**
+     * Transact 1001: permiso de paquete para recibir {@code onMcuInfoChanged} (RDS, telemetría, etc.).
+     */
+    private void requestMcuPermissionHandshake(IBinder mcuServiceBinder) {
+        if (mcuServiceBinder == null || mContext == null) return;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken("android.qf.mcu.IMcuManager");
+            data.writeString(mContext.getPackageName());
+            mcuServiceBinder.transact(1001, data, reply, 0);
+            reply.readException();
+            Log.d(TAG, "Mcu permission handshake (1001) OK");
+        } catch (Exception e) {
+            Log.e(TAG, "Mcu permission handshake failed", e);
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * La radio OEM suele volver a registrar su {@code IMcuListener} y deja de entregar RDS a OpenRadioFM.
+     * Vuelve a ejecutar el handshake 1001 y {@link #registerMcuListener()} sin recrear todo el manager.
+     */
+    public void reassertMcuInfoListener() {
+        if (mMcuManager == null) {
+            Log.w(TAG, "reassertMcuInfoListener: mMcuManager null (motor no inicializado)");
+            return;
+        }
+        try {
+            Class<?> serviceManagerClass = Class.forName("android.os.ServiceManager");
+            Method getService = serviceManagerClass.getMethod("getService", String.class);
+            IBinder binder = (IBinder) getService.invoke(null, SERVICE_NAME);
+            if (binder != null) {
+                requestMcuPermissionHandshake(binder);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "reassertMcuInfoListener: handshake opcional falló", e);
+        }
+        registerMcuListener();
+        Log.i(TAG, "reassertMcuInfoListener: listener re-registrado");
+    }
+
     private void initMcuConnection() {
         try {
             // 1. Get ServiceManager -> mcu_service
@@ -461,20 +505,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Log.d(TAG, "Got IMcuManager instance: " + mMcuManager);
 
             // 3. Send "Request Permission" Transaction (1001) - Critical for receiving events
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            try {
-                data.writeInterfaceToken("android.qf.mcu.IMcuManager");
-                data.writeString(mContext.getPackageName());
-                binder.transact(1001, data, reply, 0);
-                reply.readException();
-                Log.d(TAG, "Permissions requested successfully (Transact 1001)");
-            } catch (Exception e) {
-                Log.e(TAG, "Error requesting permissions", e);
-            } finally {
-                data.recycle();
-                reply.recycle();
-            }
+            requestMcuPermissionHandshake(binder);
 
             // 4. Register McuListener via Proxy to receive callbacks
             registerMcuListener();
