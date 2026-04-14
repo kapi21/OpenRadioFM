@@ -20,9 +20,10 @@ import android.widget.Button;
 import android.widget.ScrollView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import androidx.appcompat.widget.SwitchCompat;
-import android.widget.SeekBar;
 
 public class K706EngineeringDialog extends Dialog implements K706RadioManager.RawMcuListener {
 
@@ -32,17 +33,18 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
     private boolean mIsRunning = false;
 
     // UI Elements - RF
-    private TextView tvK706Rssi, tvK706RawSignal, tvK706Stereo, tvK706BandInfo, tvK706Scan;
+    private TextView tvK706SignalStrengthBar, tvK706RawSignal, tvK706Stereo, tvK706BandInfo, tvK706Scan;
     
     // UI Elements - RDS
-    private TextView tvK706Ps, tvK706Rt, tvK706Pi, tvK706Pty;
+    private TextView tvK706Ps, tvK706Rt, tvK706RtRaw, tvK706Pi, tvK706Pty;
 
     // UI Elements - OEM Media
     private TextView tvK706OemFocusEvent, tvK706OemFlags;
     
     // UI Elements - Assets & System
     private TextView tvK706Assets, tvK706McuRaw, tvK706Device;
-    private TextView tvK706Rssi_Real, tvK706Snr_Real, tvK706Usn_Real;
+    private TextView tvK706RssiValue, tvK706Snr_Real, tvK706Usn_Real;
+    private TextView tvK706Acc;
 
     // Log & Controls
     private TextView tvK706Log;
@@ -91,7 +93,7 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
 
     private void bindViews() {
         // RF
-        tvK706Rssi = findViewById(R.id.tvK706Rssi);
+        tvK706SignalStrengthBar = findViewById(R.id.tvK706SignalStrengthBar);
         tvK706RawSignal = findViewById(R.id.tvK706RawSignal);
         tvK706Stereo = findViewById(R.id.tvK706Stereo);
         tvK706BandInfo = findViewById(R.id.tvK706BandInfo);
@@ -100,6 +102,7 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
         // RDS
         tvK706Ps = findViewById(R.id.tvK706Ps);
         tvK706Rt = findViewById(R.id.tvK706Rt);
+        tvK706RtRaw = findViewById(R.id.tvK706RtRaw);
         tvK706Pi = findViewById(R.id.tvK706Pi);
         tvK706Pty = findViewById(R.id.tvK706Pty);
 
@@ -116,9 +119,13 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
         tvK706Log = findViewById(R.id.tvK706Log);
         scrollK706Log = findViewById(R.id.scrollK706Log);
 
-        tvK706Rssi_Real = findViewById(R.id.tvK706Rssi);
+        tvK706RssiValue = findViewById(R.id.tvK706RssiValue);
         tvK706Snr_Real = findViewById(R.id.tvK706Snr);
         tvK706Usn_Real = findViewById(R.id.tvK706Usn);
+        
+        // ACC (V24.8)
+        tvK706Acc = findViewById(R.id.tvK706Acc);
+        if (tvK706Acc != null) tvK706Acc.setText("OFF/IDLE");
 
         sbDevFileLogProfile = findViewById(R.id.sbDevFileLogProfile);
         tvDevFileLogProfileValue = findViewById(R.id.tvDevFileLogProfileValue);
@@ -302,29 +309,6 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
         }
     }
 
-    private void setupQuickCmd(int resId, byte[] cmd, String tag) {
-        View btn = findViewById(resId);
-        if (btn != null) {
-            btn.setOnClickListener(v -> {
-                K706RadioManager mgr = getK706Manager();
-                if (mgr != null) {
-                    mgr.sendRawMcuCommand(cmd);
-                    logEvent("POWER_CMD", tag + " SENT");
-                }
-            });
-        }
-    }
-
-    private byte[] hexStringToByteArray(String s) {
-        int len = s.length();
-        byte[] data = new byte[len / 2];
-        for (int i = 0; i < len; i += 2) {
-            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
-                                 + Character.digit(s.charAt(i+1), 16));
-        }
-        return data;
-    }
-
     private static String profileLabel(int p) {
         switch (p) {
             case 1: return "MEDIUM";
@@ -372,19 +356,24 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
             int rssiRaw = (signalData != null && signalData.length >= 6) ? (signalData[5] & 0xFF) : -1;
             int snrRaw = (signalData != null && signalData.length >= 8) ? (signalData[7] & 0xFF) : -1;
 
-            tvK706RawSignal.setText(String.format(Locale.US, "0x%02X / 0x%02X", rssiRaw != -1 ? rssiRaw : 0, snrRaw != -1 ? snrRaw : 0));
-            tvK706Stereo.setText(stereo ? "LOCKED (19KHZ)" : "MONO");
-            tvK706BandInfo.setText("BAND_" + band);
-            tvK706Scan.setText(scanning ? "RUNNING..." : "IDLE");
+            if (tvK706RawSignal != null) {
+                tvK706RawSignal.setText(String.format(Locale.US, "0x%02X / 0x%02X",
+                        rssiRaw != -1 ? rssiRaw : 0, snrRaw != -1 ? snrRaw : 0));
+            }
+            if (tvK706Stereo != null) tvK706Stereo.setText(stereo ? "LOCKED (19KHZ)" : "MONO");
+            if (tvK706BandInfo != null) tvK706BandInfo.setText("BAND_" + band);
+            if (tvK706Scan != null) tvK706Scan.setText(scanning ? "RUNNING..." : "IDLE");
 
             // RSSI Bar
             int sqi = (rssiRaw != -1) ? Math.min(100, (rssiRaw * 100) / 120) : (mActivity.mHasRdsLock ? 80 : 20);
             StringBuilder bar = new StringBuilder("[");
             int bars = sqi / 10;
-            for(int i=0; i<10; i++) bar.append(i < bars ? "Ôûê" : "Ôûæ");
+            for(int i=0; i<10; i++) bar.append(i < bars ? "#" : ".");
             bar.append("]");
             String dbm = (rssiRaw != -1) ? String.valueOf(-120 + rssiRaw) : "N/A";
-            tvK706Rssi.setText(String.format(Locale.US, "[%sdBm] %s", dbm, bar.toString()));
+            if (tvK706SignalStrengthBar != null) {
+                tvK706SignalStrengthBar.setText(String.format(Locale.US, "[%sdBm] %s", dbm, bar.toString()));
+            }
 
             // 2. RDS DATA
             TextView mainRdsName = mActivity.findViewById(R.id.tvRdsName);
@@ -487,8 +476,62 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
             } else if (type == 0xB0) {
                 // Status info
                 updateStatusFlags(data);
+            } else if (type == 0xB3 || type == 0xB7) {
+                // RDS RT (Radio Text) - MCU -> ARM
+                // Nota: el documento PROTOCOLO_MCU_K706.md indica 0xB3, pero algunos firmwares reportan RT como 0xB7.
+                handleRdsRtPacket(data);
+            } else if (type == 0x24) {
+                // ACC Status - MCU -> ARM
+                handleAccPacket(data);
             }
         });
+    }
+
+    private void handleAccPacket(byte[] data) {
+        if (data.length < 2) return;
+        final int raw = data[1] & 0xFF;
+        final String state = (raw == 0) ? "OFF" : (raw == 1 ? "ON" : ("0x" + String.format(Locale.US, "%02X", raw)));
+        if (tvK706Acc != null) tvK706Acc.setText(state);
+        logEvent("ACC", "0x24=" + state);
+    }
+
+    private void handleRdsRtPacket(byte[] data) {
+        if (data.length < 2) return;
+        String decoded = decodeMcuText(data, 1, StandardCharsets.ISO_8859_1);
+        if (decoded == null || decoded.trim().isEmpty()) decoded = "EMPTY";
+
+        // Mostrar texto y el payload raw (hex)
+        if (tvK706Rt != null) tvK706Rt.setText(decoded);
+        if (tvK706RtRaw != null) {
+            String payloadHex = bytesToHex(slice(data, 1));
+            if (payloadHex.length() > 90) payloadHex = payloadHex.substring(0, 87) + "...";
+            tvK706RtRaw.setText(payloadHex);
+        }
+        logEvent("RDS_RT", decoded);
+    }
+
+    private static byte[] slice(byte[] data, int offset) {
+        if (data == null || offset >= data.length) return new byte[0];
+        byte[] out = new byte[data.length - offset];
+        System.arraycopy(data, offset, out, 0, out.length);
+        return out;
+    }
+
+    private static String decodeMcuText(byte[] data, int offset, Charset cs) {
+        if (data == null || offset >= data.length) return "";
+        int end = data.length;
+        for (int i = offset; i < data.length; i++) {
+            if (data[i] == 0x00) { end = i; break; }
+        }
+        if (end <= offset) return "";
+        String s = new String(data, offset, end - offset, cs);
+        // Normalizar: quitar control chars típicos y espacios repetidos
+        s = s.replace('\u0000', ' ')
+             .replace('\u001B', ' ')
+             .replaceAll("\\p{Cntrl}+", " ")
+             .replaceAll("\\s{2,}", " ")
+             .trim();
+        return s;
     }
 
     private void parseSignalData(byte[] data) {
@@ -498,7 +541,7 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
         int snr = data[2] & 0xFF;  // Relaci├│n se├▒al/ruido
         int usn = (data.length > 3) ? (data[3] & 0xFF) : 0; // Multipath
         
-        if (tvK706Rssi_Real != null) tvK706Rssi_Real.setText(String.format(Locale.US, "%d dB╬╝V", rssi));
+        if (tvK706RssiValue != null) tvK706RssiValue.setText(String.format(Locale.US, "%d dBµV", rssi));
         if (tvK706Snr_Real != null) tvK706Snr_Real.setText(String.format(Locale.US, "%d dB", snr));
         if (tvK706Usn_Real != null) tvK706Usn_Real.setText(String.format(Locale.US, "%d (RAW)", usn));
     }

@@ -64,7 +64,10 @@
                 android:padding="8dp">
 
                 <TextView android:text="SIGNAL_STRENGTH" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Rssi" android:text="[-90dBm] ÔûæÔûæÔûæÔûæÔûæÔûæÔûæÔûæÔûæÔûæ" style="@style/EngValueStyle"/>
+                <TextView
+                    android:id="@+id/tvK706SignalStrengthBar"
+                    style="@style/EngValueStyle"
+                    android:text="[-90dBm] .........." />
 
                 <TextView android:text="MCU_RSSI_SNR" style="@style/EngLabelStyle"/>
                 <TextView android:id="@+id/tvK706RawSignal" android:text="0x00 / 0x00" style="@style/EngValueStyle"/>
@@ -122,10 +125,126 @@
                     android:backgroundTint="#002200" />
             </LinearLayout>
 
+            <!-- V24.5: SECTION: HARDWARE_AUTOMATION_MODULE (K706 Exclusive) -->
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ HARDWARE_AUTOMATION_MODULE ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="8dp">
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swAutoNightHw"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="AUTO_NIGHT_MODE (LIGHTS_SENSE)"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="monospace"
+                    app:thumbTint="#00FF00"
+                    app:trackTint="#3300FF00" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swReverseMuteHw"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="REVERSE_GEAR_MUTE (CAMERA_SYNC)"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="monospace"
+                    app:thumbTint="#00FF00"
+                    app:trackTint="#3300FF00" />
+
+                <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swHandbrakeHw"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="HANDBRAKE_SENSE (SAFETY_LOCK)"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="monospace"
+                    app:thumbTint="#00FF00"
+                    app:trackTint="#3300FF00" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp">
+                    <TextView android:text="ACC_STATUS (0x24): " style="@style/EngLabelStyle" android:layout_weight="1"/>
+                    <TextView android:id="@+id/tvK706Acc" android:text="UNKNOWN" style="@style/EngValueStyle" android:textColor="#FFFF00"/>
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:text="NOTE: ACTIVATION ENABLES OPTIONS IN MAIN SETTINGS MENU."
+                    android:textColor="#88FF88"
+                    android:textSize="10sp"
+                    android:fontFamily="monospace"
+                    android:gravity="center"/>
+            </LinearLayout>
+
+            <!-- SECTION: RDS DECODER DATA -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="#3300FF00"
+                android:padding="4dp"
+                android:text="[ RDS_DECODER_RAW_METRICS ]"
+                android:textColor="#00FF00"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="PROGRAM_SERVICE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706Ps" android:text="NONE" style="@style/EngValueStyle"/>
+
+                <TextView android:text="RADIO_TEXT" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706Rt" android:text="WAITING..." style="@style/EngValueStyle"/>
+
+                <TextView android:text="RT_RAW_DATA" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706RtRaw" android:text="NONE" style="@style/EngValueStyle" android:textSize="10sp"/>
+
+                <TextView android:text="PI_CODE (HEX)" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706Pi" android:text="0000" style="@style/EngValueStyle"/>
+
+                <TextView android:text="PTY_CODE" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706Pty" android:text="00" style="@style/EngValueStyle"/>
+
+                <TextView android:text="SIGNAL_RSSI" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706RssiValue" android:text="--" style="@style/EngValueStyle"/>
+
+                <TextView android:text="SIGNAL_SNR" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706Snr" android:text="--" style="@style/EngValueStyle"/>
+
+                <TextView android:text="SIGNAL_USN" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvK706Usn" android:text="--" style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <!-- SECTION: DEV TOGGLES (GROUPED) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
                 android:background="#3300FF00"
                 android:padding="4dp"
                 android:text="[ DEV_TOGGLES_UI ]"
@@ -287,109 +406,6 @@
                     android:textSize="14sp"
                     android:fontFamily="monospace"/>
             </LinearLayout>
-
-            <!-- V24.5: SECTION: HARDWARE_AUTOMATION_MODULE (K706 Exclusive) -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="#3300FF00"
-                android:padding="4dp"
-                android:text="[ HARDWARE_AUTOMATION_MODULE ]"
-                android:textColor="#00FF00"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace"/>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="8dp">
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swAutoNightHw"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="AUTO_NIGHT_MODE (LIGHTS_SENSE)"
-                    android:textColor="#FFFFFF"
-                    android:fontFamily="monospace"
-                    app:thumbTint="#00FF00"
-                    app:trackTint="#3300FF00" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swReverseMuteHw"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="REVERSE_GEAR_MUTE (CAMERA_SYNC)"
-                    android:textColor="#FFFFFF"
-                    android:fontFamily="monospace"
-                    app:thumbTint="#00FF00"
-                    app:trackTint="#3300FF00" />
-
-                <androidx.appcompat.widget.SwitchCompat
-                    android:id="@+id/swHandbrakeHw"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:text="HANDBRAKE_SENSE (SAFETY_LOCK)"
-                    android:textColor="#FFFFFF"
-                    android:fontFamily="monospace"
-                    app:thumbTint="#00FF00"
-                    app:trackTint="#3300FF00" />
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="NOTE: ACTIVATION ENABLES OPTIONS IN MAIN SETTINGS MENU."
-                    android:textColor="#88FF88"
-                    android:textSize="10sp"
-                    android:fontFamily="monospace"
-                    android:gravity="center"/>
-            </LinearLayout>
-
-            <!-- SECTION: RDS DECODER DATA -->
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:background="#3300FF00"
-                android:padding="4dp"
-                android:text="[ RDS_DECODER_RAW_METRICS ]"
-                android:textColor="#00FF00"
-                android:textSize="12sp"
-                android:textStyle="bold"
-                android:fontFamily="monospace"/>
-
-            <GridLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:columnCount="2"
-                android:padding="8dp">
-
-                <TextView android:text="PROGRAM_SERVICE" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Ps" android:text="NONE" style="@style/EngValueStyle"/>
-
-                <TextView android:text="RADIO_TEXT" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Rt" android:text="WAITING..." style="@style/EngValueStyle"/>
-
-                <TextView android:text="PI_CODE (HEX)" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Pi" android:text="0000" style="@style/EngValueStyle"/>
-
-                <TextView android:text="PTY_CODE" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Pty" android:text="00" style="@style/EngValueStyle"/>
-
-                <TextView android:text="SIGNAL_RSSI" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Rssi" android:text="--" style="@style/EngValueStyle"/>
-
-                <TextView android:text="SIGNAL_SNR" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Snr" android:text="--" style="@style/EngValueStyle"/>
-
-                <TextView android:text="SIGNAL_USN" style="@style/EngLabelStyle"/>
-                <TextView android:id="@+id/tvK706Usn" android:text="--" style="@style/EngValueStyle"/>
-            </GridLayout>
 
             <!-- SECTION: OEM MEDIA / AUDIOFOCUS STATUS -->
             <TextView
