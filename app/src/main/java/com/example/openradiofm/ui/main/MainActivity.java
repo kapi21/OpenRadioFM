@@ -3602,11 +3602,11 @@ public class MainActivity extends AppCompatActivity  {
         
         if (mPlaybackManager != null) {
             if (reverseOn) {
-                Log.d(TAG, "HW_AUTO: Reverse gear detected, muting...");
-                mPlaybackManager.setMute(true);
+                Log.d(TAG, "HW_AUTO: Reverse gear detected, ducking volume...");
+                mPlaybackManager.setReverseDucking(true);
             } else {
-                Log.d(TAG, "HW_AUTO: Reverse gear off, restoring audio...");
-                mPlaybackManager.setMute(false);
+                Log.d(TAG, "HW_AUTO: Reverse gear off, restoring volume...");
+                mPlaybackManager.setReverseDucking(false);
             }
         }
     }

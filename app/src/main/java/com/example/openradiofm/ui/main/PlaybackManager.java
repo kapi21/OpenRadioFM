@@ -28,6 +28,7 @@ public class PlaybackManager {
     private boolean mMediaReceiverRegistered = false;
     private PlaybackListener mListener;
     private Integer mSavedMusicVolume = null; // Para mute global fiable (MT8163)
+    private Integer mSavedMusicVolumeForReverse = null;
 
     /**
      * Interfaz para notificar a la UI de cambios en el estado de reproducción.
@@ -183,6 +184,43 @@ public class PlaybackManager {
         }
 
         Log.d(TAG, "Mute state: " + (mute ? "MUTED" : "UNMUTED") + " (System: " + mIsMutedBySystem + ")");
+    }
+
+    /**
+     * Baja temporalmente el volumen durante marcha atrás (BACKCAR/REVERSE) y lo restaura al salir.
+     *
+     * Nota: en algunos firmwares OEM el audio FM no está ligado a STREAM_MUSIC; en esos casos esto
+     * puede no tener efecto. Aun así es la opción menos invasiva frente a mutear el tuner.
+     */
+    public void setReverseDucking(boolean reverseOn) {
+        if (mAudioManager == null) return;
+        try {
+            if (reverseOn) {
+                if (mSavedMusicVolumeForReverse == null) {
+                    int current = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    mSavedMusicVolumeForReverse = Math.max(current, 0);
+                }
+                int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                int target = Math.max(1, (int) Math.floor(max * 0.25));
+                // Si ya estaba más bajo (usuario), no subimos nada: solo limitamos hacia abajo.
+                int current = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                if (current > target) {
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, target, 0);
+                }
+                Log.d(TAG, "Reverse ducking ON: target=" + target + " saved=" + mSavedMusicVolumeForReverse);
+            } else {
+                if (mSavedMusicVolumeForReverse != null) {
+                    int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    int restore = Math.min(Math.max(mSavedMusicVolumeForReverse, 0), Math.max(max, 0));
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, restore, 0);
+                    Log.d(TAG, "Reverse ducking OFF: restored=" + restore);
+                }
+                mSavedMusicVolumeForReverse = null;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Reverse ducking falló", e);
+            if (!reverseOn) mSavedMusicVolumeForReverse = null;
+        }
     }
 
     /**
