@@ -5,6 +5,14 @@
 - **Estado único (UI + Service)**: `RadioMediaService` y `MainActivity` comparten el mismo `RadioSessionController` para evitar estados divergentes.
 - **MediaSession**: el servicio es la **fuente de verdad** de metadata/Now Playing; se ignoran updates externos vía `ACTION_UPDATE_METADATA`.
 
+### QS6 / NWD — KernelService y menú de ingeniería (sustituir radio OEM)
+- **`Qs6KernelMcuClient`**: cliente experimental hacia `com.nwd.kernel.service.KernelService` / `IKernelFeature.request([B)` (Binder `transact`), para enviar tramas FM al MCU sin abrir la app nativa.
+- **Menú QS6 (Technical Matrix)**: botonera ampliada — tune, paso fino vs salto de emisora (mapeo OEM `seek`/`search`), banda, AMS, intro, near DX/LOC, RDS/PTY de laboratorio, **SAVE_P1..P16** vía `dataType=0x0C`, y pruebas AIDL (`RadioFeature`: stereo, prefeb, intro, refresh de estado, `STOP_SEARCH` por broadcast).
+- **Sesión Kernel**: el bind al `KernelService` se mantiene entre cierres del diálogo de desarrollo; se libera al destruir `MainActivity` en modo QS6 (`QS6EngineeringDialog.releaseSharedKernelClient()`).
+- **Documentación**: `QS6_MCU_KERNELSERVICE_INFORME.md` (protocolo, validación en hardware,riesgos RX).
+- **`NWDTunerAdapter`**: métodos auxiliares para ingeniería (`setStereoOn`, `prefeb`, `saveCurrentFrequency`, `getDebugStatus`).
+- **Versión app (MCU2)**: `versionCode` **36**, `versionName` **5.1.4**.
+
 ## [5.2.0] - 2026-04-12
 ### Estabilización Crítica y Restauración de Motores Legados
 - **QS6 (Nowada)**: Implementación de **Modo Master** (sincronización directa con `Settings.System`), cierre limpio del canal de audio y **fix de muteo estabilizado** mediante conmutación de fuentes.

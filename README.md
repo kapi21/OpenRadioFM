@@ -1,7 +1,7 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.2.0-green.svg)]()
-[![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.1.4-green.svg)]()
+[![Branch](https://img.shields.io/badge/branch-MCU2-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -185,6 +185,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.
 - **AutoScan (Smart v2)**: ⏸️ **En estudio** por defecto. Desde **v5.0.11**, en los **menús de ingeniería** (pulsación larga en GPS) puedes activar *Modo AutoScan* para usar el botón de escaneo en la UI principal de forma experimental (`pref_dev_autoscan_enabled` en **RadioPresets**).
 - **Audio QS6 (Qualcomm / NWD)**: ⚠️ Comportamiento dependiente del firmware; se sigue probando **cambio de fuente** (`ACTION_CHANGE_SOURCE`), foco y rutas de recuperación. Reporta modelo + build si falla el audio tras sintonizar.
+- **QS6 / rama MCU2 — KernelService (experimental)**: el menú de ingeniería QS6 incluye pruebas hacia el servicio OEM **KernelService** (tramas FM al MCU) y atajos **AIDL** / broadcast para avanzar hacia **no depender de la app de radio nativa**. Resumen en `QS6_MCU_KERNELSERVICE_INFORME.md`.
 
 ---
 
@@ -199,6 +200,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
 - [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
 - [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md) — incluye **§15 Roadmap motor QS6**
+- [QS6 — MCU vía KernelService (informe)](QS6_MCU_KERNELSERVICE_INFORME.md) — protocolo NWD, botonera de desarrollo, riesgos RX
 - [Changelog](CHANGELOG.md) · [Changelog (English)](CHANGELOG_EN.md) · [Changelog (Русский)](CHANGELOG_RU.md)
 - [Depurado en tres fases](depurado%20en%20tres%20fases.md)
 - [Roadmap](_DOCS/roadmap.md)

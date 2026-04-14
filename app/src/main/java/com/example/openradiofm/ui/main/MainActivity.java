@@ -2265,6 +2265,13 @@ public class MainActivity extends AppCompatActivity  {
     protected void onDestroy() {
         super.onDestroy();
         if (mLifecycleCoordinator != null) mLifecycleCoordinator.onDestroy();
+        // QS6: el cliente experimental de KernelService se mantiene vivo entre aperturas del menú de ingeniería,
+        // pero debe liberarse cuando la Activity termina de verdad.
+        try {
+            if (isFinishing() && mMode == FmMode.FM_QS6) {
+                QS6EngineeringDialog.releaseSharedKernelClient();
+            }
+        } catch (Exception ignored) {}
     }
 
 

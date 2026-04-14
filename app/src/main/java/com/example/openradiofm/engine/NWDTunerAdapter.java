@@ -259,6 +259,70 @@ public class NWDTunerAdapter {
         }
     }
 
+    public void setStereoOn(boolean on) {
+        if (mService != null) {
+            try {
+                mService.setStreroOn(on);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error en setStreroOn", e);
+            }
+        }
+    }
+
+    public void prefeb(boolean up) {
+        if (mService != null) {
+            try {
+                mService.prefeb(up);
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error en prefeb", e);
+            }
+        }
+    }
+
+    public void saveCurrentFrequency(int index) {
+        if (mService != null) {
+            try {
+                int idx = Math.max(0, Math.min(index, 15));
+                mService.saveCurrentFrequency((byte) (idx & 0xFF));
+            } catch (RemoteException e) {
+                Log.e(TAG, "Error en saveCurrentFrequency", e);
+            }
+        }
+    }
+
+    public String getDebugStatus() {
+        if (mService == null) return "AIDL=NULL";
+        try {
+            StringBuilder sb = new StringBuilder();
+            sb.append("AIDL=OK");
+            try {
+                sb.append(" state=").append((int) mService.getRadioState());
+            } catch (Throwable ignored) {}
+            try {
+                sb.append(" scan=").append(mService.getCurrentScanState());
+            } catch (Throwable ignored) {}
+            try {
+                sb.append(" stereo=").append(mService.isStreroOn());
+            } catch (Throwable ignored) {}
+            try {
+                sb.append(" hasStereo=").append(mService.isHasStrero());
+            } catch (Throwable ignored) {}
+            try {
+                sb.append(" near=").append(mService.isNearOn());
+            } catch (Throwable ignored) {}
+            try {
+                sb.append(" backSvc=").append(mService.isRadioBackServiceOn());
+            } catch (Throwable ignored) {}
+            try {
+                String rt = mService.getRtMessage();
+                if (rt != null && !rt.isEmpty()) sb.append(" rt=").append(rt);
+            } catch (Throwable ignored) {}
+            return sb.toString();
+        } catch (Throwable t) {
+            return "AIDL_ERR:" + t.getClass().getSimpleName();
+        }
+    }
+
     public boolean isConnected() {
         return mIsBound && mService != null;
     }
