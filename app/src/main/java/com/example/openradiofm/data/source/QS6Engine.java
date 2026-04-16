@@ -2,6 +2,7 @@ package com.example.openradiofm.data.source;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.ContentObserver;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.RemoteException;
@@ -10,6 +11,7 @@ import android.util.Log;
 import java.io.UnsupportedEncodingException;
 
 import com.example.openradiofm.engine.NWDTunerAdapter;
+import com.example.openradiofm.ui.main.Qs6KernelMcuClient;
 import com.example.openradiofm.ui.main.RadioServiceController;
 import com.nwd.radio.service.RadioCallback;
 
@@ -23,6 +25,7 @@ public class QS6Engine implements RadioEngine {
     private Context mContext;
     private RadioEngineCallback mCallback;
     private NWDTunerAdapter mAdapter;
+    private Qs6KernelMcuClient mKernel;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
     private int mCurrentFreq = 87500;
@@ -34,6 +37,10 @@ public class QS6Engine implements RadioEngine {
     private boolean mIsScanning = false;
     private boolean mIsDxLocal = false;
     private boolean mOnlineStreamingActive = false;
+    // QS6/NWD: el firmware puede no limpiar RT al cambiar de banda/frecuencia.
+    private String mLastRt = "";
+    /** Anti-spam: evita ráfagas de broadcasts de audio routing en arranque. */
+    private long mLastRequestPlayAudioWallMs = 0L;
 
     // Constantes NWD (Verificadas vía RE Fase B)
     private static final String ACTION_CHANGE_SOURCE = "com.nwd.action.ACTION_CHANGE_SOURCE";
@@ -47,6 +54,9 @@ public class QS6Engine implements RadioEngine {
     private static final String KEY_NWD_RADIO_CURRENT_BAND = "nwd_radio_current_band";
     private static final String KEY_NWD_RADIO_CURRENT_PS_DATA = "nwd_radio_current_ps_data";
     private static final String KEY_MCU_CURRENT_SOURCE = "mcu_current_source";
+    // Claves no confirmadas: se intentan leer si existen en el firmware.
+    private static final String KEY_NWD_RADIO_CURRENT_RT_MESSAGE = "nwd_radio_current_rt_message";
+    private static final String KEY_NWD_RADIO_CURRENT_PTY = "nwd_radio_current_pty";
 
     private static final int SOURCE_RADIO = 0x04;      // RE: 0x04 = Radio
     private static final int SOURCE_ANDROID = 0x00;    // RE: 0x00 = Android/System
@@ -55,9 +65,21 @@ public class QS6Engine implements RadioEngine {
     @Override
     public boolean init(Context context) {
         mContext = context;
+        mKernel = new Qs6KernelMcuClient(context);
+        try { mKernel.connect(); } catch (Throwable ignored) {}
+
+        // Mantener AIDL como fallback temporal de RX hasta que exista RX MCU accesible a third‑party.
+        // La preferencia es enviar órdenes por MCU (KernelService), no por AIDL.
         mAdapter = NWDTunerAdapter.getInstance(context);
         mAdapter.setCallback(mNwdCallback);
-        mAdapter.connect();
+        try { mAdapter.connect(); } catch (Throwable ignored) {}
+
+        try { registerNwdSettingsObservers(); } catch (Throwable ignored) {}
+
+        // QS6: minimizar dependencia del stack OEM.
+        // No “arrancar la nativa” (UI) nunca, pero sí puede ser necesario pedir routing de audio
+        // si el sistema quedó en SOURCE_ANDROID o tras streaming. Solo hacerlo si parece necesario.
+        try { maybeRequestPlayAudioOnStartup(); } catch (Throwable ignored) {}
         return true;
     }
 
@@ -133,7 +155,13 @@ public class QS6Engine implements RadioEngine {
         @Override public void notifyRdsShowState(boolean isShow) throws RemoteException {}
 
         @Override public void notifyRtMessage(String rtMessage) throws RemoteException {
-            if (mCallback != null) mCallback.onRdsText(rtMessage);
+            // Evitar RT "pegado" fuera de FM / durante transiciones.
+            if (mCurrentBand >= 3) return; // AM
+            if (rtMessage == null) rtMessage = "";
+            final String trimmed = rtMessage.trim();
+            if (trimmed.equals(mLastRt)) return;
+            mLastRt = trimmed;
+            if (mCallback != null) mCallback.onRdsText(trimmed);
         }
 
         @Override public void notifyRadioScanState(int state) throws RemoteException {
@@ -144,6 +172,8 @@ public class QS6Engine implements RadioEngine {
     @Override
     public void release() {
         closeDevice(); // Asegurar cierre de audio antes de desconectar AIDL
+        try { unregisterNwdSettingsObservers(); } catch (Throwable ignored) {}
+        try { if (mKernel != null) mKernel.disconnect(); } catch (Throwable ignored) {}
         if (mAdapter != null) {
             mAdapter.disconnect();
         }
@@ -152,13 +182,41 @@ public class QS6Engine implements RadioEngine {
     }
 
     @Override public void tune(int freqKhz) { 
-        mAdapter.tune(freqKhz); 
         mCurrentFreq = freqKhz;
-        // V22.5: Forzar actualización a Settings para que el MCU reciba la nueva frecuencia vía KernelService
-        syncToNwdSystemSettings(freqKhz, mCurrentBand, "");
+        // Preferencia: orden directa por MCU (KernelService)
+        try {
+            if (mKernel != null) {
+                int freqUnits = (mCurrentBand < 3) ? Math.max(0, freqKhz / 10) : Math.max(0, freqKhz);
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmTune(freqUnits, (byte) (mCurrentBand & 0xFF), 0));
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU tune failed, fallback to AIDL", t);
+            try { if (mAdapter != null) mAdapter.tuneWithBand(freqKhz, mCurrentBand); } catch (Throwable ignored) {}
+        }
     }
-    @Override public void seekUp() { mAdapter.seek(true); }
-    @Override public void seekDown() { mAdapter.seek(false); }
+    @Override public void seekUp() {
+        // Seek de emisora (salto de estación): actionType 3/4 en protocolo NWD.
+        try {
+            if (mKernel != null) {
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmSearchUp());
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU seekUp failed, fallback to AIDL", t);
+        }
+        try { if (mAdapter != null) mAdapter.seek(true); } catch (Throwable ignored) {}
+    }
+    @Override public void seekDown() {
+        try {
+            if (mKernel != null) {
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmSearchDown());
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU seekDown failed, fallback to AIDL", t);
+        }
+        try { if (mAdapter != null) mAdapter.seek(false); } catch (Throwable ignored) {}
+    }
     
     @Override 
     public void setMute(boolean mute) { 
@@ -168,18 +226,44 @@ public class QS6Engine implements RadioEngine {
         if (mute) switchToAndroidAudio();
         else switchToFmAudio();
     }
-    @Override public void setBand(int band) { mAdapter.setBand(band); mCurrentBand = band; }
-    @Override public void bandCycle() { mAdapter.bandCycle(); }
+    @Override public void setBand(int band) {
+        mCurrentBand = band;
+        // La forma “segura” por MCU es bandCycle + tuneWithBand. Aquí mantenemos AIDL como fallback.
+        // En la práctica, la app cambia banda al sintonizar con banda explícita.
+        try { if (mAdapter != null) mAdapter.setBand(band); } catch (Throwable ignored) {}
+    }
+    @Override public void bandCycle() {
+        try {
+            if (mKernel != null) {
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmBandCycle());
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU bandCycle failed, fallback to AIDL", t);
+        }
+        try { if (mAdapter != null) mAdapter.bandCycle(); } catch (Throwable ignored) {}
+    }
 
     @Override public String getEngineName() { return "QS6 (Modular)"; }
     @Override public int getCurrentFreq() { return mCurrentFreq; }
     @Override public int getCurrentBand() { return mCurrentBand; }
-    @Override public void stopScan() { mAdapter.stopScan(); }
+    @Override public void stopScan() {
+        // STOP_SEARCH: broadcast “shadow” (hay firmwares donde no existe stop por MCU).
+        try { if (mAdapter != null) mAdapter.stopScan(); } catch (Throwable ignored) {}
+    }
 
     @Override
     public boolean requestPlayAudio() {
         Log.d(TAG, "QS6: requestPlayAudio -> SOURCE_RADIO (" + SOURCE_RADIO + ")");
         try {
+            // Anti-spam (arranque/recreate/resume)
+            long now = android.os.SystemClock.elapsedRealtime();
+            if (now - mLastRequestPlayAudioWallMs < 1200L) {
+                Log.d(TAG, "QS6: requestPlayAudio suppressed (burst)");
+                return true;
+            }
+            mLastRequestPlayAudioWallMs = now;
+
             // 1. Cambio de fuente (Muestra volumen/MCU routing)
             Intent intentReq = new Intent(ACTION_REQUEST_CHANGE_SOURCE);
             intentReq.putExtra("extra_source_id", (byte) SOURCE_RADIO);
@@ -249,7 +333,29 @@ public class QS6Engine implements RadioEngine {
     @Override public boolean isTaEnabled() { return mIsTaEnabled; }
     @Override public boolean isTpEnabled() { return mIsTpEnabled; }
     @Override public boolean isScanning() { return mIsScanning; }
-    @Override public void toggleDxLocal() { mAdapter.setRDSState(0x08, !mIsDxLocal); }
+    @Override
+    public void toggleDxLocal() {
+        // UI espera "isLocal": true -> LOC (icono lleno), false -> DX.
+        final boolean targetLocal = !mIsDxLocal;
+        // Preferencia: MCU (KernelService) usando NearOn.
+        try {
+            if (mKernel != null) {
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmNearOn(targetLocal));
+                mIsDxLocal = targetLocal;
+                if (mCallback != null) mMainHandler.post(() -> mCallback.onDxLocalChanged(mIsDxLocal));
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU toggleDxLocal failed, fallback to AIDL", t);
+        }
+        try {
+            if (mAdapter != null) {
+                mAdapter.setRDSState(0x08, targetLocal);
+            }
+        } catch (Throwable ignored) {}
+        mIsDxLocal = targetLocal;
+        if (mCallback != null) mMainHandler.post(() -> mCallback.onDxLocalChanged(mIsDxLocal));
+    }
     @Override public boolean isDxLocal() { return mIsDxLocal; }
     @Override public void setCallback(RadioEngineCallback cb) { this.mCallback = cb; }
 
@@ -261,11 +367,54 @@ public class QS6Engine implements RadioEngine {
     public boolean isStereoPilotReported() { return false; }
     public boolean isStereoDecoderEnabled() { return true; }
 
-    @Override public void stepUp() { tune(mCurrentFreq + 50); }
-    @Override public void stepDown() { tune(mCurrentFreq - 50); }
-    @Override public void scan() { if (mAdapter != null) mAdapter.autoScan(); }
-    @Override public boolean isStereo() { return true; }
-    @Override public void setStereo(boolean enable) { if(mAdapter!=null) mAdapter.sendRadioCommand(0x04, enable ? 0x01 : 0x00); }
+    @Override
+    public void stepUp() {
+        // En QS6/NWD, el “paso fino” observado en campo se corresponde con ACTION (1,1)/(2,1).
+        try {
+            if (mKernel != null) {
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmSeekUp());
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU stepUp failed, fallback to tune(+50)", t);
+        }
+        tune(mCurrentFreq + 50);
+    }
+
+    @Override
+    public void stepDown() {
+        try {
+            if (mKernel != null) {
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmSeekDown());
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU stepDown failed, fallback to tune(-50)", t);
+        }
+        tune(mCurrentFreq - 50);
+    }
+    @Override public void scan() {
+        // Consigna: el autoscan lo gestionamos con nuestro ScanManager (no AMS/OEM).
+        // Dejamos no-op para evitar disparar la app nativa/servicio OEM.
+        Log.d(TAG, "scan(): no-op (ScanManager propio)");
+    }
+    @Override public boolean isStereo() {
+        // El SDK expone estado estéreo, pero no siempre es fiable/instantáneo.
+        // Para evitar que la UI oscile, mantenemos una respuesta conservadora.
+        return true;
+    }
+    @Override public void setStereo(boolean enable) {
+        // Preferencia: MCU (KernelService). Si no está soportado por firmware, fallback a AIDL.
+        try {
+            if (mKernel != null) {
+                mKernel.requestRaw(Qs6KernelMcuClient.buildFmSetStereoOn(enable));
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "MCU setStereo failed, fallback to AIDL", t);
+        }
+        try { if (mAdapter != null) mAdapter.setStereoOn(enable); } catch (Throwable ignored) {}
+    }
     @Override public void openEq(Context context) {}
     @Override 
     public void closeDevice() {
@@ -289,9 +438,158 @@ public class QS6Engine implements RadioEngine {
             Log.w(TAG, "Error en closeDevice", e);
         }
     }
-    @Override public void gotoPreset(int index) {}
-    @Override public void nextFavorite() {}
-    @Override public void prevFavorite() {}
+    @Override
+    public void gotoPreset(int index) {
+        // En QS6, OpenRadioFM gestiona presets propios (SharedPreferences) desde MainActivity.
+        // Este método se usa sobre todo por integraciones genéricas; si se llama aquí,
+        // intentamos delegar al OEM “prefeb” cuando sea posible.
+        try {
+            if (mAdapter != null) {
+                // No existe un "gotoPreset(index)" documentado en RadioFeature; prefeb navega por lista interna.
+                // Mantenemos comportamiento no-op seguro.
+                Log.d(TAG, "gotoPreset(" + index + "): no soportado por NWD prefeb (usa MainActivity presets)");
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    @Override
+    public void nextFavorite() {
+        // NWD: prefeb(true) → siguiente “prefab/preset” del servicio OEM (si existe).
+        try { if (mAdapter != null) mAdapter.prefeb(true); } catch (Throwable ignored) {}
+    }
+
+    @Override
+    public void prevFavorite() {
+        try { if (mAdapter != null) mAdapter.prefeb(false); } catch (Throwable ignored) {}
+    }
+
+    // =============================================================================================
+    // RX “Shadow” (Settings.System) — para reducir dependencia de callbacks AIDL.
+    // =============================================================================================
+
+    private ContentObserver mNwdSettingsObserver;
+    private boolean mObserversRegistered = false;
+
+    private void registerNwdSettingsObservers() {
+        if (mContext == null || mObserversRegistered) return;
+        android.content.ContentResolver cr = mContext.getContentResolver();
+        mNwdSettingsObserver = new ContentObserver(mMainHandler) {
+            @Override
+            public void onChange(boolean selfChange) {
+                super.onChange(selfChange);
+                try { pollNwdSettingsAndFire(); } catch (Throwable ignored) {}
+            }
+        };
+        try { cr.registerContentObserver(Settings.System.getUriFor(KEY_NWD_RADIO_CURRENT_FREQ), false, mNwdSettingsObserver); } catch (Throwable ignored) {}
+        try { cr.registerContentObserver(Settings.System.getUriFor(KEY_NWD_RADIO_CURRENT_BAND), false, mNwdSettingsObserver); } catch (Throwable ignored) {}
+        try { cr.registerContentObserver(Settings.System.getUriFor(KEY_NWD_RADIO_CURRENT_PS_DATA), false, mNwdSettingsObserver); } catch (Throwable ignored) {}
+        try { cr.registerContentObserver(Settings.System.getUriFor(KEY_NWD_RADIO_CURRENT_RT_MESSAGE), false, mNwdSettingsObserver); } catch (Throwable ignored) {}
+        try { cr.registerContentObserver(Settings.System.getUriFor(KEY_NWD_RADIO_CURRENT_PTY), false, mNwdSettingsObserver); } catch (Throwable ignored) {}
+        mObserversRegistered = true;
+        // Primer pull inmediato
+        try { pollNwdSettingsAndFire(); } catch (Throwable ignored) {}
+    }
+
+    private void unregisterNwdSettingsObservers() {
+        if (mContext == null || !mObserversRegistered) return;
+        try {
+            if (mNwdSettingsObserver != null) {
+                mContext.getContentResolver().unregisterContentObserver(mNwdSettingsObserver);
+            }
+        } catch (Throwable ignored) {
+        } finally {
+            mNwdSettingsObserver = null;
+            mObserversRegistered = false;
+        }
+    }
+
+    private void pollNwdSettingsAndFire() {
+        if (mContext == null) return;
+        android.content.ContentResolver cr = mContext.getContentResolver();
+
+        int band = mCurrentBand;
+        int freqKhz = mCurrentFreq;
+        try {
+            band = Settings.System.getInt(cr, KEY_NWD_RADIO_CURRENT_BAND, mCurrentBand);
+            int nwdFreq = Settings.System.getInt(cr, KEY_NWD_RADIO_CURRENT_FREQ, (band < 3) ? (mCurrentFreq / 10) : mCurrentFreq);
+            freqKhz = (band < 3) ? (nwdFreq * 10) : nwdFreq;
+        } catch (Throwable ignored) {}
+
+        boolean bandChanged = (band != mCurrentBand);
+        if (band != mCurrentBand) {
+            mCurrentBand = band;
+            if (mCallback != null) mCallback.onBandChanged(band);
+        }
+        boolean freqChanged = (freqKhz > 0 && freqKhz != mCurrentFreq);
+        if (freqChanged) {
+            mCurrentFreq = freqKhz;
+            if (mCallback != null) mCallback.onFrequencyChanged(freqKhz);
+        }
+
+        // PS: hex de 8 bytes (16 hex) según RE §D.4
+        try {
+            String hexPs = Settings.System.getString(cr, KEY_NWD_RADIO_CURRENT_PS_DATA);
+            String ps = decodeHexPsToString(hexPs);
+            if (ps != null && !ps.isEmpty() && mCallback != null) mCallback.onRdsName(ps);
+        } catch (Throwable ignored) {}
+
+        // RT/PTY: solo si el firmware publica claves (no garantizado).
+        try {
+            String rt = Settings.System.getString(cr, KEY_NWD_RADIO_CURRENT_RT_MESSAGE);
+            // Limpiar RT si cambiamos a AM o si cambia banda/frecuencia (evita "RT pegado" al pasar por AM).
+            if (mCurrentBand >= 3 || bandChanged || freqChanged) {
+                clearRtIfNeeded(false);
+            } else if (rt != null) {
+                String trimmed = rt.trim();
+                if (!trimmed.isEmpty() && !trimmed.equals(mLastRt) && mCallback != null) {
+                    mLastRt = trimmed;
+                    mCallback.onRdsText(trimmed);
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        try {
+            String pty = Settings.System.getString(cr, KEY_NWD_RADIO_CURRENT_PTY);
+            if (pty != null && !pty.trim().isEmpty() && mCallback != null) mCallback.onRdsPty(pty);
+        } catch (Throwable ignored) {}
+    }
+
+    private void clearRtIfNeeded(boolean alsoClearSettings) {
+        try {
+            if (!mLastRt.isEmpty()) {
+                mLastRt = "";
+                if (mCallback != null) mCallback.onRdsText("");
+            }
+        } catch (Throwable ignored) {}
+
+        if (!alsoClearSettings || mContext == null) return;
+        try {
+            Settings.System.putString(mContext.getContentResolver(), KEY_NWD_RADIO_CURRENT_RT_MESSAGE, "");
+        } catch (Throwable ignored) {}
+    }
+
+    private static String decodeHexPsToString(String hex) {
+        if (hex == null) return null;
+        String clean = hex.trim().replace(" ", "");
+        if (clean.isEmpty() || (clean.length() % 2) != 0) return null;
+        int n = clean.length() / 2;
+        if (n <= 0) return null;
+        byte[] bytes = new byte[n];
+        try {
+            for (int i = 0; i < n; i++) {
+                int hi = Character.digit(clean.charAt(i * 2), 16);
+                int lo = Character.digit(clean.charAt(i * 2 + 1), 16);
+                if (hi < 0 || lo < 0) return null;
+                bytes[i] = (byte) ((hi << 4) | lo);
+            }
+            String s = new String(bytes, "UTF-8");
+            // El PS suele venir con padding \0 o espacios
+            s = s.replace("\u0000", "").trim();
+            return s;
+        } catch (Throwable e) {
+            return null;
+        }
+    }
 
     /**
      * V22.5: Sincroniza el estado de OpenRadioFM con las claves de Settings.System de Nowada.
@@ -333,5 +631,42 @@ public class QS6Engine implements RadioEngine {
             hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
         return new String(hexChars);
+    }
+
+    /**
+     * Arranque QS6: pedir SOURCE_RADIO solo si parece necesario.
+     * Evita tocar audio si estamos muteados o en streaming.
+     */
+    private void maybeRequestPlayAudioOnStartup() {
+        if (mContext == null) return;
+        if (mIsMute) return;
+        if (mOnlineStreamingActive) return;
+
+        try {
+            android.content.ContentResolver cr = mContext.getContentResolver();
+            int source = Settings.System.getInt(cr, KEY_MCU_CURRENT_SOURCE, -1);
+            int backSvc = Settings.System.getInt(cr, KEY_NWD_RADIO_BACK_SERVICE_ON, -1);
+
+            // Si ya está en radio, no forzar.
+            if (source == SOURCE_RADIO) {
+                return;
+            }
+            // Si hay back service ON pero fuente desconocida, evitamos interferir en caliente.
+            // Solo forzar si parece que la radio está "apagada" (backSvc==0) o sin dato.
+            if (backSvc == 1 && source == -1) {
+                return;
+            }
+        } catch (Throwable ignored) {
+            // Si no podemos leer settings, dejamos el arranque neutro (sin forzar audio).
+            return;
+        }
+
+        // Diferido: deja que el sistema asiente callbacks iniciales y evita choque con tune de arranque.
+        mMainHandler.postDelayed(() -> {
+            try {
+                if (mIsMute || mOnlineStreamingActive) return;
+                requestPlayAudio();
+            } catch (Throwable ignored) {}
+        }, 450L);
     }
 }

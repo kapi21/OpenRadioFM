@@ -202,6 +202,23 @@ public final class Qs6KernelMcuClient {
         return buildFmAction((byte) 0x08, (byte) (on ? 0x00 : 0x01));
     }
 
+    /**
+     * STEREO ON/OFF (experimental).
+     *
+     * En algunas unidades QS6, el control de estéreo está expuesto por la pila OEM; para ir "MCU first"
+     * probamos un dataType dedicado con 1 byte on/off.
+     *
+     * Nota: si el firmware no soporta este dataType, el motor debe hacer fallback a AIDL.
+     */
+    public static byte[] buildFmSetStereoOn(boolean on) {
+        // Experimental: len=4, dataType=0x10, payload[0]=1/0
+        byte[] frame = generateNullProtocal(/*aLength*/ 0x04, /*type*/ TYPE_FM, /*dataType*/ (byte) 0x10);
+        int off = getProtocalDataStartOffset();
+        frame[off] = (byte) (on ? 1 : 0);
+        calCheckSumAndWriteEndOfData(frame);
+        return frame;
+    }
+
     public static byte[] buildFmSetBackServiceOn(boolean on) {
         // OEM: len=4, dataType=0x00
         byte[] frame = generateNullProtocal(/*aLength*/ 0x04, /*type*/ TYPE_FM, /*dataType*/ (byte) 0x00);
