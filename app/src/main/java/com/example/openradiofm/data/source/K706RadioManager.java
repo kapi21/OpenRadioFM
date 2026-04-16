@@ -178,11 +178,20 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             }
             
             try {
-                // V18.5: CRÍTICO - Solo recuperar si REALMENTE tenemos el foco de audio.
-                // Si el sistema nos dio LOSS, no debemos intentar recuperar el canal de radio.
+                // En algunas ROMs (Android Auto / Zlink) el callback de GAIN puede no llegar.
+                // Recuperación proactiva: intentar pedir AudioFocus; si no se concede, reintentar con backoff.
                 if (!mIsAudioFocusHeld) {
-                    Log.d(TAG, "OEM AutoRecovery: abortado (no tenemos el foco de audio)");
-                    return;
+                    try {
+                        requestAudioFocus();
+                    } catch (Exception ignored) {}
+                    if (!mIsAudioFocusHeld) {
+                        Log.d(TAG, "OEM AutoRecovery: sin AudioFocus todavía (reintentando más tarde)");
+                        // Programar siguiente intento (sin tocar MCU mientras no tengamos el foco)
+                        if (mAutoRecoveryAttempts < 4) {
+                            mAudioRecoveryHandler.postDelayed(this, delayMs);
+                        }
+                        return;
+                    }
                 }
 
                 Log.d(TAG, "OEM AutoRecovery: intento " + mAutoRecoveryAttempts + " (recuperando canal FM)");

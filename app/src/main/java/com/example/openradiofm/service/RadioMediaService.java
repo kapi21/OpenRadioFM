@@ -489,6 +489,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private void handleWidgetSeek(int direction) {
         try {
             Log.i(TAG, "handleWidgetSeek direction=" + direction + " engine=" + (mEngine != null));
+            // K706 OEM widget: asegurar FGS + sesión activa antes del comando.
+            // Evita timeouts de startForegroundService() y mejora routing como "last audio source".
+            try { forceSessionActiveForSteering(); } catch (Exception ignored) {}
             maybeStartEngine();
             if (mEngine != null) {
                 if (direction > 0) mEngine.seekUp();
@@ -505,6 +508,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     private void handleWidgetToggleMute() {
         try {
+            try { forceSessionActiveForSteering(); } catch (Exception ignored) {}
             // Reutilizar semántica de PLAY/PAUSE: PLAY=unmute, PAUSE=mute.
             if (mUserPaused) {
                 handlePlay();
@@ -881,6 +885,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private void handleWidgetPresetSkip(int direction) {
         if (direction == 0) return;
         try {
+            try { forceSessionActiveForSteering(); } catch (Exception ignored) {}
             if (mEngine != null) {
                 boolean moved = direction > 0 ? playSequentialPreset(+1) : playSequentialPreset(-1);
                 if (!moved) {
