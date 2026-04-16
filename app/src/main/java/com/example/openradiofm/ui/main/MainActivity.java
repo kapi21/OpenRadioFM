@@ -772,10 +772,15 @@ public class MainActivity extends AppCompatActivity  {
                 // Ventana corta sin bind; luego reconexi├│n AIDL (o al volver a primer plano).
                 com.example.openradiofm.data.source.MT8163Engine.setBlockHcnServiceBindAfterStreamEnd(true);
                 try {
-                    android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
-                    wakeIntent.setPackage("com.hcn.autoradio");
-                    wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-                    sendBroadcast(wakeIntent);
+                    boolean mcuDirect = false;
+                    try { mcuDirect = getSharedPreferences("RadioPresets", MODE_PRIVATE).getBoolean("pref_mt8163_mcu_direct", false); }
+                    catch (Exception ignored) {}
+                    if (!mcuDirect) {
+                        android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
+                        wakeIntent.setPackage("com.hcn.autoradio");
+                        wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+                        sendBroadcast(wakeIntent);
+                    }
                 } catch (Exception ignored) {}
                 mMainHandler.removeCallbacks(mHcnPostStreamReconnectRunnable);
                 mMainHandler.postDelayed(

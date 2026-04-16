@@ -235,6 +235,17 @@
                 app:trackTint="#3300FF00" />
 
             <androidx.appcompat.widget.SwitchCompat
+                android:id="@+id/swMt8163McuDirect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="MT8163: MCU-first (sin com.hcn.autoradio, usar RadioPlayer directo)"
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                app:thumbTint="#00FF00"
+                app:trackTint="#3300FF00" />
+
+            <androidx.appcompat.widget.SwitchCompat
                 android:id="@+id/swMtk8259V5StreamMixerCompat"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

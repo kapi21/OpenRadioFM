@@ -47,6 +47,7 @@ public class EngineeringModeDialog extends Dialog {
 
     // Dev toggles (MT8163)
     private SwitchCompat swMt8163GlobalStreamMute;
+    private SwitchCompat swMt8163McuDirect;
     // Dev toggle (MTK8259)
     private SwitchCompat swMtk8259V5StreamMixerCompat;
     private SwitchCompat swDevAutoScanEnabled;
@@ -119,6 +120,7 @@ public class EngineeringModeDialog extends Dialog {
 
         // Dev toggles
         swMt8163GlobalStreamMute = findViewById(R.id.swMt8163GlobalStreamMute);
+        swMt8163McuDirect = findViewById(R.id.swMt8163McuDirect);
         swMtk8259V5StreamMixerCompat = findViewById(R.id.swMtk8259V5StreamMixerCompat);
         swDevAutoScanEnabled = findViewById(R.id.swDevAutoScanEnabled);
         swDevDayModeEnabled = findViewById(R.id.swDevDayModeEnabled);
@@ -159,6 +161,18 @@ public class EngineeringModeDialog extends Dialog {
                 if (checked) {
                     logEvent("WARN", "STREAM_MUSIC mute ON: puede silenciar Spotify/BT/Android Auto");
                 }
+            });
+        }
+
+        if (swMt8163McuDirect != null) {
+            boolean enabled = false;
+            try { enabled = mPrefs.getBoolean("pref_mt8163_mcu_direct", false); }
+            catch (Exception ignored) {}
+            swMt8163McuDirect.setChecked(enabled);
+            swMt8163McuDirect.setOnCheckedChangeListener((btn, checked) -> {
+                try { mPrefs.edit().putBoolean("pref_mt8163_mcu_direct", checked).apply(); } catch (Exception ignored) {}
+                logEvent("DEV", "pref_mt8163_mcu_direct=" + checked);
+                logEvent("INFO", "Reinicia la app para aplicar (MT8163 sin com.hcn.autoradio)");
             });
         }
 

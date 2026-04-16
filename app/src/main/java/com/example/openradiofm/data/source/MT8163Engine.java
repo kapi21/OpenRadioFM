@@ -33,6 +33,10 @@ public class MT8163Engine implements RadioEngine {
     private RadioEngineCallback mCallback;
     private boolean mBound = false;
     private boolean mExternalService = false;
+    /** true: no usar FMPlugService (com.hcn.autoradio); controlar vía RadioPlayer directo. */
+    private boolean mPreferDirectRadioPlayer = false;
+    /** Última banda UI (0=FM1,1=FM2,2=FM3,3=AM1) cuando vamos por RadioPlayer. */
+    private int mLastUiBand = 0;
     
     // V21.3: Estado de recuperación diferida para reconexión asíncrona
     private boolean mPendingAudioRecovery = false;
@@ -157,6 +161,10 @@ public class MT8163Engine implements RadioEngine {
         @Override
         public void run() {
             if (mContext == null || mExternalService) return;
+            if (mPreferDirectRadioPlayer) {
+                Log.i(TAG, "Reconexión HCN omitida (pref_mt8163_mcu_direct=true)");
+                return;
+            }
             if (mBound && mService != null) return;
             Log.w(TAG, "Reconectando servicio HCN (Estaba muerto)...");
             try {
@@ -285,8 +293,17 @@ public class MT8163Engine implements RadioEngine {
     public boolean init(Context context) {
         mContext = context;
 
+        // Preferencia: “MCU first” (sin dependencia del servicio com.hcn.autoradio).
+        try {
+            mPreferDirectRadioPlayer = context
+                    .getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                    .getBoolean("pref_mt8163_mcu_direct", false);
+        } catch (Exception ignored) {
+            mPreferDirectRadioPlayer = false;
+        }
+
         // 1. Conectar con servicio HCN del sistema (tune, seek, band)
-        if (!mExternalService) {
+        if (!mExternalService && !mPreferDirectRadioPlayer) {
             try {
                 Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
                 intent.setPackage("com.hcn.autoradio");
@@ -295,7 +312,7 @@ public class MT8163Engine implements RadioEngine {
             } catch (Exception e) {
                 Log.e(TAG, "No se pudo conectar al servicio HCN", e);
             }
-        } else {
+        } else if (mExternalService) {
             // Si el servicio es externo, registrar el callback de todas formas
             try {
                 mService.registerRadioCallback(new IRadioCallBack.Stub() {
@@ -307,6 +324,8 @@ public class MT8163Engine implements RadioEngine {
             } catch (RemoteException e) {
                 Log.e(TAG, "Error registrando callback AIDL externo", e);
             }
+        } else {
+            Log.i(TAG, "MT8163: pref_mt8163_mcu_direct=true -> omitiendo bind a com.hcn.autoradio");
         }
 
         // 2. Inicializar HiddenRadioPlayer (RDS AF/TA via RadioPlayer oculto)
@@ -479,17 +498,24 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void tune(int freqKhz) {
+        resetRdsUI();
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            boolean ok = mHiddenPlayer.tune(freqKhz);
+            if (ok) {
+                if (mCallback != null) mCallback.onFrequencyChanged(freqKhz);
+                return;
+            }
+        }
         // Snapshot antes de resetRdsUI(): el callback RDS puede llamar getCurrentFreq() y
         // handleDeadService() deja mService=null antes de llegar a gotoFreq (reentrada).
         IRadioServiceAPI svc = mService;
         if (svc == null) return;
-        resetRdsUI();
-        try { 
-            svc.gotoFreq(freqKhz); 
+        try {
+            svc.gotoFreq(freqKhz);
         } catch (android.os.DeadObjectException e) {
             handleDeadService("tune", e);
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en tune", e); 
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException en tune", e);
         }
         startFreqPolling();
     }
@@ -532,17 +558,47 @@ public class MT8163Engine implements RadioEngine {
         mPollingHandler.postDelayed(mPollingRunnable, 100);
     }
 
+    private void startDirectFreqPolling() {
+        ensurePollingThread();
+        if (mPollingHandler == null) return;
+        if (mPollingRunnable != null) {
+            mPollingHandler.removeCallbacks(mPollingRunnable);
+        }
+        mPollingTicks = 0;
+        mPollingRunnable = new Runnable() {
+            @Override
+            public void run() {
+                if (!mPreferDirectRadioPlayer || mHiddenPlayer == null) return;
+                Integer f = mHiddenPlayer.getCurrentFreqKhz();
+                if (f != null && f > 0 && f != mLastPolledFreq) {
+                    mLastPolledFreq = f;
+                    if (mCallback != null) mCallback.onFrequencyChanged(f);
+                }
+                // ventana corta (4s) igual que AIDL
+                mPollingTicks++;
+                if (mPollingTicks < 40) {
+                    mPollingHandler.postDelayed(this, 100);
+                }
+            }
+        };
+        mPollingHandler.postDelayed(mPollingRunnable, 100);
+    }
+
     @Override
     public int getCurrentFreq() {
         if (mIsOnlineStreamingActive && mLastPolledFreq > 0) return mLastPolledFreq;
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            Integer f = mHiddenPlayer.getCurrentFreqKhz();
+            if (f != null && f > 0) return f;
+        }
         if (mService == null) return 0;
-        try { 
-            return mService.getCurrentFreq(); 
+        try {
+            return mService.getCurrentFreq();
         } catch (android.os.DeadObjectException e) {
             handleDeadService("getCurrentFreq", e);
             return 0;
-        } catch (RemoteException e) { 
-            return 0; 
+        } catch (RemoteException e) {
+            return 0;
         }
     }
 
@@ -562,91 +618,113 @@ public class MT8163Engine implements RadioEngine {
     
     @Override
     public void seekUp() {
+        resetRdsUI();
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            if (mHiddenPlayer.seekUp()) {
+                startDirectFreqPolling();
+                return;
+            }
+        }
         IRadioServiceAPI svc = mService;
         if (svc == null) return;
-        resetRdsUI();
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current + 100);
-        try { 
-            svc.onSeekDownEvent(); 
+        try {
+            // MT8163: en AIDL, seekUp debe llamar onSeekUpEvent (estaba invertido).
+            svc.onSeekUpEvent();
         } catch (android.os.DeadObjectException e) {
             handleDeadService("seekUp", e);
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en seekUp"); 
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException en seekUp");
         }
         startFreqPolling();
     }
 
     @Override
     public void seekDown() {
+        resetRdsUI();
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            if (mHiddenPlayer.seekDown()) {
+                startDirectFreqPolling();
+                return;
+            }
+        }
         IRadioServiceAPI svc = mService;
         if (svc == null) return;
-        resetRdsUI();
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current - 100);
-        try { 
-            svc.onSeekUpEvent(); 
+        try {
+            // MT8163: en AIDL, seekDown debe llamar onSeekDownEvent (estaba invertido).
+            svc.onSeekDownEvent();
         } catch (android.os.DeadObjectException e) {
             handleDeadService("seekDown", e);
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en seekDown"); 
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException en seekDown");
         }
         startFreqPolling();
     }
 
     @Override
     public void stepUp() {
+        resetRdsUI();
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            // Notificar inmediata para “sensación” + polling para corrección.
+            int current = getCurrentFreq();
+            if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current + 100);
+            if (mHiddenPlayer.stepUp()) {
+                startDirectFreqPolling();
+                return;
+            }
+        }
         IRadioServiceAPI svc = mService;
         if (svc == null) return;
-        resetRdsUI();
         // V16.2: Notificar frecuencia inmediata para sensación de movimiento
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) {
             mCallback.onFrequencyChanged(current + 100);
         }
-        try { 
-            svc.onManualUpEvent(); 
+        try {
+            svc.onManualUpEvent();
         } catch (android.os.DeadObjectException e) {
             handleDeadService("stepUp", e);
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en stepUp"); 
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException en stepUp");
         }
         startFreqPolling();
     }
 
     @Override
     public void stepDown() {
+        resetRdsUI();
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            int current = getCurrentFreq();
+            if (current > 0 && mCallback != null) mCallback.onFrequencyChanged(current - 100);
+            if (mHiddenPlayer.stepDown()) {
+                startDirectFreqPolling();
+                return;
+            }
+        }
         IRadioServiceAPI svc = mService;
         if (svc == null) return;
-        resetRdsUI();
         // V16.2: Notificar frecuencia inmediata para sensación de movimiento
         int current = getCurrentFreq();
         if (current > 0 && mCallback != null) {
             mCallback.onFrequencyChanged(current - 100);
         }
-        try { 
-            svc.onManualDownEvent(); 
+        try {
+            svc.onManualDownEvent();
         } catch (android.os.DeadObjectException e) {
             handleDeadService("stepDown", e);
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en stepDown"); 
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException en stepDown");
         }
         startFreqPolling();
     }
 
     @Override
     public void scan() {
-        IRadioServiceAPI svc = mService;
-        if (svc == null) return;
-        resetRdsUI();
-        try { 
-            svc.onScanEvent(); 
-        } catch (android.os.DeadObjectException e) {
-            handleDeadService("scan", e);
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en scan"); 
-        }
-        startFreqPolling();
+        // Consigna: el autoscan lo gestiona ScanManager (software). No usar OEM (ni AIDL ni RadioPlayer).
+        Log.d(TAG, "scan(): no-op (ScanManager propio)");
     }
 
     @Override
@@ -663,13 +741,41 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void bandCycle() {
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            // MCU-direct (HiddenRadioPlayer): algunos firmwares MT8163 no tienen FM3.
+            // Ciclo tolerante: FM1 -> FM2 -> (FM3 si existe) -> FM1. Si falla, caer a FM1 o AM1 si existe.
+            String cur = mHiddenPlayer.getUiBandName();
+            String[] candidates;
+            if ("FM2".equals(cur)) {
+                candidates = new String[] { "FM3", "FM1", "AM1", "FM2" };
+            } else if ("FM3".equals(cur)) {
+                candidates = new String[] { "FM1", "FM2", "AM1", "FM3" };
+            } else if ("AM1".equals(cur) || "AM".equals(cur)) {
+                candidates = new String[] { "FM1", "FM2", "FM3", "AM1" };
+            } else {
+                // FM1 o null -> FM2 (comportamiento histórico)
+                candidates = new String[] { "FM2", "FM3", "FM1", "AM1" };
+            }
+            Integer freq = mHiddenPlayer.getCurrentFreqKhz();
+            for (String next : candidates) {
+                if (mHiddenPlayer.setUiBandKeepFreq(next, freq)) {
+                    if ("FM1".equals(next)) mLastUiBand = 0;
+                    else if ("FM2".equals(next)) mLastUiBand = 1;
+                    else if ("FM3".equals(next)) mLastUiBand = 2;
+                    else if ("AM1".equals(next) || "AM".equals(next)) mLastUiBand = 3;
+                    if (mCallback != null) mCallback.onBandChanged(mLastUiBand);
+                    startDirectFreqPolling();
+                    return;
+                }
+            }
+        }
         if (mService == null) return;
-        try { 
-            mService.onBandEvent(); 
+        try {
+            mService.onBandEvent();
         } catch (android.os.DeadObjectException e) {
             handleDeadService("bandCycle", e);
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en bandCycle"); 
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException en bandCycle");
         }
     }
 
@@ -677,14 +783,18 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public boolean isStereo() {
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            Boolean s = mHiddenPlayer.isStereo();
+            if (s != null) return s;
+        }
         if (mService == null) return false;
-        try { 
-            return mService.IsStereo(); 
+        try {
+            return mService.IsStereo();
         } catch (android.os.DeadObjectException e) {
             mService = null;
             return false;
-        } catch (RemoteException e) { 
-            return false; 
+        } catch (RemoteException e) {
+            return false;
         }
     }
 
@@ -697,24 +807,42 @@ public class MT8163Engine implements RadioEngine {
     public void setMute(boolean mute) {
         if (mHiddenPlayer != null) mHiddenPlayer.setMute(mute);
         
-        // V18.6: Fallback para MT8163 enviando parámetros directos al AudioManager
+        // Fallback para MT8163: parámetros directos al AudioManager (el audio FM suele ir por HAL, no por STREAM_MUSIC).
         if (mAudioManager != null) {
             try {
-                // Restauramos lógica v18.6: NO apagar fm_radio_on durante el mute para evitar pops/demoras.
-                // Usamos fm_radio_on=1 siempre mientras estemos en modo Radio.
-                final String params = "fm_radio_on=1;fm_mute=" + (mute ? "1" : "0");
-                mAudioManager.setParameters(params);
+                // Algunas ROMs ignoran el formato con ';' pero aceptan claves sueltas. Probamos ambos.
+                // Importante: NO apagar fm_radio_on durante el mute para evitar pops/demoras.
+                final String v = mute ? "1" : "0";
+                final String paramsA = "fm_radio_on=1;fm_mute=" + v;
+                final String paramsB = "fm_mute=" + v;
+                final String paramsC = "hcn_fm_mute=" + v;
+
+                mAudioManager.setParameters(paramsA);
+                mAudioManager.setParameters(paramsB);
+                mAudioManager.setParameters(paramsC);
                 
                 // Reintento corto para asegurar que el DSP procesa el cambio
                 if (mPollingHandler != null) {
                     mPollingHandler.postDelayed(() -> {
-                        try { mAudioManager.setParameters(params); } catch (Exception ignored) {}
+                        try {
+                            mAudioManager.setParameters(paramsA);
+                            mAudioManager.setParameters(paramsB);
+                            mAudioManager.setParameters(paramsC);
+                        } catch (Exception ignored) {}
                     }, 120);
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error setMute (AudiorManager fallback)", e);
             }
         }
+
+        // Extra: algunos firmwares solo aplican mute correctamente si el routing FM está activo.
+        // Reforzar el estado base del HAL sin tocar audio focus ni forzar requestPlayAudio.
+        try {
+            if (mAudioManager != null) {
+                mAudioManager.setParameters("fm_radio_on=1");
+            }
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -864,26 +992,39 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void toggleDxLocal() {
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            Boolean cur = mHiddenPlayer.isLocal();
+            boolean targetLocal = (cur == null) ? !isDxLocal() : !cur;
+            if (mHiddenPlayer.setLocal(targetLocal)) {
+                if (mCallback != null) mCallback.onDxLocalChanged(targetLocal);
+                return;
+            }
+        }
         if (mService == null) return;
-        try { 
-            mService.onLocDxEvent(); 
+        try {
+            mService.onLocDxEvent();
         } catch (android.os.DeadObjectException e) {
             mService = null;
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en toggleDxLocal"); 
+        } catch (RemoteException e) {
+            Log.e(TAG, "RemoteException en toggleDxLocal");
         }
     }
 
     @Override
     public boolean isDxLocal() {
+        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
+            Boolean v = mHiddenPlayer.isLocal();
+            if (v != null) return v;
+            return false;
+        }
         if (mService == null) return false;
-        try { 
-            return mService.IsDxLocal(); 
+        try {
+            return mService.IsDxLocal();
         } catch (android.os.DeadObjectException e) {
             mService = null;
             return false;
-        } catch (RemoteException e) { 
-            return false; 
+        } catch (RemoteException e) {
+            return false;
         }
     }
 
@@ -891,24 +1032,19 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void gotoPreset(int index) {
-        if (mService == null) return;
-        try { 
-            mService.gotoFreqIndex(index); 
-        } catch (android.os.DeadObjectException e) {
-            mService = null;
-        } catch (RemoteException e) { 
-            Log.e(TAG, "RemoteException en gotoPreset"); 
-        }
+        // Consigna: presets los gestiona MainActivity/PresetManager (software), no el OEM.
+        Log.d(TAG, "gotoPreset(" + index + "): no-op (usa MainActivity presets)");
     }
 
     @Override
     public void nextFavorite() {
-        if (mHiddenPlayer != null) mHiddenPlayer.next();
+        // Consigna: favoritos/presets son software; no navegar lista interna del chip/OEM.
+        Log.d(TAG, "nextFavorite(): no-op (usa MainActivity presets)");
     }
 
     @Override
     public void prevFavorite() {
-        if (mHiddenPlayer != null) mHiddenPlayer.prev();
+        Log.d(TAG, "prevFavorite(): no-op (usa MainActivity presets)");
     }
 
     // === Callbacks ===
