@@ -181,6 +181,28 @@ Notas:
 - `RADIO_INFO` y `BACK_ON/OFF` pueden **no tener efecto visible en UI** si solo disparan refresco interno del stack OEM o flags de “background service”, no parámetros audibles.
 - Falta documentar aquí (cuando lo tengas a mano) **modelo exacto + build** para que el hallazgo sea reproducible en soporte.
 
+### Botonera de desarrollo QS6: efectos observados (unidad real)
+
+Tabla de referencia rápida (botón → comando → efecto). Donde el “comando” es el mapeo del protocolo NWD documentado arriba; cuando no está mapeado en este informe aún, se deja como “(sin mapear)”.
+
+| Botón (UI dev) | Comando / payload (NWD) | Efecto observado |
+|---|---|---|
+| `LOC` / `DX` | `TYPE_FM(0x03) dataType=0x01 (ACTION)` + `actionType=0x08` (Near/LOC‑DX), `actionValue=0/1` | **Lógica invertida** (se comportan al revés de lo esperado). |
+| `INTRO` | `TYPE_FM(0x03) dataType=0x01 (ACTION)` + `(actionType=0x07, actionValue=0x01)` | No hace “intro/scan” observable; termina en **87.5**. |
+| `AIDL INTRO` | Igual que `INTRO` pero enviado por AIDL `IKernelFeature.request([B)` | Se va a **87.5**. |
+| `RDS=0` | `TYPE_FM(0x03) dataType=0x08 (SetRDSState)` + `rdsState=0` | **Desactiva AF y TA**. |
+| `RDS=7` | `TYPE_FM(0x03) dataType=0x08 (SetRDSState)` + `rdsState=7` | **Activa AF y TA**. |
+| `RDS^1` | `TYPE_FM(0x03) dataType=0x08 (SetRDSState)` + `rdsState=1` | **Activa AF**. |
+| `RDS^2` | `TYPE_FM(0x03) dataType=0x08 (SetRDSState)` + `rdsState=2` | **Activa TA**. |
+| `RDS^4` | `TYPE_FM(0x03) dataType=0x08 (SetRDSState)` + `rdsState=4` | **Sin efecto observable**. |
+| `PTY << / >>` | `TYPE_FM(0x03) dataType=0x09 (SetPTYIndex)` + `idx` | Selecciona “estilo/tipo” (índices **1–30**). |
+| `SAVE_P1` | `TYPE_FM(0x03) dataType=0x0C (SaveCurrentFrequency)` + `(band/index) + freq` | Se interpreta como **guardar preset/memoria** del dispositivo. |
+| `STEREO ON` | (sin mapear en este informe) | **Activa estéreo**. |
+| `STEREO OFF` | (sin mapear en este informe) | **Desactiva estéreo**. |
+| `AIDL REFRESH` | (sin mapear en este informe) | Se percibe como **reinicio/refresco** del sistema de radio. |
+| `PREFEB` | (sin mapear en este informe) | **Sin efecto observable** (probable falta de datos en memoria interna). |
+| `STOP SEARCH` | (sin mapear en este informe) | **Detiene** la búsqueda si hay una búsqueda activa. |
+
 ## Riesgos / puntos abiertos
 
 - **Acceso third‑party**:
@@ -192,6 +214,12 @@ Notas:
     - si `KernelService` ofrece callback AIDL
     - si el OEM publica estado en `Settings.System` / propiedades / broadcasts
     - si el propio `RadioService` OEM es el que expone callbacks (y KernelService solo TX/RX interno).
+  - Estado actual en OpenRadioFM (QS6):
+    - TX: se puede enviar por `KernelService` (MCU directo) con `Qs6KernelMcuClient`.
+    - RX: si no se dispone de frames MCU para third‑party, se usa un enfoque “shadow” para reducir dependencia del servicio AIDL:
+      - `Settings.System.nwd_radio_current_freq` / `nwd_radio_current_band` para refresco de frecuencia/banda
+      - `Settings.System.nwd_radio_current_ps_data` (PS en hex, 8 bytes) para nombre de emisora (RDS PS)
+      - (Opcional, dependiente de firmware) `nwd_radio_current_rt_message`, `nwd_radio_current_pty`
 - **Checksum/longitudes**:
   - Se implementó el checksum “suma OEM” para frames cortos. Si algún firmware usa variante distinta para ciertos tipos, habría que ajustar.
 - **Unidades de frecuencia**:

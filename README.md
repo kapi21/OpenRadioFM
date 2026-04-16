@@ -186,6 +186,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **AutoScan (Smart v2)**: ⏸️ **En estudio** por defecto. Desde **v5.0.11**, en los **menús de ingeniería** (pulsación larga en GPS) puedes activar *Modo AutoScan* para usar el botón de escaneo en la UI principal de forma experimental (`pref_dev_autoscan_enabled` en **RadioPresets**).
 - **Audio QS6 (Qualcomm / NWD)**: ⚠️ Comportamiento dependiente del firmware; se sigue probando **cambio de fuente** (`ACTION_CHANGE_SOURCE`), foco y rutas de recuperación. Reporta modelo + build si falla el audio tras sintonizar.
 - **QS6 / rama MCU2 — KernelService (experimental)**: el menú de ingeniería QS6 incluye pruebas hacia el servicio OEM **KernelService** (tramas FM al MCU) y atajos **AIDL** / broadcast para avanzar hacia **no depender de la app de radio nativa**. Resumen en `QS6_MCU_KERNELSERVICE_INFORME.md`.
+- **K706 / widget OEM (QuickFish)**: en algunas ROMs el broadcast `com.qf.radio.update_action` está protegido por permisos de sistema; en `MCU2` se evita reintentar tras `SecurityException` (menos spam de logs). Además, se interceptan acciones del widget OEM (`/customize/radio/*`) para reenviar a OpenRadioFM.
 
 ---
 

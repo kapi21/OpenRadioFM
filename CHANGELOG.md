@@ -4,6 +4,9 @@
 - **ACC (K706)**: `0x24` tratado como **ACC** y expuesto como evento `125` (pipeline Engine → UI/Servicio). Se incluye en el estado compartido (`RadioSessionState.accOn`).
 - **Estado único (UI + Service)**: `RadioMediaService` y `MainActivity` comparten el mismo `RadioSessionController` para evitar estados divergentes.
 - **MediaSession**: el servicio es la **fuente de verdad** de metadata/Now Playing; se ignoran updates externos vía `ACTION_UPDATE_METADATA`.
+- **Widget OEM QuickFish (K706)**:
+  - Recepción de acciones del widget del launcher (`/customize/radio/*`) mediante `OemRadioWidgetReceiver` (prev/next/seek/mute), reenrutadas a `RadioMediaService`.
+  - Endurecimiento frente a ROMs que bloquean `com.qf.radio.update_action`: si el broadcast falla por `SecurityException`, se **deshabilitan reintentos** para evitar spam/binder flood.
 
 ### QS6 / NWD — KernelService y menú de ingeniería (sustituir radio OEM)
 - **`Qs6KernelMcuClient`**: cliente experimental hacia `com.nwd.kernel.service.KernelService` / `IKernelFeature.request([B)` (Binder `transact`), para enviar tramas FM al MCU sin abrir la app nativa.
@@ -11,6 +14,16 @@
 - **Sesión Kernel**: el bind al `KernelService` se mantiene entre cierres del diálogo de desarrollo; se libera al destruir `MainActivity` en modo QS6 (`QS6EngineeringDialog.releaseSharedKernelClient()`).
 - **Documentación**: `QS6_MCU_KERNELSERVICE_INFORME.md` (protocolo, validación en hardware,riesgos RX).
 - **`NWDTunerAdapter`**: métodos auxiliares para ingeniería (`setStereoOn`, `prefeb`, `saveCurrentFrequency`, `getDebugStatus`).
+- **QS6Engine “MCU-first” (híbrido)**: preferencia por órdenes vía `KernelService` (tune/seek/band/dx-local/stereo) con fallback a AIDL; RX complementario por `Settings.System` (freq/band/PS y claves opcionales RT/PTY si existen) para reducir dependencia de callbacks OEM.
+
+### MT8163 / HCN — MCU-first (sin com.hcn.autoradio)
+- **HiddenRadioPlayer**: ampliado con control directo (tune/seek/step/band/local/estado) vía reflexión sobre `android.radio.RadioPlayer`.
+- **Preferencia `pref_mt8163_mcu_direct`**: modo experimental para **omitir** el bind a `com.hcn.autoradio` y operar por RadioPlayer; toggle en menú de ingeniería (requiere reinicio de la app).
+- **Correcciones AIDL**: fix de inversión de `seekUp/seekDown` en `MT8163Engine` y ajuste para que `ScanManager` (software) sea la única fuente de AutoScan/presets.
+
+### Accesibilidad (volante / teclas de medios)
+- **FactoryRadioHijackerService**: solicitud reforzada de `FLAG_REQUEST_FILTER_KEY_EVENTS` al conectar y log a nivel INFO para diagnósticos en ROMs que filtran DEBUG.
+- **Config**: `accessibility_service_config.xml` pasa a `typeAllMask` + `canRequestFilterKeyEvents=true` para mejorar compatibilidad con unidades OEM.
 - **Versión app (MCU2)**: `versionCode` **36**, `versionName` **5.1.4**.
 
 ## [5.2.0] - 2026-04-12
