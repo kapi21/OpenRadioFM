@@ -113,6 +113,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsRadioActive = false;
     private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
     private boolean mIsTransientFocusLoss = false; // V17.0: Spotify/Android Auto
+
+    // OEM parity: si perdimos foco de forma transitoria, la radio nativa “powerDown” y luego “powerUp” en GAIN.
+    // En OpenRadioFM lo modelamos como una suspensión temporal de FM (sin olvidar que el usuario quiere FM).
+    private boolean mPausedByTransientLossOfFocus = false;
+    // OEM parity: DUCK solo mutea, y al GAIN restaura sin re-rutear.
+    private boolean mMutedByDuck = false;
     
     // V24.3: RAW DATA LISTENERS (Engineering)
     public interface RawMcuListener {
@@ -262,14 +268,30 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS", e);
                         }
-                        // Importante: NO abandonar AudioFocus aquí.
-                        // Si abandonamos, no recibiremos AUDIOFOCUS_GAIN y la FM no podrá autorecuperar
-                        // al terminar una interrupción (Maps/Spotify/Android Auto).
+                        // OEM parity: LOSS es “permanente” → no autorecuperar (a diferencia de TRANSIENT).
+                        mPausedByTransientLossOfFocus = false;
+                        mMutedByDuck = false;
+                        // No abandonamos AudioFocus aquí para permitir que el sistema nos notifique GAIN;
+                        // pero tampoco intentamos recuperar automáticamente si no fue transitorio.
                         mIsAudioFocusHeld = false;
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS_TRANSIENT (" + focusChange + ")----");
+                        // OEM parity: distinguir DUCK (-3) de TRANSIENT (-2).
+                        if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                            // DUCK: solo mute temporal (no ceder canal completo).
+                            try {
+                                mMutedByDuck = true;
+                                setMute(true);
+                            } catch (Exception e) {
+                                Log.w(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: setMute(true) falló", e);
+                            }
+                            mIsAudioFocusHeld = false;
+                            broadcastOemFocus(EVENT_LOSS_TRANSIENT);
+                            break;
+                        }
+
                         broadcastOemFocus(EVENT_LOSS_TRANSIENT);
                         if (mIsOnlineStreamingActive) {
                             Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorando mute porque el Streaming Online está activo");
@@ -290,7 +312,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorado (startup/espurio). mIsRadioActive=false");
                             break;
                         }
-                        // En pérdida transitoria NO tenemos foco; evitamos recovery agresivo hasta GAIN.
+                        // En pérdida transitoria NO tenemos foco; suspendemos FM y marcamos para recovery en GAIN.
                         mIsAudioFocusHeld = false;
                         
                         // V17.0: Diferenciar llamada real de interrupción de música
@@ -304,19 +326,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         
                         try {
                             mWasRadioActiveBeforeFocusLoss = mIsRadioActive;
-                            mIsRadioActive = false; // Detener Heartbeat temporalmente
-                            if (mWasRadioActiveBeforeFocusLoss) {
-                                setMute(true);
-                            } else {
-                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: Skip setMute(true) (radio no activa)");
-                            }
-                            // V11.5: Soltar canal MCU para que BT/teléfono suene limpio
-                            if (mSetChannel != null && mMcuManager != null) {
-                                mSetChannel.invoke(mMcuManager, (byte) 4);
-                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: RPC_SetChannel(4) - canal FM liberado (mIsInCall=" + mIsInCall + ")");
-                            }
-                            // V18.4: Desmutear canal 4 para que Android/BT se oiga
-                            setMute(false);
+                            // OEM parity: powerDown temporal (cede canal a Android)
+                            mPausedByTransientLossOfFocus = (mWasRadioActiveBeforeFocusLoss || mUserWantsFmAudio);
+                            suspendFmForTransientFocusLoss();
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS_TRANSIENT", e);
                         }
@@ -335,14 +347,29 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         // Al recuperar foco, cancelamos backoff y forzamos recuperación inmediata.
                         mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
                         mAutoRecoveryAttempts = 0;
-                        // Forzar recuperación inmediata
-                        enforceAudioChannelRecovery();
-                        try {
-                            // Asegurar que el canal FM vuelve audible tras GAIN.
-                            if (mUserWantsFmAudio && !mIsOnlineStreamingActive) {
-                                setMute(false);
+                        // OEM parity: si veníamos de DUCK, solo desmutear.
+                        if (mMutedByDuck) {
+                            mMutedByDuck = false;
+                            try { setMute(false); } catch (Exception ignored) {}
+                            break;
+                        }
+
+                        // OEM parity: si veníamos de TRANSIENT, “powerUp” + unmute.
+                        if (mPausedByTransientLossOfFocus && mUserWantsFmAudio && !mIsOnlineStreamingActive) {
+                            mPausedByTransientLossOfFocus = false;
+                            try {
+                                // Recuperación rápida: evitar sleep dentro de la secuencia.
+                                startFmAudioSequence(/*fast*/ true);
+                            } catch (Exception e) {
+                                Log.w(TAG, "AUDIOFOCUS_GAIN: startFmAudioSequence(fast) falló, fallback enforceAudioChannelRecovery()", e);
+                                enforceAudioChannelRecovery();
                             }
-                        } catch (Exception ignored) {}
+                            try { setMute(false); } catch (Exception ignored) {}
+                            break;
+                        }
+
+                        // Fallback: recuperación inmediata de canal (BT/edge cases)
+                        enforceAudioChannelRecovery();
                         break;
                 }
             }
@@ -1431,6 +1458,14 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
      * causando que PID 4140 lo sobreescriba con SetChannel(4).
      */
     private void startFmAudioSequence() {
+        startFmAudioSequence(/*fast*/ false);
+    }
+
+    /**
+     * Variante para recuperación por AudioFocus: evita sleeps/bloqueos largos.
+     * En K706 el framework suele aplicar SetChannel(2) rápidamente tras requestAudioFocus.
+     */
+    private void startFmAudioSequence(boolean fast) {
         Log.d(TAG, "=== INICIO SECUENCIA AUDIO FM V7.2d ===");
 
         // 1. Silenciar primero
@@ -1457,12 +1492,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         requestAudioFocus();
         Log.d(TAG, "[3/7] requestAudioFocus - PID 4140 debería responder con SetChannel(2)");
 
-        // 4. Esperar un poco para que PID 4140 procese el AudioFocus
-        // y llame SetChannel(2) por nosotros
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            // ignore
+        // 4. Esperar un poco para que PID 4140 procese el AudioFocus y llame SetChannel(2) por nosotros.
+        // En recuperación por foco preferimos no bloquear (fast=true).
+        if (!fast) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {}
         }
 
         // 5. Verificar si PID 4140 ya activó el canal FM
@@ -1582,6 +1617,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM (Teardown V9.5) ===");
         mIsRadioActive = false; // V9.9: Limpiar flag activo inmediatamente
         mUserWantsFmAudio = false;
+        mPausedByTransientLossOfFocus = false;
+        mMutedByDuck = false;
         mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
         mAutoRecoveryAttempts = 0;
         try {
@@ -1602,6 +1639,29 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.w(TAG, "Teardown error", e);
             try { setMute(false); } catch (Exception ignored) {}
+        }
+    }
+
+    /**
+     * Suspende temporalmente la FM por pérdida transitoria de AudioFocus (Maps/AA/Spotify).
+     * Clava la OEM: baja el "power" del audio FM y cede el canal a Android.
+     *
+     * Importante: NO borra {@link #mUserWantsFmAudio}; esto permite recuperar en AUDIOFOCUS_GAIN.
+     */
+    private void suspendFmForTransientFocusLoss() {
+        try {
+            // “PowerDown” temporal: mute -> fm_radio_on=0 -> SetChannel(4) -> unmute (para que Android suene)
+            setMute(true);
+            setAudioParams(false);
+            if (mSetChannel != null && mMcuManager != null) {
+                mSetChannel.invoke(mMcuManager, (byte) 4);
+            }
+            setMute(false);
+        } catch (Exception e) {
+            Log.w(TAG, "suspendFmForTransientFocusLoss falló", e);
+            try { setMute(false); } catch (Exception ignored) {}
+        } finally {
+            mIsRadioActive = false;
         }
     }
 
