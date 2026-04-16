@@ -262,14 +262,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS", e);
                         }
-                        // OEM: no dependas de recreación de layout para volver a sonar.
-                        // Programamos intentos de autorecuperación si el usuario quería FM.
-                        if (mUserWantsFmAudio) {
-                            mAutoRecoveryAttempts = 0;
-                            mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
-                            mAudioRecoveryHandler.postDelayed(mAutoRecoveryRunnable, 1500L);
-                        }
-                        abandonAudioFocus();
+                        // Importante: NO abandonar AudioFocus aquí.
+                        // Si abandonamos, no recibiremos AUDIOFOCUS_GAIN y la FM no podrá autorecuperar
+                        // al terminar una interrupción (Maps/Spotify/Android Auto).
+                        mIsAudioFocusHeld = false;
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
@@ -294,7 +290,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorado (startup/espurio). mIsRadioActive=false");
                             break;
                         }
-                        mIsAudioFocusHeld = true;
+                        // En pérdida transitoria NO tenemos foco; evitamos recovery agresivo hasta GAIN.
+                        mIsAudioFocusHeld = false;
                         
                         // V17.0: Diferenciar llamada real de interrupción de música
                         if (mAudioManager.isMusicActive()) {
@@ -340,6 +337,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         mAutoRecoveryAttempts = 0;
                         // Forzar recuperación inmediata
                         enforceAudioChannelRecovery();
+                        try {
+                            // Asegurar que el canal FM vuelve audible tras GAIN.
+                            if (mUserWantsFmAudio && !mIsOnlineStreamingActive) {
+                                setMute(false);
+                            }
+                        } catch (Exception ignored) {}
                         break;
                 }
             }
