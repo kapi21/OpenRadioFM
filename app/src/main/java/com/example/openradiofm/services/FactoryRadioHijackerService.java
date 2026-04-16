@@ -9,6 +9,7 @@ import android.os.PowerManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.accessibility.AccessibilityEvent;
+import android.accessibilityservice.AccessibilityServiceInfo;
 
 import com.example.openradiofm.service.RadioMediaService;
 import com.example.openradiofm.ui.main.MainActivity;
@@ -185,17 +186,10 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     protected boolean onKeyEvent(KeyEvent event) {
         try {
             if (event == null) return false;
-            if (MainActivity.sMainActivityResumed) {
-                return false;
-            }
-            if (!MainActivity.sWheelMediaBridgeActive) {
-                return false;
-            }
+            final boolean resumed = MainActivity.sMainActivityResumed;
+            final boolean bridge = MainActivity.sWheelMediaBridgeActive;
             SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
             if (!p.getBoolean(PREF_FORWARD_MEDIA_KEYS, true)) {
-                return false;
-            }
-            if (event.getAction() != KeyEvent.ACTION_DOWN) {
                 return false;
             }
             int code = event.getKeyCode();
@@ -210,6 +204,20 @@ public class FactoryRadioHijackerService extends AccessibilityService {
                 return false;
             }
 
+            // Log siempre visible: en muchas ROM el usuario filtra por INFO y no ve DEBUG.
+            try {
+                Log.i(TAG, "onKeyEvent MEDIA keyCode=" + code
+                        + " action=" + event.getAction()
+                        + " resumed=" + resumed
+                        + " bridge=" + bridge);
+            } catch (Exception ignored) {}
+
+            // Solo reenviar cuando la UI no está al frente; si la Activity está en foreground,
+            // dejamos que su propio onKeyDown/onKeyUp lo gestione.
+            if (resumed) return false;
+            if (!bridge) return false;
+            if (event.getAction() != KeyEvent.ACTION_DOWN) return false;
+
             Intent svc = new Intent(this, RadioMediaService.class);
             svc.setAction(Intent.ACTION_MEDIA_BUTTON);
             svc.putExtra(Intent.EXTRA_KEY_EVENT, event);
@@ -218,7 +226,7 @@ public class FactoryRadioHijackerService extends AccessibilityService {
             } else {
                 startService(svc);
             }
-            Log.d(TAG, "MEDIA key reenviada a RadioMediaService (keyCode=" + code + ")");
+            Log.i(TAG, "MEDIA key reenviada a RadioMediaService (keyCode=" + code + ")");
             return true;
         } catch (Exception e) {
             Log.w(TAG, "onKeyEvent forward falló", e);
@@ -230,6 +238,24 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     protected void onServiceConnected() {
         super.onServiceConnected();
         HiHackBootReminder.persistEverEnabled(this);
+        // K706/QS6 OEM: asegurar que se solicita filtrado de teclas aunque algunas ROM ignoren el XML.
+        // Esto es imprescindible para capturar KEYCODE_MEDIA_* cuando el launcher los consume como KeyEvent.
+        try {
+            AccessibilityServiceInfo info = getServiceInfo();
+            if (info != null) {
+                info.flags |= AccessibilityServiceInfo.FLAG_REQUEST_FILTER_KEY_EVENTS;
+                // Algunas ROM solo envían onKeyEvent si el servicio no está “demasiado” limitado en eventTypes.
+                // No cambia nuestra lógica (seguimos filtrando a TYPE_WINDOW_STATE_CHANGED), pero mejora compatibilidad.
+                info.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
+                setServiceInfo(info);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "onServiceConnected: no se pudo solicitar filterKeyEvents", e);
+        }
+        // Activar bridge por defecto: el guard basado en mode puede estar aún sin detectar en arranques en frío.
+        try {
+            MainActivity.sWheelMediaBridgeActive = true;
+        } catch (Exception ignored) {}
         // Start heartbeat
         try { mHbHandler.removeCallbacks(mHeartbeat); } catch (Exception ignored) {}
         try { mHbHandler.post(mHeartbeat); } catch (Exception ignored) {}

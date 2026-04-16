@@ -138,6 +138,17 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private Bitmap mLastNotifiedLogo = null;
 
     /**
+     * K706/QuickFish: el routing de teclas del widget depende del "last audio source" OEM,
+     * que se actualiza al pedir AudioFocus (vía MediaFocusControl + requestCustomAudioFocus).
+     * Pedimos foco desde el servicio para ganar propiedad incluso con launcher al frente.
+     */
+    private static final String K706_STEERING_FOCUS_TAG = "OpenRadioFM-K706-SteeringFocus";
+    private AudioManager mK706SteeringAudioManager;
+    private AudioManager.OnAudioFocusChangeListener mK706SteeringFocusListener;
+    private AudioFocusRequest mK706SteeringFocusRequest;
+    private boolean mK706SteeringFocusHeld = false;
+
+    /**
      * QS6 (NWD): segundo {@link AudioManager#requestAudioFocus} desde este servicio en foreground.
      * Algunas unidades enlazan el bus de audio al cliente de medios activo, no solo al proceso de la Activity.
      */
@@ -468,6 +479,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             setPlaybackState(true);
             ensureNotificationVisible();
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            // K706 OEM: asegurar que el sistema nos marca como "audio source" actual.
+            ensureK706OemSteeringAudioFocus();
         } catch (Exception e) {
             Log.w(TAG, "forceSessionActiveForSteering falló", e);
         }
@@ -995,9 +1008,86 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             mIsPlaying = true;
             setPlaybackState(true);
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            ensureK706OemSteeringAudioFocus();
             Log.d(TAG, "Steering: sesión PLAYING+FGS mantenida para mandos en segundo plano (K706/QS6)");
         } catch (Exception e) {
             Log.w(TAG, "refreshSteeringMediaSessionAndForeground", e);
+        }
+    }
+
+    private boolean isK706PlatformForOemSteering() {
+        try {
+            if (mEngine != null) {
+                String n = mEngine.getEngineName();
+                return "K706".equals(n);
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    /**
+     * Pide AudioFocus (sin tocar mute) para que QuickFish actualice sys.qf.last_audio_src.
+     * Esto hace que el puente OEM que hoy entrega los KEYCODE_MEDIA_* a la radio de fábrica
+     * los rerutee hacia el "lastAudioSource" (nuestra app), como ocurre con NaviMods.
+     */
+    private void ensureK706OemSteeringAudioFocus() {
+        if (!isK706PlatformForOemSteering()) return;
+        // Si el motor ya está activo (caso normal cuando venimos desde UI),
+        // NO pidamos un segundo AudioFocus con otro clientId: en algunas ROMs K706
+        // eso genera AUDIOFOCUS_LOSS al request del engine y termina abandonándolo.
+        if (mEngine != null) return;
+        if (mK706SteeringFocusHeld) return;
+        try {
+            if (mK706SteeringAudioManager == null) {
+                mK706SteeringAudioManager =
+                        (AudioManager) getApplicationContext().getSystemService(AUDIO_SERVICE);
+                mK706SteeringFocusListener = focusChange ->
+                        Log.d(K706_STEERING_FOCUS_TAG, "onAudioFocusChange=" + focusChange);
+            }
+            if (mK706SteeringAudioManager == null) return;
+
+            int result;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (mK706SteeringFocusRequest == null) {
+                    AudioAttributes aa = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+                    mK706SteeringFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(aa)
+                            .setWillPauseWhenDucked(false)
+                            .setOnAudioFocusChangeListener(mK706SteeringFocusListener,
+                                    new Handler(Looper.getMainLooper()))
+                            .build();
+                }
+                result = mK706SteeringAudioManager.requestAudioFocus(mK706SteeringFocusRequest);
+            } else {
+                result = mK706SteeringAudioManager.requestAudioFocus(
+                        mK706SteeringFocusListener,
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.AUDIOFOCUS_GAIN
+                );
+            }
+            mK706SteeringFocusHeld = (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED);
+            Log.i(K706_STEERING_FOCUS_TAG, "requestAudioFocus result=" + result
+                    + " held=" + mK706SteeringFocusHeld);
+        } catch (Exception e) {
+            Log.w(TAG, "ensureK706OemSteeringAudioFocus falló", e);
+        }
+    }
+
+    private void abandonK706OemSteeringAudioFocus() {
+        try {
+            if (!mK706SteeringFocusHeld || mK706SteeringAudioManager == null) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && mK706SteeringFocusRequest != null) {
+                mK706SteeringAudioManager.abandonAudioFocusRequest(mK706SteeringFocusRequest);
+            } else if (mK706SteeringFocusListener != null) {
+                mK706SteeringAudioManager.abandonAudioFocus(mK706SteeringFocusListener);
+            }
+            mK706SteeringFocusHeld = false;
+            Log.i(K706_STEERING_FOCUS_TAG, "abandonAudioFocus (K706 steering)");
+        } catch (Exception e) {
+            Log.w(TAG, "abandonK706OemSteeringAudioFocus falló", e);
         }
     }
 
@@ -1799,6 +1889,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     @Override
     public void onDestroy() {
+        abandonK706OemSteeringAudioFocus();
         abandonQs6ServiceAudioFocus();
         try {
             stopForeground(true);

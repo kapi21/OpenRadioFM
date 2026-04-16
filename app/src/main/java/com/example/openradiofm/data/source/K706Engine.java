@@ -456,6 +456,9 @@ public class K706Engine implements RadioEngine {
     @Override
     public void notifyWidgetUpdate(Context context, int freqKhz, int band,
                                    int presetIdx, String rdsName) {
+        // Algunas ROMs bloquean este broadcast por permisos/signature; si ocurre una vez,
+        // deshabilitamos reintentos para evitar spam de logcat y Binder flood.
+        if (QfWidgetBroadcastGuard.isDisabled()) return;
         try {
             final boolean isAm = (band == 3 || band == 4);
             final String freqStr;
@@ -487,8 +490,31 @@ public class K706Engine implements RadioEngine {
             context.sendBroadcast(qf);
 
             Log.d(TAG, "notifyWidgetUpdate: QF broadcast enviado -> " + freqStr + " band=" + band);
+        } catch (SecurityException se) {
+            QfWidgetBroadcastGuard.disable(se);
         } catch (Exception e) {
             Log.w(TAG, "notifyWidgetUpdate: error enviando broadcast QF", e);
+        }
+    }
+
+    /**
+     * Guarda estática para cortar reintentos tras "Permission Denial" al broadcast QF.
+     * Evita que llamadas frecuentes (cambios de frecuencia) llenen el log y gasten CPU.
+     */
+    private static final class QfWidgetBroadcastGuard {
+        private static volatile boolean sDisabled = false;
+        private static volatile boolean sLoggedDisable = false;
+
+        static boolean isDisabled() {
+            return sDisabled;
+        }
+
+        static void disable(SecurityException se) {
+            sDisabled = true;
+            if (!sLoggedDisable) {
+                sLoggedDisable = true;
+                Log.w(TAG, "notifyWidgetUpdate: QF broadcast deshabilitado por permisos (SecurityException)", se);
+            }
         }
     }
 }

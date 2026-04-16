@@ -21,6 +21,7 @@ import com.example.openradiofm.data.source.RadioEngine;
 public class WidgetBroadcastManager {
 
     private static final String TAG = "WidgetBroadcastMgr";
+    private static final QfBroadcastGuard QF_GUARD = new QfBroadcastGuard();
 
     // Constantes de banda (coinciden con MainActivity)
     private static final int BAND_AM1 = 3;
@@ -113,6 +114,7 @@ public class WidgetBroadcastManager {
 
     private void broadcastK706(Context ctx, String freqStr, int nativeFreq,
                                int band, int presetIdx, String widgetName) {
+        if (QF_GUARD.isDisabled()) return;
         Intent qf = new Intent("com.qf.radio.update_action");
         qf.putExtra("com.qf.radio.update_action_key", freqStr);
         qf.putExtra("com.qf.radio.update_action_freq_key", nativeFreq);
@@ -121,7 +123,11 @@ public class WidgetBroadcastManager {
         qf.putExtra("com.qf.radio.update_action_searching_key", false);
         qf.putExtra("com.qf.radio.update_action_name_key", widgetName);
         qf.setPackage("com.android.auto.autohome");
-        ctx.sendBroadcast(qf);
+        try {
+            ctx.sendBroadcast(qf);
+        } catch (SecurityException se) {
+            QF_GUARD.disable(se);
+        }
     }
 
     private void broadcastMtk(Context ctx, String freqStr, int band,
@@ -194,5 +200,26 @@ public class WidgetBroadcastManager {
         if (a == null && b == null) return true;
         if (a == null || b == null) return false;
         return a.equals(b);
+    }
+
+    /**
+     * Evita reintentos tras SecurityException ("Permission Denial") al broadcast QF.
+     * En algunos K706 el broadcast está protegido por permisos de sistema.
+     */
+    private static final class QfBroadcastGuard {
+        private volatile boolean disabled = false;
+        private volatile boolean logged = false;
+
+        boolean isDisabled() {
+            return disabled;
+        }
+
+        void disable(SecurityException se) {
+            disabled = true;
+            if (!logged) {
+                logged = true;
+                Log.w(TAG, "broadcastK706: deshabilitado por permisos (SecurityException)", se);
+            }
+        }
     }
 }
