@@ -96,7 +96,11 @@ public class LifecycleCoordinator {
                 Log.w(TAG, "onStop: elevate RadioMediaService for steering (K706/QS6)", e);
             }
         }
-        if (!liveActive && mActivity.mEngine != null && !mActivity.isChangingConfigurations()) {
+        // K706/QS6: NO soltar audio focus al ir a Home.
+        // En estas ROMs, soltar/re-pedir foco desde otro "clientId" dentro de la misma app puede
+        // provocar un AUDIOFOCUS_LOSS espurio y dejarnos sin routing de media keys.
+        boolean isK706OrQs6 = (mActivity.mMode == MainActivity.FmMode.FM_K706 || mActivity.mMode == MainActivity.FmMode.FM_QS6);
+        if (!isK706OrQs6 && !liveActive && mActivity.mEngine != null && !mActivity.isChangingConfigurations()) {
             try {
                 mActivity.mEngine.releaseAudioFocusOnlyForBackground();
             } catch (Exception e) {
