@@ -24,6 +24,8 @@ local.properties
 local.properties.bak
 
 # === Depuración, Logs y Herramientas (LOCAL - NO SUBIR) ===
+# APK/dumps de ingeniería inversa vía ADB (no versionar)
+_artifacts/
 _DEBUG/
 _BUILD_LOGS/
 _BACKUPS/
