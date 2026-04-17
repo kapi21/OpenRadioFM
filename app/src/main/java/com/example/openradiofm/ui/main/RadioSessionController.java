@@ -128,8 +128,10 @@ public class RadioSessionController {
     // region Engine event hooks
 
     public void onFrequencyChanged(int freqKhz) {
+        // Al sintonizar otra frecuencia el PS/RDS anterior deja de ser válido; si lo conservamos,
+        // MediaSession y logos resuelven nombres/archivos incorrectos hasta el siguiente RDS.
         updateState(freqKhz, currentState.band, currentState.isPlaying, currentState.isMuted,
-                currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
+                currentState.accOn, "", "", "", "");
     }
 
     public void onBandChanged(int band) {

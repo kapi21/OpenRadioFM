@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 import androidx.media.session.MediaButtonReceiver;
@@ -35,6 +36,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.view.KeyEvent;
 
 import com.example.openradiofm.R;
@@ -58,6 +61,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
+    /** Launchers OEM que deben poder leer logos vía content:// (FileProvider). */
+    private static final String[] OEM_LOGO_URI_GRANT_PACKAGES = new String[] {
+            "com.android.launcher.star.blue",
+            "com.android.launcher3",
+    };
     /** Start command from UI to force PLAYING MediaSession state. */
     public static final String ACTION_FORCE_PLAY = "com.example.openradiofm.action.FORCE_PLAY";
     /**
@@ -136,6 +144,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private String mLastNotifiedTitle = "";
     private String mLastNotifiedArtist = "";
     private Bitmap mLastNotifiedLogo = null;
+
+    // K706/QS6 OEM widgets: suelen usar albumArt/art como "carátula" en el widget multimedia.
+    // Cacheamos el bitmap para no decodificar continuamente bajo ráfagas de eventos.
+    private String mLastMetadataLogoPath = null;
+    private long mLastMetadataLogoMtime = -1L;
+    private Bitmap mLastMetadataLogo = null;
 
     /**
      * K706/QuickFish: el routing de teclas del widget depende del "last audio source" OEM,
@@ -620,12 +634,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             new com.example.openradiofm.data.source.RadioEngineCallback() {
                 @Override
                 public void onFrequencyChanged(int freqKhz) {
-                    // Actualizar title/artist basado en datos guardados (CUSTOM/RDS) para Android Auto
-                    updateMetadataFromPrefs(freqKhz);
-                    saveRecentFrequency(freqKhz);
+                    // Mantener sesión alineada antes de metadata (MainActivity suele ir primero en el Composite,
+                    // pero si el servicio es la única fuente del callback, esto evita freq/RDS obsoletos).
                     if (mSessionController != null) {
                         mSessionController.onFrequencyChanged(freqKhz);
                     }
+                    updateMetadataFromPrefs(freqKhz);
+                    saveRecentFrequency(freqKhz);
                     updateHomeAppWidgetSync();
                 }
 
@@ -646,11 +661,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
                 @Override
                 public void onRdsName(String name) {
-                    // Se persistirá por RadioRepository en UI normalmente, aquí solo refrescamos
-                    updateMetadataName(name);
+                    // Se persistirá por RadioRepository en UI normalmente.
+                    // Importante: no basta con cambiar TITLE; hay que volver a publicar bitmap/URI
+                    // (p. ej. 90100_RNECLAS.png) o el widget OEM solo verá texto.
                     if (mSessionController != null) {
                         mSessionController.onRdsName(name);
                     }
+                    updateMetadataFromPrefs(getLiveFreqKhzOrDefault(0));
                     updateHomeAppWidgetSync();
                 }
 
@@ -1269,12 +1286,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
 
             String title;
-            if (live != null && live.rdsName != null && !live.rdsName.trim().isEmpty()) {
+            if (live != null && live.rdsName != null && !live.rdsName.trim().isEmpty()
+                    && (live.freqKhz <= 0 || live.freqKhz == freqKhz)) {
                 title = live.rdsName.trim();
             } else if (name != null && !name.isEmpty() && !name.matches("\\d+")) {
                 title = name;
             } else {
-                int f = (live != null && live.freqKhz > 0) ? live.freqKhz : freqKhz;
+                int f = (live != null && live.freqKhz > 0 && live.freqKhz == freqKhz) ? live.freqKhz : freqKhz;
                 title = formatFrequency(f);
             }
 
@@ -1314,24 +1332,179 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (pi != null && !pi.trim().isEmpty()) {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, pi.trim());
             }
+
+            // Artwork para widget OEM / notificación (si existe en RadioLogos).
+            // Preferimos el nombre RDS vivo o el nombre persistido, no el título si es solo frecuencia.
+            String nameForLogo = null;
+            if (live != null && live.rdsName != null && !live.rdsName.trim().isEmpty()
+                    && (live.freqKhz <= 0 || live.freqKhz == freqKhz)) {
+                nameForLogo = live.rdsName.trim();
+            } else if (name != null && !name.trim().isEmpty() && !name.trim().matches("\\d+")) {
+                nameForLogo = name.trim();
+            }
+            java.io.File logoFile = resolveStationLogoFile(freqKhz, nameForLogo);
+            String artUri = (logoFile != null && logoFile.isFile())
+                    ? stationLogoUriStringForMetadata(logoFile) : null;
+            if (artUri != null && !artUri.isEmpty()) {
+                builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, artUri);
+                builder.putString(MediaMetadataCompat.METADATA_KEY_ART_URI, artUri);
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, artUri);
+            }
+            Bitmap art = decodeStationLogoBitmap(logoFile);
+            if (art != null) {
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, art);
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, art);
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, art);
+            }
             mMediaSession.setMetadata(builder.build());
         } catch (Exception e) {
             Log.w(TAG, "updateMetadataFromPrefs() falló", e);
         }
     }
 
-    private void updateMetadataName(String rdsName) {
+    private String radioLogoFileProviderAuthority() {
+        return getPackageName() + ".radio_logo";
+    }
+
+    private void grantLogoUriToOemLaunchers(@Nullable Uri uri) {
+        if (uri == null) return;
+        for (String pkg : OEM_LOGO_URI_GRANT_PACKAGES) {
+            try {
+                grantUriPermission(pkg, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    /**
+     * URI para metadata: content:// con permiso de lectura al launcher OEM; si falla, file:// en almacenamiento público.
+     */
+    @Nullable
+    private String stationLogoUriStringForMetadata(@NonNull java.io.File file) {
         try {
-            if (rdsName == null || rdsName.trim().isEmpty()) return;
-            MediaMetadataCompat current = mMediaSession.getController().getMetadata();
-            MediaMetadataCompat.Builder builder = (current != null)
-                    ? new MediaMetadataCompat.Builder(current)
-                    : new MediaMetadataCompat.Builder();
-            builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, rdsName.trim());
-            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, rdsName.trim());
-            mMediaSession.setMetadata(builder.build());
+            String content = stationLogoContentUriString(file);
+            if (content != null && !content.isEmpty()) {
+                grantLogoUriToOemLaunchers(Uri.parse(content));
+                return content;
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            String ap = file.getAbsolutePath();
+            if (ap.startsWith("/sdcard/") || ap.contains("/emulated/0/") || ap.contains("/RadioLogos/")) {
+                return Uri.fromFile(file).toString();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    @Nullable
+    private String stationLogoContentUriString(@NonNull java.io.File file) {
+        try {
+            Uri u = FileProvider.getUriForFile(this, radioLogoFileProviderAuthority(), file);
+            return u != null ? u.toString() : null;
         } catch (Exception e) {
-            Log.w(TAG, "updateMetadataName() falló", e);
+            Log.w(TAG, "No se pudo publicar URI de logo (FileProvider)", e);
+            return null;
+        }
+    }
+
+    @Nullable
+    private Bitmap decodeStationLogoBitmap(@Nullable java.io.File f) {
+        try {
+            if (f == null || !f.isFile()) return null;
+            final String path = f.getAbsolutePath();
+            final long mtime = f.lastModified();
+            if (path.equals(mLastMetadataLogoPath) && mtime == mLastMetadataLogoMtime && mLastMetadataLogo != null) {
+                return mLastMetadataLogo;
+            }
+
+            Bitmap bmp = decodeBitmapMaxEdge(path, 320);
+            if (bmp != null) {
+                mLastMetadataLogoPath = path;
+                mLastMetadataLogoMtime = mtime;
+                mLastMetadataLogo = bmp;
+            }
+            return bmp;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private java.io.File resolveStationLogoFile(int freqKhz, @Nullable String rdsName) {
+        if (freqKhz <= 0) return null;
+        try {
+            java.io.File preferred = getPreferredRadioLogosDir();
+            java.io.File legacy = new java.io.File("/sdcard/RadioLogos/");
+
+            String sanitizedName = (rdsName != null && !rdsName.isEmpty())
+                    ? rdsName.replaceAll("[^a-zA-Z0-9]", "").toUpperCase()
+                    : null;
+
+            // 1) Frecuencia + RDS
+            if (sanitizedName != null && !sanitizedName.isEmpty()) {
+                String fileName = freqKhz + "_" + sanitizedName + ".png";
+                java.io.File f1 = new java.io.File(preferred, fileName);
+                if (f1.exists()) return f1;
+                java.io.File f2 = new java.io.File(legacy, fileName);
+                if (f2.exists()) return f2;
+            }
+
+            // 2) Solo frecuencia
+            String fullName = freqKhz + ".png";
+            java.io.File full1 = new java.io.File(preferred, fullName);
+            if (full1.exists()) return full1;
+            java.io.File full2 = new java.io.File(legacy, fullName);
+            if (full2.exists()) return full2;
+
+            // 3) Frecuencia corta
+            String shortName = (freqKhz / 10) + ".png";
+            java.io.File short1 = new java.io.File(preferred, shortName);
+            if (short1.exists()) return short1;
+            java.io.File short2 = new java.io.File(legacy, shortName);
+            if (short2.exists()) return short2;
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private java.io.File getPreferredRadioLogosDir() {
+        java.io.File legacy = new java.io.File("/sdcard/RadioLogos/");
+        try {
+            if ((legacy.exists() || legacy.mkdirs()) && legacy.canRead()) return legacy;
+        } catch (Exception ignored) {}
+        java.io.File external = getExternalFilesDir(null);
+        java.io.File base = (external != null) ? external : getFilesDir();
+        java.io.File appDir = new java.io.File(base, "RadioLogos");
+        try { appDir.mkdirs(); } catch (Exception ignored) {}
+        return appDir;
+    }
+
+    @Nullable
+    private static Bitmap decodeBitmapMaxEdge(@NonNull String path, int maxEdgePx) {
+        if (maxEdgePx <= 0) return null;
+        try {
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, o);
+            int w = o.outWidth;
+            int h = o.outHeight;
+            if (w <= 0 || h <= 0) return null;
+
+            int inSampleSize = 1;
+            int max = Math.max(w, h);
+            while ((max / inSampleSize) > maxEdgePx) {
+                inSampleSize *= 2;
+            }
+
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inJustDecodeBounds = false;
+            o2.inSampleSize = Math.max(inSampleSize, 1);
+            o2.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            return BitmapFactory.decodeFile(path, o2);
+        } catch (Exception ignored) {
+            return null;
         }
     }
 

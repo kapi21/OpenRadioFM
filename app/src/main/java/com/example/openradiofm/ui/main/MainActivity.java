@@ -2600,6 +2600,8 @@ public class MainActivity extends AppCompatActivity  {
      * (V2/V3/Simple); si no, llama directamente a {@link LogoManager#clearLogo()}.
      */
     public void clearStationLogoUi() {
+        if (isFinishing()) return;
+        if (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed()) return;
         if (mUiController != null) {
             mUiController.updateLogo(null);
         } else if (mLogoManager != null) {
@@ -3371,6 +3373,9 @@ public class MainActivity extends AppCompatActivity  {
         }
 
         runOnUiThread(() -> {
+            if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) {
+                return;
+            }
             if (tvRdsName != null) {
                 tvRdsName.setText("");
                 tvRdsName.setVisibility(View.VISIBLE);

@@ -60,6 +60,17 @@ public class LogoManager {
         mActiveLogoDir = pickWritableDir(mLegacyLogoDir, mAppLogoDir);
         createRadioLogosFolder();
     }
+
+    private boolean isActivityUsable() {
+        try {
+            if (mActivity == null) return false;
+            if (mActivity.isFinishing()) return false;
+            if (android.os.Build.VERSION.SDK_INT >= 17 && mActivity.isDestroyed()) return false;
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
     
     private static File pickWritableDir(File legacy, File appDir) {
         try {
@@ -231,6 +242,7 @@ public class LogoManager {
      */
     public void applyFallbackLogo(ImageView iv) {
         if (iv == null) return;
+        if (!isActivityUsable()) return;
 
         // V13.9.1: Ocultar logo principal en Layout 3 (V3)
         if (iv.getId() == R.id.ivMainLogo && mActivity.isV3LayoutActive()) {
@@ -296,6 +308,7 @@ public class LogoManager {
      * El slot {@link R.id#ivMainLogo} en V2/Simple lo rellena {@link #applyFallbackLogo(ImageView)} (ic_toast).
      */
     public void loadCarLogo() {
+        if (!isActivityUsable()) return;
         ImageView ivCarLogo = mActivity.findViewById(R.id.ivCarLogo);
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
 
@@ -346,6 +359,7 @@ public class LogoManager {
      * Actualiza el fondo dinámico (difuminado).
      */
     public void updateDynamicBackground(String logoUrl) {
+        if (!isActivityUsable()) return;
         // V18.6: El Simple Layout gestiona su propio fondo dinámico basado en paletas.
         // Evitamos que LogoManager interfiera para no mezclar diseños.
         if (mActivity.mIsSimpleLayout) return;
@@ -412,6 +426,7 @@ public class LogoManager {
      * Útil al cambiar de frecuencia para evitar persistencia.
      */
     public void clearLogo() {
+        if (!isActivityUsable()) return;
         mLastStationLogoUrl = null;
 
         // Layout V3: el logo de emisora no se muestra en ivMainLogo (GONE), pero Glide/ivDynamicBackground
@@ -446,6 +461,7 @@ public class LogoManager {
      * Encapsula la lógica de carga de logo de estación.
      */
     public void updateStationLogo(int freq, int band, String cachedUrl) {
+        if (!isActivityUsable()) return;
         final int logoGen = mActivity.mLogoUiGeneration.get();
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         String bandCacheKey = band + "_" + freq;

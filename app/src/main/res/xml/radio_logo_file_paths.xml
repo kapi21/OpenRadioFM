@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Legacy carpeta pública usada por la app -->
+    <external-path name="radio_logos_legacy" path="RadioLogos" />
+    <!-- Raíz externa (fallback si el OEM monta rutas distintas) -->
+    <external-path name="external_root" path="." />
+    <!-- App-specific: getExternalFilesDir()/RadioLogos -->
+    <external-files-path name="radio_logos_app_ext" path="RadioLogos" />
+    <external-files-path name="app_ext_root" path="." />
+    <!-- Interno -->
+    <files-path name="files_root" path="." />
+    <cache-path name="cache_root" path="." />
+</paths>

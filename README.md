@@ -199,6 +199,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - [Compatibilidad de Hardware](docs/HW_COMPATIBILITY.md)
 - [Compilación / CI — credenciales Supabase](docs/CI_SUPABASE.md)
 - [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
+- [Reverse widget radio launcher `com.android.launcher.star.blue` (guía ADB + jadx)](_DOCS/REVERSE_LAUNCHER_STAR_BLUE_WIDGET.md)
 - [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
 - [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md) — incluye **§15 Roadmap motor QS6**
 - [QS6 — MCU vía KernelService (informe)](QS6_MCU_KERNELSERVICE_INFORME.md) — protocolo NWD, botonera de desarrollo, riesgos RX

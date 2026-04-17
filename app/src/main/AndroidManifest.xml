@@ -150,6 +150,16 @@
                 android:resource="@xml/accessibility_service_config" />
         </service>
 
+        <provider
+            android:name=".provider.RadioLogoFileProvider"
+            android:authorities="${applicationId}.radio_logo"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/radio_logo_file_paths" />
+        </provider>
+
     </application>
 
 
