@@ -45,6 +45,7 @@ radiobrowser_stations_*.json
 _DOCS/*
 !_DOCS/manual_*.md
 !_DOCS/manual_usuario.md
+!_DOCS/INFORME_K706_MANDOS_Y_WIDGET.md
 
 # docs/ (web + imágenes del README): subir solo lo mínimo
 docs/**

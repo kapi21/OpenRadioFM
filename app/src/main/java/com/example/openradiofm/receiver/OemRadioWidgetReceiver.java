@@ -16,20 +16,22 @@ import com.example.openradiofm.service.RadioMediaService;
 public class OemRadioWidgetReceiver extends BroadcastReceiver {
     private static final String TAG = "OemRadioWidgetRx";
 
-    private static final String ACT_PRE = "/customize/radio/pre";
-    private static final String ACT_NEXT = "/customize/radio/next";
-    private static final String ACT_SEEK_UP = "/customize/radio/seek_up";
-    private static final String ACT_SEEK_DOWN = "/customize/radio/seek_down";
-    private static final String ACT_CLOSE = "/customize/radio/close";
+    // Algunas ROMs envían el action con o sin "/" inicial.
+    private static final String ACT_PRE = "customize/radio/pre";
+    private static final String ACT_NEXT = "customize/radio/next";
+    private static final String ACT_SEEK_UP = "customize/radio/seek_up";
+    private static final String ACT_SEEK_DOWN = "customize/radio/seek_down";
+    private static final String ACT_CLOSE = "customize/radio/close";
 
     @Override
     public void onReceive(Context context, Intent intent) {
         if (context == null || intent == null) return;
-        final String action = intent.getAction();
+        final String rawAction = intent.getAction();
+        final String action = normalizeAction(rawAction);
 
         // Log de diagnóstico: nos permite ver exactamente qué manda el launcher (extras incluidos).
         try {
-            Log.i(TAG, "onReceive action=" + action + " extras=" + intent.getExtras());
+            Log.i(TAG, "onReceive action=" + rawAction + " normalized=" + action + " extras=" + intent.getExtras());
         } catch (Exception ignored) {}
 
         if (action == null) return;
@@ -64,6 +66,13 @@ public class OemRadioWidgetReceiver extends BroadcastReceiver {
         } catch (Exception e) {
             Log.w(TAG, "No se pudo arrancar RadioMediaService (" + svcAction + ")", e);
         }
+    }
+
+    private static String normalizeAction(String action) {
+        if (action == null) return null;
+        // El intent-filter permite acciones con "/" inicial; normalizamos para comparar.
+        while (action.startsWith("/")) action = action.substring(1);
+        return action;
     }
 }
 

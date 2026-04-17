@@ -2,6 +2,7 @@ package com.example.openradiofm.data.source;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -86,6 +87,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     // --- Broadcom FmReceiverService Reflection (V9.9: RDS Silencioso) ---
     private Object mFmReceiverService;
     private Method mBroadcomSetRdsMode;
+    // Si esta ROM no trae Broadcom FmProxy/ReceiverService, no reintentar en cada recovery.
+    private boolean mBroadcomRdsUnsupported = false;
+    private boolean mBroadcomRdsUnsupportedLogged = false;
 
     // V9.6: QFTunerManager - Canal de alto nivel para seek/scan/RDS
     private QFTunerAdapter mQfAdapter;
@@ -224,6 +228,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     /** Requiere {@link Manifest.permission#READ_PHONE_STATE} concedido en Android 6+. */
     private android.telephony.PhoneStateListener mPhoneStateListener;
     private volatile boolean mPhoneListenerRegistered;
+    private android.telephony.TelephonyManager mTelephonyManager;
+
+    // Broadcom fallback binding: evitar fugas si se llega a hacer bind.
+    private ServiceConnection mBroadcomFmReceiverConnection;
+    private boolean mBroadcomFmReceiverBound;
 
     public K706RadioManager(Context context) {
         this.mContext = context;
@@ -404,9 +413,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
         if (mPhoneListenerRegistered) return;
         try {
-            android.telephony.TelephonyManager tm =
-                    (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            if (tm == null) return;
+            if (mTelephonyManager == null) {
+                mTelephonyManager =
+                        (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            }
+            if (mTelephonyManager == null) return;
 
             if (mPhoneStateListener == null) {
                 mPhoneStateListener = new android.telephony.PhoneStateListener() {
@@ -461,11 +472,28 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     }
                 };
             }
-            tm.listen(mPhoneStateListener, android.telephony.PhoneStateListener.LISTEN_CALL_STATE);
+            mTelephonyManager.listen(mPhoneStateListener, android.telephony.PhoneStateListener.LISTEN_CALL_STATE);
             mPhoneListenerRegistered = true;
             Log.d(TAG, "PhoneStateListener registrado (silencio FM en llamadas)");
         } catch (Exception e) {
             Log.e(TAG, "registerPhoneStateListenerIfPermitted", e);
+        }
+    }
+
+    private void unregisterPhoneStateListener() {
+        if (!mPhoneListenerRegistered) return;
+        try {
+            if (mTelephonyManager == null && mContext != null) {
+                mTelephonyManager =
+                        (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            }
+            if (mTelephonyManager != null && mPhoneStateListener != null) {
+                mTelephonyManager.listen(mPhoneStateListener, android.telephony.PhoneStateListener.LISTEN_NONE);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "unregisterPhoneStateListener falló", e);
+        } finally {
+            mPhoneListenerRegistered = false;
         }
     }
 
@@ -617,9 +645,6 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     Log.d(TAG, "  " + m.getName() + "(" + params + ") -> " + m.getReturnType().getSimpleName());
                 }
             }
-
-            // === SECUENCIA DE INICIO DE AUDIO FM ===
-            startFmAudioSequence();
 
             Log.d(TAG, "K706RadioManager initialized and connected.");
 
@@ -1396,6 +1421,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         stopFmAudioSequence();
         
         abandonAudioFocus();
+        unregisterPhoneStateListener();
+        unbindBroadcomFmReceiverServiceIfNeeded();
         if (mAudioManager != null && mContext != null) {
             mAudioManager.unregisterMediaButtonEventReceiver(
                     new ComponentName(mContext.getPackageName(), "MediaButtonReceiver"));
@@ -1575,6 +1602,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
      * todas las características del RDS (PTY, RT, etc.) usando reflection.
      */
     private void enableBroadcomRdsFeatures() {
+        if (mBroadcomRdsUnsupported) return;
         try {
             // Buscamos FmProxy de Broadcom 
             Class<?> fmProxyClass = Class.forName("com.broadcom.bt.app.fm.FmProxy");
@@ -1586,7 +1614,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             // Por lo que trataremos de hacer bindService directo al IFmReceiverService si está disponible
             Intent intent = new Intent();
             intent.setComponent(new ComponentName("com.broadcom.bt.app.fm", "com.broadcom.bt.app.fm.FmReceiverService"));
-            boolean bound = mContext.bindService(intent, new android.content.ServiceConnection() {
+            // Evitar múltiples binds (y fuga si se llama más de una vez).
+            if (mBroadcomFmReceiverBound) {
+                return;
+            }
+            if (mBroadcomFmReceiverConnection == null) {
+                mBroadcomFmReceiverConnection = new android.content.ServiceConnection() {
                 @Override
                 public void onServiceConnected(ComponentName name, IBinder service) {
                     try {
@@ -1611,14 +1644,40 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 public void onServiceDisconnected(ComponentName name) {
                     Log.d(TAG, "[Broadcom] Desconectado de FmReceiverService");
                 }
-            }, Context.BIND_AUTO_CREATE);
+                };
+            }
+            boolean bound = mContext.bindService(intent, mBroadcomFmReceiverConnection, Context.BIND_AUTO_CREATE);
+            mBroadcomFmReceiverBound = bound;
             
             if (!bound) {
                 Log.w(TAG, "[Broadcom] bindService falló. El servicio FmReceiverService no está accesible para la app.");
             }
             
+        } catch (ClassNotFoundException e) {
+            // Muy común en K706: el framework no incluye clases Broadcom. Evitar spam y reintentos.
+            mBroadcomRdsUnsupported = true;
+            if (!mBroadcomRdsUnsupportedLogged) {
+                mBroadcomRdsUnsupportedLogged = true;
+                Log.w(TAG, "[Broadcom] FmProxy no existe en esta ROM; deshabilitando override Broadcom para evitar spam.", e);
+            }
         } catch (Exception e) {
-            Log.w(TAG, "[Broadcom] Broadcom FmProxy / FmReceiverService no disponible o inaccesible vía Reflection.", e);
+            // Otros fallos (permisos/bind) no deberían spamear sin control.
+            if (!mBroadcomRdsUnsupportedLogged) {
+                Log.w(TAG, "[Broadcom] Broadcom FmProxy / FmReceiverService no disponible o inaccesible vía Reflection.", e);
+            }
+        }
+    }
+
+    private void unbindBroadcomFmReceiverServiceIfNeeded() {
+        if (!mBroadcomFmReceiverBound) return;
+        if (mContext == null) return;
+        if (mBroadcomFmReceiverConnection == null) return;
+        try {
+            mContext.unbindService(mBroadcomFmReceiverConnection);
+        } catch (Exception e) {
+            Log.w(TAG, "unbindBroadcomFmReceiverServiceIfNeeded falló", e);
+        } finally {
+            mBroadcomFmReceiverBound = false;
         }
     }
 
@@ -1878,13 +1937,34 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // V17.0: Limpiar estados de interrupcion al forzar play
         mIsInCall = false;
         mIsTransientFocusLoss = false;
-        
-        requestAudioFocus();
+
+        // “Play” = usuario quiere FM + secuencia completa (orden correcto en K706).
+        try {
+            startFmAudioSequence(/*fast*/ true);
+        } catch (Exception e) {
+            Log.w(TAG, "requestPlayAudio: startFmAudioSequence(fast) falló, fallback enforceAudioChannelRecovery()", e);
+            enforceAudioChannelRecovery();
+        }
         mIsRadioActive = true;
         Log.d(TAG, "requestPlayAudio: focus=" + mIsAudioFocusHeld + " radioActive=true");
-        // Forzar canal 2 por si acaso
-        enforceAudioChannelRecovery();
         return mIsAudioFocusHeld;
+    }
+
+    /**
+     * K706: pedir AudioFocus solo para routing de MEDIA keys / "lastAudioSource" OEM,
+     * sin arrancar la secuencia de audio FM (no tocar canal/mute/params).
+     *
+     * Útil para mantener el enrutado de mandos cuando la app está en segundo plano,
+     * evitando carreras/LOSS espurio al “arranque en frío”.
+     */
+    public boolean requestAudioFocusOnlyForRouting() {
+        try {
+            requestAudioFocus();
+            return mIsAudioFocusHeld;
+        } catch (Exception e) {
+            Log.w(TAG, "requestAudioFocusOnlyForRouting falló", e);
+            return false;
+        }
     }
 
     public void setMute(boolean mute) throws RemoteException {
@@ -2038,17 +2118,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
         Log.d(TAG, "enforceAudioChannelRecovery: Forzando SetChannel(2) tras desconexión BT");
         try {
-            // Repetimos la secuencia vital para asegurar el audio FM
-            requestAudioFocus(); // Asegurarnos de tener el foco estándar Android
-            
-            if (mSetChannel != null && mMcuManager != null) {
-                mSetChannel.invoke(mMcuManager, (byte) 2);
-                Log.d(TAG, "enforceAudioChannelRecovery: mSetChannel(2) enviado");
-            }
-            
-            // Refrescar el Mute al estado actual (si estábamos desmuteados, que suene)
-            setMute(false);
-            setAudioParams(true); // V18.1: Restaurar flag de FM activo en el mixer de Android
+            // Mantener un único “ritual” de recuperación: en K706 el orden importa (LOC -> focus -> channel -> params).
+            startFmAudioSequence(/*fast*/ true);
         } catch (Exception e) {
             Log.e(TAG, "enforceAudioChannelRecovery FAILED", e);
         }

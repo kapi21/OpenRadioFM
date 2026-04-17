@@ -123,11 +123,18 @@
             android:name=".receiver.OemRadioWidgetReceiver"
             android:exported="true">
             <intent-filter>
+                <!-- Variantes con "/" inicial -->
                 <action android:name="/customize/radio/pre" />
                 <action android:name="/customize/radio/next" />
                 <action android:name="/customize/radio/seek_up" />
                 <action android:name="/customize/radio/seek_down" />
                 <action android:name="/customize/radio/close" />
+                <!-- Variantes sin "/" inicial -->
+                <action android:name="customize/radio/pre" />
+                <action android:name="customize/radio/next" />
+                <action android:name="customize/radio/seek_up" />
+                <action android:name="customize/radio/seek_down" />
+                <action android:name="customize/radio/close" />
             </intent-filter>
         </receiver>
 

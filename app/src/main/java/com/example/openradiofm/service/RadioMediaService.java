@@ -157,6 +157,17 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private AudioManager.OnAudioFocusChangeListener mQs6ServiceFocusListener;
     private AudioFocusRequest mQs6ServiceFocusRequest;
 
+    // ------------------------------------------------------------
+    // K706 / QuickFish OEM: util_service (UtilEventManager) key bridge
+    // (canal OEM de KeyEvents en algunas ROMs)
+    // ------------------------------------------------------------
+    private Object mQfUtilEventManager;          // android.qf.util.UtilEventManager (hidden)
+    private Object mQfUtilEventListenerProxy;    // android.qf.util.UtilEventListener (Proxy)
+    private boolean mQfUtilKeyBridgeRegistered = false;
+    // Anti-stress: el util_service puede emitir ráfagas de KeyEvents; limitamos por keyCode.
+    private long mQfLastUtilKeyUptimeMs = 0L;
+    private int mQfLastUtilKeyCode = -1;
+
     private boolean usePresetModeForSteering() {
         return mPresetPrefs != null && mPresetPrefs.getInt("pref_steering_next_prev_mode", 0) == 1;
     }
@@ -228,6 +239,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         Log.w(TAG, "No se pudo setear callback al engine desde el servicio", e);
                     }
                     Log.d(TAG, "Engine listo dentro del servicio: " + (engine != null ? engine.getEngineName() : "null"));
+
+                    // K706 / QuickFish: registrar bridge OEM de KeyEvents (util_service) cuando el engine está listo.
+                    // Esto permite recibir KEYCODE_MEDIA_* incluso con el launcher al frente.
+                    try {
+                        ensureK706UtilEventKeyBridgeRegistered();
+                    } catch (Exception e) {
+                        Log.w(TAG, "No se pudo registrar util_service key bridge", e);
+                    }
 
                     // Aplicar comandos pendientes (si llegaron antes de inicializar el engine)
                     flushPendingCommands();
@@ -496,6 +515,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (mEngine != null) {
                 if (direction > 0) mEngine.seekUp();
                 else mEngine.seekDown();
+                // Importante (K706): tras un SEEK NO forzar enforceAudioRecovery, porque algunas ROM
+                // re-ejecutan el “ritual” (LOC/focus/channel/params) y vuelven a la frecuencia previa.
+                ensureAudibleWithoutRecovery();
                 // QS/OEM: el callback de frecuencia puede llegar tarde; refresco diferido por si la Activity no está viva.
                 scheduleHomeWidgetRefreshFallback();
             } else {
@@ -780,6 +802,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
     }
 
+    private void handlePlayPause() {
+        if (mIsPlaying) {
+            handlePause();
+        } else {
+            handlePlay();
+        }
+    }
+
     private void ensureQs6ServiceAudioFocus() {
         try {
             if (mQs6ServiceAudioManager == null) {
@@ -922,7 +952,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     if (direction > 0) mEngine.seekUp();
                     else mEngine.seekDown();
                 }
-                handlePlay();
+                // Igual que en widget SEEK: no disparar recovery justo después del seek/skip.
+                ensureAudibleWithoutRecovery();
             } else {
                 enqueueSkip(direction > 0 ? +1 : -1, presetMode);
                 maybeStartEngine();
@@ -932,6 +963,41 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
         } catch (Exception e) {
             Log.w(TAG, "handleSteeringSkip(" + direction + ") falló", e);
+        }
+    }
+
+    /**
+     * Dejar el estado como PLAYING + unmute, pero sin llamar a enforceAudioRecovery().
+     * (K706: evita que el recovery “pise” cambios de frecuencia tras SEEK/NEXT/PREV).
+     */
+    private void ensureAudibleWithoutRecovery() {
+        try {
+            mUserPaused = false;
+            mIsPlaying = true;
+            setPlaybackState(true);
+            writeOemStateToPrefs("PLAY_SEEK");
+            ensureNotificationVisible();
+            try {
+                startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            } catch (Exception ignored) {}
+
+            // Importante: PlaybackManager.setMute(false) llama a enforceAudioRecovery() en K706,
+            // lo que bajo stress provoca tormentas de recovery (y puede colgar la radio).
+            boolean isK706 = false;
+            try {
+                isK706 = mEngine != null && "K706".equals(mEngine.getEngineName());
+            } catch (Exception ignored) {}
+
+            if (isK706 && mEngine != null) {
+                // No llamar a mEngine.enforceAudioRecovery() aquí.
+                mEngine.setMute(false);
+            } else if (mPlaybackManager != null) {
+                mPlaybackManager.setMute(false);
+            } else if (mEngine != null) {
+                mEngine.setMute(false);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "ensureAudibleWithoutRecovery falló", e);
         }
     }
 
@@ -1033,7 +1099,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     /**
      * Pide AudioFocus (sin tocar mute) para que QuickFish actualice sys.qf.last_audio_src.
      * Esto hace que el puente OEM que hoy entrega los KEYCODE_MEDIA_* a la radio de fábrica
-     * los rerutee hacia el "lastAudioSource" (nuestra app), como ocurre con NaviMods.
+     * los rerutee hacia el "lastAudioSource" (nuestra app).
      */
     private void ensureK706OemSteeringAudioFocus() {
         if (!isK706PlatformForOemSteering()) return;
@@ -1892,8 +1958,164 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         return "";
     }
 
+    private boolean isK706EngineActive() {
+        try {
+            return mEngine != null && "K706".equals(mEngine.getEngineName());
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * K706/QF: registra listener en util_service para recibir KeyEvents OEM (volante/widget launcher)
+     * sin depender de Accessibility ni de ACTION_MEDIA_BUTTON.
+     *
+     * Basado en el API OEM `android.qf.util.UtilEventManager.RPC_KeyEventChangedListener(UtilEventListener)`.
+     */
+    private void ensureK706UtilEventKeyBridgeRegistered() {
+        if (mQfUtilKeyBridgeRegistered) return;
+        if (!isK706EngineActive()) return;
+
+        // 1) Comprobar existencia del binder (si no existe, no insistimos)
+        try {
+            Class<?> sm = Class.forName("android.os.ServiceManager");
+            java.lang.reflect.Method getService = sm.getMethod("getService", String.class);
+            Object b1 = getService.invoke(null, "util_service");
+            Object b2 = getService.invoke(null, "UTIL_EVENT_SERVICE");
+            if (b1 == null && b2 == null) {
+                Log.w(TAG, "K706 util_service no disponible (ServiceManager.getService==null)");
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "No se pudo comprobar binder de util_service", t);
+        }
+
+        try {
+            // 2) Obtener el manager del system service
+            Object mgr = getSystemService("util_service");
+            if (mgr == null) mgr = getSystemService("UTIL_EVENT_SERVICE");
+            if (mgr == null) {
+                Log.w(TAG, "getSystemService(util_service) devolvió null");
+                return;
+            }
+            mQfUtilEventManager = mgr;
+
+            // 3) Crear proxy de android.qf.util.UtilEventListener
+            Class<?> listenerItf = Class.forName("android.qf.util.UtilEventListener");
+            Class<?> qfKeyInfoCls = Class.forName("android.qf.util.QFKeyEventInfo");
+            java.lang.reflect.Method getKeyEventInfo = qfKeyInfoCls.getMethod("getKeyEventInfo");
+
+            mQfUtilEventListenerProxy = java.lang.reflect.Proxy.newProxyInstance(
+                    listenerItf.getClassLoader(),
+                    new Class<?>[]{listenerItf},
+                    (proxy, method, args) -> {
+                        if (method == null) return null;
+                        final String m = method.getName();
+
+                        // Necesario: UtilEventManager usa el listener como clave de HashMap.
+                        // Si hashCode() devuelve null, crashea con NPE al hacer unbox.
+                        if ("hashCode".equals(m) && (args == null || args.length == 0)) {
+                            return System.identityHashCode(proxy);
+                        }
+                        if ("equals".equals(m) && args != null && args.length == 1) {
+                            return proxy == args[0];
+                        }
+                        if ("toString".equals(m) && (args == null || args.length == 0)) {
+                            return "OpenRadioFM-UtilEventListenerProxy@" + Integer.toHexString(System.identityHashCode(proxy));
+                        }
+
+                        if (!"onReceived".equals(m) || args == null || args.length < 2) {
+                            return null;
+                        }
+                        Object keyInfo = args[1];
+                        if (keyInfo == null) return null;
+
+                        try {
+                            if (!isK706EngineActive()) return null;
+                            if (mMediaSession == null) return null;
+
+                            Object ke = getKeyEventInfo.invoke(keyInfo);
+                            if (!(ke instanceof android.view.KeyEvent)) return null;
+                            android.view.KeyEvent keyEvent = (android.view.KeyEvent) ke;
+                            if (keyEvent.getAction() != android.view.KeyEvent.ACTION_DOWN) return null;
+
+                            int keyCode = keyEvent.getKeyCode();
+                            // Si el usuario pausó, solo aceptamos comandos que puedan "revivir" la sesión.
+                            // De lo contrario, tras PAUSE parecería que los mandos "mueren" (porque bloqueamos todo).
+                            if (mUserPaused) {
+                                final boolean isResumeKey =
+                                        keyCode == android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE ||
+                                        keyCode == android.view.KeyEvent.KEYCODE_MEDIA_PLAY ||
+                                        keyCode == android.view.KeyEvent.KEYCODE_MEDIA_PAUSE;
+                                if (!isResumeKey) return null;
+                            }
+                            // Anti-stress: no procesar ráfagas idénticas (p.ej. NEXT mantenido).
+                            final long now = android.os.SystemClock.uptimeMillis();
+                            final long minGapMs = 180L;
+                            if (keyCode == mQfLastUtilKeyCode && (now - mQfLastUtilKeyUptimeMs) < minGapMs) {
+                                return null;
+                            }
+                            mQfLastUtilKeyCode = keyCode;
+                            mQfLastUtilKeyUptimeMs = now;
+                            switch (keyCode) {
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: // 85
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PLAY:       // 126
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PAUSE:      // 127
+                                    handlePlayPause();
+                                    break;
+                                case android.view.KeyEvent.KEYCODE_MEDIA_NEXT:       // 87
+                                    handleSteeringSkip(+1);
+                                    break;
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS:   // 88
+                                    handleSteeringSkip(-1);
+                                    break;
+                                // 89/90: algunas ROMs usan REWIND/FF como SEEK prev/next.
+                                case android.view.KeyEvent.KEYCODE_MEDIA_REWIND:     // 89
+                                    handleWidgetSeek(-1);
+                                    break;
+                                case android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: // 90
+                                    handleWidgetSeek(+1);
+                                    break;
+                            }
+                        } catch (Throwable t) {
+                            Log.w(TAG, "util_service onReceived falló", t);
+                        }
+                        return null;
+                    }
+            );
+
+            // 4) Invocar RPC_KeyEventChangedListener(listener)
+            java.lang.reflect.Method rpc = mgr.getClass().getMethod("RPC_KeyEventChangedListener", listenerItf);
+            rpc.invoke(mgr, mQfUtilEventListenerProxy);
+            mQfUtilKeyBridgeRegistered = true;
+            Log.i(TAG, "K706 util_service key bridge registrado (UtilEventManager)");
+        } catch (Throwable t) {
+            mQfUtilKeyBridgeRegistered = false;
+            mQfUtilEventManager = null;
+            mQfUtilEventListenerProxy = null;
+            Log.w(TAG, "No se pudo registrar util_service key bridge", t);
+        }
+    }
+
+    private void unregisterK706UtilEventKeyBridgeIfNeeded() {
+        try {
+            if (!mQfUtilKeyBridgeRegistered || mQfUtilEventManager == null || mQfUtilEventListenerProxy == null) return;
+            Class<?> listenerItf = Class.forName("android.qf.util.UtilEventListener");
+            java.lang.reflect.Method rpcRemove = mQfUtilEventManager.getClass().getMethod("RPC_RemoveListener", listenerItf);
+            rpcRemove.invoke(mQfUtilEventManager, mQfUtilEventListenerProxy);
+            Log.i(TAG, "K706 util_service key bridge desregistrado");
+        } catch (Throwable t) {
+            Log.w(TAG, "No se pudo desregistrar util_service key bridge", t);
+        } finally {
+            mQfUtilKeyBridgeRegistered = false;
+            mQfUtilEventManager = null;
+            mQfUtilEventListenerProxy = null;
+        }
+    }
+
     @Override
     public void onDestroy() {
+        unregisterK706UtilEventKeyBridgeIfNeeded();
         abandonK706OemSteeringAudioFocus();
         abandonQs6ServiceAudioFocus();
         try {
