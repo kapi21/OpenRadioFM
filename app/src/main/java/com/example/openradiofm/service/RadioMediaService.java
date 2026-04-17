@@ -1187,8 +1187,18 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (event == null) return;
 
             switch (event) {
-                case K706RadioManager.EVENT_LOSS:
                 case K706RadioManager.EVENT_LOSS_TRANSIENT:
+                    // Voz de navegación / Android Auto (Zlink): no forzar PLAYING+FGS aquí; competía con Maps.
+                    if (mIsPlaying && !mUserPaused) {
+                        mWasPlayingBeforeFocusLoss = true;
+                    }
+                    mIsPlaying = false;
+                    setPlaybackState(false);
+                    writeOemStateToPrefs(event);
+                    ensureNotificationVisible();
+                    break;
+
+                case K706RadioManager.EVENT_LOSS:
                     if (isSteeringMediaBackgroundPlatform() && !mUserPaused) {
                         if (mIsPlaying) mWasPlayingBeforeFocusLoss = true;
                         writeOemStateToPrefs(event);

@@ -7,7 +7,7 @@
 
 ## [Unreleased]
 
-- **K706 / общий движок и AutoScan**: см. [`CHANGELOG.md`](CHANGELOG.md) — `onHwAutomationEvent` в `CompositeRadioEngineCallback`, восстановление полного callback после диалога выборочного сканирования, остановка «лишней» анимации иконки и фильтр ложных `scanning=true` после медленного AutoScan. Версия **5.1.6** (`versionCode` **38**).
+- **K706 / Android Auto, голос навигации (Zlink)**: см. [`CHANGELOG.md`](CHANGELOG.md) — уступка аудиофокуса при `isMusicActive`, `requestAudioFocus(false)` в auto-recovery, `RadioMediaService` без PLAYING+FGS на `LOSS_TRANSIENT`. Плюс пункты **5.1.6**. Версия **5.1.7** (`versionCode` **39**).
 
 ---
 

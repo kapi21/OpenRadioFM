@@ -1,4 +1,8 @@
 ## [Unreleased] - MCU2
+### K706 / Android Auto y voz de navegación (Zlink)
+- **`K706RadioManager`**: el “Glitch Protect” que relanzaba FM tras `AUDIOFOCUS_LOSS` / `LOSS_TRANSIENT` **no** se aplica si `AudioManager.isMusicActive()` (voz de Maps u otra app); imita la radio OEM (ceder mux). Los reintentos de **`mAutoRecoveryRunnable`** llaman `requestAudioFocus(false)` para **no** alargar la ventana anti-LOSS de 2,5 s (dejaba la app peleando con la guía).
+- **`RadioMediaService`**: ante **`EVENT_LOSS_TRANSIENT`** del broadcast OEM ya **no** se llama `refreshSteeringMediaSessionAndForeground()` (evitaba volver a PLAYING+FGS y a pedir foco mientras suena la navegación).
+
 ### K706 / motor compartido y AutoScan (UI)
 - **`CompositeRadioEngineCallback`**: reenvío de **`onHwAutomationEvent`** a ambos receptores (eventos de hardware 122–125 ya no se pierden con motor compartido).
 - **Escaneo selectivo (K706)**: al cerrar el diálogo se restaura el **callback previo** (p. ej. `Composite` UI + `RadioMediaService`), no solo `EngineCallbackCoordinator`.
@@ -32,7 +36,7 @@
 - **FactoryRadioHijackerService**: solicitud reforzada de `FLAG_REQUEST_FILTER_KEY_EVENTS` al conectar y log a nivel INFO para diagnósticos en ROMs que filtran DEBUG.
 - **Config**: `accessibility_service_config.xml` pasa a `typeAllMask` + `canRequestFilterKeyEvents=true` para mejorar compatibilidad con unidades OEM.
 - **UI / fondo dinámico**: `ivDynamicBackground` pasa a **fitCenter** (layouts default y `sw720dp`); `LogoManager` decodifica el bitmap al tamaño de pantalla (tope **1600 px** en el lado largo) y usa **fitCenter** en Glide para contener el arte sin recorte tipo centerCrop.
-- **Versión app (MCU2)**: `versionCode` **38**, `versionName` **5.1.6**.
+- **Versión app (MCU2)**: `versionCode` **39**, `versionName` **5.1.7**.
 
 ## [5.2.0] - 2026-04-12
 ### Estabilización Crítica y Restauración de Motores Legados

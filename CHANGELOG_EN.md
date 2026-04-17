@@ -5,6 +5,10 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ---
 
 ## [Unreleased] - MCU2
+### K706 / Android Auto & navigation voice (Zlink)
+- **`K706RadioManager`**: “Glitch protect” that re-armed FM after `AUDIOFOCUS_LOSS` / `LOSS_TRANSIENT` is **skipped** when `AudioManager.isMusicActive()` (Maps TTS / another app is playing), matching OEM behavior (yield mux). **`mAutoRecoveryRunnable`** now calls `requestAudioFocus(false)` so it **does not** extend the 2.5s anti-LOSS window (which kept fighting guidance audio).
+- **`RadioMediaService`**: on OEM broadcast **`EVENT_LOSS_TRANSIENT`**, **do not** call `refreshSteeringMediaSessionAndForeground()` (it forced PLAYING+FGS and focus while navigation wanted the channel).
+
 ### K706 / shared engine & AutoScan UI
 - **`CompositeRadioEngineCallback`**: forwards **`onHwAutomationEvent`** to both delegates (hardware automation events are no longer dropped when UI + service share the engine).
 - **K706 selective scan dialog**: on dismiss, restores the **previous** `RadioEngineCallback` (e.g. `Composite` UI + `RadioMediaService`) instead of only the coordinator.
@@ -18,7 +22,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **`ivDynamicBackground`**: **fitCenter** in default and `sw720dp` layouts; `LogoManager` decodes to screen size (cap **1600 px** on the long edge) and uses Glide **fitCenter** to avoid centerCrop-style clipping.
 
 ### Version (MCU2)
-- `versionCode` **38**, `versionName` **5.1.6**.
+- `versionCode` **39**, `versionName` **5.1.7**.
 
 ---
 

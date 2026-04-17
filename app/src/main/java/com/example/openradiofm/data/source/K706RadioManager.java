@@ -153,6 +153,18 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     // OEM fix: evitar "mute inicial" por pérdidas espurias de AudioFocus (Zlink/Auto al enganchar)
     private long mIgnoreFocusLossUntilUptimeMs = 0L;
     private boolean mWasRadioActiveBeforeFocusLoss = false;
+
+    /**
+     * Si hay otra reproducción activa en STREAM_MUSIC (p. ej. voz de Maps vía Android Auto / Zlink),
+     * no debemos usar el “Glitch Protect” que vuelve a enganchar la FM: imita la radio OEM (ceder mux).
+     */
+    private boolean isOtherMediaPlaybackLikelyActive() {
+        try {
+            return mAudioManager != null && mAudioManager.isMusicActive();
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
     
     // OEM fix: recuperar audio sin depender de recreación de layout.
     // En K706 el sistema puede forzar MUTE_EQ + SetChannel(4) tras un LOSS.
@@ -186,7 +198,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 // Recuperación proactiva: intentar pedir AudioFocus; si no se concede, reintentar con backoff.
                 if (!mIsAudioFocusHeld) {
                     try {
-                        requestAudioFocus();
+                        requestAudioFocus(false);
                     } catch (Exception ignored) {}
                     if (!mIsAudioFocusHeld) {
                         Log.d(TAG, "OEM AutoRecovery: sin AudioFocus todavía (reintentando más tarde)");
@@ -252,7 +264,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         // K706 OEM FIX (V18.5): Solo ignorar LOSS si es extremadamente reciente tras pedir foco (ventana de 2.5s)
                         // y el usuario quiere FM. Esto evita que la app "muera" al arrancar en algunos firmwares chinos,
                         // pero permite que Spotify/Música tomen el control después.
-                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs) {
+                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs
+                                && !isOtherMediaPlaybackLikelyActive()) {
                             Log.d(TAG, "AUDIOFOCUS_LOSS (Glitch Protect): mUserWantsFmAudio=true -> manteniendo FM, forzando recovery");
                             mIsRadioActive = true;
                             mWasRadioActiveBeforeFocusLoss = true;
@@ -316,8 +329,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                             break;
                         }
                         // V18.5: En LOSS_TRANSIENT (llamadas/navegación), respetamos SIEMPRE la interrupción.
-                        // Solo usamos recovery si es un glitch de inicio.
-                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs) {
+                        // Solo usamos recovery si es un glitch de inicio (y no hay otra app reproduciendo: Maps/AA).
+                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs
+                                && !isOtherMediaPlaybackLikelyActive()) {
                             Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT (Glitch Protect): forzando recovery");
                             mIsRadioActive = true;
                             mWasRadioActiveBeforeFocusLoss = true;
@@ -1430,9 +1444,19 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     private void requestAudioFocus() {
+        requestAudioFocus(true);
+    }
+
+    /**
+     * @param extendAntiGlitchWindow si {@code false}, no alarga la ventana anti-LOSS (p. ej. reintentos del
+     *        {@link #mAutoRecoveryRunnable}): evita competir con la voz de Maps/Android Auto durante segundos.
+     */
+    private void requestAudioFocus(boolean extendAntiGlitchWindow) {
         if (mAudioManager != null && !mIsAudioFocusHeld) {
-            // Ventana anti-LOSS espurio tras pedir foco (Zlink/Auto)
-            mIgnoreFocusLossUntilUptimeMs = android.os.SystemClock.uptimeMillis() + 2500L;
+            if (extendAntiGlitchWindow) {
+                // Ventana anti-LOSS espurio tras pedir foco (Zlink/Auto)
+                mIgnoreFocusLossUntilUptimeMs = android.os.SystemClock.uptimeMillis() + 2500L;
+            }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 AudioAttributes attributes = new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)

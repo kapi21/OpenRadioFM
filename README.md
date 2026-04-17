@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.1.6-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.1.7-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-MCU2-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -57,7 +57,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.1.6** (rama **MCU2**, abril 2026, `versionCode` **38**): **K706** — motor compartido: `CompositeRadioEngineCallback` reenvía `onHwAutomationEvent`; el escaneo selectivo restaura el callback completo (UI + `RadioMediaService`); AutoScan detiene la rotación del icono de forma fiable y filtra `scanning=true` espurio del MCU tras el barrido lento. Sigue vigente la mejora de audio FM (canal 2) y el fondo dinámico **fitCenter** en `LogoManager`. Ver `CHANGELOG.md`.
+**5.1.7** (rama **MCU2**, abril 2026, `versionCode` **39**): **K706 + Android Auto / Zlink** — la FM cede ante pérdida transitoria de foco cuando otra app reproduce (`isMusicActive`): sin “Glitch Protect” que recuperara el mux; el `AutoRecoveryRunnable` ya no alarga la ventana anti-LOSS. **`RadioMediaService`**: en `LOSS_TRANSIENT` no se fuerza sesión PLAYING+FGS (voz de Maps). Incluye correcciones **5.1.6** (motor compartido, AutoScan icono). Ver `CHANGELOG.md`.
 
 **5.1.1** (abril 2026, `versionCode` **33**): incluye **Eslovenia (SI)**, **Backup Studio** / Storage, **widget** actualizado en seek con la app en segundo plano (**QS6** vía `RadioMediaService`) y **logo del widget** con Glide en hilo principal; **Modo Día** beige; fix **Supabase** en release; logs **`ORF_WidgetRx`**. En UI: **ajustes premium** con resúmenes en interruptores; **presets** siguiente/anterior por **orden de slots** con bucle; **opción** de **tira de presets en bucle** (V2/V3) y coherencia de skin/fondo dinámico con modo noche automático. *Pendiente:* logo del widget bajo ciertos casos; **`ivMainLogo` en layout 2** bajo estrés (zapping/layout). Ver `CHANGELOG.md`.
 
