@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.1.4-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.1.5-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-MCU2-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -56,6 +56,8 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Logos HD (Supabase) | ✅ | ✅ | ✅ |
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
+
+**5.1.5** (rama **MCU2**, abril 2026, `versionCode` **37**): **K706** — recuperación de audio FM sin el pre-mute redundante cuando el MCU ya está en canal 2 (menos micro-cortes tras desmute / foco). **UI** — fondo dinámico **fitCenter** + decode acotado al tamaño de pantalla en `LogoManager`. *Futuro:* si el clic al conmutar mux **4→2** (p. ej. tras BT) sigue molestando, revisar debounce del heartbeat; ver `CHANGELOG.md`.
 
 **5.1.1** (abril 2026, `versionCode` **33**): incluye **Eslovenia (SI)**, **Backup Studio** / Storage, **widget** actualizado en seek con la app en segundo plano (**QS6** vía `RadioMediaService`) y **logo del widget** con Glide en hilo principal; **Modo Día** beige; fix **Supabase** en release; logs **`ORF_WidgetRx`**. En UI: **ajustes premium** con resúmenes en interruptores; **presets** siguiente/anterior por **orden de slots** con bucle; **opción** de **tira de presets en bucle** (V2/V3) y coherencia de skin/fondo dinámico con modo noche automático. *Pendiente:* logo del widget bajo ciertos casos; **`ivMainLogo` en layout 2** bajo estrés (zapping/layout). Ver `CHANGELOG.md`.
 

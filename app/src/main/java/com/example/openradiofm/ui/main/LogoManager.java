@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 
 import androidx.core.content.ContextCompat;
 import android.graphics.drawable.Drawable;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -34,7 +35,10 @@ import java.io.File;
  */
 public class LogoManager {
     private static final String TAG = "LogoManager";
-    /** Fondo difuminado: no hace falta píxel a píxel; limitar decode mejora fluidez y RAM en head units lentas. */
+    /**
+     * Fondo dinámico: decodificar como máximo al tamaño de pantalla (ver {@link #getDynamicBgDecodeSize()}),
+     * sin superar este tope en el lado mayor (evita OOM en resoluciones extremas).
+     */
     private static final int DYNAMIC_BG_MAX_EDGE_PX = 1600;
     private final MainActivity mActivity;
     
@@ -88,6 +92,24 @@ public class LogoManager {
         File app = new File(mAppLogoDir, fileName);
         if (app.exists()) return app;
         return null;
+    }
+
+    /**
+     * Dimensiones objetivo para decodificar el fondo dinámico: tamaño visible de pantalla,
+     * nunca mayor que {@link #DYNAMIC_BG_MAX_EDGE_PX} en el lado largo (mantiene RAM razonable).
+     */
+    private void getDynamicBgDecodeSize(int[] outWh) {
+        DisplayMetrics dm = mActivity.getResources().getDisplayMetrics();
+        int w = Math.max(1, dm.widthPixels);
+        int h = Math.max(1, dm.heightPixels);
+        int longEdge = Math.max(w, h);
+        if (longEdge > DYNAMIC_BG_MAX_EDGE_PX) {
+            float scale = (float) DYNAMIC_BG_MAX_EDGE_PX / (float) longEdge;
+            w = Math.max(1, Math.round(w * scale));
+            h = Math.max(1, Math.round(h * scale));
+        }
+        outWh[0] = w;
+        outWh[1] = h;
     }
 
     /** Layout Simple: el logo vive dentro de {@link R.id#boxLogoSimple}; debe quedar visible al cargar emisora. */
@@ -380,6 +402,10 @@ public class LogoManager {
                     final int genAtStart = mActivity.mLogoUiGeneration.get();
                     mLastDynamicBgUrl = logoUrl;
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
+                    // Contener la imagen en el área de pantalla (sin recorte tipo centerCrop que “amplía” el arte).
+                    ivDynamicBackground.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    int[] decode = new int[2];
+                    getDynamicBgDecodeSize(decode);
                     if (mDynamicBgTarget != null) {
                         try { Glide.with(mActivity.getApplicationContext()).clear(mDynamicBgTarget); } catch (Exception ignored) {}
                         mDynamicBgTarget = null;
@@ -402,8 +428,8 @@ public class LogoManager {
                             .load(logoUrl)
                             .apply(new RequestOptions()
                                     .format(DecodeFormat.PREFER_ARGB_8888)
-                                    .override(DYNAMIC_BG_MAX_EDGE_PX, DYNAMIC_BG_MAX_EDGE_PX))
-                            .centerCrop()
+                                    .override(decode[0], decode[1])
+                                    .fitCenter())
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(mDynamicBgTarget);
                 }

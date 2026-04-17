@@ -12,7 +12,7 @@
         android:id="@+id/ivDynamicBackground"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
         android:alpha="0.25"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"

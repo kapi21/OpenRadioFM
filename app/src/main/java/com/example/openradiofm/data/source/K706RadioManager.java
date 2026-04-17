@@ -1504,12 +1504,27 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private void startFmAudioSequence(boolean fast) {
         Log.d(TAG, "=== INICIO SECUENCIA AUDIO FM V7.2d ===");
 
-        // 1. Silenciar primero
-        try {
-            setMute(true);
-            Log.d(TAG, "[1/7] setMute(true) OK");
-        } catch (Exception e) {
-            Log.w(TAG, "[1/7] setMute(true) failed", e);
+        // 1. Silenciar primero (omitir si fast + ya en FM: evita micro-corte audible cuando
+        //    PlaybackManager.setMute(false) encadena enforceAudioRecovery justo tras desmutear,
+        //    o el heartbeat ya devolvió el canal 2).
+        boolean skipLeadingMute = false;
+        if (fast && mMcuManager != null && mGetChannel != null) {
+            try {
+                byte ch = (byte) mGetChannel.invoke(mMcuManager);
+                if (ch == 2) {
+                    skipLeadingMute = true;
+                }
+            } catch (Exception ignored) {}
+        }
+        if (!skipLeadingMute) {
+            try {
+                setMute(true);
+                Log.d(TAG, "[1/7] setMute(true) OK");
+            } catch (Exception e) {
+                Log.w(TAG, "[1/7] setMute(true) failed", e);
+            }
+        } else {
+            Log.d(TAG, "[1/7] setMute(true) omitido (fast, canal ya FM)");
         }
 
         // 2. CLAVE: Enviar comando "Radio Area" al MCU
@@ -2118,7 +2133,24 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
         Log.d(TAG, "enforceAudioChannelRecovery: Forzando SetChannel(2) tras desconexión BT");
         try {
-            // Mantener un único “ritual” de recuperación: en K706 el orden importa (LOC -> focus -> channel -> params).
+            // Si el MCU ya reporta FM (2), no repetir la secuencia completa: su primer paso es
+            // setMute(true) y produce un corte de décimas de segundo tras un desmute reciente.
+            byte current = -1;
+            if (mMcuManager != null && mGetChannel != null) {
+                try {
+                    current = (byte) mGetChannel.invoke(mMcuManager);
+                } catch (Exception ignored) {}
+            }
+            if (current == 2) {
+                Log.d(TAG, "enforceAudioChannelRecovery: canal ya FM(2) — recuperación ligera (sin pre-mute ni ritual completo)");
+                requestAudioFocus();
+                setAudioParams(true);
+                setMute(false);
+                mUserWantsFmAudio = true;
+                mIsRadioActive = true;
+                return;
+            }
+            // Cambio real de ruta (p. ej. 4→2): ritual completo; el pre-mute puede ser necesario.
             startFmAudioSequence(/*fast*/ true);
         } catch (Exception e) {
             Log.e(TAG, "enforceAudioChannelRecovery FAILED", e);

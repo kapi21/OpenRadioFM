@@ -1,5 +1,7 @@
 ## [Unreleased] - MCU2
 ### K706 / Media (independencia y auditoría)
+- **Recuperación FM sin micro-corte (K706)**: si `RPC_GetChannel` ya devuelve **FM (2)**, `enforceAudioChannelRecovery()` evita el ritual completo que empezaba con `setMute(true)` (colisión con `PlaybackManager.setMute(false)` → `enforceAudioRecovery`). En `startFmAudioSequence(fast)` se omite el pre-mute inicial cuando el canal ya es 2. El cambio real **4→2** sigue usando la secuencia completa cuando hace falta.
+- **Pendiente / futura revisión (audio OEM)**: si tras BT/stack QF aún se nota un clic al **mux 4→2** con el heartbeat, valorar **debounce** o **ventana de gracia** tras `abandonCustomAudioFocus` antes de forzar `SetChannel(2)` (riesgo: retrasar recuperación; medir en carretera).
 - **RDS RT end-to-end (K706)**: compatibilidad con RadioText desde **`0xB7`** (RT) y heurística para firmwares donde RT llega como **`0xB3`**; limpieza de texto más robusta para evitar RT vacío por filtrado.
 - **ACC (K706)**: `0x24` tratado como **ACC** y expuesto como evento `125` (pipeline Engine → UI/Servicio). Se incluye en el estado compartido (`RadioSessionState.accOn`).
 - **Estado único (UI + Service)**: `RadioMediaService` y `MainActivity` comparten el mismo `RadioSessionController` para evitar estados divergentes.
@@ -24,7 +26,8 @@
 ### Accesibilidad (volante / teclas de medios)
 - **FactoryRadioHijackerService**: solicitud reforzada de `FLAG_REQUEST_FILTER_KEY_EVENTS` al conectar y log a nivel INFO para diagnósticos en ROMs que filtran DEBUG.
 - **Config**: `accessibility_service_config.xml` pasa a `typeAllMask` + `canRequestFilterKeyEvents=true` para mejorar compatibilidad con unidades OEM.
-- **Versión app (MCU2)**: `versionCode` **36**, `versionName` **5.1.4**.
+- **UI / fondo dinámico**: `ivDynamicBackground` pasa a **fitCenter** (layouts default y `sw720dp`); `LogoManager` decodifica el bitmap al tamaño de pantalla (tope **1600 px** en el lado largo) y usa **fitCenter** en Glide para contener el arte sin recorte tipo centerCrop.
+- **Versión app (MCU2)**: `versionCode` **37**, `versionName` **5.1.5**.
 
 ## [5.2.0] - 2026-04-12
 ### Estabilización Crítica y Restauración de Motores Legados
