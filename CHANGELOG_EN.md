@@ -5,6 +5,11 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ---
 
 ## [Unreleased] - MCU2
+### K706 / shared engine & AutoScan UI
+- **`CompositeRadioEngineCallback`**: forwards **`onHwAutomationEvent`** to both delegates (hardware automation events are no longer dropped when UI + service share the engine).
+- **K706 selective scan dialog**: on dismiss, restores the **previous** `RadioEngineCallback` (e.g. `Composite` UI + `RadioMediaService`) instead of only the coordinator.
+- **AutoScan icon**: after slow preset overwrite scan, the MCU can emit spurious `onScanStatusChanged(true)` and restart rotation; UI now **filters** that for ~2.2s after slow autoscan completion (`adjustEngineScanningForAutoScanUi`), **`stopAutoScanAnimation`** is hardened (`animate().cancel()`, `clearAnimation()`, `rotation=0`), and **`LifecycleCoordinator.onResume`** uses the same rule.
+
 ### K706 / audio recovery
 - **Fewer FM micro-dropouts (K706)**: when `RPC_GetChannel` already reports **FM (2)**, `enforceAudioChannelRecovery()` skips the full ritual that started with `setMute(true)` (it collided with `PlaybackManager.setMute(false)` → `enforceAudioRecovery`). `startFmAudioSequence(fast)` skips the leading mute when the channel is already 2. A real **4→2** route change still runs the full sequence when needed.
 - **Future review**: if a click remains on **mux 4→2** after BT/QF stack events, consider **debouncing** or a **grace window** after `abandonCustomAudioFocus` before forcing `SetChannel(2)` (trade-off: slower recovery).
@@ -13,7 +18,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **`ivDynamicBackground`**: **fitCenter** in default and `sw720dp` layouts; `LogoManager` decodes to screen size (cap **1600 px** on the long edge) and uses Glide **fitCenter** to avoid centerCrop-style clipping.
 
 ### Version (MCU2)
-- `versionCode` **37**, `versionName` **5.1.5**.
+- `versionCode` **38**, `versionName` **5.1.6**.
 
 ---
 

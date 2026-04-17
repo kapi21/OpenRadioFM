@@ -96,6 +96,11 @@ public class ScanManager {
     private boolean mSlowFinishPosted = false;
     /** Marca de tiempo de {@link #finishSlowAutoScanInternal}; evita que MainActivity re-sincronice la UI a 108 MHz vía OEM. */
     private long mSlowAutoscanFinishEpochMs = 0L;
+    /**
+     * Tras AutoScan lento, algunos K706 mandan {@code onScanStatusChanged(true)} entre seeks; eso reactivaba
+     * la rotación del icono aunque el barrido ya hubiera terminado.
+     */
+    private static final long OEM_SCAN_TRUE_SUPPRESS_AFTER_SLOW_MS = 2200L;
     /** Última frecuencia vista al tick anterior del barrido lento; si no cambia, fallback stepUp (QS6 search puede quedarse quieto). */
     private int mLastSlowSeekTickFreq = -1;
     private final Runnable mSlowSeekRunnable = new Runnable() {
@@ -147,6 +152,24 @@ public class ScanManager {
 
     public boolean isScanning() {
         return mIsScanning;
+    }
+
+    /**
+     * Convierte el flag OEM de escaneo en el estado que debe ver la UI (botón AutoScan / captura inteligente).
+     * Suprime {@code true} espurios justo después de un AutoScan lento completado.
+     */
+    public boolean adjustEngineScanningForAutoScanUi(boolean oemScanning) {
+        if (!oemScanning) {
+            return false;
+        }
+        if (mSlowSeekAutoScan || mAutoOverwritePresets) {
+            return true;
+        }
+        long elapsed = android.os.SystemClock.elapsedRealtime() - mSlowAutoscanFinishEpochMs;
+        if (mSlowAutoscanFinishEpochMs > 0L && elapsed >= 0L && elapsed < OEM_SCAN_TRUE_SUPPRESS_AFTER_SLOW_MS) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -215,7 +238,11 @@ public class ScanManager {
             }
         } catch (Exception ignored) {}
         try {
-            if (target != null) target.setRotation(0f);
+            if (target != null) {
+                target.animate().cancel();
+                target.clearAnimation();
+                target.setRotation(0f);
+            }
         } catch (Exception ignored) {}
     }
 
@@ -898,8 +925,20 @@ public class ScanManager {
             tvStatus.setText(mActivity.getString(R.string.searching_next));
         });
 
-        // Al cerrar, restaurar el callback principal a MainActivity
-        dialog.setOnDismissListener(d -> mActivity.mEngine.setCallback(mActivity.mEngineCallbackCoordinator));
+        final RadioEngineCallback previousCallback =
+                (mActivity.mEngine instanceof K706Engine)
+                        ? ((K706Engine) mActivity.mEngine).getCallback()
+                        : null;
+
+        // Restaurar el callback previo (p. ej. Composite UI + RadioMediaService), no solo el coordinator.
+        dialog.setOnDismissListener(d -> {
+            if (mActivity.mEngine == null) return;
+            if (previousCallback != null) {
+                mActivity.mEngine.setCallback(previousCallback);
+            } else {
+                mActivity.mEngine.setCallback(mActivity.mEngineCallbackCoordinator);
+            }
+        });
 
         // Interceptar eventos de motor durante el escaneo selectivo
         mActivity.mEngine.setCallback(new RadioEngineCallback() {

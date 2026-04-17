@@ -66,9 +66,10 @@ public class LifecycleCoordinator {
         }
 
         if (mActivity.mEngine != null && mActivity.mScanManager != null) {
-            boolean scanning = mActivity.mEngine.isScanning();
-            mActivity.mIsScanning = scanning;
-            mActivity.mScanManager.applyEngineScanState(scanning);
+            boolean oemScanning = mActivity.mEngine.isScanning();
+            boolean uiScanning = mActivity.mScanManager.adjustEngineScanningForAutoScanUi(oemScanning);
+            mActivity.mIsScanning = uiScanning;
+            mActivity.mScanManager.applyEngineScanState(uiScanning);
         }
     }
 

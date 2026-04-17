@@ -276,9 +276,12 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
             mActivity.mSessionController.onScanStatusChanged(scanning);
         }
         mActivity.runOnUiThread(() -> {
-            mActivity.mIsScanning = scanning;
+            final boolean uiScanning = (mActivity.mScanManager != null)
+                    ? mActivity.mScanManager.adjustEngineScanningForAutoScanUi(scanning)
+                    : scanning;
+            mActivity.mIsScanning = uiScanning;
             if (mActivity.mScanManager != null) {
-                mActivity.mScanManager.applyEngineScanState(scanning);
+                mActivity.mScanManager.applyEngineScanState(uiScanning);
             }
             if (!scanning && mActivity.mScanManager != null && mActivity.mScanManager.getStationAdapter() != null) {
                 Log.d(TAG, "Scan finished callback received");

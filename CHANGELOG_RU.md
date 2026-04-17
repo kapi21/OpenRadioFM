@@ -7,7 +7,7 @@
 
 ## [Unreleased]
 
-*(новых записей нет; последние изменения описаны в 5.1.0)*
+- **K706 / общий движок и AutoScan**: см. [`CHANGELOG.md`](CHANGELOG.md) — `onHwAutomationEvent` в `CompositeRadioEngineCallback`, восстановление полного callback после диалога выборочного сканирования, остановка «лишней» анимации иконки и фильтр ложных `scanning=true` после медленного AutoScan. Версия **5.1.6** (`versionCode` **38**).
 
 ---
 
