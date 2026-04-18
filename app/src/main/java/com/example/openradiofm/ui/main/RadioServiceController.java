@@ -81,6 +81,25 @@ public class RadioServiceController {
      * {@link com.example.openradiofm.data.source.K706Engine#release()} o
      * {@link com.example.openradiofm.data.source.JancarIviEngine#release()} para no reutilizar un motor ya cerrado.
      */
+    /**
+     * MT8163/HCN: un solo {@code bindService} en MainActivity; el servicio reutiliza esta instancia
+     * para widget launcher / MediaSession sin volver a enlazar.
+     */
+    public static void registerSharedMt8163Engine(RadioEngine engine) {
+        if (!(engine instanceof MT8163Engine)) return;
+        synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+            sSharedLocalEngine = engine;
+            Log.d(TAG, "MT8163: motor HCN compartido registrado (RadioMediaService puede adjuntar)");
+        }
+    }
+
+    /** @return motor MT8163 ya enlazado desde MainActivity, o null. */
+    public static RadioEngine getSharedMt8163EngineForService() {
+        synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+            return sSharedLocalEngine instanceof MT8163Engine ? sSharedLocalEngine : null;
+        }
+    }
+
     public static void clearSharedLocalEngineIfSame(RadioEngine engine) {
         if (engine == null) return;
         synchronized (SHARED_LOCAL_ENGINE_LOCK) {
@@ -321,6 +340,18 @@ public class RadioServiceController {
                 return;
             } catch (Exception e) {
                 Log.e(TAG, "Error iniciando JancarIviEngine", e);
+            }
+        }
+
+        if (mode == MainActivity.FmMode.FM_MT8163) {
+            synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                if (sSharedLocalEngine instanceof MT8163Engine) {
+                    Log.i(TAG, "=> MT8163: reutilizando motor ya enlazado (sin segundo bind HCN)");
+                    if (mListener != null) {
+                        mListener.onEngineReady(sSharedLocalEngine);
+                    }
+                    return;
+                }
             }
         }
 

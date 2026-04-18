@@ -242,6 +242,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                             uiCb = ((com.example.openradiofm.data.source.QS6Engine) mEngine).getCallback();
                         } else if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
                             uiCb = ((com.example.openradiofm.data.source.K706Engine) mEngine).getCallback();
+                        } else if (mEngine instanceof com.example.openradiofm.data.source.MT8163Engine) {
+                            uiCb = ((com.example.openradiofm.data.source.MT8163Engine) mEngine).getCallback();
                         }
                         if (uiCb != null) {
                             mEngine.setCallback(new com.example.openradiofm.data.source.CompositeRadioEngineCallback(
@@ -909,11 +911,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (mEngine != null) return;
             if (mRadioServiceController == null) return;
             if (mRadioServiceController.isFmMt8163Mode()) {
-                Log.d(TAG, "maybeStartEngine: omitido (MT8163/HCN enlazado solo desde MainActivity)");
-                return;
+                if (RadioServiceController.getSharedMt8163EngineForService() == null) {
+                    Log.d(TAG, "maybeStartEngine: MT8163 sin motor compartido (abre OpenRadioFM para enlazar HCN)");
+                    return;
+                }
             }
             if (mEngineInitStarted.compareAndSet(false, true)) {
-                Log.d(TAG, "Iniciando RadioServiceController.start() (OEM cold start)");
+                Log.d(TAG, "Iniciando RadioServiceController.start() (cold start o MT8163 compartido)");
                 mRadioServiceController.start();
             } else if (mEngine == null) {
                 Log.d(TAG, "maybeStartEngine: reintento (motor aún null)");

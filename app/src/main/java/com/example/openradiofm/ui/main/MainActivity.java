@@ -1057,6 +1057,10 @@ public class MainActivity extends AppCompatActivity  {
                 mEngine.setCallback(mEngineCallbackCoordinator);
             }
 
+            if (mEngine instanceof com.example.openradiofm.data.source.MT8163Engine) {
+                RadioServiceController.registerSharedMt8163Engine(mEngine);
+            }
+
             if (mEngine instanceof K706Engine) {
                 runOnUiThread(() -> requestReadPhoneStateForK706IfNeeded());
             }

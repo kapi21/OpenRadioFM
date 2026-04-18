@@ -436,6 +436,7 @@ public class MT8163Engine implements RadioEngine {
         }
 
         Log.d(TAG, "release(persist=false): Soltando recursos MT8163 y silenciando");
+        com.example.openradiofm.ui.main.RadioServiceController.clearSharedLocalEngineIfSame(this);
         mInitCompleted = false;
         mRadioMuteDesired = false;
         switchToAndroidAudio(); // Asegurar liberación de audio al salir
@@ -1261,6 +1262,11 @@ public class MT8163Engine implements RadioEngine {
     @Override
     public void setCallback(RadioEngineCallback cb) {
         this.mCallback = cb;
+    }
+
+    /** Para {@link com.example.openradiofm.service.RadioMediaService}: componer con el callback de MainActivity. */
+    public RadioEngineCallback getCallback() {
+        return mCallback;
     }
 
     /**
