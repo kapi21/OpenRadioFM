@@ -16,6 +16,29 @@ final class MainActivityBootstrap {
     private MainActivityBootstrap() {}
 
     static void runAfterSuper(MainActivity a, Bundle savedInstanceState) {
+        createEarlyCoordinators(a);
+        configureVolumeStream(a);
+        restoreInstanceState(a, savedInstanceState);
+        initHardwareAndWidgetBridge(a);
+        initPrefsLayoutFlagsAndStatusBar(a);
+        inflateContentAndUiController(a);
+        bindSignalMeter(a);
+        ensureFirstRunLanguageCountry(a);
+        initUiControllerViewsFontsIcons(a);
+        maybeRequestStoragePermission(a);
+        initLogoServiceAndPlaybackStack(a);
+        loadLogoAssetsAndSimpleLayoutManager(a);
+        bootstrapLastFrequencyAndBands(a);
+        initSimpleLayoutIfNeeded(a);
+        bindMainFrequencyViewsAndClock(a);
+        applyLogoModeBindIndicatorsAndStreaming(a);
+        wireRdsIconsAndStereoToggle(a);
+        wireCarLogoAndControlPanel(a);
+        initThemeSkinNightAndAutoHideV3(a);
+        finalizeBootstrap(a);
+    }
+
+    private static void createEarlyCoordinators(MainActivity a) {
         a.mSkinCoordinator = new SkinCoordinator(a);
         a.mStatusRefreshCoordinator = new StatusRefreshCoordinator(a);
         a.mEngineCallbackCoordinator = new EngineCallbackCoordinator(a);
@@ -23,37 +46,45 @@ final class MainActivityBootstrap {
         a.mHardwareKeyCoordinator = new HardwareKeyCoordinator(a);
         a.mUiMediator = new UiViewMediator(a);
         a.mFreqStateManager = new FrequencyStateManager();
-        
-        // V19.2: Forzar que el control de volumen por hardware afecte al stream de musica 
+    }
+
+    private static void configureVolumeStream(MainActivity a) {
+        // V19.2: Forzar que el control de volumen por hardware afecte al stream de musica
         // desde el inicio. Esto evita el bug de doble pulsacion en MTK.
         a.setVolumeControlStream(android.media.AudioManager.STREAM_MUSIC);
+    }
 
+    private static void restoreInstanceState(MainActivity a, Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             a.mLastFreq = savedInstanceState.getInt("mLastFreq", -1);
             a.mIsV3 = savedInstanceState.getBoolean("mIsV3", false);
             a.mIsRecreating = true;
             Log.d(MainActivity.TAG, "State Restored: Freq=" + a.mLastFreq + " (Recreation detected)");
         }
+    }
 
+    private static void initHardwareAndWidgetBridge(MainActivity a) {
         // V18.6: MCU and BT logic controlled by HardwareManager
         a.mHardwareManager = new HardwareManager(a);
         a.mHardwareManager.registerReceivers();
-        
+
         // V23.0: Gestor de broadcasts para widgets OEM
         a.mWidgetBroadcastManager = new WidgetBroadcastManager();
+    }
 
+    private static void initPrefsLayoutFlagsAndStatusBar(MainActivity a) {
         // V3.0: Layout Selection
         a.mPrefs = a.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE); // Init prefs early
         a.mIconPackManager = new IconPackManager(a, a.mPrefs);
         a.mPresetNumberIconManager = new PresetNumberIconManager(a);
-        
+
         // V21.3: Forzar habilitación de banda AM para evitar inestabilidad en motores HW (MTK8259)
         // Se ha eliminado la opción de desactivarlo en Ajustes Premium.
         if (!a.mPrefs.getBoolean("pref_enable_am", true)) {
             a.mPrefs.edit().putBoolean("pref_enable_am", true).apply();
             Log.i(MainActivity.TAG, "AM Band forced to enabled for stability.");
         }
-        
+
         a.mIsV3 = a.mPrefs.getBoolean("pref_layout_v3", false);
         a.mIsSimpleLayout = a.mPrefs.getBoolean("pref_layout_simple", false);
         // Un solo layout activo: Simple gana. Si ambas prefs quedaron true (migración, backup, bug),
@@ -69,7 +100,9 @@ final class MainActivityBootstrap {
 
         // V4.8: Manejo de Barra de Estado (Fullscreen condicional)
         a.applyStatusBarVisibility();
+    }
 
+    private static void inflateContentAndUiController(MainActivity a) {
         if (a.mIsSimpleLayout) {
             a.setContentView(R.layout.activity_simple_radio);
             a.mUiController = new SimpleLayoutController(a);
@@ -82,17 +115,22 @@ final class MainActivityBootstrap {
             a.applyLayout2SidePreference();
         }
         a.mUiMediator.bindViews();
+    }
 
-        
+    private static void bindSignalMeter(MainActivity a) {
         a.mSignalBarsView = a.findViewById(R.id.viewSignalBars);
         a.mSignalMeterCoordinator = new SignalMeterCoordinator(a);
         a.mSignalMeterCoordinator.bind(a.mUiMediator.ivSignalLevel, a.mSignalBarsView);
         a.mSignalMeterCoordinator.applyModeVisibility();
+    }
 
+    private static void ensureFirstRunLanguageCountry(MainActivity a) {
         // Primer inicio tras instalación: solicitar idioma y país.
         // Explicación: mejora la selección de logos y streaming (filtrado por country_code en Supabase).
         a.ensureFirstRunLanguageAndCountry();
+    }
 
+    private static void initUiControllerViewsFontsIcons(MainActivity a) {
         // V21.0: Initialize the active UI Controller
         if (a.mUiController != null) {
             a.mUiController.initViews(a.findViewById(android.R.id.content));
@@ -110,13 +148,16 @@ final class MainActivityBootstrap {
         }
 
         // V3.8: Premium Background Binding
-        
+    }
 
+    private static void maybeRequestStoragePermission(MainActivity a) {
         if (a.checkSelfPermission(
                 android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
             a.requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
         }
+    }
 
+    private static void initLogoServiceAndPlaybackStack(MainActivity a) {
         // V13: Inicializar Managers agnósticos
         a.mLogoManager = new LogoManager(a);
         if (a.mRepository != null) {
@@ -137,7 +178,7 @@ final class MainActivityBootstrap {
         a.mHistoryManager = new HistoryManager(a, a.mPrefs);
         a.mMediaSessionManager = new MediaSessionManager(a);
         a.mMediaSessionManager.connect();
-        
+
         a.mControlPanelManager = new ControlPanelManager(a);
 
         // V5.5: Inicializar PlaybackManager y DeviceManager
@@ -202,14 +243,17 @@ final class MainActivityBootstrap {
         a.mPlaybackManager.registerMediaReceiver();
 
         a.mDeviceManager = new DeviceManager(a);
+    }
 
-
+    private static void loadLogoAssetsAndSimpleLayoutManager(MainActivity a) {
         // V2.0: Cargar fondo personalizado si existe
         a.mLogoManager.loadCustomBackground();
         a.mLogoManager.loadCarLogo();
 
         a.mSimpleLayoutManager = new SimpleLayoutManager(a);
+    }
 
+    private static void bootstrapLastFrequencyAndBands(MainActivity a) {
         // V13: Cargar última frecuencia guardada
         if (a.mLastFreq == -1) {
             a.mLastFreq = a.mPrefs.getInt("pref_last_freq", 87500);
@@ -270,7 +314,7 @@ final class MainActivityBootstrap {
             }
         }
         a.mStartupSavedFreqKhz = a.mLastFreq;
-        
+
         // V22.4: Saneo de arranque para prevenir bucles de Startup Reinforce
         // 1. Corregir escala de frecuencia (unidades NWD 10kHz vs app kHz)
         if (a.mMode == MainActivity.FmMode.FM_QS6 && a.mLastFreq > 0 && a.mLastFreq < 20000) {
@@ -295,11 +339,15 @@ final class MainActivityBootstrap {
 
         a.mStartupPersistGuardUntilMs = android.os.SystemClock.elapsedRealtime() + 6000L;
         a.mStartupRetuneAttempts = 0;
+    }
 
+    private static void initSimpleLayoutIfNeeded(MainActivity a) {
         if (a.mIsSimpleLayout) {
             a.mSimpleLayoutManager.initViews(a.findViewById(android.R.id.content));
         }
+    }
 
+    private static void bindMainFrequencyViewsAndClock(MainActivity a) {
         // Bind Views
         a.tvFrequency = a.findViewById(R.id.tvFrequency);
         if (a.tvFrequency != null) {
@@ -314,15 +362,9 @@ final class MainActivityBootstrap {
 
         // V4.3: New UI Elements
         a.tvPty = a.findViewById(R.id.tvPty);
-        
-
-        
-        
-        
 
         a.ivBandIndicator = a.findViewById(R.id.ivBandIndicator);
         a.ivUnitLabel = a.findViewById(R.id.ivUnitLabel);
-        
 
         // V18.5: Inicializar Reloj Digital
         a.mClockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
@@ -336,7 +378,9 @@ final class MainActivityBootstrap {
                 a.mClockHandler.postDelayed(this, 10000); // 10 segs (suficiente para HH:mm)
             }
         };
+    }
 
+    private static void applyLogoModeBindIndicatorsAndStreaming(MainActivity a) {
         // Aplicar preferencias iniciales
         a.applyLogoModePreference();
         a.ivFavoriteIndicator = a.findViewById(R.id.ivFavoriteIndicator);
@@ -345,11 +389,13 @@ final class MainActivityBootstrap {
         a.ivTaIcon = a.findViewById(R.id.ivTaIcon);
         a.ivTpIcon = a.findViewById(R.id.ivTpIcon);
         a.ivDataActivity = a.findViewById(R.id.ivDataActivity);
-        
+
         a.setupOnlineStreaming();
 
         // El listener de a.mRepository se configura asincronamente en onModeDetected
+    }
 
+    private static void wireRdsIconsAndStereoToggle(MainActivity a) {
         // V9.9: RDS Icons must be dimmed by default, not gone.
         // V5.0: RDS Icons - Ahora usan a.mEngine (sin bifurcación por modo)
         if (a.ivAfIcon != null) {
@@ -381,12 +427,12 @@ final class MainActivityBootstrap {
         if (a.ivStereoIcon != null) {
             a.ivStereoIcon.setVisibility(View.VISIBLE); // Siempre visible
             a.refreshStereoIndicatorUi(null);
-            
+
             a.ivStereoIcon.setOnClickListener(v -> {
                 a.animateButton(a.ivStereoIcon);
                 boolean current = a.mPrefs.getBoolean("pref_stereo_mode_on", true);
                 boolean next = !current;
-                
+
                 // Guardar y Aplicar
                 a.mPrefs.edit().putBoolean("pref_stereo_mode_on", next).apply();
                 if (a.mEngine != null) {
@@ -396,7 +442,9 @@ final class MainActivityBootstrap {
                 a.showToast(next ? "Modo Stereo Activado" : "Modo Forzar Mono");
             });
         }
+    }
 
+    private static void wireCarLogoAndControlPanel(MainActivity a) {
         // V16.2: Skin cycling remains in Car Logo (as it's more visual)
         if (a.mUiMediator.ivCarLogo != null) {
             a.mUiMediator.ivCarLogo.setOnClickListener(v -> {
@@ -419,16 +467,17 @@ final class MainActivityBootstrap {
         // setupIndicators();
 
         // V16.2: Inicializar ThemeManager
-        
+    }
 
+    private static void initThemeSkinNightAndAutoHideV3(MainActivity a) {
         a.mThemeManager = new com.example.openradiofm.ui.theme.ThemeManager(a);
-        a.mThemeManager.setLayoutPrefs(a.mPrefs); 
+        a.mThemeManager.setLayoutPrefs(a.mPrefs);
         // V2.5: Eliminado SkinAppliedListener redundante. a.applySkin() ahora gestiona todo secuencialmente.
         a.applySkin(a.mThemeManager.getCurrentSkin());
         a.checkAndApplyNightMode(); // V4: Automatic Night Mode
 
         // V18.6: Auto-hide bottom controls initialization
-        
+
         a.mAutoHideHandler = new android.os.Handler(android.os.Looper.getMainLooper());
         a.mAutoHideRunnable = () -> a.hideBottomControls();
 
@@ -449,9 +498,11 @@ final class MainActivityBootstrap {
             }
             a.resetAutoHideTimer();
         }
-    
-        // Seeking Logic (Delegated to ControlPanelManager)
 
+        // Seeking Logic (Delegated to ControlPanelManager)
+    }
+
+    private static void finalizeBootstrap(MainActivity a) {
         a.applyFonts();
 
         // V8.5: Easter Egg (Credits) - Restored
@@ -465,6 +516,5 @@ final class MainActivityBootstrap {
 
         // V20.0: Ajuste automático por densidad (DPI)
         a.adjustLayoutForDPI();
-
     }
 }

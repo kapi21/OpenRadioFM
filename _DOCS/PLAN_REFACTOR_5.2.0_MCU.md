@@ -52,7 +52,7 @@ No verás cambios nuevos en botones, sonido ni pantallas: la radio se comporta i
 - [x] `onCreate` queda en: `setTheme` → `super.onCreate` → `MainActivityBootstrap.runAfterSuper`.
 - [x] Visibilidad **package** en campos que el bootstrap asigna (vistas, flags de arranque, `mServiceListener`, constantes de banda / prefs bootstrap, `TAG`) para no exponer API pública innecesaria.
 - [x] Script opcional de mantenimiento: `tools/gen_main_activity_bootstrap.py` (regenerar desde `MainActivity` si se edita el orden; revisar `R.id` y claves de `Bundle` a mano).
-- [ ] *Opcional siguiente paso:* trocear `runAfterSuper` en métodos privados nombrados dentro de la misma clase (volumen/prefs/layout/managers/…) sin cambiar orden.
+- [x] *Opcional:* `runAfterSuper` troceado en métodos `private static` nombrados (`createEarlyCoordinators`, `bootstrapLastFrequencyAndBands`, etc.) sin cambiar orden ni comportamiento.
 
 ### Para el usuario (Fase 1 — cerrada)
 
