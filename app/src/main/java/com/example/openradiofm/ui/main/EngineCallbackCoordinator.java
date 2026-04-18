@@ -1,38 +1,36 @@
 package com.example.openradiofm.ui.main;
 
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.source.RadioEngineCallback;
-import com.example.openradiofm.ui.main.RDSManager;
 
 public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManager.RDSListener {
     private static final String TAG = "EngineCallbackCoordinator";
-    private final MainActivity mActivity;
+    private final RadioUiHost mHost;
 
-    public EngineCallbackCoordinator(MainActivity activity) {
-        this.mActivity = activity;
+    public EngineCallbackCoordinator(RadioUiHost host) {
+        this.mHost = host;
     }
 
     @Override
     public void onFrequencyChanged(int freqKhz) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onFrequencyChanged(freqKhz);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onFrequencyChanged(freqKhz);
         }
-        mActivity.handleFrequencyChange(freqKhz);
-        if (mActivity.mScanManager != null && mActivity.mScanManager.isScanning()) {
-            try { mActivity.mScanManager.onScanFrequencyChanged(freqKhz); } catch (Exception ignored) {}
+        mHost.handleFrequencyChange(freqKhz);
+        if (mHost.getScanManager() != null && mHost.getScanManager().isScanning()) {
+            try { mHost.getScanManager().onScanFrequencyChanged(freqKhz); } catch (Exception ignored) {}
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateFrequency(freqKhz, null, mActivity.mCurrentBand >= 3);
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updateFrequency(freqKhz, null, mHost.getUiCurrentBand() >= 3);
             } else {
-                mActivity.updateFrequencyDisplay(freqKhz, null);
+                mHost.updateFrequencyDisplay(freqKhz, null);
             }
-            if (mActivity.mSkinCoordinator != null) mActivity.mSkinCoordinator.reapplyVisualStateForCurrentSkin();
+            if (mHost.getSkinCoordinator() != null) mHost.getSkinCoordinator().reapplyVisualStateForCurrentSkin();
         });
     }
 
@@ -42,56 +40,54 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
 
     @Override
     public void onBandChanged(int band) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onBandChanged(band);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onBandChanged(band);
         }
-        mActivity.runOnUiThread(() -> {
-            mActivity.mLogoUiGeneration.incrementAndGet();
-            mActivity.clearStationLogoUi();
-            mActivity.mCurrentBand = band;
-            mActivity.mLastBand = band;
-            if (mActivity.mPrefs != null) {
-                mActivity.mPrefs.edit().putInt("pref_last_band", band).apply();
+        mHost.runOnHostUiThread(() -> {
+            mHost.incrementLogoUiGeneration();
+            mHost.clearStationLogoUi();
+            mHost.setUiCurrentBand(band);
+            mHost.setLastStoredBand(band);
+            mHost.persistLastBandPreference(band);
+            if (mHost.getPresetManager() != null) {
+                mHost.getPresetManager().refreshPresetsCache(band);
+                mHost.getPresetManager().refreshButtons(band);
             }
-            if (mActivity.mPresetManager != null) {
-                mActivity.mPresetManager.refreshPresetsCache(band);
-                mActivity.mPresetManager.refreshButtons(band);
-            }
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateBandIndicator(band);
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updateBandIndicator(band);
             } else {
-                mActivity.updateBandImage(band);
+                mHost.updateBandImage(band);
             }
 
-            TextView ivUnitLabel = mActivity.findViewById(R.id.ivUnitLabel);
+            TextView ivUnitLabel = (TextView) mHost.findHostViewById(R.id.ivUnitLabel);
             if (ivUnitLabel != null) {
                 MainActivity.setTextIfChanged(ivUnitLabel, unitShortText(band));
             }
-            
-            if (mActivity.mSkinCoordinator != null) mActivity.mSkinCoordinator.reapplyVisualStateForCurrentSkin();
-            
-            if (mActivity.mEngine != null) {
-                mActivity.sendWidgetUpdate(mActivity.mEngine.getCurrentFreq(), band, mActivity.mLastPs);
+
+            if (mHost.getSkinCoordinator() != null) mHost.getSkinCoordinator().reapplyVisualStateForCurrentSkin();
+
+            if (mHost.getRadioEngine() != null) {
+                mHost.sendWidgetUpdate(mHost.getRadioEngine().getCurrentFreq(), band, mHost.getLastPs());
             }
         });
     }
 
     @Override
     public void onStereoChanged(boolean stereo) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onStereoChanged(stereo);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onStereoChanged(stereo);
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateStereo(stereo);
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updateStereo(stereo);
             } else {
-                mActivity.refreshStereoIndicatorUi(null);
+                mHost.refreshStereoIndicatorUi(null);
             }
-            
-            if (mActivity.mSignalMeterCoordinator != null && mActivity.mSignalMeterCoordinator.useBars()) {
-                mActivity.mSignalMeterCoordinator.refreshFromEngineFlags();
+
+            if (mHost.getSignalMeterCoordinator() != null && mHost.getSignalMeterCoordinator().useBars()) {
+                mHost.getSignalMeterCoordinator().refreshFromEngineFlags();
             } else {
-                ImageView ivSignalLevel = mActivity.findViewById(R.id.ivSignalLevel);
+                ImageView ivSignalLevel = (ImageView) mHost.findHostViewById(R.id.ivSignalLevel);
                 if (ivSignalLevel != null) {
                     int color = stereo ? android.graphics.Color.parseColor("#00E676")
                             : android.graphics.Color.parseColor("#FFD600");
@@ -103,97 +99,97 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
 
     @Override
     public void onRdsName(final String name) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onRdsName(name);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onRdsName(name);
         }
-        if (mActivity.mFreqStateManager != null && mActivity.mFreqStateManager.shouldBlockTransitionalRdsName(name)) {
+        if (mHost.getFreqStateManager() != null && mHost.getFreqStateManager().shouldBlockTransitionalRdsName(name)) {
             Log.d(TAG, "onRdsName: bloqueado PS previo en transición (" + (name != null ? name.trim() : "") + ")");
             return;
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mRdsManager != null) {
-                mActivity.mRdsManager.onRdsName(name);
-                boolean newLock = mActivity.mRdsManager.hasRdsLock();
-                mActivity.mHasRdsLock = newLock;
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getRdsManager() != null) {
+                mHost.getRdsManager().onRdsName(name);
+                boolean newLock = mHost.getRdsManager().hasRdsLock();
+                mHost.setHasRdsLock(newLock);
                 maybeTickRdsLock(newLock);
                 // MediaSession/NowPlaying se actualiza desde RadioMediaService (source of truth).
             }
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateRDS(name);
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updateRDS(name);
             }
-            
-            if (mActivity.mEngine != null) {
-                mActivity.sendWidgetUpdate(mActivity.mEngine.getCurrentFreq(), mActivity.mCurrentBand, name);
+
+            if (mHost.getRadioEngine() != null) {
+                mHost.sendWidgetUpdate(mHost.getRadioEngine().getCurrentFreq(), mHost.getUiCurrentBand(), name);
             }
         });
     }
 
     @Override
     public void onRdsText(String text) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onRdsText(text);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onRdsText(text);
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mRdsManager != null) {
-                mActivity.mRdsManager.onRdsText(text);
-                boolean newLock = mActivity.mRdsManager.hasRdsLock();
-                mActivity.mHasRdsLock = newLock;
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getRdsManager() != null) {
+                mHost.getRdsManager().onRdsText(text);
+                boolean newLock = mHost.getRdsManager().hasRdsLock();
+                mHost.setHasRdsLock(newLock);
                 maybeTickRdsLock(newLock);
                 // MediaSession/NowPlaying se actualiza desde RadioMediaService (source of truth).
             }
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateRDSText(text);
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updateRDSText(text);
             }
         });
     }
 
     private void maybeTickRdsLock(boolean hasLockNow) {
         long now = android.os.SystemClock.elapsedRealtime();
-        boolean risingEdge = hasLockNow && !mActivity.mHadRdsLockForTick;
-        mActivity.mHadRdsLockForTick = hasLockNow;
+        boolean risingEdge = hasLockNow && !mHost.getHadRdsLockForTick();
+        mHost.setHadRdsLockForTick(hasLockNow);
         if (!risingEdge) return;
-        if (now - mActivity.mLastRdsLockTickUptimeMs < 650L) return;
-        mActivity.mLastRdsLockTickUptimeMs = now;
+        if (now - mHost.getLastRdsLockTickUptimeMs() < 650L) return;
+        mHost.setLastRdsLockTickUptimeMs(now);
 
-        TextView ps = mActivity.findViewById(R.id.tvRdsName);
-        TextView pty = mActivity.findViewById(R.id.tvPty);
+        TextView ps = (TextView) mHost.findHostViewById(R.id.tvRdsName);
+        TextView pty = (TextView) mHost.findHostViewById(R.id.tvPty);
         MainActivity.tickFlashText(ps);
         MainActivity.tickFlashText(pty);
     }
 
     @Override
     public void onRdsPty(String pty) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onRdsPty(pty);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onRdsPty(pty);
         }
-        if (mActivity.mRepository != null && mActivity.mEngine != null && pty != null && !pty.trim().isEmpty()) {
+        if (mHost.getRadioRepository() != null && mHost.getRadioEngine() != null && pty != null && !pty.trim().isEmpty()) {
             try {
-                mActivity.mRepository.saveRdsPty(mActivity.mEngine.getCurrentFreq(), pty);
+                mHost.getRadioRepository().saveRdsPty(mHost.getRadioEngine().getCurrentFreq(), pty);
             } catch (Exception ignored) {}
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mRdsManager != null) {
-                mActivity.mRdsManager.onRdsPty(pty);
-                mActivity.mCurrentPty = mActivity.mRdsManager.getCurrentPty();
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getRdsManager() != null) {
+                mHost.getRdsManager().onRdsPty(pty);
+                mHost.setCurrentPty(mHost.getRdsManager().getCurrentPty());
             }
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updatePTY(pty);
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updatePTY(pty);
             }
         });
     }
 
     @Override
     public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onRdsStatus(afEnabled, taEnabled, tpEnabled);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onRdsStatus(afEnabled, taEnabled, tpEnabled);
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateRdsStatus(afEnabled, taEnabled, tpEnabled);
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updateRdsStatus(afEnabled, taEnabled, tpEnabled);
             } else {
-                ImageView ivAfIcon = mActivity.findViewById(R.id.ivAfIcon);
-                ImageView ivTaIcon = mActivity.findViewById(R.id.ivTaIcon);
-                ImageView ivTpIcon = mActivity.findViewById(R.id.ivTpIcon);
+                ImageView ivAfIcon = (ImageView) mHost.findHostViewById(R.id.ivAfIcon);
+                ImageView ivTaIcon = (ImageView) mHost.findHostViewById(R.id.ivTaIcon);
+                ImageView ivTpIcon = (ImageView) mHost.findHostViewById(R.id.ivTpIcon);
                 if (ivAfIcon != null) ivAfIcon.setAlpha(afEnabled ? 1.0f : 0.2f);
                 if (ivTaIcon != null) ivTaIcon.setAlpha(taEnabled ? 1.0f : 0.2f);
                 if (ivTpIcon != null) ivTpIcon.setAlpha(tpEnabled ? 1.0f : 0.2f);
@@ -204,17 +200,17 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
 
     @Override
     public void onRdsPi(String piCode) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onRdsPi(piCode);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onRdsPi(piCode);
         }
-        mActivity.mCurrentPi = piCode;
-        if (mActivity.mRepository != null && mActivity.mEngine != null) {
-            int freq = mActivity.mEngine.getCurrentFreq();
-            mActivity.mRepository.saveRdsPi(freq, piCode);
+        mHost.setCurrentPi(piCode);
+        if (mHost.getRadioRepository() != null && mHost.getRadioEngine() != null) {
+            int freq = mHost.getRadioEngine().getCurrentFreq();
+            mHost.getRadioRepository().saveRdsPi(freq, piCode);
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mRdsManager != null) {
-                mActivity.mRdsManager.onRdsPi(piCode);
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getRdsManager() != null) {
+                mHost.getRdsManager().onRdsPi(piCode);
             }
         });
     }
@@ -222,26 +218,26 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
     // RDSManager.RDSListener implementation
     @Override
     public void onRdsNameConfirmed(String name) {
-        if (mActivity.mFreqStateManager != null && mActivity.mFreqStateManager.shouldBlockTransitionalRdsName(name)) {
+        if (mHost.getFreqStateManager() != null && mHost.getFreqStateManager().shouldBlockTransitionalRdsName(name)) {
             Log.d(TAG, "RDS guard activo: ignorando PS transitorio '" + name + "'");
             return;
         }
-        if (mActivity.mRepository != null && mActivity.mEngine != null) {
-            int freq = mActivity.mEngine.getCurrentFreq();
-            mActivity.mRepository.saveRdsName(freq, name);
+        if (mHost.getRadioRepository() != null && mHost.getRadioEngine() != null) {
+            int freq = mHost.getRadioEngine().getCurrentFreq();
+            mHost.getRadioRepository().saveRdsName(freq, name);
 
-            if (mActivity.mScanManager != null && mActivity.mScanManager.isScanning()) {
-                try { mActivity.mScanManager.onScanPsConfirmed(freq, name); } catch (Exception ignored) {}
+            if (mHost.getScanManager() != null && mHost.getScanManager().isScanning()) {
+                try { mHost.getScanManager().onScanPsConfirmed(freq, name); } catch (Exception ignored) {}
             }
 
-            mActivity.runOnUiThread(() -> mActivity.updateFrequencyDisplay(freq, name));
+            mHost.runOnHostUiThread(() -> mHost.updateFrequencyDisplay(freq, name));
 
-            if (mActivity.mLogoManager != null) {
-                mActivity.mLogoManager.updateStationLogo(freq, mActivity.mCurrentBand, null);
+            if (mHost.getLogoManager() != null) {
+                mHost.getLogoManager().updateStationLogo(freq, mHost.getUiCurrentBand(), null);
             }
 
-            if (mActivity.mPresetManager != null) {
-                mActivity.mPresetManager.updateCardVisuals(-1, freq, mActivity.mCurrentBand);
+            if (mHost.getPresetManager() != null) {
+                mHost.getPresetManager().updateCardVisuals(-1, freq, mHost.getUiCurrentBand());
             }
         }
     }
@@ -253,46 +249,46 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
 
     @Override
     public int getCurrentFrequency() {
-        return mActivity.mEngine != null ? mActivity.mEngine.getCurrentFreq() : 0;
+        return mHost.getRadioEngine() != null ? mHost.getRadioEngine().getCurrentFreq() : 0;
     }
 
     @Override
     public int getCurrentBand() {
-        return mActivity.mCurrentBand;
+        return mHost.getUiCurrentBand();
     }
 
     @Override
     public void onDxLocalChanged(boolean isLocal) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onDxLocalChanged(isLocal);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onDxLocalChanged(isLocal);
         }
-        mActivity.runOnUiThread(() -> mActivity.syncLocDxButtonVisual(isLocal));
+        mHost.runOnHostUiThread(() -> mHost.syncLocDxButtonVisual(isLocal));
     }
 
     @Override
     public void onScanStatusChanged(boolean scanning) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onScanStatusChanged(scanning);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onScanStatusChanged(scanning);
         }
-        mActivity.runOnUiThread(() -> {
-            final boolean uiScanning = (mActivity.mScanManager != null)
-                    ? mActivity.mScanManager.adjustEngineScanningForAutoScanUi(scanning)
+        mHost.runOnHostUiThread(() -> {
+            final boolean uiScanning = (mHost.getScanManager() != null)
+                    ? mHost.getScanManager().adjustEngineScanningForAutoScanUi(scanning)
                     : scanning;
-            mActivity.mIsScanning = uiScanning;
-            if (mActivity.mScanManager != null) {
-                mActivity.mScanManager.applyEngineScanState(uiScanning);
+            mHost.setUiScanningFlag(uiScanning);
+            if (mHost.getScanManager() != null) {
+                mHost.getScanManager().applyEngineScanState(uiScanning);
             }
-            if (!scanning && mActivity.mScanManager != null && mActivity.mScanManager.getStationAdapter() != null) {
+            if (!scanning && mHost.getScanManager() != null && mHost.getScanManager().getStationAdapter() != null) {
                 Log.d(TAG, "Scan finished callback received");
             }
-            
-            if (!scanning && mActivity.mEngine != null) {
-                if (mActivity.mScanManager != null && mActivity.mScanManager.shouldDeferOemFrequencySyncAfterSlowAutoscan()) {
+
+            if (!scanning && mHost.getRadioEngine() != null) {
+                if (mHost.getScanManager() != null && mHost.getScanManager().shouldDeferOemFrequencySyncAfterSlowAutoscan()) {
                     // Autoscan lento por sobrescritura
                 } else {
-                    int currentFreq = mActivity.mEngine.getCurrentFreq();
-                    mActivity.mLastFreq = -1;
-                    mActivity.handleFrequencyChange(currentFreq);
+                    int currentFreq = mHost.getRadioEngine().getCurrentFreq();
+                    mHost.setLastFreqKhz(-1);
+                    mHost.handleFrequencyChange(currentFreq);
                 }
             }
         });
@@ -300,55 +296,55 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
 
     @Override
     public void onRawEvent(int code, String data) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onRawEvent(code, data);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onRawEvent(code, data);
         }
-        if (mActivity.mEngineeringDialog != null && mActivity.mEngineeringDialog.isShowing()) {
-            mActivity.mEngineeringDialog.addRdsLog(data);
+        if (mHost.getK706EngineeringDialog() != null && mHost.getK706EngineeringDialog().isShowing()) {
+            mHost.getK706EngineeringDialog().addRdsLog(data);
         }
-        if (mActivity.mQs6EngineeringDialog != null && mActivity.mQs6EngineeringDialog.isShowing()) {
-            mActivity.mQs6EngineeringDialog.addRdsLog(data);
+        if (mHost.getQs6EngineeringDialog() != null && mHost.getQs6EngineeringDialog().isShowing()) {
+            mHost.getQs6EngineeringDialog().addRdsLog(data);
         }
     }
 
     @Override
     public void onSignalUpdate(int rssi, int snr) {
-        if (mActivity.mSessionController != null) {
-            mActivity.mSessionController.onSignalUpdate(rssi, snr);
+        if (mHost.getRadioSessionController() != null) {
+            mHost.getRadioSessionController().onSignalUpdate(rssi, snr);
         }
-        if (mActivity.mScanManager != null && mActivity.mScanManager.isScanning()) {
-            try { mActivity.mScanManager.onSignalUpdate(rssi, snr); } catch (Exception ignored) {}
+        if (mHost.getScanManager() != null && mHost.getScanManager().isScanning()) {
+            try { mHost.getScanManager().onSignalUpdate(rssi, snr); } catch (Exception ignored) {}
         }
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mEngineeringDialog != null && mActivity.mEngineeringDialog.isShowing()) {
-                mActivity.mEngineeringDialog.updateSignalQuality(rssi, snr);
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getK706EngineeringDialog() != null && mHost.getK706EngineeringDialog().isShowing()) {
+                mHost.getK706EngineeringDialog().updateSignalQuality(rssi, snr);
             }
-            if (mActivity.mQs6EngineeringDialog != null && mActivity.mQs6EngineeringDialog.isShowing()) {
-                mActivity.mQs6EngineeringDialog.updateSignalQuality(rssi, snr);
+            if (mHost.getQs6EngineeringDialog() != null && mHost.getQs6EngineeringDialog().isShowing()) {
+                mHost.getQs6EngineeringDialog().updateSignalQuality(rssi, snr);
             }
-            if (mActivity.mSignalMeterCoordinator != null) {
-                mActivity.mSignalMeterCoordinator.onRssiSnr(rssi, snr);
+            if (mHost.getSignalMeterCoordinator() != null) {
+                mHost.getSignalMeterCoordinator().onRssiSnr(rssi, snr);
             }
         });
     }
 
     @Override
     public void onHwAutomationEvent(int type, boolean active) {
-        mActivity.runOnUiThread(() -> {
+        mHost.runOnHostUiThread(() -> {
             switch (type) {
                 case 122: // Lights
-                    mActivity.handleHwLightsAutomation(active);
+                    mHost.handleHwLightsAutomation(active);
                     break;
                 case 123: // Reverse
-                    mActivity.handleHwReverseMute(active);
+                    mHost.handleHwReverseMute(active);
                     break;
                 case 124: // Handbrake
-                    mActivity.handleHwHandbrakeSafety(active);
+                    mHost.handleHwHandbrakeSafety(active);
                     break;
                 case 125: // ACC
-                    mActivity.handleHwAccState(active);
-                    if (mActivity.mSessionController != null) {
-                        mActivity.mSessionController.onAccChanged(active);
+                    mHost.handleHwAccState(active);
+                    if (mHost.getRadioSessionController() != null) {
+                        mHost.getRadioSessionController().onAccChanged(active);
                     }
                     break;
             }

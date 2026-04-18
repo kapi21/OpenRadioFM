@@ -349,6 +349,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
     public com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
 
+    @Override
     public boolean isQs6TransitionGuardActive() {
         try {
             boolean isQs6 = mEngine != null
@@ -445,6 +446,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         return null;
     }
 
+    @Override
     public boolean hasStableCachedNameForFrequency(int freqKhz) {
         String name = getStableCachedNameForFrequency(freqKhz);
         return name != null && !name.trim().isEmpty();
@@ -679,6 +681,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * - Parpadeando si hay actividad (download/upload) y hay conectividad.
      * - Color: rojo (streaming), amarillo (buffer), blanco/azul noche en FM idle (coherente con packs).
      */
+    @Override
     public void updateDataActivityUI() {
         if (ivDataActivity == null) return;
 
@@ -1449,6 +1452,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     /**
      * Sincroniza el botón LOC/DX con el estado del motor (drawable por defecto, pack y tinte de skin).
      */
+    @Override
     public void syncLocDxButtonVisual(boolean isLocal) {
         if (mUiMediator.btnLocDx == null) return;
         mUiMediator.btnLocDx.setSelected(isLocal);
@@ -1970,6 +1974,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * @param rxActiveIfNotNull si no es null, valor ya combinado (p. ej. streaming || isStereo) para el alpha;
      *                          si es null, se calcula aquí.
      */
+    @Override
     public void refreshStereoIndicatorUi(Boolean rxActiveIfNotNull) {
         if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) {
             return;
@@ -2203,6 +2208,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * Delega en {@link BaseLayoutController#updateLogo} cuando hay controlador
      * (V2/V3/Simple); si no, llama directamente a {@link LogoManager#clearLogo()}.
      */
+    @Override
     public void clearStationLogoUi() {
         if (isFinishing()) return;
         if (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed()) return;
@@ -2246,6 +2252,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * Delega la lógica de broadcasts específicos al motor de radio activo para
      * evitar dependencias directas con {@code com.qf.*} u otras plataformas en la UI.
      */
+    @Override
     public void sendWidgetUpdate(int freq, int band, String rdsName) {
         if (mWidgetBroadcastManager != null) {
             mWidgetBroadcastManager.sendUpdate(this, freq, band, rdsName, 
@@ -2272,6 +2279,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         return (band == BAND_AM1 || band == BAND_AM2) ? "kHz" : "MHz";
     }
 
+    @Override
     public void updateBandImage(int band) {
         if (ivBandIndicator != null) {
             setTextIfChanged(ivBandIndicator, bandShortText(band));
@@ -2360,7 +2368,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     // V4.0: Saved Preset Indicator & Color Logic (Unified)
     // V4.8.6: Ahora acepta rdsName para evitar hilos redundantes si ya se obtuvo antes.
-    void updateFrequencyDisplay(int freq, String rdsName) {
+    @Override
+    public void updateFrequencyDisplay(int freq, String rdsName) {
         if (freq <= 0) return;
         
         runOnUiThread(() -> {
@@ -2559,6 +2568,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     // V4: Swipe Listener Class
 
     // V16: Delegaciones a NightModeManager
+    @Override
     public void checkAndApplyNightMode() {
         if (mNightModeManager != null) mNightModeManager.checkAndApplyNightMode();
     }
@@ -2723,6 +2733,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     /**
      * V4.3: Helper to check if a frequency is stored in presets
      */
+    @Override
     public boolean isStationMemorized(int freq) {
         if (mPresetManager == null)
             return false;
@@ -2737,6 +2748,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     /**
      * V4.3: Helper to get the 1-based index of a preset frequency
      */
+    @Override
     public int getPresetIndex(int freq) {
         if (mPresetManager == null)
             return 0;
@@ -2888,6 +2900,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     /**
      * V13.9: Centralized reset when frequency changes.
      */
+    @Override
     public void handleFrequencyChange(int freq) {
         if (freq == mLastFreq)
             return;
@@ -3464,8 +3477,166 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         return mHasRdsLock;
     }
 
+    @Override
+    public android.view.View findHostViewById(int id) {
+        return findViewById(id);
+    }
+
+    @Override
+    public SignalMeterCoordinator getSignalMeterCoordinator() {
+        return mSignalMeterCoordinator;
+    }
+
+    @Override
+    public FrequencyStateManager getFreqStateManager() {
+        return mFreqStateManager;
+    }
+
+    @Override
+    public SkinCoordinator getSkinCoordinator() {
+        return mSkinCoordinator;
+    }
+
+    @Override
+    public NightModeManager getNightModeManager() {
+        return mNightModeManager;
+    }
+
+    @Override
+    public com.example.openradiofm.data.repository.RadioRepository getRadioRepository() {
+        return mRepository;
+    }
+
+    @Override
+    public RadioSessionController getRadioSessionController() {
+        return mSessionController;
+    }
+
+    @Override
+    public K706EngineeringDialog getK706EngineeringDialog() {
+        return mEngineeringDialog;
+    }
+
+    @Override
+    public QS6EngineeringDialog getQs6EngineeringDialog() {
+        return mQs6EngineeringDialog;
+    }
+
+    @Override
+    public java.util.Map<String, String> getLogoCachePerBand() {
+        return mLogoCachePerBand;
+    }
+
+    @Override
+    public boolean isUiScanning() {
+        return mIsScanning;
+    }
+
+    @Override
+    public int hostNextStationInfoSequence() {
+        return mStationInfoSeq.incrementAndGet();
+    }
+
+    @Override
+    public int getLastStationInfoRequestedSeq() {
+        return mLastStationInfoRequestedSeq;
+    }
+
+    @Override
+    public void setLastStationInfoRequestedSeq(int seq) {
+        mLastStationInfoRequestedSeq = seq;
+    }
+
+    @Override
+    public void setUiCurrentBand(int band) {
+        mCurrentBand = band;
+    }
+
+    @Override
+    public void setLastFreqKhz(int freqKhz) {
+        mLastFreq = freqKhz;
+    }
+
+    @Override
+    public String getLastPs() {
+        return mLastPs;
+    }
+
+    @Override
+    public void setLastPs(String ps) {
+        mLastPs = ps != null ? ps : "";
+    }
+
+    @Override
+    public String getCurrentPty() {
+        return mCurrentPty;
+    }
+
+    @Override
+    public void setCurrentPty(String pty) {
+        mCurrentPty = pty;
+    }
+
+    @Override
+    public void setHasRdsLock(boolean value) {
+        mHasRdsLock = value;
+    }
+
+    @Override
+    public boolean getHadRdsLockForTick() {
+        return mHadRdsLockForTick;
+    }
+
+    @Override
+    public void setHadRdsLockForTick(boolean value) {
+        mHadRdsLockForTick = value;
+    }
+
+    @Override
+    public long getLastRdsLockTickUptimeMs() {
+        return mLastRdsLockTickUptimeMs;
+    }
+
+    @Override
+    public void setLastRdsLockTickUptimeMs(long ms) {
+        mLastRdsLockTickUptimeMs = ms;
+    }
+
+    @Override
+    public void incrementLogoUiGeneration() {
+        mLogoUiGeneration.incrementAndGet();
+    }
+
+    @Override
+    public void persistLastBandPreference(int band) {
+        if (mPrefs != null) {
+            mPrefs.edit().putInt("pref_last_band", band).apply();
+        }
+    }
+
+    @Override
+    public int getLastStoredBand() {
+        return mLastBand;
+    }
+
+    @Override
+    public void setLastStoredBand(int band) {
+        mLastBand = band;
+    }
+
+    @Override
+    public String getCurrentPi() {
+        return mCurrentPi;
+    }
+
+    @Override
+    public void setCurrentPi(String pi) {
+        mCurrentPi = pi;
+    }
+
     // === V24.5: HARDWARE AUTOMATION HANDLERS (K706 EXCLUSIVE) ===
 
+    @Override
     public void handleHwLightsAutomation(boolean lightsOn) {
         if (mPrefs == null || !mPrefs.getBoolean("pref_hw_auto_night", true)) return;
         
@@ -3487,6 +3658,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         }
     }
 
+    @Override
     public void handleHwReverseMute(boolean reverseOn) {
         if (mPrefs == null || !mPrefs.getBoolean("pref_hw_reverse_mute", true)) return;
         
@@ -3501,6 +3673,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         }
     }
 
+    @Override
     public void handleHwHandbrakeSafety(boolean engaged) {
         if (mPrefs == null || !mPrefs.getBoolean("pref_hw_handbrake", true)) return;
         
@@ -3512,6 +3685,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     /** ACC (contacto) ON/OFF. Útil para política de auto-recovery/persistencia. */
+    @Override
     public void handleHwAccState(boolean accOn) {
         try {
             if (mPrefs != null) {

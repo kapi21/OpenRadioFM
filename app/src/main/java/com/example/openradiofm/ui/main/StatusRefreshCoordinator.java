@@ -4,7 +4,6 @@ import android.content.Context;
 import android.media.AudioManager;
 import android.os.Build;
 import android.util.Log;
-import android.view.View;
 import android.widget.ImageView;
 
 import com.example.openradiofm.R;
@@ -16,39 +15,39 @@ public class StatusRefreshCoordinator {
     private static final long DATA_ACTIVITY_UI_INTERVAL_MS = 1000;
     private static final long NIGHT_MODE_CHECK_INTERVAL_MS = 60000;
 
-    private final MainActivity mActivity;
+    private final RadioUiHost mHost;
     private long mLastDataActivityUiTime = 0;
     private long mLastNightModeCheckTime = 0;
 
-    public StatusRefreshCoordinator(MainActivity activity) {
-        this.mActivity = activity;
+    public StatusRefreshCoordinator(RadioUiHost host) {
+        this.mHost = host;
     }
 
     public void refreshRadioStatus() {
-        if (mActivity.mEngine == null) return;
+        if (mHost.getRadioEngine() == null) return;
 
         long now = System.currentTimeMillis();
         final boolean shouldUpdateDataUi = (now - mLastDataActivityUiTime) >= DATA_ACTIVITY_UI_INTERVAL_MS;
         final boolean shouldCheckNight = (now - mLastNightModeCheckTime) >= NIGHT_MODE_CHECK_INTERVAL_MS;
         if (shouldUpdateDataUi) mLastDataActivityUiTime = now;
         if (shouldCheckNight) mLastNightModeCheckTime = now;
-        
+
         if (shouldUpdateDataUi || shouldCheckNight) {
-            mActivity.runOnUiThread(() -> {
-                if (shouldUpdateDataUi) mActivity.updateDataActivityUI();
-                if (shouldCheckNight) mActivity.checkAndApplyNightMode();
+            mHost.runOnHostUiThread(() -> {
+                if (shouldUpdateDataUi) mHost.updateDataActivityUI();
+                if (shouldCheckNight) mHost.checkAndApplyNightMode();
             });
         }
 
-        boolean isStreaming = mActivity.getOnlineStreamManager() != null
-                && (mActivity.getOnlineStreamManager().isPlaying() || mActivity.getOnlineStreamManager().isLoading());
+        boolean isStreaming = mHost.getOnlineStreamManager() != null
+                && (mHost.getOnlineStreamManager().isPlaying() || mHost.getOnlineStreamManager().isLoading());
 
-        if (mActivity.mPlaybackManager != null && mActivity.mEngine != null &&
-            ("MTK8259_8667".equals(mActivity.mEngine.getEngineName()) ||
-             ("MT8163".equals(mActivity.mEngine.getEngineName())
-                     && (mActivity.mPrefs.getBoolean("pref_mt8163_global_stream_mute", true)
-                     || mActivity.mPrefs.getBoolean("pref_mt8163_mcu_direct", false))))) {
-            AudioManager am = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
+        if (mHost.getPlaybackManager() != null && mHost.getRadioEngine() != null &&
+            ("MTK8259_8667".equals(mHost.getRadioEngine().getEngineName()) ||
+             ("MT8163".equals(mHost.getRadioEngine().getEngineName())
+                     && (mHost.getRadioPresets().getBoolean("pref_mt8163_global_stream_mute", true)
+                     || mHost.getRadioPresets().getBoolean("pref_mt8163_mcu_direct", false))))) {
+            AudioManager am = (AudioManager) mHost.getHostContext().getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
                 boolean isSystemMuted;
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -58,38 +57,38 @@ public class StatusRefreshCoordinator {
                 } else {
                     isSystemMuted = am.getStreamVolume(AudioManager.STREAM_MUSIC) == 0;
                 }
-                
-                if (!isSystemMuted && mActivity.mPlaybackManager.isMuted()) {
-                    if (mActivity.mPlaybackManager.isMt8163StreamVolumeMuteRejectedByOem()) {
+
+                if (!isSystemMuted && mHost.getPlaybackManager().isMuted()) {
+                    if (mHost.getPlaybackManager().isMt8163StreamVolumeMuteRejectedByOem()) {
                         // STREAM_MUSIC no refleja mute (app sin permiso); no forzar unmute espurio.
-                    } else if (mActivity.mPlaybackManager.shouldSuppressMt8163StreamMuteSync()) {
-                        // Tras inject VOLUME_MUTE el HU puede “desenganchar” STREAM_MUSIC del mute real;
-                        // no interpretar como “usuario desmuteó por volumen” con un solo toque en la app.
+                    } else if (mHost.getPlaybackManager().shouldSuppressMt8163StreamMuteSync()) {
+                        // Tras inject VOLUME_MUTE el HU puede "desenganchar" STREAM_MUSIC del mute real;
+                        // no interpretar como "usuario desmuteó por volumen" con un solo toque en la app.
                     } else {
                         Log.d(TAG, "Mute sync: System unmuted, updating UI/Engine");
-                        mActivity.mPlaybackManager.setMute(false);
+                        mHost.getPlaybackManager().setMute(false);
                     }
                 }
             }
         }
 
-        int freq = isStreaming ? mActivity.mLastFreq : mActivity.mEngine.getCurrentFreq();
+        int freq = isStreaming ? mHost.getLastFreqKhz() : mHost.getRadioEngine().getCurrentFreq();
         if (freq <= 0) return;
 
-        int band = isStreaming ? mActivity.mCurrentBand : mActivity.mEngine.getCurrentBand();
-        boolean isStereo = isStreaming || mActivity.mEngine.isStereo();
-        boolean isLocal = !isStreaming && mActivity.mEngine.isDxLocal();
+        int band = isStreaming ? mHost.getUiCurrentBand() : mHost.getRadioEngine().getCurrentBand();
+        boolean isStereo = isStreaming || mHost.getRadioEngine().isStereo();
+        boolean isLocal = !isStreaming && mHost.getRadioEngine().isDxLocal();
 
-        boolean stateChanged = (mActivity.mFreqStateManager != null)
-                ? mActivity.mFreqStateManager.shouldFullRefresh(freq, band) : true;
+        boolean stateChanged = (mHost.getFreqStateManager() != null)
+                ? mHost.getFreqStateManager().shouldFullRefresh(freq, band) : true;
 
         if (!stateChanged) {
-            mActivity.runOnUiThread(() -> {
-                mActivity.refreshStereoIndicatorUi(isStereo);
-                mActivity.syncLocDxButtonVisual(isLocal);
-                
-                ImageView ivSignalLevel = mActivity.findViewById(R.id.ivSignalLevel);
-                if (ivSignalLevel != null && (mActivity.mSignalMeterCoordinator == null || !mActivity.mSignalMeterCoordinator.useBars())) {
+            mHost.runOnHostUiThread(() -> {
+                mHost.refreshStereoIndicatorUi(isStereo);
+                mHost.syncLocDxButtonVisual(isLocal);
+
+                ImageView ivSignalLevel = (ImageView) mHost.findHostViewById(R.id.ivSignalLevel);
+                if (ivSignalLevel != null && (mHost.getSignalMeterCoordinator() == null || !mHost.getSignalMeterCoordinator().useBars())) {
                     int sigColor = isStereo ? android.graphics.Color.parseColor("#00E676") : android.graphics.Color.parseColor("#FFD600");
                     ivSignalLevel.setColorFilter(sigColor, android.graphics.PorterDuff.Mode.SRC_IN);
                 }
@@ -97,17 +96,17 @@ public class StatusRefreshCoordinator {
             return;
         }
 
-        if (band != mActivity.mCurrentBand) {
-            String logMsg = "Band shift detected: " + mActivity.mCurrentBand + " -> " + band;
-            mActivity.mCurrentBand = band;
+        if (band != mHost.getUiCurrentBand()) {
+            String logMsg = "Band shift detected: " + mHost.getUiCurrentBand() + " -> " + band;
+            mHost.setUiCurrentBand(band);
             Log.d(TAG, logMsg);
-            if (mActivity.mPresetManager != null) {
-                mActivity.mPresetManager.refreshPresetsCache(band);
-                mActivity.runOnUiThread(() -> mActivity.mPresetManager.refreshButtons(band));
+            if (mHost.getPresetManager() != null) {
+                mHost.getPresetManager().refreshPresetsCache(band);
+                mHost.runOnHostUiThread(() -> mHost.getPresetManager().refreshButtons(band));
             }
         }
 
-        if (freq != mActivity.mLastFreq) {
+        if (freq != mHost.getLastFreqKhz()) {
             Log.d(TAG, "Ultima frecuencia guardada: " + freq);
         }
 
@@ -117,10 +116,10 @@ public class StatusRefreshCoordinator {
         final boolean fIsLocal = isLocal;
         final boolean fIsStreaming = isStreaming;
 
-        final int seq = mActivity.mStationInfoSeq.incrementAndGet();
-        mActivity.mLastStationInfoRequestedSeq = seq;
-        if (mActivity.mStationInfoExecutor == null) {
-            mActivity.mStationInfoExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
+        final int seq = mHost.hostNextStationInfoSequence();
+        mHost.setLastStationInfoRequestedSeq(seq);
+        if (mHost.getStationInfoExecutor() == null) {
+            mHost.setStationInfoExecutor(java.util.concurrent.Executors.newSingleThreadExecutor());
         }
 
         /*
@@ -129,113 +128,113 @@ public class StatusRefreshCoordinator {
          * pintar el PS antiguo en tvFrequency (V3 muestra el PS ahí) — p. ej. "ANTENA 2" pegado al zapping.
          * Encadenamos el trabajo en background después del reset y forzamos MHz hasta nuevo PS fiable.
          */
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mRdsManager != null) mActivity.mRdsManager.reset(true);
-            mActivity.clearStationLogoUi();
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateRDS("");
-                mActivity.mUiController.updateFrequency(fFreq, "", fIsAm);
+        mHost.runOnHostUiThread(() -> {
+            if (mHost.getRdsManager() != null) mHost.getRdsManager().reset(true);
+            mHost.clearStationLogoUi();
+            if (mHost.getUiController() != null) {
+                mHost.getUiController().updateRDS("");
+                mHost.getUiController().updateFrequency(fFreq, "", fIsAm);
             } else {
-                mActivity.updateFrequencyDisplay(fFreq, "");
+                mHost.updateFrequencyDisplay(fFreq, "");
             }
 
-            mActivity.mStationInfoExecutor.execute(() -> {
-            if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-            if (seq != mActivity.mLastStationInfoRequestedSeq) return;
-            final boolean qs6TransitionActive = mActivity.isQs6TransitionGuardActive();
+            mHost.getStationInfoExecutor().execute(() -> {
+            if (mHost.isHostFinishing() || mHost.isHostDestroyed()) return;
+            if (seq != mHost.getLastStationInfoRequestedSeq()) return;
+            final boolean qs6TransitionActive = mHost.isQs6TransitionGuardActive();
 
             RadioStation station = null;
-            if (mActivity.mRepository != null && !mActivity.mIsScanning) {
+            if (mHost.getRadioRepository() != null && !mHost.isUiScanning()) {
                 String livePs = null;
-                if (!qs6TransitionActive && !fIsStreaming && mActivity.mRdsManager != null && mActivity.mEngine != null && fFreq == mActivity.mEngine.getCurrentFreq()) {
-                    String cn = mActivity.mRdsManager.getConfirmedName();
+                if (!qs6TransitionActive && !fIsStreaming && mHost.getRdsManager() != null && mHost.getRadioEngine() != null && fFreq == mHost.getRadioEngine().getCurrentFreq()) {
+                    String cn = mHost.getRdsManager().getConfirmedName();
                     if (cn != null && !cn.trim().isEmpty()) {
                         livePs = cn.trim();
                     }
                 }
-                station = mActivity.mRepository.getStationInfo(fFreq, null, livePs);
+                station = mHost.getRadioRepository().getStationInfo(fFreq, null, livePs);
             }
-            if (seq != mActivity.mLastStationInfoRequestedSeq) return;
+            if (seq != mHost.getLastStationInfoRequestedSeq()) return;
 
             final String rdsNameRaw = (station != null) ? station.getName() : "";
-            final boolean hasStableCachedName = mActivity.hasStableCachedNameForFrequency(fFreq);
+            final boolean hasStableCachedName = mHost.hasStableCachedNameForFrequency(fFreq);
             final String rdsName = (qs6TransitionActive && !hasStableCachedName) ? "" : rdsNameRaw;
             final String stationPty = (station != null) ? station.getPty() : null;
-            mActivity.mLastPs = rdsName;
+            mHost.setLastPs(rdsName);
             final String repoLogoForUi = (station != null) ? station.getLogoUrl() : null;
 
-            mActivity.runOnUiThread(() -> {
-                if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                if (seq != mActivity.mLastStationInfoRequestedSeq) return;
+            mHost.runOnHostUiThread(() -> {
+                if (mHost.isHostFinishing() || mHost.isHostDestroyed()) return;
+                if (seq != mHost.getLastStationInfoRequestedSeq()) return;
 
-                boolean isNight = (mActivity.mThemeManager != null && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.NIGHT_MODE);
+                boolean isNight = (mHost.getThemeManager() != null && mHost.getThemeManager().getActiveSkin() == ThemeManager.Skin.NIGHT_MODE);
 
-                if (mActivity.mUiController != null) {
-                    mActivity.mUiController.updateFrequency(fFreq, rdsName, fIsAm);
-                    mActivity.mUiController.applySkin(isNight);
-                    mActivity.mUiController.updateBandIndicator(fBand);
-                    
-                    if ((mActivity.mCurrentPty == null || mActivity.mCurrentPty.trim().isEmpty())
+                if (mHost.getUiController() != null) {
+                    mHost.getUiController().updateFrequency(fFreq, rdsName, fIsAm);
+                    mHost.getUiController().applySkin(isNight);
+                    mHost.getUiController().updateBandIndicator(fBand);
+
+                    if ((mHost.getCurrentPty() == null || mHost.getCurrentPty().trim().isEmpty())
                             && stationPty != null && !stationPty.trim().isEmpty()
-                            && mActivity.mRdsManager != null) {
-                        mActivity.mRdsManager.onRdsPty(stationPty);
-                        mActivity.mCurrentPty = stationPty;
-                        mActivity.mUiController.updatePTY(stationPty);
+                            && mHost.getRdsManager() != null) {
+                        mHost.getRdsManager().onRdsPty(stationPty);
+                        mHost.setCurrentPty(stationPty);
+                        mHost.getUiController().updatePTY(stationPty);
                     }
 
-                    if (mActivity.mLogoManager != null) {
-                        boolean qs6GuardActive = mActivity.isQs6TransitionGuardActive();
-                        String cachedLogo = mActivity.mLogoCachePerBand.get(fBand + "_" + fFreq);
+                    if (mHost.getLogoManager() != null) {
+                        boolean qs6GuardActive = mHost.isQs6TransitionGuardActive();
+                        String cachedLogo = mHost.getLogoCachePerBand().get(fBand + "_" + fFreq);
                         String repoLogo = repoLogoForUi;
                         String preferredLogo = (cachedLogo != null && !cachedLogo.trim().isEmpty()) ? cachedLogo : ((repoLogo != null && !repoLogo.trim().isEmpty()) ? repoLogo : null);
 
                         if (preferredLogo != null) {
-                            mActivity.mLogoManager.updateStationLogo(fFreq, fBand, preferredLogo);
+                            mHost.getLogoManager().updateStationLogo(fFreq, fBand, preferredLogo);
                         } else if (qs6GuardActive) {
-                            mActivity.clearStationLogoUi();
+                            mHost.clearStationLogoUi();
                         } else {
-                            mActivity.mLogoManager.updateStationLogo(fFreq, fBand, null);
+                            mHost.getLogoManager().updateStationLogo(fFreq, fBand, null);
                         }
                     }
 
-                    boolean isFav = mActivity.isStationMemorized(fFreq);
-                    int pIndex = mActivity.getPresetIndex(fFreq);
-                    mActivity.mUiController.updateFavoriteIndicator(isFav, pIndex, isNight);
-                    
-                    if (isNight && mActivity.mNightModeManager != null) {
-                        mActivity.mNightModeManager.applyNightModeColors(mActivity.mLastFreq);
+                    boolean isFav = mHost.isStationMemorized(fFreq);
+                    int pIndex = mHost.getPresetIndex(fFreq);
+                    mHost.getUiController().updateFavoriteIndicator(isFav, pIndex, isNight);
+
+                    if (isNight && mHost.getNightModeManager() != null) {
+                        mHost.getNightModeManager().applyNightModeColors(mHost.getLastFreqKhz());
                     }
-                    mActivity.updateDataActivityUI();
+                    mHost.updateDataActivityUI();
                 } else {
-                    int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
-                    android.widget.TextView ivUnitLabel = mActivity.findViewById(R.id.ivUnitLabel);
-                    android.widget.TextView tvFrequency = mActivity.findViewById(R.id.tvFrequency);
-                    
+                    int nightBlue = mHost.getHostContext().getResources().getColor(R.color.night_blue_primary, null);
+                    android.widget.TextView ivUnitLabel = (android.widget.TextView) mHost.findHostViewById(R.id.ivUnitLabel);
+                    android.widget.TextView tvFrequency = (android.widget.TextView) mHost.findHostViewById(R.id.tvFrequency);
+
                     if (isNight) {
                         MainActivity.setTextColorIfChanged(ivUnitLabel, nightBlue);
                         MainActivity.setTextColorIfChanged(tvFrequency, nightBlue);
                     } else {
-                        boolean isLight = mActivity.mThemeManager != null && mActivity.mThemeManager.getActiveSkin() == ThemeManager.Skin.CLEAR;
+                        boolean isLight = mHost.getThemeManager() != null && mHost.getThemeManager().getActiveSkin() == ThemeManager.Skin.CLEAR;
                         MainActivity.setTextColorIfChanged(ivUnitLabel, isLight ? android.graphics.Color.BLACK : android.graphics.Color.WHITE);
                         MainActivity.setTextColorIfChanged(tvFrequency, android.graphics.Color.WHITE);
                     }
-                    mActivity.updateFrequencyDisplay(fFreq, rdsName);
-                    mActivity.updateBandImage(fBand);
-                    if (isNight && mActivity.mNightModeManager != null) {
-                        mActivity.mNightModeManager.applyNightModeColors(mActivity.mLastFreq);
+                    mHost.updateFrequencyDisplay(fFreq, rdsName);
+                    mHost.updateBandImage(fBand);
+                    if (isNight && mHost.getNightModeManager() != null) {
+                        mHost.getNightModeManager().applyNightModeColors(mHost.getLastFreqKhz());
                     }
-                    mActivity.updateDataActivityUI();
+                    mHost.updateDataActivityUI();
                 }
 
-                if (mActivity.mMediaSessionManager != null) {
+                if (mHost.getMediaSessionManager() != null) {
                     float freqDisplay = fFreq / 1000.0f;
                     String freqStr = String.format(java.util.Locale.US, "%.1f MHz", freqDisplay);
-                    mActivity.mMediaSessionManager.updateMetadata(rdsName, freqStr, null);
+                    mHost.getMediaSessionManager().updateMetadata(rdsName, freqStr, null);
                 }
 
-                mActivity.syncLocDxButtonVisual(fIsLocal);
-                mActivity.sendWidgetUpdate(fFreq, fBand, rdsName);
-                mActivity.refreshStereoIndicatorUi(fIsStreaming || (mActivity.mEngine != null && mActivity.mEngine.isStereo()));
+                mHost.syncLocDxButtonVisual(fIsLocal);
+                mHost.sendWidgetUpdate(fFreq, fBand, rdsName);
+                mHost.refreshStereoIndicatorUi(fIsStreaming || (mHost.getRadioEngine() != null && mHost.getRadioEngine().isStereo()));
             });
         });
         });

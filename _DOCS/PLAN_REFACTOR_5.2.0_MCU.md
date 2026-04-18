@@ -23,7 +23,8 @@
 - [x] Grep de usos: `mActivity.` en `ui/main` y accesos a campos públicos de `MainActivity` (inventario amplio; muchos managers siguen en `MainActivity` hasta fases posteriores).
 - [x] Contrato **`RadioUiHost`**: `app/.../ui/main/RadioUiHost.java`; **`MainActivity`** lo implementa.
 - [x] Coordinadores migrados al contrato (primera tanda): **`LifecycleCoordinator`**, **`HardwareKeyCoordinator`**, **`SignalMeterCoordinator`** (`RadioUiHost` en constructor; sin cambio de comportamiento).
-- [ ] Resto de `*Coordinator` / diálogos / managers: siguen con **`MainActivity`**; migración incremental en siguientes fases.
+- [x] **`StatusRefreshCoordinator`** y **`EngineCallbackCoordinator`**: constructor `RadioUiHost`; `RadioUiHost` ampliado con getters/setters y operaciones de UI que antes leían campos públicos de `MainActivity`.
+- [ ] Resto de `*Coordinator` / diálogos / managers: siguen con **`MainActivity`** donde aún no hay método en el host; migración incremental en siguientes fases.
 
 ### API `RadioUiHost` (consumidor → métodos relevantes)
 
@@ -32,6 +33,8 @@
 | `LifecycleCoordinator` | `getHostContext`, `hostSendBroadcast`, `hostStartForegroundService`, `hostStartService`, `getOnlineStreamManager`, `getRadioService`, `getFmMode`, `getServiceController`, `requestHcnBindWithMediaSessionHandoff`, `getPlaybackManager`, `getRadioEngine`, `getScanManager`, `setUiScanningFlag`, `isPowerOffRequested`, `isHostChangingConfigurations`, `getMainHandler`, `getAutoHideHandler`, `getClockHandler`, `isHostFinishing`, `stopStatusPolling`, `getStationInfoExecutor`, `setStationInfoExecutor`, `getMediaSessionManager`, `getDeviceManager`, `getHardwareManager`, `getHiddenPlayer`, `setHiddenPlayer`, `setOnlineStreamManagerRef`, `getPresetManager`, `getLogoManager`, `getRdsManager`, `getUiController`, `getRadioPresets`, `getLastFreqKhz`, `getUiCurrentBand`, `setShutdownPersistGuardUntilMs`, `setPowerOffRequested` |
 | `HardwareKeyCoordinator` | `getRadioPresets`, `getRadioEngine`, `getPresetManager`, `setMute`, `isMuteState` |
 | `SignalMeterCoordinator` | `getRadioPresets`, `getThemeManager`, `getRadioEngine`, `isRdsLockHeld`, `getUiCurrentBand` |
+| `StatusRefreshCoordinator` | Casi todo el bloque ampliado de **«Coordinación UI motor / refresco»** en `RadioUiHost` (motor, prefs, ejecutor de emisora, RDS, logo, widget, modo noche, medidor, `findHostViewById`, etc.). |
+| `EngineCallbackCoordinator` | Mismo bloque ampliado + `getRadioSessionController`, diálogos de ingeniería, handlers HW; sustituye acceso directo a campos de `MainActivity`. |
 
 Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnHostUiThread`, `isHostChangingConfigurations`, envío de intents/broadcasts.
 
