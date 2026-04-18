@@ -4,9 +4,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -53,6 +55,8 @@ import com.example.openradiofm.ui.widget.SignalBarsView;
 import com.example.openradiofm.AppConstants;
 import com.example.openradiofm.service.RadioMediaService;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * Pantalla principal de la radio FM.
  *
@@ -69,7 +73,7 @@ import com.example.openradiofm.service.RadioMediaService;
  * - Los recursos de hardware (servicio, proceso root, listener RDS oculto) se
  * liberan expl├¡citamente en onDestroy() para evitar fugas de memoria.
  */
-public class MainActivity extends AppCompatActivity  {
+public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     // V4.0: Language Context Wrapper (CORRECTED)
     @Override
@@ -226,6 +230,7 @@ public class MainActivity extends AppCompatActivity  {
      * OEM: bajar MediaSession a STOPPED y esperar un tick antes de bind a {@code com.hcn.autoradio},
      * o el mux puede hacer {@code forceStopPackage} sobre OpenRadioFM.
      */
+    @Override
     public void requestHcnBindWithMediaSessionHandoff(String reasonForLog) {
         if (mMode != FmMode.FM_MT8163 || mServiceController == null) return;
         if (mRadioService != null) return;
@@ -642,6 +647,7 @@ public class MainActivity extends AppCompatActivity  {
     /**
      * Detiene el sondeo de estado si est├í activo.
      */
+    @Override
     public void stopStatusPolling() {
         if (mPollingExecutor != null) {
             mPollingExecutor.shutdownNow();
@@ -3140,6 +3146,7 @@ public class MainActivity extends AppCompatActivity  {
     }
 
     // V5.5: setMute delegado a mPlaybackManager (ver PlaybackManager.java)
+    @Override
     public void setMute(boolean mute) {
         if (mPlaybackManager != null) {
             mPlaybackManager.setMute(mute, true);
@@ -3699,8 +3706,210 @@ public class MainActivity extends AppCompatActivity  {
     }
 
 
+    @Override
     public OnlineStreamManager getOnlineStreamManager() {
         return mOnlineStreamManager;
+    }
+
+    // --- RadioUiHost (Fase 0 refactor 5.2.0.MCU) ---
+
+    @Override
+    public Context getHostContext() {
+        return this;
+    }
+
+    @Override
+    public boolean isHostFinishing() {
+        return isFinishing();
+    }
+
+    @Override
+    public boolean isHostDestroyed() {
+        return isDestroyed();
+    }
+
+    @Override
+    public void runOnHostUiThread(Runnable action) {
+        runOnUiThread(action);
+    }
+
+    @Override
+    public boolean isHostChangingConfigurations() {
+        return isChangingConfigurations();
+    }
+
+    @Override
+    public void hostSendBroadcast(Intent intent) {
+        sendBroadcast(intent);
+    }
+
+    @Override
+    public void hostStartForegroundService(Intent intent) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            startForegroundService(intent);
+        } else {
+            startService(intent);
+        }
+    }
+
+    @Override
+    public void hostStartService(Intent intent) {
+        startService(intent);
+    }
+
+    @Override
+    public IRadioServiceAPI getRadioService() {
+        return mRadioService;
+    }
+
+    @Override
+    public MainActivity.FmMode getFmMode() {
+        return mMode;
+    }
+
+    @Override
+    public RadioServiceController getServiceController() {
+        return mServiceController;
+    }
+
+    @Override
+    public PlaybackManager getPlaybackManager() {
+        return mPlaybackManager;
+    }
+
+    @Override
+    public RadioEngine getRadioEngine() {
+        return mEngine;
+    }
+
+    @Override
+    public ScanManager getScanManager() {
+        return mScanManager;
+    }
+
+    @Override
+    public void setUiScanningFlag(boolean value) {
+        mIsScanning = value;
+    }
+
+    @Override
+    public SharedPreferences getRadioPresets() {
+        return mPrefs;
+    }
+
+    @Override
+    public int getLastFreqKhz() {
+        return mLastFreq;
+    }
+
+    @Override
+    public int getUiCurrentBand() {
+        return mCurrentBand;
+    }
+
+    @Override
+    public void setShutdownPersistGuardUntilMs(long elapsedRealtimeMs) {
+        mShutdownPersistGuardUntilMs = elapsedRealtimeMs;
+    }
+
+    @Override
+    public void setPowerOffRequested(boolean value) {
+        mPowerOffRequested = value;
+    }
+
+    @Override
+    public boolean isPowerOffRequested() {
+        return mPowerOffRequested;
+    }
+
+    @Override
+    public Handler getMainHandler() {
+        return mMainHandler;
+    }
+
+    @Override
+    public Handler getAutoHideHandler() {
+        return mAutoHideHandler;
+    }
+
+    @Override
+    public Handler getClockHandler() {
+        return mClockHandler;
+    }
+
+    @Override
+    public ExecutorService getStationInfoExecutor() {
+        return mStationInfoExecutor;
+    }
+
+    @Override
+    public void setStationInfoExecutor(ExecutorService executor) {
+        mStationInfoExecutor = executor;
+    }
+
+    @Override
+    public MediaSessionManager getMediaSessionManager() {
+        return mMediaSessionManager;
+    }
+
+    @Override
+    public DeviceManager getDeviceManager() {
+        return mDeviceManager;
+    }
+
+    @Override
+    public HardwareManager getHardwareManager() {
+        return mHardwareManager;
+    }
+
+    @Override
+    public HiddenRadioPlayer getHiddenPlayer() {
+        return mHiddenPlayer;
+    }
+
+    @Override
+    public void setHiddenPlayer(HiddenRadioPlayer player) {
+        mHiddenPlayer = player;
+    }
+
+    @Override
+    public void setOnlineStreamManagerRef(OnlineStreamManager manager) {
+        mOnlineStreamManager = manager;
+    }
+
+    @Override
+    public PresetManager getPresetManager() {
+        return mPresetManager;
+    }
+
+    @Override
+    public LogoManager getLogoManager() {
+        return mLogoManager;
+    }
+
+    @Override
+    public RDSManager getRdsManager() {
+        return mRdsManager;
+    }
+
+    @Override
+    public BaseLayoutController getUiController() {
+        return mUiController;
+    }
+
+    @Override
+    public boolean isMuteState() {
+        return mMuteState;
+    }
+
+    @Override
+    public ThemeManager getThemeManager() {
+        return mThemeManager;
+    }
+
+    @Override
+    public boolean isRdsLockHeld() {
+        return mHasRdsLock;
     }
 
     // === V24.5: HARDWARE AUTOMATION HANDLERS (K706 EXCLUSIVE) ===

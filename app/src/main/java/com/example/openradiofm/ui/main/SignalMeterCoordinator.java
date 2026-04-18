@@ -14,13 +14,13 @@ public final class SignalMeterCoordinator {
 
     public static final String PREF_USE_BARS = "pref_signal_meter_bars";
 
-    private final MainActivity mActivity;
+    private final RadioUiHost mHost;
     private ImageView mIcon;
     private SignalBarsView mBars;
     private int mLastLit = Integer.MIN_VALUE;
 
-    public SignalMeterCoordinator(MainActivity activity) {
-        mActivity = activity;
+    public SignalMeterCoordinator(RadioUiHost host) {
+        mHost = host;
     }
 
     public void bind(ImageView icon, SignalBarsView bars) {
@@ -30,7 +30,7 @@ public final class SignalMeterCoordinator {
 
     public boolean useBars() {
         try {
-            return mActivity.mPrefs != null && mActivity.mPrefs.getBoolean(PREF_USE_BARS, false);
+            return mHost.getRadioPresets() != null && mHost.getRadioPresets().getBoolean(PREF_USE_BARS, false);
         } catch (Exception e) {
             return false;
         }
@@ -55,8 +55,8 @@ public final class SignalMeterCoordinator {
 
     public void applyBarsAppearanceFromSkin() {
         if (mBars == null) return;
-        ThemeManager.Skin s = mActivity.mThemeManager != null
-                ? mActivity.mThemeManager.getActiveSkin() : ThemeManager.Skin.CLASSIC;
+        ThemeManager.Skin s = mHost.getThemeManager() != null
+                ? mHost.getThemeManager().getActiveSkin() : ThemeManager.Skin.CLASSIC;
         if (s == ThemeManager.Skin.NIGHT_MODE) {
             mBars.setAppearance(SignalBarsView.APPEAR_NIGHT);
         } else if (s == ThemeManager.Skin.DAY_MODE || s == ThemeManager.Skin.CLEAR) {
@@ -79,9 +79,9 @@ public final class SignalMeterCoordinator {
     /** Sincroniza barras con estéreo / RDS / banda cuando no hay telemetría numérica reciente. */
     public void refreshFromEngineFlags() {
         if (!useBars() || mBars == null) return;
-        boolean hasStereo = mActivity.mEngine != null && mActivity.mEngine.isStereo();
-        boolean hasRdsLock = mActivity.mHasRdsLock;
-        int band = mActivity.mCurrentBand;
+        boolean hasStereo = mHost.getRadioEngine() != null && mHost.getRadioEngine().isStereo();
+        boolean hasRdsLock = mHost.isRdsLockHeld();
+        int band = mHost.getUiCurrentBand();
         int lit;
         if (hasRdsLock && hasStereo) {
             lit = 5;

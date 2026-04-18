@@ -18,11 +18,22 @@
 
 ## Fase 0 — Inventario y contrato (`RadioUiHost` / scope)
 
-- [ ] Grep de usos: `mActivity.` en `ui/main` y accesos a campos públicos de `MainActivity`
-- [ ] Listar dependencias reales de cada `*Coordinator` y `*Manager` hacia la activity
-- [ ] Definir interfaz o clase **`RadioUiHost`** (o nombre acordado) con métodos mínimos: ciclo UI, motor, frecuencia mostrada, generación de invalidación, etc.
-- [ ] Migrar **solo lecturas** a través del contrato (sin mover lógica pesada aún)
-- [ ] Documentar en este archivo la API del contrato (tabla: consumidor → método)
+- [x] Grep de usos: `mActivity.` en `ui/main` y accesos a campos públicos de `MainActivity` (inventario amplio; muchos managers siguen en `MainActivity` hasta fases posteriores).
+- [x] Contrato **`RadioUiHost`**: `app/.../ui/main/RadioUiHost.java`; **`MainActivity`** lo implementa.
+- [x] Coordinadores migrados al contrato (primera tanda): **`LifecycleCoordinator`**, **`HardwareKeyCoordinator`**, **`SignalMeterCoordinator`** (`RadioUiHost` en constructor; sin cambio de comportamiento).
+- [ ] Resto de `*Coordinator` / diálogos / managers: siguen con **`MainActivity`**; migración incremental en siguientes fases.
+
+### API `RadioUiHost` (consumidor → métodos relevantes)
+
+| Consumidor | Métodos usados (resumen) |
+|------------|---------------------------|
+| `LifecycleCoordinator` | `getHostContext`, `hostSendBroadcast`, `hostStartForegroundService`, `hostStartService`, `getOnlineStreamManager`, `getRadioService`, `getFmMode`, `getServiceController`, `requestHcnBindWithMediaSessionHandoff`, `getPlaybackManager`, `getRadioEngine`, `getScanManager`, `setUiScanningFlag`, `isPowerOffRequested`, `isHostChangingConfigurations`, `getMainHandler`, `getAutoHideHandler`, `getClockHandler`, `isHostFinishing`, `stopStatusPolling`, `getStationInfoExecutor`, `setStationInfoExecutor`, `getMediaSessionManager`, `getDeviceManager`, `getHardwareManager`, `getHiddenPlayer`, `setHiddenPlayer`, `setOnlineStreamManagerRef`, `getPresetManager`, `getLogoManager`, `getRdsManager`, `getUiController`, `getRadioPresets`, `getLastFreqKhz`, `getUiCurrentBand`, `setShutdownPersistGuardUntilMs`, `setPowerOffRequested` |
+| `HardwareKeyCoordinator` | `getRadioPresets`, `getRadioEngine`, `getPresetManager`, `setMute`, `isMuteState` |
+| `SignalMeterCoordinator` | `getRadioPresets`, `getThemeManager`, `getRadioEngine`, `isRdsLockHeld`, `getUiCurrentBand` |
+
+Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnHostUiThread`, `isHostChangingConfigurations`, envío de intents/broadcasts.
+
+**Nota:** `getUiCurrentBand()` expone el índice de banda **`mCurrentBand`** de la UI; no confundir con `MainActivity.getCurrentBand()` (derivado del motor cuando existe).
 
 ---
 
