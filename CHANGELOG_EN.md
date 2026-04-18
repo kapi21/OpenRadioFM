@@ -5,6 +5,15 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ---
 
 ## [Unreleased] - MCU2
+### K706 / Android Auto + Spotify + on-device diagnostics (Z-Link; follow-up TBD)
+- **`RadioActivityFileLogger`**: stable file log (`commit` for filename and flag); periodic **`TICK`** heartbeat; optional **`logcat -d`** dump from K706 engineering UI. `LifecycleCoordinator` feeds **`uiResumed`** into ticks.
+- **Engineering menus**: file-log toggle relies on **`onToggleChanged`** only (no duplicate `apply`). K706: logcat dump button + i18n key **`eng_dev_logcat_dump_button`**.
+- **`K706RadioManager`**: **`LOSS_TRANSIENT`** treats AA voice as not GSM (`VOICE_SESSION_AA_OR_TTS`); playback reflection / `APLAY_*` / `AUDIO_FOCUS` logging; weak ref for TICK snapshots.
+- **Focus vs `getCurrentFreq` race**: on real **`AUDIOFOCUS_LOSS`**, clear **`mIsAudioFocusHeld`** and **`mAllowImplicitFmRecoverFromPoll`** at the **start** of the `try` (before MCU work) so Binder threads do not “recover” with stale `held=true`.
+- **Spotify / AA**: if channel is **4** and **`isMusicActive()`** or mux competition, do not force FM; optionally sync logical focus. **`getCurrentFreq`** polls **`checkAndRecoverAudio`** whenever **`mUserWantsFmAudio`** so FM can resume when external media stops without relying only on **`AUDIOFOCUS_GAIN`**. Heartbeat uses **`enforceAudioChannelRecovery()`** instead of naked **`SetChannel(2)`**.
+- **`K706Engine.switchToFmAudio`**: calls **`requestPlayAudio()`** for a full FM sequence when returning from UI.
+- **Still open (tracked for later)**: closer match to **QS6-style ducking** (AA prompts without harsh permanent LOSS); validate on K706+Z-Link with `RadioLogos` logs. **MT8163/QS6** remain a different stack (HAL/AIDL vs MCU mux).
+
 ### K706 / Android Auto & navigation voice (Zlink)
 - **`K706RadioManager`**: “Glitch protect” that re-armed FM after `AUDIOFOCUS_LOSS` / `LOSS_TRANSIENT` is **skipped** when `AudioManager.isMusicActive()` (Maps TTS / another app is playing), matching OEM behavior (yield mux). **`mAutoRecoveryRunnable`** now calls `requestAudioFocus(false)` so it **does not** extend the 2.5s anti-LOSS window (which kept fighting guidance audio).
 - **`RadioMediaService`**: on OEM broadcast **`EVENT_LOSS_TRANSIENT`**, **do not** call `refreshSteeringMediaSessionAndForeground()` (it forced PLAYING+FGS and focus while navigation wanted the channel).

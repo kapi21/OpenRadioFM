@@ -239,7 +239,6 @@ public class EngineeringModeDialog extends Dialog {
             try { on = mPrefs.getBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, false); } catch (Exception ignored) {}
             swDevFileLoggingEnabled.setChecked(on);
             swDevFileLoggingEnabled.setOnCheckedChangeListener((btn, checked) -> {
-                try { mPrefs.edit().putBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, checked).apply(); } catch (Exception ignored) {}
                 com.example.openradiofm.utils.RadioActivityFileLogger.onToggleChanged(mActivity, checked);
                 logEvent("DEV", com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED + "=" + checked);
             });

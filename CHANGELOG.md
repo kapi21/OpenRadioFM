@@ -1,4 +1,13 @@
 ## [Unreleased] - MCU2
+### K706 / Android Auto + Spotify + diagnóstico (Z-Link; seguimiento pendiente)
+- **`RadioActivityFileLogger`**: log a fichero estable (`commit` del nombre y del flag; sin carrera `apply`); **heartbeat `TICK`** periódico con estado FM/foco/UI; opción **volcar buffer `logcat`** desde ingeniería K706 (`logcat_dump_*.txt` en `RadioLogos/`). `LifecycleCoordinator` informa `uiResumed` al logger.
+- **Menús de ingeniería** (K706 / genérico / QS6): el toggle de log no duplica `putBoolean`+`apply`; solo `onToggleChanged` persiste. **K706**: botón volcado logcat + string i18n `eng_dev_logcat_dump_button`.
+- **`K706RadioManager`**: rama **`LOSS_TRANSIENT`** sin tratar voz AA como llamada GSM (`VOICE_SESSION_AA_OR_TTS`); reflexión playback / logs `APLAY_*` / `AUDIO_FOCUS`; **weak ref** para línea `TICK` en fichero.
+- **Carreras foco vs `getCurrentFreq`**: en **`AUDIOFOCUS_LOSS`** real, **`mIsAudioFocusHeld`** y **`mAllowImplicitFmRecoverFromPoll`** se ponen a **false al inicio** del `try` (antes de MCU), para que hilos Binder no ejecuten “secuestro de canal” con foco aún “held”.
+- **Spotify / AA**: con canal **4** y **`isMusicActive()`** o competencia de mux, no forzar FM; sincronizar foco lógico si hace falta. **`getCurrentFreq`** vuelve a llamar **`checkAndRecoverAudio`** con **`mUserWantsFmAudio`** para poder retomar FM cuando cesa la media externa (sin depender solo de `AUDIOFOCUS_GAIN`). Heartbeat con **`enforceAudioChannelRecovery()`** en lugar de solo `SetChannel(2)`.
+- **`K706Engine.switchToFmAudio`**: delega en **`requestPlayAudio()`** para limpiar flags y secuencia completa al volver desde la UI.
+- **Pendiente (anotado para más adelante)**: acercar el comportamiento al **ducking tipo QS6** (notificaciones AA sin `LOSS` permanente brusco); validar en unidad K706+Z-Link con logs `RadioLogos` (`implRec`, `TICK`, `AUDIO_FOCUS`). **MT8163/QS6** siguen con arquitectura distinta (HAL/AIDL vs mux MCU); no unificar motores.
+
 ### K706 / Android Auto y voz de navegación (Zlink)
 - **`K706RadioManager`**: el “Glitch Protect” que relanzaba FM tras `AUDIOFOCUS_LOSS` / `LOSS_TRANSIENT` **no** se aplica si `AudioManager.isMusicActive()` (voz de Maps u otra app); imita la radio OEM (ceder mux). Los reintentos de **`mAutoRecoveryRunnable`** llaman `requestAudioFocus(false)` para **no** alargar la ventana anti-LOSS de 2,5 s (dejaba la app peleando con la guía).
 - **`RadioMediaService`**: ante **`EVENT_LOSS_TRANSIENT`** del broadcast OEM ya **no** se llama `refreshSteeringMediaSessionAndForeground()` (evitaba volver a PLAYING+FGS y a pedir foco mientras suena la navegación).

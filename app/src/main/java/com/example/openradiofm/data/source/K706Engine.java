@@ -232,9 +232,11 @@ public class K706Engine implements RadioEngine {
     @Override
     public void switchToFmAudio() {
         if (mManager == null) return;
-        try { 
+        try {
             mManager.setOnlineStreamingActive(false); // V18.3: Volvemos a modo radio estándar
-            mManager.enforceAudioChannelRecovery(); 
+            // requestPlayAudio limpia flags de llamada/transiente y fuerza la secuencia FM completa;
+            // enforceAudioChannelRecovery solo no bastaba tras Spotify/AA sin AUDIOFOCUS_GAIN.
+            mManager.requestPlayAudio();
         } catch (Exception e) { Log.e(TAG, "switchToFmAudio", e); }
     }
 

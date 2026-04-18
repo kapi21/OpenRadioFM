@@ -367,6 +367,7 @@
     <string name="eng_dev_file_log_profile_basic">BASE</string>
     <string name="eng_dev_file_log_profile_medium">MEDIO</string>
     <string name="eng_dev_file_log_profile_full">COMPLETO</string>
+    <string name="eng_dev_logcat_dump_button">DEV: esporta buffer logcat in RadioLogos</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

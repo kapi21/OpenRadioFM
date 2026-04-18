@@ -337,6 +337,7 @@
     <string name="eng_dev_file_log_profile_basic">БАЗОВИЙ</string>
     <string name="eng_dev_file_log_profile_medium">СЕРЕДНІЙ</string>
     <string name="eng_dev_file_log_profile_full">ПОВНИЙ</string>
+    <string name="eng_dev_logcat_dump_button">DEV: скинути буфер logcat у RadioLogos</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

@@ -335,6 +335,29 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/tvDevFileLogPath"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:textColor="#88FF88"
+                android:textSize="10sp"
+                android:fontFamily="monospace"
+                android:text=""/>
+
+            <Button
+                android:id="@+id/btnDevLogcatDump"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="@string/eng_dev_logcat_dump_button"
+                android:textColor="#00FF00"
+                android:textSize="11sp"
+                android:fontFamily="monospace"
+                android:backgroundTint="#002200" />
+
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"

@@ -367,6 +367,7 @@
     <string name="eng_dev_file_log_profile_basic">ALAP</string>
     <string name="eng_dev_file_log_profile_medium">KÖZEPES</string>
     <string name="eng_dev_file_log_profile_full">TELJES</string>
+    <string name="eng_dev_logcat_dump_button">DEV: logcat puffer mentése a RadioLogos mappába</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

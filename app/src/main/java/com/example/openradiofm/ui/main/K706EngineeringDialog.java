@@ -14,6 +14,7 @@ import android.graphics.drawable.ColorDrawable;
 
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.source.K706RadioManager;
+import com.example.openradiofm.utils.RadioActivityFileLogger;
 import java.util.Locale;
 import java.io.File;
 import android.widget.Button;
@@ -56,7 +57,8 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
     private SwitchCompat swDevReliefHdEnabled;
     private SwitchCompat swDevFileLoggingEnabled;
     private SeekBar sbDevFileLogProfile, sbK706Sensitivity;
-    private TextView tvDevFileLogProfileValue, tvK706SensitivityValue;
+    private TextView tvDevFileLogProfileValue, tvDevFileLogPath, tvK706SensitivityValue;
+    private Button btnDevLogcatDump;
 
     public K706EngineeringDialog(MainActivity activity) {
         super(activity);
@@ -129,6 +131,8 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
 
         sbDevFileLogProfile = findViewById(R.id.sbDevFileLogProfile);
         tvDevFileLogProfileValue = findViewById(R.id.tvDevFileLogProfileValue);
+        tvDevFileLogPath = findViewById(R.id.tvDevFileLogPath);
+        btnDevLogcatDump = findViewById(R.id.btnDevLogcatDump);
 
         sbK706Sensitivity = findViewById(R.id.sbK706Sensitivity);
         tvK706SensitivityValue = findViewById(R.id.tvK706SensitivityValue);
@@ -222,9 +226,17 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
             try { on = prefs.getBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, false); } catch (Exception ignored) {}
             swDevFileLoggingEnabled.setChecked(on);
             swDevFileLoggingEnabled.setOnCheckedChangeListener((btn, checked) -> {
-                try { prefs.edit().putBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, checked).apply(); } catch (Exception ignored) {}
                 com.example.openradiofm.utils.RadioActivityFileLogger.onToggleChanged(mActivity, checked);
                 logEvent("DEV", com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED + "=" + checked);
+                refreshDevFileLogPathText();
+            });
+            refreshDevFileLogPathText();
+        }
+
+        if (btnDevLogcatDump != null) {
+            btnDevLogcatDump.setOnClickListener(v -> {
+                RadioActivityFileLogger.dumpLogcatBufferBestEffort(mActivity);
+                logEvent("DEV", "LOGCAT_DUMP_REQUESTED");
             });
         }
 
@@ -307,6 +319,15 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
                 logEvent("HW_AUTO", "SAFETY_LOCK=" + checked);
             });
         }
+    }
+
+    /** Ruta del .log para copiar por MTP / USB masivo sin ADB. */
+    private void refreshDevFileLogPathText() {
+        try {
+            if (tvDevFileLogPath != null) {
+                tvDevFileLogPath.setText(RadioActivityFileLogger.getActiveLogFilePathForDisplay(mActivity));
+            }
+        } catch (Exception ignored) {}
     }
 
     private static String profileLabel(int p) {
@@ -393,10 +414,14 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
                 boolean userPaused = prefs.getBoolean("oem_user_paused", false);
                 boolean wasPlayingBeforeLoss = prefs.getBoolean("oem_was_playing_before_focus_loss", false);
                 boolean isPlaying = prefs.getBoolean("oem_is_playing", false);
+                int rawFocus = prefs.getInt(K706RadioManager.PREF_OEM_LAST_AUDIOFOCUS_RAW, Integer.MIN_VALUE);
+                long rawWallMs = prefs.getLong(K706RadioManager.PREF_OEM_LAST_AUDIOFOCUS_WALL_MS, 0L);
+                String rawStr = (rawFocus == Integer.MIN_VALUE) ? "?" : String.valueOf(rawFocus);
 
                 if (tvK706OemFocusEvent != null) tvK706OemFocusEvent.setText(lastFocus);
                 if (tvK706OemFlags != null) {
-                    tvK706OemFlags.setText("playing=" + isPlaying + " userPaused=" + userPaused + " resumeArmed=" + wasPlayingBeforeLoss);
+                    tvK706OemFlags.setText("playing=" + isPlaying + " userPaused=" + userPaused + " resumeArmed=" + wasPlayingBeforeLoss
+                            + " fwkFocus=" + rawStr + " @ms=" + rawWallMs);
                 }
             } catch (Exception ignored) {}
 

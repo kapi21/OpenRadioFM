@@ -337,6 +337,7 @@
     <string name="eng_dev_file_log_profile_basic">基本</string>
     <string name="eng_dev_file_log_profile_medium">中</string>
     <string name="eng_dev_file_log_profile_full">完全</string>
+    <string name="eng_dev_logcat_dump_button">DEV: logcat バッファを RadioLogos に保存</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 

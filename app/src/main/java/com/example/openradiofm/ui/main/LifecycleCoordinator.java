@@ -7,6 +7,7 @@ import android.util.Log;
 import com.example.openradiofm.service.RadioMediaService;
 import com.example.openradiofm.data.source.MT8163Engine;
 import com.example.openradiofm.services.FactoryRadioHijackerService;
+import com.example.openradiofm.utils.RadioActivityFileLogger;
 
 
 public class LifecycleCoordinator {
@@ -22,6 +23,7 @@ public class LifecycleCoordinator {
 
     public void onResume() {
         MainActivity.sMainActivityResumed = true;
+        RadioActivityFileLogger.noteMainActivityResumed(true);
         boolean liveActive = mActivity.mOnlineStreamManager != null && 
                 (mActivity.mOnlineStreamManager.isPlaying() || mActivity.mOnlineStreamManager.isLoading());
         Log.d(TAG, "onResume: liveActive=" + liveActive);
@@ -75,6 +77,7 @@ public class LifecycleCoordinator {
 
     public void onPause() {
         MainActivity.sMainActivityResumed = false;
+        RadioActivityFileLogger.noteMainActivityResumed(false);
     }
 
     public void onStop() {
