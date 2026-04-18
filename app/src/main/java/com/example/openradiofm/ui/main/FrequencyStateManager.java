@@ -54,7 +54,7 @@ public class FrequencyStateManager {
     // Result DTO
     // =========================================================================
 
-    /** Resultado de evaluar un cambio de frecuencia en handleFrequencyChange. */
+    /** Resultado de evaluar un cambio de frecuencia en {@link FrequencyChangeCoordinator#handleFrequencyChange(int)}. */
     public static class FreqChangeResult {
         /** true → ignorar completamente el cambio. */
         public boolean blocked;
@@ -139,7 +139,7 @@ public class FrequencyStateManager {
     /**
      * Evalúa si un cambio de frecuencia debe procesarse y qué acciones tomar.
      * Centraliza las guardas de arranque, apagado y bootstrap espurio que
-     * antes estaban inline en handleFrequencyChange().
+     * antes estaban inline en el flujo de cambio de frecuencia (ahora {@link FrequencyChangeCoordinator}).
      */
     public FreqChangeResult evaluateFrequencyChange(int newFreq, int lastFreq, int currentBand,
                                                      MainActivity.FmMode mode, RadioEngine engine) {

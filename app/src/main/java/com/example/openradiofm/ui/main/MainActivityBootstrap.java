@@ -46,6 +46,7 @@ final class MainActivityBootstrap {
         a.mHardwareKeyCoordinator = new HardwareKeyCoordinator(a);
         a.mUiMediator = new UiViewMediator(a);
         a.mFreqStateManager = new FrequencyStateManager();
+        a.mFrequencyChangeCoordinator = new FrequencyChangeCoordinator(a);
     }
 
     private static void configureVolumeStream(MainActivity a) {

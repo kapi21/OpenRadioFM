@@ -252,6 +252,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     // V16: Managers de Modo Nocturno e Historial
     public SkinCoordinator mSkinCoordinator;
+    public FrequencyChangeCoordinator mFrequencyChangeCoordinator;
     public StatusRefreshCoordinator mStatusRefreshCoordinator;
     public EngineCallbackCoordinator mEngineCallbackCoordinator;
     public LifecycleCoordinator mLifecycleCoordinator;
@@ -301,8 +302,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     public long mShutdownPersistGuardUntilMs = 0L;
     /** True solo durante el flujo de PowerOff (evita bridge de volante en onStop). */
     public volatile boolean mPowerOffRequested = false;
-    private int mUserRequestedFreqKhz = -1;
-    private long mUserRequestedFreqUntilMs = 0L;
+    int mUserRequestedFreqKhz = -1;
+    long mUserRequestedFreqUntilMs = 0L;
     static final String PREF_QS6_BOOTSTRAP_SANITIZED = "pref_qs6_bootstrap_sanitized";
     /** Misma idea que QS6: evitar prefs contaminadas con 87.5/87.6 tras reinicio de unidad (MCU arranca antes que la app). */
     static final String PREF_K706_BOOTSTRAP_SANITIZED = "pref_k706_bootstrap_sanitized";
@@ -314,28 +315,19 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     public long mLastRdsLockTickUptimeMs = 0L;
     public String mCurrentPty = null;
     public String mLastLogoUrl = "";
-    private volatile String mPrevStationNameBeforeTune = "";
+    volatile String mPrevStationNameBeforeTune = "";
     public java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
     /** Evita arrastre de RDS/logo de la emisora anterior tras un cambio de frecuencia (QS6/NWD). */
-    private static final long RDS_TRANSITION_GUARD_MS = 1200L;
-    private volatile long mRdsTransitionGuardUntilMs = 0L;
+    static final long RDS_TRANSITION_GUARD_MS = 1200L;
+    volatile long mRdsTransitionGuardUntilMs = 0L;
     /** Margen tras cambiar de frecuencia antes de contribuir metadatos a la nube. */
-    private static final long CLOUD_CONTRIB_FREQ_SETTLE_MS = 1750L;
-    private long mCloudContribAllowedAfterMs = 0L;
+    static final long CLOUD_CONTRIB_FREQ_SETTLE_MS = 1750L;
+    long mCloudContribAllowedAfterMs = 0L;
     /**
      * QS6/NWD y otros motores con callbacks r├ípidos: invalida cargas de logo as├¡ncronas al cambiar
      * frecuencia o banda (evita que un Glide/getStationInfo tard├¡o pinte logo de otra emisora).
      */
     public final java.util.concurrent.atomic.AtomicInteger mLogoUiGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
-    /**
-     * QS6/OEM: ráfagas de callbacks + broadcasts al launcher pueden crear un bucle (freq “loca”, PS pegado).
-     * Coalescencia del trabajo pesado de {@link #handleFrequencyChange(int)} salvo que pasen ~280 ms desde el último ciclo.
-     */
-    private static final long FREQ_CHANGE_HEAVY_COALESCE_MS = 280L;
-    private int mFreqHeavyPendingFreq = -1;
-    private boolean mFreqHeavySuppressPersist = false;
-    private long mFreqHeavyLastCompleteMs = 0L;
-    private final Runnable mFreqHeavyRunnable = this::runPendingFrequencyChangeHeavy;
     /**
      * Se incrementa en {@link #onDestroy()} cuando la activity termina ({@code isFinishing()}), para que
      * tareas en {@link com.example.openradiofm.util.AppIoExecutor} ligadas a esta instancia aborten cooperativamente.
@@ -1869,7 +1861,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     @Override
     protected void onDestroy() {
-        mMainHandler.removeCallbacks(mFreqHeavyRunnable);
+        if (mFrequencyChangeCoordinator != null) mFrequencyChangeCoordinator.cancelPendingHeavy();
         super.onDestroy();
         if (mLifecycleCoordinator != null) mLifecycleCoordinator.onDestroy();
         // QS6: el cliente experimental de KernelService se mantiene vivo entre aperturas del menú de ingeniería,
@@ -2574,7 +2566,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     // V16: Delegaciones a HistoryManager
-    private void addToHistory(int freq) {
+    void addToHistory(int freq) {
         if (mHistoryManager != null) mHistoryManager.addToHistory(freq);
     }
 
@@ -2902,174 +2894,9 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      */
     @Override
     public void handleFrequencyChange(int freq) {
-        if (freq == mLastFreq)
-            return;
-
-        if (android.os.SystemClock.elapsedRealtime() < mShutdownPersistGuardUntilMs) {
-            Log.d(TAG, "Shutdown guard: skipping frequency callback " + freq);
-            return;
+        if (mFrequencyChangeCoordinator != null) {
+            mFrequencyChangeCoordinator.handleFrequencyChange(freq);
         }
-
-        boolean suppressStartupPersist = false;
-        if (mStartupSavedFreqKhz > 0
-                && android.os.SystemClock.elapsedRealtime() < mStartupPersistGuardUntilMs) {
-            // Si en arranque llega una freq por defecto del HAL distinta a la guardada,
-            // no la persistimos para no pisar la emisora real del usuario.
-            if (freq != mStartupSavedFreqKhz && (freq == 87600 || freq == 87500)) {
-                suppressStartupPersist = true;
-                Log.d(TAG, "Startup guard: suppress persist for bootstrap freq " + freq
-                        + " (saved=" + mStartupSavedFreqKhz + ")");
-                // QS6/K706: algunos firmwares o el MCU reimponen 87.5/87.6 tras callbacks tard├¡os.
-                // Reforzamos restauraci├│n activa de la emisora guardada durante ventana de arranque.
-                if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706
-                        || mMode == FmMode.FM_JANCAR_IVI) && mEngine != null && mStartupRetuneAttempts < 3) {
-                    final int targetFreq = mStartupSavedFreqKhz;
-                    final int targetBand = mLastBand;
-                    mStartupRetuneAttempts++;
-                    mMainHandler.postDelayed(() -> {
-                        try {
-                            if (isFinishing() || isDestroyed() || mEngine == null) return;
-                            int current = mEngine.getCurrentFreq();
-                            if (current == 87600 || current == 87500) {
-                                Log.d(TAG, "Startup guard: re-assert saved station "
-                                        + targetFreq + "/B" + targetBand
-                                        + " (attempt " + mStartupRetuneAttempts + ")");
-                                if (mEngine instanceof QS6Engine) {
-                                    ((QS6Engine) mEngine).tuneWithBand(targetFreq, targetBand);
-                                } else {
-                                    mEngine.tune(targetFreq);
-                                }
-                            }
-                        } catch (Exception e) {
-                            Log.w(TAG, "Startup guard re-assert failed", e);
-                        }
-                    }, 260L);
-                }
-            }
-            // Si ya alcanzamos la guardada, cerramos la guarda.
-            if (freq == mStartupSavedFreqKhz) {
-                mStartupPersistGuardUntilMs = 0L;
-            }
-        }
-
-        // QS6/K706: el firmware o MCU puede emitir 87.5/87.6 de forma espuria. Solo persistimos
-        // estas frecuencias bootstrap si vienen de una acci├│n expl├¡cita de usuario reciente.
-        if ((mMode == FmMode.FM_QS6 || mMode == FmMode.FM_K706
-                || mMode == FmMode.FM_JANCAR_IVI) && (freq == 87500 || freq == 87600)) {
-            boolean userRequestedRecently =
-                    mUserRequestedFreqKhz == freq
-                            && android.os.SystemClock.elapsedRealtime() <= mUserRequestedFreqUntilMs;
-            if (!userRequestedRecently) {
-                suppressStartupPersist = true;
-                Log.d(TAG, "Bootstrap persist guard: suppress " + freq + " (no recent user request, mode="
-                        + mMode + ")");
-            }
-        }
-
-        mFreqHeavyPendingFreq = freq;
-        mFreqHeavySuppressPersist = suppressStartupPersist;
-        mMainHandler.removeCallbacks(mFreqHeavyRunnable);
-        long now = android.os.SystemClock.elapsedRealtime();
-        long wait = FREQ_CHANGE_HEAVY_COALESCE_MS - (now - mFreqHeavyLastCompleteMs);
-        if (wait <= 0L) {
-            mMainHandler.post(mFreqHeavyRunnable);
-        } else {
-            mMainHandler.postDelayed(mFreqHeavyRunnable, wait);
-        }
-    }
-
-    private void runPendingFrequencyChangeHeavy() {
-        int freq = mFreqHeavyPendingFreq;
-        if (freq < 0) return;
-        mFreqHeavyPendingFreq = -1;
-        if (freq == mLastFreq) {
-            mFreqHeavyLastCompleteMs = android.os.SystemClock.elapsedRealtime();
-            return;
-        }
-        applyFrequencyChangeHeavy(freq, mFreqHeavySuppressPersist);
-        mFreqHeavyLastCompleteMs = android.os.SystemClock.elapsedRealtime();
-    }
-
-    /** Trabajo pesado tras coalescencia (logo, RDS, historial, widget, MediaSession). */
-    private void applyFrequencyChangeHeavy(int freq, boolean suppressStartupPersist) {
-        mLogoUiGeneration.incrementAndGet();
-        mPrevStationNameBeforeTune = mLastPs != null ? mLastPs : "";
-        mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
-        mLastFreq = freq;
-        mCloudContribAllowedAfterMs = android.os.SystemClock.elapsedRealtime() + CLOUD_CONTRIB_FREQ_SETTLE_MS;
-        mLastBand = mCurrentBand;
-        mLastLogoUrl = ""; // Force logo reload
-        mCurrentPi = null;
-        mCurrentPty = null;
-        mLastPs = ""; // V18.6.4: Clear cached RDS name to avoid stale display on new freq
-        mHasRdsLock = false;
-        mHadRdsLockForTick = false;
-
-        if (mRdsManager != null) {
-            // MT8163: handleFrequencyChange puede venir desde un hilo de polling del engine.
-            // RDSManager.reset(true) toca TextViews (setText) y puede crashear por CalledFromWrongThreadException.
-            // La limpieza visual ya se hace m├ís abajo dentro de runOnUiThread().
-            mRdsManager.reset(false);
-        }
-
-        if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
-            mOnlineStreamManager.stopStream();
-        }
-
-        runOnUiThread(() -> {
-            if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) {
-                return;
-            }
-            if (tvRdsName != null) {
-                tvRdsName.setText("");
-                tvRdsName.setVisibility(View.VISIBLE);
-            }
-            if (tvRdsInfo != null) {
-                tvRdsInfo.setText("");
-                tvRdsInfo.setVisibility(View.VISIBLE);
-            }
-            refreshStereoIndicatorUi(null);
-            if (tvPty != null) {
-                tvPty.setText(getString(R.string.pty_none));
-            }
-
-            // Clear logos immediately (V3: reset duro Glide + fondo din├ímico ÔÇö evita logo ÔÇ£fantasmaÔÇØ tras la frecuencia)
-            // V2/Simple: clearLogo() fuerza Glide.clear + fallback ic_toast en mUiMediator.ivMainLogo; V3 mantiene car_logo en mUiMediator.ivCarLogo (loadCarLogo).
-            clearStationLogoUi();
-        });
-
-        // V13.9: Durante el escaneo, OMITIMOS guardar historial y persistencia para mayor fluidez
-        if (mIsScanning) {
-            Log.d(TAG, "Scanning in progress: skipping history/persistence for freq " + freq);
-            return;
-        }
-
-        // V13.9: Logic moved from refreshRadioStatus
-        if (mPrefs != null) {
-            if (!suppressStartupPersist && mPrefs.getBoolean("pref_save_history", true)) {
-                addToHistory(freq);
-            }
-            if (!suppressStartupPersist) {
-                mPrefs.edit()
-                        .putInt("pref_last_freq", freq)
-                        .putInt("pref_last_band", mCurrentBand)
-                        .apply();
-                Log.d(TAG, "Last freq saved & History updated: " + freq);
-            } else {
-                Log.d(TAG, "Startup guard: skipping pref_last_freq/history persist for " + freq);
-            }
-        }
-
-        Log.d(TAG, "Frequency changed to " + freq + " - UI Reset triggered");
-
-        // V16: Update MediaSession Metadata
-        if (mMediaSessionManager != null) {
-            String title = (freq / 1000.0) + " MHz";
-            mMediaSessionManager.updateMetadata(title, "OpenRadioFM", null);
-        }
-
-        // V5.2: Update Launcher Widget on frequency shift
-        sendWidgetUpdateIntent(freq, mCurrentBand, null);
     }
 
     // V18.6: M├®todos para ocultaci├│n autom├ítica de controles

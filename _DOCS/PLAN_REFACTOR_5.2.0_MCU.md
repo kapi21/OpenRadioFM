@@ -62,9 +62,9 @@ La pantalla y la radio deben comportarse **igual que antes** al abrir la app, ca
 
 ## Fase 2 — Presentación de emisora (freq / RDS / logo / coalescing)
 
-- [ ] Agrupar **`handleFrequencyChange`**, **`runPendingFrequencyChangeHeavy`**, estado **`mFreqHeavy*`** en **`StationPresentationController`** o **`FrequencyChangeCoordinator`**
-- [ ] Mantener **`StatusRefreshCoordinator`** como colaborador (orden reset RDS + MHz antes del executor)
-- [ ] Unificar entrada única para “cambió la frecuencia desde el motor” vs “desde la UI”
+- [x] Agrupar **`handleFrequencyChange`**, coalescencia ~280 ms y trabajo pesado asociado en **`FrequencyChangeCoordinator`** (`app/.../FrequencyChangeCoordinator.java`); `MainActivity` delega; creado en **`MainActivityBootstrap.createEarlyCoordinators`**; **`cancelPendingHeavy`** en `onDestroy`.
+- [ ] Mantener **`StatusRefreshCoordinator`** como colaborador (orden reset RDS + MHz antes del executor) — sin cambio; revisar tras más extracciones.
+- [ ] Unificar entrada única para “cambió la frecuencia desde el motor” vs “desde la UI” (p. ej. API única sobre el coordinador o el host).
 - [ ] Validar en **QS6** (ráfagas OEM) y **K706** (zapping rápido)
 
 ### Para el usuario (Fase 2 — pendiente)
