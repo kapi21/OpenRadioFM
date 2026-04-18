@@ -5,6 +5,8 @@
 
 **Referencias:** `CHANGELOG_REFACTOR.md`, `README.md` (arquitectura), informes en `_DOCS/`.
 
+**Notas para el usuario final:** al cerrar cada fase, este documento incluye un apartado **«Para el usuario»** (lenguaje sencillo: qué notarás o qué mejora a medio plazo). La Fase 0 no cambia la experiencia en pantalla; fases posteriores pueden hacerlo solo si el comportamiento lo merece (siempre probado en radio).
+
 ---
 
 ## Criterios de éxito por fase
@@ -35,6 +37,10 @@ Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnH
 
 **Nota:** `getUiCurrentBand()` expone el índice de banda **`mCurrentBand`** de la UI; no confundir con `MainActivity.getCurrentBand()` (derivado del motor cuando existe).
 
+### Para el usuario (Fase 0 — cerrada)
+
+No verás cambios nuevos en botones, sonido ni pantallas: la radio se comporta igual que antes. Lo que hemos hecho es **ordenar por dentro** cómo la app habla consigo misma al arrancar, al usar teclas del volante o al mostrar el medidor de señal. Eso **facilita corregir fallos y añadir mejoras** sin tocar cientos de sitios a la vez, y reduce el riesgo de que un arreglo en una radio rompa otra. Es la base de la línea **5.2.0.MCU** hacia un código más fiable a largo plazo.
+
 ---
 
 ## Fase 1 — Bootstrap de `onCreate`
@@ -47,6 +53,10 @@ Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnH
 - [ ] Dejar `onCreate` reducido a delegación + orden explícito
 - [ ] Revisar que `onSaveInstanceState` / recreación de layout sigan coherentes
 
+### Para el usuario (Fase 1 — pendiente)
+
+*(Completar al cerrar la fase.)* En principio: **misma app al abrirla**; por dentro, arranque más claro y menos propenso a fallos raros al cambiar de tema, idioma o layout. Si algo visible cambiara, se anunciaría en notas de versión.
+
 ---
 
 ## Fase 2 — Presentación de emisora (freq / RDS / logo / coalescing)
@@ -56,6 +66,10 @@ Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnH
 - [ ] Unificar entrada única para “cambió la frecuencia desde el motor” vs “desde la UI”
 - [ ] Validar en **QS6** (ráfagas OEM) y **K706** (zapping rápido)
 
+### Para el usuario (Fase 2 — pendiente)
+
+*(Completar al cerrar la fase.)* Objetivo: **nombre de emisora, RDS y logo más estables** al cambiar de frecuencia rápido, sin parpadeos o textos «pegados» de la emisora anterior, sobre todo en radios con muchos avisos del sistema.
+
 ---
 
 ## Fase 3 — Streaming y conectividad
@@ -64,12 +78,20 @@ Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnH
 - [ ] Separar claramente: **FM hardware** vs **ExoPlayer / red**
 - [ ] Indicador de actividad de datos / offline: API única desde el nuevo módulo
 
+### Para el usuario (Fase 3 — pendiente)
+
+*(Completar al cerrar la fase.)* Objetivo: **menos choques entre radio FM y streaming por internet** (quién tiene el sonido, icono de nube, cortes al volver de otra app). Comportamiento más predecible al alternar emisora online y FM.
+
 ---
 
 ## Fase 4 — Apariencia (skins, fuentes, icon packs)
 
 - [ ] Mover restos de **`applySkin`**, **`applyFonts`**, tintes sueltos hacia **`SkinCoordinator`** / **`AppearanceController`**
 - [ ] Evitar duplicar lógica entre `NightModeManager` / `DayModeManager` y la activity
+
+### Para el usuario (Fase 4 — pendiente)
+
+*(Completar al cerrar la fase.)* Objetivo: **misma apariencia** (modo noche, día, iconos); menos incoherencias al cambiar de skin o pack de iconos. Si se unifica bien, menos parpadeos al rotar tema.
 
 ---
 
@@ -79,6 +101,10 @@ Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnH
 - [ ] Agrupar **`onRequestPermissionsResult`** y helpers de almacenamiento
 - [ ] Comprobar **`WidgetBroadcastManager`** sigue recibiendo datos desde un solo sitio
 
+### Para el usuario (Fase 5 — pendiente)
+
+*(Completar al cerrar la fase.)* Objetivo: **abrir la app desde el widget o accesos del sistema** de forma más fiable; permisos y avisos más claros. Menos comportamientos «solo en mi radio» por rutas de entrada distintas.
+
 ---
 
 ## Fase 6 — Estado y visibilidad de miembros
@@ -86,6 +112,10 @@ Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnH
 - [ ] Sustituir campos **`public`** por **package-private** + getters donde sea necesario
 - [ ] Agrupar flags relacionados (guards RDS, secuencias logo, bootstrap K706/QS6) en objetos de estado pequeños
 - [ ] Pasada final de grep: ningún paquete externo debería requerir campos crudos de `MainActivity`
+
+### Para el usuario (Fase 6 — pendiente)
+
+*(Completar al cerrar la fase.)* Cambio casi todo **interno**. Beneficio: menos regresiones al actualizar; la app **se comporta igual** salvo que se cierre un bug concreto durante la limpieza.
 
 ---
 
@@ -95,6 +125,10 @@ Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnH
 - [ ] Cerrar entradas **[Unreleased]** en `CHANGELOG.md` / `CHANGELOG_EN.md`
 - [ ] Actualizar badges y párrafo de versión en `README.md`
 - [ ] Tag `v5.2.0` y merge acordado (`5.2.0.MCU` → `MCU2` o `main`, según política del repo)
+
+### Para el usuario (Fase 7 — pendiente)
+
+*(Completar al cerrar la fase.)* Aquí sí suele haber **versión nueva numerada (5.2.0)** y notas públicas: qué radios probar, novedades visibles y enlaces al changelog. Es el momento de resumir todo el trabajo MCU en un mensaje claro para quien instala el APK.
 
 ---
 
