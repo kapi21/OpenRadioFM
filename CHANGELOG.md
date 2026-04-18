@@ -1,4 +1,22 @@
 ## [Unreleased] - MCU2
+
+### AutoScan por sobrescritura (abril 2026)
+- **Siempre FM1**: antes de borrar memorias 1–18 se alinea hardware y `MainActivity.mCurrentBand` a FM1 (QS6 `tuneWithBand(87,5 MHz, 0)`; K706/MT8163/MTK8259 `bandCycle` hasta FM1 + `tune`). Textos `autoscan_confirm_message` y `toast_autoscan_slow` actualizados en todos los idiomas.
+- **Ritmo**: tiempos de validación RDS, intervalo entre seeks, hold de guardado en preset y paso tras emisora aceptada **más pausados** (sin volver al barrido extremadamente lento inicial de 11 s / 8,5 s).
+- **Botón AutoScan**: sin animación de rotación; solo **tinte verde** en activo. Sincronización de `MainActivity.mIsScanning` con el estado efectivo en `applyEngineScanState`; durante el barrido lento el flag OEM incoherente no corta el estado “escaneando”; tras el fin, **latch** que ignora `onScanStatusChanged(true)` espurio (hasta nuevo autoscan o **~45 s**).
+- **Guardado**: tras aceptar emisora se puede reprogramar el siguiente seek antes del intervalo largo.
+
+### MT8163 / HCN — mute e init (abril 2026)
+- **`mRadioMuteDesired`**: evita forzar ruta FM / `setMute(false)` en recuperación AIDL y en `deferredBinderRecovery` cuando el usuario mantiene la radio silenciada (p. ej. tras inyección OEM).
+- **`mInitCompleted`**: evita doble `init` cuando `MainActivity` reentra con freq 0 tras `onServiceConnected`.
+- **Motor / `HiddenRadioPlayer`**: ampliaciones de control y coherencia con preferencia modo directo RadioPlayer; documentación mute HAL vs mux OEM.
+- **Menú ingeniería**: ajustes asociados (layout/strings) al modo experimental MT8163.
+
+### UI / ST, layouts y playback (abril 2026)
+- **`SignalMeterCoordinator`**: eliminado el color dinámico del icono **ST** por SNR (sombras/tinte); el ST sigue la lógica de skin / `MainActivity.refreshStereoIndicatorUi` y layouts estándar/simple/V3.
+- **`PlaybackManager`** y **`StatusRefreshCoordinator`**: refinamiento de mute/recuperación y refresco de estado acorde a MT8163 y uso en cabecera.
+- Coordinadores de tema/layout (**`DayModeManager`**, **`NightModeManager`**, **`StandardLayoutManager`**, etc.): alineación con el indicador ST y botones de control.
+
 ### K706 / Android Auto + Spotify + diagnóstico (Z-Link; seguimiento pendiente)
 - **`RadioActivityFileLogger`**: log a fichero estable (`commit` del nombre y del flag; sin carrera `apply`); **heartbeat `TICK`** periódico con estado FM/foco/UI; opción **volcar buffer `logcat`** desde ingeniería K706 (`logcat_dump_*.txt` en `RadioLogos/`). `LifecycleCoordinator` informa `uiResumed` al logger.
 - **Menús de ingeniería** (K706 / genérico / QS6): el toggle de log no duplica `putBoolean`+`apply`; solo `onToggleChanged` persiste. **K706**: botón volcado logcat + string i18n `eng_dev_logcat_dump_button`.
@@ -12,10 +30,10 @@
 - **`K706RadioManager`**: el “Glitch Protect” que relanzaba FM tras `AUDIOFOCUS_LOSS` / `LOSS_TRANSIENT` **no** se aplica si `AudioManager.isMusicActive()` (voz de Maps u otra app); imita la radio OEM (ceder mux). Los reintentos de **`mAutoRecoveryRunnable`** llaman `requestAudioFocus(false)` para **no** alargar la ventana anti-LOSS de 2,5 s (dejaba la app peleando con la guía).
 - **`RadioMediaService`**: ante **`EVENT_LOSS_TRANSIENT`** del broadcast OEM ya **no** se llama `refreshSteeringMediaSessionAndForeground()` (evitaba volver a PLAYING+FGS y a pedir foco mientras suena la navegación).
 
-### K706 / motor compartido y AutoScan (UI)
+### K706 / motor compartido y escaneo (UI)
 - **`CompositeRadioEngineCallback`**: reenvío de **`onHwAutomationEvent`** a ambos receptores (eventos de hardware 122–125 ya no se pierden con motor compartido).
 - **Escaneo selectivo (K706)**: al cerrar el diálogo se restaura el **callback previo** (p. ej. `Composite` UI + `RadioMediaService`), no solo `EngineCallbackCoordinator`.
-- **AutoScan (icono)**: al terminar el barrido lento, el icono puede seguir girando por `onScanStatusChanged(true)` espurio del MCU; se **suprime** ese estado en UI durante ~2,2 s tras el fin del AutoScan lento (`adjustEngineScanningForAutoScanUi`), se refuerza **`stopAutoScanAnimation`** (`animate().cancel()`, `clearAnimation()`, `rotation=0`) y **`LifecycleCoordinator.onResume`** usa el mismo criterio.
+- **AutoScan**: ver bloque *AutoScan por sobrescritura* arriba (FM1, latch OEM, botón sin rotación).
 
 ### K706 / Media (independencia y auditoría)
 - **Recuperación FM sin micro-corte (K706)**: si `RPC_GetChannel` ya devuelve **FM (2)**, `enforceAudioChannelRecovery()` evita el ritual completo que empezaba con `setMute(true)` (colisión con `PlaybackManager.setMute(false)` → `enforceAudioRecovery`). En `startFmAudioSequence(fast)` se omite el pre-mute inicial cuando el canal ya es 2. El cambio real **4→2** sigue usando la secuencia completa cuando hace falta.
