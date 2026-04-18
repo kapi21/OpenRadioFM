@@ -113,7 +113,6 @@ public class StandardLayoutManager {
             if (tvRdsName != null) tvRdsName.setTextColor(nightBlue);
             if (tvRdsInfo != null) tvRdsInfo.setTextColor(nightBlue);
             if (tvPty != null) tvPty.setTextColor(nightBlue);
-            if (ivStereoIcon != null) ivStereoIcon.setTextColor(nightBlue);
             if (btnPowerOff != null) btnPowerOff.setColorFilter(nightBlue, PorterDuff.Mode.SRC_IN);
         } else {
             if (tvFrequency != null) tvFrequency.setTextColor(normalText);
@@ -121,7 +120,6 @@ public class StandardLayoutManager {
             if (tvRdsName != null) tvRdsName.setTextColor(normalText);
             if (tvRdsInfo != null) tvRdsInfo.setTextColor(normalText);
             if (tvPty != null) tvPty.setTextColor(normalText);
-            if (ivStereoIcon != null) ivStereoIcon.setTextColor(normalText);
             if (btnPowerOff != null) btnPowerOff.clearColorFilter();
         }
     }
@@ -172,10 +170,7 @@ public class StandardLayoutManager {
     }
 
     public void updateStereoIcon() {
-        if (ivStereoIcon != null) {
-            boolean hasStereo = mActivity.mEngine != null && mActivity.mEngine.isStereo();
-            ivStereoIcon.setVisibility(hasStereo ? View.VISIBLE : View.INVISIBLE);
-        }
+        mActivity.refreshStereoIndicatorUi(null);
     }
 
     public void updateBandImage(int band) {

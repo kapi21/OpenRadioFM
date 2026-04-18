@@ -255,7 +255,7 @@
     <string name="widget_next_preset">Memorie următoare</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">SUPRASCRIERE MEMORII</string>
-    <string name="autoscan_confirm_message">Acest AutoScan șterge și umple memoriile 1–18 ale benzii curente cu posturile detectate.\n\nÎncepi scanarea?</string>
+    <string name="autoscan_confirm_message">Acest AutoScan începe mereu pe FM1: șterge și umple mai întâi memoriile 1–18 pe FM1 (tunerul comută pe FM1 dacă e nevoie). Poate continua pe FM2/FM3 după 18 posturi.\n\nÎncepi scanarea?</string>
     <string name="autoscan_confirm_start">Începe scanarea</string>
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
@@ -364,7 +364,7 @@
     <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
 
     <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_slow">AutoScan lent de pe FM1: se caută posturi… (atinge din nou pentru oprire)</string>
     <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
     <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
     <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>

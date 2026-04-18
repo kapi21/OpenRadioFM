@@ -117,18 +117,7 @@ public class MainLayoutController extends BaseLayoutController {
 
     @Override
     public void updateStereo(boolean stereo) {
-        if (ivStereoIcon != null) {
-            // V7.2f: En lugar de ocultarlo, ajustamos el alpha sutilmente
-            // para indicar si el hardware detecta señal estéreo real.
-            // Pero el Alpha principal lo manda el modo manual del usuario.
-            boolean manualStereo = mActivity.mPrefs.getBoolean("pref_stereo_mode_on", true);
-            if (manualStereo) {
-                ivStereoIcon.setAlpha(stereo ? 1.0f : 0.6f);
-            } else {
-                ivStereoIcon.setAlpha(0.4f);
-            }
-            ivStereoIcon.setVisibility(View.VISIBLE);
-        }
+        mActivity.refreshStereoIndicatorUi(null);
     }
 
     @Override
@@ -146,12 +135,7 @@ public class MainLayoutController extends BaseLayoutController {
         MainActivity.setTextColorIfChanged(tvRdsInfo, color);
         MainActivity.setTextColorIfChanged(tvPty, color);
         
-        // V7.2f: No sobrescribir el color de ivStereoIcon aquí si SignalMeterCoordinator 
-        // ya le está dando color dinámico por SNR. Solo el alpha.
-        if (ivStereoIcon != null) {
-            boolean manualStereo = mActivity.mPrefs.getBoolean("pref_stereo_mode_on", true);
-            ivStereoIcon.setAlpha(manualStereo ? 1.0f : 0.4f);
-        }
+        mActivity.refreshStereoIndicatorUi(null);
         
         if (ivUnitLabel != null) {
             MainActivity.setTextColorIfChanged(ivUnitLabel, color);

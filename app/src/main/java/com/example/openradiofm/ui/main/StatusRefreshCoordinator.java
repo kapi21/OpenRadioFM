@@ -45,7 +45,9 @@ public class StatusRefreshCoordinator {
 
         if (mActivity.mPlaybackManager != null && mActivity.mEngine != null &&
             ("MTK8259_8667".equals(mActivity.mEngine.getEngineName()) ||
-             ("MT8163".equals(mActivity.mEngine.getEngineName()) && mActivity.mPrefs.getBoolean("pref_mt8163_global_stream_mute", false)))) {
+             ("MT8163".equals(mActivity.mEngine.getEngineName())
+                     && (mActivity.mPrefs.getBoolean("pref_mt8163_global_stream_mute", true)
+                     || mActivity.mPrefs.getBoolean("pref_mt8163_mcu_direct", false))))) {
             AudioManager am = (AudioManager) mActivity.getSystemService(Context.AUDIO_SERVICE);
             if (am != null) {
                 boolean isSystemMuted;
@@ -58,8 +60,15 @@ public class StatusRefreshCoordinator {
                 }
                 
                 if (!isSystemMuted && mActivity.mPlaybackManager.isMuted()) {
-                    Log.d(TAG, "Mute sync: System unmuted, updating UI/Engine");
-                    mActivity.mPlaybackManager.setMute(false);
+                    if (mActivity.mPlaybackManager.isMt8163StreamVolumeMuteRejectedByOem()) {
+                        // STREAM_MUSIC no refleja mute (app sin permiso); no forzar unmute espurio.
+                    } else if (mActivity.mPlaybackManager.shouldSuppressMt8163StreamMuteSync()) {
+                        // Tras inject VOLUME_MUTE el HU puede “desenganchar” STREAM_MUSIC del mute real;
+                        // no interpretar como “usuario desmuteó por volumen” con un solo toque en la app.
+                    } else {
+                        Log.d(TAG, "Mute sync: System unmuted, updating UI/Engine");
+                        mActivity.mPlaybackManager.setMute(false);
+                    }
                 }
             }
         }
@@ -75,20 +84,8 @@ public class StatusRefreshCoordinator {
                 ? mActivity.mFreqStateManager.shouldFullRefresh(freq, band) : true;
 
         if (!stateChanged) {
-            final ThemeManager.Skin fSkin = (mActivity.mThemeManager != null) ? mActivity.mThemeManager.getActiveSkin() : null;
             mActivity.runOnUiThread(() -> {
-                android.widget.TextView ivStereoIcon = mActivity.findViewById(R.id.ivStereoIcon);
-                if (ivStereoIcon != null) {
-                    MainActivity.setVisibilityIfChanged(ivStereoIcon, isStereo ? View.VISIBLE : View.INVISIBLE);
-                    if (fSkin == ThemeManager.Skin.NIGHT_MODE) {
-                        int nightBlue = mActivity.getResources().getColor(R.color.night_blue_primary, null);
-                        MainActivity.setTextColorIfChanged(ivStereoIcon, nightBlue);
-                    } else if (fSkin == ThemeManager.Skin.DAY_MODE || fSkin == ThemeManager.Skin.CLEAR) {
-                        MainActivity.setTextColorIfChanged(ivStereoIcon, android.graphics.Color.BLACK);
-                    } else {
-                        MainActivity.setTextColorIfChanged(ivStereoIcon, android.graphics.Color.WHITE);
-                    }
-                }
+                mActivity.refreshStereoIndicatorUi(isStereo);
                 mActivity.syncLocDxButtonVisual(isLocal);
                 
                 ImageView ivSignalLevel = mActivity.findViewById(R.id.ivSignalLevel);
@@ -229,6 +226,7 @@ public class StatusRefreshCoordinator {
 
                 mActivity.syncLocDxButtonVisual(fIsLocal);
                 mActivity.sendWidgetUpdate(fFreq, fBand, rdsName);
+                mActivity.refreshStereoIndicatorUi(fIsStreaming || (mActivity.mEngine != null && mActivity.mEngine.isStereo()));
             });
         });
     }

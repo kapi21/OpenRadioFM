@@ -255,7 +255,7 @@
     <string name="widget_next_preset">Следующий пресет</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">ПЕРЕЗАПИСЬ ПРИСЕТОВ</string>
-    <string name="autoscan_confirm_message">Этот AutoScan очистит и заполнит ячейки 1–18 текущего диапазона найденными станциями.\n\nНачать сканирование?</string>
+    <string name="autoscan_confirm_message">Этот AutoScan всегда начинается с FM1: сначала очищает и заполняет ячейки 1–18 на FM1 (при необходимости тюнер переключится на FM1). Затем может продолжить на FM2/FM3 после 18 станций.\n\nНачать сканирование?</string>
     <string name="autoscan_confirm_start">Начать сканирование</string>
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
@@ -364,7 +364,7 @@
     <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
 
     <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_slow">Медленный AutoScan с FM1: поиск станций… (нажмите ещё раз, чтобы остановить)</string>
     <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
     <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
     <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>

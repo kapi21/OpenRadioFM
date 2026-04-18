@@ -289,6 +289,44 @@ public class HiddenRadioPlayer {
         return getRadioInfoBoolField("mIsStereo");
     }
 
+    /**
+     * RadioPlayer notifica {@code onEvent(1, radioInfo)}; el campo {@code mUiBand} refleja FM-1…FM-3
+     * aunque el servicio HCN {@code getCurrentBand()} devuelva 0. Mapea a índice de banda de la app:
+     * 0=FM1, 1=FM2, 2=FM3, 3=AM1, 4=AM2; {@code -1} si no se reconoce.
+     */
+    public int readAppBandIndexFromRadioInfo(Object radioInfo) {
+        if (radioInfo == null) return -1;
+        Object uiBandObj = null;
+        try {
+            java.lang.reflect.Field f = radioInfo.getClass().getField("mUiBand");
+            uiBandObj = f.get(radioInfo);
+        } catch (Exception ignored) {
+        }
+        if (uiBandObj == null) {
+            String s = radioInfo.toString();
+            int key = s.indexOf("mUiBand=");
+            if (key >= 0) {
+                String rest = s.substring(key + 8).trim();
+                int end = rest.indexOf(',');
+                if (end > 0) rest = rest.substring(0, end).trim();
+                uiBandObj = rest;
+            }
+        }
+        return mapUiBandTokenToAppIndex(uiBandObj);
+    }
+
+    private static int mapUiBandTokenToAppIndex(Object token) {
+        if (token == null) return -1;
+        String t = token.toString().trim().toUpperCase(java.util.Locale.US).replace("-", "").replace("_", "");
+        if (t.contains("FM3")) return 2;
+        if (t.contains("FM2")) return 1;
+        if (t.contains("FM1")) return 0;
+        if (t.equals("FM")) return 0;
+        if (t.contains("AM2")) return 4;
+        if (t.contains("AM1") || t.equals("AM")) return 3;
+        return -1;
+    }
+
     public Integer getCurrentFreqKhz() {
         if (mRadioPlayerInstance == null) return null;
         try {

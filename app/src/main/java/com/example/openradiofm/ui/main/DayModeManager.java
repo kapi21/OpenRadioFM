@@ -52,7 +52,6 @@ public final class DayModeManager {
         tintText(R.id.tvRdsInfo, dayBlack);
         tintText(R.id.tvPty, dayBlack);
         tintText(R.id.ivBandIndicator, dayBlack);
-        tintText(R.id.ivStereoIcon, dayBlack);
         tintText(R.id.ivUnitLabel, dayBlack);
 
         // Iconos estado
@@ -83,6 +82,8 @@ public final class DayModeManager {
             TextView tv = mActivity.findViewById(tvId);
             if (tv != null) tv.setTextColor(dayBlack);
         }
+
+        main.refreshStereoIndicatorUi(null);
     }
 
     public void resetDayModeColors(int lastFreq) {
@@ -102,7 +103,6 @@ public final class DayModeManager {
         tintText(R.id.tvRdsInfo, normalText);
         tintText(R.id.tvPty, normalText);
         tintText(R.id.ivBandIndicator, normalText);
-        tintText(R.id.ivStereoIcon, normalText);
         tintText(R.id.ivUnitLabel, normalText);
         tintText(R.id.tvFrequency, normalText);
 
@@ -130,6 +130,8 @@ public final class DayModeManager {
             TextView tv = mActivity.findViewById(tvId);
             if (tv != null) tv.setTextColor(normalText);
         }
+
+        main.refreshStereoIndicatorUi(null);
     }
 
     private void tintText(int id, int color) {

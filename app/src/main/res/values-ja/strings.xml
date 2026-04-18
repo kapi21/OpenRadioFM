@@ -255,7 +255,7 @@
     <string name="widget_next_preset">次のプリセット</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">プリセットの上書き</string>
-    <string name="autoscan_confirm_message">この AutoScan は現在のバンドのプリセット 1〜18 を消去し、検出した局で埋め直します。\n\nスキャンを開始しますか？</string>
+    <string name="autoscan_confirm_message">この AutoScan は常に FM1 から開始します。まず FM1 のプリセット 1〜18 を消去して再登録します（必要なら FM1 に切り替えます）。18 局登録後は FM2/FM3 に続行できます。\n\nスキャンを開始しますか？</string>
     <string name="autoscan_confirm_start">スキャン開始</string>
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
@@ -364,7 +364,7 @@
     <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
 
     <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_slow">FM1 からのスロー AutoScan：局を検索中…（もう一度タップで停止）</string>
     <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
     <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
     <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>

@@ -45,7 +45,7 @@ public class MinimalLayoutManager {
             ivMainLogo.setOnClickListener(v -> {
                 // Toggle Mute en Minimal
                 if (mActivity.mPlaybackManager != null) {
-                    mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted());
+                    mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted(), true);
                 } else if (mActivity.mEngine != null) {
                     boolean isMuted = !mActivity.mMuteState;
                     mActivity.mEngine.setMute(isMuted);

@@ -316,7 +316,7 @@
     <string name="widget_next_preset">Next preset</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">PRESET OVERWRITE</string>
-    <string name="autoscan_confirm_message">This AutoScan will clear and refill presets 1–18 on the current band with stations it finds.\n\nStart scanning?</string>
+    <string name="autoscan_confirm_message">This AutoScan always starts on FM1: it clears and fills presets 1–18 on FM1 first (the tuner switches to FM1 if needed). It can continue on FM2/FM3 after 18 stations.\n\nStart scanning?</string>
     <string name="autoscan_confirm_start">Start scan</string>
 
     <string name="save_load_section_actions">Available actions</string>
@@ -395,7 +395,7 @@
     <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
 
     <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_slow">Slow AutoScan from FM1: searching stations… (tap again to stop)</string>
     <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
     <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
     <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>

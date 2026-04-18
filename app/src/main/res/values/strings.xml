@@ -319,7 +319,7 @@
 
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">SOBRESCRITURA DE MEMORIAS</string>
-    <string name="autoscan_confirm_message">Este AutoScan borrará y rellenará las memorias 1–18 de la banda actual con las emisoras que vaya detectando.\n\n¿Quieres iniciar el escaneo?</string>
+    <string name="autoscan_confirm_message">Este AutoScan siempre empieza en FM1: borra y rellena las memorias 1–18 en FM1 primero (el sintonizador pasará a FM1 si hace falta). Puede continuar en FM2/FM3 al llenar las 18 memorias.\n\n¿Quieres iniciar el escaneo?</string>
     <string name="autoscan_confirm_start">Iniciar escaneo</string>
 
     <!-- Diálogo guardar/cargar: textos que faltaban -->
@@ -404,7 +404,7 @@
     <string name="toast_basic_no_engineering">Modo básico: menú de ingeniería no disponible</string>
 
     <string name="toast_autoscan_stopped">AutoScan detenido</string>
-    <string name="toast_autoscan_slow">AutoScan lento: buscando emisoras… (pulsa de nuevo para parar)</string>
+    <string name="toast_autoscan_slow">AutoScan lento desde FM1: buscando emisoras… (pulsa de nuevo para parar)</string>
     <string name="toast_autoscan_start_failed">No se pudo iniciar AutoScan</string>
     <string name="toast_autoscan_finished">AutoScan terminado (%1$d memorias)</string>
     <string name="toast_autoscan_band_presets">AutoScan → %1$s · memorias 1–18</string>

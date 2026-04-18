@@ -85,8 +85,7 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
             if (mActivity.mUiController != null) {
                 mActivity.mUiController.updateStereo(stereo);
             } else {
-                TextView ivStereoIcon = mActivity.findViewById(R.id.ivStereoIcon);
-                if (ivStereoIcon != null) MainActivity.setVisibilityIfChanged(ivStereoIcon, stereo ? View.VISIBLE : View.INVISIBLE);
+                mActivity.refreshStereoIndicatorUi(null);
             }
             
             if (mActivity.mSignalMeterCoordinator != null && mActivity.mSignalMeterCoordinator.useBars()) {

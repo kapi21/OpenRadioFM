@@ -48,6 +48,7 @@ public class EngineeringModeDialog extends Dialog {
     // Dev toggles (MT8163)
     private SwitchCompat swMt8163GlobalStreamMute;
     private SwitchCompat swMt8163McuDirect;
+    private SwitchCompat swMt8163McuInjectMuteKey;
     // Dev toggle (MTK8259)
     private SwitchCompat swMtk8259V5StreamMixerCompat;
     private SwitchCompat swDevAutoScanEnabled;
@@ -121,6 +122,7 @@ public class EngineeringModeDialog extends Dialog {
         // Dev toggles
         swMt8163GlobalStreamMute = findViewById(R.id.swMt8163GlobalStreamMute);
         swMt8163McuDirect = findViewById(R.id.swMt8163McuDirect);
+        swMt8163McuInjectMuteKey = findViewById(R.id.swMt8163McuInjectMuteKey);
         swMtk8259V5StreamMixerCompat = findViewById(R.id.swMtk8259V5StreamMixerCompat);
         swDevAutoScanEnabled = findViewById(R.id.swDevAutoScanEnabled);
         swDevDayModeEnabled = findViewById(R.id.swDevDayModeEnabled);
@@ -149,8 +151,8 @@ public class EngineeringModeDialog extends Dialog {
         });
 
         if (swMt8163GlobalStreamMute != null) {
-            boolean enabled = false;
-            try { enabled = mPrefs.getBoolean("pref_mt8163_global_stream_mute", false); }
+            boolean enabled = true;
+            try { enabled = mPrefs.getBoolean("pref_mt8163_global_stream_mute", true); }
             catch (Exception ignored) {}
             swMt8163GlobalStreamMute.setChecked(enabled);
             swMt8163GlobalStreamMute.setOnCheckedChangeListener((btn, checked) -> {
@@ -173,6 +175,18 @@ public class EngineeringModeDialog extends Dialog {
                 try { mPrefs.edit().putBoolean("pref_mt8163_mcu_direct", checked).apply(); } catch (Exception ignored) {}
                 logEvent("DEV", "pref_mt8163_mcu_direct=" + checked);
                 logEvent("INFO", "Reinicia la app para aplicar (MT8163 sin com.hcn.autoradio)");
+            });
+        }
+
+        if (swMt8163McuInjectMuteKey != null) {
+            boolean inj = true;
+            try { inj = mPrefs.getBoolean("pref_mt8163_mcu_inject_mute_key", true); }
+            catch (Exception ignored) {}
+            swMt8163McuInjectMuteKey.setChecked(inj);
+            swMt8163McuInjectMuteKey.setOnCheckedChangeListener((btn, checked) -> {
+                try { mPrefs.edit().putBoolean("pref_mt8163_mcu_inject_mute_key", checked).apply(); }
+                catch (Exception ignored) {}
+                logEvent("DEV", "pref_mt8163_mcu_inject_mute_key=" + checked);
             });
         }
 

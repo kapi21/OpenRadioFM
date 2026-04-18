@@ -73,7 +73,7 @@ public class RadioSessionController {
         // Audio
         try {
             if (playbackManager != null) {
-                playbackManager.setMute(false);
+                playbackManager.setMute(false, true);
             } else {
                 engine.setMute(false);
                 engine.enforceAudioRecovery();
@@ -87,7 +87,7 @@ public class RadioSessionController {
                 currentState.accOn, currentState.rdsName, currentState.rdsText, currentState.pty, currentState.pi);
         try {
             if (playbackManager != null) {
-                playbackManager.setMute(true);
+                playbackManager.setMute(true, true);
             } else {
                 engine.setMute(true);
             }

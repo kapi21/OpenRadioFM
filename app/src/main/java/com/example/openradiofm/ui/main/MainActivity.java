@@ -1092,8 +1092,11 @@ public class MainActivity extends AppCompatActivity  {
                 Log.w(TAG, "No se pudo inicializar RadioSessionController en MainActivity", e);
             }
 
-            // Si el motor no se ha inicializado todav├¡a (ej: K706), lo hacemos aqu├¡
-            if (mEngine.getCurrentFreq() <= 0) {
+            // Si el motor no se ha inicializado todavía (ej: K706), lo hacemos aquí.
+            // MT8163: init() ya se llamó en onServiceConnected antes de onEngineReady; getCurrentFreq()
+            // sigue en 0 hasta el primer tune — repetir init duplicaba bind HCN + HiddenRadioPlayer (log 2×).
+            if (mEngine.getCurrentFreq() <= 0
+                    && !(mEngine instanceof com.example.openradiofm.data.source.MT8163Engine)) {
                 mEngine.init(MainActivity.this);
             }
 
@@ -1638,10 +1641,7 @@ public class MainActivity extends AppCompatActivity  {
         // V7.2f: Botón ST dinámico con dos estados (Stereo/Mono)
         if (ivStereoIcon != null) {
             ivStereoIcon.setVisibility(View.VISIBLE); // Siempre visible
-            
-            // Cargar preferencia guardada
-            boolean isStereoOn = mPrefs.getBoolean("pref_stereo_mode_on", true);
-            ivStereoIcon.setAlpha(isStereoOn ? 1.0f : 0.4f);
+            refreshStereoIndicatorUi(null);
             
             ivStereoIcon.setOnClickListener(v -> {
                 animateButton(ivStereoIcon);
@@ -1650,12 +1650,10 @@ public class MainActivity extends AppCompatActivity  {
                 
                 // Guardar y Aplicar
                 mPrefs.edit().putBoolean("pref_stereo_mode_on", next).apply();
-                ivStereoIcon.setAlpha(next ? 1.0f : 0.4f);
-                
                 if (mEngine != null) {
                     mEngine.setStereo(next);
                 }
-                
+                refreshStereoIndicatorUi(null);
                 showToast(next ? "Modo Stereo Activado" : "Modo Forzar Mono");
             });
         }
@@ -2410,6 +2408,57 @@ public class MainActivity extends AppCompatActivity  {
         }
     }
 
+    /**
+     * Indicador ST: color según skin y alpha según recepción estéreo y {@code pref_stereo_mode_on}.
+     * Siempre visible; en mono (recepción) queda ~medio alpha; con “forzar mono” del usuario, más apagado.
+     *
+     * @param rxActiveIfNotNull si no es null, valor ya combinado (p. ej. streaming || isStereo) para el alpha;
+     *                          si es null, se calcula aquí.
+     */
+    public void refreshStereoIndicatorUi(Boolean rxActiveIfNotNull) {
+        if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) {
+            return;
+        }
+        TextView st = findViewById(R.id.ivStereoIcon);
+        if (st == null) return;
+
+        boolean streaming = mOnlineStreamManager != null
+                && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading());
+        final boolean rxActive;
+        if (rxActiveIfNotNull != null) {
+            rxActive = rxActiveIfNotNull;
+        } else {
+            rxActive = streaming || (mEngine != null && mEngine.isStereo());
+        }
+
+        boolean manualStereo = mPrefs != null && mPrefs.getBoolean("pref_stereo_mode_on", true);
+
+        ThemeManager.Skin skin = mThemeManager != null
+                ? mThemeManager.getActiveSkin() : ThemeManager.Skin.CLASSIC;
+        int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
+        int color;
+        if (skin == ThemeManager.Skin.NIGHT_MODE) {
+            color = nightBlue;
+        } else if (skin == ThemeManager.Skin.DAY_MODE || skin == ThemeManager.Skin.CLEAR) {
+            color = Color.BLACK;
+        } else {
+            color = Color.WHITE;
+        }
+        setTextColorIfChanged(st, color);
+        if (skin == ThemeManager.Skin.NIGHT_MODE) {
+            st.setShadowLayer(8f, 0, 0, color);
+        } else {
+            st.setShadowLayer(0, 0, 0, 0);
+        }
+
+        st.setVisibility(View.VISIBLE);
+        if (!manualStereo) {
+            st.setAlpha(0.4f);
+        } else {
+            st.setAlpha(rxActive ? 1.0f : 0.55f);
+        }
+    }
+
     public void refreshPresetButtons() {
         if (mPresetManager != null) {
             mPresetManager.refreshButtons(mCurrentBand);
@@ -3096,7 +3145,7 @@ public class MainActivity extends AppCompatActivity  {
     // V5.5: setMute delegado a mPlaybackManager (ver PlaybackManager.java)
     public void setMute(boolean mute) {
         if (mPlaybackManager != null) {
-            mPlaybackManager.setMute(mute);
+            mPlaybackManager.setMute(mute, true);
         }
     }
 
@@ -3384,12 +3433,7 @@ public class MainActivity extends AppCompatActivity  {
                 tvRdsInfo.setText("");
                 tvRdsInfo.setVisibility(View.VISIBLE);
             }
-            if (ivStereoIcon != null) {
-                // V7.2f: No ocultamos, dejamos visible con alpha de espera
-                boolean manualStereo = mPrefs.getBoolean("pref_stereo_mode_on", true);
-                ivStereoIcon.setAlpha(manualStereo ? 0.6f : 0.4f);
-                ivStereoIcon.setVisibility(View.VISIBLE);
-            }
+            refreshStereoIndicatorUi(null);
             if (tvPty != null) {
                 tvPty.setText(getString(R.string.pty_none));
             }

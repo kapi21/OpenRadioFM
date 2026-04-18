@@ -45,7 +45,7 @@ public class ControlPanelManager {
         if (btnMute != null) {
             btnMute.setOnClickListener(v -> {
                 if (mActivity.mPlaybackManager != null) {
-                    mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted());
+                    mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted(), true);
                 }
             });
         }
