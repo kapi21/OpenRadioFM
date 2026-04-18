@@ -363,12 +363,10 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     public SignalMeterCoordinator mSignalMeterCoordinator;
     ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
     android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
-    private int mActiveDataOps = 0; // V16.2: Concurrent Supabase Operations
+    int mActiveDataOps = 0; // V16.2: Concurrent Supabase Operations (StreamingUiCoordinator)
     public DataActivityIndicatorManager mDataActivityIndicatorManager;
-    private long mLastInternetCheckTime = 0;
-    private boolean mLastInternetCache = false;
-    /** Opacidad del icono nube cuando hay logos online pero sin conectividad (no ocultar, solo atenuar). */
-    private static final float CLOUD_DATA_OFFLINE_ALPHA = 0.38f;
+    long mLastInternetCheckTime = 0;
+    boolean mLastInternetCache = false;
 
     // V2.6: Master Guard for refreshRadioStatus
     private int mLastRefreshFreq = -1;
@@ -673,79 +671,20 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * Icono cloud: delega en {@link #updateDataActivityUI()} (p. ej. tras di├ílogos de tema).
      */
     public void refreshDataActivityIndicator() {
-        updateDataActivityUI();
+        StreamingUiCoordinator.updateDataActivityUi(this);
     }
 
     /**
      * V16.2: Actualiza el estado visual del icono de actividad de datos.
-     * - Oculto si logos online desactivados.
-     * - Visible: opacidad plena con internet; atenuado ({@link #CLOUD_DATA_OFFLINE_ALPHA}) sin internet.
-     * - Parpadeando si hay actividad (download/upload) y hay conectividad.
-     * - Color: rojo (streaming), amarillo (buffer), blanco/azul noche en FM idle (coherente con packs).
+     * Implementación en {@link StreamingUiCoordinator#updateDataActivityUi(MainActivity)}.
      */
     @Override
     public void updateDataActivityUI() {
-        if (ivDataActivity == null) return;
-
-        boolean onlineEnabled = mPrefs.getBoolean("pref_logos_online", false);
-        
-        // V2.5: Cache internet check for 10 seconds to avoid main thread jitter
-        long now = System.currentTimeMillis();
-        boolean isConnected;
-        if (now - mLastInternetCheckTime < 10000) {
-            isConnected = mLastInternetCache;
-        } else {
-            isConnected = isInternetAvailable();
-            mLastInternetCache = isConnected;
-            mLastInternetCheckTime = now;
-        }
-        
-        if (!onlineEnabled) {
-            ensureDataActivityIndicatorManager();
-            if (mDataActivityIndicatorManager != null) {
-                mDataActivityIndicatorManager.render(
-                        false,
-                        isConnected,
-                        mActiveDataOps,
-                        false,
-                        false,
-                        mThemeManager != null ? mThemeManager.getActiveSkin() : null,
-                        CLOUD_DATA_OFFLINE_ALPHA,
-                        getResources().getColor(R.color.night_blue_primary, null)
-                );
-            } else {
-                setVisibilityIfChanged(ivDataActivity, View.INVISIBLE);
-            }
-            return;
-        }
-
-        ensureDataActivityIndicatorManager();
-        if (mDataActivityIndicatorManager == null) return;
-
-        boolean playing = mOnlineStreamManager != null && mOnlineStreamManager.isPlaying();
-        boolean loading = mOnlineStreamManager != null && mOnlineStreamManager.isLoading();
-        com.example.openradiofm.ui.theme.ThemeManager.Skin skin = mThemeManager != null
-                ? mThemeManager.getActiveSkin() : null;
-        int nightBlue = getResources().getColor(R.color.night_blue_primary, null);
-
-        mDataActivityIndicatorManager.render(
-                true,
-                isConnected,
-                mActiveDataOps,
-                playing,
-                loading,
-                skin,
-                CLOUD_DATA_OFFLINE_ALPHA,
-                nightBlue
-        );
+        StreamingUiCoordinator.updateDataActivityUi(this);
     }
 
     public void ensureDataActivityIndicatorManager() {
-        if (mDataActivityIndicatorManager != null) return;
-        if (ivDataActivity == null) return;
-        if (mUiMediator.ivDataActivityIcon == null) 
-        if (mUiMediator.ivDataActivityIcon == null) return;
-        mDataActivityIndicatorManager = new DataActivityIndicatorManager(mUiMediator.ivDataActivity, mUiMediator.ivDataActivityIcon);
+        StreamingUiCoordinator.ensureDataActivityIndicatorManager(this);
     }
 
     /**
@@ -757,18 +696,9 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     // Blink / alpha / tint del cloud movidos a DataActivityIndicatorManager
 
+    /** @see StreamingUiCoordinator#isInternetReachable(MainActivity) */
     public boolean isInternetAvailable() {
-        try {
-            android.net.ConnectivityManager cm = (android.net.ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
-            // V18.6.4: Migrado de getActiveNetworkInfo() (deprecada API 29) a NetworkCapabilities
-            android.net.Network net = cm.getActiveNetwork();
-            if (net == null) return false;
-            android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(net);
-            return caps != null && caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET);
-        } catch (Exception e) {
-            Log.e(TAG, "isInternetAvailable: Error checking connection", e);
-            return false;
-        }
+        return StreamingUiCoordinator.isInternetReachable(this);
     }
 
 

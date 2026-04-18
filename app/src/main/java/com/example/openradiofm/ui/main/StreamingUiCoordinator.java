@@ -3,23 +3,121 @@ package com.example.openradiofm.ui.main;
 import android.content.Context;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.View;
 
 import com.example.openradiofm.R;
+import com.example.openradiofm.ui.theme.ThemeManager;
 
 /**
- * Configuración de streaming online, icono de actividad de datos y listeners asociados
- * (Fase 3 refactor 5.2.0.MCU — extracción desde {@link MainActivity#setupOnlineStreaming()}).
+ * Streaming por red (ExoPlayer / {@link OnlineStreamManager}) frente a FM por hardware
+ * ({@code mEngine} en {@link MainActivity}): listeners de stream, icono nube y
+ * {@linkplain #updateDataActivityUi(MainActivity) actualización única} del indicador de datos.
+ * (Fase 3 refactor 5.2.0.MCU.)
  */
 public final class StreamingUiCoordinator {
 
+    /** Opacidad del icono nube cuando hay logos online pero sin conectividad. */
+    private static final float CLOUD_DATA_OFFLINE_ALPHA = 0.38f;
+
     private StreamingUiCoordinator() {}
+
+    /** Audio por internet (no FM hardware). */
+    private static boolean isOnlineStreamPlaying(MainActivity a) {
+        return a.mOnlineStreamManager != null && a.mOnlineStreamManager.isPlaying();
+    }
+
+    private static boolean isOnlineStreamLoading(MainActivity a) {
+        return a.mOnlineStreamManager != null && a.mOnlineStreamManager.isLoading();
+    }
+
+    /**
+     * Conectividad a Internet (NetworkCapabilities). Independiente del estado del motor FM.
+     */
+    static boolean isInternetReachable(MainActivity a) {
+        try {
+            android.net.ConnectivityManager cm = (android.net.ConnectivityManager)
+                    a.getSystemService(Context.CONNECTIVITY_SERVICE);
+            android.net.Network net = cm.getActiveNetwork();
+            if (net == null) return false;
+            android.net.NetworkCapabilities caps = cm.getNetworkCapabilities(net);
+            return caps != null && caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET);
+        } catch (Exception e) {
+            Log.e(MainActivity.TAG, "isInternetReachable: Error checking connection", e);
+            return false;
+        }
+    }
+
+    static void ensureDataActivityIndicatorManager(MainActivity a) {
+        if (a.mDataActivityIndicatorManager != null) return;
+        if (a.ivDataActivity == null) return;
+        if (a.mUiMediator.ivDataActivityIcon == null) return;
+        a.mDataActivityIndicatorManager = new DataActivityIndicatorManager(
+                a.mUiMediator.ivDataActivity, a.mUiMediator.ivDataActivityIcon);
+    }
+
+    /**
+     * Punto único para pintar el icono de actividad de datos / streaming vs FM idle.
+     */
+    static void updateDataActivityUi(MainActivity a) {
+        if (a.ivDataActivity == null) return;
+
+        boolean onlineEnabled = a.mPrefs.getBoolean("pref_logos_online", false);
+
+        long now = System.currentTimeMillis();
+        boolean isConnected;
+        if (now - a.mLastInternetCheckTime < 10000) {
+            isConnected = a.mLastInternetCache;
+        } else {
+            isConnected = isInternetReachable(a);
+            a.mLastInternetCache = isConnected;
+            a.mLastInternetCheckTime = now;
+        }
+
+        if (!onlineEnabled) {
+            ensureDataActivityIndicatorManager(a);
+            if (a.mDataActivityIndicatorManager != null) {
+                a.mDataActivityIndicatorManager.render(
+                        false,
+                        isConnected,
+                        a.mActiveDataOps,
+                        false,
+                        false,
+                        a.mThemeManager != null ? a.mThemeManager.getActiveSkin() : null,
+                        CLOUD_DATA_OFFLINE_ALPHA,
+                        a.getResources().getColor(R.color.night_blue_primary, null)
+                );
+            } else {
+                MainActivity.setVisibilityIfChanged(a.ivDataActivity, View.INVISIBLE);
+            }
+            return;
+        }
+
+        ensureDataActivityIndicatorManager(a);
+        if (a.mDataActivityIndicatorManager == null) return;
+
+        boolean playing = isOnlineStreamPlaying(a);
+        boolean loading = isOnlineStreamLoading(a);
+        ThemeManager.Skin skin = a.mThemeManager != null ? a.mThemeManager.getActiveSkin() : null;
+        int nightBlue = a.getResources().getColor(R.color.night_blue_primary, null);
+
+        a.mDataActivityIndicatorManager.render(
+                true,
+                isConnected,
+                a.mActiveDataOps,
+                playing,
+                loading,
+                skin,
+                CLOUD_DATA_OFFLINE_ALPHA,
+                nightBlue
+        );
+    }
 
     static void install(MainActivity a) {
         a.mOnlineStreamManager = new OnlineStreamManager(a, a.mPlaybackManager);
         a.mOnlineStreamManager.setListener(new OnlineStreamManager.StreamListener() {
             @Override
             public void onStreamStatusChanged(boolean isLoading, boolean isPlaying) {
-                a.runOnUiThread(() -> a.updateDataActivityUI());
+                a.runOnUiThread(() -> updateDataActivityUi(a));
             }
 
             @Override

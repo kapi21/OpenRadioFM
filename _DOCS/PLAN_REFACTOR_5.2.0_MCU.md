@@ -76,12 +76,12 @@ La intención sigue siendo **nombre, RDS y logo más estables** al zappear o con
 ## Fase 3 — Streaming y conectividad
 
 - [x] **`setupOnlineStreaming`** delega en **`StreamingUiCoordinator.install(MainActivity)`** (`app/.../StreamingUiCoordinator.java`); **`MainActivity.removeHcnBindAfterHandoffCallbacks()`** expone cancelación del runnable MT8163 al paquete `ui.main`.
-- [ ] Separar claramente: **FM hardware** vs **ExoPlayer / red**
-- [ ] Indicador de actividad de datos / offline: API única desde el nuevo módulo
+- [x] Separar en código: helpers **`isOnlineStreamPlaying` / `isOnlineStreamLoading`** (ExoPlayer/red) frente a FM por **`mEngine`** en el resto de `MainActivity`; comentario de módulo en **`StreamingUiCoordinator`**.
+- [x] Indicador nube / offline: **`StreamingUiCoordinator.updateDataActivityUi`**, **`ensureDataActivityIndicatorManager`**, **`isInternetReachable`**; `MainActivity` solo delega (`mActiveDataOps` y caché de red visibles al paquete).
 
-### Para el usuario (Fase 3 — pendiente)
+### Para el usuario (Fase 3 — en curso)
 
-*(Completar al cerrar la fase.)* Objetivo: **menos choques entre radio FM y streaming por internet** (quién tiene el sonido, icono de nube, cortes al volver de otra app). Comportamiento más predecible al alternar emisora online y FM.
+Objetivo: **menos choques entre FM y streaming** y un icono de datos **coherente**. Por ahora el cambio es **interno** (mismo icono y mismos toques); la lógica vive en **`StreamingUiCoordinator`** para que futuros ajustes no repartan el pintado entre varias clases. Sigue siendo importante **probar** cambio FM ↔ nube en **MT8163** y al menos un head unit con streaming.
 
 ---
 
