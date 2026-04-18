@@ -12,6 +12,13 @@
 - **Motor / `HiddenRadioPlayer`**: ampliaciones de control y coherencia con preferencia modo directo RadioPlayer; documentación mute HAL vs mux OEM.
 - **Menú ingeniería**: ajustes asociados (layout/strings) al modo experimental MT8163.
 
+### MT8163 / HCN — Agama launcher y MediaSession (abril 2026)
+- **Motor compartido con `RadioMediaService`**: tras el bind HCN en `MainActivity`, el `MT8163Engine` se registra en `RadioServiceController`; el servicio llama a `start()` solo para reinyectar `onEngineReady` **sin** un segundo `bindService` a `com.hcn.autoradio` (evita force-stop en algunas ROM).
+- **Controles externos**: seek / preset desde launchers tipo **Agama** (y sesión de medios) reciben `mEngine` y dejan de quedar en silencio funcional.
+- **`MT8163Engine.getCallback()`**: composición de callback con la UI (mismo patrón que K706/QS6).
+- **`release(false)`**: `clearSharedLocalEngineIfSame` al soltar el motor.
+- **Limitación**: sin haber abierto la app al menos una vez en la sesión no hay motor compartido; el widget/sesión no opera hasta ese bind inicial (por diseño).
+
 ### UI / ST, layouts y playback (abril 2026)
 - **`SignalMeterCoordinator`**: eliminado el color dinámico del icono **ST** por SNR (sombras/tinte); el ST sigue la lógica de skin / `MainActivity.refreshStereoIndicatorUi` y layouts estándar/simple/V3.
 - **`PlaybackManager`** y **`StatusRefreshCoordinator`**: refinamiento de mute/recuperación y refresco de estado acorde a MT8163 y uso en cabecera.

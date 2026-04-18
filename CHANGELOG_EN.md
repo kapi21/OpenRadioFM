@@ -5,6 +5,14 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ---
 
 ## [Unreleased] - MCU2
+
+### MT8163 / HCN — Agama launcher & MediaSession (April 2026)
+- **Shared engine with `RadioMediaService`**: after the HCN bind in `MainActivity`, `MT8163Engine` is registered in `RadioServiceController`; the service calls `start()` only to deliver `onEngineReady` **without** a second `bindService` to `com.hcn.autoradio` (avoids force-stop on some OEM ROMs).
+- **External controls**: seek / preset from launchers such as **Agama** (and the media session) get a non-null `mEngine` instead of being no-ops.
+- **`MT8163Engine.getCallback()`**: composite callback with the UI (same pattern as K706/QS6).
+- **`release(false)`**: calls `clearSharedLocalEngineIfSame` when tearing down the engine.
+- **Limitation**: if the app has never been opened in that session, there is no shared engine yet; the widget/session stays inactive until that first bind (by design).
+
 ### K706 / Android Auto + Spotify + on-device diagnostics (Z-Link; follow-up TBD)
 - **`RadioActivityFileLogger`**: stable file log (`commit` for filename and flag); periodic **`TICK`** heartbeat; optional **`logcat -d`** dump from K706 engineering UI. `LifecycleCoordinator` feeds **`uiResumed`** into ticks.
 - **Engineering menus**: file-log toggle relies on **`onToggleChanged`** only (no duplicate `apply`). K706: logcat dump button + i18n key **`eng_dev_logcat_dump_button`**.
