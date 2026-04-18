@@ -483,14 +483,20 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             mEngine.tune(freq);
             mUserRequestedFreqKhz = freq;
             mUserRequestedFreqUntilMs = android.os.SystemClock.elapsedRealtime() + 12000L;
+            // Antes del callback del motor: misma frecuencia evita doble trabajo en handleFrequencyChange.
             mLastFreq = freq;
-            mLastBand = mCurrentBand;
-            if (mPrefs != null) {
-                // Persistencia inmediata en acci├│n de usuario (QS6 puede emitir callbacks tard├¡os al cerrar).
-                mPrefs.edit()
-                        .putInt("pref_last_freq", freq)
-                        .putInt("pref_last_band", mCurrentBand)
-                        .apply();
+            if (mFrequencyChangeCoordinator != null) {
+                // Misma tubería que el motor (sin coalescencia): cloud/RDS/streaming/MediaSession/widget/prefs.
+                // Historial no (comportamiento histórico de gotoFreq). QS6: no pisa el PS primado arriba.
+                mFrequencyChangeCoordinator.finishUserTuneFromUi(freq, isQs6);
+            } else {
+                mLastBand = mCurrentBand;
+                if (mPrefs != null) {
+                    mPrefs.edit()
+                            .putInt("pref_last_freq", freq)
+                            .putInt("pref_last_band", mCurrentBand)
+                            .apply();
+                }
             }
             if (isQs6) {
                 // Peque├▒o retraso: evita leer getCurrentFreq() a├║n viejo en QS6 justo tras TUNE.

@@ -64,7 +64,7 @@ La pantalla y la radio deben comportarse **igual que antes** al abrir la app, ca
 
 - [x] Agrupar **`handleFrequencyChange`**, coalescencia ~280 ms y trabajo pesado asociado en **`FrequencyChangeCoordinator`** (`app/.../FrequencyChangeCoordinator.java`); `MainActivity` delega; creado en **`MainActivityBootstrap.createEarlyCoordinators`**; **`cancelPendingHeavy`** en `onDestroy`.
 - [ ] Mantener **`StatusRefreshCoordinator`** como colaborador (orden reset RDS + MHz antes del executor) — sin cambio; revisar tras más extracciones.
-- [ ] Unificar entrada única para “cambió la frecuencia desde el motor” vs “desde la UI” (p. ej. API única sobre el coordinador o el host).
+- [x] Unificar efectos de estado: **`FrequencyChangeCoordinator.finishUserTuneFromUi(freq, isQs6)`** tras **`MainActivity.gotoFreq`** (misma tubería pesada que el motor, sin coalescencia; sin historial; QS6 no pisa PS primado; durante escaneo sigue persistiendo como antes).
 - [ ] Validar en **QS6** (ráfagas OEM) y **K706** (zapping rápido)
 
 ### Para el usuario (Fase 2 — pendiente)

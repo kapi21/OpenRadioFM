@@ -34,6 +34,23 @@ public final class FrequencyChangeCoordinator {
         mA.mMainHandler.removeCallbacks(mFreqHeavyRunnable);
     }
 
+    /**
+     * Tras {@link MainActivity#gotoFreq(int)}: el motor suele notificar la misma frecuencia y
+     * {@link #handleFrequencyChange(int)} sale por {@code freq == mLastFreq} sin aplicar estado pesado.
+     * Esta ruta unifica el mismo trabajo (cloud guard, RDS reset, streaming, MediaSession, widget, prefs)
+     * sin coalescencia. No añade historial (comportamiento histórico de {@code gotoFreq}).
+     * <p>
+     * QS6: {@code gotoFreq} ya primó nombre RDS/caché y guardas antes del {@code tune}; no se pisan
+     * {@code tvRdsName}/{@code tvRdsInfo} ni se duplica el bump de generación de logo / guarda RDS.
+     * </p>
+     */
+    void finishUserTuneFromUi(int freq, boolean isQs6) {
+        mA.mMainHandler.removeCallbacks(mFreqHeavyRunnable);
+        mFreqHeavyPendingFreq = -1;
+        applyFrequencyChangeHeavy(freq, false, true, !isQs6, isQs6, true);
+        mFreqHeavyLastCompleteMs = android.os.SystemClock.elapsedRealtime();
+    }
+
     void handleFrequencyChange(int freq) {
         if (freq == mA.mLastFreq) {
             return;
@@ -113,15 +130,25 @@ public final class FrequencyChangeCoordinator {
             mFreqHeavyLastCompleteMs = android.os.SystemClock.elapsedRealtime();
             return;
         }
-        applyFrequencyChangeHeavy(freq, mFreqHeavySuppressPersist);
+        applyFrequencyChangeHeavy(freq, mFreqHeavySuppressPersist, false, true, false, false);
         mFreqHeavyLastCompleteMs = android.os.SystemClock.elapsedRealtime();
     }
 
-    /** Trabajo pesado tras coalescencia (logo, RDS, historial, widget, MediaSession). */
-    private void applyFrequencyChangeHeavy(int freq, boolean suppressStartupPersist) {
-        mA.mLogoUiGeneration.incrementAndGet();
-        mA.mPrevStationNameBeforeTune = mA.mLastPs != null ? mA.mLastPs : "";
-        mA.mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + MainActivity.RDS_TRANSITION_GUARD_MS;
+    /**
+     * @param suppressStartupPersist guardas de arranque/apagado (ruta motor)
+     * @param skipHistory            {@code true} en sintonía explícita desde UI ({@code gotoFreq} no añadía historial)
+     * @param clearRdsTextWidgetsOnUi {@code false} en QS6 tras primar nombre en {@code gotoFreq}
+     * @param skipLogoBumpAndTransitionGuard {@code true} si QS6 ya aplicó bump/guarda antes del {@code tune}
+     * @param allowWorkWhileScanning {@code true} solo para {@link #finishUserTuneFromUi}; {@code gotoFreq} persistía aunque {@code mIsScanning}
+     */
+    private void applyFrequencyChangeHeavy(int freq, boolean suppressStartupPersist, boolean skipHistory,
+            boolean clearRdsTextWidgetsOnUi, boolean skipLogoBumpAndTransitionGuard,
+            boolean allowWorkWhileScanning) {
+        if (!skipLogoBumpAndTransitionGuard) {
+            mA.mLogoUiGeneration.incrementAndGet();
+            mA.mPrevStationNameBeforeTune = mA.mLastPs != null ? mA.mLastPs : "";
+            mA.mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + MainActivity.RDS_TRANSITION_GUARD_MS;
+        }
         mA.mLastFreq = freq;
         mA.mCloudContribAllowedAfterMs = android.os.SystemClock.elapsedRealtime() + MainActivity.CLOUD_CONTRIB_FREQ_SETTLE_MS;
         mA.mLastBand = mA.mCurrentBand;
@@ -147,29 +174,31 @@ public final class FrequencyChangeCoordinator {
             if (mA.isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && mA.isDestroyed())) {
                 return;
             }
-            if (mA.tvRdsName != null) {
-                mA.tvRdsName.setText("");
-                mA.tvRdsName.setVisibility(View.VISIBLE);
-            }
-            if (mA.tvRdsInfo != null) {
-                mA.tvRdsInfo.setText("");
-                mA.tvRdsInfo.setVisibility(View.VISIBLE);
+            if (clearRdsTextWidgetsOnUi) {
+                if (mA.tvRdsName != null) {
+                    mA.tvRdsName.setText("");
+                    mA.tvRdsName.setVisibility(View.VISIBLE);
+                }
+                if (mA.tvRdsInfo != null) {
+                    mA.tvRdsInfo.setText("");
+                    mA.tvRdsInfo.setVisibility(View.VISIBLE);
+                }
+                if (mA.tvPty != null) {
+                    mA.tvPty.setText(mA.getString(R.string.pty_none));
+                }
             }
             mA.refreshStereoIndicatorUi(null);
-            if (mA.tvPty != null) {
-                mA.tvPty.setText(mA.getString(R.string.pty_none));
-            }
 
             mA.clearStationLogoUi();
         });
 
-        if (mA.mIsScanning) {
+        if (mA.mIsScanning && !allowWorkWhileScanning) {
             Log.d(MainActivity.TAG, "Scanning in progress: skipping history/persistence for freq " + freq);
             return;
         }
 
         if (mA.mPrefs != null) {
-            if (!suppressStartupPersist && mA.mPrefs.getBoolean("pref_save_history", true)) {
+            if (!suppressStartupPersist && !skipHistory && mA.mPrefs.getBoolean("pref_save_history", true)) {
                 mA.addToHistory(freq);
             }
             if (!suppressStartupPersist) {
