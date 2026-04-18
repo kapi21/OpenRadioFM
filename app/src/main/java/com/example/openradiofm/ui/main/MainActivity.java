@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         super.attachBaseContext(MyContextWrapper.wrap(newBase, lang));
     }
 
-    private static final String TAG = "OpenRadioFm";
+    static final String TAG = "OpenRadioFm";
     private static final int PRESETS_COUNT = AppConstants.PRESETS_COUNT; // Fuente ├║nica global
     /** Silenciar FM en llamadas (K706): {@link Manifest.permission#READ_PHONE_STATE} */
     private static final int REQ_READ_PHONE_STATE_K706 = 1003;
@@ -147,12 +147,12 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      */
     public static volatile boolean sWheelMediaBridgeActive = false;
 
-    // Band Constants
-    private static final int BAND_FM1 = 0;
-    private static final int BAND_FM2 = 1;
-    private static final int BAND_FM3 = 2;
-    private static final int BAND_AM1 = 3;
-    private static final int BAND_AM2 = 4;
+    // Band Constants (package: usadas por MainActivityBootstrap)
+    static final int BAND_FM1 = 0;
+    static final int BAND_FM2 = 1;
+    static final int BAND_FM3 = 2;
+    static final int BAND_AM1 = 3;
+    static final int BAND_AM2 = 4;
 
     /**
      * Modos de funcionamiento de la app:
@@ -202,7 +202,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     public boolean mIsMinimal = false; // V19.2
     public boolean mControlsHidden = false;
     public android.os.Handler mAutoHideHandler;
-    private Runnable mAutoHideRunnable;
+    Runnable mAutoHideRunnable;
 
     // V21.0: UI Controllers Refactor
     public BaseLayoutController mUiController;
@@ -272,13 +272,13 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     // V18.5: Reloj Digital
     public android.os.Handler mClockHandler;
-    private Runnable mClockRunnable;
+    Runnable mClockRunnable;
 
     // V5.5: Managers de Audio y Dispositivo
     public PlaybackManager mPlaybackManager;
     public DeviceManager mDeviceManager;
     public HardwareManager mHardwareManager;
-    private WidgetBroadcastManager mWidgetBroadcastManager; // V23.0: Desacoplamiento de widgets OEM
+    WidgetBroadcastManager mWidgetBroadcastManager; // V23.0: Desacoplamiento de widgets OEM
     public RadioSessionController mSessionController;
 
 
@@ -294,18 +294,18 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     public int mLastFreq = -1;
     // Guarda de arranque: evita persistir una frecuencia "bootstrap" (p.ej. 87.6)
     // antes de que el motor termine de restaurar la ├║ltima emisora real.
-    private int mStartupSavedFreqKhz = -1;
-    private long mStartupPersistGuardUntilMs = 0L;
+    int mStartupSavedFreqKhz = -1;
+    long mStartupPersistGuardUntilMs = 0L;
     public int mLastBand = BAND_FM1;
-    private int mStartupRetuneAttempts = 0;
+    int mStartupRetuneAttempts = 0;
     public long mShutdownPersistGuardUntilMs = 0L;
     /** True solo durante el flujo de PowerOff (evita bridge de volante en onStop). */
     public volatile boolean mPowerOffRequested = false;
     private int mUserRequestedFreqKhz = -1;
     private long mUserRequestedFreqUntilMs = 0L;
-    private static final String PREF_QS6_BOOTSTRAP_SANITIZED = "pref_qs6_bootstrap_sanitized";
+    static final String PREF_QS6_BOOTSTRAP_SANITIZED = "pref_qs6_bootstrap_sanitized";
     /** Misma idea que QS6: evitar prefs contaminadas con 87.5/87.6 tras reinicio de unidad (MCU arranca antes que la app). */
-    private static final String PREF_K706_BOOTSTRAP_SANITIZED = "pref_k706_bootstrap_sanitized";
+    static final String PREF_K706_BOOTSTRAP_SANITIZED = "pref_k706_bootstrap_sanitized";
     public String mLastPs = ""; // V18.6: Almacena el nombre RDS/Custom actual
     public boolean mHasRdsLock = false;
     /** Estado previo para disparar el "tick" visual al enganchar RDS lock (falseÔåÆtrue). */
@@ -346,7 +346,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         return mUiWorkGeneration.get();
     }
 
-    private com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
+    com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
     public com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
 
     public boolean isQs6TransitionGuardActive() {
@@ -361,11 +361,11 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     // V5.0: UI Elements (Fixing Compilation Errors)
-    private TextView tvPty;
-    private SignalBarsView mSignalBarsView;
+    TextView tvPty;
+    SignalBarsView mSignalBarsView;
     public SignalMeterCoordinator mSignalMeterCoordinator;
-    private ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
-    private android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
+    ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
+    android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
     private int mActiveDataOps = 0; // V16.2: Concurrent Supabase Operations
     public DataActivityIndicatorManager mDataActivityIndicatorManager;
     private long mLastInternetCheckTime = 0;
@@ -416,7 +416,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     public QS6EngineeringDialog mQs6EngineeringDialog = null;
 
     public int mCurrentBand = 0;
-    private boolean mIsRecreating = false; // V20.3: Flag to distinguish between Cold Start and Layout Switch
+    boolean mIsRecreating = false; // V20.3: Flag to distinguish between Cold Start and Layout Switch
 
     
 
@@ -600,12 +600,12 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     // V3.0: Background personalizado
 
-    private TextView tvFrequency, tvRdsName, tvRdsInfo;
+    TextView tvFrequency, tvRdsName, tvRdsInfo;
     private android.view.View boxFrequency;
-    private TextView ivBandIndicator;
-    private TextView ivUnitLabel;
-    private ImageView ivFavoriteIndicator;
-    private TextView ivStereoIcon;
+    TextView ivBandIndicator;
+    TextView ivUnitLabel;
+    ImageView ivFavoriteIndicator;
+    TextView ivStereoIcon;
 
     // UI Arrays for Presets - REMOVED (Managed by PresetManager)
 
@@ -975,7 +975,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
 
-    private final RadioServiceController.ServiceListener mServiceListener = new RadioServiceController.ServiceListener() {
+    final RadioServiceController.ServiceListener mServiceListener = new RadioServiceController.ServiceListener() {
         @Override
         public void onModeDetected(FmMode mode) {
             mMode = mode; // Se asigna sincronamente antes de volver a la cola de eventos
@@ -1279,455 +1279,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.Theme_OpenRadioFm);
         super.onCreate(savedInstanceState);
-        mSkinCoordinator = new SkinCoordinator(this);
-        mStatusRefreshCoordinator = new StatusRefreshCoordinator(this);
-        mEngineCallbackCoordinator = new EngineCallbackCoordinator(this);
-        mLifecycleCoordinator = new LifecycleCoordinator(this);
-        mHardwareKeyCoordinator = new HardwareKeyCoordinator(this);
-        mUiMediator = new UiViewMediator(this);
-        mFreqStateManager = new FrequencyStateManager();
-        
-        // V19.2: Forzar que el control de volumen por hardware afecte al stream de musica 
-        // desde el inicio. Esto evita el bug de doble pulsacion en MTK.
-        setVolumeControlStream(android.media.AudioManager.STREAM_MUSIC);
-
-        if (savedInstanceState != null) {
-            mLastFreq = savedInstanceState.getInt("mLastFreq", -1);
-            mIsV3 = savedInstanceState.getBoolean("mIsV3", false);
-            mIsRecreating = true;
-            Log.d(TAG, "State Restored: Freq=" + mLastFreq + " (Recreation detected)");
-        }
-
-        // V18.6: MCU and BT logic controlled by HardwareManager
-        mHardwareManager = new HardwareManager(this);
-        mHardwareManager.registerReceivers();
-        
-        // V23.0: Gestor de broadcasts para widgets OEM
-        mWidgetBroadcastManager = new WidgetBroadcastManager();
-
-        // V3.0: Layout Selection
-        mPrefs = getSharedPreferences("RadioPresets", MODE_PRIVATE); // Init prefs early
-        mIconPackManager = new IconPackManager(this, mPrefs);
-        mPresetNumberIconManager = new PresetNumberIconManager(this);
-        
-        // V21.3: Forzar habilitación de banda AM para evitar inestabilidad en motores HW (MTK8259)
-        // Se ha eliminado la opción de desactivarlo en Ajustes Premium.
-        if (!mPrefs.getBoolean("pref_enable_am", true)) {
-            mPrefs.edit().putBoolean("pref_enable_am", true).apply();
-            Log.i(TAG, "AM Band forced to enabled for stability.");
-        }
-        
-        mIsV3 = mPrefs.getBoolean("pref_layout_v3", false);
-        mIsSimpleLayout = mPrefs.getBoolean("pref_layout_simple", false);
-        // Un solo layout activo: Simple gana. Si ambas prefs quedaron true (migración, backup, bug),
-        // la UI es Simple pero mIsV3=true hacía que LogoManager ocultara mUiMediator.ivMainLogo como en V3.
-        if (mIsSimpleLayout) {
-            if (mIsV3) {
-                mPrefs.edit().putBoolean("pref_layout_v3", false).apply();
-            }
-            mIsV3 = false;
-        } else if (mIsV3) {
-            mIsSimpleLayout = false;
-        }
-
-        // V4.8: Manejo de Barra de Estado (Fullscreen condicional)
-        applyStatusBarVisibility();
-
-        if (mIsSimpleLayout) {
-            setContentView(R.layout.activity_simple_radio);
-            mUiController = new SimpleLayoutController(this);
-        } else if (mIsV3) {
-            setContentView(R.layout.activity_main_v3);
-            mUiController = new V3LayoutController(this);
-        } else {
-            setContentView(R.layout.activity_main);
-            mUiController = new MainLayoutController(this);
-            applyLayout2SidePreference();
-        }
-        mUiMediator.bindViews();
-
-        
-        mSignalBarsView = findViewById(R.id.viewSignalBars);
-        mSignalMeterCoordinator = new SignalMeterCoordinator(this);
-        mSignalMeterCoordinator.bind(mUiMediator.ivSignalLevel, mSignalBarsView);
-        mSignalMeterCoordinator.applyModeVisibility();
-
-        // Primer inicio tras instalación: solicitar idioma y país.
-        // Explicación: mejora la selección de logos y streaming (filtrado por country_code en Supabase).
-        ensureFirstRunLanguageAndCountry();
-
-        // V21.0: Initialize the active UI Controller
-        if (mUiController != null) {
-            mUiController.initViews(findViewById(android.R.id.content));
-            mUiMediator.bindViews();
-        }
-
-        // V15.6: Aplicar tipografía global inmediatamente tras cargar el layout
-        applyFonts();
-        // Aplicar pack de iconos (si existe) a la UI actual.
-        applyIconPack();
-
-        // VXX: Aplicar relieve opcional de logos
-        if (mPrefs != null) {
-            applyReliefHd(mPrefs.getBoolean("pref_relief_hd", false));
-        }
-
-        // V3.8: Premium Background Binding
-        
-
-        if (checkSelfPermission(
-                android.Manifest.permission.READ_EXTERNAL_STORAGE) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[] { android.Manifest.permission.READ_EXTERNAL_STORAGE }, 100);
-        }
-
-        // V13: Inicializar Managers agnósticos
-        mLogoManager = new LogoManager(this);
-        if (mRepository != null) {
-            mSupabaseSyncManager = new com.example.openradiofm.data.source.SupabaseSyncManager(this, mRepository.getSupabaseSource());
-        }
-        mServiceController = new RadioServiceController(this, mPrefs, mServiceListener);
-
-        // V16: NightMode y History Managers
-        mNightModeManager = new NightModeManager(this, mPrefs, freq -> {
-            // V18.6.4: Pasar el nombre RDS actual para no perderlo al cambiar de skin
-            String currentName = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
-            updateFrequencyDisplay(freq, currentName);
-        });
-        mDayModeManager = new DayModeManager(this, mPrefs, freq -> {
-            String currentName = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
-            updateFrequencyDisplay(freq, currentName);
-        });
-        mHistoryManager = new HistoryManager(this, mPrefs);
-        mMediaSessionManager = new MediaSessionManager(this);
-        mMediaSessionManager.connect();
-        
-        mControlPanelManager = new ControlPanelManager(this);
-
-        // V5.5: Inicializar PlaybackManager y DeviceManager
-        mPlaybackManager = new PlaybackManager(this);
-        mPlaybackManager.init(mEngine, new PlaybackManager.PlaybackListener() {
-            @Override
-            public void onMuteStateChanged(boolean isMuted) {
-                mMuteState = isMuted;
-                runOnUiThread(() -> {
-                    if (mUiController != null) {
-                        mUiController.updateMute(isMuted);
-                    }
-                    if (mUiMediator.btnMute != null) {
-                        mUiMediator.btnMute.setSelected(isMuted);
-                        // boolean isMTK = mEngine != null && mEngine.getEngineName().contains("MTK"); // Removed as per instruction
-
-                        if (isMuted) {
-                            setImageResourceIfChanged(mUiMediator.btnMute, R.drawable.radio_mute_p);
-                        } else {
-                            setImageResourceIfChanged(mUiMediator.btnMute, R.drawable.radio_mute_n);
-                        }
-                        // Reaplicar pack si existe (evita volver a default al cambiar estado)
-                        if (mIconPackManager != null) {
-                            mIconPackManager.apply(mUiMediator.btnMute, isMuted ? "radio_mute_p" : "radio_mute_n",
-                                    isMuted ? R.drawable.radio_mute_p : R.drawable.radio_mute_n);
-                        }
-                        // V2.5: Preservar tinte noche si activo
-                        Object savedFilter = mUiMediator.btnMute.getTag(R.id.tag_color_filter);
-                        if (savedFilter instanceof Integer) {
-                            mUiMediator.btnMute.setColorFilter((Integer) savedFilter, android.graphics.PorterDuff.Mode.SRC_IN);
-                        }
-                        mUiMediator.btnMute.setAlpha(1.0f);
-                        if (!isMuted) mUiMediator.btnMute.setSelected(false);
-                    }
-                });
-            }
-
-            @Override
-            public void onMediaCommand(String command) {
-                runOnUiThread(() -> {
-                    boolean usePresetMode = mPrefs != null
-                            && mPrefs.getInt("pref_steering_next_prev_mode", 0) == 1;
-                    switch (command) {
-                        case "ACTION_NEXT":
-                            if (usePresetMode) {
-                                if (mPresetManager != null) mPresetManager.playNextPreset();
-                            } else if (mEngine != null) {
-                                mEngine.seekUp();
-                            }
-                            break;
-                        case "ACTION_PREV":
-                            if (usePresetMode) {
-                                if (mPresetManager != null) mPresetManager.playPrevPreset();
-                            } else if (mEngine != null) {
-                                mEngine.seekDown();
-                            }
-                            break;
-                    }
-                });
-            }
-        });
-        mPlaybackManager.registerMediaReceiver();
-
-        mDeviceManager = new DeviceManager(this);
-
-
-        // V2.0: Cargar fondo personalizado si existe
-        mLogoManager.loadCustomBackground();
-        mLogoManager.loadCarLogo();
-
-        mSimpleLayoutManager = new SimpleLayoutManager(this);
-
-        // V13: Cargar última frecuencia guardada
-        if (mLastFreq == -1) {
-            mLastFreq = mPrefs.getInt("pref_last_freq", 87500);
-        }
-        mLastBand = mPrefs.getInt("pref_last_band", BAND_FM1);
-        // Saneo 1 sola vez: si QS6 viene con pref contaminada en bootstrap (87.5/87.6),
-        // intentamos recuperar una frecuencia más fiable desde el motor antes de persistir otra vez.
-        if (mMode == FmMode.FM_QS6
-                && !mPrefs.getBoolean(PREF_QS6_BOOTSTRAP_SANITIZED, false)
-                && (mLastFreq == 87500 || mLastFreq == 87600)
-                && mEngine != null) {
-            try {
-                int engineFreq = mEngine.getCurrentFreq();
-                int engineBand = mEngine.getCurrentBand();
-                if (engineFreq > 0 && engineFreq != 87500 && engineFreq != 87600) {
-                    mLastFreq = engineFreq;
-                    mLastBand = engineBand;
-                    mPrefs.edit()
-                            .putInt("pref_last_freq", mLastFreq)
-                            .putInt("pref_last_band", mLastBand)
-                            .putBoolean(PREF_QS6_BOOTSTRAP_SANITIZED, true)
-                            .apply();
-                    Log.d(TAG, "QS6 sanitize: bootstrap pref replaced with engine freq "
-                            + mLastFreq + "/B" + mLastBand);
-                } else {
-                    mPrefs.edit().putBoolean(PREF_QS6_BOOTSTRAP_SANITIZED, true).apply();
-                    Log.d(TAG, "QS6 sanitize: bootstrap pref kept (no reliable engine freq yet)");
-                }
-            } catch (Exception e) {
-                mPrefs.edit().putBoolean(PREF_QS6_BOOTSTRAP_SANITIZED, true).apply();
-                Log.w(TAG, "QS6 sanitize check failed", e);
-            }
-        }
-        if (mMode == FmMode.FM_K706
-                && !mPrefs.getBoolean(PREF_K706_BOOTSTRAP_SANITIZED, false)
-                && (mLastFreq == 87500 || mLastFreq == 87600)
-                && mEngine != null) {
-            try {
-                int engineFreq = mEngine.getCurrentFreq();
-                int engineBand = mEngine.getCurrentBand();
-                if (engineFreq > 0 && engineFreq != 87500 && engineFreq != 87600) {
-                    mLastFreq = engineFreq;
-                    mLastBand = engineBand;
-                    mPrefs.edit()
-                            .putInt("pref_last_freq", mLastFreq)
-                            .putInt("pref_last_band", mLastBand)
-                            .putBoolean(PREF_K706_BOOTSTRAP_SANITIZED, true)
-                            .apply();
-                    Log.d(TAG, "K706 sanitize: bootstrap pref replaced with engine freq "
-                            + mLastFreq + "/B" + mLastBand);
-                } else {
-                    mPrefs.edit().putBoolean(PREF_K706_BOOTSTRAP_SANITIZED, true).apply();
-                    Log.d(TAG, "K706 sanitize: bootstrap pref kept (no reliable engine freq yet)");
-                }
-            } catch (Exception e) {
-                mPrefs.edit().putBoolean(PREF_K706_BOOTSTRAP_SANITIZED, true).apply();
-                Log.w(TAG, "K706 sanitize check failed", e);
-            }
-        }
-        mStartupSavedFreqKhz = mLastFreq;
-        
-        // V22.4: Saneo de arranque para prevenir bucles de Startup Reinforce
-        // 1. Corregir escala de frecuencia (unidades NWD 10kHz vs app kHz)
-        if (mMode == FmMode.FM_QS6 && mLastFreq > 0 && mLastFreq < 20000) {
-            Log.w(TAG, "Startup: Detectada frecuencia NWD (10kHz units: " + mLastFreq + "). Escalando a kHz.");
-            mLastFreq *= 10;
-        }
-
-        // 2. Corregir banda incoherente (FM no puede ser banda >= 3)
-        if (mLastFreq > 30000 && mLastBand >= 3) {
-            Log.w(TAG, "Startup: Detectada banda AM (" + mLastBand + ") para frecuencia FM (" + mLastFreq + "). Forzando FM1.");
-            mLastBand = BAND_FM1;
-            mCurrentBand = mLastBand;
-            mPrefs.edit().putInt("pref_last_band", mLastBand).apply();
-        } else if (mLastFreq <= 30000 && mLastBand < 3 && mLastFreq > 0) {
-            Log.w(TAG, "Startup: Detectada banda FM (" + mLastBand + ") para frecuencia AM (" + mLastFreq + "). Forzando AM1.");
-            mLastBand = BAND_AM1;
-            mCurrentBand = mLastBand;
-            mPrefs.edit().putInt("pref_last_band", mLastBand).apply();
-        } else {
-            mCurrentBand = mLastBand;
-        }
-
-        mStartupPersistGuardUntilMs = android.os.SystemClock.elapsedRealtime() + 6000L;
-        mStartupRetuneAttempts = 0;
-
-        if (mIsSimpleLayout) {
-            mSimpleLayoutManager.initViews(findViewById(android.R.id.content));
-        }
-
-        // Bind Views
-        tvFrequency = findViewById(R.id.tvFrequency);
-        if (tvFrequency != null) {
-            tvFrequency.setEllipsize(null);
-            tvFrequency.setSingleLine(false); // Necesario para que el Autosizing no se confunda con ellipsize
-            tvFrequency.setMaxLines(1);
-            // V7.2f: El listener real se configura en setupCreditsEasterEgg() para evitar redundancias
-            // y mantener la funcionalidad de historial + créditos.
-        }
-        tvRdsName = findViewById(R.id.tvRdsName); // V5
-        tvRdsInfo = findViewById(R.id.tvRdsInfo);
-
-        // V4.3: New UI Elements
-        tvPty = findViewById(R.id.tvPty);
-        
-
-        
-        
-        
-
-        ivBandIndicator = findViewById(R.id.ivBandIndicator);
-        ivUnitLabel = findViewById(R.id.ivUnitLabel);
-        
-
-        // V18.5: Inicializar Reloj Digital
-        mClockHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-        mClockRunnable = new Runnable() {
-            @Override
-            public void run() {
-                if (mUiMediator.tvDigitalClock != null && mUiMediator.tvDigitalClock.getVisibility() == View.VISIBLE) {
-                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault());
-                    mUiMediator.tvDigitalClock.setText(sdf.format(new java.util.Date()));
-                }
-                mClockHandler.postDelayed(this, 10000); // 10 segs (suficiente para HH:mm)
-            }
-        };
-
-        // Aplicar preferencias iniciales
-        applyLogoModePreference();
-        ivFavoriteIndicator = findViewById(R.id.ivFavoriteIndicator);
-        ivStereoIcon = findViewById(R.id.ivStereoIcon);
-        ivAfIcon = findViewById(R.id.ivAfIcon);
-        ivTaIcon = findViewById(R.id.ivTaIcon);
-        ivTpIcon = findViewById(R.id.ivTpIcon);
-        ivDataActivity = findViewById(R.id.ivDataActivity);
-        
-        setupOnlineStreaming();
-
-        // El listener de mRepository se configura asincronamente en onModeDetected
-
-        // V9.9: RDS Icons must be dimmed by default, not gone.
-        // V5.0: RDS Icons - Ahora usan mEngine (sin bifurcación por modo)
-        if (ivAfIcon != null) {
-            ivAfIcon.setAlpha(0.2f);
-            ivAfIcon.setOnClickListener(v -> {
-                animateButton(ivAfIcon);
-                if (mEngine != null)
-                    mEngine.toggleRdsFeature(1); // AF
-            });
-        }
-        if (ivTaIcon != null) {
-            ivTaIcon.setAlpha(0.2f);
-            ivTaIcon.setOnClickListener(v -> {
-                animateButton(ivTaIcon);
-                if (mEngine != null)
-                    mEngine.toggleRdsFeature(2); // TA
-            });
-        }
-        if (ivTpIcon != null) {
-            ivTpIcon.setAlpha(0.2f);
-            ivTpIcon.setOnClickListener(v -> {
-                animateButton(ivTpIcon);
-                if (mEngine != null)
-                    mEngine.toggleRdsFeature(0); // RDS global
-            });
-        }
-
-        // V7.2f: Botón ST dinámico con dos estados (Stereo/Mono)
-        if (ivStereoIcon != null) {
-            ivStereoIcon.setVisibility(View.VISIBLE); // Siempre visible
-            refreshStereoIndicatorUi(null);
-            
-            ivStereoIcon.setOnClickListener(v -> {
-                animateButton(ivStereoIcon);
-                boolean current = mPrefs.getBoolean("pref_stereo_mode_on", true);
-                boolean next = !current;
-                
-                // Guardar y Aplicar
-                mPrefs.edit().putBoolean("pref_stereo_mode_on", next).apply();
-                if (mEngine != null) {
-                    mEngine.setStereo(next);
-                }
-                refreshStereoIndicatorUi(null);
-                showToast(next ? "Modo Stereo Activado" : "Modo Forzar Mono");
-            });
-        }
-
-        // V16.2: Skin cycling remains in Car Logo (as it's more visual)
-        if (mUiMediator.ivCarLogo != null) {
-            mUiMediator.ivCarLogo.setOnClickListener(v -> {
-                com.example.openradiofm.ui.theme.ThemeManager.Skin next = mThemeManager.cycleSkin();
-                applySkin(next);
-                showToast(getString(R.string.toast_skin_colon, next.displayName));
-            });
-            mUiMediator.ivCarLogo.setOnLongClickListener(v -> {
-                if (mDialogManager != null) mDialogManager.showHistoryDialog();
-                return true;
-            });
-        }
-
-        // Indicators Binding - REMOVED
-
-        // Configurar controles (Delegados a ControlPanelManager)
-        if (mControlPanelManager != null) mControlPanelManager.initViews();
-
-        // Configurar indicadores de estado (Eliminados)
-        // setupIndicators();
-
-        // V16.2: Inicializar ThemeManager
-        
-
-        mThemeManager = new com.example.openradiofm.ui.theme.ThemeManager(this);
-        mThemeManager.setLayoutPrefs(mPrefs); 
-        // V2.5: Eliminado SkinAppliedListener redundante. applySkin() ahora gestiona todo secuencialmente.
-        applySkin(mThemeManager.getCurrentSkin());
-        checkAndApplyNightMode(); // V4: Automatic Night Mode
-
-        // V18.6: Auto-hide bottom controls initialization
-        
-        mAutoHideHandler = new android.os.Handler(android.os.Looper.getMainLooper());
-        mAutoHideRunnable = () -> hideBottomControls();
-
-        // En Layout V3, interceptar toques en el fondo para mostrar controles
-        if (isV3LayoutActive()) {
-            android.view.View root = findViewById(R.id.rootLayout);
-            if (root != null) {
-                root.setOnTouchListener((v, event) -> {
-                    if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
-                        if (mControlsHidden) {
-                            showBottomControls();
-                        } else {
-                            resetAutoHideTimer();
-                        }
-                    }
-                    return false; // Permitir que otros elementos reciban el toque
-                });
-            }
-            resetAutoHideTimer();
-        }
-    
-        // Seeking Logic (Delegated to ControlPanelManager)
-
-        applyFonts();
-
-        // V8.5: Easter Egg (Credits) - Restored
-        setupCreditsEasterEgg();
-
-        if (mServiceController != null)
-            mServiceController.start();
-
-        // Tras recreate() (cambio de layout u otra recreación con estado): segundo refresh asentado.
-        scheduleRadioUiResyncAfterRecreation();
-
-        // V20.0: Ajuste automático por densidad (DPI)
-        adjustLayoutForDPI();
+        MainActivityBootstrap.runAfterSuper(this, savedInstanceState);
     }
 
     /**
@@ -1755,7 +1307,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * Si {@link #mIsRecreating} (recreación con estado guardado), fuerza otro {@link #refreshRadioStatus()}
      * tras un tick para que logo/RDS/presets coincidan con el nuevo XML (el primero puede adelantarse al layout).
      */
-    private void scheduleRadioUiResyncAfterRecreation() {
+    void scheduleRadioUiResyncAfterRecreation() {
         if (!mIsRecreating) return;
         mMainHandler.postDelayed(() -> {
             if (isFinishing() || isDestroyed()) return;
@@ -1769,7 +1321,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     private static final String PREF_ONBOARDING_LANG_DONE = "pref_onboarding_lang_done";
     private static final String PREF_ONBOARDING_COUNTRY_DONE = "pref_onboarding_country_done";
 
-    private void ensureFirstRunLanguageAndCountry() {
+    void ensureFirstRunLanguageAndCountry() {
         try {
             if (mPrefs == null) return;
             if (mPrefs.getBoolean(PREF_ONBOARDING_DONE, false)) return;
@@ -2576,7 +2128,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         }
     }
 
-    private void setupCreditsEasterEgg() {
+    void setupCreditsEasterEgg() {
         if (tvFrequency != null) {
             tvFrequency.setOnClickListener(v -> handleCreditsClick());
 
@@ -3642,7 +3194,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * V20.0: Detecta autom├íticamente si la pantalla tiene una densidad alta (DPI)
      * y ajusta las gu├¡as y el tama├▒o de los botones para que no se deformen.
      */
-    private void adjustLayoutForDPI() {
+    void adjustLayoutForDPI() {
         if (!isV3LayoutActive()) return; 
         
         android.util.DisplayMetrics metrics = getResources().getDisplayMetrics();

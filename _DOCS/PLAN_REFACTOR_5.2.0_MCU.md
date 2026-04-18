@@ -45,17 +45,15 @@ No verás cambios nuevos en botones, sonido ni pantallas: la radio se comporta i
 
 ## Fase 1 — Bootstrap de `onCreate`
 
-- [ ] Extraer secuencia de inicialización a **`MainActivityBootstrap`** (o equivalente) con pasos nombrados, por ejemplo:
-  - [ ] Ventana / volumen / tema
-  - [ ] `SharedPreferences`, flags de layout, `setContentView`, `UiViewMediator`
-  - [ ] Managers agnósticos (`LogoManager`, `RadioServiceController`, …)
-  - [ ] `PlaybackManager` / `DeviceManager` / receptores
-- [ ] Dejar `onCreate` reducido a delegación + orden explícito
-- [ ] Revisar que `onSaveInstanceState` / recreación de layout sigan coherentes
+- [x] Secuencia tras `super.onCreate` movida a **`MainActivityBootstrap.runAfterSuper(MainActivity, Bundle)`** (`app/.../MainActivityBootstrap.java`).
+- [x] `onCreate` queda en: `setTheme` → `super.onCreate` → `MainActivityBootstrap.runAfterSuper`.
+- [x] Visibilidad **package** en campos que el bootstrap asigna (vistas, flags de arranque, `mServiceListener`, constantes de banda / prefs bootstrap, `TAG`) para no exponer API pública innecesaria.
+- [x] Script opcional de mantenimiento: `tools/gen_main_activity_bootstrap.py` (regenerar desde `MainActivity` si se edita el orden; revisar `R.id` y claves de `Bundle` a mano).
+- [ ] *Opcional siguiente paso:* trocear `runAfterSuper` en métodos privados nombrados dentro de la misma clase (volumen/prefs/layout/managers/…) sin cambiar orden.
 
-### Para el usuario (Fase 1 — pendiente)
+### Para el usuario (Fase 1 — cerrada)
 
-*(Completar al cerrar la fase.)* En principio: **misma app al abrirla**; por dentro, arranque más claro y menos propenso a fallos raros al cambiar de tema, idioma o layout. Si algo visible cambiara, se anunciaría en notas de versión.
+La pantalla y la radio deben comportarse **igual que antes** al abrir la app, cambiar de layout o recuperar estado tras rotar la pantalla. Lo mejorado es **interno**: el arranque está concentrado en un solo módulo, lo que facilita revisar el orden de inicialización y detectar fallos sin recorrer miles de líneas. No es una función nueva para el conductor; es **calidad y mantenimiento** para que las próximas versiones salgan más estables.
 
 ---
 
