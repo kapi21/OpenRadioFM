@@ -88,11 +88,11 @@ Objetivo: **menos choques entre FM y streaming** y un icono de datos **coherente
 ## Fase 4 — Apariencia (skins, fuentes, icon packs)
 
 - [x] **`applyFonts`** y **`applyRecursiveFont`** viven en **`SkinCoordinator`**; **`MainActivity`** delega (misma API pública para `DialogManager`, `HistoryManager`, etc.). **`applySkin`** ya delegaba en `SkinCoordinator`.
-- [ ] Evitar duplicar lógica entre `NightModeManager` / `DayModeManager` y la activity (p. ej. color `tvDigitalClock` en `applySkin` vs `applyVisualStateForSkin`)
+- [x] Color **`tvDigitalClock`**: una sola implementación **`SkinCoordinator.applyDigitalClockTextColor`** (antes se pintaba dos veces con reglas ligeramente distintas). Otros tintes / managers siguen en **NightModeManager** / **DayModeManager** hasta un repaso mayor.
 
-### Para el usuario (Fase 4 — en curso)
+### Para el usuario (Fase 4 — cerrada en alcance MCU actual)
 
-La apariencia en pantalla debe seguir **igual**; el cambio es **dónde vive el código** de fuentes (ahora junto a skins en **`SkinCoordinator`**). Próximo paso lógico: reducir duplicados de color reloj / modo día-noche entre el coordinador y los managers.
+Skins y fuentes siguen viéndose **como antes**; el código está más **agrupado** en **`SkinCoordinator`** y el reloj digital ya no depende de **dos bloques** que podían diverger. Si notas alguna diferencia solo en el color del reloj al mezclar modo noche/día/clear, conviene probar en **hardware** y reportarlo.
 
 ---
 

@@ -81,19 +81,24 @@ public class SkinCoordinator {
         } catch (Exception ignored) {}
         
         mActivity.mLastSkinAppliedForBackground = skin;
+    }
 
+    /**
+     * Color del reloj digital según skin activa (una sola fuente de verdad; antes duplicado
+     * al final de {@link #applySkin} y dentro de {@link #applyVisualStateForSkin}).
+     */
+    private void applyDigitalClockTextColor(ThemeManager tm, ThemeManager.Skin skin) {
         TextView tvDigitalClock = mActivity.findViewById(R.id.tvDigitalClock);
-        if (tvDigitalClock != null) {
-            if (isNight) {
-                tvDigitalClock.setTextColor(mActivity.getResources().getColor(R.color.night_blue_primary, null));
-            } else {
-                boolean isLight = (tm != null && tm.getActiveSkin() == ThemeManager.Skin.CLEAR);
-                if (isDay) {
-                    tvDigitalClock.setTextColor(Color.BLACK);
-                } else {
-                    tvDigitalClock.setTextColor(isLight ? Color.BLACK : Color.WHITE);
-                }
-            }
+        if (tvDigitalClock == null) return;
+        if (skin == ThemeManager.Skin.NIGHT_MODE) {
+            tvDigitalClock.setTextColor(mActivity.getResources().getColor(R.color.night_blue_primary, null));
+            return;
+        }
+        boolean isLight = (tm != null && tm.getActiveSkin() == ThemeManager.Skin.CLEAR);
+        if (skin == ThemeManager.Skin.DAY_MODE) {
+            tvDigitalClock.setTextColor(Color.BLACK);
+        } else {
+            tvDigitalClock.setTextColor(isLight ? Color.BLACK : Color.WHITE);
         }
     }
 
@@ -140,16 +145,7 @@ public class SkinCoordinator {
         mActivity.updateDataActivityUI();
 
         try {
-            TextView tvDigitalClock = mActivity.findViewById(R.id.tvDigitalClock);
-            if (tvDigitalClock != null) {
-                if (isNight) {
-                    tvDigitalClock.setTextColor(mActivity.getResources().getColor(R.color.night_blue_primary, null));
-                } else if (isDay || isClear) {
-                    tvDigitalClock.setTextColor(Color.BLACK);
-                } else {
-                    tvDigitalClock.setTextColor(Color.WHITE);
-                }
-            }
+            applyDigitalClockTextColor(mActivity.mThemeManager, skin);
         } catch (Exception ignored) {}
 
         try {
