@@ -6,6 +6,17 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## [Unreleased] - MCU2
 
+### QS6 / NWD — RDS, System mirror & OEM loops (April 2026)
+- **Field workaround**: if RDS/tuner state drifts from NWD firmware expectations, **confirmed approach** is to align RDS (and related OEM toggles) via the **head unit’s native radio settings** while app/KernelService paths mature. See `README.md` (*Known issues*) and `QS6_MCU_KERNELSERVICE_INFORME.md`.
+- **`QS6Engine`**: during **slow AutoScan**, **AIDL** is preferred for `tune`/`seek` (`setAutoScanOemPreferred`, wired from `ScanManager`); outside AutoScan, **MCU-first** remains where applicable. Clears **RT** when frequency/band changes on AIDL callbacks. Optional `Settings.System` mirror guarded by `canWrite` (M+) with a **single warning** if write permission is missing.
+- **`MainActivity`**: **~280 ms coalescing** of heavy `handleFrequencyChange` work to damp OEM callback/broadcast bursts (unstable frequency, stuck PS).
+- **`WidgetBroadcastManager`**: **~320 ms coalescing** in `sendUpdate` against fast launcher/HAL re-injection.
+- **`StatusRefreshCoordinator`**: **RDS reset**, logo clear, and **MHz UI refresh** run **before** enqueueing `getStationInfo` on the background executor (fixes racing the old PS back onto the frequency line after zapping).
+- **`RadioRepository`**: **`pickBestSupabaseRow`** when the API returns multiple `ps_name` matches; **frequency+country fallback** if custom/PI/ps_name returned nothing; safer frequency parsing on Supabase rows (MHz vs kHz).
+- **`MT8163Engine`**: post-streaming HCN reconnect goes through **`ACTION_MT8163_FM_HANDOFF`** plus delayed bind (**~550 ms**), waiting out the OEM block window when needed; avoids competing with `MainActivity` and ROM `forceStop` edge cases.
+- **`MainActivity` / MT8163**: removed `mHcnPostStreamReconnectRunnable`; the post-streaming window is owned by the engine.
+- **`AndroidManifest`**: optional `WRITE_SETTINGS` (with `tools:ignore`) for the QS6 `Settings.System` mirror.
+
 ### MT8163 / HCN — Agama launcher & MediaSession (April 2026)
 - **Shared engine with `RadioMediaService`**: after the HCN bind in `MainActivity`, `MT8163Engine` is registered in `RadioServiceController`; the service calls `start()` only to deliver `onEngineReady` **without** a second `bindService` to `com.hcn.autoradio` (avoids force-stop on some OEM ROMs).
 - **External controls**: seek / preset from launchers such as **Agama** (and the media session) get a non-null `mEngine` instead of being no-ops.

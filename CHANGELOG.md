@@ -1,5 +1,16 @@
 ## [Unreleased] - MCU2
 
+### QS6 / NWD — RDS, espejo System y bucles OEM (abril 2026)
+- **Operativa**: si RDS o el estado del sintonizador queda desalineado respecto al firmware NWD, **workaround verificado en unidad**: usar los **ajustes de la radio del dispositivo** (OEM) para activar o corregir RDS u opciones equivalentes; la app y `KernelService` siguen siendo la vía preferida en desarrollo. Documentado en `README.md` (*Problemas conocidos*) y `QS6_MCU_KERNELSERVICE_INFORME.md`.
+- **`QS6Engine`**: en **AutoScan lento** se prioriza **AIDL** para `tune`/`seek` (`setAutoScanOemPreferred`, enganchado desde `ScanManager`); fuera de AutoScan se mantiene **MCU primero** donde aplica. Limpieza de **RT** al cambiar frecuencia o banda por callback AIDL. Espejo opcional a `Settings.System` con `canWrite` (M+) y **un solo log** si no hay permiso de escritura.
+- **`MainActivity`**: **coalescencia ~280 ms** del trabajo pesado de `handleFrequencyChange` para amortiguar ráfagas de callbacks/broadcasts (freq inestable, PS pegado).
+- **`WidgetBroadcastManager`**: **coalescencia ~320 ms** en `sendUpdate` ante reinyecciones rápidas del launcher/HAL.
+- **`StatusRefreshCoordinator`**: **reset RDS**, logo y **MHz en UI** antes de encolar `getStationInfo` en el executor (evita carrera que repintaba el PS previo al zapping).
+- **`RadioRepository`**: **`pickBestSupabaseRow`** cuando la API devuelve varias filas (`ps_name` ilike); **fallback** por frecuencia+país si no hubo datos tras custom/PI/ps_name; parseo de frecuencia en filas Supabase (MHz vs kHz).
+- **`MT8163Engine`**: reconexión HCN tras streaming vía **`ACTION_MT8163_FM_HANDOFF`** y bind retardado (**~550 ms**), con espera si la ventana OEM bloquea el bind; evita doble ruta con `MainActivity` y `forceStop` en algunas ROM.
+- **`MainActivity` / MT8163**: eliminado `mHcnPostStreamReconnectRunnable`; la ventana post-streaming la coordina el motor.
+- **`AndroidManifest`**: `WRITE_SETTINGS` (opcional, con `tools:ignore`) para el espejo QS6 en `Settings.System`.
+
 ### AutoScan por sobrescritura (abril 2026)
 - **Siempre FM1**: antes de borrar memorias 1–18 se alinea hardware y `MainActivity.mCurrentBand` a FM1 (QS6 `tuneWithBand(87,5 MHz, 0)`; K706/MT8163/MTK8259 `bandCycle` hasta FM1 + `tune`). Textos `autoscan_confirm_message` y `toast_autoscan_slow` actualizados en todos los idiomas.
 - **Ritmo**: tiempos de validación RDS, intervalo entre seeks, hold de guardado en preset y paso tras emisora aceptada **más pausados** (sin volver al barrido extremadamente lento inicial de 11 s / 8,5 s).

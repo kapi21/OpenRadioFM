@@ -156,6 +156,17 @@ public class ScanManager {
         this.mActivity = activity;
     }
 
+    /**
+     * QS6: AutoScan lento prioriza AIDL (tune/seek) para no competir con el barrido por software;
+     * fuera de AutoScan el motor usa MCU primero.
+     */
+    private void applyQs6AutoScanOemPath(boolean preferred) {
+        if (mActivity == null || mActivity.mEngine == null) return;
+        if (mActivity.mEngine instanceof QS6Engine) {
+            ((QS6Engine) mActivity.mEngine).setAutoScanOemPreferred(preferred);
+        }
+    }
+
     public List<StationAdapter.ScannedStation> getCapturedList() {
         return mCapturedList;
     }
@@ -259,6 +270,7 @@ public class ScanManager {
                 mMainHandler.removeCallbacks(mSlowSeekRunnable);
                 mMainHandler.removeCallbacks(mClearScanSuppressRunnable);
                 mSlowSeekAutoScan = false;
+                applyQs6AutoScanOemPath(false);
                 mAutoOverwritePresets = false;
                 mIsScanning = false;
                 mSuppressOemScanTrueUntilFalse = false;
@@ -324,6 +336,7 @@ public class ScanManager {
 
     private void startAutoScanOverwrite(ImageButton btn) {
         if (mActivity.mEngine == null) return;
+        applyQs6AutoScanOemPath(true);
         mAutoScanSessionId++;
         mAutoOverwritePresets = true;
         mSlowFinishPosted = false;
@@ -387,6 +400,7 @@ public class ScanManager {
         } catch (Exception e) {
             mIsScanning = false;
             mSlowSeekAutoScan = false;
+            applyQs6AutoScanOemPath(false);
             applyScanButtonVisual(false, btn);
             mActivity.showToast(mActivity.getString(R.string.toast_autoscan_start_failed));
         }
@@ -407,6 +421,7 @@ public class ScanManager {
         mSlowAutoscanFinishEpochMs = android.os.SystemClock.elapsedRealtime();
         mMainHandler.removeCallbacks(mSlowSeekRunnable);
         mSlowSeekAutoScan = false;
+        applyQs6AutoScanOemPath(false);
         mAutoOverwritePresets = false;
         mIsScanning = false;
         mSuppressOemScanTrueUntilFalse = true;

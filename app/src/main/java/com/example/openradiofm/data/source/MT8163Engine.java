@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.util.Log;
 import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
 
+import com.example.openradiofm.service.RadioMediaService;
 import com.example.openradiofm.util.AppIoExecutor;
 
 import java.util.function.BooleanSupplier;
@@ -159,16 +161,16 @@ public class MT8163Engine implements RadioEngine {
         return true;
     }
 
-    private final Runnable mReconnectRunnable = new Runnable() {
+    /** Misma cadencia que MainActivity tras {@link RadioMediaService#ACTION_MT8163_FM_HANDOFF}. */
+    private static final long HCN_RECONNECT_AFTER_HANDOFF_MS = 550L;
+
+    private final Runnable mReconnectDoBindRunnable = new Runnable() {
         @Override
         public void run() {
             if (mContext == null || mExternalService) return;
-            if (mPreferDirectRadioPlayer) {
-                Log.i(TAG, "Reconexión HCN omitida (pref_mt8163_mcu_direct=true)");
-                return;
-            }
+            if (mPreferDirectRadioPlayer) return;
             if (mBound && mService != null) return;
-            Log.w(TAG, "Reconectando servicio HCN (Estaba muerto)...");
+            Log.w(TAG, "Reconectando servicio HCN (bind tras handoff MediaSession)...");
             try {
                 Intent wake = new Intent("com.hcn.autoradio.FMRADIO_START");
                 wake.setPackage("com.hcn.autoradio");
@@ -178,6 +180,45 @@ public class MT8163Engine implements RadioEngine {
                 mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
             } catch (Exception e) {
                 Log.e(TAG, "Error intentando reconectar", e);
+            }
+        }
+    };
+
+    private final Runnable mReconnectRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mContext == null || mExternalService) return;
+            if (mPreferDirectRadioPlayer) {
+                Log.i(TAG, "Reconexión HCN omitida (pref_mt8163_mcu_direct=true)");
+                return;
+            }
+            if (isHcnServiceBindBlockedAfterStreamEnd()) {
+                ensurePollingThread();
+                if (mPollingHandler != null) {
+                    mPollingHandler.postDelayed(this, 500L);
+                    Log.d(TAG, "Reconexión HCN: esperando fin ventana post-streaming OEM (~12s)");
+                }
+                return;
+            }
+            if (mBound && mService != null) return;
+
+            try {
+                Intent h = new Intent(mContext, RadioMediaService.class);
+                h.setAction(RadioMediaService.ACTION_MT8163_FM_HANDOFF);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    mContext.startForegroundService(h);
+                } else {
+                    mContext.startService(h);
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "ACTION_MT8163_FM_HANDOFF antes de bind HCN falló", e);
+            }
+            ensurePollingThread();
+            if (mPollingHandler != null) {
+                mPollingHandler.removeCallbacks(mReconnectDoBindRunnable);
+                mPollingHandler.postDelayed(mReconnectDoBindRunnable, HCN_RECONNECT_AFTER_HANDOFF_MS);
+            } else {
+                mReconnectDoBindRunnable.run();
             }
         }
     };
@@ -261,6 +302,7 @@ public class MT8163Engine implements RadioEngine {
         ensurePollingThread();
         if (mPollingHandler != null) {
             mPollingHandler.removeCallbacks(mReconnectRunnable);
+            mPollingHandler.removeCallbacks(mReconnectDoBindRunnable);
             mPollingHandler.postDelayed(mReconnectRunnable, RECONNECT_DEBOUNCE_MS);
         } else {
             mReconnectRunnable.run();
@@ -443,6 +485,10 @@ public class MT8163Engine implements RadioEngine {
         
         if (mPollingRunnable != null && mPollingHandler != null) {
             mPollingHandler.removeCallbacks(mPollingRunnable);
+        }
+        if (mPollingHandler != null) {
+            mPollingHandler.removeCallbacks(mReconnectRunnable);
+            mPollingHandler.removeCallbacks(mReconnectDoBindRunnable);
         }
         if (mPollingThread != null) {
             try {

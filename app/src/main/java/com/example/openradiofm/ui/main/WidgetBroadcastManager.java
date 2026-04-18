@@ -2,6 +2,9 @@ package com.example.openradiofm.ui.main;
 
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.example.openradiofm.data.repository.RadioRepository;
@@ -32,14 +35,31 @@ public class WidgetBroadcastManager {
     private int mLastBroadcastBand = -1;
     private String mLastBroadcastPs = "";
 
+    /** Evita ráfagas MTK/Topway/Launcher que reinyectan estado y disparan bucles con el HAL. */
+    private static final long WIDGET_SEND_COALESCE_MS = 320L;
+    private final Handler mCoalesceHandler = new Handler(Looper.getMainLooper());
+    private long mLastWidgetSendCompleteMs = 0L;
+    private Context mPendingCtx;
+    private int mPendingFreq;
+    private int mPendingBand;
+    private String mPendingRdsName;
+    private int mPendingPresetIdx;
+    private boolean mPendingIsStereo;
+    private RadioRepository mPendingRepo;
+    private RadioEngine mPendingEngine;
+    private final Runnable mFlushRunnable = this::flushPendingSend;
+
     /**
      * Resetea las guardas de broadcast para forzar la próxima emisión.
      * Útil tras recrear la Activity o cambios forzados de estado.
      */
     public void invalidate() {
+        mCoalesceHandler.removeCallbacks(mFlushRunnable);
         mLastBroadcastFreq = -1;
         mLastBroadcastBand = -1;
         mLastBroadcastPs = "";
+        mLastWidgetSendCompleteMs = 0L;
+        mPendingCtx = null;
     }
 
     /**
@@ -59,6 +79,37 @@ public class WidgetBroadcastManager {
     public void sendUpdate(Context context, int freq, int band,
                            String rdsName, int presetIdx, boolean isStereo,
                            RadioRepository repo, RadioEngine engine) {
+        mPendingCtx = context;
+        mPendingFreq = freq;
+        mPendingBand = band;
+        mPendingRdsName = rdsName;
+        mPendingPresetIdx = presetIdx;
+        mPendingIsStereo = isStereo;
+        mPendingRepo = repo;
+        mPendingEngine = engine;
+
+        mCoalesceHandler.removeCallbacks(mFlushRunnable);
+        long now = SystemClock.elapsedRealtime();
+        long wait = WIDGET_SEND_COALESCE_MS - (now - mLastWidgetSendCompleteMs);
+        if (wait <= 0L) {
+            mCoalesceHandler.post(mFlushRunnable);
+        } else {
+            mCoalesceHandler.postDelayed(mFlushRunnable, wait);
+        }
+    }
+
+    private void flushPendingSend() {
+        mLastWidgetSendCompleteMs = SystemClock.elapsedRealtime();
+        Context context = mPendingCtx;
+        if (context == null) return;
+        int freq = mPendingFreq;
+        int band = mPendingBand;
+        String rdsName = mPendingRdsName;
+        int presetIdx = mPendingPresetIdx;
+        boolean isStereo = mPendingIsStereo;
+        RadioRepository repo = mPendingRepo;
+        RadioEngine engine = mPendingEngine;
+
         // Guarda anti-spam (evita Binder flood / "Permission Denial")
         if (freq == mLastBroadcastFreq && band == mLastBroadcastBand
                 && strEquals(rdsName, mLastBroadcastPs)) {

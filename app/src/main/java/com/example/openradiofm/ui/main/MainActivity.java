@@ -245,22 +245,6 @@ public class MainActivity extends AppCompatActivity  {
         mMainHandler.postDelayed(mHcnBindAfterHandoffRunnable, MT8163_MS_AFTER_SESSION_HANDOFF_BEFORE_HCN_BIND);
     }
 
-    /** MT8163: tras parar streaming, intentar reconectar AIDL al acabar la ventana OEM. */
-    private final Runnable mHcnPostStreamReconnectRunnable = () -> {
-        try {
-            if (isFinishing() || isDestroyed()) return;
-            if (mMode != FmMode.FM_MT8163 || mServiceController == null) return;
-            if (mRadioService != null) return;
-            if (com.example.openradiofm.data.source.MT8163Engine.isHcnServiceBindBlockedAfterStreamEnd()) {
-                return;
-            }
-            android.util.Log.i(TAG, "Reconexi├│n HCN tras ventana post-streaming");
-            requestHcnBindWithMediaSessionHandoff("ventana post-streaming");
-        } catch (Exception e) {
-            android.util.Log.w(TAG, "mHcnPostStreamReconnectRunnable", e);
-        }
-    };
-
     // V16: Managers de Modo Nocturno e Historial
     public SkinCoordinator mSkinCoordinator;
     public StatusRefreshCoordinator mStatusRefreshCoordinator;
@@ -338,6 +322,15 @@ public class MainActivity extends AppCompatActivity  {
      * frecuencia o banda (evita que un Glide/getStationInfo tard├¡o pinte logo de otra emisora).
      */
     public final java.util.concurrent.atomic.AtomicInteger mLogoUiGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
+    /**
+     * QS6/OEM: ráfagas de callbacks + broadcasts al launcher pueden crear un bucle (freq “loca”, PS pegado).
+     * Coalescencia del trabajo pesado de {@link #handleFrequencyChange(int)} salvo que pasen ~280 ms desde el último ciclo.
+     */
+    private static final long FREQ_CHANGE_HEAVY_COALESCE_MS = 280L;
+    private int mFreqHeavyPendingFreq = -1;
+    private boolean mFreqHeavySuppressPersist = false;
+    private long mFreqHeavyLastCompleteMs = 0L;
+    private final Runnable mFreqHeavyRunnable = this::runPendingFrequencyChangeHeavy;
     /**
      * Se incrementa en {@link #onDestroy()} cuando la activity termina ({@code isFinishing()}), para que
      * tareas en {@link com.example.openradiofm.util.AppIoExecutor} ligadas a esta instancia aborten cooperativamente.
@@ -762,7 +755,6 @@ public class MainActivity extends AppCompatActivity  {
 
             @Override
             public void onBeforeStreamStart() {
-                mMainHandler.removeCallbacks(mHcnPostStreamReconnectRunnable);
                 mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
             }
 
@@ -782,10 +774,10 @@ public class MainActivity extends AppCompatActivity  {
                         sendBroadcast(wakeIntent);
                     }
                 } catch (Exception ignored) {}
-                mMainHandler.removeCallbacks(mHcnPostStreamReconnectRunnable);
-                mMainHandler.postDelayed(
-                        mHcnPostStreamReconnectRunnable,
-                        com.example.openradiofm.data.source.MT8163Engine.HCN_BIND_BLOCK_AFTER_STREAM_MS + 400L);
+                mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
+                // Reconexión FMPlug tras ~12s: solo MT8163Engine (handoff MediaSession + bind).
+                // requestHcnBindWithMediaSessionHandoff + start() aquí competía con el motor y
+                // SourceService.forceStopPackage(openradiofm) al quedar com.hcn.autoradio activo.
             }
         });
 
@@ -2315,6 +2307,7 @@ public class MainActivity extends AppCompatActivity  {
 
     @Override
     protected void onDestroy() {
+        mMainHandler.removeCallbacks(mFreqHeavyRunnable);
         super.onDestroy();
         if (mLifecycleCoordinator != null) mLifecycleCoordinator.onDestroy();
         // QS6: el cliente experimental de KernelService se mantiene vivo entre aperturas del menú de ingeniería,
@@ -3401,6 +3394,32 @@ public class MainActivity extends AppCompatActivity  {
             }
         }
 
+        mFreqHeavyPendingFreq = freq;
+        mFreqHeavySuppressPersist = suppressStartupPersist;
+        mMainHandler.removeCallbacks(mFreqHeavyRunnable);
+        long now = android.os.SystemClock.elapsedRealtime();
+        long wait = FREQ_CHANGE_HEAVY_COALESCE_MS - (now - mFreqHeavyLastCompleteMs);
+        if (wait <= 0L) {
+            mMainHandler.post(mFreqHeavyRunnable);
+        } else {
+            mMainHandler.postDelayed(mFreqHeavyRunnable, wait);
+        }
+    }
+
+    private void runPendingFrequencyChangeHeavy() {
+        int freq = mFreqHeavyPendingFreq;
+        if (freq < 0) return;
+        mFreqHeavyPendingFreq = -1;
+        if (freq == mLastFreq) {
+            mFreqHeavyLastCompleteMs = android.os.SystemClock.elapsedRealtime();
+            return;
+        }
+        applyFrequencyChangeHeavy(freq, mFreqHeavySuppressPersist);
+        mFreqHeavyLastCompleteMs = android.os.SystemClock.elapsedRealtime();
+    }
+
+    /** Trabajo pesado tras coalescencia (logo, RDS, historial, widget, MediaSession). */
+    private void applyFrequencyChangeHeavy(int freq, boolean suppressStartupPersist) {
         mLogoUiGeneration.incrementAndGet();
         mPrevStationNameBeforeTune = mLastPs != null ? mLastPs : "";
         mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;

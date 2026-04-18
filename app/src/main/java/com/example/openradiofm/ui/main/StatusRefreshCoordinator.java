@@ -97,14 +97,6 @@ public class StatusRefreshCoordinator {
             return;
         }
 
-        mActivity.runOnUiThread(() -> {
-            if (mActivity.mRdsManager != null) mActivity.mRdsManager.reset(true);
-            mActivity.clearStationLogoUi();
-            if (mActivity.mUiController != null) {
-                mActivity.mUiController.updateRDS("");
-            }
-        });
-
         if (band != mActivity.mCurrentBand) {
             String logMsg = "Band shift detected: " + mActivity.mCurrentBand + " -> " + band;
             mActivity.mCurrentBand = band;
@@ -130,7 +122,24 @@ public class StatusRefreshCoordinator {
         if (mActivity.mStationInfoExecutor == null) {
             mActivity.mStationInfoExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
         }
-        mActivity.mStationInfoExecutor.execute(() -> {
+
+        /*
+         * Orden crítico: antes se hacía reset( RDS ) en runOnUiThread y a la vez execute() en el
+         * executor; el hilo de fondo podía llamar getConfirmedName() ANTES del reset y volver a
+         * pintar el PS antiguo en tvFrequency (V3 muestra el PS ahí) — p. ej. "ANTENA 2" pegado al zapping.
+         * Encadenamos el trabajo en background después del reset y forzamos MHz hasta nuevo PS fiable.
+         */
+        mActivity.runOnUiThread(() -> {
+            if (mActivity.mRdsManager != null) mActivity.mRdsManager.reset(true);
+            mActivity.clearStationLogoUi();
+            if (mActivity.mUiController != null) {
+                mActivity.mUiController.updateRDS("");
+                mActivity.mUiController.updateFrequency(fFreq, "", fIsAm);
+            } else {
+                mActivity.updateFrequencyDisplay(fFreq, "");
+            }
+
+            mActivity.mStationInfoExecutor.execute(() -> {
             if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
             if (seq != mActivity.mLastStationInfoRequestedSeq) return;
             final boolean qs6TransitionActive = mActivity.isQs6TransitionGuardActive();
@@ -228,6 +237,7 @@ public class StatusRefreshCoordinator {
                 mActivity.sendWidgetUpdate(fFreq, fBand, rdsName);
                 mActivity.refreshStereoIndicatorUi(fIsStreaming || (mActivity.mEngine != null && mActivity.mEngine.isStereo()));
             });
+        });
         });
     }
 }
