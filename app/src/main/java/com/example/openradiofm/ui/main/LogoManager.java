@@ -141,7 +141,7 @@ public class LogoManager {
      */
     public void loadCustomBackground() {
         if (mActivity.mPrefs == null) return;
-        final int genAtStart = mActivity.mLogoUiGeneration.get();
+        final int genAtStart = mActivity.mRdsLogoTransition.logoUiGeneration.get();
         // DAY_MODE: fondo beige fijo (ignorar background.jpg/dinámico).
         try {
             if (mActivity.mThemeManager != null
@@ -208,7 +208,7 @@ public class LogoManager {
                         @Override
                         public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
                             if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                            if (genAtStart != mActivity.mLogoUiGeneration.get()) return;
+                            if (genAtStart != mActivity.mRdsLogoTransition.logoUiGeneration.get()) return;
                             root.setBackground(resource);
                         }
 
@@ -399,7 +399,7 @@ public class LogoManager {
                         || ivDynamicBackground.getVisibility() != View.VISIBLE
                         || mDynamicBgTarget == null;
                 if (needsReload) {
-                    final int genAtStart = mActivity.mLogoUiGeneration.get();
+                    final int genAtStart = mActivity.mRdsLogoTransition.logoUiGeneration.get();
                     mLastDynamicBgUrl = logoUrl;
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
                     // Contener la imagen en el área de pantalla (sin recorte tipo centerCrop que “amplía” el arte).
@@ -414,7 +414,7 @@ public class LogoManager {
                         @Override
                         public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
                             if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                            if (genAtStart != mActivity.mLogoUiGeneration.get()) return;
+                            if (genAtStart != mActivity.mRdsLogoTransition.logoUiGeneration.get()) return;
                             ivDynamicBackground.setImageDrawable(resource);
                         }
 
@@ -488,7 +488,7 @@ public class LogoManager {
      */
     public void updateStationLogo(int freq, int band, String cachedUrl) {
         if (!isActivityUsable()) return;
-        final int logoGen = mActivity.mLogoUiGeneration.get();
+        final int logoGen = mActivity.mRdsLogoTransition.logoUiGeneration.get();
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         String bandCacheKey = band + "_" + freq;
 
@@ -682,7 +682,7 @@ public class LogoManager {
      * Evita aplicar logos de una petición obsoleta (QS6: AIDL + shadow; zapping rápido).
      */
     private boolean isLogoRequestStillValid(int logoGen, int freq, int band) {
-        if (logoGen != mActivity.mLogoUiGeneration.get()) {
+        if (logoGen != mActivity.mRdsLogoTransition.logoUiGeneration.get()) {
             return false;
         }
         if (mActivity.mEngine != null) {

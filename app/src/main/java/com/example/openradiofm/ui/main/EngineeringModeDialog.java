@@ -316,12 +316,12 @@ public class EngineeringModeDialog extends Dialog {
             boolean isStereo = (mActivity.mEngine != null) && mActivity.mEngine.isStereo();
             boolean isDx = (mActivity.mEngine != null) && !mActivity.mEngine.isDxLocal();
             
-            tvSignalQualityIndex.setText(mActivity.mHasRdsLock ? "85% (RDS_LOCK)" : "40% (LOW)");
+            tvSignalQualityIndex.setText(mActivity.mRdsLockUiTick.hasLock ? "85% (RDS_LOCK)" : "40% (LOW)");
             tvStereoPilot.setText(isStereo ? "LOCKED (19kHz)" : "NO_PILOT");
             tvTunerMode.setText(isDx ? "DX (DISTANT)" : "LOC (LOCAL)");
             
             // RSSI Simulado
-            int rssi = mActivity.mHasRdsLock ? -60 : -95;
+            int rssi = mActivity.mRdsLockUiTick.hasLock ? -60 : -95;
             StringBuilder bar = new StringBuilder("[");
             int bars = (rssi + 110) / 10;
             for(int i=0; i<10; i++) bar.append(i < bars ? "█" : "░");
@@ -341,7 +341,7 @@ public class EngineeringModeDialog extends Dialog {
             tvRtText.setText(rt.length() > 30 ? rt.substring(0, 27) + "..." : rt);
             tvPiCode.setText("WAITING...");
             tvPtyRaw.setText(mActivity.mCurrentPty != null ? mActivity.mCurrentPty : "00");
-            tvRdsSync.setText(mActivity.mHasRdsLock ? "LOCKED" : "SEARCHING");
+            tvRdsSync.setText(mActivity.mRdsLockUiTick.hasLock ? "LOCKED" : "SEARCHING");
             tvAfList.setText("ENABLE: " + (mActivity.mEngine != null && mActivity.mEngine.isAfEnabled()));
 
             // 3. System

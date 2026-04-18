@@ -136,14 +136,27 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * {@code onResume} y {@code onPause}. Muchas ROM de cabecera no llaman {@code onStop} al ir al
      * launcher; el hijacker reenvia teclas MEDIA solo cuando esta bandera es false.
      */
-    public static volatile boolean sMainActivityResumed = false;
+    static volatile boolean sMainActivityResumed = false;
 
     /**
      * True con motor K706 o QS6: {@link com.example.openradiofm.services.FactoryRadioHijackerService}
      * reenvia teclas MEDIA a {@link com.example.openradiofm.service.RadioMediaService} cuando
      * esta activity no esta resumed (launcher al frente). No aplica a MT8163 u otros.
      */
-    public static volatile boolean sWheelMediaBridgeActive = false;
+    static volatile boolean sWheelMediaBridgeActive = false;
+
+    /** Para {@link com.example.openradiofm.services.FactoryRadioHijackerService} (otro paquete). */
+    public static boolean isMainActivityResumed() {
+        return sMainActivityResumed;
+    }
+
+    public static boolean isWheelMediaBridgeActive() {
+        return sWheelMediaBridgeActive;
+    }
+
+    public static void setWheelMediaBridgeActive(boolean active) {
+        sWheelMediaBridgeActive = active;
+    }
 
     // Band Constants (package: usadas por MainActivityBootstrap)
     static final int BAND_FM1 = 0;
@@ -171,40 +184,40 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         AM
     }
 
-    public FmMode mMode = FmMode.FM_BASICO;
+    FmMode mMode = FmMode.FM_BASICO;
 
-    public IRadioServiceAPI mRadioService;
-    public com.example.openradiofm.data.repository.RadioRepository mRepository;
-    public android.content.SharedPreferences mPrefs;
-    public HiddenRadioPlayer mHiddenPlayer;
+    IRadioServiceAPI mRadioService;
+    com.example.openradiofm.data.repository.RadioRepository mRepository;
+    android.content.SharedPreferences mPrefs;
+    HiddenRadioPlayer mHiddenPlayer;
 
     // V5.0: Capa de abstracci├│n de hardware
-    public RadioEngine mEngine;
-    public boolean mIsScanning = false;
-    public ScanManager mScanManager;
-    public DialogManager mDialogManager;
-    public LogoManager mLogoManager;
-    public RadioServiceController mServiceController;
-    public RDSManager mRdsManager;
-    public StandardLayoutManager mStandardLayoutManager;
-    public SimpleLayoutManager mSimpleLayoutManager;
-    public ControlPanelManager mControlPanelManager;
+    RadioEngine mEngine;
+    boolean mIsScanning = false;
+    ScanManager mScanManager;
+    DialogManager mDialogManager;
+    LogoManager mLogoManager;
+    RadioServiceController mServiceController;
+    RDSManager mRdsManager;
+    StandardLayoutManager mStandardLayoutManager;
+    SimpleLayoutManager mSimpleLayoutManager;
+    ControlPanelManager mControlPanelManager;
 
-    public boolean mIsSimpleLayout = false;
-    public boolean mIsV3 = false;
+    boolean mIsSimpleLayout = false;
+    boolean mIsV3 = false;
 
     /** Layout horizontal V3 real (no Simple). Usar en logo/skins para no mezclar flags sueltos. */
     public boolean isV3LayoutActive() {
         return mIsV3 && !mIsSimpleLayout;
     }
-    public boolean mIsMinimal = false; // V19.2
-    public boolean mControlsHidden = false;
-    public android.os.Handler mAutoHideHandler;
+    boolean mIsMinimal = false; // V19.2
+    boolean mControlsHidden = false;
+    android.os.Handler mAutoHideHandler;
     Runnable mAutoHideRunnable;
 
     // V21.0: UI Controllers Refactor
-    public BaseLayoutController mUiController;
-    public final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    BaseLayoutController mUiController;
+    final android.os.Handler mMainHandler = new android.os.Handler(android.os.Looper.getMainLooper());
 
     /**
      * Tras {@link RadioMediaService#ACTION_MT8163_FM_HANDOFF}: ejecutar {@code conectarRadio()}.
@@ -253,83 +266,68 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     // V16: Managers de Modo Nocturno e Historial
-    public SkinCoordinator mSkinCoordinator;
-    public FrequencyChangeCoordinator mFrequencyChangeCoordinator;
-    public StatusRefreshCoordinator mStatusRefreshCoordinator;
-    public EngineCallbackCoordinator mEngineCallbackCoordinator;
-    public LifecycleCoordinator mLifecycleCoordinator;
-    public HardwareKeyCoordinator mHardwareKeyCoordinator;
-    public UiViewMediator mUiMediator;
-    public FrequencyStateManager mFreqStateManager;
-    public NightModeManager mNightModeManager;
-    public DayModeManager mDayModeManager;
-    public com.example.openradiofm.ui.theme.ThemeManager.Skin mLastSkinAppliedForBackground = null;
-    public HistoryManager mHistoryManager;
-    public MediaSessionManager mMediaSessionManager;
-    public ThemeManager mThemeManager; // V16.2: Skin manager
-    public IconPackManager mIconPackManager;
-    public PresetNumberIconManager mPresetNumberIconManager;
+    SkinCoordinator mSkinCoordinator;
+    FrequencyChangeCoordinator mFrequencyChangeCoordinator;
+    StatusRefreshCoordinator mStatusRefreshCoordinator;
+    EngineCallbackCoordinator mEngineCallbackCoordinator;
+    LifecycleCoordinator mLifecycleCoordinator;
+    HardwareKeyCoordinator mHardwareKeyCoordinator;
+    UiViewMediator mUiMediator;
+    FrequencyStateManager mFreqStateManager;
+    NightModeManager mNightModeManager;
+    DayModeManager mDayModeManager;
+    com.example.openradiofm.ui.theme.ThemeManager.Skin mLastSkinAppliedForBackground = null;
+    HistoryManager mHistoryManager;
+    MediaSessionManager mMediaSessionManager;
+    ThemeManager mThemeManager; // V16.2: Skin manager
+    IconPackManager mIconPackManager;
+    PresetNumberIconManager mPresetNumberIconManager;
 
     // N├║meros de presets (1..18) para el indicador de favorito
     public static final String PREF_PRESET_NUMBERS_STYLE = "pref_preset_numbers_style"; // 0=default(drawable), 1=tabler(assets svg)
 
     // V18.5: Reloj Digital
-    public android.os.Handler mClockHandler;
+    android.os.Handler mClockHandler;
     Runnable mClockRunnable;
 
     // V5.5: Managers de Audio y Dispositivo
-    public PlaybackManager mPlaybackManager;
-    public DeviceManager mDeviceManager;
-    public HardwareManager mHardwareManager;
+    PlaybackManager mPlaybackManager;
+    DeviceManager mDeviceManager;
+    HardwareManager mHardwareManager;
     WidgetBroadcastManager mWidgetBroadcastManager; // V23.0: Desacoplamiento de widgets OEM
-    public RadioSessionController mSessionController;
+    RadioSessionController mSessionController;
 
 
     // V11: RDS PI Database Identification
     private com.example.openradiofm.data.source.RdsDatabase mRdsDb;
-    public String mCurrentPi = null;
+    String mCurrentPi = null;
 
     // V13: Gestor de Presets (Reducci├│n de MainActivity)
-    public PresetManager mPresetManager;
+    PresetManager mPresetManager;
 
     // V24.5: K706 Engineering & Hardware Automation
-    public K706EngineeringDialog mEngineeringDialog = null;
-    public int mLastFreq = -1;
-    // Guarda de arranque: evita persistir una frecuencia "bootstrap" (p.ej. 87.6)
-    // antes de que el motor termine de restaurar la ├║ltima emisora real.
-    int mStartupSavedFreqKhz = -1;
-    long mStartupPersistGuardUntilMs = 0L;
-    public int mLastBand = BAND_FM1;
-    int mStartupRetuneAttempts = 0;
-    public long mShutdownPersistGuardUntilMs = 0L;
+    K706EngineeringDialog mEngineeringDialog = null;
+    int mLastFreq = -1;
+    /** Guardas de arranque (bootstrap MCU) y sintonía explícita; ver {@link StartupFreqPersistGuards}. */
+    final StartupFreqPersistGuards mStartupFqGuards = new StartupFreqPersistGuards();
+    int mLastBand = BAND_FM1;
+    long mShutdownPersistGuardUntilMs = 0L;
     /** True solo durante el flujo de PowerOff (evita bridge de volante en onStop). */
-    public volatile boolean mPowerOffRequested = false;
-    int mUserRequestedFreqKhz = -1;
-    long mUserRequestedFreqUntilMs = 0L;
+    volatile boolean mPowerOffRequested = false;
     static final String PREF_QS6_BOOTSTRAP_SANITIZED = "pref_qs6_bootstrap_sanitized";
     /** Misma idea que QS6: evitar prefs contaminadas con 87.5/87.6 tras reinicio de unidad (MCU arranca antes que la app). */
     static final String PREF_K706_BOOTSTRAP_SANITIZED = "pref_k706_bootstrap_sanitized";
-    public String mLastPs = ""; // V18.6: Almacena el nombre RDS/Custom actual
-    public boolean mHasRdsLock = false;
-    /** Estado previo para disparar el "tick" visual al enganchar RDS lock (falseÔåÆtrue). */
-    public boolean mHadRdsLockForTick = false;
-    /** Anti-spam: evita ticks repetidos por bursts de callbacks. */
-    public long mLastRdsLockTickUptimeMs = 0L;
-    public String mCurrentPty = null;
-    public String mLastLogoUrl = "";
-    volatile String mPrevStationNameBeforeTune = "";
-    public java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
+    String mLastPs = ""; // V18.6: Almacena el nombre RDS/Custom actual
+    final RdsLockUiTickState mRdsLockUiTick = new RdsLockUiTickState();
+    String mCurrentPty = null;
+    String mLastLogoUrl = "";
+    java.util.Map<String, String> mLogoCachePerBand = new java.util.HashMap<>();
     /** Evita arrastre de RDS/logo de la emisora anterior tras un cambio de frecuencia (QS6/NWD). */
     static final long RDS_TRANSITION_GUARD_MS = 1200L;
-    volatile long mRdsTransitionGuardUntilMs = 0L;
+    final RdsLogoTransitionState mRdsLogoTransition = new RdsLogoTransitionState();
     /** Margen tras cambiar de frecuencia antes de contribuir metadatos a la nube. */
     static final long CLOUD_CONTRIB_FREQ_SETTLE_MS = 1750L;
     long mCloudContribAllowedAfterMs = 0L;
-    /**
-     * QS6/NWD y otros motores con callbacks r├ípidos: invalida cargas de logo as├¡ncronas al cambiar
-     * frecuencia o banda (evita que un Glide/getStationInfo tard├¡o pinte logo de otra emisora).
-     */
-    public final java.util.concurrent.atomic.AtomicInteger mLogoUiGeneration = new java.util.concurrent.atomic.AtomicInteger(0);
     /**
      * Se incrementa en {@link #onDestroy()} cuando la activity termina ({@code isFinishing()}), para que
      * tareas en {@link com.example.openradiofm.util.AppIoExecutor} ligadas a esta instancia aborten cooperativamente.
@@ -341,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     com.example.openradiofm.data.source.SupabaseSyncManager mSupabaseSyncManager;
-    public com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
+    com.example.openradiofm.ui.main.OnlineStreamManager mOnlineStreamManager;
 
     @Override
     public boolean isQs6TransitionGuardActive() {
@@ -349,7 +347,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             boolean isQs6 = mEngine != null
                     && mEngine.getEngineName() != null
                     && mEngine.getEngineName().toUpperCase().contains("QS6");
-            return isQs6 && android.os.SystemClock.elapsedRealtime() < mRdsTransitionGuardUntilMs;
+            return isQs6 && android.os.SystemClock.elapsedRealtime() < mRdsLogoTransition.rdsTransitionGuardUntilMs;
         } catch (Exception ignored) {
             return false;
         }
@@ -358,11 +356,11 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     // V5.0: UI Elements (Fixing Compilation Errors)
     TextView tvPty;
     SignalBarsView mSignalBarsView;
-    public SignalMeterCoordinator mSignalMeterCoordinator;
+    SignalMeterCoordinator mSignalMeterCoordinator;
     ImageView ivAfIcon, ivTaIcon, ivTpIcon; // RDS Status Icons
     android.widget.FrameLayout ivDataActivity; // V16.2: Cloud Data indicator (Wrapper)
     int mActiveDataOps = 0; // V16.2: Concurrent Supabase Operations (StreamingUiCoordinator)
-    public DataActivityIndicatorManager mDataActivityIndicatorManager;
+    DataActivityIndicatorManager mDataActivityIndicatorManager;
     long mLastInternetCheckTime = 0;
     boolean mLastInternetCache = false;
 
@@ -378,11 +376,11 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     private long mLastDataActivityUiTime = 0;
     
     // V21.1: Evitar crear hilos por cada refresh (coalescing de station info)
-    public java.util.concurrent.ExecutorService mStationInfoExecutor;
-    public final java.util.concurrent.atomic.AtomicInteger mStationInfoSeq = new java.util.concurrent.atomic.AtomicInteger(0);
-    public volatile int mLastStationInfoRequestedSeq = 0;
+    java.util.concurrent.ExecutorService mStationInfoExecutor;
+    final java.util.concurrent.atomic.AtomicInteger mStationInfoSeq = new java.util.concurrent.atomic.AtomicInteger(0);
+    volatile int mLastStationInfoRequestedSeq = 0;
 
-    public boolean mMuteState = false;
+    boolean mMuteState = false;
 
     // V5.0: Signal Quality Logic
     public enum SignalQuality {
@@ -406,9 +404,9 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     private SignalQuality mCurrentQuality = SignalQuality.NO_SIGNAL;
 
     /** Men├║ ingenier├¡a QS6 / NWD (pulsaci├│n larga en GPS). */
-    public QS6EngineeringDialog mQs6EngineeringDialog = null;
+    QS6EngineeringDialog mQs6EngineeringDialog = null;
 
-    public int mCurrentBand = 0;
+    int mCurrentBand = 0;
     boolean mIsRecreating = false; // V20.3: Flag to distinguish between Cold Start and Layout Switch
 
     
@@ -473,16 +471,16 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             });
 
             if (isQs6) {
-                mPrevStationNameBeforeTune = mLastPs != null ? mLastPs : "";
-                mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
-                mLogoUiGeneration.incrementAndGet();
+                mRdsLogoTransition.prevStationNameBeforeTune = mLastPs != null ? mLastPs : "";
+                mRdsLogoTransition.rdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
+                mRdsLogoTransition.logoUiGeneration.incrementAndGet();
             }
             try {
                 com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "gotoFreq(" + freq + ") band=" + mCurrentBand);
             } catch (Exception ignored) {}
             mEngine.tune(freq);
-            mUserRequestedFreqKhz = freq;
-            mUserRequestedFreqUntilMs = android.os.SystemClock.elapsedRealtime() + 12000L;
+            mStartupFqGuards.userRequestedFreqKhz = freq;
+            mStartupFqGuards.userRequestedFreqUntilMs = android.os.SystemClock.elapsedRealtime() + 12000L;
             // Antes del callback del motor: misma frecuencia evita doble trabajo en handleFrequencyChange.
             mLastFreq = freq;
             if (mFrequencyChangeCoordinator != null) {
@@ -706,13 +704,13 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * Opci├│n A: "tick" visual (flash/fade) cuando se engancha RDS lock.
      * Dispara solo en flanco de subida y con anti-spam.
      */
-    public void maybeTickRdsLock(boolean hasLockNow) {
+    void maybeTickRdsLock(boolean hasLockNow) {
         long now = android.os.SystemClock.elapsedRealtime();
-        boolean risingEdge = hasLockNow && !mHadRdsLockForTick;
-        mHadRdsLockForTick = hasLockNow;
+        boolean risingEdge = hasLockNow && !mRdsLockUiTick.hadLockForTick;
+        mRdsLockUiTick.hadLockForTick = hasLockNow;
         if (!risingEdge) return;
-        if (now - mLastRdsLockTickUptimeMs < 650L) return;
-        mLastRdsLockTickUptimeMs = now;
+        if (now - mRdsLockUiTick.lastTickUptimeMs < 650L) return;
+        mRdsLockUiTick.lastTickUptimeMs = now;
 
         android.widget.TextView ps = findViewById(R.id.tvRdsName);
         android.widget.TextView pty = findViewById(R.id.tvPty);
@@ -1084,7 +1082,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      */
     private void prepareForLayoutModeRecreate() {
         try {
-            mLogoUiGeneration.incrementAndGet();
+            mRdsLogoTransition.logoUiGeneration.incrementAndGet();
         } catch (Exception ignored) {}
         try {
             int s = mStationInfoSeq.incrementAndGet();
@@ -3006,7 +3004,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     @Override
     public boolean isRdsLockHeld() {
-        return mHasRdsLock;
+        return mRdsLockUiTick.hasLock;
     }
 
     @Override
@@ -3111,32 +3109,32 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     @Override
     public void setHasRdsLock(boolean value) {
-        mHasRdsLock = value;
+        mRdsLockUiTick.hasLock = value;
     }
 
     @Override
     public boolean getHadRdsLockForTick() {
-        return mHadRdsLockForTick;
+        return mRdsLockUiTick.hadLockForTick;
     }
 
     @Override
     public void setHadRdsLockForTick(boolean value) {
-        mHadRdsLockForTick = value;
+        mRdsLockUiTick.hadLockForTick = value;
     }
 
     @Override
     public long getLastRdsLockTickUptimeMs() {
-        return mLastRdsLockTickUptimeMs;
+        return mRdsLockUiTick.lastTickUptimeMs;
     }
 
     @Override
     public void setLastRdsLockTickUptimeMs(long ms) {
-        mLastRdsLockTickUptimeMs = ms;
+        mRdsLockUiTick.lastTickUptimeMs = ms;
     }
 
     @Override
     public void incrementLogoUiGeneration() {
-        mLogoUiGeneration.incrementAndGet();
+        mRdsLogoTransition.logoUiGeneration.incrementAndGet();
     }
 
     @Override

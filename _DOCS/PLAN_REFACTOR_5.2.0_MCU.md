@@ -110,13 +110,13 @@ Comportamiento esperado **igual** al abrir desde widget o volver con el hijacker
 
 ## Fase 6 — Estado y visibilidad de miembros
 
-- [ ] Sustituir campos **`public`** por **package-private** + getters donde sea necesario
-- [ ] Agrupar flags relacionados (guards RDS, secuencias logo, bootstrap K706/QS6) en objetos de estado pequeños
-- [ ] Pasada final de grep: ningún paquete externo debería requerir campos crudos de `MainActivity`
+- [x] Sustituir campos **`public`** por **package-private** en miembros de instancia de **`MainActivity`** (consumo en **`ui.main`**). Estáticos **`sMainActivityResumed`** / **`sWheelMediaBridgeActive`**: package + API pública **`isMainActivityResumed`**, **`isWheelMediaBridgeActive`**, **`setWheelMediaBridgeActive`** para **`FactoryRadioHijackerService`**.
+- [x] Agrupar flags relacionados en objetos de estado pequeños (mismo paquete): **`RdsLockUiTickState`** (`mRdsLockUiTick`), **`RdsLogoTransitionState`** (`mRdsLogoTransition`), **`StartupFreqPersistGuards`** (`mStartupFqGuards`). **`FrequencyStateManager`** conserva su copia para **`evaluateFrequencyChange`** / **`shouldBlockTransitionalRdsName`** hasta un posible unificación futura.
+- [x] Grep externo: sin acceso a campos de instancia **`m*`** desde fuera de **`ui.main`**; el hijacker ya no depende de campos estáticos públicos.
 
-### Para el usuario (Fase 6 — pendiente)
+### Para el usuario (Fase 6 — cerrada)
 
-*(Completar al cerrar la fase.)* Cambio casi todo **interno**. Beneficio: menos regresiones al actualizar; la app **se comporta igual** salvo que se cierre un bug concreto durante la limpieza.
+Cambio **interno**: misma radio, mismos widgets y mismo volante en segundo plano. La app **agrupa** en pocos objetos el estado de RDS en pantalla, invalidación de logos y guardas de arranque (bootstrap 87.5/87.6), y **reduce** la superficie pública de `MainActivity`. Conviene una **pasada rápida** en cabecera con hijacker (MEDIA con launcher al frente, K706/QS6) y comprobar ingeniería / layout estándar si usas esos menús.
 
 ---
 

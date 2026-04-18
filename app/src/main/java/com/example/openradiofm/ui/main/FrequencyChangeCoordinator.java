@@ -62,17 +62,17 @@ public final class FrequencyChangeCoordinator {
         }
 
         boolean suppressStartupPersist = false;
-        if (mA.mStartupSavedFreqKhz > 0
-                && android.os.SystemClock.elapsedRealtime() < mA.mStartupPersistGuardUntilMs) {
-            if (freq != mA.mStartupSavedFreqKhz && (freq == 87600 || freq == 87500)) {
+        if (mA.mStartupFqGuards.startupSavedFreqKhz > 0
+                && android.os.SystemClock.elapsedRealtime() < mA.mStartupFqGuards.startupPersistGuardUntilMs) {
+            if (freq != mA.mStartupFqGuards.startupSavedFreqKhz && (freq == 87600 || freq == 87500)) {
                 suppressStartupPersist = true;
                 Log.d(MainActivity.TAG, "Startup guard: suppress persist for bootstrap freq " + freq
-                        + " (saved=" + mA.mStartupSavedFreqKhz + ")");
+                        + " (saved=" + mA.mStartupFqGuards.startupSavedFreqKhz + ")");
                 if ((mA.mMode == MainActivity.FmMode.FM_QS6 || mA.mMode == MainActivity.FmMode.FM_K706
-                        || mA.mMode == MainActivity.FmMode.FM_JANCAR_IVI) && mA.mEngine != null && mA.mStartupRetuneAttempts < 3) {
-                    final int targetFreq = mA.mStartupSavedFreqKhz;
+                        || mA.mMode == MainActivity.FmMode.FM_JANCAR_IVI) && mA.mEngine != null && mA.mStartupFqGuards.startupRetuneAttempts < 3) {
+                    final int targetFreq = mA.mStartupFqGuards.startupSavedFreqKhz;
                     final int targetBand = mA.mLastBand;
-                    mA.mStartupRetuneAttempts++;
+                    mA.mStartupFqGuards.startupRetuneAttempts++;
                     mA.mMainHandler.postDelayed(() -> {
                         try {
                             if (mA.isFinishing() || mA.isDestroyed() || mA.mEngine == null) return;
@@ -80,7 +80,7 @@ public final class FrequencyChangeCoordinator {
                             if (current == 87600 || current == 87500) {
                                 Log.d(MainActivity.TAG, "Startup guard: re-assert saved station "
                                         + targetFreq + "/B" + targetBand
-                                        + " (attempt " + mA.mStartupRetuneAttempts + ")");
+                                        + " (attempt " + mA.mStartupFqGuards.startupRetuneAttempts + ")");
                                 if (mA.mEngine instanceof QS6Engine) {
                                     ((QS6Engine) mA.mEngine).tuneWithBand(targetFreq, targetBand);
                                 } else {
@@ -93,16 +93,16 @@ public final class FrequencyChangeCoordinator {
                     }, 260L);
                 }
             }
-            if (freq == mA.mStartupSavedFreqKhz) {
-                mA.mStartupPersistGuardUntilMs = 0L;
+            if (freq == mA.mStartupFqGuards.startupSavedFreqKhz) {
+                mA.mStartupFqGuards.startupPersistGuardUntilMs = 0L;
             }
         }
 
         if ((mA.mMode == MainActivity.FmMode.FM_QS6 || mA.mMode == MainActivity.FmMode.FM_K706
                 || mA.mMode == MainActivity.FmMode.FM_JANCAR_IVI) && (freq == 87500 || freq == 87600)) {
             boolean userRequestedRecently =
-                    mA.mUserRequestedFreqKhz == freq
-                            && android.os.SystemClock.elapsedRealtime() <= mA.mUserRequestedFreqUntilMs;
+                    mA.mStartupFqGuards.userRequestedFreqKhz == freq
+                            && android.os.SystemClock.elapsedRealtime() <= mA.mStartupFqGuards.userRequestedFreqUntilMs;
             if (!userRequestedRecently) {
                 suppressStartupPersist = true;
                 Log.d(MainActivity.TAG, "Bootstrap persist guard: suppress " + freq + " (no recent user request, mode="
@@ -145,9 +145,9 @@ public final class FrequencyChangeCoordinator {
             boolean clearRdsTextWidgetsOnUi, boolean skipLogoBumpAndTransitionGuard,
             boolean allowWorkWhileScanning) {
         if (!skipLogoBumpAndTransitionGuard) {
-            mA.mLogoUiGeneration.incrementAndGet();
-            mA.mPrevStationNameBeforeTune = mA.mLastPs != null ? mA.mLastPs : "";
-            mA.mRdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + MainActivity.RDS_TRANSITION_GUARD_MS;
+            mA.mRdsLogoTransition.logoUiGeneration.incrementAndGet();
+            mA.mRdsLogoTransition.prevStationNameBeforeTune = mA.mLastPs != null ? mA.mLastPs : "";
+            mA.mRdsLogoTransition.rdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + MainActivity.RDS_TRANSITION_GUARD_MS;
         }
         mA.mLastFreq = freq;
         mA.mCloudContribAllowedAfterMs = android.os.SystemClock.elapsedRealtime() + MainActivity.CLOUD_CONTRIB_FREQ_SETTLE_MS;
@@ -156,8 +156,8 @@ public final class FrequencyChangeCoordinator {
         mA.mCurrentPi = null;
         mA.mCurrentPty = null;
         mA.mLastPs = ""; // V18.6.4: Clear cached RDS name to avoid stale display on new freq
-        mA.mHasRdsLock = false;
-        mA.mHadRdsLockForTick = false;
+        mA.mRdsLockUiTick.hasLock = false;
+        mA.mRdsLockUiTick.hadLockForTick = false;
 
         if (mA.mRdsManager != null) {
             // MT8163: handleFrequencyChange puede venir desde un hilo de polling del engine.

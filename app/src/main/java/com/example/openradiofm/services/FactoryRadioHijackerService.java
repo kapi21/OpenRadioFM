@@ -180,14 +180,14 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     /**
      * K706 / QS6 (NWD): con el launcher al frente las teclas MEDIA suelen ir como {@code KeyEvent}
      * al foco, no como {@code ACTION_MEDIA_BUTTON} a {@link RadioMediaService}. Reenviamos solo cuando
-     * {@link MainActivity#sMainActivityResumed} es false (p. ej. launcher al frente) y el motor es K706 o QS6.
+     * {@link MainActivity#isMainActivityResumed()} es false (p. ej. launcher al frente) y el motor es K706 o QS6.
      */
     @Override
     protected boolean onKeyEvent(KeyEvent event) {
         try {
             if (event == null) return false;
-            final boolean resumed = MainActivity.sMainActivityResumed;
-            final boolean bridge = MainActivity.sWheelMediaBridgeActive;
+            final boolean resumed = MainActivity.isMainActivityResumed();
+            final boolean bridge = MainActivity.isWheelMediaBridgeActive();
             SharedPreferences p = getSharedPreferences(PREFS, MODE_PRIVATE);
             if (!p.getBoolean(PREF_FORWARD_MEDIA_KEYS, true)) {
                 return false;
@@ -254,7 +254,7 @@ public class FactoryRadioHijackerService extends AccessibilityService {
         }
         // Activar bridge por defecto: el guard basado en mode puede estar aún sin detectar en arranques en frío.
         try {
-            MainActivity.sWheelMediaBridgeActive = true;
+            MainActivity.setWheelMediaBridgeActive(true);
         } catch (Exception ignored) {}
         // Start heartbeat
         try { mHbHandler.removeCallbacks(mHeartbeat); } catch (Exception ignored) {}

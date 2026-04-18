@@ -386,7 +386,7 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
             if (tvK706Scan != null) tvK706Scan.setText(scanning ? "RUNNING..." : "IDLE");
 
             // RSSI Bar
-            int sqi = (rssiRaw != -1) ? Math.min(100, (rssiRaw * 100) / 120) : (mActivity.mHasRdsLock ? 80 : 20);
+            int sqi = (rssiRaw != -1) ? Math.min(100, (rssiRaw * 100) / 120) : (mActivity.mRdsLockUiTick.hasLock ? 80 : 20);
             StringBuilder bar = new StringBuilder("[");
             int bars = sqi / 10;
             for(int i=0; i<10; i++) bar.append(i < bars ? "#" : ".");

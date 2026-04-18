@@ -156,7 +156,7 @@ public class StandardLayoutManager {
         if (ivSignalLevel != null) {
             int signalColor;
             boolean hasStereo = mActivity.mEngine != null && mActivity.mEngine.isStereo();
-            boolean hasRdsLock = mActivity.mHasRdsLock;
+            boolean hasRdsLock = mActivity.mRdsLockUiTick.hasLock;
 
             if (hasRdsLock && hasStereo) {
                 signalColor = Color.parseColor("#00E676"); // Green

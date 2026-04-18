@@ -64,7 +64,7 @@ public class SkinCoordinator {
         ThemeManager.Skin activeAfter = tm != null ? tm.getActiveSkin() : null;
 
         if (activeBefore != activeAfter) {
-            try { mActivity.mLogoUiGeneration.incrementAndGet(); } catch (Exception ignored) {}
+            try { mActivity.mRdsLogoTransition.logoUiGeneration.incrementAndGet(); } catch (Exception ignored) {}
         }
 
         boolean isNight = (skin == ThemeManager.Skin.NIGHT_MODE);

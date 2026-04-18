@@ -314,7 +314,7 @@ final class MainActivityBootstrap {
                 Log.w(MainActivity.TAG, "K706 sanitize check failed", e);
             }
         }
-        a.mStartupSavedFreqKhz = a.mLastFreq;
+        a.mStartupFqGuards.startupSavedFreqKhz = a.mLastFreq;
 
         // V22.4: Saneo de arranque para prevenir bucles de Startup Reinforce
         // 1. Corregir escala de frecuencia (unidades NWD 10kHz vs app kHz)
@@ -338,8 +338,8 @@ final class MainActivityBootstrap {
             a.mCurrentBand = a.mLastBand;
         }
 
-        a.mStartupPersistGuardUntilMs = android.os.SystemClock.elapsedRealtime() + 6000L;
-        a.mStartupRetuneAttempts = 0;
+        a.mStartupFqGuards.startupPersistGuardUntilMs = android.os.SystemClock.elapsedRealtime() + 6000L;
+        a.mStartupFqGuards.startupRetuneAttempts = 0;
     }
 
     private static void initSimpleLayoutIfNeeded(MainActivity a) {

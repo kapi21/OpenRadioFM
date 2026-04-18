@@ -614,13 +614,13 @@ public class QS6EngineeringDialog extends Dialog {
                 if (tvQs6StereoRaw != null) tvQs6StereoRaw.setText("N/A");
             }
 
-            int sqi = mActivity.mHasRdsLock ? 80 : 25;
+            int sqi = mActivity.mRdsLockUiTick.hasLock ? 80 : 25;
             StringBuilder bar = new StringBuilder("[");
             int bars = sqi / 10;
             for (int i = 0; i < 10; i++) bar.append(i < bars ? "█" : "░");
             bar.append("]");
             if (tvQs6Rssi != null) {
-                tvQs6Rssi.setText(String.format(Locale.US, "[est] %s RDS_LOCK=%s", bar, mActivity.mHasRdsLock));
+                tvQs6Rssi.setText(String.format(Locale.US, "[est] %s RDS_LOCK=%s", bar, mActivity.mRdsLockUiTick.hasLock));
             }
 
             TextView mainRdsName = mActivity.findViewById(R.id.tvRdsName);
@@ -631,7 +631,7 @@ public class QS6EngineeringDialog extends Dialog {
             if (tvQs6Rt != null) tvQs6Rt.setText(rt.length() > 36 ? rt.substring(0, 33) + "..." : rt);
             if (tvQs6Pi != null) tvQs6Pi.setText(mActivity.mCurrentPi != null ? mActivity.mCurrentPi : "—");
             if (tvQs6Pty != null) tvQs6Pty.setText(mActivity.mCurrentPty != null ? mActivity.mCurrentPty : "00");
-            if (tvQs6RdsLock != null) tvQs6RdsLock.setText(mActivity.mHasRdsLock ? "YES" : "NO");
+            if (tvQs6RdsLock != null) tvQs6RdsLock.setText(mActivity.mRdsLockUiTick.hasLock ? "YES" : "NO");
 
             try {
                 android.content.SharedPreferences prefs =
