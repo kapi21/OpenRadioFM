@@ -48,6 +48,7 @@ _DOCS/*
 !_DOCS/manual_*.md
 !_DOCS/manual_usuario.md
 !_DOCS/INFORME_K706_MANDOS_Y_WIDGET.md
+!_DOCS/PLAN_REFACTOR_5.2.0_MCU.md
 
 # docs/ (web + imágenes del README): subir solo lo mínimo
 docs/**
