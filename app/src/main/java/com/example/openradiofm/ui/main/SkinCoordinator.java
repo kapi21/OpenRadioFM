@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -22,6 +24,35 @@ public class SkinCoordinator {
 
     public SkinCoordinator(MainActivity activity) {
         this.mActivity = activity;
+    }
+
+    /**
+     * Tipografía global (V15.6) y presets; antes en {@link MainActivity#applyFonts()}.
+     */
+    public void applyFonts() {
+        Typeface typeface = mActivity.getSystemTypeface();
+        applyRecursiveFont(mActivity.findViewById(android.R.id.content), typeface);
+        if (mActivity.mPresetManager != null) {
+            mActivity.mPresetManager.applyFonts(typeface);
+        }
+        if (mActivity.mUiMediator.tvDigitalClock != null) {
+            mActivity.mUiMediator.tvDigitalClock.setTypeface(typeface);
+        }
+    }
+
+    /**
+     * Aplica {@code tf} a TextViews bajo {@code v}; usado por diálogos y escaneo.
+     */
+    public void applyRecursiveFont(View v, Typeface tf) {
+        if (v == null) return;
+        if (v instanceof ViewGroup) {
+            ViewGroup vg = (ViewGroup) v;
+            for (int i = 0; i < vg.getChildCount(); i++) {
+                applyRecursiveFont(vg.getChildAt(i), tf);
+            }
+        } else if (v instanceof TextView) {
+            ((TextView) v).setTypeface(tf);
+        }
     }
 
     public void applySkin(ThemeManager.Skin skin) {

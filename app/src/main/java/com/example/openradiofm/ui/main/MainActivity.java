@@ -1712,38 +1712,19 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     /**
-     * V15.6: Aplica la tipografía global inmediatamente tras cargar el layout
+     * V15.6: Aplica la tipografía global inmediatamente tras cargar el layout.
+     * Implementación en {@link SkinCoordinator#applyFonts()}.
      */
     public void applyFonts() {
-        android.graphics.Typeface typeface = getSystemTypeface();
-        applyRecursiveFont(findViewById(android.R.id.content), typeface);
-
-        // V2.1: Especial para mPresetManager que maneja sus propios arrays
-        if (mPresetManager != null) {
-            mPresetManager.applyFonts(typeface);
-        }
-
-        // V18.5: Reloj Digital
-        if (mUiMediator.tvDigitalClock != null) {
-            mUiMediator.tvDigitalClock.setTypeface(typeface);
-        }
+        if (mSkinCoordinator != null) mSkinCoordinator.applyFonts();
     }
 
     /**
-     * V15.6: Aplica una fuente de forma recursiva a todos los TextViews (y
-     * derivados) en un árbol de vistas.
+     * V15.6: Aplica una fuente de forma recursiva a TextViews bajo {@code v}.
+     * Implementación en {@link SkinCoordinator#applyRecursiveFont(android.view.View, android.graphics.Typeface)}.
      */
     public void applyRecursiveFont(View v, android.graphics.Typeface tf) {
-        if (v == null)
-            return;
-        if (v instanceof android.view.ViewGroup) {
-            android.view.ViewGroup vg = (android.view.ViewGroup) v;
-            for (int i = 0; i < vg.getChildCount(); i++) {
-                applyRecursiveFont(vg.getChildAt(i), tf);
-            }
-        } else if (v instanceof TextView) {
-            ((TextView) v).setTypeface(tf);
-        }
+        if (mSkinCoordinator != null) mSkinCoordinator.applyRecursiveFont(v, tf);
     }
 
     public void seekUp() {

@@ -87,12 +87,12 @@ Objetivo: **menos choques entre FM y streaming** y un icono de datos **coherente
 
 ## Fase 4 — Apariencia (skins, fuentes, icon packs)
 
-- [ ] Mover restos de **`applySkin`**, **`applyFonts`**, tintes sueltos hacia **`SkinCoordinator`** / **`AppearanceController`**
-- [ ] Evitar duplicar lógica entre `NightModeManager` / `DayModeManager` y la activity
+- [x] **`applyFonts`** y **`applyRecursiveFont`** viven en **`SkinCoordinator`**; **`MainActivity`** delega (misma API pública para `DialogManager`, `HistoryManager`, etc.). **`applySkin`** ya delegaba en `SkinCoordinator`.
+- [ ] Evitar duplicar lógica entre `NightModeManager` / `DayModeManager` y la activity (p. ej. color `tvDigitalClock` en `applySkin` vs `applyVisualStateForSkin`)
 
-### Para el usuario (Fase 4 — pendiente)
+### Para el usuario (Fase 4 — en curso)
 
-*(Completar al cerrar la fase.)* Objetivo: **misma apariencia** (modo noche, día, iconos); menos incoherencias al cambiar de skin o pack de iconos. Si se unifica bien, menos parpadeos al rotar tema.
+La apariencia en pantalla debe seguir **igual**; el cambio es **dónde vive el código** de fuentes (ahora junto a skins en **`SkinCoordinator`**). Próximo paso lógico: reducir duplicados de color reloj / modo día-noche entre el coordinador y los managers.
 
 ---
 
