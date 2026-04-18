@@ -388,20 +388,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Equalizzatore non disponibile (motore radio non avviato)</string>
+    <string name="toast_radio_engine_not_started">Motore radio non avviato</string>
+    <string name="toast_no_gps_app">Nessuna app mappe/GPS trovata</string>
+    <string name="toast_basic_no_engineering">Modo base: menu ingegneria non disponibile</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
+    <string name="toast_autoscan_stopped">AutoScan interrotto</string>
     <string name="toast_autoscan_slow">AutoScan lento da FM1: ricerca in corso… (tocca di nuovo per fermare)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_start_failed">Impossibile avviare l’AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan completato (%1$d preset)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · preset 1–18</string>
+    <string name="toast_presets_overwritten">Preset sovrascritti (%1$d stazioni).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Ritorno alla modalità standard…</string>
+    <string name="toast_recovering_fm_audio">Recupero audio FM…</string>
+    <string name="toast_hw_eq_unsupported">EQ hardware non supportato su questo dispositivo</string>
+    <string name="toast_saved_to_slot">Salvato nel preset %1$d</string>
 </resources>

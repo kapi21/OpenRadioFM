@@ -358,20 +358,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Эквалайзер недоступен (радиодвижок не запущен)</string>
+    <string name="toast_radio_engine_not_started">Радиодвижок не запущен</string>
+    <string name="toast_no_gps_app">Приложение карт/GPS не найдено</string>
+    <string name="toast_basic_no_engineering">Базовый режим: инженерное меню недоступно</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
+    <string name="toast_autoscan_stopped">AutoScan остановлен</string>
     <string name="toast_autoscan_slow">Медленный AutoScan с FM1: поиск станций… (нажмите ещё раз, чтобы остановить)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_start_failed">Не удалось запустить AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan завершён (%1$d пресетов)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · пресеты 1–18</string>
+    <string name="toast_presets_overwritten">Пресеты перезаписаны (%1$d станций).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Возврат в стандартный режим…</string>
+    <string name="toast_recovering_fm_audio">Восстановление FM-аудио…</string>
+    <string name="toast_hw_eq_unsupported">Аппаратный EQ не поддерживается на этом устройстве</string>
+    <string name="toast_saved_to_slot">Сохранено в пресет %1$d</string>
 </resources>

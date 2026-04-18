@@ -358,20 +358,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">イコライザーは利用できません（ラジオエンジンが未起動）</string>
+    <string name="toast_radio_engine_not_started">ラジオエンジンが起動していません</string>
+    <string name="toast_no_gps_app">地図/GPS アプリが見つかりません</string>
+    <string name="toast_basic_no_engineering">基本モード：エンジニアリングメニューは利用できません</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
+    <string name="toast_autoscan_stopped">AutoScan を停止しました</string>
     <string name="toast_autoscan_slow">FM1 からのスロー AutoScan：局を検索中…（もう一度タップで停止）</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_start_failed">AutoScan を開始できませんでした</string>
+    <string name="toast_autoscan_finished">AutoScan 完了（プリセット %1$d 件）</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · プリセット 1–18</string>
+    <string name="toast_presets_overwritten">プリセットを上書きしました（%1$d 局）。</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">標準モードに戻ります…</string>
+    <string name="toast_recovering_fm_audio">FM オーディオを復旧中…</string>
+    <string name="toast_hw_eq_unsupported">この端末ではハードウェア EQ に対応していません</string>
+    <string name="toast_saved_to_slot">プリセット %1$d に保存しました</string>
 </resources>

@@ -388,20 +388,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Equalizer nem érhető el (rádiómotor nem fut)</string>
+    <string name="toast_radio_engine_not_started">Rádiómotor nem indult el</string>
+    <string name="toast_no_gps_app">Nem található térkép/GPS alkalmazás</string>
+    <string name="toast_basic_no_engineering">Alap mód: mérnöki menü nem elérhető</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
+    <string name="toast_autoscan_stopped">AutoScan leállítva</string>
     <string name="toast_autoscan_slow">Lassú AutoScan FM1-ről: keresés… (érintsd újra a leállításhoz)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_start_failed">Az AutoScan indítása sikertelen</string>
+    <string name="toast_autoscan_finished">AutoScan kész (%1$d preset)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · 1–18 preset</string>
+    <string name="toast_presets_overwritten">Presetek felülírva (%1$d állomás).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Vissza az alap módhoz…</string>
+    <string name="toast_recovering_fm_audio">FM hang visszaállítása…</string>
+    <string name="toast_hw_eq_unsupported">Hardveres EQ nem támogatott ezen az eszközön</string>
+    <string name="toast_saved_to_slot">Mentve a(z) %1$d. presetbe</string>
 </resources>
