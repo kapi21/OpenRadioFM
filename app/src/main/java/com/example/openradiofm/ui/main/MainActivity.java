@@ -95,8 +95,6 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     static final String TAG = "OpenRadioFm";
     private static final int PRESETS_COUNT = AppConstants.PRESETS_COUNT; // Fuente ├║nica global
-    /** Silenciar FM en llamadas (K706): {@link Manifest.permission#READ_PHONE_STATE} */
-    private static final int REQ_READ_PHONE_STATE_K706 = 1003;
 
     public static boolean isFactoryRadioHijackerAccessibilityEnabled(Context context) {
         try {
@@ -1017,7 +1015,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
                                 false)) {
                     getIntent().removeExtra(
                             com.example.openradiofm.services.FactoryRadioHijackerService.EXTRA_FROM_HIJACKER);
-                    scheduleK706McuListenerReassertAfterOem("from_hijacker_cold", 850L);
+                    IntentRouter.scheduleK706McuListenerReassertAfterOem(MainActivity.this, "from_hijacker_cold", 850L);
                 }
             };
 
@@ -1431,67 +1429,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         super.onNewIntent(intent);
         setIntent(intent);
         Log.d(TAG, "onNewIntent: App ya activa, refrescando parámetros (Single Instance).");
-        handleK706McuReassertFromHijackerIntent(intent);
-        handleWidgetDeepLinks(intent);
-    }
-
-    /**
-     * La radio OEM registra su propio {@code IMcuListener}; al volver con HiHack hay que volver a
-     * pedir telemetría MCU (RDS 0xB6/B7/…) para OpenRadioFM.
-     */
-    private void handleK706McuReassertFromHijackerIntent(Intent intent) {
-        if (intent == null || mMode != FmMode.FM_K706) return;
-        if (!intent.getBooleanExtra(
-                com.example.openradiofm.services.FactoryRadioHijackerService.EXTRA_FROM_HIJACKER, false)) {
-            return;
-        }
-        intent.removeExtra(com.example.openradiofm.services.FactoryRadioHijackerService.EXTRA_FROM_HIJACKER);
-        scheduleK706McuListenerReassertAfterOem("from_hijacker_warm", 400L);
-    }
-
-    private void scheduleK706McuListenerReassertAfterOem(String reason, long delayMs) {
-        mMainHandler.postDelayed(() -> {
-            if (isFinishing() || isDestroyed()) return;
-            if (mMode != FmMode.FM_K706 || !(mEngine instanceof K706Engine)) return;
-            try {
-                ((K706Engine) mEngine).reassertMcuTelemetryListener();
-                Log.i(TAG, "K706: reassert MCU listener (" + reason + ")");
-            } catch (Exception e) {
-                Log.w(TAG, "K706: reassert MCU listener falló (" + reason + ")", e);
-            }
-        }, delayMs);
-    }
-
-    private void handleWidgetDeepLinks(Intent intent) {
-        if (intent == null) return;
-        try {
-            if (intent.getBooleanExtra(com.example.openradiofm.widget.OpenRadioFmWidgetProvider.EXTRA_WIDGET_SHOW_INFO, false)) {
-                int freq = intent.getIntExtra("freq_khz", 0);
-                int band = intent.getIntExtra("band", 0);
-                String ps = intent.getStringExtra("ps");
-                String bandTxt;
-                if (band == BAND_FM1) bandTxt = "FM1";
-                else if (band == BAND_FM2) bandTxt = "FM2";
-                else if (band == BAND_FM3) bandTxt = "FM3";
-                else if (band == BAND_AM1) bandTxt = "AM1";
-                else if (band == BAND_AM2) bandTxt = "AM2";
-                else bandTxt = "FM1";
-                String freqTxt = (freq > 0)
-                        ? ((band == BAND_AM1 || band == BAND_AM2) ? (freq + " kHz") : String.format(java.util.Locale.US, "%.2f MHz", freq / 1000.0))
-                        : "—";
-                String psTxt = (ps != null && !ps.trim().isEmpty()) ? ps.trim() : "—";
-                new android.app.AlertDialog.Builder(this)
-                        .setTitle("OpenRadioFM")
-                        .setMessage(bandTxt + " · " + freqTxt + "\n" + psTxt)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-            }
-            if (intent.getBooleanExtra(com.example.openradiofm.widget.OpenRadioFmWidgetProvider.EXTRA_WIDGET_OPEN_FAVORITES_DIALOG, false)) {
-                if (mDialogManager != null) {
-                    mDialogManager.showSaveLoadFavoritesDialog();
-                }
-            }
-        } catch (Exception ignored) {}
+        IntentRouter.dispatchNewIntent(this, intent);
     }
 
     @Override
@@ -2433,7 +2371,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             requestPermissions(new String[] {
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
                     android.Manifest.permission.READ_EXTERNAL_STORAGE
-            }, 1001);
+            }, IntentRouter.REQ_STORAGE_IMPORT_EXPORT);
         }
     }
 
@@ -2451,30 +2389,13 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             ((K706Engine) mEngine).registerPhoneStateListenerIfPermitted();
             return;
         }
-        requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE}, REQ_READ_PHONE_STATE_K706);
+        requestPermissions(new String[]{Manifest.permission.READ_PHONE_STATE}, IntentRouter.REQ_READ_PHONE_STATE_K706);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1001) {
-            if (grantResults.length > 0 && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                showToast(getString(R.string.toast_permissions_granted));
-                if (mDialogManager != null)
-                    mDialogManager.showSaveLoadFavoritesDialog();
-            } else {
-                showToast(getString(R.string.toast_storage_permission_needed));
-            }
-        } else if (requestCode == REQ_READ_PHONE_STATE_K706) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (mEngine instanceof K706Engine) {
-                    ((K706Engine) mEngine).registerPhoneStateListenerIfPermitted();
-                }
-                showToast(getString(R.string.toast_phone_mute_on_call));
-            } else {
-                showToast(getString(R.string.toast_phone_no_permission_fm));
-            }
-        }
+        IntentRouter.dispatchPermissionsResult(this, requestCode, permissions, grantResults);
     }
 
     // V15: Wrappers de compatibilidad para diálogos llamados desde otras clases

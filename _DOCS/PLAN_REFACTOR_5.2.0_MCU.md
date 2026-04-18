@@ -98,13 +98,13 @@ Skins y fuentes siguen viéndose **como antes**; el código está más **agrupad
 
 ## Fase 5 — Intents, widget, permisos
 
-- [ ] Centralizar **`onNewIntent`**, deep links de widget, reassert K706 hijacker en **`IntentRouter`** (o clase dedicada)
-- [ ] Agrupar **`onRequestPermissionsResult`** y helpers de almacenamiento
-- [ ] Comprobar **`WidgetBroadcastManager`** sigue recibiendo datos desde un solo sitio
+- [x] **`IntentRouter`** (`app/.../IntentRouter.java`): **`dispatchNewIntent`** (widget + reassert MCU K706/hijacker), **`scheduleK706McuListenerReassertAfterOem`**, **`dispatchPermissionsResult`**; códigos **`REQ_STORAGE_IMPORT_EXPORT`** / **`REQ_READ_PHONE_STATE_K706`**.
+- [x] **`MainActivity`**: `onNewIntent` / `onRequestPermissionsResult` delegan; **`requestStoragePermissions`** usa el código nombrado.
+- [x] **`WidgetBroadcastManager.sendUpdate`**: solo desde **`MainActivity.sendWidgetUpdate`** (vía `RadioUiHost` / `FrequencyChangeCoordinator`); sin nuevas rutas en este refactor.
 
-### Para el usuario (Fase 5 — pendiente)
+### Para el usuario (Fase 5 — cierre técnico parcial)
 
-*(Completar al cerrar la fase.)* Objetivo: **abrir la app desde el widget o accesos del sistema** de forma más fiable; permisos y avisos más claros. Menos comportamientos «solo en mi radio» por rutas de entrada distintas.
+Comportamiento esperado **igual** al abrir desde widget o volver con el hijacker K706. El cambio es **organización del código** para revisar entradas y permisos en un solo sitio. Conviene **probar** widget “info” / favoritos y permisos de almacenamiento + **READ_PHONE_STATE** en K706.
 
 ---
 
