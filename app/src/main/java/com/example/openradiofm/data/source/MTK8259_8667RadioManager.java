@@ -97,7 +97,7 @@ public class MTK8259_8667RadioManager {
      * Referencia APK OpenRadioFM v5.0 (Stability Beta): {@code setOnlineStreamingActive} en el engine
      * era no-op; solo {@code switchToAndroidAudio()} llamaba a {@code CloseRadioCh()} (sin
      * {@code EnterMode}). Si Csaba/OEM reporta regresión con esta ruta, valorar fallback solo
-     * {@code CloseRadioCh()} o pref OEM (comparar con smali de una descompilación local, no versionada).
+     * {@code CloseRadioCh()} o pref OEM (comparar con smali en {@code _ASSETS/v5_apktool}).
      */
     public void switchMixerToAndroidAudio() {
         try {
@@ -284,14 +284,14 @@ public class MTK8259_8667RadioManager {
     }
 
     /**
-     * Establecer una banda específica (0-2 FM, 3-4 AM)
+     * Establecer una banda específica (0-2 FM, 3-4 AM). Añadido para paridad {@link RadioEngine#setBand(int)} (v5.x).
      */
     public void setBand(int band) throws RemoteException {
         if (mTsSpeechRadio == null) return;
-        
+
         boolean targetIsAm = (band >= 3);
         boolean currentIsAm = isAmBand();
-        
+
         if (targetIsAm != currentIsAm) {
             if (targetIsAm) {
                 mTsSpeechRadio.onRadioAM();
@@ -299,9 +299,7 @@ public class MTK8259_8667RadioManager {
                 mTsSpeechRadio.onRadioFM();
             }
         } else {
-            // Ya estamos en el grupo correcto, pero quizás queramos forzar el ciclo
-            // para llegar a FM2/FM3 si el HW lo soporta así.
-            mTsSpeechRadio.onRadioFM(); // Re-trigger suele ciclar en FM
+            mTsSpeechRadio.onRadioFM();
         }
     }
 
