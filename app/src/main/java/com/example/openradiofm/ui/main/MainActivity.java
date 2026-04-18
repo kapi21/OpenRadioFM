@@ -224,6 +224,10 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         }
     };
 
+    void removeHcnBindAfterHandoffCallbacks() {
+        mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
+    }
+
     private static final long MT8163_MS_AFTER_SESSION_HANDOFF_BEFORE_HCN_BIND = 550L;
 
     /**
@@ -246,7 +250,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         } catch (Exception e) {
             android.util.Log.w(TAG, "requestHcnBindWithMediaSessionHandoff", e);
         }
-        mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
+        removeHcnBindAfterHandoffCallbacks();
         mMainHandler.postDelayed(mHcnBindAfterHandoffRunnable, MT8163_MS_AFTER_SESSION_HANDOFF_BEFORE_HCN_BIND);
     }
 
@@ -748,144 +752,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * V17.0: Configura el toggle de Radio Online vs Radio FM.
      */
     public void setupOnlineStreaming() {
-        mOnlineStreamManager = new com.example.openradiofm.ui.main.OnlineStreamManager(this, mPlaybackManager);
-        mOnlineStreamManager.setListener(new com.example.openradiofm.ui.main.OnlineStreamManager.StreamListener() {
-            @Override
-            public void onStreamStatusChanged(boolean isLoading, boolean isPlaying) {
-                runOnUiThread(() -> updateDataActivityUI());
-            }
-
-            @Override
-            public void onStreamError(String message) {
-                runOnUiThread(() -> showToast(message));
-            }
-
-            @Override
-            public void onBeforeStreamStart() {
-                mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
-            }
-
-            @Override
-            public void onStreamStoppedMt8163() {
-                // OEM: conectarRadio() al instante tras streaming ÔåÆ SourceService.forceStopPackage.
-                // Ventana corta sin bind; luego reconexi├│n AIDL (o al volver a primer plano).
-                com.example.openradiofm.data.source.MT8163Engine.setBlockHcnServiceBindAfterStreamEnd(true);
-                try {
-                    boolean mcuDirect = false;
-                    try { mcuDirect = getSharedPreferences("RadioPresets", MODE_PRIVATE).getBoolean("pref_mt8163_mcu_direct", false); }
-                    catch (Exception ignored) {}
-                    if (!mcuDirect) {
-                        android.content.Intent wakeIntent = new android.content.Intent("com.hcn.autoradio.FMRADIO_START");
-                        wakeIntent.setPackage("com.hcn.autoradio");
-                        wakeIntent.addFlags(android.content.Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
-                        sendBroadcast(wakeIntent);
-                    }
-                } catch (Exception ignored) {}
-                mMainHandler.removeCallbacks(mHcnBindAfterHandoffRunnable);
-                // Reconexión FMPlug tras ~12s: solo MT8163Engine (handoff MediaSession + bind).
-                // requestHcnBindWithMediaSessionHandoff + start() aquí competía con el motor y
-                // SourceService.forceStopPackage(openradiofm) al quedar com.hcn.autoradio activo.
-            }
-        });
-
-        if (ivDataActivity != null) {
-            // Feedback visual al pulsar (el drawable del pack no usa selector de estado).
-            ivDataActivity.setOnTouchListener((v, event) -> {
-                if (mUiMediator.ivDataActivityIcon == null) 
-                if (mUiMediator.ivDataActivityIcon == null) return false;
-                switch (event.getActionMasked()) {
-                    case MotionEvent.ACTION_DOWN:
-                        mUiMediator.ivDataActivityIcon.setAlpha(0.42f);
-                        break;
-                    case MotionEvent.ACTION_UP:
-                    case MotionEvent.ACTION_CANCEL:
-                        mUiMediator.ivDataActivityIcon.setAlpha(1.0f);
-                        break;
-                    default:
-                        break;
-                }
-                return false;
-            });
-
-            ivDataActivity.setOnClickListener(v -> {
-                // V21.4: Permitir siempre detener el stream si ya est├í sonando, independientemente de si la radio nativa muri├│ (freq <= 0)
-                if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
-                    mOnlineStreamManager.stopStream();
-                    showToast(getString(R.string.toast_returning_fm));
-                    return;
-                }
-
-                int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
-                if (freq <= 0) return;
-
-                // getStationInfo + resoluci├│n Supabase en hilo de fondo (URL a menudo a├║n no en cach├®).
-                final int bgGen = getUiWorkGeneration();
-                com.example.openradiofm.util.AppIoExecutor.execute(() -> {
-                    if (isFinishing() || isDestroyed()) return;
-                    if (getUiWorkGeneration() != bgGen) return;
-                    try {
-                        com.example.openradiofm.data.model.RadioStation station =
-                                mRepository.getStationInfo(freq, null);
-                        String url = (station != null) ? station.getStreamUrl() : null;
-                        if (url == null || url.isEmpty()) {
-                            runOnUiThread(() -> {
-                                if (!isFinishing()) {
-                                    showToast(getString(R.string.toast_stream_searching));
-                                }
-                            });
-                            url = mRepository.resolveStreamUrlForFrequency(freq);
-                        }
-                        final String streamUrl = url;
-                        runOnUiThread(() -> {
-                            if (isFinishing() || isDestroyed()) return;
-                            if (getUiWorkGeneration() != bgGen) return;
-                            if (streamUrl != null && !streamUrl.isEmpty()) {
-                                mOnlineStreamManager.startStream(streamUrl);
-                                showToast(getString(R.string.toast_stream_starting));
-                            } else {
-                                showToast(getString(R.string.toast_stream_unavailable));
-                            }
-                        });
-                    } catch (Exception e) {
-                        Log.e(TAG, "Streaming: getStationInfo fall├│", e);
-                        runOnUiThread(() -> {
-                            if (!isFinishing()) { showToast(getString(R.string.toast_station_load_error)); }
-                        });
-                    }
-                });
-            });
-
-            // V17.1: Pulsaci├│n larga para forzar recarga (borrar cach├®) de Supabase
-            ivDataActivity.setOnLongClickListener(v -> {
-                int freq = (mEngine != null) ? mEngine.getCurrentFreq() : -1;
-                if (freq > 0) {
-                    showToast(getString(R.string.toast_station_cache_sync));
-                    mRepository.clearCacheForFrequency(freq);
-                    
-                    // Asegurar que forzamos tambi├®n la recarga visual deteniendo el posible stream actual
-                    if (mOnlineStreamManager != null && (mOnlineStreamManager.isPlaying() || mOnlineStreamManager.isLoading())) {
-                        mOnlineStreamManager.stopStream();
-                    }
-
-                    // Forzar recarga en segundo plano
-                    final int bgGenCache = getUiWorkGeneration();
-                    com.example.openradiofm.util.AppIoExecutor.execute(() -> {
-                        if (isFinishing() || isDestroyed()) return;
-                        if (getUiWorkGeneration() != bgGenCache) return;
-                        mRepository.getStationInfo(freq, logoUrl -> {
-                            // V18.6.4: Preservar nombre RDS actual al recargar
-                            String name = (mRdsManager != null) ? mRdsManager.getDisplayName(freq) : mLastPs;
-                            runOnUiThread(() -> {
-                                if (isFinishing() || isDestroyed()) return;
-                                if (getUiWorkGeneration() != bgGenCache) return;
-                                updateFrequencyDisplay(freq, name);
-                            });
-                        });
-                    });
-                }
-                return true;
-            });
-        }
+        StreamingUiCoordinator.install(this);
     }
 
     // Blink / alpha / tint del cloud movidos a DataActivityIndicatorManager

@@ -11,8 +11,8 @@
 
 ## Criterios de éxito por fase
 
-- [ ] Compila: `./gradlew :app:assembleDebug`
-- [ ] Cadenas: `./gradlew :app:auditStrings`
+- [x] Compila: `./gradlew :app:assembleDebug` (última verificación en máquina de desarrollo)
+- [x] Cadenas: `./gradlew :app:auditStrings`
 - [ ] Prueba manual mínima: **K706**, **MT8163**, **QS6** (sintonía, preset, mute, segundo plano si aplica)
 - [ ] Sin regresiones conocidas en los flujos tocados (documentar en CHANGELOG *Unreleased* si cambia comportamiento intencionado)
 
@@ -63,19 +63,19 @@ La pantalla y la radio deben comportarse **igual que antes** al abrir la app, ca
 ## Fase 2 — Presentación de emisora (freq / RDS / logo / coalescing)
 
 - [x] Agrupar **`handleFrequencyChange`**, coalescencia ~280 ms y trabajo pesado asociado en **`FrequencyChangeCoordinator`** (`app/.../FrequencyChangeCoordinator.java`); `MainActivity` delega; creado en **`MainActivityBootstrap.createEarlyCoordinators`**; **`cancelPendingHeavy`** en `onDestroy`.
-- [ ] Mantener **`StatusRefreshCoordinator`** como colaborador (orden reset RDS + MHz antes del executor) — sin cambio; revisar tras más extracciones.
+- [x] **`StatusRefreshCoordinator`**: orden crítico RDS + MHz antes del executor **sin cambio**; sigue siendo el colaborador correcto tras `FrequencyChangeCoordinator` / `finishUserTuneFromUi`.
 - [x] Unificar efectos de estado: **`FrequencyChangeCoordinator.finishUserTuneFromUi(freq, isQs6)`** tras **`MainActivity.gotoFreq`** (misma tubería pesada que el motor, sin coalescencia; sin historial; QS6 no pisa PS primado; durante escaneo sigue persistiendo como antes).
 - [ ] Validar en **QS6** (ráfagas OEM) y **K706** (zapping rápido)
 
-### Para el usuario (Fase 2 — pendiente)
+### Para el usuario (Fase 2 — cierre técnico; HW pendiente)
 
-*(Completar al cerrar la fase.)* Objetivo: **nombre de emisora, RDS y logo más estables** al cambiar de frecuencia rápido, sin parpadeos o textos «pegados» de la emisora anterior, sobre todo en radios con muchos avisos del sistema.
+La intención sigue siendo **nombre, RDS y logo más estables** al zappear o con ráfagas del sistema. El código ya concentra coalescencia, trabajo pesado y la ruta **`gotoFreq`** en **`FrequencyChangeCoordinator`**. Falta **confirmar en radio real (QS6 / K706)** que no hay regresiones; si todo va bien, notarás sobre todo **menos “PS pegado” o logos cruzados** en escenarios que antes eran delicados.
 
 ---
 
 ## Fase 3 — Streaming y conectividad
 
-- [ ] Extraer **`setupOnlineStreaming`** y lógica relacionada a **`StreamingUiCoordinator`** (o extensión de `OnlineStreamManager`)
+- [x] **`setupOnlineStreaming`** delega en **`StreamingUiCoordinator.install(MainActivity)`** (`app/.../StreamingUiCoordinator.java`); **`MainActivity.removeHcnBindAfterHandoffCallbacks()`** expone cancelación del runnable MT8163 al paquete `ui.main`.
 - [ ] Separar claramente: **FM hardware** vs **ExoPlayer / red**
 - [ ] Indicador de actividad de datos / offline: API única desde el nuevo módulo
 
