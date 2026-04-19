@@ -27,6 +27,11 @@
     <string name="bg_pure_black">Tiszta Fekete</string>
     <string name="bg_fixed_image">Rögzített kép (background.png)</string>
     <string name="bg_dynamic_logo">Adó logója (Dinamikus)</string>
+    <string name="dynamic_bg_aspect_title">Dinamikus háttér képarány</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (nincs vágás)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (kitölti, vág)</string>
+    <string name="toast_dynamic_bg_letterbox">Dinamikus háttér: letterbox (nincs vágás)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Dinamikus háttér: 16:9 (kitölti, vág)</string>
 
     <!-- Font Names -->
     <string name="font_default">Alapértelmezett (Rendszer)</string>
@@ -42,6 +47,10 @@
     <string name="night_mode_auto">Automatikus Éjszakai Mód</string>
     <string name="relief_hd">HD Domborítás</string>
     <string name="save_history">Adóelőzmények mentése</string>
+    <string name="save_history_summary_on">Az adók mentésre kerülnek; a lista megnyitható (pl. RDS név megérintése).</string>
+    <string name="save_history_summary_off">Ki: nincs mentés, előzmény párbeszéd sem jelenik meg.</string>
+    <string name="toast_history_save_disabled">Kapcsold be az „Adóelőzmények mentése” opciót a lista megnyitásához.</string>
+    <string name="hardware_automation_section_header">(Hardveres automatizálás) (teszt alatt)</string>
     <string name="online_logos">Online Logók</string>
     <string name="status_bar_v2">Állapotsor megjelenítése</string>
     <string name="status_bar_enabled">✅ Állapotsor engedélyezve</string>
@@ -78,7 +87,7 @@
     <string name="logos_online_disabled">❌ Online logók letiltva</string>
     <string name="under_study">Fejlesztés alatt</string>
     <string name="night_mode_manual_blocked">Deaktiválja az automatikus éjszakai módot a téma manuális kiválasztásához</string>
-    <string name="auto_hide_controls">Vezérlők automatikus elrejtése</string>
+    <string name="auto_hide_controls">Vezérlők automatikus elrejtése (3. elrendezés, vízszintes)</string>
     <string name="auto_hide_enabled">✅ Automatikus elrejtés engedélyezve</string>
     <string name="auto_hide_disabled">❌ Automatikus elrejtés letiltva</string>
     <string name="preset_scroll_loop_title">Végtelen preset görgetés</string>

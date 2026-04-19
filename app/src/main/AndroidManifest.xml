@@ -120,23 +120,36 @@
             </intent-filter>
         </receiver>
 
-        <!-- K706/QuickFish: el widget del launcher manda broadcasts "customize/radio/*" a la radio OEM -->
+        <!--
+          K706/QuickFish: el widget del launcher manda broadcasts "customize/radio/*" a la radio OEM.
+          IMPORTANTE: este intent-filter es crítico para el control desde el widget OEM.
+          Cambiar/limpiar acciones (pre/prev/previous/seek_*/mute/pause/close) puede romper el widget.
+          Antes de modificarlo, notificar al desarrollador y validar en hardware K706.
+        -->
         <receiver
             android:name=".receiver.OemRadioWidgetReceiver"
             android:exported="true">
             <intent-filter>
                 <!-- Variantes con "/" inicial -->
                 <action android:name="/customize/radio/pre" />
+                <action android:name="/customize/radio/prev" />
+                <action android:name="/customize/radio/previous" />
                 <action android:name="/customize/radio/next" />
                 <action android:name="/customize/radio/seek_up" />
                 <action android:name="/customize/radio/seek_down" />
                 <action android:name="/customize/radio/close" />
+                <action android:name="/customize/radio/mute" />
+                <action android:name="/customize/radio/pause" />
                 <!-- Variantes sin "/" inicial -->
                 <action android:name="customize/radio/pre" />
+                <action android:name="customize/radio/prev" />
+                <action android:name="customize/radio/previous" />
                 <action android:name="customize/radio/next" />
                 <action android:name="customize/radio/seek_up" />
                 <action android:name="customize/radio/seek_down" />
                 <action android:name="customize/radio/close" />
+                <action android:name="customize/radio/mute" />
+                <action android:name="customize/radio/pause" />
             </intent-filter>
         </receiver>
 

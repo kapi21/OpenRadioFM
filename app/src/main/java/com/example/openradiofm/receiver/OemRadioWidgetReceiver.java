@@ -12,16 +12,25 @@ import com.example.openradiofm.service.RadioMediaService;
  * K706/QuickFish launcher widgets suelen mandar broadcasts "customize/radio/*" a la radio OEM.
  * Este receiver los intercepta para que OpenRadioFM pueda reaccionar (seek/mute) incluso si
  * el launcher no envía ACTION_MEDIA_BUTTON a nuestra MediaSession.
+ *
+ * IMPORTANTE (K706): este puente es crítico para el control desde el widget OEM.
+ * - Las acciones y su mapeo varían por ROM/launcher (pre/prev/previous/seek_up/seek_down/mute/pause/close).
+ * - Modificar el intent-filter del manifest o este switch puede romper el control del widget.
+ * Antes de cambiarlo, notificar al desarrollador y validar en hardware K706/QuickFish.
  */
 public class OemRadioWidgetReceiver extends BroadcastReceiver {
     private static final String TAG = "OemRadioWidgetRx";
 
     // Algunas ROMs envían el action con o sin "/" inicial.
     private static final String ACT_PRE = "customize/radio/pre";
+    private static final String ACT_PREV = "customize/radio/prev";
+    private static final String ACT_PREVIOUS = "customize/radio/previous";
     private static final String ACT_NEXT = "customize/radio/next";
     private static final String ACT_SEEK_UP = "customize/radio/seek_up";
     private static final String ACT_SEEK_DOWN = "customize/radio/seek_down";
     private static final String ACT_CLOSE = "customize/radio/close";
+    private static final String ACT_MUTE = "customize/radio/mute";
+    private static final String ACT_PAUSE = "customize/radio/pause";
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -44,10 +53,14 @@ public class OemRadioWidgetReceiver extends BroadcastReceiver {
                 svcAction = RadioMediaService.ACTION_WIDGET_SEEK_UP;
                 break;
             case ACT_PRE:
+            case ACT_PREV:
+            case ACT_PREVIOUS:
             case ACT_SEEK_DOWN:
                 svcAction = RadioMediaService.ACTION_WIDGET_SEEK_DOWN;
                 break;
             case ACT_CLOSE:
+            case ACT_MUTE:
+            case ACT_PAUSE:
                 // “Cerrar” OEM suele equivaler a pause/mute.
                 svcAction = RadioMediaService.ACTION_WIDGET_TOGGLE_MUTE;
                 break;

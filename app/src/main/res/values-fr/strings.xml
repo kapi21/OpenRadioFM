@@ -61,6 +61,11 @@
     <string name="bg_pure_black">Noir Pur</string>
     <string name="bg_fixed_image">Image Fixe (background.png)</string>
     <string name="bg_dynamic_logo">Logo Station (Dynamique)</string>
+    <string name="dynamic_bg_aspect_title">Cadrage du fond dynamique</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (sans recadrage)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (remplir, recadre)</string>
+    <string name="toast_dynamic_bg_letterbox">Fond dynamique : letterbox (sans recadrage)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Fond dynamique : 16:9 (remplir, recadre)</string>
     <string name="font_default">Défaut (Système)</string>
     <string name="font_bebas">Robotique (Bebas)</string>
     <string name="font_digital">Digital (LED)</string>
@@ -72,6 +77,10 @@
     <string name="night_mode_auto">Mode Nuit Automatique</string>
     <string name="relief_hd">Relief HD</string>
     <string name="save_history">Enregistrer l\'Historique</string>
+    <string name="save_history_summary_on">Les stations sont enregistrées ; vous pouvez ouvrir la liste (ex. : appuyer sur le nom RDS).</string>
+    <string name="save_history_summary_off">Désactivé : pas d\'historique ni de dialogue associé.</string>
+    <string name="toast_history_save_disabled">Activez « Enregistrer l\'historique » dans les options pour voir la liste.</string>
+    <string name="hardware_automation_section_header">(Automatisation matérielle) (en test)</string>
     <string name="enable_gestures_beta">Activer Gestes (Swipe) (beta)</string>
     <string name="online_logos">Logos en Ligne</string>
     <string name="night_mode_enabled">✅ Mode Nuit Automatique activé</string>
@@ -83,7 +92,7 @@
     <string name="logos_online_enabled">✅ Logos en ligne activés</string>
     <string name="logos_online_disabled">❌ Logos en ligne désactivés</string>
     <string name="night_mode_manual_blocked">Désactivez le mode nuit automatique pour choisir le skin manuellement</string>
-    <string name="auto_hide_controls">Masquer les commandes automatiquement</string>
+    <string name="auto_hide_controls">Masquer les commandes automatiquement (layout 3 horizontal)</string>
     <string name="auto_hide_enabled">✅ Masquage automatique activé</string>
     <string name="auto_hide_disabled">❌ Masquage automatique désactivé</string>
     <string name="preset_scroll_loop_title">Défilement infini des préréglages</string>

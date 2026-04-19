@@ -38,6 +38,13 @@ public class ControlPanelManager {
                     mActivity.showToast(mActivity.getString(R.string.toast_eq_unavailable));
                 }
             });
+            btnEq.setOnLongClickListener(v -> {
+                if (mActivity.mEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
+                    com.example.openradiofm.data.source.QS6Engine.openAndroidAudioEffectPanel(mActivity);
+                    return true;
+                }
+                return false;
+            });
         }
 
         // Mute Logic delegada a PlaybackManager

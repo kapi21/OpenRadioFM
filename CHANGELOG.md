@@ -1,5 +1,18 @@
 ## [Unreleased] - MCU2
 
+(sin entradas)
+
+## [5.2.0] - 2026-04-19
+
+### Estabilización Crítica y Restauración de Motores Legados
+- **QS6 (Nowada)**: Implementación de **Modo Master** (sincronización directa con `Settings.System`), cierre limpio del canal de audio y **fix de muteo estabilizado** mediante conmutación de fuentes.
+- **MT8163 (HCN)**: Revertido a la implementación original estable (HCN native AIDL). Solucionados problemas de regresión en sintonía, RDS y mutes espurios.
+- **MTK8259/8667 (Topway)**: Restaurado sistema de doble vínculo (`ITsCommon` + `ITsSpeechRadio`) para total compatibilidad con MainUI.apk.
+- **Jancar (8227L)**: Revertido al motor original basado en el servicio nativo de Jancar.
+- **Mute Legado (MT8163)**: Restaurada lógica de audio v18.6 (mantenimiento de `fm_radio_on=1`) para evitar ruidos de conmutación.
+- **Paridad RadioEngine**: Implementado `setBand(int)` en todos los motores restaurados para compatibilidad con la interfaz unificada v5.x.
+- **Correcciones de Compilación**: Resueltos 5 fallos críticos de símbolos y métodos abstractos derivados de la restauración de código antiguo.
+
 ### QS6 / NWD — RDS, espejo System y bucles OEM (abril 2026)
 - **Operativa**: si RDS o el estado del sintonizador queda desalineado respecto al firmware NWD, **workaround verificado en unidad**: usar los **ajustes de la radio del dispositivo** (OEM) para activar o corregir RDS u opciones equivalentes; la app y `KernelService` siguen siendo la vía preferida en desarrollo. Documentado en `README.md` (*Problemas conocidos*) y `QS6_MCU_KERNELSERVICE_INFORME.md`.
 - **`QS6Engine`**: en **AutoScan lento** se prioriza **AIDL** para `tune`/`seek` (`setAutoScanOemPreferred`, enganchado desde `ScanManager`); fuera de AutoScan se mantiene **MCU primero** donde aplica. Limpieza de **RT** al cambiar frecuencia o banda por callback AIDL. Espejo opcional a `Settings.System` con `canWrite` (M+) y **un solo log** si no hay permiso de escritura.
@@ -81,17 +94,7 @@
 - **FactoryRadioHijackerService**: solicitud reforzada de `FLAG_REQUEST_FILTER_KEY_EVENTS` al conectar y log a nivel INFO para diagnósticos en ROMs que filtran DEBUG.
 - **Config**: `accessibility_service_config.xml` pasa a `typeAllMask` + `canRequestFilterKeyEvents=true` para mejorar compatibilidad con unidades OEM.
 - **UI / fondo dinámico**: `ivDynamicBackground` pasa a **fitCenter** (layouts default y `sw720dp`); `LogoManager` decodifica el bitmap al tamaño de pantalla (tope **1600 px** en el lado largo) y usa **fitCenter** en Glide para contener el arte sin recorte tipo centerCrop.
-- **Versión app (MCU2)**: `versionCode` **39**, `versionName` **5.1.7**.
-
-## [5.2.0] - 2026-04-12
-### Estabilización Crítica y Restauración de Motores Legados
-- **QS6 (Nowada)**: Implementación de **Modo Master** (sincronización directa con `Settings.System`), cierre limpio del canal de audio y **fix de muteo estabilizado** mediante conmutación de fuentes.
-- **MT8163 (HCN)**: Revertido a la implementación original estable (HCN native AIDL). Solucionados problemas de regresión en sintonía, RDS y mutes espurios.
-- **MTK8259/8667 (Topway)**: Restaurado sistema de doble vínculo (`ITsCommon` + `ITsSpeechRadio`) para total compatibilidad con MainUI.apk.
-- **Jancar (8227L)**: Revertido al motor original basado en el servicio nativo de Jancar.
-- **Mute Legado (MT8163)**: Restaurada lógica de audio v18.6 (mantenimiento de `fm_radio_on=1`) para evitar ruidos de conmutación.
-- **Paridad RadioEngine**: Implementado `setBand(int)` en todos los motores restaurados para compatibilidad con la interfaz unificada v5.x.
-- **Correcciones de Compilación**: Resueltos 5 fallos críticos de símbolos y métodos abstractos derivados de la restauración de código antiguo.
+- **Versión app (MCU2)**: `versionCode` **40**, `versionName` **5.2.0**.
 
 ## [5.1.8] - 2026-04-12
 ### Solucionado

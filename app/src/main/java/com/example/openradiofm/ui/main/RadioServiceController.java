@@ -32,6 +32,26 @@ public class RadioServiceController {
     /** Evita ráfagas de bind a com.hcn.autoradio (varias instancias de este controller). */
     private static final Object sMt8163StartLock = new Object();
     private static long sLastMt8163StartWallMs;
+    /** MT8163/HCN: mientras un bind está en vuelo, no reintentar (evita doble bind en onCreate/onResume). */
+    private static boolean sMt8163BindInFlight;
+    private static long sMt8163BindInFlightSinceElapsedMs;
+    private static final long MT8163_BIND_IN_FLIGHT_SUPPRESS_MS = 8000L;
+
+    /** Visible para LifecycleCoordinator: evita confundir cold start con force-stop. */
+    public static boolean isMt8163HcnBindInFlight() {
+        synchronized (sMt8163StartLock) {
+            if (!sMt8163BindInFlight) return false;
+            long now = SystemClock.elapsedRealtime();
+            long since = sMt8163BindInFlightSinceElapsedMs > 0 ? (now - sMt8163BindInFlightSinceElapsedMs) : 0L;
+            if (since >= 0L && since < MT8163_BIND_IN_FLIGHT_SUPPRESS_MS) {
+                return true;
+            }
+            // Timeout: permitir reintento y no bloquear onResume.
+            sMt8163BindInFlight = false;
+            sMt8163BindInFlightSinceElapsedMs = 0L;
+            return false;
+        }
+    }
 
     /**
      * Motor instanciado localmente (QS6/K706) compartido entre MainActivity y RadioMediaService.
@@ -175,6 +195,14 @@ public class RadioServiceController {
             Log.d(TAG, "Servicio conectado: " + name.flattenToShortString());
             mRadioService = IRadioServiceAPI.Stub.asInterface(service);
             mBound = true;
+            try {
+                if ("com.hcn.autoradio".equals(name.getPackageName())) {
+                    synchronized (sMt8163StartLock) {
+                        sMt8163BindInFlight = false;
+                        sMt8163BindInFlightSinceElapsedMs = 0L;
+                    }
+                }
+            } catch (Exception ignored) {}
 
             // Re-evaluar modo basado en el paquete conectado
             MainActivity.FmMode newMode = MainActivity.FmMode.FM_BASICO;
@@ -195,6 +223,14 @@ public class RadioServiceController {
             Log.w(TAG, "Servicio DESCONECTADO (Muerte o force-stop): " + name.flattenToShortString());
             mRadioService = null;
             mBound = false;
+            try {
+                if ("com.hcn.autoradio".equals(name.getPackageName())) {
+                    synchronized (sMt8163StartLock) {
+                        sMt8163BindInFlight = false;
+                        sMt8163BindInFlightSinceElapsedMs = 0L;
+                    }
+                }
+            } catch (Exception ignored) {}
             if (mListener != null) {
                 mListener.onServiceDisconnected();
             }
@@ -353,6 +389,20 @@ public class RadioServiceController {
                     return;
                 }
             }
+            synchronized (sMt8163StartLock) {
+                if (sMt8163BindInFlight) {
+                    long now = SystemClock.elapsedRealtime();
+                    long since = sMt8163BindInFlightSinceElapsedMs > 0 ? (now - sMt8163BindInFlightSinceElapsedMs) : 0L;
+                    if (since >= 0L && since < MT8163_BIND_IN_FLIGHT_SUPPRESS_MS) {
+                        Log.w(TAG, "MT8163: start() suprimido (bind HCN en vuelo hace " + since + "ms)");
+                        return;
+                    } else {
+                        // Timeout: permitimos reintento.
+                        sMt8163BindInFlight = false;
+                        sMt8163BindInFlightSinceElapsedMs = 0L;
+                    }
+                }
+            }
         }
 
         // Post-streaming en ROM OEM: bind a com.hcn.autoradio desde aquí dispara
@@ -448,6 +498,12 @@ public class RadioServiceController {
             if (mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE)) {
                 Log.d(TAG, "Vinculando a proveedor: " + provider[0]);
                 mBound = true;
+                if ("com.hcn.autoradio".equals(provider[0])) {
+                    synchronized (sMt8163StartLock) {
+                        sMt8163BindInFlight = true;
+                        sMt8163BindInFlightSinceElapsedMs = SystemClock.elapsedRealtime();
+                    }
+                }
                 return true;
             }
         } catch (Exception ignored) {

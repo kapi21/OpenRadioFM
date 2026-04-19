@@ -24,6 +24,7 @@
 - [x] Contrato **`RadioUiHost`**: `app/.../ui/main/RadioUiHost.java`; **`MainActivity`** lo implementa.
 - [x] Coordinadores migrados al contrato (primera tanda): **`LifecycleCoordinator`**, **`HardwareKeyCoordinator`**, **`SignalMeterCoordinator`** (`RadioUiHost` en constructor; sin cambio de comportamiento).
 - [x] **`StatusRefreshCoordinator`** y **`EngineCallbackCoordinator`**: constructor `RadioUiHost`; `RadioUiHost` ampliado con getters/setters y operaciones de UI que antes leían campos públicos de `MainActivity`.
+- [x] **`FrequencyChangeCoordinator`**: constructor `RadioUiHost` (2026-04-19); métodos nuevos en el host para guardas de arranque, ventana nube post-sintonía, transición RDS/logo e historial.
 - [ ] Resto de `*Coordinator` / diálogos / managers: siguen con **`MainActivity`** donde aún no hay método en el host; migración incremental en siguientes fases.
 
 ### API `RadioUiHost` (consumidor → métodos relevantes)
@@ -35,10 +36,82 @@
 | `SignalMeterCoordinator` | `getRadioPresets`, `getThemeManager`, `getRadioEngine`, `isRdsLockHeld`, `getUiCurrentBand` |
 | `StatusRefreshCoordinator` | Casi todo el bloque ampliado de **«Coordinación UI motor / refresco»** en `RadioUiHost` (motor, prefs, ejecutor de emisora, RDS, logo, widget, modo noche, medidor, `findHostViewById`, etc.). |
 | `EngineCallbackCoordinator` | Mismo bloque ampliado + `getRadioSessionController`, diálogos de ingeniería, handlers HW; sustituye acceso directo a campos de `MainActivity`. |
+| `FrequencyChangeCoordinator` | `RadioUiHost` (2026-04-19): handlers, motor, prefs, RDS/logo reset, streaming, widget, guardas de arranque (`getStartupFreqPersistGuards`), `beginRdsLogoTransitionAfterTune`, `armCloudContribFreqSettleWindow`, etc. |
 
 Puente Activity: `getHostContext`, `isHostFinishing`, `isHostDestroyed`, `runOnHostUiThread`, `isHostChangingConfigurations`, envío de intents/broadcasts.
 
 **Nota:** `getUiCurrentBand()` expone el índice de banda **`mCurrentBand`** de la UI; no confundir con `MainActivity.getCurrentBand()` (derivado del motor cuando existe).
+
+### Inventario código — `MainActivity` vs `RadioUiHost` (2026-04-19)
+
+Ámbito: `app/src/main/java/com/example/openradiofm/ui/main/`. Objetivo del inventario: saber qué falta para el ítem *«Resto de *Coordinator / diálogos / managers»* de la Fase 0.
+
+**Ya usan `RadioUiHost` en el constructor**
+
+| Clase |
+|--------|
+| `LifecycleCoordinator` |
+| `HardwareKeyCoordinator` |
+| `SignalMeterCoordinator` |
+| `StatusRefreshCoordinator` |
+| `EngineCallbackCoordinator` |
+| `FrequencyChangeCoordinator` |
+
+**Siguen con `MainActivity` como referencia principal** (`private final MainActivity` o constructor equivalente)
+
+| Clase | Comentario breve |
+|--------|------------------|
+| `LogoManager` | Logos, fondo dinámico, visibilidad |
+| `DialogManager` | Diálogos (prefs, about, save/load, hijacker, etc.) |
+| `HardwareManager` | Bridge / hardware |
+| `MediaSessionManager` | Sesión de medios ligada a la activity |
+| `ScanManager` | Escaneo y flujo OEM |
+| `PresetManager` | Presets y repositorio |
+| `ControlPanelManager` | Panel de controles |
+| `SkinCoordinator` | Skins y fuentes (ver también Fase 4) |
+| `UiViewMediator` | Mediación de vistas |
+| `HistoryManager` | Historial |
+| `StandardLayoutManager` | Layout estándar |
+| `SimpleLayoutManager` | Layout simple |
+| `MinimalLayoutManager` | Layout mínimo |
+| `StationAdapter` | Lista tras escaneo |
+| `EngineeringModeDialog` | Menú ingeniería genérico |
+| `K706EngineeringDialog` | Ingeniería K706 |
+| `QS6EngineeringDialog` | Ingeniería QS6 |
+
+**Layouts (`BaseLayoutController` → `protected final MainActivity mActivity`)**
+
+| Clase |
+|--------|
+| `MainLayoutController` |
+| `SimpleLayoutController` |
+| `V3LayoutController` |
+
+**Helpers estáticos con parámetro `MainActivity`**
+
+| Clase | Métodos / entrada |
+|--------|-------------------|
+| `IntentRouter` | `dispatchNewIntent`, `dispatchPermissionsResult`, `scheduleK706McuListenerReassertAfterOem`, handlers internos |
+| `StreamingUiCoordinator` | `install`, `updateDataActivityUi`, `isInternetReachable`, helpers de streaming / indicador de datos |
+| `InfinitePresetScrollHelper` | `attachIfNeeded(MainActivity)` |
+
+**Por diseño ligados a la activity (no “coordinador” de UI)**
+
+| Clase | Nota |
+|--------|------|
+| `MainActivityBootstrap` | Secuencia `runAfterSuper(MainActivity, Bundle)`; mover al host implicaría repartir responsabilidades, no solo renombrar. |
+
+**Acoplamiento de tipo o casts (sin campo `MainActivity` obligatorio)**
+
+| Clase | Detalle |
+|--------|---------|
+| `RadioServiceController` | Usa `MainActivity.FmMode` en detección y ramas de motor. |
+| `RDSManager` | Constructor `Context`; usa métodos estáticos de `MainActivity` para actualizar `TextView` (`setTextIfChanged`, etc.). |
+| `DayModeManager` / `NightModeManager` | Reciben `Activity`; casts a `MainActivity` para `setColorFilterIfChanged`, `refreshStereoIndicatorUi` y coherencia con datos/nube. |
+
+**Sugerencia de orden al ampliar `RadioUiHost`** (incremental): (1) managers que más cruzan motor y UI (`ScanManager`, `PresetManager`, `DialogManager`, `MediaSessionManager`); (2) layouts y `LogoManager` / `ControlPanelManager` / `UiViewMediator` / `HistoryManager`; (3) diálogos de ingeniería; (4) sustituir parámetro `MainActivity` por `RadioUiHost` en `IntentRouter` / `StreamingUiCoordinator` cuando el API del host cubra las llamadas; (5) reducir casts en `DayModeManager` / `NightModeManager` exponiendo en el host lo que hoy solo vive en `MainActivity`. **`FrequencyChangeCoordinator`** ya usa `RadioUiHost` (2026-04-19).
+
+*Última revisión del inventario: 2026-04-19 — actualizado cierre `FrequencyChangeCoordinator` + API host.*
 
 ### Para el usuario (Fase 0 — cerrada)
 
@@ -141,4 +214,4 @@ Cambio **interno**: misma radio, mismos widgets y mismo volante en segundo plano
 
 ---
 
-*Última actualización: documento creado para la rama `5.2.0.MCU`.*
+*Última actualización: 2026-04-19 — inventario Fase 0; `FrequencyChangeCoordinator` migrado a `RadioUiHost` + métodos de host asociados. Documento originado para la rama `5.2.0.MCU`.*

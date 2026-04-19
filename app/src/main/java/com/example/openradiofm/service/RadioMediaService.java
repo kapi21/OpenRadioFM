@@ -1887,6 +1887,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         if (pkg.equals("com.zjinnova.zlink")) return true;
         if (pkg.contains("zlink")) return true;
         if (pkg.contains("carlink") || pkg.contains("tlink") || pkg.contains("easyconn")) return true;
+
+        // Agama Launcher / widgets: necesita acceder a MediaBrowser/MediaSession para mostrar
+        // texto y controles. No siempre es app de sistema, así que lo permitimos explícitamente.
+        // Ejemplos habituales: com.agama.carlauncher, com.agama.* (varía por versión/skin).
+        if (pkg.contains("agama")) return true;
         
         // Permitir también la propia app
         if (pkg.equals(getPackageName())) return true;

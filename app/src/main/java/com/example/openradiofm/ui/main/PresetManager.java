@@ -222,12 +222,24 @@ public class PresetManager {
     }
 
     public void refreshButtons(int currentBand) {
+        refreshButtons(currentBand, true);
+    }
+
+    /**
+     * Arranque rápido: permite refrescar solo texto primero y diferir logos.
+     * En MT8163 reduce trabajo IO (existencia de ficheros) en el primer frame.
+     */
+    public void refreshButtons(int currentBand, boolean loadLogos) {
         for (int i = 0; i < mPresetsCount; i++) {
-            updateCardVisuals(i, mPresets[i], currentBand);
+            updateCardVisuals(i, mPresets[i], currentBand, loadLogos);
         }
     }
 
     public void updateCardVisuals(int index, int freq, int currentBand) {
+        updateCardVisuals(index, freq, currentBand, true);
+    }
+
+    public void updateCardVisuals(int index, int freq, int currentBand, boolean loadLogos) {
         if (index == -1) {
             // Buscar si esta frecuencia está en los presets actuales
             for (int i = 0; i < mPresetsCount; i++) {
@@ -314,6 +326,10 @@ public class PresetManager {
                 });
             });
             }
+        }
+
+        if (!loadLogos) {
+            return;
         }
 
         final int fFreqForLogo = freq;

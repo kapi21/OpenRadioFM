@@ -808,11 +808,32 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
                 // Inicializar Managers que dependen del repo/db
                 if (mPresetManager == null) {
                     mPresetManager = new PresetManager(MainActivity.this, mRepository, mPrefs, PRESETS_COUNT);
-                    mPresetManager.bindViews(findViewById(android.R.id.content), isV3LayoutActive());
+                    View root = findViewById(android.R.id.content);
+                    mPresetManager.bindViews(root, isV3LayoutActive());
                     InfinitePresetScrollHelper.attachIfNeeded(MainActivity.this);
-                    mPresetManager.refreshPresetsCache(mCurrentBand);
-                    mPresetManager.refreshButtons(mCurrentBand);
-                    mPresetManager.syncLoopMirrorPresetVisualsWithMainSlots();
+                    // MT8163 (y en general cold start): evitar cargar todo el estado de presets/logos
+                    // en el mismo tick en el que se infla el layout (reduce jank: "Skipped frames").
+                    if (root != null) {
+                        root.post(() -> {
+                            if (isFinishing() || isDestroyed() || mPresetManager == null) return;
+                            mPresetManager.refreshPresetsCache(mCurrentBand);
+                            // Arranque rápido: texto primero, logos después.
+                            mPresetManager.refreshButtons(mCurrentBand, false);
+                            mPresetManager.syncLoopMirrorPresetVisualsWithMainSlots();
+                            mMainHandler.postDelayed(() -> {
+                                if (isFinishing() || isDestroyed() || mPresetManager == null) return;
+                                mPresetManager.refreshButtons(mCurrentBand, true);
+                            }, 1400);
+                        });
+                    } else {
+                        mPresetManager.refreshPresetsCache(mCurrentBand);
+                        mPresetManager.refreshButtons(mCurrentBand, false);
+                        mPresetManager.syncLoopMirrorPresetVisualsWithMainSlots();
+                        mMainHandler.postDelayed(() -> {
+                            if (isFinishing() || isDestroyed() || mPresetManager == null) return;
+                            mPresetManager.refreshButtons(mCurrentBand, true);
+                        }, 1400);
+                    }
                 }
 
                 if (mDialogManager == null) {
@@ -2905,6 +2926,38 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     @Override
     public void setShutdownPersistGuardUntilMs(long elapsedRealtimeMs) {
         mShutdownPersistGuardUntilMs = elapsedRealtimeMs;
+    }
+
+    @Override
+    public long getShutdownPersistGuardUntilMs() {
+        return mShutdownPersistGuardUntilMs;
+    }
+
+    @Override
+    public StartupFreqPersistGuards getStartupFreqPersistGuards() {
+        return mStartupFqGuards;
+    }
+
+    @Override
+    public void beginRdsLogoTransitionAfterTune(String lastPsSnapshot) {
+        mRdsLogoTransition.logoUiGeneration.incrementAndGet();
+        mRdsLogoTransition.prevStationNameBeforeTune = lastPsSnapshot != null ? lastPsSnapshot : "";
+        mRdsLogoTransition.rdsTransitionGuardUntilMs = android.os.SystemClock.elapsedRealtime() + RDS_TRANSITION_GUARD_MS;
+    }
+
+    @Override
+    public void armCloudContribFreqSettleWindow() {
+        mCloudContribAllowedAfterMs = android.os.SystemClock.elapsedRealtime() + CLOUD_CONTRIB_FREQ_SETTLE_MS;
+    }
+
+    @Override
+    public void clearCachedLogoUrl() {
+        mLastLogoUrl = "";
+    }
+
+    @Override
+    public void addFreqToHistory(int freqKhz) {
+        addToHistory(freqKhz);
     }
 
     @Override

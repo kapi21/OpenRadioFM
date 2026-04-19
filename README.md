@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.1.7-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.2.0-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-MCU2-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -57,7 +57,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.1.7** (rama **MCU2**, abril 2026, `versionCode` **39**): **K706 + Android Auto / Zlink** — la FM cede ante pérdida transitoria de foco cuando otra app reproduce (`isMusicActive`): sin “Glitch Protect” que recuperara el mux; el `AutoRecoveryRunnable` ya no alarga la ventana anti-LOSS. **`RadioMediaService`**: en `LOSS_TRANSIENT` no se fuerza sesión PLAYING+FGS (voz de Maps). Incluye correcciones **5.1.6** (motor compartido). **AutoScan por sobrescritura**: arranque siempre en **FM1**, tiempos de barrido más pausados, botón con **solo tinte** (sin rotación), supresión de estado OEM espurio tras el fin. **MT8163**: mute lógico respetado en recuperación (`mRadioMuteDesired`), init idempotente; **motor HCN compartido** con el servicio para que controles del launcher (**Agama**) y la sesión de medios funcionen sin un segundo bind (tras abrir la app una vez en la sesión). **UI**: indicador **ST** sin colores dinámicos por SNR. **Diagnóstico sin ADB**: log a `RadioLogos/*.log` con `TICK`, volcado opcional de logcat desde ingeniería K706; ver `CHANGELOG.md` (rama *Unreleased*).
+**5.2.0** (rama **MCU2**, abril 2026, `versionCode` **40**): consolidación del refactor 5.2.0 y estabilidad multi‑motor. **MT8163**: compatibilidad con launchers tipo **Agama** (controles + texto vía `MediaBrowser/MediaSession`) y mitigación de arranque pesado (bind HCN idempotente + diferido de trabajo de presets/logos). **QS6/NWD**: mejoras de RDS/AutoScan e ingeniería. Ver `CHANGELOG.md` (sección **5.2.0**).
 
 **Pendiente (K706 + Z-Link + AA)**: seguir afinando interacción con Spotify/mux MCU vs **ducking** natural que ya da **QS6** en la misma app; trabajo documentado en `CHANGELOG.md` bajo *Unreleased*.
 

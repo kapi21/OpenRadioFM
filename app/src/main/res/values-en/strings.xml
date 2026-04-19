@@ -42,6 +42,11 @@
     <string name="bg_pure_black">Pure Black</string>
     <string name="bg_fixed_image">Fixed Image (background.png)</string>
     <string name="bg_dynamic_logo">Station Logo (Dynamic)</string>
+    <string name="dynamic_bg_aspect_title">Dynamic background framing</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (no crop)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (fill, crops)</string>
+    <string name="toast_dynamic_bg_letterbox">Dynamic background: letterbox (no crop)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Dynamic background: 16:9 (fill, crops)</string>
 
     <!-- Font Names -->
     <string name="font_default">Default (System)</string>
@@ -57,6 +62,10 @@
     <string name="night_mode_auto">Automatic Night Mode</string>
     <string name="relief_hd">HD Relief</string>
     <string name="save_history">Save Station History</string>
+    <string name="save_history_summary_on">Stations are saved; you can open the list (e.g. tap the RDS name).</string>
+    <string name="save_history_summary_off">Off: history is not saved and its dialog is not shown.</string>
+    <string name="toast_history_save_disabled">Turn on «Save station history» in options to open the list.</string>
+    <string name="hardware_automation_section_header">(Hardware automation) (in testing)</string>
     <string name="enable_gestures_beta">Enable Gestures (Swipe) (beta)</string>
     <string name="online_logos">Online Logos</string>
     
@@ -71,7 +80,7 @@
     <string name="logos_online_disabled">❌ Online logos disabled</string>
     <string name="under_study">Under study</string>
     <string name="night_mode_manual_blocked">Disable Automatic Night Mode to choose skin manually</string>
-    <string name="auto_hide_controls">Auto-hide controls</string>
+    <string name="auto_hide_controls">Auto-hide controls (layout 3 horizontal)</string>
     <string name="auto_hide_enabled">✅ Auto-hide controls enabled</string>
     <string name="auto_hide_disabled">❌ Auto-hide controls disabled</string>
     <string name="preset_scroll_loop_title">Infinite preset scrolling</string>

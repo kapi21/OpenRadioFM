@@ -259,8 +259,9 @@ public class DialogManager {
             int bgIdx = mActivity.mPrefs.getInt("pref_bg_mode", 1);
             String[] modes = { mActivity.getString(R.string.bg_pure_black),
                     mActivity.getString(R.string.bg_fixed_image), mActivity.getString(R.string.bg_dynamic_logo) };
-            if (bgIdx >= 0 && bgIdx < modes.length)
-                tvBackgroundStatus.setText(modes[bgIdx]);
+            if (bgIdx >= 0 && bgIdx < modes.length) {
+                tvBackgroundStatus.setText(buildBackgroundStatusText(modes[bgIdx]));
+            }
         }
 
         // Switches
@@ -504,10 +505,10 @@ public class DialogManager {
 
         if (swHistory != null) {
             swHistory.setChecked(mActivity.mPrefs.getBoolean("pref_save_history", true));
-            bindSwitchSummary(tvSummarySaveHistory, swHistory.isChecked());
+            bindSaveHistorySummary(tvSummarySaveHistory, swHistory.isChecked());
             swHistory.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply();
-                bindSwitchSummary(tvSummarySaveHistory, checked);
+                bindSaveHistorySummary(tvSummarySaveHistory, checked);
             });
         }
 
@@ -852,8 +853,44 @@ public class DialogManager {
             mActivity.mLogoManager.loadCustomBackground();
             mActivity.mLogoManager.loadCarLogo();
             mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
-            if (tvStatus != null)
-                tvStatus.setText(modes[w]);
+            if (w == 2) {
+                // Al elegir fondo dinámico, ofrecer el ajuste de encuadre (letterbox vs fill).
+                showDynamicBackgroundAspectSelector(() -> {
+                    mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
+                    if (tvStatus != null) tvStatus.setText(buildBackgroundStatusText(modes[w]));
+                });
+            } else {
+                if (tvStatus != null) tvStatus.setText(modes[w]);
+            }
+        });
+    }
+
+    private String buildBackgroundStatusText(String modeLabel) {
+        if (mActivity.mPrefs == null) return modeLabel;
+        int bgMode = mActivity.mPrefs.getInt("pref_bg_mode", 1);
+        if (bgMode != 2) return modeLabel;
+        int aspect = mActivity.mPrefs.getInt("pref_dynamic_bg_aspect", 0);
+        String aspectLabel = (aspect == 1)
+                ? mActivity.getString(R.string.dynamic_bg_aspect_fill_16_9)
+                : mActivity.getString(R.string.dynamic_bg_aspect_letterbox);
+        return modeLabel + " · " + aspectLabel;
+    }
+
+    private void showDynamicBackgroundAspectSelector(Runnable onDone) {
+        if (mActivity.mPrefs == null) {
+            if (onDone != null) onDone.run();
+            return;
+        }
+        String[] options = {
+                mActivity.getString(R.string.dynamic_bg_aspect_letterbox),
+                mActivity.getString(R.string.dynamic_bg_aspect_fill_16_9),
+        };
+        int current = mActivity.mPrefs.getInt("pref_dynamic_bg_aspect", 0);
+        showGridSelector(mActivity.getString(R.string.dynamic_bg_aspect_title), options, current, which -> {
+            mActivity.mPrefs.edit().putInt("pref_dynamic_bg_aspect", which).apply();
+            mActivity.showToast(mActivity.getString(
+                    which == 1 ? R.string.toast_dynamic_bg_fill_16_9 : R.string.toast_dynamic_bg_letterbox));
+            if (onDone != null) onDone.run();
         });
     }
 
@@ -1224,6 +1261,10 @@ public class DialogManager {
     }
 
     public void showHistoryDialog() {
+        if (!mActivity.mPrefs.getBoolean("pref_save_history", true)) {
+            mActivity.showStyledToast(mActivity.getString(R.string.toast_history_save_disabled));
+            return;
+        }
         String historyStr = mActivity.mPrefs.getString("pref_station_history", "");
         if (historyStr.isEmpty()) {
             mActivity.showStyledToast(mActivity.getString(R.string.history_empty));
@@ -1474,6 +1515,12 @@ public class DialogManager {
         if (tv == null) return;
         tv.setText(on ? mActivity.getString(R.string.settings_value_on)
                 : mActivity.getString(R.string.settings_value_off));
+    }
+
+    private void bindSaveHistorySummary(TextView tv, boolean on) {
+        if (tv == null) return;
+        tv.setText(on ? mActivity.getString(R.string.save_history_summary_on)
+                : mActivity.getString(R.string.save_history_summary_off));
     }
 
     private void fillThemeSummary(TextView tv) {

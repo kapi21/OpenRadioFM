@@ -34,6 +34,12 @@ public class LifecycleCoordinator {
         // Re-conectar si la app vuelve al frente y el servicio nativo fue matado
         if (mHost.getRadioService() == null && mHost.getFmMode() == MainActivity.FmMode.FM_MT8163
                 && mHost.getServiceController() != null) {
+            // Cold start: si el bind a HCN está en vuelo, NO hacer handoff/wake (se confunde con force-stop)
+            // y mete jank en el primer render.
+            if (RadioServiceController.isMt8163HcnBindInFlight()) {
+                Log.d(TAG, "onResume: MT8163 bind HCN en vuelo; omitiendo recovery/handoff");
+                return;
+            }
             if (MT8163Engine.isHcnServiceBindBlockedAfterStreamEnd()) {
                 Log.i(TAG, "onResume: bind HCN en ventana post-streaming (~12s); reintento automático al expirar");
                 try {

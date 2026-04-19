@@ -475,7 +475,79 @@ public class QS6Engine implements RadioEngine {
         }
         try { if (mAdapter != null) mAdapter.setStereoOn(enable); } catch (Throwable ignored) {}
     }
-    @Override public void openEq(Context context) {}
+    @Override
+    public void openEq(Context context) {
+        if (context == null) return;
+        try {
+            // QS6/NWD: el DSP/EQ suele vivir en una app OEM. Probamos paquetes conocidos y, si falla,
+            // usamos el panel genérico de AudioEffect o los ajustes de sonido.
+            String[] pkgs = new String[] {
+                    // Posibles nombres OEM (varían por ROM)
+                    "com.nwd.audioset",
+                    "com.nwd.soundeffect",
+                    "com.nwd.soundeffects",
+                    "com.nwd.dsp",
+                    "com.nwd.eq",
+                    // Paquetes comunes en otras plataformas soportadas
+                    "com.qf.soundeffect",
+                    "com.android.musicfx",
+                    "com.android.soundfx",
+            };
+            for (String p : pkgs) {
+                try {
+                    android.content.Intent launch = context.getPackageManager().getLaunchIntentForPackage(p);
+                    if (launch != null) {
+                        launch.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(launch);
+                        Log.i(TAG, "QS6: EQ abierto: " + p);
+                        return;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            // Fallback estándar Android: panel de efectos de audio.
+            try {
+                android.content.Intent i = new android.content.Intent(android.media.audiofx.AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
+                i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                // No atamos a una sesión concreta; algunos OEM ignoran EXTRA_AUDIO_SESSION.
+                context.startActivity(i);
+                Log.i(TAG, "QS6: EQ abierto via AudioEffect panel");
+                return;
+            } catch (Exception ignored) {
+            }
+
+            // Último fallback: ajustes de sonido
+            try {
+                android.content.Intent i = new android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS);
+                i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                context.startActivity(i);
+                Log.i(TAG, "QS6: EQ fallback a ajustes de sonido");
+            } catch (Exception e) {
+                Log.w(TAG, "QS6: no se pudo abrir EQ", e);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "QS6: openEq falló", e);
+        }
+    }
+
+    /** Apertura “larga” del EQ: panel estándar Android (si existe) o ajustes de sonido. */
+    public static void openAndroidAudioEffectPanel(Context context) {
+        if (context == null) return;
+        try {
+            android.content.Intent i = new android.content.Intent(android.media.audiofx.AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL);
+            i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+            return;
+        } catch (Exception ignored) {
+        }
+        try {
+            android.content.Intent i = new android.content.Intent(android.provider.Settings.ACTION_SOUND_SETTINGS);
+            i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            context.startActivity(i);
+        } catch (Exception ignored) {
+        }
+    }
     @Override 
     public void closeDevice() {
         Log.d(TAG, "QS6: closeDevice -> Liberando recursos de audio");

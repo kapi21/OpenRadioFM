@@ -1,7 +1,6 @@
 package com.example.openradiofm.data.repository;
 
 import com.example.openradiofm.data.model.RadioStation;
-import com.example.openradiofm.data.source.PredefinedStationSource;
 import com.example.openradiofm.data.source.RootRDSSource;
 import com.example.openradiofm.data.source.CloudContributionGuard;
 import com.example.openradiofm.data.source.SupabaseLogoSource;
@@ -13,7 +12,6 @@ public class RadioRepository {
     private final RootRDSSource rootSource;
     private final WebRadioSource webSource;
     private final SupabaseLogoSource supabaseSource; // V16.0: Servidor centralizado
-    private final PredefinedStationSource predefinedSource;
     private final boolean useRoot;
 
     private final android.content.SharedPreferences mPrefs;
@@ -166,7 +164,6 @@ public class RadioRepository {
         this.rootSource = enableRoot ? new RootRDSSource() : null;
         this.webSource = new WebRadioSource();
         this.supabaseSource = new SupabaseLogoSource();
-        this.predefinedSource = new PredefinedStationSource(context);
         // Usamos un archivo de preferencias específico para los nombres de emisoras
         this.mPrefs = context.getSharedPreferences("RadioStationNames", android.content.Context.MODE_PRIVATE);
 

@@ -402,8 +402,12 @@ public class LogoManager {
                     final int genAtStart = mActivity.mRdsLogoTransition.logoUiGeneration.get();
                     mLastDynamicBgUrl = logoUrl;
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
-                    // Contener la imagen en el área de pantalla (sin recorte tipo centerCrop que “amplía” el arte).
-                    ivDynamicBackground.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                    int aspect = 0;
+                    try {
+                        aspect = mActivity.mPrefs != null ? mActivity.mPrefs.getInt("pref_dynamic_bg_aspect", 0) : 0;
+                    } catch (Exception ignored) {}
+                    boolean fill = (aspect == 1);
+                    ivDynamicBackground.setScaleType(fill ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
                     int[] decode = new int[2];
                     getDynamicBgDecodeSize(decode);
                     if (mDynamicBgTarget != null) {
@@ -429,7 +433,9 @@ public class LogoManager {
                             .apply(new RequestOptions()
                                     .format(DecodeFormat.PREFER_ARGB_8888)
                                     .override(decode[0], decode[1])
-                                    .fitCenter())
+                                    .transform(fill
+                                            ? new com.bumptech.glide.load.resource.bitmap.CenterCrop()
+                                            : new com.bumptech.glide.load.resource.bitmap.FitCenter()))
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(mDynamicBgTarget);
                 }

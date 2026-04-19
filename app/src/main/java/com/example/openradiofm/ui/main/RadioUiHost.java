@@ -80,6 +80,27 @@ public interface RadioUiHost {
 
     void setShutdownPersistGuardUntilMs(long elapsedRealtimeMs);
 
+    /** Ventana de no persistir frecuencia tras apagado (ms desde {@link android.os.SystemClock#elapsedRealtime()}). */
+    long getShutdownPersistGuardUntilMs();
+
+    /** Estado mutable de guardas de arranque / bootstrap (87.5 / 87.6, etc.). */
+    StartupFreqPersistGuards getStartupFreqPersistGuards();
+
+    /**
+     * Tras un cambio de frecuencia “real”: invalida generación de logo, guarda PS previo para transición
+     * y abre ventana {@code RDS_TRANSITION_GUARD_MS} (implementación en {@link MainActivity}).
+     */
+    void beginRdsLogoTransitionAfterTune(String lastPsSnapshot);
+
+    /** Evita contribuciones nube hasta que la frecuencia se estabilice (mismo plazo que en {@link MainActivity}). */
+    void armCloudContribFreqSettleWindow();
+
+    /** Fuerza recarga de logo en la siguiente petición (equiv. {@code mLastLogoUrl = ""}). */
+    void clearCachedLogoUrl();
+
+    /** Historial de emisoras; no hace nada si el gestor no está listo. */
+    void addFreqToHistory(int freqKhz);
+
     void setPowerOffRequested(boolean value);
 
     boolean isPowerOffRequested();

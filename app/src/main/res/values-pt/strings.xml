@@ -27,6 +27,11 @@
     <string name="bg_pure_black">Preto Puro</string>
     <string name="bg_fixed_image">Imagem (background.png)</string>
     <string name="bg_dynamic_logo">Logo da Estação (Dinâmico)</string>
+    <string name="dynamic_bg_aspect_title">Enquadramento do fundo dinâmico</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (sem recorte)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (preencher, recorta)</string>
+    <string name="toast_dynamic_bg_letterbox">Fundo dinâmico: letterbox (sem recorte)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Fundo dinâmico: 16:9 (preencher, recorta)</string>
 
     <!-- Font Names -->
     <string name="font_default">Padrão (Sistema)</string>
@@ -42,6 +47,10 @@
     <string name="night_mode_auto">Modo Noturno Automático</string>
     <string name="relief_hd">Relevo HD</string>
     <string name="save_history">Salvar Histórico de Estações</string>
+    <string name="save_history_summary_on">As estações são guardadas; pode abrir a lista (ex.: tocar no nome RDS).</string>
+    <string name="save_history_summary_off">Desligado: não guarda histórico nem mostra o diálogo.</string>
+    <string name="toast_history_save_disabled">Ative «Salvar histórico de estações» nas opções para ver a lista.</string>
+    <string name="hardware_automation_section_header">(Automatização por hardware) (em testes)</string>
     <string name="enable_gestures_beta">Ativar Gestos (Deslizar) (beta)</string>
     <string name="online_logos">Logos Online</string>
     <string name="status_bar_v2">Mostrar barra de estado</string>
@@ -81,7 +90,7 @@
     <string name="logos_online_disabled">❌ Logos online desativados</string>
     <string name="under_study">Em estudo</string>
     <string name="night_mode_manual_blocked">Desative o Modo Noturno automático para escolher o tema manualmente</string>
-    <string name="auto_hide_controls">Ocultar controlos automaticamente</string>
+    <string name="auto_hide_controls">Ocultar controlos automaticamente (layout 3 horizontal)</string>
     <string name="auto_hide_enabled">✅ Ocultar controlos ativado</string>
     <string name="auto_hide_disabled">❌ Ocultar controlos desativado</string>
     <string name="preset_scroll_loop_title">Deslize infinito dos presets</string>

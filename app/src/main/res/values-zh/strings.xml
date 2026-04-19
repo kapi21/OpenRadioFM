@@ -24,6 +24,11 @@
     <string name="bg_pure_black">纯黑</string>
     <string name="bg_fixed_image">固定图像 (background.png)</string>
     <string name="bg_dynamic_logo">台标 (动态)</string>
+    <string name="dynamic_bg_aspect_title">动态背景显示方式</string>
+    <string name="dynamic_bg_aspect_letterbox">信箱模式（不裁切）</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9（铺满，裁切）</string>
+    <string name="toast_dynamic_bg_letterbox">动态背景：信箱模式（不裁切）</string>
+    <string name="toast_dynamic_bg_fill_16_9">动态背景：16:9（铺满，裁切）</string>
     <string name="font_default">默认 (系统)</string>
     <string name="font_bebas">机器人 (Bebas)</string>
     <string name="font_digital">数字 (LED)</string>
@@ -34,6 +39,10 @@
     <string name="night_mode_auto">自动夜间模式</string>
     <string name="relief_hd">高清浮雕</string>
     <string name="save_history">保存收听历史</string>
+    <string name="save_history_summary_on">会保存电台；可打开列表（例如点击 RDS 名称）。</string>
+    <string name="save_history_summary_off">已关闭：不保存历史，也不显示历史对话框。</string>
+    <string name="toast_history_save_disabled">请在选项中开启「保存收听历史」以查看列表。</string>
+    <string name="hardware_automation_section_header">（硬件自动化）（测试中）</string>
     <string name="enable_gestures_beta">启用手势 (Swipe) (测试版)</string>
     <string name="online_logos">在线台标</string>
 
@@ -68,7 +77,7 @@
     <string name="logos_online_disabled">❌ 在线台标已关闭</string>
     <string name="under_study">研究中</string>
     <string name="night_mode_manual_blocked">禁用自动夜间模式以手动选择皮肤</string>
-    <string name="auto_hide_controls">自动隐藏控制栏</string>
+    <string name="auto_hide_controls">自动隐藏控制栏（布局3 横向）</string>
     <string name="auto_hide_enabled">✅ 自动隐藏已开启</string>
     <string name="auto_hide_disabled">❌ 自动隐藏已关闭</string>
     <string name="preset_scroll_loop_title">预设无限滑动</string>
