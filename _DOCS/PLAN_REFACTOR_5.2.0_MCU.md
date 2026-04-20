@@ -200,6 +200,75 @@ Cambio **interno**: misma radio, mismos widgets y mismo volante en segundo plano
 - [ ] Actualizar badges y párrafo de versión en `README.md`
 - [ ] Tag `v5.2.0` y merge acordado (`5.2.0.MCU` → `MCU2` o `main`, según política del repo)
 
+### Regresiones detectadas en pruebas (pendientes antes de publicar)
+
+- **K706**:
+  - Tras cerrar con **PowerOff** y volver a abrir, se pierden los **controles de volante en segundo plano**.
+  - En widget OEM (launcher) desaparece el texto “OpenRadioFM” y aparece **duplicada** la última emisora (PS).
+- **QS6 / NWD**:
+  - Sin control de **volante en segundo plano**; en background se maneja el widget de la radio OEM.
+  - Solo funciona el control cuando la app está en **primer plano**.
+- **MT8163**:
+  - Arranque “pesado”: se percibe jank/latencia al iniciar.
+  - Regresión: se perdió el control desde el widget de **Agama** (controles + texto vía MediaSession/MediaBrowser).
+
+### Roadmap operativo de depuración (K706 / volante en 2º plano)
+
+**Objetivo**: aislar por qué 87/88 (NEXT/PREV) dejan de producir seek tras ciclos de **HOME/PowerOff**, y verificar por logs si el evento entra por **MediaSession**, por **util_service (UtilEventManager)** o por **Accessibility Hijacker**.
+
+#### A) Secuencia de prueba (repetible)
+
+- **Baseline “bueno”**:
+  - Abrir OpenRadioFM, iniciar FM.
+  - Ir a launcher (HOME).
+  - Pulsar **NEXT/PREV** 4–8 veces (volante o widget multimedia OEM).
+- **Caso “malo”**:
+  - Ejecutar **PowerOff** (cierre total) y volver a abrir (o quedarse en launcher).
+  - Sin traer la app al frente, pulsar **NEXT/PREV** 4–8 veces.
+- **Criterio de éxito**:
+  - En el filtro de MediaSession, ver **ráfagas** de `onMetadataChanged` con frecuencias (105.6 → 105.7 → …) o salto a PS/RDS.
+
+#### B) Filtros recomendados (PowerShell)
+
+1) **Teclas crudas + foco** (ver si 87/88 van al launcher):
+
+```powershell
+adb logcat -v time InputDispatcher:V WindowManager:V QFKeyEvent:V *:S
+```
+
+2) **Bridge OEM `util_service` + app** (K706/QF):
+
+```powershell
+adb logcat -v time QFKeyEvent:V UtilEventManager:V RadioMediaService:V com.example.openradiofm:V *:S
+```
+
+3) **Si sospechas del Hijacker (Accessibility)**:
+
+```powershell
+adb logcat -v time QFKeyEvent:V UtilEventManager:V RadioMediaService:V RadioHijackerService:I com.example.openradiofm:V *:S
+```
+
+4) **MediaSession / widget del sistema** (PLAY/PAUSE + metadata):
+
+```powershell
+adb logcat -v time MediaSession:V MediaSessionService:V AudioFocus:V MediaFocusControl:V MediaControllerService:V ThirdPartyMediaWidget:V RadioMediaService:V com.example.openradiofm:V *:S
+```
+
+#### C) Lectura rápida de resultados (qué mirar)
+
+- **Si (1) muestra 87/88 al launcher** y (4) no muestra cambios de metadata:
+  - La ROM enruta teclas como `KeyEvent` al foco; toca depender de **util_service** o **Hijacker**.
+- **Si (2) muestra `RPC_KeyEventChangedListener` pero no hay efecto**:
+  - Posible mismatch de firma del callback OEM o extracción de `KeyEvent` (proxy) o bridge desactivado.
+- **Si (3) muestra `MEDIA key reenviada a RadioMediaService`** pero no hay seek:
+  - El evento llega como `ACTION_MEDIA_BUTTON` pero se traduce a PLAY/PAUSE; revisar `onMediaButtonEvent` y `handleSteeringSkip`.
+
+#### D) Parches relevantes ya aplicados (para no perder contexto)
+
+- **`RadioMediaService`**:
+  - `onMediaButtonEvent`: si llega explícito `KEYCODE_MEDIA_NEXT/PREVIOUS` (87/88), fuerza `handleSteeringSkip()` aunque el framework lo “consuma”.
+  - Bridge `util_service` (`UtilEventManager`): listener más tolerante (no filtrar por nombre `on...`, extraer `KeyEvent` desde args / `getKeyEventInfo`, fallback `(keyCode,action)`).
+
 ### Para el usuario (Fase 7 — pendiente)
 
 *(Completar al cerrar la fase.)* Aquí sí suele haber **versión nueva numerada (5.2.0)** y notas públicas: qué radios probar, novedades visibles y enlaces al changelog. Es el momento de resumir todo el trabajo MCU en un mensaje claro para quien instala el APK.

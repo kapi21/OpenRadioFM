@@ -132,10 +132,9 @@ public class ControlPanelManager {
         if (btnPowerOff != null) {
             btnPowerOff.setOnClickListener(v -> {
                 mActivity.animateButton(btnPowerOff);
-                mActivity.prepareForPowerOff();
-                if (mActivity.mDeviceManager != null) {
-                    mActivity.mDeviceManager.powerOff();
-                }
+                // K706: PowerOff UI = minimizar (mantener widget de música operativo).
+                // No ejecutar prepareForPowerOff() (mute + cierre total).
+                mActivity.minimizeToHomeKeepingMediaControl();
             });
         }
 

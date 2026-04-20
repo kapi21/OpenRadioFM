@@ -232,6 +232,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ### v5.2.0 (Abril 2026) — `main` — Estabilización QS6 + Motores Legados (`versionCode` 40)
 - **ES:** **OpenRadioFM v5.2.0** — Estabilización crítica para motores **QS6 (Nowada)** y restauración de los motores **MT8163, MTK y Jancar** a sus versiones legadas estables. Incluye **Modo Master** en QS6, paridad de bandas en toda la gama y fix de audio v18.6 para MT8163. Ver `CHANGELOG.md`.
 - **EN:** **OpenRadioFM v5.2.0** — Critical stabilization for **QS6 (Nowada)** and restoration of **MT8163, MTK and Jancar** engines to their stable legacy versions. Includes **Master Mode** for QS6, band parity across the lineup, and v18.6 audio fix for MT8163. See `CHANGELOG_EN.md`.
+ - **K706 (widget música / Now Playing)**:
+   - **PowerOff / Atrás = minimizar**: salir a HOME sin `finish()` para evitar `forceStopPackage()` del launcher.
+   - **Silencio en background**: al minimizar, **mute** + **abandonar AudioFocus** sin cerrar el HAL; al volver, el audio se recupera con PLAY/unmute.
+   - **Widget de música sigue operativo**: `RadioMediaService` mantiene `MediaSession`/FGS activos para que el widget genérico de música siga controlando.
 
 ### v5.1.3 (Abril 2026) — `main` — medidor de señal en barras, QS6 0–5 (`versionCode` 35)
 - **ES:** **OpenRadioFM v5.1.3** — opción **barras de señal** (V2/V3) en Ajustes premium; `SignalBarsView` + colores por skin; corrección de lógica (polling, skin, dBm, escala **0–5** QS/NWD). Concepto en `docs/img/concept_signal_bars_main_ui.png`. Ver `CHANGELOG.md`.

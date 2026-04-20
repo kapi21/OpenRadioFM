@@ -190,6 +190,16 @@ public class K706Engine implements RadioEngine {
     }
 
     @Override
+    public void releaseAudioFocusOnlyForBackground() {
+        if (mManager == null) return;
+        try {
+            mManager.releaseAudioFocusOnlyForBackground();
+        } catch (Exception e) {
+            Log.w(TAG, "releaseAudioFocusOnlyForBackground", e);
+        }
+    }
+
+    @Override
     public void openEq(Context context) {
         try {
             android.content.Intent launchIntent = context.getPackageManager().getLaunchIntentForPackage("com.qf.soundeffect");
@@ -481,7 +491,7 @@ public class K706Engine implements RadioEngine {
 
             final String widgetName = (rdsName != null && !rdsName.isEmpty()
                     && !"STATION NAME".equals(rdsName) && !"STATION".equals(rdsName))
-                    ? rdsName : "";
+                    ? rdsName : "OpenRadioFM";
 
             android.content.Intent qf = new android.content.Intent("com.qf.radio.update_action");
             qf.putExtra("com.qf.radio.update_action_key",          freqStr);

@@ -2137,6 +2137,25 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
+    /**
+     * Vxx: Soltar AudioFocus sin cerrar el HAL ni parar secuencia FM.
+     * Útil cuando la UI se minimiza (modo "silencio en background") y queremos que el launcher
+     * no nos trate como fuente activa, pero sin perder estado del motor.
+     */
+    public void releaseAudioFocusOnlyForBackground() {
+        try {
+            // Evitar que el auto-recovery/heartbeat vuelva a reclamar AudioFocus inmediatamente.
+            mUserWantsFmAudio = false;
+            mAllowImplicitFmRecoverFromPoll = false;
+            mIsRadioActive = false;
+            try { mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable); } catch (Exception ignored) {}
+            mAutoRecoveryAttempts = 0;
+            abandonAudioFocus();
+        } catch (Exception e) {
+            Log.w(TAG, "releaseAudioFocusOnlyForBackground falló", e);
+        }
+    }
+
         /**
      * V7.2d: Secuencia de inicio de audio FM.
      * CORREGIDA basándose en el análisis del log de la app nativa (TunerManagerForExt/FmService).

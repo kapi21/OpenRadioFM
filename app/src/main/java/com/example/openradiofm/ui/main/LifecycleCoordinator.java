@@ -116,8 +116,6 @@ public class LifecycleCoordinator {
     }
 
     public void onDestroy() {
-        MainActivity.sWheelMediaBridgeActive = false;
-
         if (mHost.getMainHandler() != null) mHost.getMainHandler().removeCallbacksAndMessages(null);
         if (mHost.getAutoHideHandler() != null) mHost.getAutoHideHandler().removeCallbacksAndMessages(null);
         if (mHost.getClockHandler() != null) mHost.getClockHandler().removeCallbacksAndMessages(null);

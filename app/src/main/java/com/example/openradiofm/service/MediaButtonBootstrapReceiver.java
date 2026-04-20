@@ -18,6 +18,13 @@ public class MediaButtonBootstrapReceiver extends BroadcastReceiver {
         if (context == null || intent == null) return;
 
         try {
+            try {
+                android.view.KeyEvent ke = intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+                Log.i(TAG, "onReceive action=" + intent.getAction()
+                        + " keyEvent=" + (ke != null ? (ke.getKeyCode() + "/" + ke.getAction()) : "null")
+                        + " extras=" + intent.getExtras());
+            } catch (Exception ignored) {}
+
             Intent serviceIntent = new Intent(context, RadioMediaService.class);
             serviceIntent.setAction(intent.getAction());
             serviceIntent.putExtras(intent);

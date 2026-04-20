@@ -555,7 +555,13 @@ public class RadioServiceController {
             mContext.getPackageManager().getPackageInfo("com.nwd.radio.service", 0);
             return true;
         } catch (Exception e) {
-            return false;
+            // Algunas ROM NWD exponen la radio OEM como app (com.nwd.radio) en lugar del servicio.
+            try {
+                mContext.getPackageManager().getPackageInfo("com.nwd.radio", 0);
+                return true;
+            } catch (Exception ignored) {
+                return false;
+            }
         }
     }
 

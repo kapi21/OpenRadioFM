@@ -244,7 +244,9 @@ public class WidgetBroadcastManager {
                 && !"STATION".equals(rdsName)) {
             return rdsName;
         }
-        return "";
+        // En varios launchers OEM, un name vacío hace que repitan el último valor o dupliquen el PS.
+        // Usamos una marca estable para evitar “ghost text” tras cerrar/reabrir.
+        return "OpenRadioFM";
     }
 
     private static boolean strEquals(String a, String b) {

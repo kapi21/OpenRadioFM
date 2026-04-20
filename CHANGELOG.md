@@ -76,6 +76,10 @@
 - **Widget OEM QuickFish (K706)**:
   - Recepción de acciones del widget del launcher (`/customize/radio/*`) mediante `OemRadioWidgetReceiver` (prev/next/seek/mute), reenrutadas a `RadioMediaService`.
   - Endurecimiento frente a ROMs que bloquean `com.qf.radio.update_action`: si el broadcast falla por `SecurityException`, se **deshabilitan reintentos** para evitar spam/binder flood.
+ - **Widget genérico de música (K706 / Now Playing)**:
+   - **PowerOff / Atrás = minimizar** (sin `finish()`), evitando que el launcher ejecute `forceStopPackage()` sobre OpenRadioFM.
+   - Al minimizar: **mute + abandono de AudioFocus** (sin cerrar HAL) para “cerrar” el sonido de FM en background.
+   - Se mantiene **`MediaSession`/FGS** activo en `RadioMediaService` para que el widget de música siga controlando la app.
 
 ### QS6 / NWD — KernelService y menú de ingeniería (sustituir radio OEM)
 - **`Qs6KernelMcuClient`**: cliente experimental hacia `com.nwd.kernel.service.KernelService` / `IKernelFeature.request([B)` (Binder `transact`), para enviar tramas FM al MCU sin abrir la app nativa.

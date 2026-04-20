@@ -344,21 +344,25 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         mMediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public void onPlay() {
+                Log.i(TAG, "MediaSession.onPlay()");
                 handlePlay();
             }
 
             @Override
             public void onPause() {
+                Log.i(TAG, "MediaSession.onPause()");
                 handlePause();
             }
 
             @Override
             public void onSkipToNext() {
+                Log.i(TAG, "MediaSession.onSkipToNext()");
                 handleSteeringSkip(+1);
             }
 
             @Override
             public void onSkipToPrevious() {
+                Log.i(TAG, "MediaSession.onSkipToPrevious()");
                 handleSteeringSkip(-1);
             }
 
@@ -376,6 +380,29 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             @Override
             public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
                 KeyEvent ke = extractMediaKeyEvent(mediaButtonIntent);
+                try {
+                    Log.i(TAG, "MediaSession.onMediaButtonEvent action=" + (mediaButtonIntent != null ? mediaButtonIntent.getAction() : "null")
+                            + " key=" + (ke != null ? (ke.getKeyCode() + "/" + ke.getAction()) : "null")
+                            + " extras=" + (mediaButtonIntent != null ? mediaButtonIntent.getExtras() : null));
+                } catch (Exception ignored) {}
+
+                // OEM/K706: a veces el framework "consume" el evento (superHandled=true) pero el
+                // callback que nos llega acaba siendo PLAY/PAUSE en vez de NEXT/PREV. Para los seek,
+                // si vemos el KEYCODE explícito, lo ejecutamos nosotros.
+                if (ke != null && ke.getAction() == KeyEvent.ACTION_DOWN && !ke.isCanceled()) {
+                    int code = ke.getKeyCode();
+                    if (code == KeyEvent.KEYCODE_MEDIA_NEXT || code == KeyEvent.KEYCODE_MEDIA_PREVIOUS
+                            || code == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD || code == KeyEvent.KEYCODE_MEDIA_REWIND) {
+                        if (code == KeyEvent.KEYCODE_MEDIA_PREVIOUS || code == KeyEvent.KEYCODE_MEDIA_REWIND) {
+                            handleSteeringSkip(-1);
+                        } else {
+                            handleSteeringSkip(+1);
+                        }
+                        mLastHandledMediaKeyDownTime = ke.getDownTime();
+                        return true;
+                    }
+                }
+
                 boolean superHandled = super.onMediaButtonEvent(mediaButtonIntent);
                 if (superHandled) {
                     if (ke != null && ke.getAction() == KeyEvent.ACTION_DOWN) {
@@ -435,6 +462,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        try {
+            android.view.KeyEvent ke = intent != null ? intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT) : null;
+            Log.i(TAG, "onStartCommand action=" + (intent != null ? intent.getAction() : "null")
+                    + " keyEvent=" + (ke != null ? (ke.getKeyCode() + "/" + ke.getAction()) : "null")
+                    + " flags=" + flags + " startId=" + startId);
+        } catch (Exception ignored) {}
+
         // OEM safety (Android 8+): si nos arrancan con startForegroundService(),
         // debemos llamar a startForeground() rápidamente o Android mata el proceso.
         // Entramos en foreground con una notificación "pausada" y salimos si procede.
@@ -500,7 +534,23 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             handleWidgetToggleMute();
         }
 
-        return START_NOT_STICKY;
+        // K706/QS6: si el sistema mata el proceso tras “cerrar” la app (task swipe / memory trim),
+        // un servicio START_NOT_STICKY no vuelve y el widget OEM pierde el target de control.
+        // Mantenerlo sticky cuando el dispositivo requiere MediaSession activa en background
+        // o cuando nos arrancan desde widget/medios.
+        boolean keepSticky =
+                isSteeringMediaBackgroundPlatform()
+                        || mIsPlaying
+                        || (intent != null && (
+                                ACTION_FORCE_SESSION_ACTIVE.equals(intent.getAction())
+                                        || ACTION_FORCE_PLAY.equals(intent.getAction())
+                                        || ACTION_WIDGET_PREV_PRESET.equals(intent.getAction())
+                                        || ACTION_WIDGET_NEXT_PRESET.equals(intent.getAction())
+                                        || ACTION_WIDGET_SEEK_DOWN.equals(intent.getAction())
+                                        || ACTION_WIDGET_SEEK_UP.equals(intent.getAction())
+                                        || ACTION_WIDGET_TOGGLE_MUTE.equals(intent.getAction())
+                        ));
+        return keepSticky ? START_STICKY : START_NOT_STICKY;
     }
 
     /**
@@ -1192,7 +1242,21 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
             switch (event) {
                 case K706RadioManager.EVENT_LOSS_TRANSIENT:
-                    // Voz de navegación / Android Auto (Zlink): no forzar PLAYING+FGS aquí; competía con Maps.
+                    // K706/QS6: en algunos launchers, al ir a HOME o al overlay de widgets se emite LOSS_TRANSIENT.
+                    // Si reflejamos PAUSED aquí, el widget genérico de "música" deja de considerar nuestra sesión
+                    // como "Now Playing" y el control se pierde aunque el motor siga vivo.
+                    //
+                    // Para plataformas que dependen de MediaSession en background (K706/QS6), mantenemos la sesión
+                    // en PLAYING pero SIN forzar audio focus extra ni reactivar hardware: solo routing/visibilidad.
+                    if (isSteeringMediaBackgroundPlatform() && !mUserPaused) {
+                        mIsPlaying = true;
+                        setPlaybackState(true);
+                        writeOemStateToPrefs(event);
+                        ensureNotificationVisible();
+                        break;
+                    }
+
+                    // Voz de navegación / Android Auto (Zlink): comportamiento estándar fuera de K706/QS6.
                     if (mIsPlaying && !mUserPaused) {
                         mWasPlayingBeforeFocusLoss = true;
                     }
@@ -2158,6 +2222,16 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
     }
 
+    /** util_service: aceptar callbacks aunque el motor aún no esté cacheado en el servicio. */
+    private boolean shouldApplyK706UtilServiceKeyBridge() {
+        try {
+            if (mRadioServiceController != null && mRadioServiceController.isK706Mode()) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        return isK706EngineActive();
+    }
+
     /**
      * K706/QF: registra listener en util_service para recibir KeyEvents OEM (volante/widget launcher)
      * sin depender de Accessibility ni de ACTION_MEDIA_BUTTON.
@@ -2216,19 +2290,49 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                             return "OpenRadioFM-UtilEventListenerProxy@" + Integer.toHexString(System.identityHashCode(proxy));
                         }
 
-                        if (!"onReceived".equals(m) || args == null || args.length < 2) {
-                            return null;
-                        }
-                        Object keyInfo = args[1];
-                        if (keyInfo == null) return null;
-
                         try {
-                            if (!isK706EngineActive()) return null;
-                            if (mMediaSession == null) return null;
+                            if (!shouldApplyK706UtilServiceKeyBridge()) return null;
 
-                            Object ke = getKeyEventInfo.invoke(keyInfo);
-                            if (!(ke instanceof android.view.KeyEvent)) return null;
-                            android.view.KeyEvent keyEvent = (android.view.KeyEvent) ke;
+                            // ROM/OEM variance: stubs AIDL a veces usan OnKeyEvent (O mayúscula) — no filtrar por "on...".
+                            // Extraemos KeyEvent de cualquier arg compatible, o (keyCode, action) como Integer.
+                            if (args == null || args.length == 0) return null;
+
+                            android.view.KeyEvent keyEvent = null;
+                            for (Object a : args) {
+                                if (a == null) continue;
+                                if (a instanceof android.view.KeyEvent) {
+                                    keyEvent = (android.view.KeyEvent) a;
+                                    break;
+                                }
+                                try {
+                                    java.lang.reflect.Method mGet = a.getClass().getMethod("getKeyEventInfo");
+                                    Object ke = mGet.invoke(a);
+                                    if (ke instanceof android.view.KeyEvent) {
+                                        keyEvent = (android.view.KeyEvent) ke;
+                                        break;
+                                    }
+                                } catch (Throwable ignored) {
+                                    // fallback: probamos contra la clase esperada, por compatibilidad.
+                                    try {
+                                        if (qfKeyInfoCls.isInstance(a)) {
+                                            Object ke = getKeyEventInfo.invoke(a);
+                                            if (ke instanceof android.view.KeyEvent) {
+                                                keyEvent = (android.view.KeyEvent) ke;
+                                                break;
+                                            }
+                                        }
+                                    } catch (Throwable ignored2) {}
+                                }
+                            }
+                            if (keyEvent == null && args.length >= 2
+                                    && args[0] instanceof Integer && args[1] instanceof Integer) {
+                                int kc = (Integer) args[0];
+                                int act = (Integer) args[1];
+                                if (act == android.view.KeyEvent.ACTION_DOWN) {
+                                    keyEvent = new android.view.KeyEvent(act, kc);
+                                }
+                            }
+                            if (keyEvent == null) return null;
                             if (keyEvent.getAction() != android.view.KeyEvent.ACTION_DOWN) return null;
 
                             int keyCode = keyEvent.getKeyCode();

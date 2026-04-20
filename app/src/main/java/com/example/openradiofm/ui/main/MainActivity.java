@@ -2614,6 +2614,48 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     /**
+     * K706: "PowerOff" UI en modo B = minimizar a HOME sin silenciar ni disparar cierre total.
+     * Evita el flujo prepareForPowerOff() porque puede mutear y además algunos launchers
+     * interpretan el cierre como cambio de fuente y ejecutan forceStopPackage().
+     */
+    public void minimizeToHomeKeepingMediaControl() {
+        // Silencio en background (modo B): apagar sonido de FM y soltar AudioFocus,
+        // pero mantener MediaSession/FGS para el widget de música.
+        try {
+            if (mEngine != null) {
+                mEngine.setMute(true);
+                mEngine.releaseAudioFocusOnlyForBackground();
+            } else if (mPlaybackManager != null) {
+                // fallback legacy
+                mPlaybackManager.setMute(true);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            // Asegurar que el servicio de medios mantiene sesión/FGS para el widget de música.
+            Intent media = new Intent(getApplicationContext(), com.example.openradiofm.service.RadioMediaService.class);
+            media.setAction(com.example.openradiofm.service.RadioMediaService.ACTION_FORCE_SESSION_ACTIVE);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                startForegroundService(media);
+            } else {
+                startService(media);
+            }
+        } catch (Exception ignored) {}
+
+        try {
+            // No marcar powerOffRequested: eso activa lógica de apagado (mute/guards).
+            setPowerOffRequested(false);
+        } catch (Exception ignored) {}
+
+        try {
+            moveTaskToBack(true);
+        } catch (Exception e) {
+            // fallback
+            try { finish(); } catch (Exception ignored) {}
+        }
+    }
+
+    /**
      * V13.9: Centralized reset when frequency changes.
      */
     @Override
@@ -2672,6 +2714,15 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      */
     @Override
     public boolean onKeyDown(int keyCode, android.view.KeyEvent event) {
+        // K706: salir con BACK debe minimizar en vez de cerrar.
+        // Si la Activity termina (finish), el launcher puede ejecutar forceStopPackage()
+        // y se pierde el control del widget genérico de música.
+        if (keyCode == android.view.KeyEvent.KEYCODE_BACK) {
+            try {
+                moveTaskToBack(true);
+                return true;
+            } catch (Exception ignored) {}
+        }
         if (mHardwareKeyCoordinator != null && mHardwareKeyCoordinator.onKeyDown(keyCode, event)) {
             return true;
         }
