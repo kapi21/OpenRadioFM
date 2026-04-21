@@ -85,11 +85,28 @@ public class QS6Engine implements RadioEngine {
 
         try { registerNwdSettingsObservers(); } catch (Throwable ignored) {}
 
+        // Tras reboot, el servicio OEM puede tardar en estar operativo si la radio nativa no se abrió.
+        // Hacemos un "kick" suave: si no hay cambios RX en los primeros segundos, pedimos re-bind.
+        try { scheduleWarmupRebind(); } catch (Throwable ignored) {}
+
         // QS6: minimizar dependencia del stack OEM.
         // No “arrancar la nativa” (UI) nunca, pero sí puede ser necesario pedir routing de audio
         // si el sistema quedó en SOURCE_ANDROID o tras streaming. Solo hacerlo si parece necesario.
         try { maybeRequestPlayAudioOnStartup(); } catch (Throwable ignored) {}
         return true;
+    }
+
+    private void scheduleWarmupRebind() {
+        final int initFreq = mCurrentFreq;
+        final int initBand = mCurrentBand;
+        mMainHandler.postDelayed(() -> {
+            // Si seguimos en los defaults y no hemos recibido callbacks/settings, reintentamos conexión AIDL.
+            if (mAdapter != null && mCurrentFreq == initFreq && mCurrentBand == initBand) {
+                try { mAdapter.connect(); } catch (Throwable ignored) {}
+                // Además, forzamos un poll de settings por si el firmware ya publica estado.
+                try { pollNwdSettingsAndFire(); } catch (Throwable ignored) {}
+            }
+        }, 2200L);
     }
 
     private final RadioCallback.Stub mNwdCallback = new RadioCallback.Stub() {

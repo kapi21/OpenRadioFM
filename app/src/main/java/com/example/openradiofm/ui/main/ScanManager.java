@@ -212,6 +212,14 @@ public class ScanManager {
             mActivity.mIsScanning = effective;
         }
         applyScanButtonVisual(effective, null);
+        // UI-only: mientras escaneamos, hacer “fluido” el contador como la nativa.
+        // Se corta automáticamente al llegar una frecuencia real (MainActivity.handleFrequencyChange()) o al finalizar scan.
+        try {
+            if (mActivity != null) {
+                if (effective) mActivity.startFrequencyTicker(true);
+                else mActivity.stopFrequencyTicker();
+            }
+        } catch (Exception ignored) {}
         try {
             com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(
                     mActivity,

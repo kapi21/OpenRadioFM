@@ -6,6 +6,20 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## [Unreleased] - MCU2
 
+### QS6 / NWD — cold start, rebind & stability (April 2026)
+- **`QS6Engine`**: post‑reboot *warm-up rebind*: if no RX arrives within ~2.2s (callbacks/settings), retry `connect()` and force a `pollNwdSettingsAndFire()` so state is picked up without opening the OEM radio UI.
+- **`NWDTunerAdapter`**: AIDL reconnect with **backoff**, explicit `startService()` warm-up (no UI), and `linkToDeath` so a dead binder (or callback registration failures) triggers an automatic re-bind.
+
+### Launchers / MediaSession — initial metadata (April 2026)
+- **`RadioMediaService`**: delayed **initial metadata publish** on startup (avoids “session is there but metadata=null” in launchers such as Agama) and expanded artwork-grant allowlist for common car launchers.
+
+### UI — smoother seek/scan + station rename (April 2026)
+- **`MainActivity` / `ScanManager`**: UI‑only “optimistic” frequency ticker while `seekUp/seekDown` and during scanning; automatically stops when the real tuned frequency arrives or scanning ends.
+- **`DialogManager`**: new **Edit station name** dialog (save / restore original) with immediate UI+preset refresh and logo cache invalidation.
+
+### Startup performance (April 2026)
+- **`MainActivityBootstrap`**: defer heavy work (fonts, icon pack, `MediaSessionManager.connect`, media receiver registration, and late bootstrap phase) to the next UI tick to reduce “Skipped frames” on some head units.
+
 ### QS6 / NWD — RDS, System mirror & OEM loops (April 2026)
 - **Field workaround**: if RDS/tuner state drifts from NWD firmware expectations, **confirmed approach** is to align RDS (and related OEM toggles) via the **head unit’s native radio settings** while app/KernelService paths mature. See `README.md` (*Known issues*) and `QS6_MCU_KERNELSERVICE_INFORME.md`.
 - **`QS6Engine`**: during **slow AutoScan**, **AIDL** is preferred for `tune`/`seek` (`setAutoScanOemPreferred`, wired from `ScanManager`); outside AutoScan, **MCU-first** remains where applicable. Clears **RT** when frequency/band changes on AIDL callbacks. Optional `Settings.System` mirror guarded by `canWrite` (M+) with a **single warning** if write permission is missing.

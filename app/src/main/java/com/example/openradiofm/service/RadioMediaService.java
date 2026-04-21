@@ -38,6 +38,9 @@ import android.os.Looper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.provider.MediaStore;
 import android.view.KeyEvent;
 
 import com.example.openradiofm.R;
@@ -65,6 +68,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String[] OEM_LOGO_URI_GRANT_PACKAGES = new String[] {
             "com.android.launcher.star.blue",
             "com.android.launcher3",
+            // Car launchers comunes que consumen MediaSession metadata/artwork
+            "altergames.carlauncher",
+            "hu.carlauncher",
     };
     /** Start command from UI to force PLAYING MediaSession state. */
     public static final String ACTION_FORCE_PLAY = "com.example.openradiofm.action.FORCE_PLAY";
@@ -270,6 +276,17 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     if (engine instanceof com.example.openradiofm.data.source.QS6Engine) {
                         ensureQs6ServiceAudioFocus();
                     }
+
+                    // Importante para launchers (AGAMA, etc.): algunos motores no emiten un
+                    // primer onFrequencyChanged al arrancar si la frecuencia ya está fijada.
+                    // Si no publicamos metadata inicial, el launcher ve la sesión pero sin datos (metadata=null).
+                    try {
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            int f = getLiveFreqKhzOrDefault(0);
+                            updateMetadataFromPrefs(f);
+                            updateHomeAppWidgetSync();
+                        }, 450);
+                    } catch (Exception ignored) {}
                 }
 
                 @Override
@@ -1397,7 +1414,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                     .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "OpenRadioFM")
                     .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
-                    .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "Radio FM");
+                    // Muchos launchers muestran DISPLAY_SUBTITLE como "frecuencia" aunque TITLE sea el RDS (PS).
+                    .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
+                            (freqKhz > 0 || (live != null && live.freqKhz > 0))
+                                    ? formatFrequency((live != null && live.freqKhz > 0) ? live.freqKhz : freqKhz)
+                                    : "Radio FM");
 
             // OEM-like enrichment: RT como "álbum"/descripción, PTY como género, PI como id/extra
             if (rt != null && !rt.trim().isEmpty()) {
@@ -1459,6 +1480,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
      */
     @Nullable
     private String stationLogoUriStringForMetadata(@NonNull java.io.File file) {
+        // Preferir MediaStore si el archivo fue escaneado (más compatible con launchers; evita problemas de AppsFilter
+        // al conceder permisos de FileProvider a paquetes terceros).
+        try {
+            String ms = mediaStoreImageUriStringForPath(file.getAbsolutePath());
+            if (ms != null && !ms.isEmpty()) {
+                return ms;
+            }
+        } catch (Exception ignored) {}
         try {
             String content = stationLogoContentUriString(file);
             if (content != null && !content.isEmpty()) {
@@ -1473,6 +1502,60 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 return Uri.fromFile(file).toString();
             }
         } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    @Nullable
+    private String mediaStoreImageUriStringForPath(@NonNull String absolutePath) {
+        try {
+            // 1) Buscar por DATA (legacy). Muchos headunits siguen exponiéndolo.
+            Uri base = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            String[] proj = new String[]{ MediaStore.Images.Media._ID };
+            Cursor c = null;
+            try {
+                c = getContentResolver().query(
+                        base,
+                        proj,
+                        MediaStore.Images.Media.DATA + "=?",
+                        new String[]{ absolutePath },
+                        null
+                );
+                if (c != null && c.moveToFirst()) {
+                    long id = c.getLong(0);
+                    return ContentUris.withAppendedId(base, id).toString();
+                }
+            } finally {
+                if (c != null) c.close();
+            }
+        } catch (Throwable ignored) {
+        }
+        // 2) Fallback: buscar por nombre (cuando DATA no está disponible).
+        try {
+            String name = null;
+            try {
+                name = new java.io.File(absolutePath).getName();
+            } catch (Exception ignored) {}
+            if (name == null || name.isEmpty()) return null;
+            Uri base = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            String[] proj = new String[]{ MediaStore.Images.Media._ID };
+            Cursor c = null;
+            try {
+                c = getContentResolver().query(
+                        base,
+                        proj,
+                        MediaStore.Images.Media.DISPLAY_NAME + "=?",
+                        new String[]{ name },
+                        MediaStore.Images.Media.DATE_ADDED + " DESC"
+                );
+                if (c != null && c.moveToFirst()) {
+                    long id = c.getLong(0);
+                    return ContentUris.withAppendedId(base, id).toString();
+                }
+            } finally {
+                if (c != null) c.close();
+            }
+        } catch (Throwable ignored) {
         }
         return null;
     }

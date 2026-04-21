@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.RemoteException;
 import android.util.Log;
 
@@ -20,21 +22,47 @@ public class NWDTunerAdapter {
     private static NWDTunerAdapter sInstance;
 
     private final Context mContext;
+    private final Handler mMainHandler = new Handler(Looper.getMainLooper());
     private RadioFeature mService;
     private boolean mIsBound = false;
     private RadioCallback mCallback;
+
+    // QS6/NWD: tras reboot el servicio OEM puede estar "frío" (driver /dev/NwdRadio no listo).
+    // Implementamos reintentos con backoff para reenganchar callbacks sin depender de abrir la app nativa.
+    private int mReconnectAttempts = 0;
+    private boolean mReconnectScheduled = false;
+    private IBinder.DeathRecipient mDeathRecipient;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = RadioFeature.Stub.asInterface(service);
             mIsBound = true;
+            mReconnectAttempts = 0;
+            mReconnectScheduled = false;
             Log.d(TAG, "NWD RadioService conectado.");
+
+            try {
+                if (service != null) {
+                    if (mDeathRecipient != null) {
+                        try { service.unlinkToDeath(mDeathRecipient, 0); } catch (Exception ignored) {}
+                    }
+                    mDeathRecipient = () -> {
+                        Log.w(TAG, "NWD binder murió; reintentando bind");
+                        mService = null;
+                        mIsBound = false;
+                        scheduleReconnect("binderDied");
+                    };
+                    service.linkToDeath(mDeathRecipient, 0);
+                }
+            } catch (Throwable ignored) {}
+
             if (mCallback != null && mService != null) {
                 try {
                     mService.registCallback(mCallback);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error al registrar callback en el bind", e);
+                    scheduleReconnect("registCallbackRemoteException");
                 }
             }
         }
@@ -44,6 +72,7 @@ public class NWDTunerAdapter {
             mService = null;
             mIsBound = false;
             Log.w(TAG, "NWD RadioService desconectado.");
+            scheduleReconnect("onServiceDisconnected");
         }
     };
 
@@ -64,6 +93,8 @@ public class NWDTunerAdapter {
     }
 
     public void disconnect() {
+        mReconnectScheduled = false;
+        mReconnectAttempts = 0;
         if (mService != null) {
             if (mCallback != null) {
                 try { mService.unRegistCallback(mCallback); } catch (Exception ignored) {}
@@ -78,12 +109,23 @@ public class NWDTunerAdapter {
 
     public void bind() {
         if (mIsBound) return;
-        Intent intent = new Intent("com.nwd.radio.service.ACTION_RADIO_SERVICE");
-        intent.setPackage("com.nwd.radio.service");
         try {
-            mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            Intent svc = new Intent("com.nwd.radio.service.ACTION_RADIO_SERVICE");
+            svc.setPackage("com.nwd.radio.service");
+
+            // Warm-up: intentar arrancar el servicio explícitamente (sin UI).
+            try {
+                Intent explicit = new Intent(svc);
+                explicit.setComponent(new ComponentName("com.nwd.radio.service", "com.nwd.radio.service.RadioService"));
+                mContext.startService(explicit);
+            } catch (Exception ignored) {}
+
+            // Rebind limpio si quedó un bind a medias.
+            try { mContext.unbindService(mConnection); } catch (Exception ignored) {}
+            mContext.bindService(svc, mConnection, Context.BIND_AUTO_CREATE);
         } catch (Exception e) {
             Log.e(TAG, "Error al vincular el servicio NWD", e);
+            scheduleReconnect("bindException");
         }
     }
 
@@ -94,8 +136,28 @@ public class NWDTunerAdapter {
                 mService.registCallback(callback);
             } catch (RemoteException e) {
                 Log.e(TAG, "Error al registrar callback", e);
+                scheduleReconnect("setCallbackRemoteException");
             }
         }
+    }
+
+    private void scheduleReconnect(String reason) {
+        if (mReconnectScheduled) return;
+        mReconnectScheduled = true;
+        long delayMs;
+        // Backoff rápido al principio; luego tope 10s
+        if (mReconnectAttempts <= 0) delayMs = 350L;
+        else if (mReconnectAttempts == 1) delayMs = 750L;
+        else if (mReconnectAttempts == 2) delayMs = 1400L;
+        else if (mReconnectAttempts == 3) delayMs = 2200L;
+        else delayMs = Math.min(10000L, 3000L + (mReconnectAttempts * 700L));
+        mReconnectAttempts++;
+        Log.w(TAG, "scheduleReconnect(" + reason + ") in " + delayMs + "ms (attempt " + mReconnectAttempts + ")");
+        mMainHandler.postDelayed(() -> {
+            mReconnectScheduled = false;
+            if (mIsBound) return;
+            bind();
+        }, delayMs);
     }
 
     public void tune(int freqKhz) {

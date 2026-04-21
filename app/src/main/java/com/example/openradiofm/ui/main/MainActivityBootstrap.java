@@ -138,10 +138,19 @@ final class MainActivityBootstrap {
             a.mUiMediator.bindViews();
         }
 
-        // V15.6: Aplicar tipografía global inmediatamente tras cargar el layout
-        a.applyFonts();
-        // Aplicar pack de iconos (si existe) a la UI actual.
-        a.applyIconPack();
+        // Arranque fluido: evitar trabajo recursivo pesado antes del primer draw.
+        // (En algunos headunits causa "Skipped XX frames" al iniciar tras reboot/instalación).
+        View root = a.findViewById(android.R.id.content);
+        if (root != null) {
+            root.post(() -> {
+                try { a.applyFonts(); } catch (Exception ignored) {}
+                try { a.applyIconPack(); } catch (Exception ignored) {}
+            });
+        } else {
+            // Fallback (no debería ocurrir)
+            a.applyFonts();
+            a.applyIconPack();
+        }
 
         // VXX: Aplicar relieve opcional de logos
         if (a.mPrefs != null) {
@@ -178,7 +187,15 @@ final class MainActivityBootstrap {
         });
         a.mHistoryManager = new HistoryManager(a, a.mPrefs);
         a.mMediaSessionManager = new MediaSessionManager(a);
-        a.mMediaSessionManager.connect();
+        // Arranque fluido: la conexión al MediaBrowser/MediaSession puede provocar jank
+        // en algunas ROMs justo antes del primer draw. Diferir un tick.
+        try {
+            a.getMainHandler().post(() -> {
+                try { if (a.mMediaSessionManager != null) a.mMediaSessionManager.connect(); } catch (Exception ignored) {}
+            });
+        } catch (Exception ignored) {
+            a.mMediaSessionManager.connect();
+        }
 
         a.mControlPanelManager = new ControlPanelManager(a);
 
@@ -241,7 +258,14 @@ final class MainActivityBootstrap {
                 });
             }
         });
-        a.mPlaybackManager.registerMediaReceiver();
+        // Evitar registro pesado en el tramo crítico del primer render.
+        try {
+            a.getMainHandler().post(() -> {
+                try { if (a.mPlaybackManager != null) a.mPlaybackManager.registerMediaReceiver(); } catch (Exception ignored) {}
+            });
+        } catch (Exception ignored) {
+            a.mPlaybackManager.registerMediaReceiver();
+        }
 
         a.mDeviceManager = new DeviceManager(a);
     }
@@ -504,18 +528,22 @@ final class MainActivityBootstrap {
     }
 
     private static void finalizeBootstrap(MainActivity a) {
-        a.applyFonts();
-
-        // V8.5: Easter Egg (Credits) - Restored
-        a.setupCreditsEasterEgg();
-
-        if (a.mServiceController != null)
-            a.mServiceController.start();
-
-        // Tras recreate() (cambio de layout u otra recreación con estado): segundo refresh asentado.
-        a.scheduleRadioUiResyncAfterRecreation();
-
-        // V20.0: Ajuste automático por densidad (DPI)
-        a.adjustLayoutForDPI();
+        // Fase final: diferir operaciones costosas al siguiente ciclo de UI para no penalizar
+        // el primer render (evita "Skipped XX frames" al arranque).
+        View root = a.findViewById(android.R.id.content);
+        Runnable late = () -> {
+            try { a.applyFonts(); } catch (Exception ignored) {}
+            try { a.setupCreditsEasterEgg(); } catch (Exception ignored) {}
+            try {
+                if (a.mServiceController != null) a.mServiceController.start();
+            } catch (Exception ignored) {}
+            try { a.scheduleRadioUiResyncAfterRecreation(); } catch (Exception ignored) {}
+            try { a.adjustLayoutForDPI(); } catch (Exception ignored) {}
+        };
+        if (root != null) {
+            root.post(late);
+        } else {
+            late.run();
+        }
     }
 }

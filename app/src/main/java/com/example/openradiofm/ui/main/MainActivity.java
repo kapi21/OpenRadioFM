@@ -1688,6 +1688,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         if (mEngine != null) {
             runOnUiThread(this::clearStationLogoUi);
             try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "seekUp()"); } catch (Exception ignored) {}
+            try { startFrequencyTicker(true); } catch (Exception ignored) {}
             mEngine.seekUp();
         }
     }
@@ -1696,6 +1697,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         if (mEngine != null) {
             runOnUiThread(this::clearStationLogoUi);
             try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(this, "UI", "seekDown()"); } catch (Exception ignored) {}
+            try { startFrequencyTicker(false); } catch (Exception ignored) {}
             mEngine.seekDown();
         }
     }
@@ -2660,9 +2662,88 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      */
     @Override
     public void handleFrequencyChange(int freq) {
+        // Animación optimista durante seek/scan: al llegar frecuencia real, cortar y hacer snap.
+        try { stopFrequencyTicker(); } catch (Exception ignored) {}
         if (mFrequencyChangeCoordinator != null) {
             mFrequencyChangeCoordinator.handleFrequencyChange(freq);
         }
+    }
+
+    // =============================================================================================
+    // Frecuencia “fluida” durante seek/scan (UI-only)
+    // =============================================================================================
+
+    private final android.os.Handler mFreqTickerHandler = new android.os.Handler(android.os.Looper.getMainLooper());
+    private boolean mFreqTickerRunning = false;
+    private boolean mFreqTickerDirectionUp = true;
+    private int mFreqTickerKhz = -1;
+    private long mFreqTickerStartedMs = 0L;
+    private static final long FREQ_TICK_MS = 80L;
+    private static final long FREQ_TICK_MAX_MS = 9000L; // seguridad: no dejarlo corriendo indefinidamente
+
+    private final Runnable mFreqTickerRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!mFreqTickerRunning) return;
+            if (isFinishing() || (android.os.Build.VERSION.SDK_INT >= 17 && isDestroyed())) {
+                mFreqTickerRunning = false;
+                return;
+            }
+            long now = android.os.SystemClock.elapsedRealtime();
+            if (mFreqTickerStartedMs > 0L && now - mFreqTickerStartedMs > FREQ_TICK_MAX_MS) {
+                mFreqTickerRunning = false;
+                return;
+            }
+
+            final int band = mCurrentBand;
+            final boolean isAm = (band >= 3);
+            final int stepKhz = isAm ? 9 : 100; // AM típico 9 kHz; FM 0.1 MHz
+
+            int next = mFreqTickerKhz > 0 ? mFreqTickerKhz : (mLastFreq > 0 ? mLastFreq : 87500);
+            next = mFreqTickerDirectionUp ? (next + stepKhz) : (next - stepKhz);
+
+            if (!isAm) {
+                if (next < 87500) next = 108000;
+                if (next > 108000) next = 87500;
+            } else {
+                if (next < 522) next = 1620;
+                if (next > 1620) next = 522;
+            }
+
+            mFreqTickerKhz = next;
+            try {
+                // Solo texto, sin “trabajo pesado” (logos/prefs/widgets).
+                if (tvFrequency != null) {
+                    final String s = isAm
+                            ? String.valueOf(next)
+                            : String.format(java.util.Locale.US, "%.1f", next / 1000.0);
+                    setTextIfChanged(tvFrequency, s);
+                } else if (mUiController != null) {
+                    mUiController.updateFrequency(next, null, isAm);
+                }
+            } catch (Exception ignored) {}
+
+            mFreqTickerHandler.postDelayed(this, FREQ_TICK_MS);
+        }
+    };
+
+    public void startFrequencyTicker(boolean directionUp) {
+        mFreqTickerDirectionUp = directionUp;
+        if (mFreqTickerRunning) return;
+        mFreqTickerRunning = true;
+        mFreqTickerStartedMs = android.os.SystemClock.elapsedRealtime();
+        int cur = -1;
+        try { if (mEngine != null) cur = mEngine.getCurrentFreq(); } catch (Exception ignored) {}
+        if (cur <= 0) cur = (mLastFreq > 0 ? mLastFreq : 87500);
+        mFreqTickerKhz = cur;
+        mFreqTickerHandler.removeCallbacks(mFreqTickerRunnable);
+        mFreqTickerHandler.post(mFreqTickerRunnable);
+    }
+
+    public void stopFrequencyTicker() {
+        if (!mFreqTickerRunning) return;
+        mFreqTickerRunning = false;
+        mFreqTickerHandler.removeCallbacks(mFreqTickerRunnable);
     }
 
     // V18.6: M├®todos para ocultaci├│n autom├ítica de controles

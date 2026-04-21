@@ -1,6 +1,18 @@
 ## [Unreleased] - MCU2
 
-(sin entradas)
+### QS6 / NWD — arranque, rebind y estabilidad (abril 2026)
+- **`QS6Engine`**: *warm-up rebind* tras reboot: si en ~2,2 s no llega RX (callbacks/settings) se reintenta `connect()` y se fuerza un `pollNwdSettingsAndFire()` para enganchar estado sin abrir la radio OEM.
+- **`NWDTunerAdapter`**: reconexión AIDL con **backoff**, *warm-up* `startService()` (sin UI), y `linkToDeath` para re-bind automático si muere el binder o falla `registCallback`.
+
+### Launchers / MediaSession — metadata inicial (abril 2026)
+- **`RadioMediaService`**: publicación de **metadata inicial** diferida al arrancar (evita sesión visible pero sin datos en launchers tipo Agama) y ampliación de paquetes con permiso de lectura de artwork para launchers de coche comunes.
+
+### UI — seek/scan “fluido” y edición de nombre (abril 2026)
+- **`MainActivity` / `ScanManager`**: *ticker* de frecuencia “optimista” durante `seekUp/seekDown` y mientras el escaneo está activo; se corta automáticamente al llegar la frecuencia real o al finalizar el scan.
+- **`DialogManager`**: nuevo diálogo **Editar nombre de emisora** (guardar/restaurar original) con refresco inmediato de UI/presets y limpieza de caché de logos.
+
+### Rendimiento de arranque (abril 2026)
+- **`MainActivityBootstrap`**: diferir operaciones costosas (fuentes, icon pack, `MediaSessionManager.connect`, registro de media receiver y fase final de bootstrap) al siguiente tick de UI para reducir “Skipped frames” en head units.
 
 ## [5.2.0] - 2026-04-19
 

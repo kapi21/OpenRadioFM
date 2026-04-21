@@ -42,25 +42,57 @@ public class DialogManager {
             return;
         int currentFreq = mActivity.mEngine.getCurrentFreq();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(mActivity.getString(R.string.edit_station_name));
-        builder.setMessage(mActivity.getString(R.string.frequency_label, String.format(java.util.Locale.getDefault(), "%.1f", currentFreq / 1000.0)));
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_edit_station_name);
 
-        final EditText input = new EditText(mActivity);
-        input.setSingleLine(true);
-
-        // Pre-llenar con el nombre actual (si es custom o RDS)
-        com.example.openradiofm.data.model.RadioStation s = mActivity.mRepository.getStationInfo(currentFreq, null);
-        if (s.getName() != null) {
-            input.setText(s.getName());
-            input.setSelectAllOnFocus(true);
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
 
-        builder.setView(input);
+        View rootCard = dialog.findViewById(R.id.edit_station_dialog_root);
+        if (rootCard != null) {
+            try {
+                rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+            } catch (Exception ignored) {
+            }
+        }
 
-        builder.setPositiveButton(mActivity.getString(R.string.dialog_btn_save), (dialog, which) -> {
-            String newName = input.getText().toString().trim();
-            if (!newName.isEmpty()) {
+        TextView tvFreq = dialog.findViewById(R.id.tvEditStationFreq);
+        if (tvFreq != null) {
+            String f = String.format(java.util.Locale.getDefault(), "%.1f", currentFreq / 1000.0);
+            tvFreq.setText(mActivity.getString(R.string.frequency_label, f));
+        }
+
+        final EditText input = dialog.findViewById(R.id.etStationName);
+        if (input != null) {
+            input.setSingleLine(true);
+            try {
+                input.setTypeface(mActivity.getSystemTypeface());
+            } catch (Exception ignored) {
+            }
+
+            // Pre-llenar con el nombre actual (si es custom o RDS)
+            try {
+                com.example.openradiofm.data.model.RadioStation s = mActivity.mRepository.getStationInfo(currentFreq, null);
+                if (s != null && s.getName() != null) {
+                    input.setText(s.getName());
+                    input.setSelectAllOnFocus(true);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        View btnSave = dialog.findViewById(R.id.btnSaveStationName);
+        if (btnSave != null) {
+            btnSave.setOnClickListener(v -> {
+                if (input == null) return;
+                String newName = input.getText().toString().trim();
+                if (newName.isEmpty()) return;
+
                 // V16.4: Usar setCustomName (CUSTOM_) en vez de saveRdsName (RDS_)
                 mActivity.mRepository.setCustomName(currentFreq, newName);
                 mActivity.showToast(mActivity.getString(R.string.toast_station_name_saved, newName));
@@ -74,48 +106,66 @@ public class DialogManager {
                 if (mActivity.mPresetManager != null) {
                     mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
                 }
-                // V16.4: Forzar refresco de la frecuencia en pantalla
+
                 mActivity.runOnUiThread(() -> {
                     // V18.6: Limpiar caché de logos de la Activity para que busque el nuevo nombre
                     int band = mActivity.getCurrentBand();
                     mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
                     mActivity.mLastLogoUrl = ""; // Forzar que LogoManager no ignore el cambio
-                    
+
                     mActivity.updateFrequencyDisplay(currentFreq, newName);
                     mActivity.refreshRadioStatus();
                 });
-            }
-        });
 
-        builder.setNegativeButton(mActivity.getString(R.string.cancel), (dialog, which) -> dialog.cancel());
-
-        builder.setNeutralButton(mActivity.getString(R.string.dialog_btn_restore_original), (dialog, which) -> {
-            // V16.4: Limpiar nombre custom
-            mActivity.mRepository.setCustomName(currentFreq, null);
-            mActivity.showToast(mActivity.getString(R.string.toast_station_name_restored));
-
-            // V16.4: Limpiar override en RDSManager
-            if (mActivity.mRdsManager != null) {
-                mActivity.mRdsManager.clearCustomNameOverride();
-            }
-
-            if (mActivity.mPresetManager != null) {
-                mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
-            }
-            // V16.4: Forzar refresco
-            mActivity.runOnUiThread(() -> {
-                // V18.6: Limpiar caché al restaurar
-                int band = mActivity.getCurrentBand();
-                mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
-                mActivity.mLastLogoUrl = "";
-                
-                mActivity.updateFrequencyDisplay(currentFreq, null);
-                mActivity.refreshRadioStatus();
+                dialog.dismiss();
             });
-        });
+        }
 
-        builder.show();
-        input.requestFocus();
+        View btnRestore = dialog.findViewById(R.id.btnRestoreOriginalStationName);
+        if (btnRestore != null) {
+            btnRestore.setOnClickListener(v -> {
+                // V16.4: Limpiar nombre custom
+                mActivity.mRepository.setCustomName(currentFreq, null);
+                mActivity.showToast(mActivity.getString(R.string.toast_station_name_restored));
+
+                // V16.4: Limpiar override en RDSManager
+                if (mActivity.mRdsManager != null) {
+                    mActivity.mRdsManager.clearCustomNameOverride();
+                }
+
+                if (mActivity.mPresetManager != null) {
+                    mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
+                }
+
+                mActivity.runOnUiThread(() -> {
+                    // V18.6: Limpiar caché al restaurar
+                    int band = mActivity.getCurrentBand();
+                    mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
+                    mActivity.mLastLogoUrl = "";
+
+                    mActivity.updateFrequencyDisplay(currentFreq, null);
+                    mActivity.refreshRadioStatus();
+                });
+
+                dialog.dismiss();
+            });
+        }
+
+        View btnCancel = dialog.findViewById(R.id.btnCancelEditStationName);
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {
+        }
+
+        dialog.show();
+        try {
+            if (input != null) input.requestFocus();
+        } catch (Exception ignored) {
+        }
     }
 
     public void showPremiumSettingsDialog() {

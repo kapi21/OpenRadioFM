@@ -46,6 +46,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 |---|:---:|:---:|:---:|
 | Sintonización FM | ✅ | ✅ | ✅ |
 | Seek / AutoScan | ✅ | ✅ | ✅ |
+| Editar nombre de emisora (custom) | ✅ | ✅ | ✅ |
 | RDS PS (nombre) | ✅ | ✅ | ✅ |
 | RDS RT (información) | ✅ | ✅ | ✅ |
 | AF / TA / TP | ✅ | ✅ | ✅ |
