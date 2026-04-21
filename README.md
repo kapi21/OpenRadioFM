@@ -5,9 +5,9 @@
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
-[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259-purple.svg)]()
+[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units**, con soporte activo para **K706**, **MT8163 (Junsun V1 Pro)** y las plataformas **MTK 8227L / 8259 / 8667**.  
+**Aplicación de radio FM premium para Android Head Units**, con soporte activo para **K706**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, y **FYT/Teyes (OEM)** (control por intents de `com.syu.radio`).  
 Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada de logos y temas.
 
 <div align="center">

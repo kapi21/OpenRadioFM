@@ -178,6 +178,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         FM_BASICO,
         FM_K706,
         FM_QS6,
+        /** FYT/Teyes OEM: control por intents de {@code com.syu.radio}. */
+        FM_FYT_OEM,
         /** Jancar IVI ({@code com.jancar.services} / IRadio AIDL), p. ej. MTK8227L. */
         FM_JANCAR_IVI,
         FM_8259_8667,

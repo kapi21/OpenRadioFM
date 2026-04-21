@@ -42,6 +42,10 @@
         <intent>
             <action android:name="com.jancar.services.action.radio" />
         </intent>
+
+        <!-- FYT/Teyes OEM Radio (com.syu.radio) + screenbutton -->
+        <package android:name="com.syu.radio" />
+        <package android:name="com.fyt.screenbutton" />
     </queries>
 
     <application

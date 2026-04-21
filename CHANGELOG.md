@@ -1,5 +1,8 @@
 ## [Unreleased] - MCU2
 
+### FYT / Teyes — motor OEM por intents (abril 2026)
+- **`FYTOemEngine`**: nuevo motor **FYT/OEM** (paquete `com.syu.radio`) sin root ni AIDL: `tune` por deep‑link `radio://tune?freq=…` y **Prev/Next** vía `startService` a `com.syu.broadcast.MyService` (`com.syu.radio.prevservice/nextservice`). Incluye autodetección en `RadioServiceController` (usa `sys.fyt.platform` cuando está disponible).
+
 ### QS6 / NWD — arranque, rebind y estabilidad (abril 2026)
 - **`QS6Engine`**: *warm-up rebind* tras reboot: si en ~2,2 s no llega RX (callbacks/settings) se reintenta `connect()` y se fuerza un `pollNwdSettingsAndFire()` para enganchar estado sin abrir la radio OEM.
 - **`NWDTunerAdapter`**: reconexión AIDL con **backoff**, *warm-up* `startService()` (sin UI), y `linkToDeath` para re-bind automático si muere el binder o falla `registCallback`.

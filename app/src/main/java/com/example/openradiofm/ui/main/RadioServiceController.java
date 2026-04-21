@@ -14,6 +14,7 @@ import android.util.Log;
 import com.hcn.autoradio.IRadioServiceAPI;
 import com.example.openradiofm.data.source.RadioEngine;
 import com.example.openradiofm.data.source.MT8163Engine;
+import com.example.openradiofm.data.source.FYTOemEngine;
 import com.example.openradiofm.service.RadioMediaService;
 import com.ts.main.common.ITsCommon;
 import com.ts.tsspeechlib.radio.ITsSpeechRadio;
@@ -377,6 +378,26 @@ public class RadioServiceController {
             } catch (Exception e) {
                 Log.e(TAG, "Error iniciando JancarIviEngine", e);
             }
+        } else if (mode == MainActivity.FmMode.FM_FYT_OEM) {
+            try {
+                synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                    if (sSharedLocalEngine instanceof FYTOemEngine) {
+                        Log.i(TAG, "=> FYT/OEM: reutilizando instancia compartida");
+                        if (mListener != null) mListener.onEngineReady(sSharedLocalEngine);
+                        return;
+                    }
+                    FYTOemEngine engine = new FYTOemEngine();
+                    if (engine.init(mContext)) {
+                        sSharedLocalEngine = engine;
+                        if (mListener != null) mListener.onEngineReady(engine);
+                    } else {
+                        Log.w(TAG, "Error iniciando FYTOemEngine (init devolvió false)");
+                    }
+                }
+                return;
+            } catch (Exception e) {
+                Log.e(TAG, "Error iniciando FYTOemEngine", e);
+            }
         }
 
         if (mode == MainActivity.FmMode.FM_MT8163) {
@@ -523,6 +544,7 @@ public class RadioServiceController {
         if (engineIdx == 8) return MainActivity.FmMode.FM_JANCAR_IVI;
 
         // Si es Automático (0), intentamos detectar el hardware
+        if (FYTOemEngine.isFytOemAvailable(mContext)) return MainActivity.FmMode.FM_FYT_OEM;
         if (isTS8259()) return MainActivity.FmMode.FM_8259_8667;
         if (isQS6()) return MainActivity.FmMode.FM_QS6;
         if (isK706()) return MainActivity.FmMode.FM_K706;

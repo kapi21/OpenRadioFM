@@ -6,6 +6,9 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ## [Unreleased] - MCU2
 
+### FYT / Teyes — OEM intent-based engine (April 2026)
+- **`FYTOemEngine`**: new **FYT/OEM** engine (package `com.syu.radio`) with no root/AIDL: `tune` via deep‑link `radio://tune?freq=…` and **Prev/Next** via `startService` to `com.syu.broadcast.MyService` (`com.syu.radio.prevservice/nextservice`). Includes auto-detection in `RadioServiceController` (uses `sys.fyt.platform` when available).
+
 ### QS6 / NWD — cold start, rebind & stability (April 2026)
 - **`QS6Engine`**: post‑reboot *warm-up rebind*: if no RX arrives within ~2.2s (callbacks/settings), retry `connect()` and force a `pollNwdSettingsAndFire()` so state is picked up without opening the OEM radio UI.
 - **`NWDTunerAdapter`**: AIDL reconnect with **backoff**, explicit `startService()` warm-up (no UI), and `linkToDeath` so a dead binder (or callback registration failures) triggers an automatic re-bind.
