@@ -438,6 +438,31 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         return null;
     }
 
+    /**
+     * K706/QuickFish: al abrir la app, forzar una emisión de estado al widget OEM (si existe).
+     * Esto ayuda a “mostrar” la tarjeta/widget de radio en launchers que reaccionan a
+     * {@code com.qf.radio.update_action} al entrar en Radio.
+     */
+    private void pushOemWidgetStateOnAppOpenIfPossible() {
+        try {
+            if (mEngine == null) return;
+            // Solo tiene sentido para K706 (broadcast QF); otros motores ignoran notifyWidgetUpdate.
+            if (mMode != FmMode.FM_K706) return;
+            int freq = mEngine.getCurrentFreq();
+            if (freq <= 0) return;
+            int band;
+            try {
+                band = mEngine.getCurrentBand();
+            } catch (Exception ignored) {
+                band = mCurrentBand;
+            }
+            if (band < 0) band = mCurrentBand;
+            String name = getStableCachedNameForFrequency(freq);
+            if (name == null) name = "";
+            sendWidgetUpdate(freq, band, name);
+        } catch (Exception ignored) {}
+    }
+
     @Override
     public boolean hasStableCachedNameForFrequency(int freqKhz) {
         String name = getStableCachedNameForFrequency(freqKhz);
@@ -1457,6 +1482,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     protected void onResume() {
         super.onResume();
         if (mLifecycleCoordinator != null) mLifecycleCoordinator.onResume();
+        // K706 Root Edition: al volver al frente, empujar estado al widget OEM para que se “despierte”.
+        pushOemWidgetStateOnAppOpenIfPossible();
     }
 
     @Override

@@ -500,14 +500,37 @@ public class K706Engine implements RadioEngine {
             qf.putExtra("com.qf.radio.update_action_preset_key",   presetIdx);
             qf.putExtra("com.qf.radio.update_action_searching_key", false);
             qf.putExtra("com.qf.radio.update_action_name_key",     widgetName);
-            qf.setPackage("com.android.auto.autohome");
-            context.sendBroadcast(qf);
+            // K706 (QuickFish): en muchas ROM el launcher real es un "theme package" (p. ej. movablecell)
+            // que contiene el namespace autohome, pero el packageName NO es com.android.auto.autohome.
+            // Para maximizar compatibilidad, probamos ambos destinos y luego fallback sin package.
+            boolean sent = false;
+            sent |= sendBroadcastToPackage(context, qf, "com.android.launcher.movablecell");
+            sent |= sendBroadcastToPackage(context, qf, "com.android.auto.autohome");
+            if (!sent) {
+                // Último intento: broadcast implícito (puede estar filtrado por la ROM)
+                context.sendBroadcast(qf);
+            }
 
             Log.d(TAG, "notifyWidgetUpdate: QF broadcast enviado -> " + freqStr + " band=" + band);
         } catch (SecurityException se) {
             QfWidgetBroadcastGuard.disable(se);
         } catch (Exception e) {
             Log.w(TAG, "notifyWidgetUpdate: error enviando broadcast QF", e);
+        }
+    }
+
+    private static boolean sendBroadcastToPackage(Context context, android.content.Intent base, String pkg) {
+        if (context == null || base == null || pkg == null || pkg.isEmpty()) return false;
+        try {
+            android.content.Intent i = new android.content.Intent(base);
+            i.setPackage(pkg);
+            context.sendBroadcast(i);
+            return true;
+        } catch (SecurityException se) {
+            // Si la ROM restringe el destino, dejamos que el guard superior lo gestione.
+            throw se;
+        } catch (Exception ignored) {
+            return false;
         }
     }
 

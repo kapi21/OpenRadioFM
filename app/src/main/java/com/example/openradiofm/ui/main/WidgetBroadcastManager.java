@@ -173,9 +173,24 @@ public class WidgetBroadcastManager {
         qf.putExtra("com.qf.radio.update_action_preset_key", presetIdx);
         qf.putExtra("com.qf.radio.update_action_searching_key", false);
         qf.putExtra("com.qf.radio.update_action_name_key", widgetName);
-        qf.setPackage("com.android.auto.autohome");
         try {
-            ctx.sendBroadcast(qf);
+            // Ver K706Engine.notifyWidgetUpdate: algunos launchers usan package distinto a com.android.auto.autohome.
+            boolean sent = false;
+            try {
+                Intent i = new Intent(qf);
+                i.setPackage("com.android.launcher.movablecell");
+                ctx.sendBroadcast(i);
+                sent = true;
+            } catch (Exception ignored) {}
+            try {
+                Intent i2 = new Intent(qf);
+                i2.setPackage("com.android.auto.autohome");
+                ctx.sendBroadcast(i2);
+                sent = true;
+            } catch (Exception ignored) {}
+            if (!sent) {
+                ctx.sendBroadcast(qf);
+            }
         } catch (SecurityException se) {
             QF_GUARD.disable(se);
         }
