@@ -7,7 +7,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 ## [Unreleased] - MCU2
 
 ### K706 Root Edition (`K706_Root` branch, April 2026)
-- **Magisk (`magisk/K706_Root/`)**: on each boot disables `com.android.fmradio.ext` and **patches** XML under `/data/data/*/shared_prefs` that reference the OEM shortcut (several component string variants; package/class split); `*.bak_orf` backups; `uninstall.sh` restores prefs and re-enables OEM.
+- **Magisk (`magisk/K706_Root/`)**: **systemless overlay** `system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk` with a trampoline APK (`:stub-fmradio`: `FmMainActivity` → OpenRadioFM, stub `FmService` for `IFmRadioService`); `service.sh` **`pm enable`s** the package (required for the launcher’s explicit `ComponentName`). Still patches OEM strings in `shared_prefs`; `SKIPMOUNT=false`; `build_k706_root_zip.bat` builds the stub and packs the ZIP.
 - **Magisk — Windows build**: `magisk/build_k706_root_zip.bat` forces **LF** line endings before zipping; `.gitattributes` sets `eol=lf` under `magisk/`.
 - **K706 / OEM widget**: `com.qf.radio.update_action` is also sent to the **resolved HOME package** (e.g. `com.android.launcher.gradient.black`), in addition to `movablecell` and `com.android.auto.autohome` (`K706Engine`, `WidgetBroadcastManager`). **Fix:** a `SecurityException` on one target no longer aborts the whole loop (avoids widgets stuck with `radioStartup=false`).
 - **`LauncherIntentUtils`**: moved to `com.example.openradiofm.util` for engine use.

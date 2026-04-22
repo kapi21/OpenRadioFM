@@ -1,9 +1,14 @@
 # OpenRadioFM — K706 Root Hijack (Magisk)
 
 ## Qué hace
-- En cada arranque, **deshabilita** la FM OEM real: `com.android.fmradio.ext`
-- **Icono RADIO (cualquier launcher/tema)**: recorre `/data/data/*/shared_prefs/*.xml` y, si el XML referencia el acceso directo OEM (`fmradio.ext` / `FmMainActivity`), sustituye el destino por OpenRadioFM (`MainActivity`). Así, si cambias el launcher por defecto y otro paquete guarda el mismo tipo de atajo, también se corrige en el siguiente arranque.
-- Al desinstalar el módulo, **restaura** el paquete (`pm enable`) y los XML respaldados (`*.bak_orf`).
+- **APK trampolín (QF K706):** monta `system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk` (ruta real en unidades con `pm path com.android.fmradio.ext` → `package:/system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk`). Mantiene el mismo `package` `com.android.fmradio.ext` y la actividad `com.android.fmradio.FmMainActivity`, pero al abrirlas **redirige a OpenRadioFM**. Así el widget del launcher (`Function.onRadio` → `RunApp`) deja de lanzar `ActivityNotFoundException` cuando la radio OEM estaba deshabilitada.
+- Incluye un **FmService** mínimo con la acción `com.android.fmradio.IFmRadioService` (stub) para evitar fallos triviales de bind; el sintonizador real sigue siendo OpenRadioFM / motor K706.
+- En cada arranque: **`pm enable`** `com.android.fmradio.ext` (el paquete debe estar habilitado para que el `ComponentName` explícito resuelva contra el APK montado).
+- **Icono RADIO (prefs):** recorre `/data/data/*/shared_prefs/*.xml` con referencias OEM y sustituye por OpenRadioFM donde aplique.
+- Al desinstalar el módulo, Magisk quita el overlay (vuelve el APK de fábrica), **`pm enable`** y restauración de `*.bak_orf`.
+
+### Otra ROM / otra ruta bajo `/system/priv-app/`
+Si `pm path com.android.fmradio.ext` **no** es `QF_FMRadioExt/QF_FMRadioExt.apk`, hay que renombrar la carpeta y el `.apk` dentro del ZIP del módulo (o duplicar el árbol) para coincidir con la ruta real antes de empaquetar.
 
 ## Instalación
 1) Comprime la carpeta `magisk/K706_Root/` como ZIP **manteniendo la estructura completa**, incluyendo `META-INF/`:

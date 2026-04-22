@@ -1,7 +1,7 @@
 ## [Unreleased] - MCU2
 
 ### K706 Root Edition (rama `K706_Root`, abril 2026)
-- **Magisk (`magisk/K706_Root/`)**: en cada boot deshabilita `com.android.fmradio.ext` y **parchea** XML en `/data/data/*/shared_prefs` que apunten al atajo OEM (variantes componente slash/guion y sustitución de paquete/clase); backup `*.bak_orf`; `uninstall.sh` restaura prefs y re-habilita OEM.
+- **Magisk (`magisk/K706_Root/`)**: **overlay** `system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk` con APK trampolín (`:stub-fmradio`: `FmMainActivity` → OpenRadioFM, `FmService` stub para `IFmRadioService`); `service.sh` hace **`pm enable`** del paquete (necesario para el `ComponentName` explícito del launcher). Sigue el **parche** de XML en `shared_prefs`; `customize.sh` usa `SKIPMOUNT=false`; `build_k706_root_zip.bat` compila el stub y empaqueta el ZIP.
 - **Magisk — build Windows**: `magisk/build_k706_root_zip.bat` fuerza **LF** en scripts antes del ZIP; `.gitattributes` fuerza `eol=lf` bajo `magisk/`.
 - **K706 / widget OEM**: `com.qf.radio.update_action` también se envía al **paquete HOME** resuelto (p. ej. `com.android.launcher.gradient.black`), además de `movablecell` y `com.android.auto.autohome` (`K706Engine`, `WidgetBroadcastManager`). **Fix:** si un destino lanza `SecurityException`, ya no se cancela el resto del bucle (antes el widget podía quedarse en `radioStartup=false`).
 - **`LauncherIntentUtils`**: movido a `com.example.openradiofm.util` para uso desde el motor.

@@ -52,7 +52,7 @@ patch_all_radio_shortcut_prefs() {
   done
 }
 
-log_print "service.sh start: disabling OEM FM package: ${PKG_FM_OEM}"
+log_print "service.sh start: stub QF_FMRadioExt + launcher prefs (${PKG_FM_OEM})"
 
 i=0
 while [ $i -lt 30 ]; do
@@ -61,8 +61,10 @@ while [ $i -lt 30 ]; do
   sleep 1
 done
 
-pm disable-user --user 0 "${PKG_FM_OEM}" >/dev/null 2>&1
-am force-stop "${PKG_FM_OEM}" >/dev/null 2>&1
+# El módulo monta un APK trampolín en system/priv-app/QF_FMRadioExt/ (mismo package
+# com.android.fmradio.ext). Si el paquete sigue disable-user, el launcher lanza
+# ActivityNotFoundException al pulsar el widget (Function.onRadio -> FmMainActivity).
+pm enable --user 0 "${PKG_FM_OEM}" >/dev/null 2>&1
 
 log_print "Scanning shared_prefs for OEM RADIO shortcut targets -> OpenRadioFM"
 patch_all_radio_shortcut_prefs

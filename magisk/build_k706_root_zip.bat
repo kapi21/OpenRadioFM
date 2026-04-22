@@ -31,6 +31,21 @@ if /i not "!CUR_BRANCH!"=="K706_Root" (
   echo [WARN] Continuo igualmente para crear el ZIP desde la rama actual.
 )
 
+echo [INFO] Compilando APK trampolin :stub-fmradio:assembleRelease ...
+REM El modulo :app exige SUPABASE_* al configurar Gradle; valores dummy si faltan.
+if "!SUPABASE_URL!"=="" set "SUPABASE_URL=https://build-placeholder.invalid/"
+if "!SUPABASE_ANON_KEY!"=="" set "SUPABASE_ANON_KEY=build-placeholder"
+call gradlew.bat :stub-fmradio:assembleRelease -q
+if errorlevel 1 (
+  echo [ERROR] Fallo Gradle stub-fmradio.
+  exit /b 1
+)
+set "STUB_APK=%CD%\stub-fmradio\build\outputs\apk\release\stub-fmradio-release.apk"
+if not exist "%STUB_APK%" (
+  echo [ERROR] No se encontro APK: %STUB_APK%
+  exit /b 1
+)
+
 REM Construir zip desde los archivos del módulo, normalizando LF en una carpeta temporal.
 if exist "%OUT_ZIP%" del /f /q "%OUT_ZIP%" >nul 2>&1
 
@@ -48,6 +63,13 @@ copy /Y "magisk\\K706_Root\\module.prop" "%TMP_DIR%\\module.prop" >nul
 copy /Y "magisk\\K706_Root\\customize.sh" "%TMP_DIR%\\customize.sh" >nul
 copy /Y "magisk\\K706_Root\\service.sh" "%TMP_DIR%\\service.sh" >nul
 copy /Y "magisk\\K706_Root\\uninstall.sh" "%TMP_DIR%\\uninstall.sh" >nul
+
+mkdir "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt" >nul 2>&1
+copy /Y "%STUB_APK%" "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt\\QF_FMRadioExt.apk" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo copiar el stub al arbol system del modulo.
+  exit /b 1
+)
 
 REM Normalizar LF (reemplazar CRLF->LF) en scripts y update-binary
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^

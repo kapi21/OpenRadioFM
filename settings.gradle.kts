@@ -24,4 +24,5 @@ dependencyResolutionManagement {
 
 rootProject.name = "RadioPoC"
 include(":app")
+include(":stub-fmradio")
  

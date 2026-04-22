@@ -30,7 +30,7 @@ Se cubren dos vías:
 
 ### 2.2 Magisk (`magisk/K706_Root/`)
 
-- En cada boot: `pm disable-user` + `force-stop` de `com.android.fmradio.ext`.
+- **Magisk v1.1+:** overlay del APK en `system/priv-app/QF_FMRadioExt/` (trampolín `:stub-fmradio`) + `pm enable` de `com.android.fmradio.ext` (el widget llama a `FmMainActivity` por `ComponentName` explícito; deshabilitar el paquete provoca `ActivityNotFoundException`).
 - **Atajos RADIO multi-launcher:** escaneo de `/data/data/*/shared_prefs/*.xml` que referencien FM OEM; backup `*.bak_orf`; `sed` a componente OpenRadioFM (incluye variantes slash, guion, y reemplazo de paquete/clase por separado).
 - **Desinstalación:** `pm enable` OEM + restauración de todos los `*.bak_orf` bajo `shared_prefs`.
 - **ZIP:** `magisk/build_k706_root_zip.bat` normaliza **CRLF → LF** en scripts antes de comprimir (evita fallos de instalación en Magisk por finales de línea Windows).

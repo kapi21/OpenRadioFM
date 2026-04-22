@@ -3,7 +3,8 @@
 # Magisk 27 module install script (customize.sh)
 # Se ejecuta durante la instalación del ZIP. (LF normalizado)
 
-SKIPMOUNT=true
+# false = montar system/ (APK trampolín QF_FMRadioExt). true = solo scripts (no overlay).
+SKIPMOUNT=false
 PROPFILE=true
 POSTFSDATA=false
 LATESTARTSERVICE=true
@@ -18,9 +19,7 @@ print_modname() {
 
 on_install() {
   ui_print "- Instalando archivos del módulo..."
-  unzip -o "$ZIPFILE" 'module.prop' -d "$MODPATH" >/dev/null 2>&1
-  unzip -o "$ZIPFILE" 'service.sh' -d "$MODPATH" >/dev/null 2>&1
-  unzip -o "$ZIPFILE" 'uninstall.sh' -d "$MODPATH" >/dev/null 2>&1
+  unzip -o "$ZIPFILE" -x 'META-INF/*' -d "$MODPATH" >&2
 }
 
 set_permissions() {
@@ -28,4 +27,3 @@ set_permissions() {
   set_perm "$MODPATH/service.sh" 0 0 0755
   set_perm "$MODPATH/uninstall.sh" 0 0 0755
 }
-
