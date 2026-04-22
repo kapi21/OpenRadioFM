@@ -88,5 +88,7 @@ echo        adb push "%OUT_ZIP%" /sdcard/Download/k706.zip
 echo        adb shell su -c "magisk --install-module /sdcard/Download/k706.zip"
 echo        adb shell su -c "reboot"
 echo.
-pause
+if /i "%~1"=="--pause" (
+  pause
+)
 
