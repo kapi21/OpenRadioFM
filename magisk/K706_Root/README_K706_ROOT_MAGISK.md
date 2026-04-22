@@ -2,7 +2,8 @@
 
 ## Qué hace
 - En cada arranque, **deshabilita** la FM OEM real: `com.android.fmradio.ext`
-- Al desinstalar el módulo, **restaura** el paquete (`pm enable`).
+- **Icono RADIO (cualquier launcher/tema)**: recorre `/data/data/*/shared_prefs/*.xml` y, si el XML referencia el acceso directo OEM (`fmradio.ext` / `FmMainActivity`), sustituye el destino por OpenRadioFM (`MainActivity`). Así, si cambias el launcher por defecto y otro paquete guarda el mismo tipo de atajo, también se corrige en el siguiente arranque.
+- Al desinstalar el módulo, **restaura** el paquete (`pm enable`) y los XML respaldados (`*.bak_orf`).
 
 ## Instalación
 1) Comprime la carpeta `magisk/K706_Root/` como ZIP **manteniendo la estructura completa**, incluyendo `META-INF/`:
