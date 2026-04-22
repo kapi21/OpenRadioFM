@@ -9,6 +9,10 @@ import android.util.Log;
 
 import com.example.openradiofm.data.repository.RadioRepository;
 import com.example.openradiofm.data.source.RadioEngine;
+import com.example.openradiofm.util.LauncherIntentUtils;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * V22: Gestiona todos los broadcasts OEM (K706, MTK, Topway) y la actualización
@@ -174,20 +178,22 @@ public class WidgetBroadcastManager {
         qf.putExtra("com.qf.radio.update_action_searching_key", false);
         qf.putExtra("com.qf.radio.update_action_name_key", widgetName);
         try {
-            // Ver K706Engine.notifyWidgetUpdate: algunos launchers usan package distinto a com.android.auto.autohome.
+            Set<String> targets = new LinkedHashSet<>();
+            targets.add("com.android.launcher.movablecell");
+            targets.add("com.android.auto.autohome");
+            String home = LauncherIntentUtils.getDefaultHomePackage(ctx);
+            if (home != null && !home.isEmpty()) {
+                targets.add(home);
+            }
             boolean sent = false;
-            try {
-                Intent i = new Intent(qf);
-                i.setPackage("com.android.launcher.movablecell");
-                ctx.sendBroadcast(i);
-                sent = true;
-            } catch (Exception ignored) {}
-            try {
-                Intent i2 = new Intent(qf);
-                i2.setPackage("com.android.auto.autohome");
-                ctx.sendBroadcast(i2);
-                sent = true;
-            } catch (Exception ignored) {}
+            for (String pkg : targets) {
+                try {
+                    Intent i = new Intent(qf);
+                    i.setPackage(pkg);
+                    ctx.sendBroadcast(i);
+                    sent = true;
+                } catch (Exception ignored) {}
+            }
             if (!sent) {
                 ctx.sendBroadcast(qf);
             }

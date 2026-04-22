@@ -34,6 +34,8 @@ patch_all_radio_shortcut_prefs() {
         -e 's/com\\.android\\.fmradio\\.ext-com\\.android\\.fmradio\\.FmMainActivity/com\\.example\\.openradiofm-com\\.example\\.openradiofm\\.ui\\.main\\.MainActivity/g' \
         -e 's/com\.android\.fmradio\.ext\/com\.android\.fmradio\.FmMainActivity/com\.example\.openradiofm\/com\.example\.openradiofm\.ui\.main\.MainActivity/g' \
         -e 's/com\.android\.fmradio\.ext-com\.android\.fmradio\.FmMainActivity/com\.example\.openradiofm-com\.example\.openradiofm\.ui\.main\.MainActivity/g' \
+        -e 's/com\.android\.fmradio\.FmMainActivity/com.example.openradiofm.ui.main.MainActivity/g' \
+        -e 's/com\.android\.fmradio\.ext/com.example.openradiofm/g' \
         "$f" >/dev/null 2>&1
       pkg="${dir%/shared_prefs}"
       pkg="${pkg#/data/data/}"

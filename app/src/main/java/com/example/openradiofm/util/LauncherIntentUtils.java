@@ -1,4 +1,4 @@
-package com.example.openradiofm.ui.main;
+package com.example.openradiofm.util;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,13 +6,15 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 
 /**
- * Helpers para detectar el launcher/home activo (K706/QuickFish suele usar "theme packages").
+ * Detecta el paquete del launcher / HOME por defecto.
+ * Útil para enviar {@code com.qf.radio.update_action} al launcher real (p. ej.
+ * {@code com.android.launcher.gradient.black}), no solo a paquetes fijos OEM.
  */
-final class LauncherIntentUtils {
+public final class LauncherIntentUtils {
 
     private LauncherIntentUtils() {}
 
-    static String getDefaultHomePackage(Context context) {
+    public static String getDefaultHomePackage(Context context) {
         if (context == null) return null;
         try {
             Intent home = new Intent(Intent.ACTION_MAIN);
@@ -22,7 +24,6 @@ final class LauncherIntentUtils {
             if (ri == null || ri.activityInfo == null) return null;
             String pkg = ri.activityInfo.packageName;
             if (pkg == null || pkg.isEmpty()) return null;
-            // "android" suele indicar que no hay default; en head units normalmente sí hay.
             if ("android".equals(pkg)) return null;
             return pkg;
         } catch (Exception ignored) {
@@ -30,4 +31,3 @@ final class LauncherIntentUtils {
         }
     }
 }
-

@@ -4,8 +4,12 @@ import android.content.Context;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.example.openradiofm.util.LauncherIntentUtils;
 import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * V5.0: Motor K706 — Wrapper sobre K706RadioManager.
@@ -500,12 +504,19 @@ public class K706Engine implements RadioEngine {
             qf.putExtra("com.qf.radio.update_action_preset_key",   presetIdx);
             qf.putExtra("com.qf.radio.update_action_searching_key", false);
             qf.putExtra("com.qf.radio.update_action_name_key",     widgetName);
-            // K706 (QuickFish): en muchas ROM el launcher real es un "theme package" (p. ej. movablecell)
-            // que contiene el namespace autohome, pero el packageName NO es com.android.auto.autohome.
-            // Para maximizar compatibilidad, probamos ambos destinos y luego fallback sin package.
+            // K706 (QuickFish): el widget puede vivir en el HOME real (p. ej. launcher.gradient.black)
+            // aunque las clases vengan de com.android.auto.autohome.* — hay que dirigir el broadcast ahí también.
+            Set<String> targets = new LinkedHashSet<>();
+            targets.add("com.android.launcher.movablecell");
+            targets.add("com.android.auto.autohome");
+            String home = LauncherIntentUtils.getDefaultHomePackage(context);
+            if (home != null && !home.isEmpty()) {
+                targets.add(home);
+            }
             boolean sent = false;
-            sent |= sendBroadcastToPackage(context, qf, "com.android.launcher.movablecell");
-            sent |= sendBroadcastToPackage(context, qf, "com.android.auto.autohome");
+            for (String pkg : targets) {
+                sent |= sendBroadcastToPackage(context, qf, pkg);
+            }
             if (!sent) {
                 // Último intento: broadcast implícito (puede estar filtrado por la ROM)
                 context.sendBroadcast(qf);
