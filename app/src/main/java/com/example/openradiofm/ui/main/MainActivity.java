@@ -1475,6 +1475,13 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         super.onNewIntent(intent);
         setIntent(intent);
         Log.d(TAG, "onNewIntent: App ya activa, refrescando parámetros (Single Instance).");
+        try {
+            Log.i(TAG, "Intent(in): action=" + (intent != null ? intent.getAction() : "null")
+                    + " data=" + (intent != null ? intent.getDataString() : "null")
+                    + " categories=" + (intent != null ? intent.getCategories() : "null")
+                    + " extras=" + (intent != null ? intent.getExtras() : "null")
+                    + " flags=0x" + (intent != null ? Integer.toHexString(intent.getFlags()) : "0"));
+        } catch (Exception ignored) {}
         IntentRouter.dispatchNewIntent(this, intent);
     }
 

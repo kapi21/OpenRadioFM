@@ -16,6 +16,7 @@ final class MainActivityBootstrap {
     private MainActivityBootstrap() {}
 
     static void runAfterSuper(MainActivity a, Bundle savedInstanceState) {
+        logLaunchIntent(a);
         createEarlyCoordinators(a);
         configureVolumeStream(a);
         restoreInstanceState(a, savedInstanceState);
@@ -36,6 +37,17 @@ final class MainActivityBootstrap {
         wireCarLogoAndControlPanel(a);
         initThemeSkinNightAndAutoHideV3(a);
         finalizeBootstrap(a);
+    }
+
+    private static void logLaunchIntent(MainActivity a) {
+        try {
+            android.content.Intent i = a.getIntent();
+            Log.i(MainActivity.TAG, "Intent(launch): action=" + (i != null ? i.getAction() : "null")
+                    + " data=" + (i != null ? i.getDataString() : "null")
+                    + " categories=" + (i != null ? i.getCategories() : "null")
+                    + " extras=" + (i != null ? i.getExtras() : "null")
+                    + " flags=0x" + (i != null ? Integer.toHexString(i.getFlags()) : "0"));
+        } catch (Exception ignored) {}
     }
 
     private static void createEarlyCoordinators(MainActivity a) {
