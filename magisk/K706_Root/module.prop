@@ -1,0 +1,7 @@
+id=openradiofm_k706_root
+name=OpenRadioFM — K706 Root Hijack
+version=1.0
+versionCode=1
+author=OpenRadioFM
+description=Deshabilita la FM OEM (com.android.fmradio.ext) en QF K706 en cada arranque, para que OpenRadioFM sea la radio principal. Incluye rollback (enable) al desinstalar.
+
