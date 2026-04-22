@@ -252,6 +252,8 @@ public class LogoManager {
 
     /** Marca en {@link R.id#tag_logo_url} para el fallback del slot principal (no es URL remota). */
     private static final String FALLBACK_MAIN_LOGO_TAG = "__fallback_ic_toast__";
+    private static final android.os.Handler MAIN_HANDLER =
+            new android.os.Handler(android.os.Looper.getMainLooper());
 
     /**
      * Logo de respaldo cuando no hay logo de emisora.
@@ -668,10 +670,14 @@ public class LogoManager {
                 if (mActivity.isFinishing() || mActivity.isDestroyed()) return false;
                 if (mActivity.isV3LayoutActive() || iv == null) return false;
                 if (!isLogoRequestStillValid(logoGen, freq, band)) return true;
-                mActivity.runOnUiThread(() -> {
-                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                    if (!isLogoRequestStillValid(logoGen, freq, band)) return;
-                    applyFallbackLogo(iv);
+                // CRÍTICO (Glide): no se puede llamar a into()/clear() dentro de callbacks del listener.
+                // Post al main looper para ejecutar el fallback fuera de la pila de Glide.
+                MAIN_HANDLER.post(() -> {
+                    try {
+                        if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                        if (!isLogoRequestStillValid(logoGen, freq, band)) return;
+                        applyFallbackLogo(iv);
+                    } catch (Exception ignored) {}
                 });
                 return true;
             }
