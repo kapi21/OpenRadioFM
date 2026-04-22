@@ -7,7 +7,7 @@
 - **`LauncherIntentUtils`**: movido a `com.example.openradiofm.util` para uso desde el motor.
 - **UI logos**: evitar crash Glide en fallo de carga (p. ej. sintonía problemática): fallback de logo en `Handler.post` fuera del callback de `RequestListener`.
 - **Documentación**: `HANDOFF_K706_ROOT.md` (handoff, roadmap corto, ADB). Ver también `K706_ROOT_CHECKLIST.md` y `magisk/K706_Root/README_K706_ROOT_MAGISK.md`.
-- **Pendiente**: instalación del módulo vía **Magisk App** (“unzip error” intermitente en algunos entornos); completar **Nivel A** (asistente root en app) según checklist.
+- **Pendiente (abr. 2026):** error al **instalar** el módulo en unidad de prueba (Magisk App y/o flasher); seguir con ZIP de `build_k706_root_zip.bat`, vía ADB `magisk --install-module` y diagnóstico en `HANDOFF_K706_ROOT.md` (*Para mañana*). Completar **Nivel A** (asistente root en app) según checklist.
 
 ### FYT / Teyes — motor OEM por intents (abril 2026)
 - **`FYTOemEngine`**: nuevo motor **FYT/OEM** (paquete `com.syu.radio`) sin root ni AIDL: `tune` por deep‑link `radio://tune?freq=…` y **Prev/Next** vía `startService` a `com.syu.broadcast.MyService` (`com.syu.radio.prevservice/nextservice`). Incluye autodetección en `RadioServiceController` (usa `sys.fyt.platform` cuando está disponible).

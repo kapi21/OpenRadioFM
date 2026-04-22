@@ -2,6 +2,14 @@
 
 Documento para retomar el trabajo sin perder contexto. **Rama:** `K706_Root`. **Dispositivo de referencia:** QF K706, ROM última operativa, ADB típico `192.168.1.98:9876` (ajustar si cambia).
 
+### Para mañana (instalación Magisk)
+
+- **Síntoma:** error al instalar el módulo (Magisk App y/o flasher); pendiente **mensaje exacto** y si ocurre con `k706.zip` generado por `magisk\build_k706_root_zip.bat`.
+- **Comprobar primero:** ZIP generado por el **.bat** (incluye `system/priv-app/.../QF_FMRadioExt.apk` + scripts con LF). No empaquetar solo la carpeta `K706_Root` a mano sin el stub.
+- **Alternativa estable:** `adb push magisk\k706.zip /data/local/tmp/k706.zip` y `su -c 'magisk --install-module /data/local/tmp/k706.zip'`; revisar si el módulo aparece en `/data/adb/modules_update/` aunque el comando devuelva código ≠ 0; **reiniciar** y verificar `/data/adb/modules/openradiofm_k706_root/`.
+- **Hipótesis a descartar:** ZIP creado con `Compress-Archive` (Windows) incompatible con el descompresor de Magisk en algún dispositivo → probar 7-Zip “ZIP Store/Deflate” o `zip` desde WSL; trazas `logcat` al instalar desde la app Magisk.
+- **Hitos git recientes:** `655da9aa` (trampolín APK + overlay), `d6c867fb` (QF broadcast por paquete), `8ca78af6` (docs handoff).
+
 ---
 
 ## 1. Resumen ejecutivo
@@ -13,7 +21,7 @@ Se cubren dos vías:
 | Nivel | Descripción | Estado en repo |
 |--------|-------------|----------------|
 | **A** | APK + comandos `su` (asistente “modo root” en app) | Parcial: lógica/documentación en checklist; pantalla asistente pendiente según checklist |
-| **B** | Módulo **Magisk** (`magisk/K706_Root/`) | Implementado: `service.sh`, `uninstall.sh`, `customize.sh`, `META-INF`, `build_k706_root_zip.bat` |
+| **B** | Módulo **Magisk** (`magisk/K706_Root/` + `:stub-fmradio`) | Implementado: overlay `QF_FMRadioExt`, scripts, ZIP vía `build_k706_root_zip.bat`; **instalación en unidad** en depuración |
 
 ---
 
@@ -44,18 +52,20 @@ Se cubren dos vías:
 
 ## 3. Pendientes conocidos (prioridad sugerida)
 
-1. **Magisk App — “unzip error”**  
-   A veces la app Magisk sigue fallando al instalar el ZIP aunque CLI/`magisk --install-module` o generación con BAT + LF hayan funcionado antes. **Siguiente paso:** reproducir con el ZIP exacto, comprobar estructura (raíz del ZIP), permisos, y trazas Magisk; comparar con instalación por ADB.
+1. **Instalación del módulo Magisk (v1.1 con APK en `system/`)**  
+   Reporte: **error al instalar** (detalle pendiente). Prioridad: capturar texto del error, probar solo ADB `magisk --install-module`, y comparar ZIP del .bat vs empaquetado manual. Ver bloque *Para mañana* arriba.
 
-2. **Widget `CustomRadioWidget` (launcher `gradient.black` / clases `autohome`)**  
-   El log `radioStartup: false` suele indicar que el widget **no ha recibido** estado por `com.qf.radio.update_action` o que **sigue intentando enlazar** con la FM OEM deshabilitada.  
-   **Bug corregido en app:** en `K706Engine.notifyWidgetUpdate`, un `SecurityException` al enviar el broadcast a un paquete (p. ej. `movablecell`) **abortaba todo el bucle** y no se llegaba a enviar al HOME real (`gradient.black`). Tras el parche, cada destino se intenta de forma aislada.  
-   Si tras **APK actualizado + abrir OpenRadioFM** al menos una vez el centro del widget sigue sin abrir la app, el `startActivity` del launcher puede seguir apuntando por código a `com.android.fmradio.ext`: revisar Magisk (prefs) o `grep -r fmradio` en datos del launcher.
+2. **Magisk App — “unzip error” / fallos de UI**  
+   Histórico: la app Magisk a veces falla aunque CLI funcione. Con el módulo grande (~600 KB+ por el stub) vigilar límites de rutas y formato ZIP.
 
-3. **Nivel A en app**  
+3. **Widget `CustomRadioWidget` (launcher `gradient.black`)**  
+   **Causa conocida:** `ActivityNotFoundException` al OEM por `ComponentName` explícito → mitigado con **trampolín** `:stub-fmradio` + `pm enable` (no deshabilitar el paquete). Requiere módulo instalado y reinicio.  
+   **Bug corregido en app:** `K706Engine` ya no aborta todo el bucle de `com.qf.radio.update_action` si un paquete lanza `SecurityException`.
+
+4. **Nivel A en app**  
    Pantalla “Modo root” con aplicar/restaurar, logs y persistencia opcional (`BOOT_COMPLETED`), según `K706_ROOT_CHECKLIST.md`.
 
-4. **Opcional:** Magisk **systemless** priv-app de OpenRadioFM (firma/permisos — ver checklist §3.2).
+5. **Opcional:** Magisk **systemless** priv-app de OpenRadioFM (firma/permisos — ver checklist §3.2).
 
 ---
 
@@ -63,8 +73,8 @@ Se cubren dos vías:
 
 | Orden | Tarea |
 |-------|--------|
-| 1 | Cerrar diagnóstico **unzip** en Magisk App (ZIP de referencia + logs). |
-| 2 | Validar **widget RADIO** en `launcher.gradient.black` tras último commit (QF + prefs); si falla, ver §3.2. |
+| 1 | **Instalación módulo v1.1:** reproducir error, ADB CLI, formato ZIP. |
+| 2 | Validar **widget RADIO** tras módulo + reinicio (trampolín `FmMainActivity`). |
 | 3 | Completar **Nivel A** (UI root + comandos documentados). |
 | 4 | QA checklist §5 (volante, AA/Z-Link, rollback). |
 | 5 | Decidir merge hacia rama de producto (p. ej. `5.2.0.MCU`) o mantener `K706_Root` como línea larga. |
@@ -114,7 +124,8 @@ Hitos recientes documentados en `CHANGELOG.md` bajo **K706 Root Edition**.
 | Ruta | Rol |
 |------|-----|
 | `K706_ROOT_CHECKLIST.md` | Checklist de implementación |
-| `magisk/K706_Root/service.sh` | Boot: disable OEM + parche prefs |
+| `magisk/K706_Root/service.sh` | Boot: `pm enable` fmradio + parche prefs |
+| `stub-fmradio/` | APK trampolín (mismo package/actividad que OEM) |
 | `magisk/K706_Root/uninstall.sh` | Rollback OEM + prefs |
 | `magisk/K706_Root/README_K706_ROOT_MAGISK.md` | Instrucciones del módulo |
 | `magisk/build_k706_root_zip.bat` | Build ZIP con LF |
@@ -125,4 +136,4 @@ Hitos recientes documentados en `CHANGELOG.md` bajo **K706 Root Edition**.
 
 ---
 
-*Última actualización del handoff: 2026-04-22 (preparado para continuar al día siguiente).*
+*Última actualización del handoff: 2026-04-23 — instalación Magisk en unidad pendiente de cerrar.*

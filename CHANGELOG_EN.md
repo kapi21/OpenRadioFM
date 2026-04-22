@@ -13,7 +13,7 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **`LauncherIntentUtils`**: moved to `com.example.openradiofm.util` for engine use.
 - **Logos / Glide**: avoid crash on failed logo load by posting fallback onto the main `Handler` outside Glide’s `RequestListener` callback.
 - **Docs**: `HANDOFF_K706_ROOT.md` (handoff, short roadmap, ADB). See also `K706_ROOT_CHECKLIST.md` and `magisk/K706_Root/README_K706_ROOT_MAGISK.md`.
-- **Open**: Magisk App **unzip** error in some setups; **Level A** in-app root assistant per checklist.
+- **Open (Apr 2026):** module **installation** failing on test device (Magisk App and/or installer); use `build_k706_root_zip.bat` output, try ADB `magisk --install-module`, see `HANDOFF_K706_ROOT.md` (*Para mañana*). **Level A** in-app root assistant still per checklist.
 
 ### FYT / Teyes — OEM intent-based engine (April 2026)
 - **`FYTOemEngine`**: new **FYT/OEM** engine (package `com.syu.radio`) with no root/AIDL: `tune` via deep‑link `radio://tune?freq=…` and **Prev/Next** via `startService` to `com.syu.broadcast.MyService` (`com.syu.radio.prevservice/nextservice`). Includes auto-detection in `RadioServiceController` (uses `sys.fyt.platform` when available).

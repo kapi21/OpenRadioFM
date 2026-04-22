@@ -60,7 +60,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 
 **5.2.0** (rama de desarrollo principal **MCU2** / integración, abril 2026, `versionCode` **40**): consolidación del refactor 5.2.0 y estabilidad multi‑motor. **MT8163**: compatibilidad con launchers tipo **Agama** (controles + texto vía `MediaBrowser/MediaSession`) y mitigación de arranque pesado (bind HCN idempotente + diferido de trabajo de presets/logos). **QS6/NWD**: mejoras de RDS/AutoScan e ingeniería. Ver `CHANGELOG.md` (sección **5.2.0**).
 
-**Rama `K706_Root`**: edición **root / Magisk** para QF K706 (radio principal vía OpenRadioFM, neutralización reversible de `com.android.fmradio.ext`, parche multi-launcher de atajos RADIO, integración widget OEM). Handoff y próximos pasos: [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md). Módulo: `magisk/K706_Root/` y `magisk/build_k706_root_zip.bat`.
+**Rama `K706_Root`**: edición **root / Magisk** para QF K706 — trampolín `QF_FMRadioExt` (`:stub-fmradio`), `pm enable` del paquete OEM, parche de atajos en `shared_prefs`, broadcasts al launcher. Handoff: [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md). Instalación: `magisk/build_k706_root_zip.bat` → `magisk/k706.zip`; guía [`magisk/K706_Root/README_K706_ROOT_MAGISK.md`](magisk/K706_Root/README_K706_ROOT_MAGISK.md). *Estado:* instalación del módulo en hardware en depuración (ver CHANGELOG *Unreleased* / handoff).
 
 **Pendiente (K706 + Z-Link + AA)**: seguir afinando interacción con Spotify/mux MCU vs **ducking** natural que ya da **QS6** en la misma app; trabajo documentado en `CHANGELOG.md` bajo *Unreleased*.
 
