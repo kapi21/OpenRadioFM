@@ -1,7 +1,7 @@
 # OpenRadioFM 📻
 
 [![Version](https://img.shields.io/badge/version-v5.2.0-green.svg)]()
-[![Branch](https://img.shields.io/badge/branch-MCU2-informational.svg)]()
+[![Branch](https://img.shields.io/badge/branch-K706_Root-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
@@ -199,6 +199,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## 📖 Documentación
 
 - [Manual de Usuario (Español)](_DOCS/manual_usuario.md)
+- [Checklist — K706 Root Edition](K706_ROOT_CHECKLIST.md)
 - [User Manual (English)](_DOCS/manual_user_en.md)
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 - **OpenRadioFM Backup Studio (web/PWA)**: `https://kapi21.github.io/OpenRadioFM/editor/` (incluye manual ES/EN dentro de la web)
