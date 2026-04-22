@@ -116,6 +116,8 @@ logo.png
 *.lnk
 *.fav
 *copia*
+photo_*.jpg
+photo_*.png
 
 # === Configuración de Cursor (LOCAL) ===
 .cursor/
