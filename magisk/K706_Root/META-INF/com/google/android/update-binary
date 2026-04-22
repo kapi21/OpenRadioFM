@@ -2,6 +2,7 @@
 
 # Magisk module installer entrypoint.
 # Compatible con Magisk 20+ (incluye 27.0).
+# (LF) Normalizado para instalación en Magisk App.
 
 umask 022
 

@@ -1,6 +1,6 @@
 #!/system/bin/sh
 # OpenRadioFM — K706 Root Hijack (Magisk)
-# Se ejecuta en boot (late_start service).
+# Se ejecuta en boot (late_start service). (LF normalizado)
 
 MODDIR="${0%/*}"
 

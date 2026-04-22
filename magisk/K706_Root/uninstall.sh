@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# Rollback al desinstalar el módulo.
+# Rollback al desinstalar el módulo. (LF normalizado)
 
 PKG_FM_OEM="com.android.fmradio.ext"
 LAUNCHER_CITY_PKG="com.android.launcher.city"

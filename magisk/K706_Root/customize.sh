@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
 # Magisk 27 module install script (customize.sh)
-# Se ejecuta durante la instalación del ZIP.
+# Se ejecuta durante la instalación del ZIP. (LF normalizado)
 
 SKIPMOUNT=true
 PROPFILE=true
