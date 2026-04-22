@@ -463,6 +463,35 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         } catch (Exception ignored) {}
     }
 
+    /**
+     * Launcher "RADIO" (K706): algunos launchers no envían extras y solo relanzan MAIN/LAUNCHER.
+     * Este método fuerza el despertar del widget OEM y emite acciones "customize/radio/*" que el
+     * launcher conoce (se observan strings en el APK del launcher).
+     */
+    void handleLauncherRadioEntry() {
+        try {
+            // 1) Forzar estado para widget (com.qf.radio.update_action)
+            pushOemWidgetStateOnAppOpenIfPossible();
+        } catch (Exception ignored) {}
+
+        try {
+            // 2) Intentar “activar” la tarjeta/widget OEM: acciones vistas en launcher (station/band)
+            String launcherPkg = LauncherIntentUtils.getDefaultHomePackage(this);
+            if (launcherPkg == null) return;
+            sendOemLauncherBroadcast(launcherPkg, "/customize/radio/station");
+            sendOemLauncherBroadcast(launcherPkg, "/customize/radio/band");
+        } catch (Exception ignored) {}
+    }
+
+    private void sendOemLauncherBroadcast(String launcherPkg, String action) {
+        if (launcherPkg == null || launcherPkg.isEmpty() || action == null || action.isEmpty()) return;
+        try {
+            Intent i = new Intent(action);
+            i.setPackage(launcherPkg);
+            sendBroadcast(i);
+        } catch (Exception ignored) {}
+    }
+
     @Override
     public boolean hasStableCachedNameForFrequency(int freqKhz) {
         String name = getStableCachedNameForFrequency(freqKhz);

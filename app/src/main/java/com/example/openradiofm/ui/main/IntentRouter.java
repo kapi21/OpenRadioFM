@@ -22,8 +22,23 @@ public final class IntentRouter {
 
     static void dispatchNewIntent(MainActivity a, android.content.Intent intent) {
         if (intent == null) return;
+        handleLauncherMainEntry(a, intent);
         handleK706McuReassertFromHijacker(a, intent);
         handleWidgetDeepLinks(a, intent);
+    }
+
+    /**
+     * K706: el botón RADIO del launcher a menudo relanza MAIN/LAUNCHER sin extras.
+     * Usamos esto como señal para “despertar” el widget OEM.
+     */
+    private static void handleLauncherMainEntry(MainActivity a, android.content.Intent intent) {
+        try {
+            if (intent == null) return;
+            if (!android.content.Intent.ACTION_MAIN.equals(intent.getAction())) return;
+            java.util.Set<String> cats = intent.getCategories();
+            if (cats == null || !cats.contains(android.content.Intent.CATEGORY_LAUNCHER)) return;
+            a.handleLauncherRadioEntry();
+        } catch (Exception ignored) {}
     }
 
     /**
