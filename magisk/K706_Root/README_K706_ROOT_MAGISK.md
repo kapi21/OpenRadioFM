@@ -5,10 +5,13 @@
 - Al desinstalar el módulo, **restaura** el paquete (`pm enable`).
 
 ## Instalación
-1) Comprime la carpeta `magisk/K706_Root/` como ZIP manteniendo esta estructura:
+1) Comprime la carpeta `magisk/K706_Root/` como ZIP **manteniendo la estructura completa**, incluyendo `META-INF/`:
 
 ```
+META-INF/com/google/android/update-binary
+META-INF/com/google/android/updater-script
 module.prop
+customize.sh
 service.sh
 uninstall.sh
 ```
@@ -19,6 +22,7 @@ uninstall.sh
 ## Verificación (ADB)
 ```sh
 adb connect 192.168.1.98:9876
+adb -s 192.168.1.98:9876 shell su -c "pm list packages | grep -F com.android.fmradio.ext"
 adb -s 192.168.1.98:9876 shell su -c "pm disable-user --user 0 com.android.fmradio.ext"
 ```
 
