@@ -119,6 +119,7 @@ logo.png
 photo_*.jpg
 photo_*.png
 magisk/**/*.zip
+_tmp_magisk/
 
 # === Configuración de Cursor (LOCAL) ===
 .cursor/
