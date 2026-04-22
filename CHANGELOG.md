@@ -3,7 +3,7 @@
 ### K706 Root Edition (rama `K706_Root`, abril 2026)
 - **Magisk (`magisk/K706_Root/`)**: en cada boot deshabilita `com.android.fmradio.ext` y **parchea** XML en `/data/data/*/shared_prefs` que apunten al atajo OEM (variantes componente slash/guion y sustitución de paquete/clase); backup `*.bak_orf`; `uninstall.sh` restaura prefs y re-habilita OEM.
 - **Magisk — build Windows**: `magisk/build_k706_root_zip.bat` fuerza **LF** en scripts antes del ZIP; `.gitattributes` fuerza `eol=lf` bajo `magisk/`.
-- **K706 / widget OEM**: `com.qf.radio.update_action` también se envía al **paquete HOME** resuelto (p. ej. `com.android.launcher.gradient.black`), además de `movablecell` y `com.android.auto.autohome` (`K706Engine`, `WidgetBroadcastManager`).
+- **K706 / widget OEM**: `com.qf.radio.update_action` también se envía al **paquete HOME** resuelto (p. ej. `com.android.launcher.gradient.black`), además de `movablecell` y `com.android.auto.autohome` (`K706Engine`, `WidgetBroadcastManager`). **Fix:** si un destino lanza `SecurityException`, ya no se cancela el resto del bucle (antes el widget podía quedarse en `radioStartup=false`).
 - **`LauncherIntentUtils`**: movido a `com.example.openradiofm.util` para uso desde el motor.
 - **UI logos**: evitar crash Glide en fallo de carga (p. ej. sintonía problemática): fallback de logo en `Handler.post` fuera del callback de `RequestListener`.
 - **Documentación**: `HANDOFF_K706_ROOT.md` (handoff, roadmap corto, ADB). Ver también `K706_ROOT_CHECKLIST.md` y `magisk/K706_Root/README_K706_ROOT_MAGISK.md`.

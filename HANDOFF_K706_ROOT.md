@@ -48,7 +48,9 @@ Se cubren dos vías:
    A veces la app Magisk sigue fallando al instalar el ZIP aunque CLI/`magisk --install-module` o generación con BAT + LF hayan funcionado antes. **Siguiente paso:** reproducir con el ZIP exacto, comprobar estructura (raíz del ZIP), permisos, y trazas Magisk; comparar con instalación por ADB.
 
 2. **Widget `CustomRadioWidget` (launcher `gradient.black` / clases `autohome`)**  
-   Si el **click** sigue fallando tras prefs + broadcasts, el destino puede ir **hardcodeado** en el APK del launcher. Entonces: log completo con línea `java.lang....`, y `adb shell su -c "grep -r fmradio /data/data/com.android.launcher.gradient.black"` (u otro paquete HOME) para ver si queda algo fuera de `shared_prefs` (p. ej. base de datos).
+   El log `radioStartup: false` suele indicar que el widget **no ha recibido** estado por `com.qf.radio.update_action` o que **sigue intentando enlazar** con la FM OEM deshabilitada.  
+   **Bug corregido en app:** en `K706Engine.notifyWidgetUpdate`, un `SecurityException` al enviar el broadcast a un paquete (p. ej. `movablecell`) **abortaba todo el bucle** y no se llegaba a enviar al HOME real (`gradient.black`). Tras el parche, cada destino se intenta de forma aislada.  
+   Si tras **APK actualizado + abrir OpenRadioFM** al menos una vez el centro del widget sigue sin abrir la app, el `startActivity` del launcher puede seguir apuntando por código a `com.android.fmradio.ext`: revisar Magisk (prefs) o `grep -r fmradio` en datos del launcher.
 
 3. **Nivel A en app**  
    Pantalla “Modo root” con aplicar/restaurar, logs y persistencia opcional (`BOOT_COMPLETED`), según `K706_ROOT_CHECKLIST.md`.

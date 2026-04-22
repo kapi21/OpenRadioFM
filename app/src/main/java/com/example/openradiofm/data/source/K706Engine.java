@@ -515,16 +515,21 @@ public class K706Engine implements RadioEngine {
             }
             boolean sent = false;
             for (String pkg : targets) {
+                // Nunca propagar SecurityException aquí: si movablecell/autohome están protegidos,
+                // aún debemos intentar el paquete HOME real (p. ej. launcher.gradient.black) o el
+                // broadcast implícito; si abortáramos el bucle, el widget queda en radioStartup=false.
                 sent |= sendBroadcastToPackage(context, qf, pkg);
             }
             if (!sent) {
-                // Último intento: broadcast implícito (puede estar filtrado por la ROM)
-                context.sendBroadcast(qf);
+                try {
+                    context.sendBroadcast(qf);
+                    sent = true;
+                } catch (SecurityException se) {
+                    QfWidgetBroadcastGuard.disable(se);
+                }
             }
 
             Log.d(TAG, "notifyWidgetUpdate: QF broadcast enviado -> " + freqStr + " band=" + band);
-        } catch (SecurityException se) {
-            QfWidgetBroadcastGuard.disable(se);
         } catch (Exception e) {
             Log.w(TAG, "notifyWidgetUpdate: error enviando broadcast QF", e);
         }
@@ -538,8 +543,8 @@ public class K706Engine implements RadioEngine {
             context.sendBroadcast(i);
             return true;
         } catch (SecurityException se) {
-            // Si la ROM restringe el destino, dejamos que el guard superior lo gestione.
-            throw se;
+            Log.w(TAG, "notifyWidgetUpdate: omitido paquete " + pkg + " (" + se.getMessage() + ")");
+            return false;
         } catch (Exception ignored) {
             return false;
         }
