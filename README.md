@@ -58,7 +58,9 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.2.0** (rama **MCU2**, abril 2026, `versionCode` **40**): consolidación del refactor 5.2.0 y estabilidad multi‑motor. **MT8163**: compatibilidad con launchers tipo **Agama** (controles + texto vía `MediaBrowser/MediaSession`) y mitigación de arranque pesado (bind HCN idempotente + diferido de trabajo de presets/logos). **QS6/NWD**: mejoras de RDS/AutoScan e ingeniería. Ver `CHANGELOG.md` (sección **5.2.0**).
+**5.2.0** (rama de desarrollo principal **MCU2** / integración, abril 2026, `versionCode` **40**): consolidación del refactor 5.2.0 y estabilidad multi‑motor. **MT8163**: compatibilidad con launchers tipo **Agama** (controles + texto vía `MediaBrowser/MediaSession`) y mitigación de arranque pesado (bind HCN idempotente + diferido de trabajo de presets/logos). **QS6/NWD**: mejoras de RDS/AutoScan e ingeniería. Ver `CHANGELOG.md` (sección **5.2.0**).
+
+**Rama `K706_Root`**: edición **root / Magisk** para QF K706 (radio principal vía OpenRadioFM, neutralización reversible de `com.android.fmradio.ext`, parche multi-launcher de atajos RADIO, integración widget OEM). Handoff y próximos pasos: [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md). Módulo: `magisk/K706_Root/` y `magisk/build_k706_root_zip.bat`.
 
 **Pendiente (K706 + Z-Link + AA)**: seguir afinando interacción con Spotify/mux MCU vs **ducking** natural que ya da **QS6** en la misma app; trabajo documentado en `CHANGELOG.md` bajo *Unreleased*.
 
@@ -198,8 +200,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## 📖 Documentación
 
+- [Handoff — K706 Root (`K706_Root`)](HANDOFF_K706_ROOT.md)
 - [Manual de Usuario (Español)](_DOCS/manual_usuario.md)
 - [Checklist — K706 Root Edition](K706_ROOT_CHECKLIST.md)
+- [Módulo Magisk K706 Root](magisk/K706_Root/README_K706_ROOT_MAGISK.md)
 - [User Manual (English)](_DOCS/manual_user_en.md)
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 - **OpenRadioFM Backup Studio (web/PWA)**: `https://kapi21.github.io/OpenRadioFM/editor/` (incluye manual ES/EN dentro de la web)

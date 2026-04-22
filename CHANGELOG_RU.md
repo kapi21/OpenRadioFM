@@ -7,6 +7,7 @@
 
 ## [Unreleased]
 
+- **K706 Root (`K706_Root`)**: модуль Magisk, патч ярлыков RADIO в `shared_prefs`, broadcast виджета на текущий HOME, см. [`CHANGELOG.md`](CHANGELOG.md) и [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md).
 - **QS6 / NWD (после перезагрузки)**: *warm‑up rebind* и автопереподключение AIDL с backoff в `NWDTunerAdapter` (в т.ч. `linkToDeath`), плюс ранний повторный `connect()`/poll в `QS6Engine`, чтобы подхватывать состояние без открытия OEM UI.
 - **Launchers / MediaSession**: публикация **первичных метаданных** на старте `RadioMediaService` (исправляет “session есть, но metadata=null” в лаунчерах типа Agama) + расширение allowlist для выдачи доступа на artwork.
 - **UI**: “плавный” тикер частоты во время `seek/scan` и диалог **редактирования имени станции** (с сохранением/восстановлением оригинала).

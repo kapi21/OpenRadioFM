@@ -1,5 +1,14 @@
 ## [Unreleased] - MCU2
 
+### K706 Root Edition (rama `K706_Root`, abril 2026)
+- **Magisk (`magisk/K706_Root/`)**: en cada boot deshabilita `com.android.fmradio.ext` y **parchea** XML en `/data/data/*/shared_prefs` que apunten al atajo OEM (variantes componente slash/guion y sustitución de paquete/clase); backup `*.bak_orf`; `uninstall.sh` restaura prefs y re-habilita OEM.
+- **Magisk — build Windows**: `magisk/build_k706_root_zip.bat` fuerza **LF** en scripts antes del ZIP; `.gitattributes` fuerza `eol=lf` bajo `magisk/`.
+- **K706 / widget OEM**: `com.qf.radio.update_action` también se envía al **paquete HOME** resuelto (p. ej. `com.android.launcher.gradient.black`), además de `movablecell` y `com.android.auto.autohome` (`K706Engine`, `WidgetBroadcastManager`).
+- **`LauncherIntentUtils`**: movido a `com.example.openradiofm.util` para uso desde el motor.
+- **UI logos**: evitar crash Glide en fallo de carga (p. ej. sintonía problemática): fallback de logo en `Handler.post` fuera del callback de `RequestListener`.
+- **Documentación**: `HANDOFF_K706_ROOT.md` (handoff, roadmap corto, ADB). Ver también `K706_ROOT_CHECKLIST.md` y `magisk/K706_Root/README_K706_ROOT_MAGISK.md`.
+- **Pendiente**: instalación del módulo vía **Magisk App** (“unzip error” intermitente en algunos entornos); completar **Nivel A** (asistente root en app) según checklist.
+
 ### FYT / Teyes — motor OEM por intents (abril 2026)
 - **`FYTOemEngine`**: nuevo motor **FYT/OEM** (paquete `com.syu.radio`) sin root ni AIDL: `tune` por deep‑link `radio://tune?freq=…` y **Prev/Next** vía `startService` a `com.syu.broadcast.MyService` (`com.syu.radio.prevservice/nextservice`). Incluye autodetección en `RadioServiceController` (usa `sys.fyt.platform` cuando está disponible).
 

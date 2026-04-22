@@ -81,3 +81,12 @@ Este documento define el checklist de implementación para una edición “root�
   - [ ] verificación y logs
 - [ ] Módulo Magisk (zip) con instrucciones de instalación/desinstalación.
 
+---
+
+## 7) Estado en repo (abril 2026, rama `K706_Root`)
+
+- Módulo Magisk en `magisk/K706_Root/` operativo a nivel de scripts; generación de ZIP con LF en `magisk/build_k706_root_zip.bat`.
+- `service.sh`: disable OEM + escaneo universal de `shared_prefs` para atajo RADIO; `uninstall.sh`: rollback.
+- App: broadcasts QF al HOME actual; fix Glide en logos; interceptación `/customize/radio/*`.
+- **Seguimiento:** ver [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md) (pendientes: unzip en Magisk App, Nivel A UI, widget si destino hardcodeado).
+
