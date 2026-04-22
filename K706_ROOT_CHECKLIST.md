@@ -7,7 +7,6 @@ Este documento define el checklist de implementación para una edición “root�
 - [ ] **Alcance HW**: solo **QF K706** (ROM: última operativa).
 - [ ] **Motor**: forzar que toda la ruta FM use **K706** (sin fallback a servicios OEM).
 - [ ] **Anulación OEM**: neutralizar las apps/servicios de radio nativos detectados en la ROM:
-  - [ ] `com.txz.radio` (UI OEM)
   - [ ] `com.android.fmradio.ext` (priv-app + `FmService`)
 - [ ] **Rollback**: el usuario debe poder **restaurar** el estado original (reenable) sin reflashear.
 
@@ -16,7 +15,6 @@ Este documento define el checklist de implementación para una edición “root�
 - [ ] Guardar `ro.build.fingerprint` y `getprop` relevantes.
 - [ ] Registrar paquete(s) de radio OEM presentes:
   - [ ] `pm list packages | grep -i radio` (o listado equivalente)
-  - [ ] `cmd package dump com.txz.radio`
   - [ ] `cmd package dump com.android.fmradio.ext`
 - [ ] Identificar activities/receivers/services OEM que arrancan radio en boot o por launcher.
 
@@ -29,12 +27,9 @@ Este documento define el checklist de implementación para una edición “root�
 
 ### 2.2 Neutralización OEM (reversible)
 - [ ] Implementar “Aplicar modo root”:
-  - [ ] `pm disable-user --user 0 com.txz.radio`
   - [ ] `pm disable-user --user 0 com.android.fmradio.ext`
-  - [ ] `am force-stop com.txz.radio`
   - [ ] `am force-stop com.android.fmradio.ext`
 - [ ] Implementar “Restaurar radio OEM”:
-  - [ ] `pm enable com.txz.radio`
   - [ ] `pm enable com.android.fmradio.ext`
 - [ ] Verificación post-acción (enabled/disabled) con `cmd package dump <pkg>`.
 
