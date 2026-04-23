@@ -210,6 +210,9 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **Dialogs aligned with premium / AutoScan styling**: grid selector (`dialog_language_selector`), `.fav` file picker when loading favorites (`dialog_favorites_file_picker`), station history (`dialog_station_history`); dark frame, **active skin** card, user typography, red **Cancel** on lists; `item_fav_file_row` / `item_language` cells.
 - **Localized layouts**: `dialog_save_load`, `dialog_credits`, `dialog_selective_scan`, and scan rows wired to `@string/`.
 - **Build / Supabase**: credentials via `SUPABASE_URL` and `SUPABASE_ANON_KEY` in root `local.properties`, environment variables, or Gradle `-P` (no defaults committed). `BuildConfig` exposes URL, anon key, and public Storage base URL. Template `local.properties.example`; see [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
+
+### Fixed
+- **Build / Supabase**: sanitize `SUPABASE_URL` (fixes escaped values like `https\\://...` breaking Retrofit/OkHttp).
 - **Supabase community (data quality)**: centralized quality gate (`isAcceptableForCloudUpsert`, `sanitizePsForCloudUpsert`, PS rules); `CloudContributionGuard` — skip contribution while scanning or ~1.75s after a frequency change; PS must be stable ~4s before upload. `CloudContributionGuard.java`, `RadioRepository`, `MainActivity`, `SupabaseLogoSource`.
 
 ### Changed

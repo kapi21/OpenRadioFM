@@ -1,7 +1,7 @@
 id=openradiofm_k706_root
 name=OpenRadioFM — K706 Root Hijack
-version=1.1
-versionCode=2
+version=1.2
+versionCode=3
 author=OpenRadioFM
-description=Sustituye system/priv-app/QF_FMRadioExt por APK trampolín (FmMainActivity → OpenRadioFM) y parchea atajos en shared_prefs. Rollback al desinstalar el módulo.
+description=Overlay systemless: QF_FMRadioExt trampolín (FmMainActivity → OpenRadioFM) + OpenRadioFM como priv-app. Parchea atajos en shared_prefs. Rollback al desinstalar el módulo.
 

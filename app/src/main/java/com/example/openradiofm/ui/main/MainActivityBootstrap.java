@@ -540,15 +540,23 @@ final class MainActivityBootstrap {
     }
 
     private static void finalizeBootstrap(MainActivity a) {
-        // Fase final: diferir operaciones costosas al siguiente ciclo de UI para no penalizar
+        // Importante: arrancar el ServiceController inmediatamente. En algunas ROMs/headunits,
+        // los callbacks posteados pueden no ejecutarse de forma fiable en el primer frame (UI "parece viva"
+        // pero los controles no surten efecto porque el stack de servicio no arranca).
+        try {
+            if (a.mServiceController != null) {
+                a.mServiceController.start();
+            }
+        } catch (Throwable t) {
+            Log.w(MainActivity.TAG, "ServiceController.start() falló", t);
+        }
+
+        // Fase final: diferir operaciones no críticas al siguiente ciclo de UI para no penalizar
         // el primer render (evita "Skipped XX frames" al arranque).
         View root = a.findViewById(android.R.id.content);
         Runnable late = () -> {
             try { a.applyFonts(); } catch (Exception ignored) {}
             try { a.setupCreditsEasterEgg(); } catch (Exception ignored) {}
-            try {
-                if (a.mServiceController != null) a.mServiceController.start();
-            } catch (Exception ignored) {}
             try { a.scheduleRadioUiResyncAfterRecreation(); } catch (Exception ignored) {}
             try { a.adjustLayoutForDPI(); } catch (Exception ignored) {}
         };

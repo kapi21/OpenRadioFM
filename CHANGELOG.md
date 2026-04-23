@@ -272,6 +272,9 @@
 - **Diálogos alineados con menú premium / AutoScan**: selector en cuadrícula (`dialog_language_selector`), listado de archivos `.fav` al cargar favoritos (`dialog_favorites_file_picker`), historial de emisoras (`dialog_station_history`); marco oscuro, tarjeta con **skin** activo, tipografía del usuario, botón **Cancelar** rojo en listas; celdas `item_fav_file_row` / `item_language`.
 - **Layouts traducibles**: textos de `dialog_save_load`, `dialog_credits`, `dialog_selective_scan` y filas de escaneo enlazados a `@string/`.
 - **Build / Supabase**: credenciales vía `SUPABASE_URL` y `SUPABASE_ANON_KEY` en `local.properties` (raíz), variables de entorno o `-P` Gradle; sin valores por defecto en el repositorio. `BuildConfig` genera URL, clave y base pública de Storage. Plantilla `local.properties.example`; documentación [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
+
+### Fixed
+- **Build / Supabase**: normalización de `SUPABASE_URL` (corrige valores copiados/escapados tipo `https\://...` que rompían Retrofit/OkHttp).
 - **Comunidad Supabase (calidad de datos)**: puerta de calidad centralizada (`isAcceptableForCloudUpsert`, `sanitizePsForCloudUpsert`, reglas de PS); `CloudContributionGuard` — no contribuir en escaneo FM ni durante ~1,75 s tras cambiar de frecuencia; estabilidad del PS (~4 s) antes de contribuir. `CloudContributionGuard.java`, cambios en `RadioRepository`, `MainActivity`, `SupabaseLogoSource`.
 
 ### Changed

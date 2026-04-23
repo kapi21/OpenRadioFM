@@ -20,10 +20,16 @@ print_modname() {
 on_install() {
   ui_print "- Instalando archivos del módulo..."
   unzip -o "$ZIPFILE" -x 'META-INF/*' -d "$MODPATH" >&2
+  # Asegurar LF (evita shebang con CRLF => "No such file or directory")
+  sed -i 's/\r$//' "$MODPATH/service.sh" 2>/dev/null
+  sed -i 's/\r$//' "$MODPATH/uninstall.sh" 2>/dev/null
 }
 
 set_permissions() {
   set_perm_recursive "$MODPATH" 0 0 0755 0644
   set_perm "$MODPATH/service.sh" 0 0 0755
   set_perm "$MODPATH/uninstall.sh" 0 0 0755
+  # Algunos entornos Magisk/ZIP dejan service.sh como 0644; asegurar ejecutable.
+  chmod 0755 "$MODPATH/service.sh" 2>/dev/null
+  chmod 0755 "$MODPATH/uninstall.sh" 2>/dev/null
 }

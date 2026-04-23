@@ -32,9 +32,28 @@ if /i not "!CUR_BRANCH!"=="K706_Root" (
 )
 
 echo [INFO] Compilando APK trampolin :stub-fmradio:assembleRelease ...
-REM El modulo :app exige SUPABASE_* al configurar Gradle; valores dummy si faltan.
-if "!SUPABASE_URL!"=="" set "SUPABASE_URL=https://build-placeholder.invalid/"
-if "!SUPABASE_ANON_KEY!"=="" set "SUPABASE_ANON_KEY=build-placeholder"
+REM El modulo :app exige SUPABASE_* al configurar Gradle.
+REM IMPORTANTE: Gradle prioriza variables de entorno sobre local.properties, así que NO debemos
+REM inyectar valores dummy aquí (rompería la build aunque local.properties esté bien).
+REM Si no están en entorno, intentamos leerlas desde local.properties; si siguen vacías, abortamos.
+if "!SUPABASE_URL!"=="" (
+  for /f "usebackq tokens=1,* delims==" %%A in ("local.properties") do (
+    if /i "%%A"=="SUPABASE_URL" set "SUPABASE_URL=%%B"
+  )
+)
+if "!SUPABASE_ANON_KEY!"=="" (
+  for /f "usebackq tokens=1,* delims==" %%A in ("local.properties") do (
+    if /i "%%A"=="SUPABASE_ANON_KEY" set "SUPABASE_ANON_KEY=%%B"
+  )
+)
+if "!SUPABASE_URL!"=="" (
+  echo [ERROR] Falta SUPABASE_URL. Rellena local.properties ^(raiz^) o exporta SUPABASE_URL.
+  exit /b 1
+)
+if "!SUPABASE_ANON_KEY!"=="" (
+  echo [ERROR] Falta SUPABASE_ANON_KEY. Rellena local.properties ^(raiz^) o exporta SUPABASE_ANON_KEY.
+  exit /b 1
+)
 call gradlew.bat :stub-fmradio:assembleRelease -q
 if errorlevel 1 (
   echo [ERROR] Fallo Gradle stub-fmradio.
@@ -43,6 +62,18 @@ if errorlevel 1 (
 set "STUB_APK=%CD%\stub-fmradio\build\outputs\apk\release\stub-fmradio-release.apk"
 if not exist "%STUB_APK%" (
   echo [ERROR] No se encontro APK: %STUB_APK%
+  exit /b 1
+)
+
+echo [INFO] Compilando OpenRadioFM :app:assembleDebug (para priv-app) ...
+call gradlew.bat :app:assembleDebug -q
+if errorlevel 1 (
+  echo [ERROR] Fallo Gradle app.
+  exit /b 1
+)
+set "APP_APK=%CD%\app\build\outputs\apk\debug\app-debug.apk"
+if not exist "%APP_APK%" (
+  echo [ERROR] No se encontro APK: %APP_APK%
   exit /b 1
 )
 
@@ -68,6 +99,13 @@ mkdir "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt" >nul 2>&1
 copy /Y "%STUB_APK%" "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt\\QF_FMRadioExt.apk" >nul
 if errorlevel 1 (
   echo [ERROR] No se pudo copiar el stub al arbol system del modulo.
+  exit /b 1
+)
+
+mkdir "%TMP_DIR%\\system\\priv-app\\OpenRadioFM" >nul 2>&1
+copy /Y "%APP_APK%" "%TMP_DIR%\\system\\priv-app\\OpenRadioFM\\OpenRadioFM.apk" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo copiar OpenRadioFM al arbol system del modulo.
   exit /b 1
 )
 

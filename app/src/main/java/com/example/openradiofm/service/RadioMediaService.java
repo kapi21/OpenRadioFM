@@ -66,6 +66,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
     /** Launchers OEM que deben poder leer logos vía content:// (FileProvider). */
     private static final String[] OEM_LOGO_URI_GRANT_PACKAGES = new String[] {
+            // QuickFish / K706 themes/launchers
+            "com.android.launcher.gradient.black",
+            "com.android.launcher.movablecell",
+            "com.android.auto.autohome",
+            "com.android.launcher.city",
             "com.android.launcher.star.blue",
             "com.android.launcher3",
             // Car launchers comunes que consumen MediaSession metadata/artwork
@@ -1450,15 +1455,152 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, artUri);
             }
             Bitmap art = decodeStationLogoBitmap(logoFile);
+            if (art == null) {
+                // Fallback: si no hay logo descargado/local, publica al menos el logo de la app
+                // para que el widget multimedia muestre carátula en lugar de vacío.
+                try {
+                    art = BitmapFactory.decodeResource(getResources(), R.drawable.ic_app_logo);
+                } catch (Exception ignored) {}
+            }
             if (art != null) {
                 builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, art);
                 builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, art);
                 builder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, art);
             }
             mMediaSession.setMetadata(builder.build());
+
+            // QuickFish / K706 launcher: el widget multimedia suele ignorar la carátula estándar y
+            // depende de broadcasts OEM (ej. com.qf.musicplayer.action.UPDATE_ACTION).
+            // Emitimos compatibilidad best-effort con múltiples acciones/keys para que el launcher
+            // pueda renderizar título + carátula.
+            try {
+                broadcastQfMediaWidgetUpdate(title,
+                        (freqKhz > 0 || (live != null && live.freqKhz > 0))
+                                ? formatFrequency((live != null && live.freqKhz > 0) ? live.freqKhz : freqKhz)
+                                : "Radio FM",
+                        logoFile,
+                        mIsPlaying);
+            } catch (Exception ignored) {}
         } catch (Exception e) {
             Log.w(TAG, "updateMetadataFromPrefs() falló", e);
         }
+    }
+
+    private void broadcastQfMediaWidgetUpdate(@NonNull String title,
+                                              @NonNull String subtitle,
+                                              @Nullable java.io.File logoFile,
+                                              boolean isPlaying) {
+        // 1) Derivar path/uri de carátula (si existe)
+        String artPath = null;
+        String artUri = null;
+        try {
+            if (logoFile != null && logoFile.isFile()) {
+                artPath = logoFile.getAbsolutePath();
+                artUri = stationLogoUriStringForMetadata(logoFile);
+            }
+        } catch (Exception ignored) {}
+
+        // 2) Intent compat: el launcher gradient.black registra dinámicamente estos receivers.
+        // En logcat se ve CustomMusicWidget escuchando com.qf.musicplayer.action.UPDATE_ACTION.
+        android.content.Intent[] intents = new android.content.Intent[] {
+                new android.content.Intent("com.qf.musicplayer.action.UPDATE_ACTION"),
+                new android.content.Intent("com.qf.action.UPDATE_MEDIA_INFO"),
+                new android.content.Intent("com.qf.action.UPDATE_MEDIA_STATE"),
+        };
+
+        for (android.content.Intent i : intents) {
+            // Campos "típicos" (probados por compatibilidad; varios OEM cambian nombres)
+            i.putExtra("packageName", getPackageName());
+            i.putExtra("pkg", getPackageName());
+            i.putExtra("app", getPackageName());
+
+            i.putExtra("trackName", title);
+            i.putExtra("title", title);
+            i.putExtra("name", title);
+            i.putExtra("song", title);
+
+            i.putExtra("artistName", "OpenRadioFM");
+            i.putExtra("artist", "OpenRadioFM");
+            i.putExtra("subTitle", subtitle);
+            i.putExtra("subtitle", subtitle);
+
+            i.putExtra("isPlaying", isPlaying);
+            i.putExtra("playing", isPlaying);
+            i.putExtra("playState", isPlaying ? 1 : 0);
+            i.putExtra("state", isPlaying ? 1 : 0);
+
+            if (artPath != null) {
+                i.putExtra("coverPath", artPath);
+                i.putExtra("artPath", artPath);
+                i.putExtra("picPath", artPath);
+                i.putExtra("imagePath", artPath);
+            }
+            if (artUri != null) {
+                i.putExtra("coverUri", artUri);
+                i.putExtra("artUri", artUri);
+                i.putExtra("picUri", artUri);
+                i.putExtra("imageUri", artUri);
+            }
+
+            // En K706/QuickFish, muchos com.qf.* están protegidos y dan "Permission Denial".
+            // El módulo Magisk ya envía estos broadcasts como root (bridge) para evitar prompts/toasts continuos de su.
+            try {
+                sendBroadcast(i);
+            } catch (SecurityException ignored) {}
+        }
+
+        Log.d(TAG, "QF media widget broadcast: title=" + title + " artPath=" + (artPath != null));
+    }
+
+    private static void suAmBroadcast(@NonNull android.content.Intent i,
+                                      @NonNull String title,
+                                      @NonNull String subtitle,
+                                      @Nullable String artPath,
+                                      @Nullable String artUri,
+                                      boolean isPlaying) throws Exception {
+        String action = i.getAction();
+        if (action == null || action.isEmpty()) return;
+
+        // Algunos parsers OEM/`am` se rompen si los valores contienen espacios y terminan interpretando
+        // el último token como "COMPONENT"/package. Para compatibilidad, usar valores sin espacios.
+        String safeTitle = qfSafeValue(title);
+        String safeSubtitle = qfSafeValue(subtitle);
+
+        // Construir comando am broadcast con extras mínimos (evitar romper por comillas).
+        StringBuilder cmd = new StringBuilder();
+        cmd.append("am broadcast -a ").append(shQuote(action));
+        cmd.append(" --es ").append(shQuote("trackName")).append(" ").append(shQuote(safeTitle));
+        cmd.append(" --es ").append(shQuote("title")).append(" ").append(shQuote(safeTitle));
+        cmd.append(" --es ").append(shQuote("currentTrack")).append(" ").append(shQuote("com.example.openradiofm"));
+        cmd.append(" --es ").append(shQuote("packageName")).append(" ").append(shQuote("com.example.openradiofm"));
+        cmd.append(" --es ").append(shQuote("artistName")).append(" ").append(shQuote("OpenRadioFM"));
+        cmd.append(" --es ").append(shQuote("subTitle")).append(" ").append(shQuote(safeSubtitle));
+        cmd.append(" --ez ").append(shQuote("isPlaying")).append(" ").append(isPlaying ? "true" : "false");
+        cmd.append(" --ei ").append(shQuote("playState")).append(" ").append(isPlaying ? "1" : "0");
+        if (artPath != null && !artPath.isEmpty()) {
+            cmd.append(" --es ").append(shQuote("coverPath")).append(" ").append(shQuote(artPath));
+        }
+        if (artUri != null && !artUri.isEmpty()) {
+            cmd.append(" --es ").append(shQuote("coverUri")).append(" ").append(shQuote(artUri));
+        }
+
+        new ProcessBuilder("su", "-c", cmd.toString()).start();
+    }
+
+    private static String shQuote(@NonNull String s) {
+        // Single-quote safe for sh: ' -> '\''.
+        return "'" + s.replace("'", "'\\''") + "'";
+    }
+
+    private static String qfSafeValue(@NonNull String s) {
+        // Reducir a tokens para evitar ambigüedad en algunos parsers OEM.
+        // Mantener ASCII simple; el widget solo necesita un label.
+        String out = s.trim();
+        out = out.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ');
+        while (out.contains("  ")) out = out.replace("  ", " ");
+        out = out.replace(' ', '_');
+        if (out.isEmpty()) return "OpenRadioFM";
+        return out;
     }
 
     private String radioLogoFileProviderAuthority() {
@@ -1582,6 +1724,16 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
 
             Bitmap bmp = decodeBitmapMaxEdge(path, 320);
+            if (bmp == null) {
+                // Algunos headunits bloquean decodeFile directo sobre /sdcard (scoped storage / FUSE).
+                // Fallback: intentar leer por content:// (MediaStore o FileProvider) si se puede resolver.
+                try {
+                    String uriStr = stationLogoUriStringForMetadata(f);
+                    if (uriStr != null && !uriStr.isEmpty()) {
+                        bmp = decodeBitmapMaxEdgeFromUriString(uriStr, 320);
+                    }
+                } catch (Exception ignored) {}
+            }
             if (bmp != null) {
                 mLastMetadataLogoPath = path;
                 mLastMetadataLogoMtime = mtime;
@@ -1590,6 +1742,40 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             return bmp;
         } catch (Exception ignored) {
             return null;
+        }
+    }
+
+    @Nullable
+    private Bitmap decodeBitmapMaxEdgeFromUriString(@NonNull String uriStr, int maxEdgePx) {
+        if (maxEdgePx <= 0) return null;
+        android.net.Uri uri = null;
+        try { uri = android.net.Uri.parse(uriStr); } catch (Exception ignored) {}
+        if (uri == null) return null;
+        java.io.InputStream is = null;
+        try {
+            is = getContentResolver().openInputStream(uri);
+            if (is == null) return null;
+            // Decodificar sin arriesgar memoria: como fallback, escala aproximada post-decode.
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap raw = BitmapFactory.decodeStream(is, null, o);
+            if (raw == null) return null;
+            int w = raw.getWidth();
+            int h = raw.getHeight();
+            int max = Math.max(w, h);
+            if (max <= maxEdgePx) return raw;
+            float scale = (float) maxEdgePx / (float) max;
+            int nw = Math.max(1, Math.round(w * scale));
+            int nh = Math.max(1, Math.round(h * scale));
+            Bitmap scaled = Bitmap.createScaledBitmap(raw, nw, nh, true);
+            if (scaled != raw) {
+                try { raw.recycle(); } catch (Exception ignored) {}
+            }
+            return scaled;
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            try { if (is != null) is.close(); } catch (Exception ignored) {}
         }
     }
 

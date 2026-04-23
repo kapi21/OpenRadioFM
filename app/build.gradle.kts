@@ -31,7 +31,15 @@ if (supabaseUrlRaw.isNullOrEmpty() || supabaseAnonKeyRaw.isNullOrEmpty()) {
             "  - Documentación: docs/CI_SUPABASE.md",
     )
 }
-val supabaseUrl: String = supabaseUrlRaw!!.trimEnd('/') + "/"
+// Algunos entornos (o copiado desde logs) pueden introducir escapes tipo "https\\://".
+// Normalizamos para asegurar un BASE_URL válido para Retrofit/OkHttp.
+val supabaseUrlSanitized: String = supabaseUrlRaw!!
+    .replace("\\:", ":")
+    .replace("\\/", "/")
+    .replace("\\\\", "\\")
+    .replace("\\", "")
+    .trim()
+val supabaseUrl: String = supabaseUrlSanitized.trimEnd('/') + "/"
 val supabaseAnonKey: String = supabaseAnonKeyRaw!!
 val supabaseStoragePublicLogosBase: String =
     supabaseUrl.trimEnd('/') + "/storage/v1/object/public/station-logos/"

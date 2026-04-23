@@ -152,6 +152,8 @@ graph TB
 ### Supabase (obligatorio para compilar)
 Desde **v5.0.15**, la URL y la clave **anon** de Supabase no van en el código: añádelas a `local.properties` en la raíz (junto a `sdk.dir`) o exporta `SUPABASE_URL` y `SUPABASE_ANON_KEY`. Plantilla: `local.properties.example`. Guía CI: [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
 
+Nota K706/Magisk: si compilas el ZIP con `magisk/build_k706_root_zip.bat`, el script **lee** las credenciales desde `local.properties` (o variables de entorno) y **abortará** si faltan (para evitar builds “offline” con placeholders).
+
 ### Build
 ```bash
 # Clonar
