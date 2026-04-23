@@ -124,13 +124,32 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM Crear ZIP con PowerShell (sin cifrado)
+REM Crear ZIP "Magisk-friendly":
+REM - Magisk App puede ser sensible a permisos dentro del ZIP (update-binary / *.sh).
+REM - En Windows, Compress-Archive NO preserva permisos Unix. Usamos Python para escribir el ZIP
+REM   con modos 0755 para scripts y 0644 para el resto. Si no hay Python, fallback a Compress-Archive.
+set "PY_ZIPPER=%CD%\magisk\zip_magisk.py"
+if exist "%PY_ZIPPER%" goto :zip_with_python
+goto :zip_with_powershell
+
+:zip_with_python
+python "%PY_ZIPPER%" "%TMP_DIR%" "%OUT_ZIP%"
+if errorlevel 1 (
+  echo [ERROR] Fallo creando ZIP con Python.
+  exit /b 1
+)
+goto :zip_done
+
+:zip_with_powershell
+echo [WARN] No existe %PY_ZIPPER%. Usando Compress-Archive (puede fallar en Magisk por permisos).
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "& { if(Test-Path '%OUT_ZIP%'){ Remove-Item -Force '%OUT_ZIP%' }; Compress-Archive -Path '%TMP_DIR%\\*' -DestinationPath '%OUT_ZIP%' -Force }"
 if errorlevel 1 (
   echo [ERROR] Fallo creando ZIP con Compress-Archive.
   exit /b 1
 )
+
+:zip_done
 
 REM Limpiar temp
 rmdir /s /q "%TMP_DIR%" >nul 2>&1
