@@ -1,0 +1,27 @@
+#!/sbin/sh
+
+# Magisk module installer entrypoint.
+umask 022
+
+OUTFD="$2"
+ZIPFILE="$3"
+
+ui_print() {
+  echo -e "ui_print $1\nui_print" > /proc/self/fd/$OUTFD
+}
+
+require_new_magisk() {
+  ui_print "! Magisk no detectado o demasiado antiguo."
+  exit 1
+}
+
+MAGISKTMP="/data/adb/magisk"
+UTIL="$MAGISKTMP/util_functions.sh"
+[ -f "$UTIL" ] || require_new_magisk
+
+# shellcheck disable=SC1090
+. "$UTIL"
+
+install_module
+exit 0
+
