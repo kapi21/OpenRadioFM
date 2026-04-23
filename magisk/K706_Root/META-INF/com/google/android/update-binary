@@ -1,32 +1,33 @@
 #!/sbin/sh
 
-# Magisk module installer entrypoint.
-# Compatible con Magisk 20+ (incluye 27.0).
-# (LF) Normalizado para instalación en Magisk App.
+#################
+# Initialization
+#################
 
 umask 022
 
-OUTFD="$2"
-ZIPFILE="$3"
-
-ui_print() {
-  echo -e "ui_print $1\nui_print" > /proc/self/fd/$OUTFD
-}
+# echo before loading util_functions (compatible con distintos shells)
+ui_print() { echo "$1"; }
 
 require_new_magisk() {
-  ui_print "! Magisk no detectado o demasiado antiguo."
-  ui_print "! Instala/actualiza Magisk y reintenta."
+  ui_print "*******************************"
+  ui_print " Please install Magisk v20.4+! "
+  ui_print "*******************************"
   exit 1
 }
 
-# Localizar util_functions de Magisk
-MAGISKTMP="/data/adb/magisk"
-UTIL="$MAGISKTMP/util_functions.sh"
+#########################
+# Load util_functions.sh
+#########################
 
-[ -f "$UTIL" ] || require_new_magisk
+OUTFD=$2
+ZIPFILE=$3
 
-# shellcheck disable=SC1090
-. "$UTIL"
+mount /data 2>/dev/null
+
+[ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk
+. /data/adb/magisk/util_functions.sh
+[ $MAGISK_VER_CODE -lt 20400 ] && require_new_magisk
 
 install_module
 exit 0

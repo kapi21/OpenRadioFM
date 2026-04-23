@@ -33,7 +33,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "'%TMP_DIR%\\uninstall.sh'," ^
   "'%TMP_DIR%\\META-INF\\com\\google\\android\\update-binary'," ^
   "'%TMP_DIR%\\META-INF\\com\\google\\android\\updater-script'" ^
-  "); foreach($f in $files){ if(Test-Path $f){ $b=[IO.File]::ReadAllBytes($f); $s=[Text.Encoding]::UTF8.GetString($b); $s=$s -replace \"\\r\\n\",\"\\n\"; [IO.File]::WriteAllBytes($f,[Text.Encoding]::UTF8.GetBytes($s)) } } }"
+  "); foreach($f in $files){ if(Test-Path $f){ $b=[IO.File]::ReadAllBytes($f); $s=[Text.Encoding]::UTF8.GetString($b); $s=$s -replace \"\\r\\n\",\"\\n\"; $s=$s -replace \"\\r\",\"\\n\"; [IO.File]::WriteAllBytes($f,[Text.Encoding]::UTF8.GetBytes($s)) } } }"
 if errorlevel 1 (
   echo [ERROR] Fallo normalizando LF.
   exit /b 1
