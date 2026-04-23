@@ -13,6 +13,8 @@ def _write_dir_entry(zf: zipfile.ZipFile, rel_dir: str) -> None:
     rel_dir = rel_dir.replace("\\", "/").rstrip("/") + "/"
     zi = zipfile.ZipInfo(rel_dir)
     zi.create_system = 3  # Unix
+    zi.flag_bits |= 0x800  # UTF-8 filename flag (compat)
+    zi.compress_type = zipfile.ZIP_DEFLATED
     zi.external_attr = (0o755 | stat.S_IFDIR) << 16
     zf.writestr(zi, b"")
 
@@ -22,6 +24,8 @@ def _write_file_entry(zf: zipfile.ZipFile, abs_path: str, rel_path: str) -> None
     mode = 0o755 if _is_executable_script(rel_path) else 0o644
     zi = zipfile.ZipInfo(rel_path)
     zi.create_system = 3  # Unix
+    zi.flag_bits |= 0x800  # UTF-8 filename flag (compat)
+    zi.compress_type = zipfile.ZIP_DEFLATED
     zi.external_attr = (mode | stat.S_IFREG) << 16
     with open(abs_path, "rb") as f:
         zf.writestr(zi, f.read())
