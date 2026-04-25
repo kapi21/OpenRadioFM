@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="root_version_suffix">Root Version</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway y QS6 (NWD) también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema suele mandar esas teclas al launcher o a la radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilidad)</string>
     <string name="a11y_hihack_enabled">Activado</string>

@@ -1104,7 +1104,8 @@ public class DialogManager {
             if (tvVersion != null) {
                 String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(),
                         0).versionName;
-                tvVersion.setText(mActivity.getString(R.string.version, versionName));
+                String base = mActivity.getString(R.string.version, versionName);
+                tvVersion.setText(base + " — " + mActivity.getString(R.string.root_version_suffix));
             }
         } catch (Exception ignored) {
         }

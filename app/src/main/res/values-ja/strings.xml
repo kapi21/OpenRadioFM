@@ -235,7 +235,7 @@
     <string name="about_info_header">情報</string>
     <string name="about_dev_by">開発者</string>
     <string name="about_tech_details">技術詳細</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
     <string name="a11y_hihack_title">HiHack（ユーザー補助）</string>
     <string name="a11y_hihack_enabled">有効</string>

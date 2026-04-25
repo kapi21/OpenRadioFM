@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.2.0-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.2.1_Icons_Fix-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-K706_Root-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
@@ -58,7 +58,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
 
-**5.2.0** (rama de desarrollo principal **MCU2** / integración, abril 2026, `versionCode` **40**): consolidación del refactor 5.2.0 y estabilidad multi‑motor. **MT8163**: compatibilidad con launchers tipo **Agama** (controles + texto vía `MediaBrowser/MediaSession`) y mitigación de arranque pesado (bind HCN idempotente + diferido de trabajo de presets/logos). **QS6/NWD**: mejoras de RDS/AutoScan e ingeniería. Ver `CHANGELOG.md` (sección **5.2.0**).
+**5.2.1 “Icons Fix”** (abril 2026, `versionCode` **41**): corrección del selector de **packs de iconos** (PNG/SVG) y números de preset (assets), y ajuste de Supabase para evitar falsos positivos por frecuencia. Ver `CHANGELOG.md`.
 
 **Rama `K706_Root`**: edición **root / Magisk** para QF K706 — trampolín `QF_FMRadioExt` (`:stub-fmradio`), `pm enable` del paquete OEM, parche de atajos en `shared_prefs`, broadcasts al launcher. Handoff: [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md). Instalación: `magisk/build_k706_root_zip.bat` → `magisk/k706.zip`; guía [`magisk/K706_Root/README_K706_ROOT_MAGISK.md`](magisk/K706_Root/README_K706_ROOT_MAGISK.md). *Estado:* instalación del módulo en hardware en depuración (ver CHANGELOG *Unreleased* / handoff).
 

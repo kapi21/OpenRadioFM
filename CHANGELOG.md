@@ -1,5 +1,14 @@
 ## [Unreleased] - MCU2
 
+## [5.2.1 Icons Fix] - 2026-04-25
+
+### UI / Personalización (todos los modelos)
+- **Icon packs**: el selector de “Pack de iconos” ahora funciona correctamente (assets PNG/SVG). Se corrige el caso en el que el pack estaba seleccionado pero la UI no cambiaba por no encontrarse los ficheros en `assets`.
+- **Preset numbers**: los iconos de números (1–18) se cargan desde assets y se limpian caches al cambiar estilo.
+
+### Cloud / Supabase
+- **Supabase**: eliminado el fallback de búsqueda por **frecuencia + país**, ya que podía devolver logos/streams incorrectos para emisoras distintas con la misma frecuencia.
+
 ### K706 Root Edition (rama `K706_Root`, abril 2026)
 - **Magisk (`magisk/K706_Root/`)**: **overlay** `system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk` con APK trampolín (`:stub-fmradio`: `FmMainActivity` → OpenRadioFM, `FmService` stub para `IFmRadioService`); `service.sh` hace **`pm enable`** del paquete (necesario para el `ComponentName` explícito del launcher). Sigue el **parche** de XML en `shared_prefs`; `customize.sh` usa `SKIPMOUNT=false`; `build_k706_root_zip.bat` compila el stub y empaqueta el ZIP.
 - **Magisk — build Windows**: `magisk/build_k706_root_zip.bat` fuerza **LF** en scripts antes del ZIP; `.gitattributes` fuerza `eol=lf` bajo `magisk/`.

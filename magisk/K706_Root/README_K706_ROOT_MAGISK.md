@@ -6,6 +6,7 @@
 - En cada arranque: **`pm enable`** `com.android.fmradio.ext` (el paquete debe estar habilitado para que el `ComponentName` explícito del launcher resuelva contra el APK montado).
 - **Icono RADIO (prefs):** recorre `/data/data/*/shared_prefs/*.xml` con referencias OEM y sustituye por OpenRadioFM donde aplique.
 - Al desinstalar el módulo, Magisk quita el overlay (vuelve el APK de fábrica), **`pm enable`** y restauración de `*.bak_orf`.
+- Este ZIP también incluye **OpenRadioFM como `priv-app`** (`system/priv-app/OpenRadioFM/OpenRadioFM.apk`) para un despliegue “todo en uno” pensado para **usuarios root** (rama `K706_Root`, **5.2.1 Icons Fix Root Version** visible en Acerca de).
 
 ### Otra ROM / otra ruta bajo `/system/priv-app/`
 Si `pm path com.android.fmradio.ext` **no** es `QF_FMRadioExt/QF_FMRadioExt.apk`, hay que renombrar la carpeta y el `.apk` dentro del ZIP del módulo (o duplicar el árbol) para coincidir con la ruta real antes de empaquetar.
@@ -61,4 +62,48 @@ No deshabilites manualmente `com.android.fmradio.ext` con `pm disable-user` si q
 
 ## Rollback
 
-- Desinstala el módulo desde Magisk y reinicia (vuelve el APK OEM de fábrica en esa ruta).
+- Desinstala el módulo desde Magisk y reinicia.  
+  El módulo ejecuta un **rollback automático profundo** de `com.android.fmradio.ext` al desinstalarse:
+  - `pm uninstall --user 0` y también `pm uninstall` (si es user-app)
+  - limpieza de restos en `/data/app` y datos en `/data/data`, `/data/user/0`, `/data/user_de/0`
+  - reinstalación del APK OEM incluido (ver siguiente sección)
+  - y al final `install-existing + enable` para el **usuario 0** (evita que el paquete quede como `installed=false` aunque exista en `/system`).
+
+### APK OEM para rollback (obligatorio para el build)
+Para que el rollback automático reinstale tu radio OEM, el ZIP debe incluir un APK OEM.
+El generador `magisk\build_k706_root_zip.bat` **falla a propósito** si no lo encuentra.
+
+En el repo, coloca tu APK aquí (nombre fijo, sin espacios):
+
+- `magisk\oem\Radio_vnull.apk`
+
+Ejemplo: copia tu `Radio (com.android.fmradio.ext) [v.null].apk` a esa ruta y renómbralo a `Radio_vnull.apk`.
+
+## Nota importante (crash OEM por permisos)
+
+En algunos firmwares K706, `com.android.fmradio.ext` puede crashear con:
+`SecurityException: Must hold the MODIFY_PHONE_STATE permission.`
+
+Este módulo incluye una whitelist adicional en `system/etc/permissions/` para conceder
+`MODIFY_PHONE_STATE` **mientras el módulo esté instalado** (overlay systemless).
+Si desinstalas el módulo, ese overlay desaparece y el comportamiento vuelve al del firmware.
+
+## Modo OEM (sin desinstalar el módulo)
+
+Si quieres que el icono RADIO del launcher vuelva a abrir la OEM **sin desinstalar** (manteniendo el fix de permisos),
+activa el flag `orf_oem_mode` y reinicia.
+
+- Activar modo OEM:
+
+```sh
+adb shell su -c "touch /data/adb/modules/openradiofm_k706_root/orf_oem_mode && reboot"
+```
+
+- Volver a modo OpenRadioFM (trampolín):
+
+```sh
+adb shell su -c "rm -f /data/adb/modules/openradiofm_k706_root/orf_oem_mode && reboot"
+```
+
+Notas:
+- En **modo OEM** el módulo restaura automáticamente los accesos directos parcheados (`*.bak_orf`) para que el launcher vuelva a abrir la radio OEM.

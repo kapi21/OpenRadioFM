@@ -61,8 +61,8 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 40
-        versionName = "5.2.0"
+        versionCode = 41
+        versionName = "5.2.1 Icons Fix"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

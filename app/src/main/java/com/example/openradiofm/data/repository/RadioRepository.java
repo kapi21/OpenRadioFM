@@ -604,12 +604,7 @@ public class RadioRepository {
                                     android.util.Log.d("RadioRepository", "SUPABASE EMPTY OR ERROR: " + (res != null ? res.code() : "null"));
                                 }
                             }
-                            if (supabaseData == null && freqKHz >= 30000) {
-                                supabaseData = tryFetchSupabaseByFrequency(freqKHz, country);
-                                if (supabaseData != null) {
-                                    android.util.Log.d("RadioRepository", "SUPABASE: fallback frequency+country after ps_name/PI/custom");
-                                }
-                            }
+                            // Fallback por frecuencia+país eliminado: puede devolver la emisora equivocada.
                             if (supabaseData != null) {
                                 logoUrlToDownload = supabaseData.getLogoUrl();
                                 android.util.Log.d("RadioRepository", "SUPABASE SUCCESS: Logo=" + logoUrlToDownload + ", Stream=" + supabaseData.getStreamUrl());
@@ -849,30 +844,6 @@ public class RadioRepository {
     }
 
     /**
-     * Respaldo solo si custom / PI / {@code ps_name} no devolvieron datos. Orden preferido por el usuario:
-     * primero {@code ps_name}, luego frecuencia+país.
-     */
-    private SupabaseLogoResponse tryFetchSupabaseByFrequency(int freqKHz, String country) {
-        if (freqKHz < 30000) return null;
-        try {
-            String freqStr = formatSupabaseFreqMhz(freqKHz);
-            retrofit2.Call<java.util.List<SupabaseLogoResponse>> freqCall = supabaseSource.getSupabaseApi().getLogosByFreq(
-                    supabaseSource.getApiKey(),
-                    "Bearer " + supabaseSource.getApiKey(),
-                    "eq." + freqStr,
-                    "eq." + country,
-                    "*");
-            retrofit2.Response<java.util.List<SupabaseLogoResponse>> res = freqCall.execute();
-            if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                return pickBestSupabaseRow(res.body(), freqKHz, null);
-            }
-        } catch (Exception e) {
-            android.util.Log.d("RadioRepository", "tryFetchSupabaseByFrequency", e);
-        }
-        return null;
-    }
-
-    /**
      * Resuelve la URL de streaming para FM (≥ 30 MHz): usa caché {@code STREAM_} y, si falta o está
      * vacía, consulta Supabase en el <b>hilo actual</b> (solo invocar desde hilo de fondo).
      * <p>
@@ -935,9 +906,7 @@ public class RadioRepository {
                     supabaseData = pickBestSupabaseRow(res.body(), freqKHz, finalName);
                 }
             }
-            if (supabaseData == null && freqKHz >= 30000) {
-                supabaseData = tryFetchSupabaseByFrequency(freqKHz, country);
-            }
+            // Fallback por frecuencia+país eliminado: puede devolver la emisora equivocada.
             if (supabaseData != null) {
                 String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
                 mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();

@@ -65,13 +65,13 @@ if not exist "%STUB_APK%" (
   exit /b 1
 )
 
-echo [INFO] Compilando OpenRadioFM :app:assembleDebug (para priv-app) ...
-call gradlew.bat :app:assembleDebug -q
+echo [INFO] Compilando OpenRadioFM :app:assembleRelease (para priv-app) ...
+call gradlew.bat :app:assembleRelease -q
 if errorlevel 1 (
   echo [ERROR] Fallo Gradle app.
   exit /b 1
 )
-set "APP_APK=%CD%\app\build\outputs\apk\debug\app-debug.apk"
+set "APP_APK=%CD%\app\build\outputs\apk\release\app-release.apk"
 if not exist "%APP_APK%" (
   echo [ERROR] No se encontro APK: %APP_APK%
   exit /b 1
@@ -90,10 +90,32 @@ if errorlevel 1 (
 
 REM Copiar estructura del módulo
 xcopy /E /I /Y "magisk\\K706_Root\\META-INF" "%TMP_DIR%\\META-INF" >nul
+REM Copiar overlay systemless adicional (permisos, etc.)
+if exist "magisk\\K706_Root\\system" (
+  xcopy /E /I /Y "magisk\\K706_Root\\system" "%TMP_DIR%\\system" >nul
+)
 copy /Y "magisk\\K706_Root\\module.prop" "%TMP_DIR%\\module.prop" >nul
 copy /Y "magisk\\K706_Root\\customize.sh" "%TMP_DIR%\\customize.sh" >nul
+copy /Y "magisk\\K706_Root\\post-fs-data.sh" "%TMP_DIR%\\post-fs-data.sh" >nul
 copy /Y "magisk\\K706_Root\\service.sh" "%TMP_DIR%\\service.sh" >nul
 copy /Y "magisk\\K706_Root\\uninstall.sh" "%TMP_DIR%\\uninstall.sh" >nul
+
+REM APK OEM para reinstalar automáticamente al desinstalar el módulo.
+REM NOTA: no lo versionamos aquí (binario). El usuario debe copiarlo a:
+REM   magisk\oem\Radio_vnull.apk
+set "OEM_APK=%CD%\magisk\oem\Radio_vnull.apk"
+if not exist "%OEM_APK%" (
+  echo [ERROR] Falta el APK OEM para rollback automatico.
+  echo [ERROR] Copia tu "Radio (com.android.fmradio.ext) [v.null].apk" a:
+  echo [ERROR]   %OEM_APK%
+  exit /b 1
+)
+mkdir "%TMP_DIR%\\oem" >nul 2>&1
+copy /Y "%OEM_APK%" "%TMP_DIR%\\oem\\Radio_vnull.apk" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo copiar el APK OEM al arbol del modulo.
+  exit /b 1
+)
 
 mkdir "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt" >nul 2>&1
 copy /Y "%STUB_APK%" "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt\\QF_FMRadioExt.apk" >nul
@@ -109,18 +131,36 @@ if errorlevel 1 (
   exit /b 1
 )
 
-REM Normalizar LF (reemplazar CRLF->LF) en scripts y update-binary
+REM Normalizar LF (eliminar CR=0x0D) en scripts y update-binary.
+REM Nota: hacerlo a nivel de bytes para no depender de la codificación (UTF-8/UTF-16/BOM).
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "& { $files = @(" ^
+  "'%TMP_DIR%\\module.prop'," ^
   "'%TMP_DIR%\\customize.sh'," ^
+  "'%TMP_DIR%\\post-fs-data.sh'," ^
   "'%TMP_DIR%\\service.sh'," ^
   "'%TMP_DIR%\\uninstall.sh'," ^
   "'%TMP_DIR%\\META-INF\\com\\google\\android\\update-binary'," ^
   "'%TMP_DIR%\\META-INF\\com\\google\\android\\updater-script'" ^
-  "); foreach($f in $files){ if(Test-Path $f){ $b=[IO.File]::ReadAllBytes($f); $b2 = New-Object byte[] ($b.Length); [Array]::Copy($b,$b2,$b.Length); " ^
-  "$s=[Text.Encoding]::UTF8.GetString($b2); $s=$s -replace \"\\r\\n\",\"\\n\"; $s=$s -replace \"\\r\",\"\\n\"; $out=[Text.Encoding]::UTF8.GetBytes($s); [IO.File]::WriteAllBytes($f,$out) } } }"
+  "); foreach($f in $files){ if(Test-Path $f){ $b=[IO.File]::ReadAllBytes($f); if($b -contains 13){ $out = New-Object byte[] ($b.Length); $j=0; foreach($x in $b){ if($x -ne 13){ $out[$j]=$x; $j++ } }; if($j -lt $out.Length){ $out2 = New-Object byte[] ($j); [Array]::Copy($out,$out2,$j); [IO.File]::WriteAllBytes($f,$out2) } else { [IO.File]::WriteAllBytes($f,$out) } } } } }"
 if errorlevel 1 (
   echo [ERROR] Fallo normalizando LF.
+  exit /b 1
+)
+
+REM Verificar que no queden CR (0x0D) en scripts (causa ": not found" y "umask: illegal mode" en Magisk)
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "& { $files = @(" ^
+  "'%TMP_DIR%\\module.prop'," ^
+  "'%TMP_DIR%\\customize.sh'," ^
+  "'%TMP_DIR%\\post-fs-data.sh'," ^
+  "'%TMP_DIR%\\service.sh'," ^
+  "'%TMP_DIR%\\uninstall.sh'," ^
+  "'%TMP_DIR%\\META-INF\\com\\google\\android\\update-binary'," ^
+  "'%TMP_DIR%\\META-INF\\com\\google\\android\\updater-script'" ^
+  "); $bad=@(); foreach($f in $files){ if(Test-Path $f){ $b=[IO.File]::ReadAllBytes($f); if($b -contains 13){ $bad += $f } } }; if($bad.Count -gt 0){ Write-Host '[ERROR] Scripts con CR (\\r) detectados:'; $bad | ForEach-Object { Write-Host (' - ' + $_) }; exit 2 } }"
+if errorlevel 1 (
+  echo [ERROR] Quedaron CRLF/CR en scripts. Abortando para evitar fallo en Magisk.
   exit /b 1
 )
 
@@ -151,8 +191,12 @@ if errorlevel 1 (
 
 :zip_done
 
-REM Limpiar temp
-rmdir /s /q "%TMP_DIR%" >nul 2>&1
+REM Limpiar temp (opcional: --keep-tmp para depurar)
+if /i not "%~1"=="--keep-tmp" (
+  rmdir /s /q "%TMP_DIR%" >nul 2>&1
+) else (
+  echo [INFO] Manteniendo carpeta temporal: %TMP_DIR%
+)
 
 for %%I in ("%OUT_ZIP%") do (
   echo.

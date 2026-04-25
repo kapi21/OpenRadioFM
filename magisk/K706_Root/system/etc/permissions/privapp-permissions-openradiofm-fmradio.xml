@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<permissions>
+    <!--
+      Fix K706: com.android.fmradio.ext crashea al abrir por falta de MODIFY_PHONE_STATE:
+      java.lang.SecurityException: Must hold the MODIFY_PHONE_STATE permission.
+
+      Esta whitelist solo tiene efecto mientras el módulo Magisk esté instalado/activo
+      (overlay systemless). Al desinstalar el módulo, vuelve el estado original del firmware.
+    -->
+    <privapp-permissions package="com.android.fmradio.ext">
+        <permission name="android.permission.MODIFY_PHONE_STATE" />
+    </privapp-permissions>
+</permissions>
+

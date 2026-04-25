@@ -4,10 +4,10 @@ Documento para retomar el trabajo sin perder contexto. **Rama:** `K706_Root`. **
 
 ### Para mañana (instalación Magisk)
 
-- **Síntoma:** error al instalar el módulo (Magisk App y/o flasher); pendiente **mensaje exacto** y si ocurre con `k706.zip` generado por `magisk\build_k706_root_zip.bat`.
-- **Comprobar primero:** ZIP generado por el **.bat** (incluye `system/priv-app/.../QF_FMRadioExt.apk` + scripts con LF). No empaquetar solo la carpeta `K706_Root` a mano sin el stub.
-- **Alternativa estable:** `adb push magisk\k706.zip /data/local/tmp/k706.zip` y `su -c 'magisk --install-module /data/local/tmp/k706.zip'`; revisar si el módulo aparece en `/data/adb/modules_update/` aunque el comando devuelva código ≠ 0; **reiniciar** y verificar `/data/adb/modules/openradiofm_k706_root/`.
-- **Hipótesis a descartar:** ZIP creado con `Compress-Archive` (Windows) incompatible con el descompresor de Magisk en algún dispositivo → probar 7-Zip “ZIP Store/Deflate” o `zip` desde WSL; trazas `logcat` al instalar desde la app Magisk.
+- **Build ZIP (OK):** `magisk\build_k706_root_zip.bat` ya genera `magisk\k706.zip` con normalización **LF** (sin `\r`) y permisos correctos para scripts.
+- **Siguiente bloqueo a cerrar:** validar instalación en hardware (UI Magisk vs CLI).
+- **Instalación recomendada (CLI):** `adb push magisk\k706.zip /data/local/tmp/k706.zip` y `su -c 'magisk --install-module /data/local/tmp/k706.zip'`; **reiniciar** y verificar `/data/adb/modules/openradiofm_k706_root/`.
+- **Si falla desde la UI:** capturar `logcat` durante el flash e intentar de nuevo con CLI.
 - **Hitos git recientes:** `655da9aa` (trampolín APK + overlay), `d6c867fb` (QF broadcast por paquete), `8ca78af6` (docs handoff).
 
 ---
