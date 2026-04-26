@@ -133,5 +133,8 @@ _tmp_magisk/
 .cursorignore
 .cursorrules
 
+# === Informes locales (NO SUBIR A GITHUB) ===
+INFORMES/
+
 # === Kotlin ===
 .kotlin/
