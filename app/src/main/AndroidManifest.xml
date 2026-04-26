@@ -156,6 +156,15 @@
             </intent-filter>
         </receiver>
 
+        <!-- Debug: ADB control for K706 MCU RDS toggles (shell-only) -->
+        <receiver
+            android:name=".receiver.K706McuDebugReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.example.openradiofm.K706_MCU_DEBUG" />
+            </intent-filter>
+        </receiver>
+
         <!-- V16.2: Radio Hijacker Service (Accessibility) -->
         <service android:name=".services.FactoryRadioHijackerService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"

@@ -109,8 +109,14 @@ _ASSETS/
 _tools/
 tools/
 scripts/
-icons_*/
-Icons_lucide/
+# Icon packs (compilación): NO ignorar.
+# En el pasado se perdieron en builds/commits por esta regla.
+# Carpetas esperadas: icons_numbers, icons_color, icons_google, Icons_lucide, icons_remix, icons_awesome, icons_tabler
+#
+# Nota: la ubicación canónica para compilar debe ser `app/src/main/assets/icons_*`.
+# Si existen copias en la raíz del repo, se ignoran para evitar duplicados en Git/APK.
+/icons_*/
+/Icons_lucide/
 logo.png
 !docs/editor/logo.png
 !docs/editor/README.md

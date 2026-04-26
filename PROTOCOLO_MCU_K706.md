@@ -64,7 +64,7 @@ Estos códigos se reciben en el callback `onMcuInfoChanged`.
 | `0xB4` | RDS flags (TP) | En K706/QF se ha observado que **TP** se deriva de `0xB4`; el estado TA Switch se deriva de `0xB3`. |
 | `0xB5` | RDS PTY | El PTY suele venir en `data[2]`. |
 | `0xB6` | RDS PS (Station Name) | Texto PS (normalmente 8 chars, limpieza necesaria). |
-| `0xB7` | RDS RT (RadioText) | Texto RT (limpieza necesaria). En muchos firmwares K706/QF, RT llega principalmente por `0xB7`. |
+| `0xB7` | RDS RT (RadioText) | Texto RT (limpieza necesaria). En muchos firmwares K706/QF, RT llega principalmente por `0xB7`. **Nota de campo**: hay firmwares donde **RT no se emite** aunque PS (`0xB6`) sí. |
 | `0xB8` | Lista PS / investigación | Paquete visto como “preset list/PS list” en algunos dumps. |
 | `0x41` | Telemetría de señal | RSSI/SNR (según firmware; usado como métrica en OpenRadioFM). |
 | `0x22` | Luces Vehículo | Headlights ON/OFF (para modo noche). En el OEM se ha observado lógica invertida en algún componente (revisar antes de asumir 1=ON). |
@@ -79,6 +79,16 @@ Para independizar OpenRadioFM totalmente de la app nativa:
 1. **Hijacking de Audio:** Seguir usando `RPC_SetChannel(2)` para asegurar que el MCU dirija el audio de la radio a la salida aunque la app nativa intente cerrarlo.
 2. **Sync de HUD:** Utilizar la reflexión de `requestSendCurrentFrequencyRdsInfo` o simular los broadcasts de QF.
 3. **Mantenimiento de Estado:** Procesar activamente RDS desde `0xB6` (PS) y `0xB7` (RT) y tratar `0xB3` como caso ambiguo (flags o RT) para mostrar RDS sin depender de servicios intermedios.
+
+### 3.1 Caso real observado (K706 7862 / `mcu_service` por UART `/dev/ttyS0`)
+
+En la unidad de prueba:
+
+- `0xB6` (PS) llega en claro por UART (ej. “LOS40”).
+- Se pueden forzar `RDS Master` (`0xA2`) y toggles `AF/TA` (`0xA0 0x11/0x12`) y el MCU responde con `0xB3` (flags/estado).
+- **No se observan frames RT “largo”** (típicamente `0xB7`) ni a nivel callback ni en el raw de `mcu_services`.
+
+Implicación: si RT no aparece ni en UART raw, no hay nada que decodificar en Android; se trata como **limitación de firmware/MCU**.
 
 ---
 

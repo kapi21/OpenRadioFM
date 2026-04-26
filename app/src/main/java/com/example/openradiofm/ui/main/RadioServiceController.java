@@ -138,6 +138,17 @@ public class RadioServiceController {
         }
     }
 
+    /**
+     * DEBUG/TOOLS: acceso de solo lectura al engine local compartido (K706/QS6/etc).
+     * Usado por utilidades internas (p.ej. receivers de depuración) para mandar comandos al HAL
+     * sin depender de la UI.
+     */
+    public static RadioEngine peekSharedLocalEngine() {
+        synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+            return sSharedLocalEngine;
+        }
+    }
+
     public interface ServiceListener {
         void onModeDetected(MainActivity.FmMode mode);
 

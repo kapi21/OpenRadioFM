@@ -420,8 +420,10 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
 
                 if (tvK706OemFocusEvent != null) tvK706OemFocusEvent.setText(lastFocus);
                 if (tvK706OemFlags != null) {
+                    String wd = (mgr != null) ? mgr.getMcuWatchdogDebug() : "wd=n/a";
                     tvK706OemFlags.setText("playing=" + isPlaying + " userPaused=" + userPaused + " resumeArmed=" + wasPlayingBeforeLoss
-                            + " fwkFocus=" + rawStr + " @ms=" + rawWallMs);
+                            + " fwkFocus=" + rawStr + " @ms=" + rawWallMs
+                            + " " + wd);
                 }
             } catch (Exception ignored) {}
 

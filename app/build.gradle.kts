@@ -139,7 +139,7 @@ android {
         abortOnError = false
     }
 
-    // Icon packs: empaquetar PNGs de packs como assets (sin mover archivos).
+    // Icon packs: empaquetados dentro de src/main/assets (versionados).
     sourceSets {
         getByName("main") {
             // Evitar APIs deprecadas de Kotlin DSL: usar el set 'directories'
@@ -147,13 +147,6 @@ android {
             assets.directories.addAll(
                 listOf(
                     "src/main/assets",
-                    "../icons_numbers",
-                    "../icons_color",
-                    "../icons_google",
-                    "../Icons_lucide",
-                    "../icons_remix",
-                    "../icons_awesome",
-                    "../icons_tabler",
                 )
             )
         }

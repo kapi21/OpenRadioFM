@@ -142,6 +142,74 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private final java.util.List<RawMcuListener> mRawListeners = new java.util.ArrayList<>();
     public void addRawMcuListener(RawMcuListener l) { synchronized(mRawListeners) { mRawListeners.add(l); } }
     public void removeRawMcuListener(RawMcuListener l) { synchronized(mRawListeners) { mRawListeners.remove(l); } }
+
+    // === MCU LISTENER WATCHDOG (V24.9) ===
+    // Objetivo: si la app OEM vuelve a registrar su listener o el servicio deja de enviar callbacks,
+    // re-ejecutar handshake 1001 + registerMcuListener() automáticamente.
+    private static final long MCU_WATCHDOG_PERIOD_MS = 2500L;
+    private static final long MCU_CALLBACK_TIMEOUT_MS = 7000L;
+    private static final long MCU_MIN_REASSERT_INTERVAL_MS = 12000L;
+
+    private volatile long mLastMcuCallbackUptimeMs = 0L;
+    private volatile long mLastMcuReassertUptimeMs = 0L;
+    private volatile int mMcuReassertCount = 0;
+    private volatile boolean mMcuWatchdogArmed = false;
+
+    private final Runnable mMcuWatchdogRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (!mMcuWatchdogArmed) return;
+                // Solo tiene sentido vigilar cuando la radio está en uso o el usuario quiere FM.
+                if (mMcuManager != null && (mIsRadioActive || mUserWantsFmAudio)) {
+                    long now = android.os.SystemClock.uptimeMillis();
+                    long last = mLastMcuCallbackUptimeMs;
+                    long silenceMs = (last > 0L) ? (now - last) : Long.MAX_VALUE;
+                    boolean timedOut = silenceMs >= MCU_CALLBACK_TIMEOUT_MS;
+                    boolean canReassert = (now - mLastMcuReassertUptimeMs) >= MCU_MIN_REASSERT_INTERVAL_MS;
+
+                    if (timedOut && canReassert) {
+                        mLastMcuReassertUptimeMs = now;
+                        mMcuReassertCount++;
+                        Log.w(TAG, "MCU watchdog: sin callbacks " + silenceMs + "ms -> reassertMcuInfoListener() (count=" + mMcuReassertCount + ")");
+                        reassertMcuInfoListener();
+                    }
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "MCU watchdog error", t);
+            } finally {
+                if (mMcuWatchdogArmed) {
+                    mAudioRecoveryHandler.postDelayed(this, MCU_WATCHDOG_PERIOD_MS);
+                }
+            }
+        }
+    };
+
+    private void armMcuWatchdog() {
+        if (mMcuWatchdogArmed) return;
+        mMcuWatchdogArmed = true;
+        mLastMcuCallbackUptimeMs = android.os.SystemClock.uptimeMillis(); // evitar reassert inmediato al arrancar
+        try { mAudioRecoveryHandler.removeCallbacks(mMcuWatchdogRunnable); } catch (Exception ignored) {}
+        mAudioRecoveryHandler.postDelayed(mMcuWatchdogRunnable, MCU_WATCHDOG_PERIOD_MS);
+        Log.d(TAG, "MCU watchdog armed");
+    }
+
+    private void disarmMcuWatchdog() {
+        mMcuWatchdogArmed = false;
+        try { mAudioRecoveryHandler.removeCallbacks(mMcuWatchdogRunnable); } catch (Exception ignored) {}
+        Log.d(TAG, "MCU watchdog disarmed");
+    }
+
+    /** Diagnóstico: útil en EngineeringDialog sin logcat. */
+    public String getMcuWatchdogDebug() {
+        long now = android.os.SystemClock.uptimeMillis();
+        long silence = (mLastMcuCallbackUptimeMs > 0L) ? (now - mLastMcuCallbackUptimeMs) : -1L;
+        return "armed=" + mMcuWatchdogArmed
+                + " active=" + (mIsRadioActive ? 1 : 0)
+                + " wants=" + (mUserWantsFmAudio ? 1 : 0)
+                + " silenceMs=" + silence
+                + " reasserts=" + mMcuReassertCount;
+    }
     
     /** V24.8: Enviar comando RAW a la MCU (canal 0x40). */
     public void sendRawMcuCommand(byte[] data) {
@@ -1296,6 +1364,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
             Log.d(TAG, "K706RadioManager initialized and connected.");
 
+            // V24.9: activar watchdog tras una conexión MCU válida
+            armMcuWatchdog();
+
         } catch (Exception e) {
             Log.e(TAG, "Error initializing McuManager", e);
         }
@@ -1369,7 +1440,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Object listenerObj = asInterface.invoke(null, listenerBinder);
             Log.d(TAG, "IMcuListener proxy created via Stub.asInterface: " + listenerObj.getClass().getName());
             
-            requestListener.invoke(mMcuManager, listenerObj, "com.example.openradiofm");
+            // Important: el servicio usa este packageName para permisos/ruteo interno (ver logs mcu_services).
+            // Debe coincidir con el package real de la app, no un literal.
+            String pkg = (mContext != null) ? mContext.getPackageName() : "com.example.openradiofm";
+            requestListener.invoke(mMcuManager, listenerObj, pkg);
             Log.d(TAG, "✓ Registered IMcuListener (AIDL Binder) successfully!");
             
         } catch (Exception e) {
@@ -1414,7 +1488,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         Class<?> listenerInterface = Class.forName("android.qf.mcu.IMcuListener");
         Method requestListener = mMcuManager.getClass().getMethod(
             "RPC_RequestMcuInfoChangedListener", listenerInterface, String.class);
-        requestListener.invoke(mMcuManager, listenerObj, "com.example.openradiofm");
+        String pkg = (mContext != null) ? mContext.getPackageName() : "com.example.openradiofm";
+        requestListener.invoke(mMcuManager, listenerObj, pkg);
         Log.d(TAG, "✓ Registered IMcuListener (direct Binder) successfully!");
     }
 
@@ -1424,6 +1499,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private void handleMcuData(byte[] data) {
         if (data == null || data.length == 0) return;
+
+        // V24.9: si llegan callbacks, el listener está vivo.
+        mLastMcuCallbackUptimeMs = android.os.SystemClock.uptimeMillis();
         
         int packetType = data[0] & 0xFF;
         
@@ -2064,6 +2142,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     public void closeDevice() throws RemoteException {
         Log.d(TAG, "Cerrando radio FM y restaurando contexto de audio");
+
+        // Evitar reasserts mientras cerramos todo.
+        disarmMcuWatchdog();
         
         // V9.5: Emula secuencia estricta de salida de la app nativa 
         stopFmAudioSequence();
@@ -2151,6 +2232,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             try { mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable); } catch (Exception ignored) {}
             mAutoRecoveryAttempts = 0;
             abandonAudioFocus();
+            // En background no necesitamos vigilar el listener; evita reasserts inútiles.
+            disarmMcuWatchdog();
         } catch (Exception e) {
             Log.w(TAG, "releaseAudioFocusOnlyForBackground falló", e);
         }
@@ -2773,6 +2856,41 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.e(TAG, "Error toggling RDS feature " + type, e);
         }
+    }
+
+    // === RDS setters (idempotentes) — útiles para debug via ADB ===
+    public void setRdsEnabled(boolean enabled) {
+        if (mIsRdsEnabled == enabled) return;
+        mIsRdsEnabled = enabled;
+        // Comando maestro 0xA2: 0x01 ON, 0x00 OFF (según reverse TunerCmdFactory/QF)
+        sendRdsCmd((byte) (enabled ? 1 : 0));
+        Log.d(TAG, "Direct MCU -> RDS Global Switch set to: " + mIsRdsEnabled + " (cmd 0xA2)");
+        try {
+            if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
+                mBroadcomSetRdsMode.invoke(mFmReceiverService, mIsRdsEnabled ? 1 : 0, 0x0F, mIsAfEnabled ? 1 : 0, 10);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void setAfEnabled(boolean enabled) {
+        if (mIsAfEnabled == enabled) return;
+        mIsAfEnabled = enabled;
+        sendCmd(SUB_RDS_AF, (byte) (enabled ? 1 : 0), (byte) 0);
+        Log.d(TAG, "Direct MCU -> RDS AF set to: " + enabled + " (cmd 0xA0 11)");
+        fireEvent(111, "AF:" + (enabled ? "1" : "0"));
+        try {
+            if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
+                enableSilentlyRdsFeatures(mIsAfEnabled, mIsTaEnabled);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void setTaEnabled(boolean enabled) {
+        if (mIsTaEnabled == enabled) return;
+        mIsTaEnabled = enabled;
+        sendCmd(SUB_RDS_TA, (byte) (enabled ? 1 : 0), (byte) 0);
+        Log.d(TAG, "Direct MCU -> RDS TA set to: " + enabled + " (cmd 0xA0 12)");
+        fireEvent(112, "TA_SW:" + (enabled ? "1" : "0"));
     }
 
     /**
