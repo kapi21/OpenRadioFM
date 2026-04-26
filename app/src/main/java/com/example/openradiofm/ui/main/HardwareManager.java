@@ -8,6 +8,7 @@ import android.util.Log;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.source.K706Engine;
 import com.example.openradiofm.data.source.K706RadioManager;
+import com.example.openradiofm.data.source.RadioEngine;
 
 /**
  * V18.6: Gestor de Hardware y MCU.
@@ -37,8 +38,18 @@ public class HardwareManager {
     }
 
     public void registerReceivers() {
-        IntentFilter filter = new IntentFilter("com.qf.action.BT_STATE");
-        mActivity.registerReceiver(mBtStateReceiver, filter);
+        // V23.0: Solo registrar el receiver de BT cuando el engine activo es K706.
+        // En otras plataformas (NWD, MT8163, Topway) el broadcast com.qf.action.BT_STATE
+        // no existe y registrarlo genera filtros inútiles o posibles interferencias.
+        RadioEngine engine = mActivity.mEngine;
+        if (engine instanceof K706Engine) {
+            IntentFilter filter = new IntentFilter("com.qf.action.BT_STATE");
+            mActivity.registerReceiver(mBtStateReceiver, filter);
+            Log.d(TAG, "BT_STATE receiver registrado (plataforma K706)");
+        } else {
+            Log.d(TAG, "BT_STATE receiver omitido (engine no es K706: "
+                    + (engine != null ? engine.getEngineName() : "null") + ")");
+        }
     }
 
     public void unregisterReceivers() {
@@ -90,8 +101,13 @@ public class HardwareManager {
 
     /**
      * Envía comandos específicos al sintonizador via MCU (Protocolo QF/K706).
+     * <b>Solo válido en plataforma K706 (QFTuner).</b> En otros engines se ignora.
      */
     public void sendMcuTunerCmd(byte subCmd, byte param1, byte param2) {
+        if (!(mActivity.mEngine instanceof K706Engine)) {
+            Log.w(TAG, "sendMcuTunerCmd: ignorado (engine no es K706)");
+            return;
+        }
         try {
             Intent intent = new Intent("com.qf.intent.action.TUNER_CMD");
             intent.putExtra("sub_cmd", subCmd);

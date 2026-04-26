@@ -1,0 +1,7 @@
+id=openradiofm_k706_root
+name=OpenRadioFM — K706 Root Hijack
+version=5.2.1-iconsfix-root
+versionCode=52101
+author=OpenRadioFM
+description=Overlay systemless: QF_FMRadioExt trampolín (FmMainActivity → OpenRadioFM) + OpenRadioFM como priv-app. Parchea atajos en shared_prefs. Rollback al desinstalar el módulo.
+

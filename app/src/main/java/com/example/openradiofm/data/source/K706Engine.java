@@ -4,8 +4,12 @@ import android.content.Context;
 import android.os.RemoteException;
 import android.util.Log;
 
+import com.example.openradiofm.util.LauncherIntentUtils;
 import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * V5.0: Motor K706 — Wrapper sobre K706RadioManager.
@@ -40,11 +44,13 @@ public class K706Engine implements RadioEngine {
             });
 
             Log.d(TAG, "K706Engine inicializado correctamente.");
-            
-            // V11.5: Solicitar AudioFocus para que Android nos notifique
-            // de llamadas telefónicas y otras interrupciones de audio
-            mManager.requestPlayAudio();
-            
+
+            // K706: mantener AudioFocus solo para routing (mandos OEM / Media keys),
+            // sin activar audio FM hasta que el usuario haga PLAY/unmute.
+            try {
+                mManager.requestAudioFocusOnlyForRouting();
+            } catch (Exception ignored) {}
+
             return true;
         } catch (Exception e) {
             Log.e(TAG, "Error inicializando K706Engine", e);
@@ -91,6 +97,12 @@ public class K706Engine implements RadioEngine {
     public void tune(int freqKhz) {
         if (mManager == null) return;
         try { mManager.gotoFreq(freqKhz); } catch (RemoteException e) { Log.e(TAG, "tune", e); }
+    }
+
+    @Override
+    public void setBand(int band) {
+        if (mManager == null) return;
+        try { mManager.onBandEvent(); } catch (RemoteException e) { Log.e(TAG, "setBand", e); }
     }
 
     @Override
@@ -166,14 +178,29 @@ public class K706Engine implements RadioEngine {
 
     @Override
     public void setStereo(boolean enable) {
-        // K706 no expone setStereo directo en AIDL
-        Log.d(TAG, "setStereo no disponible en K706");
+        if (mManager == null) return;
+        try {
+            // V7.2f: Comando hardware 0x10 para Stereo (1) / Mono (0)
+            mManager.setStereoMode(enable);
+        } catch (Exception e) {
+            Log.e(TAG, "setStereo error", e);
+        }
     }
 
     @Override
     public void setMute(boolean mute) {
         if (mManager == null) return;
         try { mManager.setMute(mute); } catch (Exception e) { Log.e(TAG, "setMute error", e); }
+    }
+
+    @Override
+    public void releaseAudioFocusOnlyForBackground() {
+        if (mManager == null) return;
+        try {
+            mManager.releaseAudioFocusOnlyForBackground();
+        } catch (Exception e) {
+            Log.w(TAG, "releaseAudioFocusOnlyForBackground", e);
+        }
     }
 
     @Override
@@ -219,9 +246,11 @@ public class K706Engine implements RadioEngine {
     @Override
     public void switchToFmAudio() {
         if (mManager == null) return;
-        try { 
+        try {
             mManager.setOnlineStreamingActive(false); // V18.3: Volvemos a modo radio estándar
-            mManager.enforceAudioChannelRecovery(); 
+            // requestPlayAudio limpia flags de llamada/transiente y fuerza la secuencia FM completa;
+            // enforceAudioChannelRecovery solo no bastaba tras Spotify/AA sin AUDIOFOCUS_GAIN.
+            mManager.requestPlayAudio();
         } catch (Exception e) { Log.e(TAG, "switchToFmAudio", e); }
     }
 
@@ -292,6 +321,13 @@ public class K706Engine implements RadioEngine {
     public void prevFavorite() {
         if (mManager == null) return;
         try { mManager.onPreFavoriteEvent(); } catch (RemoteException e) { Log.e(TAG, "prevFavorite", e); }
+    }
+
+    @Override
+    public void setTunerSensitivity(int level) {
+        if (mManager != null) {
+            mManager.setTunerSensitivity(level);
+        }
     }
 
     // === Callbacks ===
@@ -369,6 +405,18 @@ public class K706Engine implements RadioEngine {
                     mCallback.onRdsStatus(mAfEnabled, mTaEnabled, mTpEnabled);
                 }
                 break;
+            case 122: // Lights
+                mCallback.onHwAutomationEvent(122, "1".equals(data));
+                break;
+            case 123: // Reverse
+                mCallback.onHwAutomationEvent(123, "1".equals(data));
+                break;
+            case 124: // Handbrake
+                mCallback.onHwAutomationEvent(124, "1".equals(data));
+                break;
+            case 125: // ACC
+                mCallback.onHwAutomationEvent(125, "1".equals(data));
+                break;
             default:
                 mCallback.onRawEvent(code, data);
                 break;
@@ -393,9 +441,134 @@ public class K706Engine implements RadioEngine {
     }
 
     /**
-     * Acceso como IRadioServiceAPI para compatibilidad temporal.
+     * Tras el flash de la radio OEM (p. ej. HiHack), el MCU puede dejar de enviar RDS a este proceso.
+     * Re-registra el {@code IMcuListener} sin soltar el resto del HAL.
      */
+    public void reassertMcuTelemetryListener() {
+        if (mManager == null) return;
+        try {
+            mManager.reassertMcuInfoListener();
+        } catch (Exception e) {
+            Log.w(TAG, "reassertMcuTelemetryListener", e);
+        }
+    }
+
+    /**
+     * Acceso como IRadioServiceAPI para uso exclusivo del Engineering Dialog.
+     * <b>No llamar desde la UI ni desde otros managers.</b>
+     *
+     * @deprecated Uso interno únicamente. Acceder solo desde {@code K706EngineeringDialog}.
+     */
+    @Deprecated
     public IRadioServiceAPI asAidl() {
         return mManager;
     }
+
+    // === Widget / Launcher OEM ===
+
+    /**
+     * V23.0: Envía el broadcast {@code com.qf.radio.update_action} al launcher K706/QuickFish.
+     * Movido aquí desde WidgetBroadcastManager para que la UI no tenga dependencia directa
+     * con clases {@code com.qf.*}.
+     */
+    @Override
+    public void notifyWidgetUpdate(Context context, int freqKhz, int band,
+                                   int presetIdx, String rdsName) {
+        // Algunas ROMs bloquean este broadcast por permisos/signature; si ocurre una vez,
+        // deshabilitamos reintentos para evitar spam de logcat y Binder flood.
+        if (QfWidgetBroadcastGuard.isDisabled()) return;
+        try {
+            final boolean isAm = (band == 3 || band == 4);
+            final String freqStr;
+            final int nativeFreq;
+            if (isAm) {
+                freqStr = String.valueOf(freqKhz);
+                nativeFreq = freqKhz;
+            } else {
+                java.text.DecimalFormat df = new java.text.DecimalFormat("0.00");
+                java.text.DecimalFormatSymbols dfs =
+                        new java.text.DecimalFormatSymbols(java.util.Locale.US);
+                df.setDecimalFormatSymbols(dfs);
+                freqStr = df.format(freqKhz / 1000.0f);
+                nativeFreq = freqKhz / 10;
+            }
+
+            final String widgetName = (rdsName != null && !rdsName.isEmpty()
+                    && !"STATION NAME".equals(rdsName) && !"STATION".equals(rdsName))
+                    ? rdsName : "OpenRadioFM";
+
+            android.content.Intent qf = new android.content.Intent("com.qf.radio.update_action");
+            qf.putExtra("com.qf.radio.update_action_key",          freqStr);
+            qf.putExtra("com.qf.radio.update_action_freq_key",     nativeFreq);
+            qf.putExtra("com.qf.radio.update_action_band_key",     band);
+            qf.putExtra("com.qf.radio.update_action_preset_key",   presetIdx);
+            qf.putExtra("com.qf.radio.update_action_searching_key", false);
+            qf.putExtra("com.qf.radio.update_action_name_key",     widgetName);
+            // K706 (QuickFish): el widget puede vivir en el HOME real (p. ej. launcher.gradient.black)
+            // aunque las clases vengan de com.android.auto.autohome.* — hay que dirigir el broadcast ahí también.
+            Set<String> targets = new LinkedHashSet<>();
+            targets.add("com.android.launcher.movablecell");
+            targets.add("com.android.auto.autohome");
+            String home = LauncherIntentUtils.getDefaultHomePackage(context);
+            if (home != null && !home.isEmpty()) {
+                targets.add(home);
+            }
+            boolean sent = false;
+            for (String pkg : targets) {
+                // Nunca propagar SecurityException aquí: si movablecell/autohome están protegidos,
+                // aún debemos intentar el paquete HOME real (p. ej. launcher.gradient.black) o el
+                // broadcast implícito; si abortáramos el bucle, el widget queda en radioStartup=false.
+                sent |= sendBroadcastToPackage(context, qf, pkg);
+            }
+            if (!sent) {
+                try {
+                    context.sendBroadcast(qf);
+                    sent = true;
+                } catch (SecurityException se) {
+                    QfWidgetBroadcastGuard.disable(se);
+                }
+            }
+
+            Log.d(TAG, "notifyWidgetUpdate: QF broadcast enviado -> " + freqStr + " band=" + band);
+        } catch (Exception e) {
+            Log.w(TAG, "notifyWidgetUpdate: error enviando broadcast QF", e);
+        }
+    }
+
+    private static boolean sendBroadcastToPackage(Context context, android.content.Intent base, String pkg) {
+        if (context == null || base == null || pkg == null || pkg.isEmpty()) return false;
+        try {
+            android.content.Intent i = new android.content.Intent(base);
+            i.setPackage(pkg);
+            context.sendBroadcast(i);
+            return true;
+        } catch (SecurityException se) {
+            Log.w(TAG, "notifyWidgetUpdate: omitido paquete " + pkg + " (" + se.getMessage() + ")");
+            return false;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Guarda estática para cortar reintentos tras "Permission Denial" al broadcast QF.
+     * Evita que llamadas frecuentes (cambios de frecuencia) llenen el log y gasten CPU.
+     */
+    private static final class QfWidgetBroadcastGuard {
+        private static volatile boolean sDisabled = false;
+        private static volatile boolean sLoggedDisable = false;
+
+        static boolean isDisabled() {
+            return sDisabled;
+        }
+
+        static void disable(SecurityException se) {
+            sDisabled = true;
+            if (!sLoggedDisable) {
+                sLoggedDisable = true;
+                Log.w(TAG, "notifyWidgetUpdate: QF broadcast deshabilitado por permisos (SecurityException)", se);
+            }
+        }
+    }
 }
+

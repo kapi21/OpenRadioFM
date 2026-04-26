@@ -63,14 +63,14 @@ public class DeviceManager {
      * 2. Finalizar la actividad (finish)
      */
     public void powerOff() {
+        // K706: "PowerOff" en UI se usa como "salir/minimizar".
+        // Hacer finish() aquí provoca que el launcher trate el cierre como cambio de fuente y puede
+        // ejecutar forceStopPackage(com.example.openradiofm), rompiendo el widget genérico de música.
         try {
-            Log.d(TAG, "Power Off: Cerrando dispositivo y finalizando aplicación");
-            if (mEngine != null) {
-                mEngine.closeDevice();
-            }
-            mActivity.finish();
+            Log.d(TAG, "Power Off(UI): minimizando app (sin cerrar Activity ni apagar HW)");
+            mActivity.moveTaskToBack(true);
         } catch (Exception e) {
-            Log.e(TAG, "Error durante la secuencia de apagado", e);
+            Log.e(TAG, "Power Off(UI): moveTaskToBack falló, usando finish()", e);
             mActivity.finish();
         }
     }

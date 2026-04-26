@@ -17,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 import androidx.media.MediaBrowserServiceCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 import androidx.media.session.MediaButtonReceiver;
@@ -26,6 +27,7 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.media.AudioAttributes;
 import android.media.AudioFocusRequest;
@@ -34,6 +36,12 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.content.ContentUris;
+import android.database.Cursor;
+import android.provider.MediaStore;
+import android.view.KeyEvent;
 
 import com.example.openradiofm.R;
 import com.example.openradiofm.AppConstants;
@@ -56,6 +64,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class RadioMediaService extends MediaBrowserServiceCompat {
     private static final String TAG = "RadioMediaService";
+    /** Launchers OEM que deben poder leer logos vía content:// (FileProvider). */
+    private static final String[] OEM_LOGO_URI_GRANT_PACKAGES = new String[] {
+            // QuickFish / K706 themes/launchers
+            "com.android.launcher.gradient.black",
+            "com.android.launcher.movablecell",
+            "com.android.auto.autohome",
+            "com.android.launcher.city",
+            "com.android.launcher.star.blue",
+            "com.android.launcher3",
+            // Car launchers comunes que consumen MediaSession metadata/artwork
+            "altergames.carlauncher",
+            "hu.carlauncher",
+    };
     /** Start command from UI to force PLAYING MediaSession state. */
     public static final String ACTION_FORCE_PLAY = "com.example.openradiofm.action.FORCE_PLAY";
     /**
@@ -111,6 +132,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private android.content.SharedPreferences mPresetPrefs; // "RadioPresets"
     private android.content.SharedPreferences mStationNamePrefs; // "RadioStationNames"
 
+    /**
+     * Evita doble seek/play cuando el OEM manda KEY_DOWN (lo gestiona super) y luego KEY_UP con el mismo {@link KeyEvent#getDownTime()}.
+     */
+    private long mLastHandledMediaKeyDownTime = Long.MIN_VALUE;
+
     // OEM cold start: cola mínima de comandos hasta que el engine esté listo
     private final Object mCommandLock = new Object();
     private boolean mPendingPlay = false;
@@ -130,6 +156,23 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private String mLastNotifiedArtist = "";
     private Bitmap mLastNotifiedLogo = null;
 
+    // K706/QS6 OEM widgets: suelen usar albumArt/art como "carátula" en el widget multimedia.
+    // Cacheamos el bitmap para no decodificar continuamente bajo ráfagas de eventos.
+    private String mLastMetadataLogoPath = null;
+    private long mLastMetadataLogoMtime = -1L;
+    private Bitmap mLastMetadataLogo = null;
+
+    /**
+     * K706/QuickFish: el routing de teclas del widget depende del "last audio source" OEM,
+     * que se actualiza al pedir AudioFocus (vía MediaFocusControl + requestCustomAudioFocus).
+     * Pedimos foco desde el servicio para ganar propiedad incluso con launcher al frente.
+     */
+    private static final String K706_STEERING_FOCUS_TAG = "OpenRadioFM-K706-SteeringFocus";
+    private AudioManager mK706SteeringAudioManager;
+    private AudioManager.OnAudioFocusChangeListener mK706SteeringFocusListener;
+    private AudioFocusRequest mK706SteeringFocusRequest;
+    private boolean mK706SteeringFocusHeld = false;
+
     /**
      * QS6 (NWD): segundo {@link AudioManager#requestAudioFocus} desde este servicio en foreground.
      * Algunas unidades enlazan el bus de audio al cliente de medios activo, no solo al proceso de la Activity.
@@ -138,6 +181,17 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private AudioManager mQs6ServiceAudioManager;
     private AudioManager.OnAudioFocusChangeListener mQs6ServiceFocusListener;
     private AudioFocusRequest mQs6ServiceFocusRequest;
+
+    // ------------------------------------------------------------
+    // K706 / QuickFish OEM: util_service (UtilEventManager) key bridge
+    // (canal OEM de KeyEvents en algunas ROMs)
+    // ------------------------------------------------------------
+    private Object mQfUtilEventManager;          // android.qf.util.UtilEventManager (hidden)
+    private Object mQfUtilEventListenerProxy;    // android.qf.util.UtilEventListener (Proxy)
+    private boolean mQfUtilKeyBridgeRegistered = false;
+    // Anti-stress: el util_service puede emitir ráfagas de KeyEvents; limitamos por keyCode.
+    private long mQfLastUtilKeyUptimeMs = 0L;
+    private int mQfLastUtilKeyCode = -1;
 
     private boolean usePresetModeForSteering() {
         return mPresetPrefs != null && mPresetPrefs.getInt("pref_steering_next_prev_mode", 0) == 1;
@@ -181,13 +235,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     }
                     // Inicializar controlador de sesión compartido (estado lógico de radio)
                     try {
-                        mSessionController = new RadioSessionController(
-                                RadioMediaService.this,
-                                mEngine,
-                                mPlaybackManager,
-                                mPresetPrefs,
-                                mStationNamePrefs
-                        );
+                        mSessionController = com.example.openradiofm.ui.main.RadioServiceController
+                                .getOrCreateSharedSessionController(
+                                        RadioMediaService.this,
+                                        mEngine,
+                                        mPresetPrefs,
+                                        mStationNamePrefs
+                                );
                     } catch (Exception e) {
                         Log.w(TAG, "No se pudo inicializar RadioSessionController en el servicio", e);
                     }
@@ -199,6 +253,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                             uiCb = ((com.example.openradiofm.data.source.QS6Engine) mEngine).getCallback();
                         } else if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
                             uiCb = ((com.example.openradiofm.data.source.K706Engine) mEngine).getCallback();
+                        } else if (mEngine instanceof com.example.openradiofm.data.source.MT8163Engine) {
+                            uiCb = ((com.example.openradiofm.data.source.MT8163Engine) mEngine).getCallback();
                         }
                         if (uiCb != null) {
                             mEngine.setCallback(new com.example.openradiofm.data.source.CompositeRadioEngineCallback(
@@ -211,12 +267,31 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     }
                     Log.d(TAG, "Engine listo dentro del servicio: " + (engine != null ? engine.getEngineName() : "null"));
 
+                    // K706 / QuickFish: registrar bridge OEM de KeyEvents (util_service) cuando el engine está listo.
+                    // Esto permite recibir KEYCODE_MEDIA_* incluso con el launcher al frente.
+                    try {
+                        ensureK706UtilEventKeyBridgeRegistered();
+                    } catch (Exception e) {
+                        Log.w(TAG, "No se pudo registrar util_service key bridge", e);
+                    }
+
                     // Aplicar comandos pendientes (si llegaron antes de inicializar el engine)
                     flushPendingCommands();
 
                     if (engine instanceof com.example.openradiofm.data.source.QS6Engine) {
                         ensureQs6ServiceAudioFocus();
                     }
+
+                    // Importante para launchers (AGAMA, etc.): algunos motores no emiten un
+                    // primer onFrequencyChanged al arrancar si la frecuencia ya está fijada.
+                    // Si no publicamos metadata inicial, el launcher ve la sesión pero sin datos (metadata=null).
+                    try {
+                        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                            int f = getLiveFreqKhzOrDefault(0);
+                            updateMetadataFromPrefs(f);
+                            updateHomeAppWidgetSync();
+                        }, 450);
+                    } catch (Exception ignored) {}
                 }
 
                 @Override
@@ -291,21 +366,25 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         mMediaSession.setCallback(new MediaSessionCompat.Callback() {
             @Override
             public void onPlay() {
+                Log.i(TAG, "MediaSession.onPlay()");
                 handlePlay();
             }
 
             @Override
             public void onPause() {
+                Log.i(TAG, "MediaSession.onPause()");
                 handlePause();
             }
 
             @Override
             public void onSkipToNext() {
+                Log.i(TAG, "MediaSession.onSkipToNext()");
                 handleSteeringSkip(+1);
             }
 
             @Override
             public void onSkipToPrevious() {
+                Log.i(TAG, "MediaSession.onSkipToPrevious()");
                 handleSteeringSkip(-1);
             }
 
@@ -318,6 +397,53 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             @Override
             public void onRewind() {
                 handleSteeringSkip(-1);
+            }
+
+            @Override
+            public boolean onMediaButtonEvent(Intent mediaButtonIntent) {
+                KeyEvent ke = extractMediaKeyEvent(mediaButtonIntent);
+                try {
+                    Log.i(TAG, "MediaSession.onMediaButtonEvent action=" + (mediaButtonIntent != null ? mediaButtonIntent.getAction() : "null")
+                            + " key=" + (ke != null ? (ke.getKeyCode() + "/" + ke.getAction()) : "null")
+                            + " extras=" + (mediaButtonIntent != null ? mediaButtonIntent.getExtras() : null));
+                } catch (Exception ignored) {}
+
+                // OEM/K706: a veces el framework "consume" el evento (superHandled=true) pero el
+                // callback que nos llega acaba siendo PLAY/PAUSE en vez de NEXT/PREV. Para los seek,
+                // si vemos el KEYCODE explícito, lo ejecutamos nosotros.
+                if (ke != null && ke.getAction() == KeyEvent.ACTION_DOWN && !ke.isCanceled()) {
+                    int code = ke.getKeyCode();
+                    if (code == KeyEvent.KEYCODE_MEDIA_NEXT || code == KeyEvent.KEYCODE_MEDIA_PREVIOUS
+                            || code == KeyEvent.KEYCODE_MEDIA_FAST_FORWARD || code == KeyEvent.KEYCODE_MEDIA_REWIND) {
+                        if (code == KeyEvent.KEYCODE_MEDIA_PREVIOUS || code == KeyEvent.KEYCODE_MEDIA_REWIND) {
+                            handleSteeringSkip(-1);
+                        } else {
+                            handleSteeringSkip(+1);
+                        }
+                        mLastHandledMediaKeyDownTime = ke.getDownTime();
+                        return true;
+                    }
+                }
+
+                boolean superHandled = super.onMediaButtonEvent(mediaButtonIntent);
+                if (superHandled) {
+                    if (ke != null && ke.getAction() == KeyEvent.ACTION_DOWN) {
+                        mLastHandledMediaKeyDownTime = ke.getDownTime();
+                    }
+                    return true;
+                }
+                if (ke == null) {
+                    return false;
+                }
+                // Algunos launchers/widgets (p. ej. SYU/K706) solo entregan ACTION_UP.
+                if (ke.getAction() == KeyEvent.ACTION_UP
+                        && ke.getDownTime() != mLastHandledMediaKeyDownTime
+                        && !ke.isCanceled()
+                        && dispatchMediaKeyFromOemKeyEvent(ke)) {
+                    mLastHandledMediaKeyDownTime = ke.getDownTime();
+                    return true;
+                }
+                return false;
             }
 
             @Override
@@ -344,24 +470,10 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
             @Override
             public void onCustomAction(String action, Bundle extras) {
-                if ("ACTION_UPDATE_METADATA".equals(action) && extras != null) {
-                    extras.setClassLoader(MediaMetadataCompat.class.getClassLoader());
-                    //noinspection deprecation
-                    MediaMetadataCompat metadata = extras.getParcelable("metadata"); // Simplificado
-                    // En la práctica, extraemos los campos del bundle directamente para evitar errores de ClassLoader
-                    MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder();
-                    if (extras.containsKey(MediaMetadataCompat.METADATA_KEY_TITLE)) {
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, extras.getString(MediaMetadataCompat.METADATA_KEY_TITLE));
-                    }
-                    if (extras.containsKey(MediaMetadataCompat.METADATA_KEY_ARTIST)) {
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_ARTIST, extras.getString(MediaMetadataCompat.METADATA_KEY_ARTIST));
-                    }
-                    if (extras.containsKey(MediaMetadataCompat.METADATA_KEY_ALBUM)) {
-                        builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, extras.getString(MediaMetadataCompat.METADATA_KEY_ALBUM));
-                    }
-                    // Artwork...
-                    mMediaSession.setMetadata(builder.build());
-                    // updateNotification(); // REMOVED: onMetadataChanged will trigger it via callback
+                // Seguridad/consistencia: ignorar updates externos de metadata.
+                // La fuente de verdad es el propio servicio vía callbacks del engine/prefs.
+                if ("ACTION_UPDATE_METADATA".equals(action)) {
+                    Log.d(TAG, "Ignorado ACTION_UPDATE_METADATA (source of truth = RadioMediaService)");
                 }
             }
         });
@@ -372,6 +484,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        try {
+            android.view.KeyEvent ke = intent != null ? intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT) : null;
+            Log.i(TAG, "onStartCommand action=" + (intent != null ? intent.getAction() : "null")
+                    + " keyEvent=" + (ke != null ? (ke.getKeyCode() + "/" + ke.getAction()) : "null")
+                    + " flags=" + flags + " startId=" + startId);
+        } catch (Exception ignored) {}
+
         // OEM safety (Android 8+): si nos arrancan con startForegroundService(),
         // debemos llamar a startForeground() rápidamente o Android mata el proceso.
         // Entramos en foreground con una notificación "pausada" y salimos si procede.
@@ -437,7 +556,23 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             handleWidgetToggleMute();
         }
 
-        return START_NOT_STICKY;
+        // K706/QS6: si el sistema mata el proceso tras “cerrar” la app (task swipe / memory trim),
+        // un servicio START_NOT_STICKY no vuelve y el widget OEM pierde el target de control.
+        // Mantenerlo sticky cuando el dispositivo requiere MediaSession activa en background
+        // o cuando nos arrancan desde widget/medios.
+        boolean keepSticky =
+                isSteeringMediaBackgroundPlatform()
+                        || mIsPlaying
+                        || (intent != null && (
+                                ACTION_FORCE_SESSION_ACTIVE.equals(intent.getAction())
+                                        || ACTION_FORCE_PLAY.equals(intent.getAction())
+                                        || ACTION_WIDGET_PREV_PRESET.equals(intent.getAction())
+                                        || ACTION_WIDGET_NEXT_PRESET.equals(intent.getAction())
+                                        || ACTION_WIDGET_SEEK_DOWN.equals(intent.getAction())
+                                        || ACTION_WIDGET_SEEK_UP.equals(intent.getAction())
+                                        || ACTION_WIDGET_TOGGLE_MUTE.equals(intent.getAction())
+                        ));
+        return keepSticky ? START_STICKY : START_NOT_STICKY;
     }
 
     /**
@@ -451,6 +586,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             setPlaybackState(true);
             ensureNotificationVisible();
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            // K706 OEM: asegurar que el sistema nos marca como "audio source" actual.
+            ensureK706OemSteeringAudioFocus();
         } catch (Exception e) {
             Log.w(TAG, "forceSessionActiveForSteering falló", e);
         }
@@ -459,10 +596,16 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private void handleWidgetSeek(int direction) {
         try {
             Log.i(TAG, "handleWidgetSeek direction=" + direction + " engine=" + (mEngine != null));
+            // K706 OEM widget: asegurar FGS + sesión activa antes del comando.
+            // Evita timeouts de startForegroundService() y mejora routing como "last audio source".
+            try { forceSessionActiveForSteering(); } catch (Exception ignored) {}
             maybeStartEngine();
             if (mEngine != null) {
                 if (direction > 0) mEngine.seekUp();
                 else mEngine.seekDown();
+                // Importante (K706): tras un SEEK NO forzar enforceAudioRecovery, porque algunas ROM
+                // re-ejecutan el “ritual” (LOC/focus/channel/params) y vuelven a la frecuencia previa.
+                ensureAudibleWithoutRecovery();
                 // QS/OEM: el callback de frecuencia puede llegar tarde; refresco diferido por si la Activity no está viva.
                 scheduleHomeWidgetRefreshFallback();
             } else {
@@ -475,6 +618,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
     private void handleWidgetToggleMute() {
         try {
+            try { forceSessionActiveForSteering(); } catch (Exception ignored) {}
             // Reutilizar semántica de PLAY/PAUSE: PLAY=unmute, PAUSE=mute.
             if (mUserPaused) {
                 handlePlay();
@@ -564,12 +708,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             new com.example.openradiofm.data.source.RadioEngineCallback() {
                 @Override
                 public void onFrequencyChanged(int freqKhz) {
-                    // Actualizar title/artist basado en datos guardados (CUSTOM/RDS) para Android Auto
-                    updateMetadataFromPrefs(freqKhz);
-                    saveRecentFrequency(freqKhz);
+                    // Mantener sesión alineada antes de metadata (MainActivity suele ir primero en el Composite,
+                    // pero si el servicio es la única fuente del callback, esto evita freq/RDS obsoletos).
                     if (mSessionController != null) {
                         mSessionController.onFrequencyChanged(freqKhz);
                     }
+                    updateMetadataFromPrefs(freqKhz);
+                    saveRecentFrequency(freqKhz);
                     updateHomeAppWidgetSync();
                 }
 
@@ -590,11 +735,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
                 @Override
                 public void onRdsName(String name) {
-                    // Se persistirá por RadioRepository en UI normalmente, aquí solo refrescamos
-                    updateMetadataName(name);
+                    // Se persistirá por RadioRepository en UI normalmente.
+                    // Importante: no basta con cambiar TITLE; hay que volver a publicar bitmap/URI
+                    // (p. ej. 90100_RNECLAS.png) o el widget OEM solo verá texto.
                     if (mSessionController != null) {
                         mSessionController.onRdsName(name);
                     }
+                    updateMetadataFromPrefs(getLiveFreqKhzOrDefault(0));
                     updateHomeAppWidgetSync();
                 }
 
@@ -655,6 +802,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                 public void onSignalUpdate(int rssi, int snr) {
                     if (mSessionController != null) {
                         mSessionController.onSignalUpdate(rssi, snr);
+                    }
+                }
+
+                @Override
+                public void onHwAutomationEvent(int type, boolean active) {
+                    if (mSessionController == null) return;
+                    if (type == 125) { // ACC
+                        mSessionController.onAccChanged(active);
                     }
                 }
             };
@@ -735,6 +890,14 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
 
         if (wasPlaying && mEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
             abandonQs6ServiceAudioFocus();
+        }
+    }
+
+    private void handlePlayPause() {
+        if (mIsPlaying) {
+            handlePause();
+        } else {
+            handlePlay();
         }
     }
 
@@ -820,11 +983,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (mEngine != null) return;
             if (mRadioServiceController == null) return;
             if (mRadioServiceController.isFmMt8163Mode()) {
-                Log.d(TAG, "maybeStartEngine: omitido (MT8163/HCN enlazado solo desde MainActivity)");
-                return;
+                if (RadioServiceController.getSharedMt8163EngineForService() == null) {
+                    Log.d(TAG, "maybeStartEngine: MT8163 sin motor compartido (abre OpenRadioFM para enlazar HCN)");
+                    return;
+                }
             }
             if (mEngineInitStarted.compareAndSet(false, true)) {
-                Log.d(TAG, "Iniciando RadioServiceController.start() (OEM cold start)");
+                Log.d(TAG, "Iniciando RadioServiceController.start() (cold start o MT8163 compartido)");
                 mRadioServiceController.start();
             } else if (mEngine == null) {
                 Log.d(TAG, "maybeStartEngine: reintento (motor aún null)");
@@ -843,6 +1008,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private void handleWidgetPresetSkip(int direction) {
         if (direction == 0) return;
         try {
+            try { forceSessionActiveForSteering(); } catch (Exception ignored) {}
             if (mEngine != null) {
                 boolean moved = direction > 0 ? playSequentialPreset(+1) : playSequentialPreset(-1);
                 if (!moved) {
@@ -879,7 +1045,8 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     if (direction > 0) mEngine.seekUp();
                     else mEngine.seekDown();
                 }
-                handlePlay();
+                // Igual que en widget SEEK: no disparar recovery justo después del seek/skip.
+                ensureAudibleWithoutRecovery();
             } else {
                 enqueueSkip(direction > 0 ? +1 : -1, presetMode);
                 maybeStartEngine();
@@ -889,6 +1056,41 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
         } catch (Exception e) {
             Log.w(TAG, "handleSteeringSkip(" + direction + ") falló", e);
+        }
+    }
+
+    /**
+     * Dejar el estado como PLAYING + unmute, pero sin llamar a enforceAudioRecovery().
+     * (K706: evita que el recovery “pise” cambios de frecuencia tras SEEK/NEXT/PREV).
+     */
+    private void ensureAudibleWithoutRecovery() {
+        try {
+            mUserPaused = false;
+            mIsPlaying = true;
+            setPlaybackState(true);
+            writeOemStateToPrefs("PLAY_SEEK");
+            ensureNotificationVisible();
+            try {
+                startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            } catch (Exception ignored) {}
+
+            // Importante: PlaybackManager.setMute(false) llama a enforceAudioRecovery() en K706,
+            // lo que bajo stress provoca tormentas de recovery (y puede colgar la radio).
+            boolean isK706 = false;
+            try {
+                isK706 = mEngine != null && "K706".equals(mEngine.getEngineName());
+            } catch (Exception ignored) {}
+
+            if (isK706 && mEngine != null) {
+                // No llamar a mEngine.enforceAudioRecovery() aquí.
+                mEngine.setMute(false);
+            } else if (mPlaybackManager != null) {
+                mPlaybackManager.setMute(false);
+            } else if (mEngine != null) {
+                mEngine.setMute(false);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "ensureAudibleWithoutRecovery falló", e);
         }
     }
 
@@ -970,9 +1172,86 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             mIsPlaying = true;
             setPlaybackState(true);
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
+            ensureK706OemSteeringAudioFocus();
             Log.d(TAG, "Steering: sesión PLAYING+FGS mantenida para mandos en segundo plano (K706/QS6)");
         } catch (Exception e) {
             Log.w(TAG, "refreshSteeringMediaSessionAndForeground", e);
+        }
+    }
+
+    private boolean isK706PlatformForOemSteering() {
+        try {
+            if (mEngine != null) {
+                String n = mEngine.getEngineName();
+                return "K706".equals(n);
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    /**
+     * Pide AudioFocus (sin tocar mute) para que QuickFish actualice sys.qf.last_audio_src.
+     * Esto hace que el puente OEM que hoy entrega los KEYCODE_MEDIA_* a la radio de fábrica
+     * los rerutee hacia el "lastAudioSource" (nuestra app).
+     */
+    private void ensureK706OemSteeringAudioFocus() {
+        if (!isK706PlatformForOemSteering()) return;
+        // Si el motor ya está activo (caso normal cuando venimos desde UI),
+        // NO pidamos un segundo AudioFocus con otro clientId: en algunas ROMs K706
+        // eso genera AUDIOFOCUS_LOSS al request del engine y termina abandonándolo.
+        if (mEngine != null) return;
+        if (mK706SteeringFocusHeld) return;
+        try {
+            if (mK706SteeringAudioManager == null) {
+                mK706SteeringAudioManager =
+                        (AudioManager) getApplicationContext().getSystemService(AUDIO_SERVICE);
+                mK706SteeringFocusListener = focusChange ->
+                        Log.d(K706_STEERING_FOCUS_TAG, "onAudioFocusChange=" + focusChange);
+            }
+            if (mK706SteeringAudioManager == null) return;
+
+            int result;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (mK706SteeringFocusRequest == null) {
+                    AudioAttributes aa = new AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build();
+                    mK706SteeringFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                            .setAudioAttributes(aa)
+                            .setWillPauseWhenDucked(false)
+                            .setOnAudioFocusChangeListener(mK706SteeringFocusListener,
+                                    new Handler(Looper.getMainLooper()))
+                            .build();
+                }
+                result = mK706SteeringAudioManager.requestAudioFocus(mK706SteeringFocusRequest);
+            } else {
+                result = mK706SteeringAudioManager.requestAudioFocus(
+                        mK706SteeringFocusListener,
+                        AudioManager.STREAM_MUSIC,
+                        AudioManager.AUDIOFOCUS_GAIN
+                );
+            }
+            mK706SteeringFocusHeld = (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED);
+            Log.i(K706_STEERING_FOCUS_TAG, "requestAudioFocus result=" + result
+                    + " held=" + mK706SteeringFocusHeld);
+        } catch (Exception e) {
+            Log.w(TAG, "ensureK706OemSteeringAudioFocus falló", e);
+        }
+    }
+
+    private void abandonK706OemSteeringAudioFocus() {
+        try {
+            if (!mK706SteeringFocusHeld || mK706SteeringAudioManager == null) return;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && mK706SteeringFocusRequest != null) {
+                mK706SteeringAudioManager.abandonAudioFocusRequest(mK706SteeringFocusRequest);
+            } else if (mK706SteeringFocusListener != null) {
+                mK706SteeringAudioManager.abandonAudioFocus(mK706SteeringFocusListener);
+            }
+            mK706SteeringFocusHeld = false;
+            Log.i(K706_STEERING_FOCUS_TAG, "abandonAudioFocus (K706 steering)");
+        } catch (Exception e) {
+            Log.w(TAG, "abandonK706OemSteeringAudioFocus falló", e);
         }
     }
 
@@ -984,8 +1263,32 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (event == null) return;
 
             switch (event) {
-                case K706RadioManager.EVENT_LOSS:
                 case K706RadioManager.EVENT_LOSS_TRANSIENT:
+                    // K706/QS6: en algunos launchers, al ir a HOME o al overlay de widgets se emite LOSS_TRANSIENT.
+                    // Si reflejamos PAUSED aquí, el widget genérico de "música" deja de considerar nuestra sesión
+                    // como "Now Playing" y el control se pierde aunque el motor siga vivo.
+                    //
+                    // Para plataformas que dependen de MediaSession en background (K706/QS6), mantenemos la sesión
+                    // en PLAYING pero SIN forzar audio focus extra ni reactivar hardware: solo routing/visibilidad.
+                    if (isSteeringMediaBackgroundPlatform() && !mUserPaused) {
+                        mIsPlaying = true;
+                        setPlaybackState(true);
+                        writeOemStateToPrefs(event);
+                        ensureNotificationVisible();
+                        break;
+                    }
+
+                    // Voz de navegación / Android Auto (Zlink): comportamiento estándar fuera de K706/QS6.
+                    if (mIsPlaying && !mUserPaused) {
+                        mWasPlayingBeforeFocusLoss = true;
+                    }
+                    mIsPlaying = false;
+                    setPlaybackState(false);
+                    writeOemStateToPrefs(event);
+                    ensureNotificationVisible();
+                    break;
+
+                case K706RadioManager.EVENT_LOSS:
                     if (isSteeringMediaBackgroundPlatform() && !mUserPaused) {
                         if (mIsPlaying) mWasPlayingBeforeFocusLoss = true;
                         writeOemStateToPrefs(event);
@@ -1083,12 +1386,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
 
             String title;
-            if (live != null && live.rdsName != null && !live.rdsName.trim().isEmpty()) {
+            if (live != null && live.rdsName != null && !live.rdsName.trim().isEmpty()
+                    && (live.freqKhz <= 0 || live.freqKhz == freqKhz)) {
                 title = live.rdsName.trim();
             } else if (name != null && !name.isEmpty() && !name.matches("\\d+")) {
                 title = name;
             } else {
-                int f = (live != null && live.freqKhz > 0) ? live.freqKhz : freqKhz;
+                int f = (live != null && live.freqKhz > 0 && live.freqKhz == freqKhz) ? live.freqKhz : freqKhz;
                 title = formatFrequency(f);
             }
 
@@ -1115,7 +1419,11 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                     .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                     .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "OpenRadioFM")
                     .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
-                    .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, "Radio FM");
+                    // Muchos launchers muestran DISPLAY_SUBTITLE como "frecuencia" aunque TITLE sea el RDS (PS).
+                    .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE,
+                            (freqKhz > 0 || (live != null && live.freqKhz > 0))
+                                    ? formatFrequency((live != null && live.freqKhz > 0) ? live.freqKhz : freqKhz)
+                                    : "Radio FM");
 
             // OEM-like enrichment: RT como "álbum"/descripción, PTY como género, PI como id/extra
             if (rt != null && !rt.trim().isEmpty()) {
@@ -1128,24 +1436,422 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             if (pi != null && !pi.trim().isEmpty()) {
                 builder.putString(MediaMetadataCompat.METADATA_KEY_MEDIA_ID, pi.trim());
             }
+
+            // Artwork para widget OEM / notificación (si existe en RadioLogos).
+            // Preferimos el nombre RDS vivo o el nombre persistido, no el título si es solo frecuencia.
+            String nameForLogo = null;
+            if (live != null && live.rdsName != null && !live.rdsName.trim().isEmpty()
+                    && (live.freqKhz <= 0 || live.freqKhz == freqKhz)) {
+                nameForLogo = live.rdsName.trim();
+            } else if (name != null && !name.trim().isEmpty() && !name.trim().matches("\\d+")) {
+                nameForLogo = name.trim();
+            }
+            java.io.File logoFile = resolveStationLogoFile(freqKhz, nameForLogo);
+            String artUri = (logoFile != null && logoFile.isFile())
+                    ? stationLogoUriStringForMetadata(logoFile) : null;
+            if (artUri != null && !artUri.isEmpty()) {
+                builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM_ART_URI, artUri);
+                builder.putString(MediaMetadataCompat.METADATA_KEY_ART_URI, artUri);
+                builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON_URI, artUri);
+            }
+            Bitmap art = decodeStationLogoBitmap(logoFile);
+            if (art == null) {
+                // Fallback: si no hay logo descargado/local, publica al menos el logo de la app
+                // para que el widget multimedia muestre carátula en lugar de vacío.
+                try {
+                    art = BitmapFactory.decodeResource(getResources(), R.drawable.ic_app_logo);
+                } catch (Exception ignored) {}
+            }
+            if (art != null) {
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, art);
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ART, art);
+                builder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, art);
+            }
             mMediaSession.setMetadata(builder.build());
+
+            // QuickFish / K706 launcher: el widget multimedia suele ignorar la carátula estándar y
+            // depende de broadcasts OEM (ej. com.qf.musicplayer.action.UPDATE_ACTION).
+            // Emitimos compatibilidad best-effort con múltiples acciones/keys para que el launcher
+            // pueda renderizar título + carátula.
+            try {
+                broadcastQfMediaWidgetUpdate(title,
+                        (freqKhz > 0 || (live != null && live.freqKhz > 0))
+                                ? formatFrequency((live != null && live.freqKhz > 0) ? live.freqKhz : freqKhz)
+                                : "Radio FM",
+                        logoFile,
+                        mIsPlaying);
+            } catch (Exception ignored) {}
         } catch (Exception e) {
             Log.w(TAG, "updateMetadataFromPrefs() falló", e);
         }
     }
 
-    private void updateMetadataName(String rdsName) {
+    private void broadcastQfMediaWidgetUpdate(@NonNull String title,
+                                              @NonNull String subtitle,
+                                              @Nullable java.io.File logoFile,
+                                              boolean isPlaying) {
+        // 1) Derivar path/uri de carátula (si existe)
+        String artPath = null;
+        String artUri = null;
         try {
-            if (rdsName == null || rdsName.trim().isEmpty()) return;
-            MediaMetadataCompat current = mMediaSession.getController().getMetadata();
-            MediaMetadataCompat.Builder builder = (current != null)
-                    ? new MediaMetadataCompat.Builder(current)
-                    : new MediaMetadataCompat.Builder();
-            builder.putString(MediaMetadataCompat.METADATA_KEY_TITLE, rdsName.trim());
-            builder.putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, rdsName.trim());
-            mMediaSession.setMetadata(builder.build());
+            if (logoFile != null && logoFile.isFile()) {
+                artPath = logoFile.getAbsolutePath();
+                artUri = stationLogoUriStringForMetadata(logoFile);
+            }
+        } catch (Exception ignored) {}
+
+        // 2) Intent compat: el launcher gradient.black registra dinámicamente estos receivers.
+        // En logcat se ve CustomMusicWidget escuchando com.qf.musicplayer.action.UPDATE_ACTION.
+        android.content.Intent[] intents = new android.content.Intent[] {
+                new android.content.Intent("com.qf.musicplayer.action.UPDATE_ACTION"),
+                new android.content.Intent("com.qf.action.UPDATE_MEDIA_INFO"),
+                new android.content.Intent("com.qf.action.UPDATE_MEDIA_STATE"),
+        };
+
+        for (android.content.Intent i : intents) {
+            // Campos "típicos" (probados por compatibilidad; varios OEM cambian nombres)
+            i.putExtra("packageName", getPackageName());
+            i.putExtra("pkg", getPackageName());
+            i.putExtra("app", getPackageName());
+
+            i.putExtra("trackName", title);
+            i.putExtra("title", title);
+            i.putExtra("name", title);
+            i.putExtra("song", title);
+
+            i.putExtra("artistName", "OpenRadioFM");
+            i.putExtra("artist", "OpenRadioFM");
+            i.putExtra("subTitle", subtitle);
+            i.putExtra("subtitle", subtitle);
+
+            i.putExtra("isPlaying", isPlaying);
+            i.putExtra("playing", isPlaying);
+            i.putExtra("playState", isPlaying ? 1 : 0);
+            i.putExtra("state", isPlaying ? 1 : 0);
+
+            if (artPath != null) {
+                i.putExtra("coverPath", artPath);
+                i.putExtra("artPath", artPath);
+                i.putExtra("picPath", artPath);
+                i.putExtra("imagePath", artPath);
+            }
+            if (artUri != null) {
+                i.putExtra("coverUri", artUri);
+                i.putExtra("artUri", artUri);
+                i.putExtra("picUri", artUri);
+                i.putExtra("imageUri", artUri);
+            }
+
+            // En K706/QuickFish, muchos com.qf.* están protegidos y dan "Permission Denial".
+            // El módulo Magisk ya envía estos broadcasts como root (bridge) para evitar prompts/toasts continuos de su.
+            try {
+                sendBroadcast(i);
+            } catch (SecurityException ignored) {}
+        }
+
+        Log.d(TAG, "QF media widget broadcast: title=" + title + " artPath=" + (artPath != null));
+    }
+
+    private static void suAmBroadcast(@NonNull android.content.Intent i,
+                                      @NonNull String title,
+                                      @NonNull String subtitle,
+                                      @Nullable String artPath,
+                                      @Nullable String artUri,
+                                      boolean isPlaying) throws Exception {
+        String action = i.getAction();
+        if (action == null || action.isEmpty()) return;
+
+        // Algunos parsers OEM/`am` se rompen si los valores contienen espacios y terminan interpretando
+        // el último token como "COMPONENT"/package. Para compatibilidad, usar valores sin espacios.
+        String safeTitle = qfSafeValue(title);
+        String safeSubtitle = qfSafeValue(subtitle);
+
+        // Construir comando am broadcast con extras mínimos (evitar romper por comillas).
+        StringBuilder cmd = new StringBuilder();
+        cmd.append("am broadcast -a ").append(shQuote(action));
+        cmd.append(" --es ").append(shQuote("trackName")).append(" ").append(shQuote(safeTitle));
+        cmd.append(" --es ").append(shQuote("title")).append(" ").append(shQuote(safeTitle));
+        cmd.append(" --es ").append(shQuote("currentTrack")).append(" ").append(shQuote("com.example.openradiofm"));
+        cmd.append(" --es ").append(shQuote("packageName")).append(" ").append(shQuote("com.example.openradiofm"));
+        cmd.append(" --es ").append(shQuote("artistName")).append(" ").append(shQuote("OpenRadioFM"));
+        cmd.append(" --es ").append(shQuote("subTitle")).append(" ").append(shQuote(safeSubtitle));
+        cmd.append(" --ez ").append(shQuote("isPlaying")).append(" ").append(isPlaying ? "true" : "false");
+        cmd.append(" --ei ").append(shQuote("playState")).append(" ").append(isPlaying ? "1" : "0");
+        if (artPath != null && !artPath.isEmpty()) {
+            cmd.append(" --es ").append(shQuote("coverPath")).append(" ").append(shQuote(artPath));
+        }
+        if (artUri != null && !artUri.isEmpty()) {
+            cmd.append(" --es ").append(shQuote("coverUri")).append(" ").append(shQuote(artUri));
+        }
+
+        new ProcessBuilder("su", "-c", cmd.toString()).start();
+    }
+
+    private static String shQuote(@NonNull String s) {
+        // Single-quote safe for sh: ' -> '\''.
+        return "'" + s.replace("'", "'\\''") + "'";
+    }
+
+    private static String qfSafeValue(@NonNull String s) {
+        // Reducir a tokens para evitar ambigüedad en algunos parsers OEM.
+        // Mantener ASCII simple; el widget solo necesita un label.
+        String out = s.trim();
+        out = out.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ');
+        while (out.contains("  ")) out = out.replace("  ", " ");
+        out = out.replace(' ', '_');
+        if (out.isEmpty()) return "OpenRadioFM";
+        return out;
+    }
+
+    private String radioLogoFileProviderAuthority() {
+        return getPackageName() + ".radio_logo";
+    }
+
+    private void grantLogoUriToOemLaunchers(@Nullable Uri uri) {
+        if (uri == null) return;
+        for (String pkg : OEM_LOGO_URI_GRANT_PACKAGES) {
+            try {
+                grantUriPermission(pkg, uri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            } catch (Exception ignored) {
+            }
+        }
+    }
+
+    /**
+     * URI para metadata: content:// con permiso de lectura al launcher OEM; si falla, file:// en almacenamiento público.
+     */
+    @Nullable
+    private String stationLogoUriStringForMetadata(@NonNull java.io.File file) {
+        // Preferir MediaStore si el archivo fue escaneado (más compatible con launchers; evita problemas de AppsFilter
+        // al conceder permisos de FileProvider a paquetes terceros).
+        try {
+            String ms = mediaStoreImageUriStringForPath(file.getAbsolutePath());
+            if (ms != null && !ms.isEmpty()) {
+                return ms;
+            }
+        } catch (Exception ignored) {}
+        try {
+            String content = stationLogoContentUriString(file);
+            if (content != null && !content.isEmpty()) {
+                grantLogoUriToOemLaunchers(Uri.parse(content));
+                return content;
+            }
+        } catch (Exception ignored) {
+        }
+        try {
+            String ap = file.getAbsolutePath();
+            if (ap.startsWith("/sdcard/") || ap.contains("/emulated/0/") || ap.contains("/RadioLogos/")) {
+                return Uri.fromFile(file).toString();
+            }
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    @Nullable
+    private String mediaStoreImageUriStringForPath(@NonNull String absolutePath) {
+        try {
+            // 1) Buscar por DATA (legacy). Muchos headunits siguen exponiéndolo.
+            Uri base = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            String[] proj = new String[]{ MediaStore.Images.Media._ID };
+            Cursor c = null;
+            try {
+                c = getContentResolver().query(
+                        base,
+                        proj,
+                        MediaStore.Images.Media.DATA + "=?",
+                        new String[]{ absolutePath },
+                        null
+                );
+                if (c != null && c.moveToFirst()) {
+                    long id = c.getLong(0);
+                    return ContentUris.withAppendedId(base, id).toString();
+                }
+            } finally {
+                if (c != null) c.close();
+            }
+        } catch (Throwable ignored) {
+        }
+        // 2) Fallback: buscar por nombre (cuando DATA no está disponible).
+        try {
+            String name = null;
+            try {
+                name = new java.io.File(absolutePath).getName();
+            } catch (Exception ignored) {}
+            if (name == null || name.isEmpty()) return null;
+            Uri base = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            String[] proj = new String[]{ MediaStore.Images.Media._ID };
+            Cursor c = null;
+            try {
+                c = getContentResolver().query(
+                        base,
+                        proj,
+                        MediaStore.Images.Media.DISPLAY_NAME + "=?",
+                        new String[]{ name },
+                        MediaStore.Images.Media.DATE_ADDED + " DESC"
+                );
+                if (c != null && c.moveToFirst()) {
+                    long id = c.getLong(0);
+                    return ContentUris.withAppendedId(base, id).toString();
+                }
+            } finally {
+                if (c != null) c.close();
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    @Nullable
+    private String stationLogoContentUriString(@NonNull java.io.File file) {
+        try {
+            Uri u = FileProvider.getUriForFile(this, radioLogoFileProviderAuthority(), file);
+            return u != null ? u.toString() : null;
         } catch (Exception e) {
-            Log.w(TAG, "updateMetadataName() falló", e);
+            Log.w(TAG, "No se pudo publicar URI de logo (FileProvider)", e);
+            return null;
+        }
+    }
+
+    @Nullable
+    private Bitmap decodeStationLogoBitmap(@Nullable java.io.File f) {
+        try {
+            if (f == null || !f.isFile()) return null;
+            final String path = f.getAbsolutePath();
+            final long mtime = f.lastModified();
+            if (path.equals(mLastMetadataLogoPath) && mtime == mLastMetadataLogoMtime && mLastMetadataLogo != null) {
+                return mLastMetadataLogo;
+            }
+
+            Bitmap bmp = decodeBitmapMaxEdge(path, 320);
+            if (bmp == null) {
+                // Algunos headunits bloquean decodeFile directo sobre /sdcard (scoped storage / FUSE).
+                // Fallback: intentar leer por content:// (MediaStore o FileProvider) si se puede resolver.
+                try {
+                    String uriStr = stationLogoUriStringForMetadata(f);
+                    if (uriStr != null && !uriStr.isEmpty()) {
+                        bmp = decodeBitmapMaxEdgeFromUriString(uriStr, 320);
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (bmp != null) {
+                mLastMetadataLogoPath = path;
+                mLastMetadataLogoMtime = mtime;
+                mLastMetadataLogo = bmp;
+            }
+            return bmp;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    @Nullable
+    private Bitmap decodeBitmapMaxEdgeFromUriString(@NonNull String uriStr, int maxEdgePx) {
+        if (maxEdgePx <= 0) return null;
+        android.net.Uri uri = null;
+        try { uri = android.net.Uri.parse(uriStr); } catch (Exception ignored) {}
+        if (uri == null) return null;
+        java.io.InputStream is = null;
+        try {
+            is = getContentResolver().openInputStream(uri);
+            if (is == null) return null;
+            // Decodificar sin arriesgar memoria: como fallback, escala aproximada post-decode.
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            Bitmap raw = BitmapFactory.decodeStream(is, null, o);
+            if (raw == null) return null;
+            int w = raw.getWidth();
+            int h = raw.getHeight();
+            int max = Math.max(w, h);
+            if (max <= maxEdgePx) return raw;
+            float scale = (float) maxEdgePx / (float) max;
+            int nw = Math.max(1, Math.round(w * scale));
+            int nh = Math.max(1, Math.round(h * scale));
+            Bitmap scaled = Bitmap.createScaledBitmap(raw, nw, nh, true);
+            if (scaled != raw) {
+                try { raw.recycle(); } catch (Exception ignored) {}
+            }
+            return scaled;
+        } catch (Exception ignored) {
+            return null;
+        } finally {
+            try { if (is != null) is.close(); } catch (Exception ignored) {}
+        }
+    }
+
+    @Nullable
+    private java.io.File resolveStationLogoFile(int freqKhz, @Nullable String rdsName) {
+        if (freqKhz <= 0) return null;
+        try {
+            java.io.File preferred = getPreferredRadioLogosDir();
+            java.io.File legacy = new java.io.File("/sdcard/RadioLogos/");
+
+            String sanitizedName = (rdsName != null && !rdsName.isEmpty())
+                    ? rdsName.replaceAll("[^a-zA-Z0-9]", "").toUpperCase()
+                    : null;
+
+            // 1) Frecuencia + RDS
+            if (sanitizedName != null && !sanitizedName.isEmpty()) {
+                String fileName = freqKhz + "_" + sanitizedName + ".png";
+                java.io.File f1 = new java.io.File(preferred, fileName);
+                if (f1.exists()) return f1;
+                java.io.File f2 = new java.io.File(legacy, fileName);
+                if (f2.exists()) return f2;
+            }
+
+            // 2) Solo frecuencia
+            String fullName = freqKhz + ".png";
+            java.io.File full1 = new java.io.File(preferred, fullName);
+            if (full1.exists()) return full1;
+            java.io.File full2 = new java.io.File(legacy, fullName);
+            if (full2.exists()) return full2;
+
+            // 3) Frecuencia corta
+            String shortName = (freqKhz / 10) + ".png";
+            java.io.File short1 = new java.io.File(preferred, shortName);
+            if (short1.exists()) return short1;
+            java.io.File short2 = new java.io.File(legacy, shortName);
+            if (short2.exists()) return short2;
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private java.io.File getPreferredRadioLogosDir() {
+        java.io.File legacy = new java.io.File("/sdcard/RadioLogos/");
+        try {
+            if ((legacy.exists() || legacy.mkdirs()) && legacy.canRead()) return legacy;
+        } catch (Exception ignored) {}
+        java.io.File external = getExternalFilesDir(null);
+        java.io.File base = (external != null) ? external : getFilesDir();
+        java.io.File appDir = new java.io.File(base, "RadioLogos");
+        try { appDir.mkdirs(); } catch (Exception ignored) {}
+        return appDir;
+    }
+
+    @Nullable
+    private static Bitmap decodeBitmapMaxEdge(@NonNull String path, int maxEdgePx) {
+        if (maxEdgePx <= 0) return null;
+        try {
+            BitmapFactory.Options o = new BitmapFactory.Options();
+            o.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(path, o);
+            int w = o.outWidth;
+            int h = o.outHeight;
+            if (w <= 0 || h <= 0) return null;
+
+            int inSampleSize = 1;
+            int max = Math.max(w, h);
+            while ((max / inSampleSize) > maxEdgePx) {
+                inSampleSize *= 2;
+            }
+
+            BitmapFactory.Options o2 = new BitmapFactory.Options();
+            o2.inJustDecodeBounds = false;
+            o2.inSampleSize = Math.max(inSampleSize, 1);
+            o2.inPreferredConfig = Bitmap.Config.ARGB_8888;
+            return BitmapFactory.decodeFile(path, o2);
+        } catch (Exception ignored) {
+            return null;
         }
     }
 
@@ -1503,16 +2209,74 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         if (pkg.contains("android.auto") || pkg.contains("projection.gearhead")) return true; // variantes
         if (pkg.startsWith("com.google.android.gms")) return true; // Servicios Google (Auto)
         if (pkg.startsWith("com.google.android.")) return true; // otros componentes de Auto/Car en OEMs
-        if (pkg.startsWith("com.android.")) return true; // sistema / launcher coche
+        if (pkg.startsWith("com.android.")) return true; // sistema / launcher coche (p. ej. autohome)
         if (pkg.startsWith("android")) return true;
+
+        // K706 / Topway / QuickFish: stack SYU y broadcasts QF no usan prefijo com.android.*
+        if (pkg.startsWith("com.syu.")) return true;
+        if (pkg.startsWith("com.qf.")) return true;
         
         // V21.1: Incluir Zlink (cliente común en hardware OEM para Android Auto por cable/inalámbrico)
         if (pkg.equals("com.zjinnova.zlink")) return true;
         if (pkg.contains("zlink")) return true;
         if (pkg.contains("carlink") || pkg.contains("tlink") || pkg.contains("easyconn")) return true;
+
+        // Agama Launcher / widgets: necesita acceder a MediaBrowser/MediaSession para mostrar
+        // texto y controles. No siempre es app de sistema, así que lo permitimos explícitamente.
+        // Ejemplos habituales: com.agama.carlauncher, com.agama.* (varía por versión/skin).
+        if (pkg.contains("agama")) return true;
         
         // Permitir también la propia app
-        return pkg.equals(getPackageName());
+        if (pkg.equals(getPackageName())) return true;
+
+        // Resto de launchers / IVI preinstalados (paquetes de sistema)
+        try {
+            ApplicationInfo ai = getPackageManager().getApplicationInfo(pkg, 0);
+            int f = ai.flags;
+            if ((f & ApplicationInfo.FLAG_SYSTEM) != 0) return true;
+            if ((f & ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0) return true;
+        } catch (PackageManager.NameNotFoundException ignored) {}
+        return false;
+    }
+
+    @Nullable
+    private static KeyEvent extractMediaKeyEvent(@Nullable Intent intent) {
+        if (intent == null) return null;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent.class);
+        }
+        return intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT);
+    }
+
+    private boolean dispatchMediaKeyFromOemKeyEvent(KeyEvent ke) {
+        switch (ke.getKeyCode()) {
+            case KeyEvent.KEYCODE_MEDIA_NEXT:
+            case KeyEvent.KEYCODE_MEDIA_SKIP_FORWARD:
+            case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
+                handleSteeringSkip(+1);
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PREVIOUS:
+            case KeyEvent.KEYCODE_MEDIA_SKIP_BACKWARD:
+            case KeyEvent.KEYCODE_MEDIA_REWIND:
+                handleSteeringSkip(-1);
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY:
+                handlePlay();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PAUSE:
+                handlePause();
+                return true;
+            case KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE:
+            case KeyEvent.KEYCODE_HEADSETHOOK:
+                if (mIsPlaying) {
+                    handlePause();
+                } else {
+                    handlePlay();
+                }
+                return true;
+            default:
+                return false;
+        }
     }
 
     @Override
@@ -1719,8 +2483,205 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         return "";
     }
 
+    private boolean isK706EngineActive() {
+        try {
+            return mEngine != null && "K706".equals(mEngine.getEngineName());
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    /** util_service: aceptar callbacks aunque el motor aún no esté cacheado en el servicio. */
+    private boolean shouldApplyK706UtilServiceKeyBridge() {
+        try {
+            if (mRadioServiceController != null && mRadioServiceController.isK706Mode()) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        return isK706EngineActive();
+    }
+
+    /**
+     * K706/QF: registra listener en util_service para recibir KeyEvents OEM (volante/widget launcher)
+     * sin depender de Accessibility ni de ACTION_MEDIA_BUTTON.
+     *
+     * Basado en el API OEM `android.qf.util.UtilEventManager.RPC_KeyEventChangedListener(UtilEventListener)`.
+     */
+    private void ensureK706UtilEventKeyBridgeRegistered() {
+        if (mQfUtilKeyBridgeRegistered) return;
+        if (!isK706EngineActive()) return;
+
+        // 1) Comprobar existencia del binder (si no existe, no insistimos)
+        try {
+            Class<?> sm = Class.forName("android.os.ServiceManager");
+            java.lang.reflect.Method getService = sm.getMethod("getService", String.class);
+            Object b1 = getService.invoke(null, "util_service");
+            Object b2 = getService.invoke(null, "UTIL_EVENT_SERVICE");
+            if (b1 == null && b2 == null) {
+                Log.w(TAG, "K706 util_service no disponible (ServiceManager.getService==null)");
+                return;
+            }
+        } catch (Throwable t) {
+            Log.w(TAG, "No se pudo comprobar binder de util_service", t);
+        }
+
+        try {
+            // 2) Obtener el manager del system service
+            Object mgr = getSystemService("util_service");
+            if (mgr == null) mgr = getSystemService("UTIL_EVENT_SERVICE");
+            if (mgr == null) {
+                Log.w(TAG, "getSystemService(util_service) devolvió null");
+                return;
+            }
+            mQfUtilEventManager = mgr;
+
+            // 3) Crear proxy de android.qf.util.UtilEventListener
+            Class<?> listenerItf = Class.forName("android.qf.util.UtilEventListener");
+            Class<?> qfKeyInfoCls = Class.forName("android.qf.util.QFKeyEventInfo");
+            java.lang.reflect.Method getKeyEventInfo = qfKeyInfoCls.getMethod("getKeyEventInfo");
+
+            mQfUtilEventListenerProxy = java.lang.reflect.Proxy.newProxyInstance(
+                    listenerItf.getClassLoader(),
+                    new Class<?>[]{listenerItf},
+                    (proxy, method, args) -> {
+                        if (method == null) return null;
+                        final String m = method.getName();
+
+                        // Necesario: UtilEventManager usa el listener como clave de HashMap.
+                        // Si hashCode() devuelve null, crashea con NPE al hacer unbox.
+                        if ("hashCode".equals(m) && (args == null || args.length == 0)) {
+                            return System.identityHashCode(proxy);
+                        }
+                        if ("equals".equals(m) && args != null && args.length == 1) {
+                            return proxy == args[0];
+                        }
+                        if ("toString".equals(m) && (args == null || args.length == 0)) {
+                            return "OpenRadioFM-UtilEventListenerProxy@" + Integer.toHexString(System.identityHashCode(proxy));
+                        }
+
+                        try {
+                            if (!shouldApplyK706UtilServiceKeyBridge()) return null;
+
+                            // ROM/OEM variance: stubs AIDL a veces usan OnKeyEvent (O mayúscula) — no filtrar por "on...".
+                            // Extraemos KeyEvent de cualquier arg compatible, o (keyCode, action) como Integer.
+                            if (args == null || args.length == 0) return null;
+
+                            android.view.KeyEvent keyEvent = null;
+                            for (Object a : args) {
+                                if (a == null) continue;
+                                if (a instanceof android.view.KeyEvent) {
+                                    keyEvent = (android.view.KeyEvent) a;
+                                    break;
+                                }
+                                try {
+                                    java.lang.reflect.Method mGet = a.getClass().getMethod("getKeyEventInfo");
+                                    Object ke = mGet.invoke(a);
+                                    if (ke instanceof android.view.KeyEvent) {
+                                        keyEvent = (android.view.KeyEvent) ke;
+                                        break;
+                                    }
+                                } catch (Throwable ignored) {
+                                    // fallback: probamos contra la clase esperada, por compatibilidad.
+                                    try {
+                                        if (qfKeyInfoCls.isInstance(a)) {
+                                            Object ke = getKeyEventInfo.invoke(a);
+                                            if (ke instanceof android.view.KeyEvent) {
+                                                keyEvent = (android.view.KeyEvent) ke;
+                                                break;
+                                            }
+                                        }
+                                    } catch (Throwable ignored2) {}
+                                }
+                            }
+                            if (keyEvent == null && args.length >= 2
+                                    && args[0] instanceof Integer && args[1] instanceof Integer) {
+                                int kc = (Integer) args[0];
+                                int act = (Integer) args[1];
+                                if (act == android.view.KeyEvent.ACTION_DOWN) {
+                                    keyEvent = new android.view.KeyEvent(act, kc);
+                                }
+                            }
+                            if (keyEvent == null) return null;
+                            if (keyEvent.getAction() != android.view.KeyEvent.ACTION_DOWN) return null;
+
+                            int keyCode = keyEvent.getKeyCode();
+                            // Si el usuario pausó, solo aceptamos comandos que puedan "revivir" la sesión.
+                            // De lo contrario, tras PAUSE parecería que los mandos "mueren" (porque bloqueamos todo).
+                            if (mUserPaused) {
+                                final boolean isResumeKey =
+                                        keyCode == android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE ||
+                                        keyCode == android.view.KeyEvent.KEYCODE_MEDIA_PLAY ||
+                                        keyCode == android.view.KeyEvent.KEYCODE_MEDIA_PAUSE;
+                                if (!isResumeKey) return null;
+                            }
+                            // Anti-stress: no procesar ráfagas idénticas (p.ej. NEXT mantenido).
+                            final long now = android.os.SystemClock.uptimeMillis();
+                            final long minGapMs = 180L;
+                            if (keyCode == mQfLastUtilKeyCode && (now - mQfLastUtilKeyUptimeMs) < minGapMs) {
+                                return null;
+                            }
+                            mQfLastUtilKeyCode = keyCode;
+                            mQfLastUtilKeyUptimeMs = now;
+                            switch (keyCode) {
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE: // 85
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PLAY:       // 126
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PAUSE:      // 127
+                                    handlePlayPause();
+                                    break;
+                                case android.view.KeyEvent.KEYCODE_MEDIA_NEXT:       // 87
+                                    handleSteeringSkip(+1);
+                                    break;
+                                case android.view.KeyEvent.KEYCODE_MEDIA_PREVIOUS:   // 88
+                                    handleSteeringSkip(-1);
+                                    break;
+                                // 89/90: algunas ROMs usan REWIND/FF como SEEK prev/next.
+                                case android.view.KeyEvent.KEYCODE_MEDIA_REWIND:     // 89
+                                    handleWidgetSeek(-1);
+                                    break;
+                                case android.view.KeyEvent.KEYCODE_MEDIA_FAST_FORWARD: // 90
+                                    handleWidgetSeek(+1);
+                                    break;
+                            }
+                        } catch (Throwable t) {
+                            Log.w(TAG, "util_service onReceived falló", t);
+                        }
+                        return null;
+                    }
+            );
+
+            // 4) Invocar RPC_KeyEventChangedListener(listener)
+            java.lang.reflect.Method rpc = mgr.getClass().getMethod("RPC_KeyEventChangedListener", listenerItf);
+            rpc.invoke(mgr, mQfUtilEventListenerProxy);
+            mQfUtilKeyBridgeRegistered = true;
+            Log.i(TAG, "K706 util_service key bridge registrado (UtilEventManager)");
+        } catch (Throwable t) {
+            mQfUtilKeyBridgeRegistered = false;
+            mQfUtilEventManager = null;
+            mQfUtilEventListenerProxy = null;
+            Log.w(TAG, "No se pudo registrar util_service key bridge", t);
+        }
+    }
+
+    private void unregisterK706UtilEventKeyBridgeIfNeeded() {
+        try {
+            if (!mQfUtilKeyBridgeRegistered || mQfUtilEventManager == null || mQfUtilEventListenerProxy == null) return;
+            Class<?> listenerItf = Class.forName("android.qf.util.UtilEventListener");
+            java.lang.reflect.Method rpcRemove = mQfUtilEventManager.getClass().getMethod("RPC_RemoveListener", listenerItf);
+            rpcRemove.invoke(mQfUtilEventManager, mQfUtilEventListenerProxy);
+            Log.i(TAG, "K706 util_service key bridge desregistrado");
+        } catch (Throwable t) {
+            Log.w(TAG, "No se pudo desregistrar util_service key bridge", t);
+        } finally {
+            mQfUtilKeyBridgeRegistered = false;
+            mQfUtilEventManager = null;
+            mQfUtilEventListenerProxy = null;
+        }
+    }
+
     @Override
     public void onDestroy() {
+        unregisterK706UtilEventKeyBridgeIfNeeded();
+        abandonK706OemSteeringAudioFocus();
         abandonQs6ServiceAudioFocus();
         try {
             stopForeground(true);
@@ -1740,8 +2701,12 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             }
         } catch (Exception ignored) {}
 
-        mSessionController = null;
-        mEngine = null;
+        try {
+            if (mEngine != null) {
+                mEngine.release();
+                mEngine = null;
+            }
+        } catch (Exception ignored) {}
 
         try {
             unregisterReceiver(mOemFocusReceiver);

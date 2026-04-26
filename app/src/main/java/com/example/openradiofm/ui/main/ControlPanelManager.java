@@ -38,6 +38,13 @@ public class ControlPanelManager {
                     mActivity.showToast(mActivity.getString(R.string.toast_eq_unavailable));
                 }
             });
+            btnEq.setOnLongClickListener(v -> {
+                if (mActivity.mEngine instanceof com.example.openradiofm.data.source.QS6Engine) {
+                    com.example.openradiofm.data.source.QS6Engine.openAndroidAudioEffectPanel(mActivity);
+                    return true;
+                }
+                return false;
+            });
         }
 
         // Mute Logic delegada a PlaybackManager
@@ -45,7 +52,7 @@ public class ControlPanelManager {
         if (btnMute != null) {
             btnMute.setOnClickListener(v -> {
                 if (mActivity.mPlaybackManager != null) {
-                    mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted());
+                    mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted(), true);
                 }
             });
         }
@@ -125,10 +132,9 @@ public class ControlPanelManager {
         if (btnPowerOff != null) {
             btnPowerOff.setOnClickListener(v -> {
                 mActivity.animateButton(btnPowerOff);
-                mActivity.prepareForPowerOff();
-                if (mActivity.mDeviceManager != null) {
-                    mActivity.mDeviceManager.powerOff();
-                }
+                // K706: PowerOff UI = minimizar (mantener widget de música operativo).
+                // No ejecutar prepareForPowerOff() (mute + cierre total).
+                mActivity.minimizeToHomeKeepingMediaControl();
             });
         }
 
@@ -225,6 +231,12 @@ public class ControlPanelManager {
     }
 
     private void openEngineeringMenuFromGpsLongPress() {
+        // V24.5: Activar Modo Desarrollador Global (Referencia persistente para menú premium)
+        if (mActivity.mPrefs != null) {
+            mActivity.mPrefs.edit().putBoolean("pref_dev_mode_enabled", true).apply();
+            mActivity.showToast("DEVELOPER_MODE: [UNLOCKED]");
+        }
+
         if (mActivity.mMode == MainActivity.FmMode.FM_K706) {
             mActivity.mEngineeringDialog = new K706EngineeringDialog(mActivity);
             mActivity.mEngineeringDialog.setOnDismissListener(dialog -> mActivity.mEngineeringDialog = null);

@@ -85,4 +85,10 @@ public final class CompositeRadioEngineCallback implements RadioEngineCallback {
         if (first != null) first.onSignalUpdate(rssi, snr);
         if (second != null) second.onSignalUpdate(rssi, snr);
     }
+
+    @Override
+    public void onHwAutomationEvent(int type, boolean active) {
+        if (first != null) first.onHwAutomationEvent(type, active);
+        if (second != null) second.onHwAutomationEvent(type, active);
+    }
 }

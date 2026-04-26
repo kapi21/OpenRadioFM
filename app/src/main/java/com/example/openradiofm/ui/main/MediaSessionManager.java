@@ -1,7 +1,6 @@
 package com.example.openradiofm.ui.main;
 
 import android.content.ComponentName;
-import android.content.Context;
 import android.graphics.Bitmap;
 
 import android.support.v4.media.MediaBrowserCompat;
@@ -14,8 +13,6 @@ import android.util.Log;
 import com.example.openradiofm.service.RadioMediaService;
 
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * V16: Gestor de la Sesión de Medios.
@@ -28,34 +25,6 @@ public class MediaSessionManager {
     private final MainActivity mActivity;
     private MediaBrowserCompat mMediaBrowser;
     private MediaControllerCompat mMediaController;
-
-    // V2.4: State guards to avoid redundant system updates
-    private String mLastTitle = "";
-    private String mLastSubtitle = "";
-    private Bitmap mLastLogo = null;
-    private String mLastRds = "";
-
-    private static final Pattern FREQ_SUBTITLE_PATTERN = Pattern.compile(
-            "^\\s*([0-9]+)\\s*([.,])\\s*([0-9]+)\\s*MHz\\s*$", Pattern.CASE_INSENSITIVE);
-
-    /** Unifica "94,2 MHz" / "94.20 MHz" / "94.2 MHz" para no duplicar envíos a MediaSession. */
-    private static String normalizeFreqMHzSubtitle(String subtitle) {
-        if (subtitle == null) return "";
-        Matcher m = FREQ_SUBTITLE_PATTERN.matcher(subtitle.trim());
-        if (!m.matches()) return subtitle.trim();
-        try {
-            double v = Double.parseDouble(m.group(1) + "." + m.group(3));
-            return String.format(Locale.US, "%.1f MHz", v);
-        } catch (NumberFormatException e) {
-            return subtitle.trim();
-        }
-    }
-
-    private static String metadataDedupKey(String title, String subtitle) {
-        String t = title != null ? title.trim().replaceAll("\\s+", " ") : "";
-        String s = subtitle != null ? normalizeFreqMHzSubtitle(subtitle) : "";
-        return t + "\u0001" + s;
-    }
 
     public MediaSessionManager(MainActivity activity) {
         this.mActivity = activity;
@@ -88,48 +57,14 @@ public class MediaSessionManager {
      * Actualiza los metadatos de la sesión: Emisora, RDS y Logo.
      */
     public void updateMetadata(String title, String subtitle, Bitmap logo) {
+        // Source of truth: RadioMediaService actualiza la MediaSession desde callbacks del engine/prefs.
+        // Mantener método por compatibilidad con código legacy; intencionalmente no empujamos metadata desde la UI.
         if (mMediaController == null) return;
-
-        // V2.4: Guard (título + MHz normalizado + logo) evita ráfagas por locale/comas/decimales.
-        boolean logoSame = (logo == null && mLastLogo == null) || (logo != null && mLastLogo != null && logo.sameAs(mLastLogo));
-        if (metadataDedupKey(title, subtitle).equals(metadataDedupKey(mLastTitle, mLastSubtitle)) && logoSame) {
-            return;
-        }
-
-        mLastTitle = title;
-        mLastSubtitle = subtitle;
-        mLastLogo = logo;
-
-        MediaMetadataCompat.Builder builder = new MediaMetadataCompat.Builder()
-                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
-                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, subtitle)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_TITLE, title)
-                .putString(MediaMetadataCompat.METADATA_KEY_DISPLAY_SUBTITLE, subtitle);
-
-        if (logo != null) {
-            builder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, logo);
-            builder.putBitmap(MediaMetadataCompat.METADATA_KEY_DISPLAY_ICON, logo);
-        }
-
-        mMediaController.getTransportControls().sendCustomAction("ACTION_UPDATE_METADATA", builder.build().getBundle());
-        Log.d(TAG, "Metadata update sent: " + title + " (" + subtitle + ")");
     }
 
     public void updateRds(String rdsText) {
-        if (mMediaController == null || rdsText == null) return;
-        
-        // V2.4: Guard
-        if (rdsText.equals(mLastRds)) return;
-        mLastRds = rdsText;
-
-        // El RDS se suele mapear al álbum o subtítulo en Android Auto
-        MediaMetadataCompat current = mMediaController.getMetadata();
-        MediaMetadataCompat.Builder builder = (current != null) 
-            ? new MediaMetadataCompat.Builder(current) 
-            : new MediaMetadataCompat.Builder();
-        
-        builder.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, rdsText);
-        mMediaController.getTransportControls().sendCustomAction("ACTION_UPDATE_METADATA", builder.build().getBundle());
+        // Source of truth: RadioMediaService. Mantener por compatibilidad.
+        if (mMediaController == null) return;
     }
 
     public void updatePlaybackState(int state) {

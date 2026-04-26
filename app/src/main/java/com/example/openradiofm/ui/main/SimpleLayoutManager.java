@@ -60,7 +60,7 @@ public class SimpleLayoutManager {
         if (btnMute != null) btnMute.setOnClickListener(v -> {
             // Mismo camino que ControlPanelManager: PlaybackManager + enforceAudioRecovery al desmutear
             if (mActivity.mPlaybackManager != null) {
-                mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted());
+                mActivity.mPlaybackManager.setMute(!mActivity.mPlaybackManager.isMuted(), true);
             } else if (mActivity.mEngine != null) {
                 mActivity.mMuteState = !mActivity.mMuteState;
                 mActivity.mEngine.setMute(mActivity.mMuteState);

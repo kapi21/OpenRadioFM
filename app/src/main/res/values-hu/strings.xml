@@ -27,6 +27,11 @@
     <string name="bg_pure_black">Tiszta Fekete</string>
     <string name="bg_fixed_image">Rögzített kép (background.png)</string>
     <string name="bg_dynamic_logo">Adó logója (Dinamikus)</string>
+    <string name="dynamic_bg_aspect_title">Dinamikus háttér képarány</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (nincs vágás)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (kitölti, vág)</string>
+    <string name="toast_dynamic_bg_letterbox">Dinamikus háttér: letterbox (nincs vágás)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Dinamikus háttér: 16:9 (kitölti, vág)</string>
 
     <!-- Font Names -->
     <string name="font_default">Alapértelmezett (Rendszer)</string>
@@ -42,6 +47,10 @@
     <string name="night_mode_auto">Automatikus Éjszakai Mód</string>
     <string name="relief_hd">HD Domborítás</string>
     <string name="save_history">Adóelőzmények mentése</string>
+    <string name="save_history_summary_on">Az adók mentésre kerülnek; a lista megnyitható (pl. RDS név megérintése).</string>
+    <string name="save_history_summary_off">Ki: nincs mentés, előzmény párbeszéd sem jelenik meg.</string>
+    <string name="toast_history_save_disabled">Kapcsold be az „Adóelőzmények mentése” opciót a lista megnyitásához.</string>
+    <string name="hardware_automation_section_header">(Hardveres automatizálás) (teszt alatt)</string>
     <string name="online_logos">Online Logók</string>
     <string name="status_bar_v2">Állapotsor megjelenítése</string>
     <string name="status_bar_enabled">✅ Állapotsor engedélyezve</string>
@@ -78,7 +87,7 @@
     <string name="logos_online_disabled">❌ Online logók letiltva</string>
     <string name="under_study">Fejlesztés alatt</string>
     <string name="night_mode_manual_blocked">Deaktiválja az automatikus éjszakai módot a téma manuális kiválasztásához</string>
-    <string name="auto_hide_controls">Vezérlők automatikus elrejtése</string>
+    <string name="auto_hide_controls">Vezérlők automatikus elrejtése (3. elrendezés, vízszintes)</string>
     <string name="auto_hide_enabled">✅ Automatikus elrejtés engedélyezve</string>
     <string name="auto_hide_disabled">❌ Automatikus elrejtés letiltva</string>
     <string name="preset_scroll_loop_title">Végtelen preset görgetés</string>
@@ -286,7 +295,7 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
     <string name="a11y_hihack_title">HiHack (Kisegítő lehetőségek)</string>
     <string name="a11y_hihack_enabled">Bekapcsolva</string>
@@ -315,7 +324,7 @@
     <string name="widget_next_preset">Következő memória</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">MEMÓRIÁK FELÜLÍRÁSA</string>
-    <string name="autoscan_confirm_message">Ez az AutoScan törli és újratölti az aktuális sáv 1–18 memóriáit az észlelt állomásokkal.\n\nElindítod a szkennelést?</string>
+    <string name="autoscan_confirm_message">Ez az AutoScan mindig FM1-en indul: először az FM1 1–18 memóriáit törli és tölti újra (szükség esetén FM1-re vált). 18 állomás után folytathatja FM2/FM3-on.\n\nElindítod a szkennelést?</string>
     <string name="autoscan_confirm_start">Szkennelés indítása</string>
     <string name="save_load_section_actions">Available actions</string>
     <string name="save_load_save_desc_detail">Create .fav backup in /RadioLogos</string>
@@ -367,6 +376,7 @@
     <string name="eng_dev_file_log_profile_basic">ALAP</string>
     <string name="eng_dev_file_log_profile_medium">KÖZEPES</string>
     <string name="eng_dev_file_log_profile_full">TELJES</string>
+    <string name="eng_dev_logcat_dump_button">DEV: logcat puffer mentése a RadioLogos mappába</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -387,20 +397,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Equalizer nem érhető el (rádiómotor nem fut)</string>
+    <string name="toast_radio_engine_not_started">Rádiómotor nem indult el</string>
+    <string name="toast_no_gps_app">Nem található térkép/GPS alkalmazás</string>
+    <string name="toast_basic_no_engineering">Alap mód: mérnöki menü nem elérhető</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_stopped">AutoScan leállítva</string>
+    <string name="toast_autoscan_slow">Lassú AutoScan FM1-ről: keresés… (érintsd újra a leállításhoz)</string>
+    <string name="toast_autoscan_start_failed">Az AutoScan indítása sikertelen</string>
+    <string name="toast_autoscan_finished">AutoScan kész (%1$d preset)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · 1–18 preset</string>
+    <string name="toast_presets_overwritten">Presetek felülírva (%1$d állomás).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Vissza az alap módhoz…</string>
+    <string name="toast_recovering_fm_audio">FM hang visszaállítása…</string>
+    <string name="toast_hw_eq_unsupported">Hardveres EQ nem támogatott ezen az eszközön</string>
+    <string name="toast_saved_to_slot">Mentve a(z) %1$d. presetbe</string>
 </resources>

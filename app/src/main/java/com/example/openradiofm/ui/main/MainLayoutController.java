@@ -117,9 +117,7 @@ public class MainLayoutController extends BaseLayoutController {
 
     @Override
     public void updateStereo(boolean stereo) {
-        if (ivStereoIcon != null) {
-            ivStereoIcon.setVisibility(stereo ? View.VISIBLE : View.INVISIBLE);
-        }
+        mActivity.refreshStereoIndicatorUi(null);
     }
 
     @Override
@@ -136,7 +134,8 @@ public class MainLayoutController extends BaseLayoutController {
         MainActivity.setTextColorIfChanged(tvRdsName, color);
         MainActivity.setTextColorIfChanged(tvRdsInfo, color);
         MainActivity.setTextColorIfChanged(tvPty, color);
-        MainActivity.setTextColorIfChanged(ivStereoIcon, color);
+        
+        mActivity.refreshStereoIndicatorUi(null);
         
         if (ivUnitLabel != null) {
             MainActivity.setTextColorIfChanged(ivUnitLabel, color);

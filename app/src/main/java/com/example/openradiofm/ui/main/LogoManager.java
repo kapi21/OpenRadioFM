@@ -7,6 +7,7 @@ import android.graphics.drawable.ColorDrawable;
 
 import androidx.core.content.ContextCompat;
 import android.graphics.drawable.Drawable;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -34,7 +35,10 @@ import java.io.File;
  */
 public class LogoManager {
     private static final String TAG = "LogoManager";
-    /** Fondo difuminado: no hace falta píxel a píxel; limitar decode mejora fluidez y RAM en head units lentas. */
+    /**
+     * Fondo dinámico: decodificar como máximo al tamaño de pantalla (ver {@link #getDynamicBgDecodeSize()}),
+     * sin superar este tope en el lado mayor (evita OOM en resoluciones extremas).
+     */
     private static final int DYNAMIC_BG_MAX_EDGE_PX = 1600;
     private final MainActivity mActivity;
     
@@ -60,6 +64,17 @@ public class LogoManager {
         mActiveLogoDir = pickWritableDir(mLegacyLogoDir, mAppLogoDir);
         createRadioLogosFolder();
     }
+
+    private boolean isActivityUsable() {
+        try {
+            if (mActivity == null) return false;
+            if (mActivity.isFinishing()) return false;
+            if (android.os.Build.VERSION.SDK_INT >= 17 && mActivity.isDestroyed()) return false;
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
     
     private static File pickWritableDir(File legacy, File appDir) {
         try {
@@ -77,6 +92,24 @@ public class LogoManager {
         File app = new File(mAppLogoDir, fileName);
         if (app.exists()) return app;
         return null;
+    }
+
+    /**
+     * Dimensiones objetivo para decodificar el fondo dinámico: tamaño visible de pantalla,
+     * nunca mayor que {@link #DYNAMIC_BG_MAX_EDGE_PX} en el lado largo (mantiene RAM razonable).
+     */
+    private void getDynamicBgDecodeSize(int[] outWh) {
+        DisplayMetrics dm = mActivity.getResources().getDisplayMetrics();
+        int w = Math.max(1, dm.widthPixels);
+        int h = Math.max(1, dm.heightPixels);
+        int longEdge = Math.max(w, h);
+        if (longEdge > DYNAMIC_BG_MAX_EDGE_PX) {
+            float scale = (float) DYNAMIC_BG_MAX_EDGE_PX / (float) longEdge;
+            w = Math.max(1, Math.round(w * scale));
+            h = Math.max(1, Math.round(h * scale));
+        }
+        outWh[0] = w;
+        outWh[1] = h;
     }
 
     /** Layout Simple: el logo vive dentro de {@link R.id#boxLogoSimple}; debe quedar visible al cargar emisora. */
@@ -108,7 +141,7 @@ public class LogoManager {
      */
     public void loadCustomBackground() {
         if (mActivity.mPrefs == null) return;
-        final int genAtStart = mActivity.mLogoUiGeneration.get();
+        final int genAtStart = mActivity.mRdsLogoTransition.logoUiGeneration.get();
         // DAY_MODE: fondo beige fijo (ignorar background.jpg/dinámico).
         try {
             if (mActivity.mThemeManager != null
@@ -175,7 +208,7 @@ public class LogoManager {
                         @Override
                         public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
                             if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                            if (genAtStart != mActivity.mLogoUiGeneration.get()) return;
+                            if (genAtStart != mActivity.mRdsLogoTransition.logoUiGeneration.get()) return;
                             root.setBackground(resource);
                         }
 
@@ -219,6 +252,8 @@ public class LogoManager {
 
     /** Marca en {@link R.id#tag_logo_url} para el fallback del slot principal (no es URL remota). */
     private static final String FALLBACK_MAIN_LOGO_TAG = "__fallback_ic_toast__";
+    private static final android.os.Handler MAIN_HANDLER =
+            new android.os.Handler(android.os.Looper.getMainLooper());
 
     /**
      * Logo de respaldo cuando no hay logo de emisora.
@@ -231,6 +266,7 @@ public class LogoManager {
      */
     public void applyFallbackLogo(ImageView iv) {
         if (iv == null) return;
+        if (!isActivityUsable()) return;
 
         // V13.9.1: Ocultar logo principal en Layout 3 (V3)
         if (iv.getId() == R.id.ivMainLogo && mActivity.isV3LayoutActive()) {
@@ -296,6 +332,7 @@ public class LogoManager {
      * El slot {@link R.id#ivMainLogo} en V2/Simple lo rellena {@link #applyFallbackLogo(ImageView)} (ic_toast).
      */
     public void loadCarLogo() {
+        if (!isActivityUsable()) return;
         ImageView ivCarLogo = mActivity.findViewById(R.id.ivCarLogo);
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
 
@@ -346,6 +383,7 @@ public class LogoManager {
      * Actualiza el fondo dinámico (difuminado).
      */
     public void updateDynamicBackground(String logoUrl) {
+        if (!isActivityUsable()) return;
         // V18.6: El Simple Layout gestiona su propio fondo dinámico basado en paletas.
         // Evitamos que LogoManager interfiera para no mezclar diseños.
         if (mActivity.mIsSimpleLayout) return;
@@ -363,9 +401,17 @@ public class LogoManager {
                         || ivDynamicBackground.getVisibility() != View.VISIBLE
                         || mDynamicBgTarget == null;
                 if (needsReload) {
-                    final int genAtStart = mActivity.mLogoUiGeneration.get();
+                    final int genAtStart = mActivity.mRdsLogoTransition.logoUiGeneration.get();
                     mLastDynamicBgUrl = logoUrl;
                     MainActivity.setVisibilityIfChanged(ivDynamicBackground, View.VISIBLE);
+                    int aspect = 0;
+                    try {
+                        aspect = mActivity.mPrefs != null ? mActivity.mPrefs.getInt("pref_dynamic_bg_aspect", 0) : 0;
+                    } catch (Exception ignored) {}
+                    boolean fill = (aspect == 1);
+                    ivDynamicBackground.setScaleType(fill ? ImageView.ScaleType.CENTER_CROP : ImageView.ScaleType.FIT_CENTER);
+                    int[] decode = new int[2];
+                    getDynamicBgDecodeSize(decode);
                     if (mDynamicBgTarget != null) {
                         try { Glide.with(mActivity.getApplicationContext()).clear(mDynamicBgTarget); } catch (Exception ignored) {}
                         mDynamicBgTarget = null;
@@ -374,7 +420,7 @@ public class LogoManager {
                         @Override
                         public void onResourceReady(Drawable resource, Transition<? super Drawable> transition) {
                             if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                            if (genAtStart != mActivity.mLogoUiGeneration.get()) return;
+                            if (genAtStart != mActivity.mRdsLogoTransition.logoUiGeneration.get()) return;
                             ivDynamicBackground.setImageDrawable(resource);
                         }
 
@@ -388,8 +434,10 @@ public class LogoManager {
                             .load(logoUrl)
                             .apply(new RequestOptions()
                                     .format(DecodeFormat.PREFER_ARGB_8888)
-                                    .override(DYNAMIC_BG_MAX_EDGE_PX, DYNAMIC_BG_MAX_EDGE_PX))
-                            .centerCrop()
+                                    .override(decode[0], decode[1])
+                                    .transform(fill
+                                            ? new com.bumptech.glide.load.resource.bitmap.CenterCrop()
+                                            : new com.bumptech.glide.load.resource.bitmap.FitCenter()))
                             .transition(DrawableTransitionOptions.withCrossFade())
                             .into(mDynamicBgTarget);
                 }
@@ -412,6 +460,7 @@ public class LogoManager {
      * Útil al cambiar de frecuencia para evitar persistencia.
      */
     public void clearLogo() {
+        if (!isActivityUsable()) return;
         mLastStationLogoUrl = null;
 
         // Layout V3: el logo de emisora no se muestra en ivMainLogo (GONE), pero Glide/ivDynamicBackground
@@ -446,7 +495,8 @@ public class LogoManager {
      * Encapsula la lógica de carga de logo de estación.
      */
     public void updateStationLogo(int freq, int band, String cachedUrl) {
-        final int logoGen = mActivity.mLogoUiGeneration.get();
+        if (!isActivityUsable()) return;
+        final int logoGen = mActivity.mRdsLogoTransition.logoUiGeneration.get();
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
         String bandCacheKey = band + "_" + freq;
 
@@ -620,10 +670,14 @@ public class LogoManager {
                 if (mActivity.isFinishing() || mActivity.isDestroyed()) return false;
                 if (mActivity.isV3LayoutActive() || iv == null) return false;
                 if (!isLogoRequestStillValid(logoGen, freq, band)) return true;
-                mActivity.runOnUiThread(() -> {
-                    if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
-                    if (!isLogoRequestStillValid(logoGen, freq, band)) return;
-                    applyFallbackLogo(iv);
+                // CRÍTICO (Glide): no se puede llamar a into()/clear() dentro de callbacks del listener.
+                // Post al main looper para ejecutar el fallback fuera de la pila de Glide.
+                MAIN_HANDLER.post(() -> {
+                    try {
+                        if (mActivity.isFinishing() || mActivity.isDestroyed()) return;
+                        if (!isLogoRequestStillValid(logoGen, freq, band)) return;
+                        applyFallbackLogo(iv);
+                    } catch (Exception ignored) {}
                 });
                 return true;
             }
@@ -640,7 +694,7 @@ public class LogoManager {
      * Evita aplicar logos de una petición obsoleta (QS6: AIDL + shadow; zapping rápido).
      */
     private boolean isLogoRequestStillValid(int logoGen, int freq, int band) {
-        if (logoGen != mActivity.mLogoUiGeneration.get()) {
+        if (logoGen != mActivity.mRdsLogoTransition.logoUiGeneration.get()) {
             return false;
         }
         if (mActivity.mEngine != null) {

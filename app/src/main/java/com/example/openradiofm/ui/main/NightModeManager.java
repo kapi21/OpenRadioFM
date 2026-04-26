@@ -131,7 +131,6 @@ public class NightModeManager {
         }
 
         // Iconos de estado y PTY
-        tintStereoIndicator(nightBlue);
         tintImageView(R.id.ivAfIcon, nightBlue);
         tintImageView(R.id.ivTaIcon, nightBlue);
         tintImageView(R.id.ivTpIcon, nightBlue);
@@ -182,6 +181,10 @@ public class NightModeManager {
                 }
             }
         }
+
+        if (mActivity instanceof MainActivity) {
+            ((MainActivity) mActivity).refreshStereoIndicatorUi(null);
+        }
     }
 
     /**
@@ -227,7 +230,6 @@ public class NightModeManager {
         TextView ivUnitLabel = mActivity.findViewById(R.id.ivUnitLabel);
         if (ivUnitLabel != null) ivUnitLabel.setTextColor(normalText);
 
-        clearStereoIndicator(normalText);
         clearImageViewFilter(R.id.ivAfIcon);
         clearImageViewFilter(R.id.ivTaIcon);
         clearImageViewFilter(R.id.ivTpIcon);
@@ -264,6 +266,10 @@ public class NightModeManager {
                  ((ImageView) ivView).clearColorFilter();
              }
         }
+
+        if (mActivity instanceof MainActivity) {
+            ((MainActivity) mActivity).refreshStereoIndicatorUi(null);
+        }
     }
 
     // --- Helpers privados ---
@@ -274,28 +280,6 @@ public class NightModeManager {
             ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) v, color, android.graphics.PorterDuff.Mode.SRC_IN);
         } else if (v instanceof ImageView) {
             ((ImageView) v).setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
-        }
-    }
-
-    private void tintStereoIndicator(int color) {
-        android.view.View v = mActivity.findViewById(R.id.ivStereoIcon);
-        if (v instanceof ImageView && mActivity instanceof MainActivity) {
-            ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) v, color, android.graphics.PorterDuff.Mode.SRC_IN);
-        } else if (v instanceof ImageView) {
-            ((ImageView) v).setColorFilter(color, android.graphics.PorterDuff.Mode.SRC_IN);
-        } else if (v instanceof TextView) {
-            ((TextView) v).setTextColor(color);
-        }
-    }
-
-    private void clearStereoIndicator(int normalTextColor) {
-        android.view.View v = mActivity.findViewById(R.id.ivStereoIcon);
-        if (v instanceof ImageView && mActivity instanceof MainActivity) {
-            ((MainActivity) mActivity).setColorFilterIfChanged((ImageView) v, null, null);
-        } else if (v instanceof ImageView) {
-            ((ImageView) v).clearColorFilter();
-        } else if (v instanceof TextView) {
-            ((TextView) v).setTextColor(normalTextColor);
         }
     }
 

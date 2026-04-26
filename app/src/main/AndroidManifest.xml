@@ -15,6 +15,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- QS6/NWD: espejo de freq/PS en Settings.System (opcional; requiere canWrite en M+). -->
+    <uses-permission android:name="android.permission.WRITE_SETTINGS" tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     
     <!-- V16: Permisos QS6/NWD para intentar eludir el error de apertura del socket /dev/audio-dsp -->
@@ -40,6 +42,10 @@
         <intent>
             <action android:name="com.jancar.services.action.radio" />
         </intent>
+
+        <!-- FYT/Teyes OEM Radio (com.syu.radio) + screenbutton -->
+        <package android:name="com.syu.radio" />
+        <package android:name="com.fyt.screenbutton" />
     </queries>
 
     <application
@@ -75,7 +81,6 @@
         <!-- V16: Radio Media Service for Android Auto / MediaSession -->
         <service android:name=".service.RadioMediaService"
             android:exported="true"
-            android:permission="android.permission.BIND_MEDIA_BROWSER_SERVICE"
             android:foregroundServiceType="mediaPlayback"
             tools:ignore="ExportedService">
             <intent-filter>
@@ -118,6 +123,48 @@
             </intent-filter>
         </receiver>
 
+        <!--
+          K706/QuickFish: el widget del launcher manda broadcasts "customize/radio/*" a la radio OEM.
+          IMPORTANTE: este intent-filter es crítico para el control desde el widget OEM.
+          Cambiar/limpiar acciones (pre/prev/previous/seek_*/mute/pause/close) puede romper el widget.
+          Antes de modificarlo, notificar al desarrollador y validar en hardware K706.
+        -->
+        <receiver
+            android:name=".receiver.OemRadioWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <!-- Variantes con "/" inicial -->
+                <action android:name="/customize/radio/pre" />
+                <action android:name="/customize/radio/prev" />
+                <action android:name="/customize/radio/previous" />
+                <action android:name="/customize/radio/next" />
+                <action android:name="/customize/radio/seek_up" />
+                <action android:name="/customize/radio/seek_down" />
+                <action android:name="/customize/radio/close" />
+                <action android:name="/customize/radio/mute" />
+                <action android:name="/customize/radio/pause" />
+                <!-- Variantes sin "/" inicial -->
+                <action android:name="customize/radio/pre" />
+                <action android:name="customize/radio/prev" />
+                <action android:name="customize/radio/previous" />
+                <action android:name="customize/radio/next" />
+                <action android:name="customize/radio/seek_up" />
+                <action android:name="customize/radio/seek_down" />
+                <action android:name="customize/radio/close" />
+                <action android:name="customize/radio/mute" />
+                <action android:name="customize/radio/pause" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Debug: ADB control for K706 MCU RDS toggles (shell-only) -->
+        <receiver
+            android:name=".receiver.K706McuDebugReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.example.openradiofm.K706_MCU_DEBUG" />
+            </intent-filter>
+        </receiver>
+
         <!-- V16.2: Radio Hijacker Service (Accessibility) -->
         <service android:name=".services.FactoryRadioHijackerService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
@@ -129,6 +176,16 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
+
+        <provider
+            android:name=".provider.RadioLogoFileProvider"
+            android:authorities="${applicationId}.radio_logo"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/radio_logo_file_paths" />
+        </provider>
 
     </application>
 

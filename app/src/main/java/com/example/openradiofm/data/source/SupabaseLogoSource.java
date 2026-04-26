@@ -202,14 +202,9 @@ public class SupabaseLogoSource {
                 }
             }
 
-            // 3. prioridad: Frecuencia (kHz)
-            String logoFreq = queryByFreq(freqKHz, country);
-            if (logoFreq != null) {
-                android.util.Log.d("SupabaseLogoSource", "FETCH SUCCESS (Freq): " + logoFreq);
-            } else {
-                android.util.Log.d("SupabaseLogoSource", "FETCH EMPTY: No logo found for this station.");
-            }
-            return logoFreq;
+            // Fallback por frecuencia+país eliminado: puede devolver la emisora equivocada.
+            android.util.Log.d("SupabaseLogoSource", "FETCH EMPTY: No logo found for this station.");
+            return null;
         } catch (Throwable e) {
             android.util.Log.e("SupabaseLogoSource", "FETCH ERROR", e);
             return null;
@@ -385,19 +380,6 @@ public class SupabaseLogoSource {
         } finally {
             notifyActivity(false);
         }
-        return null;
-    }
-
-    private String queryByFreq(int freq, String country) {
-        try {
-            // V19.4: Formatear frecuencia a String MHz (ej: 87.50) para coincidir con SQL
-            String freqStr = String.format(java.util.Locale.US, "%.2f", freq / 1000.0);
-            Call<List<SupabaseLogoResponse>> call = api.getLogosByFreq(apiKey, "Bearer " + apiKey, "eq." + freqStr, "eq." + country, "*");
-            Response<List<SupabaseLogoResponse>> res = call.execute();
-            if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                return res.body().get(0).getLogoUrl();
-            }
-        } catch (Exception ignored) {}
         return null;
     }
 

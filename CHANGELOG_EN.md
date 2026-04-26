@@ -4,9 +4,89 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 
 ---
 
-## [Unreleased]
+## [Unreleased] - MCU2
 
-*(empty; last documented release: **5.1.3** — see below.)*
+### K706 Root Edition (`K706_Root` branch, April 2026)
+- **Magisk (`magisk/K706_Root/`)**: **systemless overlay** `system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk` with a trampoline APK (`:stub-fmradio`: `FmMainActivity` → OpenRadioFM, stub `FmService` for `IFmRadioService`); `service.sh` **`pm enable`s** the package (required for the launcher’s explicit `ComponentName`). Still patches OEM strings in `shared_prefs`; `SKIPMOUNT=false`; `build_k706_root_zip.bat` builds the stub and packs the ZIP.
+- **Magisk — Windows build**: `magisk/build_k706_root_zip.bat` forces **LF** line endings before zipping; `.gitattributes` sets `eol=lf` under `magisk/`.
+- **K706 / OEM widget**: `com.qf.radio.update_action` is also sent to the **resolved HOME package** (e.g. `com.android.launcher.gradient.black`), in addition to `movablecell` and `com.android.auto.autohome` (`K706Engine`, `WidgetBroadcastManager`). **Fix:** a `SecurityException` on one target no longer aborts the whole loop (avoids widgets stuck with `radioStartup=false`).
+- **`LauncherIntentUtils`**: moved to `com.example.openradiofm.util` for engine use.
+- **Logos / Glide**: avoid crash on failed logo load by posting fallback onto the main `Handler` outside Glide’s `RequestListener` callback.
+- **Docs**: `HANDOFF_K706_ROOT.md` (handoff, short roadmap, ADB). See also `K706_ROOT_CHECKLIST.md` and `magisk/K706_Root/README_K706_ROOT_MAGISK.md`.
+- **Open (Apr 2026):** module **installation** failing on test device (Magisk App and/or installer); use `build_k706_root_zip.bat` output, try ADB `magisk --install-module`, see `HANDOFF_K706_ROOT.md` (*Para mañana*). **Level A** in-app root assistant still per checklist.
+
+### FYT / Teyes — OEM intent-based engine (April 2026)
+- **`FYTOemEngine`**: new **FYT/OEM** engine (package `com.syu.radio`) with no root/AIDL: `tune` via deep‑link `radio://tune?freq=…` and **Prev/Next** via `startService` to `com.syu.broadcast.MyService` (`com.syu.radio.prevservice/nextservice`). Includes auto-detection in `RadioServiceController` (uses `sys.fyt.platform` when available).
+
+### QS6 / NWD — cold start, rebind & stability (April 2026)
+- **`QS6Engine`**: post‑reboot *warm-up rebind*: if no RX arrives within ~2.2s (callbacks/settings), retry `connect()` and force a `pollNwdSettingsAndFire()` so state is picked up without opening the OEM radio UI.
+- **`NWDTunerAdapter`**: AIDL reconnect with **backoff**, explicit `startService()` warm-up (no UI), and `linkToDeath` so a dead binder (or callback registration failures) triggers an automatic re-bind.
+
+### Launchers / MediaSession — initial metadata (April 2026)
+- **`RadioMediaService`**: delayed **initial metadata publish** on startup (avoids “session is there but metadata=null” in launchers such as Agama) and expanded artwork-grant allowlist for common car launchers.
+
+### UI — smoother seek/scan + station rename (April 2026)
+- **`MainActivity` / `ScanManager`**: UI‑only “optimistic” frequency ticker while `seekUp/seekDown` and during scanning; automatically stops when the real tuned frequency arrives or scanning ends.
+- **`DialogManager`**: new **Edit station name** dialog (save / restore original) with immediate UI+preset refresh and logo cache invalidation.
+
+### Startup performance (April 2026)
+- **`MainActivityBootstrap`**: defer heavy work (fonts, icon pack, `MediaSessionManager.connect`, media receiver registration, and late bootstrap phase) to the next UI tick to reduce “Skipped frames” on some head units.
+
+### QS6 / NWD — RDS, System mirror & OEM loops (April 2026)
+- **Field workaround**: if RDS/tuner state drifts from NWD firmware expectations, **confirmed approach** is to align RDS (and related OEM toggles) via the **head unit’s native radio settings** while app/KernelService paths mature. See `README.md` (*Known issues*) and `QS6_MCU_KERNELSERVICE_INFORME.md`.
+- **`QS6Engine`**: during **slow AutoScan**, **AIDL** is preferred for `tune`/`seek` (`setAutoScanOemPreferred`, wired from `ScanManager`); outside AutoScan, **MCU-first** remains where applicable. Clears **RT** when frequency/band changes on AIDL callbacks. Optional `Settings.System` mirror guarded by `canWrite` (M+) with a **single warning** if write permission is missing.
+- **`MainActivity`**: **~280 ms coalescing** of heavy `handleFrequencyChange` work to damp OEM callback/broadcast bursts (unstable frequency, stuck PS).
+- **`WidgetBroadcastManager`**: **~320 ms coalescing** in `sendUpdate` against fast launcher/HAL re-injection.
+- **`StatusRefreshCoordinator`**: **RDS reset**, logo clear, and **MHz UI refresh** run **before** enqueueing `getStationInfo` on the background executor (fixes racing the old PS back onto the frequency line after zapping).
+- **`RadioRepository`**: **`pickBestSupabaseRow`** when the API returns multiple `ps_name` matches; **frequency+country fallback** if custom/PI/ps_name returned nothing; safer frequency parsing on Supabase rows (MHz vs kHz).
+- **`MT8163Engine`**: post-streaming HCN reconnect goes through **`ACTION_MT8163_FM_HANDOFF`** plus delayed bind (**~550 ms**), waiting out the OEM block window when needed; avoids competing with `MainActivity` and ROM `forceStop` edge cases.
+- **`MainActivity` / MT8163**: removed `mHcnPostStreamReconnectRunnable`; the post-streaming window is owned by the engine.
+- **`AndroidManifest`**: optional `WRITE_SETTINGS` (with `tools:ignore`) for the QS6 `Settings.System` mirror.
+
+### MT8163 / HCN — Agama launcher & MediaSession (April 2026)
+- **Shared engine with `RadioMediaService`**: after the HCN bind in `MainActivity`, `MT8163Engine` is registered in `RadioServiceController`; the service calls `start()` only to deliver `onEngineReady` **without** a second `bindService` to `com.hcn.autoradio` (avoids force-stop on some OEM ROMs).
+- **External controls**: seek / preset from launchers such as **Agama** (and the media session) get a non-null `mEngine` instead of being no-ops.
+- **`MT8163Engine.getCallback()`**: composite callback with the UI (same pattern as K706/QS6).
+- **`release(false)`**: calls `clearSharedLocalEngineIfSame` when tearing down the engine.
+- **Limitation**: if the app has never been opened in that session, there is no shared engine yet; the widget/session stays inactive until that first bind (by design).
+
+### K706 / Android Auto + Spotify + on-device diagnostics (Z-Link; follow-up TBD)
+- **`RadioActivityFileLogger`**: stable file log (`commit` for filename and flag); periodic **`TICK`** heartbeat; optional **`logcat -d`** dump from K706 engineering UI. `LifecycleCoordinator` feeds **`uiResumed`** into ticks.
+- **Engineering menus**: file-log toggle relies on **`onToggleChanged`** only (no duplicate `apply`). K706: logcat dump button + i18n key **`eng_dev_logcat_dump_button`**.
+- **`K706RadioManager`**: **`LOSS_TRANSIENT`** treats AA voice as not GSM (`VOICE_SESSION_AA_OR_TTS`); playback reflection / `APLAY_*` / `AUDIO_FOCUS` logging; weak ref for TICK snapshots.
+- **Focus vs `getCurrentFreq` race**: on real **`AUDIOFOCUS_LOSS`**, clear **`mIsAudioFocusHeld`** and **`mAllowImplicitFmRecoverFromPoll`** at the **start** of the `try` (before MCU work) so Binder threads do not “recover” with stale `held=true`.
+- **Spotify / AA**: if channel is **4** and **`isMusicActive()`** or mux competition, do not force FM; optionally sync logical focus. **`getCurrentFreq`** polls **`checkAndRecoverAudio`** whenever **`mUserWantsFmAudio`** so FM can resume when external media stops without relying only on **`AUDIOFOCUS_GAIN`**. Heartbeat uses **`enforceAudioChannelRecovery()`** instead of naked **`SetChannel(2)`**.
+- **`K706Engine.switchToFmAudio`**: calls **`requestPlayAudio()`** for a full FM sequence when returning from UI.
+- **Still open (tracked for later)**: closer match to **QS6-style ducking** (AA prompts without harsh permanent LOSS); validate on K706+Z-Link with `RadioLogos` logs. **MT8163/QS6** remain a different stack (HAL/AIDL vs MCU mux).
+
+### K706 / Android Auto & navigation voice (Zlink)
+- **`K706RadioManager`**: “Glitch protect” that re-armed FM after `AUDIOFOCUS_LOSS` / `LOSS_TRANSIENT` is **skipped** when `AudioManager.isMusicActive()` (Maps TTS / another app is playing), matching OEM behavior (yield mux). **`mAutoRecoveryRunnable`** now calls `requestAudioFocus(false)` so it **does not** extend the 2.5s anti-LOSS window (which kept fighting guidance audio).
+- **`RadioMediaService`**: on OEM broadcast **`EVENT_LOSS_TRANSIENT`**, **do not** call `refreshSteeringMediaSessionAndForeground()` (it forced PLAYING+FGS and focus while navigation wanted the channel).
+
+### K706 / shared engine & AutoScan UI
+- **`CompositeRadioEngineCallback`**: forwards **`onHwAutomationEvent`** to both delegates (hardware automation events are no longer dropped when UI + service share the engine).
+- **K706 selective scan dialog**: on dismiss, restores the **previous** `RadioEngineCallback` (e.g. `Composite` UI + `RadioMediaService`) instead of only the coordinator.
+- **AutoScan icon**: after slow preset overwrite scan, the MCU can emit spurious `onScanStatusChanged(true)` and restart rotation; UI now **filters** that for ~2.2s after slow autoscan completion (`adjustEngineScanningForAutoScanUi`), **`stopAutoScanAnimation`** is hardened (`animate().cancel()`, `clearAnimation()`, `rotation=0`), and **`LifecycleCoordinator.onResume`** uses the same rule.
+
+### K706 / audio recovery
+- **Fewer FM micro-dropouts (K706)**: when `RPC_GetChannel` already reports **FM (2)**, `enforceAudioChannelRecovery()` skips the full ritual that started with `setMute(true)` (it collided with `PlaybackManager.setMute(false)` → `enforceAudioRecovery`). `startFmAudioSequence(fast)` skips the leading mute when the channel is already 2. A real **4→2** route change still runs the full sequence when needed.
+- **Future review**: if a click remains on **mux 4→2** after BT/QF stack events, consider **debouncing** or a **grace window** after `abandonCustomAudioFocus` before forcing `SetChannel(2)` (trade-off: slower recovery).
+
+### UI / dynamic background
+- **`ivDynamicBackground`**: **fitCenter** in default and `sw720dp` layouts; `LogoManager` decodes to screen size (cap **1600 px** on the long edge) and uses Glide **fitCenter** to avoid centerCrop-style clipping.
+
+### Version (MCU2)
+- `versionCode` **39**, `versionName` **5.1.7**.
+
+---
+
+## [5.2.0] - 2026-04-12
+### QS6 (Nowada) Critical Stabilization
+- **Master Mode (Independence)**: Direct writes to `Settings.System` (`nwd_radio_current_freq`, `ps_data`) to sync the MCU without needing the native app.
+- **Clean Teardown**: `ACTION_EXIT_ARM_FM_RAIDO` signal implemented to force audio stop on app close.
+- **Mute Fix (Stabilized)**: Resolved issue where Mute failed due to MCU interference. Silence is now guaranteed by forcing `SOURCE_ANDROID` and disabling the radio backup service in `Settings.System` (`KEY_NWD_RADIO_BACK_SERVICE_ON`), ensuring the FM audio channel remains closed until Unmute.
+- **System Sync**: Immediate update of Nowada registry keys on source change, preventing the system from unexpectedly reverting the audio state.
+- **Lifecycle Management**: `RadioMediaService.onDestroy` sync with `QS6Engine.release` to free hardware.
 
 ---
 
@@ -130,6 +210,9 @@ Spanish version: [`CHANGELOG.md`](CHANGELOG.md)
 - **Dialogs aligned with premium / AutoScan styling**: grid selector (`dialog_language_selector`), `.fav` file picker when loading favorites (`dialog_favorites_file_picker`), station history (`dialog_station_history`); dark frame, **active skin** card, user typography, red **Cancel** on lists; `item_fav_file_row` / `item_language` cells.
 - **Localized layouts**: `dialog_save_load`, `dialog_credits`, `dialog_selective_scan`, and scan rows wired to `@string/`.
 - **Build / Supabase**: credentials via `SUPABASE_URL` and `SUPABASE_ANON_KEY` in root `local.properties`, environment variables, or Gradle `-P` (no defaults committed). `BuildConfig` exposes URL, anon key, and public Storage base URL. Template `local.properties.example`; see [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
+
+### Fixed
+- **Build / Supabase**: sanitize `SUPABASE_URL` (fixes escaped values like `https\\://...` breaking Retrofit/OkHttp).
 - **Supabase community (data quality)**: centralized quality gate (`isAcceptableForCloudUpsert`, `sanitizePsForCloudUpsert`, PS rules); `CloudContributionGuard` — skip contribution while scanning or ~1.75s after a frequency change; PS must be stable ~4s before upload. `CloudContributionGuard.java`, `RadioRepository`, `MainActivity`, `SupabaseLogoSource`.
 
 ### Changed

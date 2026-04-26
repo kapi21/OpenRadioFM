@@ -122,6 +122,16 @@ public class MTK8259_8667Engine implements RadioEngine {
     }
 
     @Override
+    public void setBand(int band) {
+        if (mManager != null) {
+            try {
+                mManager.setBand(band);
+                if (mCallback != null) mCallback.onBandChanged(band);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
     public void tune(int freqKhz) {
         if (mManager == null) return;
         try {

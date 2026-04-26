@@ -24,6 +24,11 @@
     <string name="bg_pure_black">ピュアブラック</string>
     <string name="bg_fixed_image">固定画像 (background.png)</string>
     <string name="bg_dynamic_logo">放送局ロゴ (動的)</string>
+    <string name="dynamic_bg_aspect_title">動的背景の表示モード</string>
+    <string name="dynamic_bg_aspect_letterbox">レターボックス（トリミングなし）</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9（全体を埋める・トリミング）</string>
+    <string name="toast_dynamic_bg_letterbox">動的背景：レターボックス（トリミングなし）</string>
+    <string name="toast_dynamic_bg_fill_16_9">動的背景：16:9（全体を埋める・トリミング）</string>
     <string name="font_default">デフォルト (システム)</string>
     <string name="font_bebas">ロボット (Bebas)</string>
     <string name="font_digital">デジタル (LED)</string>
@@ -34,6 +39,10 @@
     <string name="night_mode_auto">自動夜間モード</string>
     <string name="relief_hd">HDレリーフ</string>
     <string name="save_history">履歴を保存</string>
+    <string name="save_history_summary_on">局の履歴を保存します。RDS名をタップするなどして一覧を開けます。</string>
+    <string name="save_history_summary_off">オフ：保存せず、履歴ダイアログも表示しません。</string>
+    <string name="toast_history_save_disabled">一覧を表示するには設定で「履歴を保存」をオンにしてください。</string>
+    <string name="hardware_automation_section_header">（ハードウェア自動化）（試験中）</string>
     <string name="enable_gestures_beta">ジェスチャー (Swipe) を有効にする (ベータ)</string>
     <string name="online_logos">オンラインロゴ</string>
 
@@ -68,7 +77,7 @@
     <string name="logos_online_disabled">❌ オンラインロゴを無効にしました</string>
     <string name="under_study">検討中</string>
     <string name="night_mode_manual_blocked">手動でスキンを選択するには、自動夜間モードを無効にしてください</string>
-    <string name="auto_hide_controls">コントロールの自動非表示</string>
+    <string name="auto_hide_controls">コントロールの自動非表示（レイアウト3・横）</string>
     <string name="auto_hide_enabled">✅ 自動非表示を有効にしました</string>
     <string name="auto_hide_disabled">❌ 自動非表示を無効にしました</string>
     <string name="preset_scroll_loop_title">プリセットのループスクロール</string>
@@ -226,7 +235,7 @@
     <string name="about_info_header">情報</string>
     <string name="about_dev_by">開発者</string>
     <string name="about_tech_details">技術詳細</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
     <string name="a11y_hihack_title">HiHack（ユーザー補助）</string>
     <string name="a11y_hihack_enabled">有効</string>
@@ -255,7 +264,7 @@
     <string name="widget_next_preset">次のプリセット</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">プリセットの上書き</string>
-    <string name="autoscan_confirm_message">この AutoScan は現在のバンドのプリセット 1〜18 を消去し、検出した局で埋め直します。\n\nスキャンを開始しますか？</string>
+    <string name="autoscan_confirm_message">この AutoScan は常に FM1 から開始します。まず FM1 のプリセット 1〜18 を消去して再登録します（必要なら FM1 に切り替えます）。18 局登録後は FM2/FM3 に続行できます。\n\nスキャンを開始しますか？</string>
     <string name="autoscan_confirm_start">スキャン開始</string>
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
@@ -337,6 +346,7 @@
     <string name="eng_dev_file_log_profile_basic">基本</string>
     <string name="eng_dev_file_log_profile_medium">中</string>
     <string name="eng_dev_file_log_profile_full">完全</string>
+    <string name="eng_dev_logcat_dump_button">DEV: logcat バッファを RadioLogos に保存</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -357,20 +367,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">イコライザーは利用できません（ラジオエンジンが未起動）</string>
+    <string name="toast_radio_engine_not_started">ラジオエンジンが起動していません</string>
+    <string name="toast_no_gps_app">地図/GPS アプリが見つかりません</string>
+    <string name="toast_basic_no_engineering">基本モード：エンジニアリングメニューは利用できません</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_stopped">AutoScan を停止しました</string>
+    <string name="toast_autoscan_slow">FM1 からのスロー AutoScan：局を検索中…（もう一度タップで停止）</string>
+    <string name="toast_autoscan_start_failed">AutoScan を開始できませんでした</string>
+    <string name="toast_autoscan_finished">AutoScan 完了（プリセット %1$d 件）</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · プリセット 1–18</string>
+    <string name="toast_presets_overwritten">プリセットを上書きしました（%1$d 局）。</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">標準モードに戻ります…</string>
+    <string name="toast_recovering_fm_audio">FM オーディオを復旧中…</string>
+    <string name="toast_hw_eq_unsupported">この端末ではハードウェア EQ に対応していません</string>
+    <string name="toast_saved_to_slot">プリセット %1$d に保存しました</string>
 </resources>

@@ -24,6 +24,11 @@
     <string name="bg_pure_black">Чистий Чорний</string>
     <string name="bg_fixed_image">Зображення background.png</string>
     <string name="bg_dynamic_logo">Логотип Станції (Динамічний)</string>
+    <string name="dynamic_bg_aspect_title">Кадрування динамічного фону</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (без обрізки)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (заповнити, обрізає)</string>
+    <string name="toast_dynamic_bg_letterbox">Динамічний фон: letterbox (без обрізки)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Динамічний фон: 16:9 (заповнити, обрізає)</string>
     <string name="font_default">За замовчуванням (Система)</string>
     <string name="font_bebas">Роботизований (Bebas)</string>
     <string name="font_digital">Цифровий (LED)</string>
@@ -34,6 +39,10 @@
     <string name="night_mode_auto">Автоматичний Нічний Режим</string>
     <string name="relief_hd">HD рельєф</string>
     <string name="save_history">Зберегти Історію Станцій</string>
+    <string name="save_history_summary_on">Станції зберігаються; список можна відкрити (наприклад, натисніть ім’я RDS).</string>
+    <string name="save_history_summary_off">Вимкнено: історія не ведеться, діалог не показується.</string>
+    <string name="toast_history_save_disabled">Увімкніть «Зберегти історію станцій» у параметрах, щоб відкрити список.</string>
+    <string name="hardware_automation_section_header">(Апаратна автоматизація) (на тестуванні)</string>
     <string name="enable_gestures_beta">Увімкнути Жести (Swipe) (beta)</string>
     <string name="online_logos">Логотипи Онлайн</string>
 
@@ -68,7 +77,7 @@
     <string name="logos_online_disabled">❌ Онлайн логотипи вимкнено</string>
     <string name="under_study">На вивченні</string>
     <string name="night_mode_manual_blocked">Вимкніть автоматичний нічний режим, щоб вибрати тему вручну</string>
-    <string name="auto_hide_controls">Автоматичне приховування керування</string>
+    <string name="auto_hide_controls">Автоматичне приховування керування (layout 3 горизонтальний)</string>
     <string name="auto_hide_enabled">✅ Авто-приховування увімкнено</string>
     <string name="auto_hide_disabled">❌ Авто-приховування вимкнено</string>
     <string name="preset_scroll_loop_title">Нескінченна прокрутка пресетів</string>
@@ -228,7 +237,7 @@
     <string name="about_info_header">ІНФОРМАЦІЯ</string>
     <string name="about_dev_by">Розроблено</string>
     <string name="about_tech_details">Технічні деталі</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
     <string name="a11y_hihack_title">HiHack (Доступність)</string>
     <string name="a11y_hihack_enabled">Увімкнено</string>
@@ -255,7 +264,7 @@
     <string name="widget_next_preset">Наступний пресет</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">ПЕРЕЗАПИС ПРИСЕТІВ</string>
-    <string name="autoscan_confirm_message">Цей AutoScan очистить і заповнить комірки 1–18 поточного діапазону знайденими станціями.\n\nПочати сканування?</string>
+    <string name="autoscan_confirm_message">Цей AutoScan завжди починається з FM1: спочатку очищає й заповнює комірки 1–18 на FM1 (за потреби тюнер перемкнеться на FM1). Далі може продовжити на FM2/FM3 після 18 станцій.\n\nПочати сканування?</string>
     <string name="autoscan_confirm_start">Почати сканування</string>
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
@@ -337,6 +346,7 @@
     <string name="eng_dev_file_log_profile_basic">БАЗОВИЙ</string>
     <string name="eng_dev_file_log_profile_medium">СЕРЕДНІЙ</string>
     <string name="eng_dev_file_log_profile_full">ПОВНИЙ</string>
+    <string name="eng_dev_logcat_dump_button">DEV: скинути буфер logcat у RadioLogos</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -357,20 +367,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Еквалайзер недоступний (радіорушій не запущено)</string>
+    <string name="toast_radio_engine_not_started">Радіорушій не запущено</string>
+    <string name="toast_no_gps_app">Не знайдено застосунку карт/GPS</string>
+    <string name="toast_basic_no_engineering">Базовий режим: інженерне меню недоступне</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_stopped">AutoScan зупинено</string>
+    <string name="toast_autoscan_slow">Повільний AutoScan з FM1: пошук станцій… (торкніться ще раз, щоб зупинити)</string>
+    <string name="toast_autoscan_start_failed">Не вдалося запустити AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan завершено (%1$d пресетів)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · пресети 1–18</string>
+    <string name="toast_presets_overwritten">Пресети перезаписано (%1$d станцій).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Повернення до стандартного режиму…</string>
+    <string name="toast_recovering_fm_audio">Відновлення FM-аудіо…</string>
+    <string name="toast_hw_eq_unsupported">Апаратний EQ не підтримується на цьому пристрої</string>
+    <string name="toast_saved_to_slot">Збережено в пресет %1$d</string>
 </resources>

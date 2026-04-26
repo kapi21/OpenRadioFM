@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Carga números 1..18 desde assets (SVG) para el indicador de favorito.
  *
- * Ficheros esperados (en raíz de assets): number-1-small.svg ... number-18-small.svg
+ * Ficheros esperados: icons_numbers/number-1-small.svg ... icons_numbers/number-18-small.svg
  */
 public class PresetNumberIconManager {
     private final Context mContext;
@@ -36,7 +36,7 @@ public class PresetNumberIconManager {
 
     public Drawable loadNumberSmallSvg(int presetIdx) {
         if (presetIdx < 1 || presetIdx > 18) return null;
-        String assetFileName = "number-" + presetIdx + "-small.svg";
+        String assetFileName = "icons_numbers/number-" + presetIdx + "-small.svg";
         Drawable fromCache = mCache.get(assetFileName);
         if (fromCache != null) return fromCache;
 
@@ -54,7 +54,26 @@ public class PresetNumberIconManager {
             mCache.put(assetFileName, bd);
             return bd;
         } catch (Exception ignored) {
-            return null;
+            // fallback compat: assets en raíz (sourceSets con ../icons_numbers)
+            String rootName = "number-" + presetIdx + "-small.svg";
+            Drawable fromCache2 = mCache.get(rootName);
+            if (fromCache2 != null) return fromCache2;
+            try (InputStream is2 = mAssets.open(rootName)) {
+                SVG svg = SVG.getFromInputStream(is2);
+                Picture picture = svg.renderToPicture();
+                float density = mContext.getResources().getDisplayMetrics().density;
+                int sizePx = Math.max(1, Math.round(56f * density));
+                Bitmap bmp = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888);
+                Canvas canvas = new Canvas(bmp);
+                canvas.drawPicture(picture, new RectF(0, 0, sizePx, sizePx));
+                normalizeSvgRasterToWhiteTemplate(bmp);
+                BitmapDrawable bd = new BitmapDrawable(mContext.getResources(), bmp);
+                bd.setTargetDensity(mContext.getResources().getDisplayMetrics());
+                mCache.put(rootName, bd);
+                return bd;
+            } catch (Exception ignored2) {
+                return null;
+            }
         }
     }
 

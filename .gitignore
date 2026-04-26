@@ -16,6 +16,7 @@
 # === Build outputs ===
 /build/
 /app/build/
+/stub-fmradio/build/
 /app/release/
 /captures/
 .externalNativeBuild/
@@ -24,6 +25,8 @@ local.properties
 local.properties.bak
 
 # === Depuración, Logs y Herramientas (LOCAL - NO SUBIR) ===
+# APK/dumps de ingeniería inversa vía ADB (no versionar)
+_artifacts/
 _DEBUG/
 _BUILD_LOGS/
 _BACKUPS/
@@ -45,6 +48,8 @@ radiobrowser_stations_*.json
 _DOCS/*
 !_DOCS/manual_*.md
 !_DOCS/manual_usuario.md
+!_DOCS/INFORME_K706_MANDOS_Y_WIDGET.md
+!_DOCS/PLAN_REFACTOR_5.2.0_MCU.md
 
 # docs/ (web + imágenes del README): subir solo lo mínimo
 docs/**
@@ -89,6 +94,9 @@ _RELEASES/
 radio_native_decompiled/
 docs/QS6_Integration/
 
+# === Artefactos locales de otras apps de radio (no versionar ni subir) ===
+_navradio_pull/
+
 # === Certificados de firma (SEGURIDAD) ===
 platform.pk8
 platform.x509.pem
@@ -101,14 +109,24 @@ _ASSETS/
 _tools/
 tools/
 scripts/
-icons_*/
-Icons_lucide/
+# Icon packs (compilación): NO ignorar.
+# En el pasado se perdieron en builds/commits por esta regla.
+# Carpetas esperadas: icons_numbers, icons_color, icons_google, Icons_lucide, icons_remix, icons_awesome, icons_tabler
+#
+# Nota: la ubicación canónica para compilar debe ser `app/src/main/assets/icons_*`.
+# Si existen copias en la raíz del repo, se ignoran para evitar duplicados en Git/APK.
+/icons_*/
+/Icons_lucide/
 logo.png
 !docs/editor/logo.png
 !docs/editor/README.md
 *.lnk
 *.fav
 *copia*
+photo_*.jpg
+photo_*.png
+magisk/**/*.zip
+_tmp_magisk/
 
 # === Configuración de Cursor (LOCAL) ===
 .cursor/

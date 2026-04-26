@@ -167,6 +167,446 @@
                     android:backgroundTint="#222200" />
             </LinearLayout>
 
+            <!-- QS6: KernelService MCU (experimental) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#3322AAFF"
+                android:padding="4dp"
+                android:text="[ QS6_MCU_KERNELSERVICE (EXPERIMENTAL) ]"
+                android:textColor="#88CCFF"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="8dp">
+
+                <TextView android:text="KERNEL_BIND" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6KernelBind" android:text="DISCONNECTED" style="@style/EngValueStyle"/>
+
+                <TextView android:text="LAST_MCU_CMD" style="@style/EngLabelStyle"/>
+                <TextView android:id="@+id/tvQs6KernelLastCmd" android:text="-" style="@style/EngValueStyle"/>
+            </GridLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="4dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelBind"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="BIND_KERNEL"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelInfo"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="RADIO_INFO"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelBackOn"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="BACK_ON"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelBackOff"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="BACK_OFF"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelSeekDown"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="STEP_0.5 &lt;&lt;"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelSeekUp"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="STEP_0.5 &gt;&gt;"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelSearchDown"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="SEEK_STN &lt;&lt;"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelSearchUp"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="SEEK_STN &gt;&gt;"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelBand"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="BAND_CYC"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelAms"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="AMS (FUERTE)"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelTune875"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="TUNE 87.5"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelTune1015"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="TUNE 101.5"
+                    android:textSize="11sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelIntro"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="INTRO"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelNearDx"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="NEAR_DX"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelNearLoc"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="NEAR_LOC"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelRdsShow"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="RDS_SHOW"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelRds0"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="RDS=0"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelRds7"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="RDS=7"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelRdsXor1"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="RDS^1"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelRdsXor2"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="RDS^2"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelRdsXor4"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="RDS^4"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/btnQs6KernelPtyDown"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="PTY &lt;&lt;"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelPtyUp"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="PTY &gt;&gt;"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933"
+                    android:layout_marginEnd="4dp" />
+
+                <Button
+                    android:id="@+id/btnQs6KernelSaveP1"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_weight="1"
+                    android:text="SAVE_P1"
+                    android:textSize="10sp"
+                    android:textColor="#88CCFF"
+                    android:backgroundTint="#001933" />
+            </LinearLayout>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:columnCount="4"
+                android:padding="2dp">
+
+                <Button android:id="@+id/btnQs6KernelSaveP2" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P2" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP3" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P3" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP4" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P4" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP5" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P5" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+
+                <Button android:id="@+id/btnQs6KernelSaveP6" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P6" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP7" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P7" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP8" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P8" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP9" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P9" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+
+                <Button android:id="@+id/btnQs6KernelSaveP10" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P10" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP11" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P11" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP12" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P12" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP13" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P13" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+
+                <Button android:id="@+id/btnQs6KernelSaveP14" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P14" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP15" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P15" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSaveP16" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="P16" android:textSize="10sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+                <Button android:id="@+id/btnQs6KernelSavePAll" android:layout_width="0dp" android:layout_height="36dp" android:layout_columnWeight="1" android:text="SAVE_ALL" android:textSize="9sp" android:textColor="#88CCFF" android:backgroundTint="#001933"/>
+            </GridLayout>
+
+            <!-- AIDL RadioFeature (NWD) - para sustituir app nativa -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:background="#3344FF88"
+                android:padding="4dp"
+                android:text="[ QS6_RADIOFEATURE_AIDL (TEST) ]"
+                android:textColor="#88FF88"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:fontFamily="monospace"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+                <Button android:id="@+id/btnQs6AidlRefresh" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:text="AIDL_REFRESH" android:textSize="10sp" android:textColor="#88FF88" android:backgroundTint="#002211" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnQs6AidlIntro" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:text="AIDL_INTRO" android:textSize="10sp" android:textColor="#88FF88" android:backgroundTint="#002211"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+                <Button android:id="@+id/btnQs6AidlStereoOn" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:text="STEREO_ON" android:textSize="10sp" android:textColor="#88FF88" android:backgroundTint="#002211" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnQs6AidlStereoOff" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:text="STEREO_OFF" android:textSize="10sp" android:textColor="#88FF88" android:backgroundTint="#002211"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+                <Button android:id="@+id/btnQs6AidlPrefPrev" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:text="PREFEB &lt;&lt;" android:textSize="10sp" android:textColor="#88FF88" android:backgroundTint="#002211" android:layout_marginEnd="4dp"/>
+                <Button android:id="@+id/btnQs6AidlPrefNext" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:text="PREFEB &gt;&gt;" android:textSize="10sp" android:textColor="#88FF88" android:backgroundTint="#002211"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="6dp"
+                android:gravity="center">
+                <Button android:id="@+id/btnQs6ShadowStopSearch" android:layout_width="0dp" android:layout_height="40dp" android:layout_weight="1" android:text="STOP_SEARCH" android:textSize="10sp" android:textColor="#FFFFAA" android:backgroundTint="#222200"/>
+            </LinearLayout>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

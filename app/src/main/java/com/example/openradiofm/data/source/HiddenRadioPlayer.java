@@ -26,6 +26,8 @@ public class HiddenRadioPlayer {
 
     private Object mRadioPlayerInstance;
     private Listener mClientListener;
+    /** Cache de clase BAND para evitar reflexión repetida. */
+    private Class<?> mBandEnumClass;
 
     public interface Listener {
         void onRdsText(String text);
@@ -60,6 +62,11 @@ public class HiddenRadioPlayer {
         try {
             Class<?> radioPlayerClass = Class.forName(CLASS_RADIO_PLAYER);
             Class<?> listenerInterface = Class.forName(CLASS_LISTENER);
+            try {
+                mBandEnumClass = Class.forName("android.radio.RadioPlayer$BAND");
+            } catch (Exception ignored) {
+                mBandEnumClass = null;
+            }
 
             Method getInstanceMethod = radioPlayerClass.getMethod("getRadioPlayer");
             mRadioPlayerInstance = getInstanceMethod.invoke(null);
@@ -94,6 +101,254 @@ public class HiddenRadioPlayer {
         } catch (Exception e) {
             Log.e(TAG, "Fallo al iniciar HiddenRadioPlayer", e);
             return false;
+        }
+    }
+
+    // =============================================================================================
+    // Control “directo” (MCU a través del framework RadioPlayer)
+    // =============================================================================================
+
+    private Object safeGetUiBand() {
+        if (mRadioPlayerInstance == null) return null;
+        try {
+            Method m = mRadioPlayerInstance.getClass().getMethod("getUiband");
+            return m.invoke(mRadioPlayerInstance);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public String getUiBandName() {
+        Object band = safeGetUiBand();
+        return band != null ? band.toString() : null;
+    }
+
+    private Object getBandEnumByName(String name) {
+        if (name == null) return null;
+        try {
+            Class<?> cls = (mBandEnumClass != null) ? mBandEnumClass : Class.forName("android.radio.RadioPlayer$BAND");
+            @SuppressWarnings("unchecked")
+            Object v = java.lang.Enum.valueOf((Class<? extends Enum>) cls, name);
+            return v;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    /**
+     * Cambia banda (UI band) manteniendo la frecuencia actual (si se conoce).
+     * Usa setUibandIndexFreq(BAND, -1, currentFreq).
+     */
+    public boolean setUiBandKeepFreq(String bandName, Integer currentFreqKhz) {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Object band = getBandEnumByName(bandName);
+            if (band == null) return false;
+            int freq = (currentFreqKhz != null && currentFreqKhz > 0) ? currentFreqKhz : 87500;
+            Method m = mRadioPlayerInstance.getClass().getMethod(
+                    "setUibandIndexFreq",
+                    band.getClass(),
+                    int.class,
+                    int.class
+            );
+            m.invoke(mRadioPlayerInstance, band, -1, freq);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "setUiBandKeepFreq failed", e);
+            return false;
+        }
+    }
+
+    /** Sintoniza frecuencia (kHz) usando setUibandIndexFreq(BAND, index, freq). */
+    public boolean tune(int freqKhz) {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Object band = safeGetUiBand();
+            if (band == null) return false;
+            Method m = mRadioPlayerInstance.getClass().getMethod(
+                    "setUibandIndexFreq",
+                    band.getClass(),
+                    int.class,
+                    int.class
+            );
+            // index=-1: “sin preset”
+            m.invoke(mRadioPlayerInstance, band, -1, freqKhz);
+            Log.d(TAG, "tune(" + freqKhz + "kHz) via RadioPlayer.setUibandIndexFreq");
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "tune failed", e);
+            return false;
+        }
+    }
+
+    public boolean seekUp() {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Object band = safeGetUiBand();
+            if (band == null) return false;
+            Method m = mRadioPlayerInstance.getClass().getMethod("seekUp", band.getClass());
+            m.invoke(mRadioPlayerInstance, band);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "seekUp failed", e);
+            return false;
+        }
+    }
+
+    public boolean seekDown() {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Object band = safeGetUiBand();
+            if (band == null) return false;
+            Method m = mRadioPlayerInstance.getClass().getMethod("seekDown", band.getClass());
+            m.invoke(mRadioPlayerInstance, band);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "seekDown failed", e);
+            return false;
+        }
+    }
+
+    /** Scan/seek-play (barrido) en la banda actual. */
+    public boolean scan() {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Object band = safeGetUiBand();
+            if (band == null) return false;
+            Method m = mRadioPlayerInstance.getClass().getMethod("seekPlay", band.getClass());
+            m.invoke(mRadioPlayerInstance, band);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "scan failed", e);
+            return false;
+        }
+    }
+
+    public boolean setLocal(boolean local) {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Method m = mRadioPlayerInstance.getClass().getMethod("local", boolean.class);
+            m.invoke(mRadioPlayerInstance, local);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "setLocal failed", e);
+            return false;
+        }
+    }
+
+    public boolean stepUp() {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Method m = mRadioPlayerInstance.getClass().getMethod("stepUp");
+            m.invoke(mRadioPlayerInstance);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "stepUp failed", e);
+            return false;
+        }
+    }
+
+    public boolean stepDown() {
+        if (mRadioPlayerInstance == null) return false;
+        try {
+            Method m = mRadioPlayerInstance.getClass().getMethod("stepDown");
+            m.invoke(mRadioPlayerInstance);
+            return true;
+        } catch (Exception e) {
+            Log.e(TAG, "stepDown failed", e);
+            return false;
+        }
+    }
+
+    private Object safeGetRadioInfo() {
+        if (mRadioPlayerInstance == null) return null;
+        try {
+            Method m = mRadioPlayerInstance.getClass().getMethod("getRadioInfo");
+            return m.invoke(mRadioPlayerInstance);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private Boolean getRadioInfoBoolField(String field) {
+        Object info = safeGetRadioInfo();
+        if (info == null) return null;
+        try {
+            java.lang.reflect.Field f = info.getClass().getField(field);
+            Object v = f.get(info);
+            if (v instanceof Boolean) return (Boolean) v;
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    public Boolean isLocal() {
+        return getRadioInfoBoolField("mIsLocal");
+    }
+
+    public Boolean isStereo() {
+        return getRadioInfoBoolField("mIsStereo");
+    }
+
+    /**
+     * RadioPlayer notifica {@code onEvent(1, radioInfo)}; el campo {@code mUiBand} refleja FM-1…FM-3
+     * aunque el servicio HCN {@code getCurrentBand()} devuelva 0. Mapea a índice de banda de la app:
+     * 0=FM1, 1=FM2, 2=FM3, 3=AM1, 4=AM2; {@code -1} si no se reconoce.
+     */
+    public int readAppBandIndexFromRadioInfo(Object radioInfo) {
+        if (radioInfo == null) return -1;
+        Object uiBandObj = null;
+        try {
+            java.lang.reflect.Field f = radioInfo.getClass().getField("mUiBand");
+            uiBandObj = f.get(radioInfo);
+        } catch (Exception ignored) {
+        }
+        if (uiBandObj == null) {
+            String s = radioInfo.toString();
+            int key = s.indexOf("mUiBand=");
+            if (key >= 0) {
+                String rest = s.substring(key + 8).trim();
+                int end = rest.indexOf(',');
+                if (end > 0) rest = rest.substring(0, end).trim();
+                uiBandObj = rest;
+            }
+        }
+        return mapUiBandTokenToAppIndex(uiBandObj);
+    }
+
+    private static int mapUiBandTokenToAppIndex(Object token) {
+        if (token == null) return -1;
+        String t = token.toString().trim().toUpperCase(java.util.Locale.US).replace("-", "").replace("_", "");
+        if (t.contains("FM3")) return 2;
+        if (t.contains("FM2")) return 1;
+        if (t.contains("FM1")) return 0;
+        if (t.equals("FM")) return 0;
+        if (t.contains("AM2")) return 4;
+        if (t.contains("AM1") || t.equals("AM")) return 3;
+        return -1;
+    }
+
+    public Integer getCurrentFreqKhz() {
+        if (mRadioPlayerInstance == null) return null;
+        try {
+            Object info = safeGetRadioInfo();
+            if (info == null) return null;
+            try {
+                java.lang.reflect.Field f = info.getClass().getField("mFreq");
+                Object v = f.get(info);
+                if (v instanceof Integer) return (Integer) v;
+            } catch (Exception ignored) {}
+            // Fallback: toString parse si existe “freq=xxxx”
+            String s = info.toString();
+            if (s != null) {
+                String digits = s.replaceAll("[^0-9]", " ").trim().replaceAll("\\s+", " ");
+                if (!digits.isEmpty()) {
+                    String first = digits.split(" ")[0];
+                    try { return Integer.parseInt(first); } catch (Exception ignored) {}
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            return null;
         }
     }
 

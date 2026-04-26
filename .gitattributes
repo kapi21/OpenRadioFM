@@ -1,0 +1,14 @@
+# Asegurar LF para scripts y módulos (Magisk/Android shell)
+# En Windows con core.autocrlf=true, sin esto pueden quedar CRLF y Magisk App falla al ejecutar update-binary/customize.sh.
+
+magisk/** text eol=lf
+magisk/**/META-INF/** text eol=lf
+magisk/**/*.sh text eol=lf
+
+# Scripts de instalación Magisk (aunque no estén bajo magisk/ en el futuro)
+**/META-INF/**/update-binary text eol=lf
+**/META-INF/**/updater-script text eol=lf
+
+# Windows batch files deben quedarse en CRLF para no romperse en cmd.exe
+magisk/**/*.bat text eol=crlf
+

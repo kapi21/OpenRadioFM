@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="500dp"
+    android:layout_height="wrap_content"
+    android:background="#E6121212"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:id="@+id/edit_station_dialog_root"
+        style="@style/DialogContainerStyle"
+        android:clickable="false"
+        android:focusable="false">
+
+        <LinearLayout
+            style="@style/DialogTitleLayout"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="@null"
+                android:src="@android:drawable/ic_menu_edit"
+                app:tint="#00E676" />
+
+            <TextView
+                android:id="@+id/tvEditStationTitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/edit_station_name"
+                android:textColor="#00E676"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvEditStationFreq"
+            style="@style/DialogSubheaderText"
+            android:layout_marginTop="0dp"
+            tools:text="Frecuencia: 103.6" />
+
+        <LinearLayout
+            style="@style/DialogBoxStyle"
+            android:clickable="false"
+            android:focusable="false">
+
+            <EditText
+                android:id="@+id/etStationName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/edit_station_name"
+                android:imeOptions="actionDone"
+                android:inputType="textCapWords"
+                android:maxLines="1"
+                android:padding="8dp"
+                android:textColor="@android:color/white"
+                android:textColorHint="#88FFFFFF"
+                android:textSize="18sp"
+                tools:text="COPE" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowEditStationButtons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnSaveStationName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_glass_card_blue"
+                android:minHeight="52dp"
+                android:text="@string/dialog_btn_save"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnRestoreOriginalStationName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_submenu_box"
+                android:minHeight="52dp"
+                android:text="@string/dialog_btn_restore_original"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnCancelEditStationName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@drawable/bg_glass_card_red"
+                android:minHeight="52dp"
+                android:text="@string/cancel"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
+

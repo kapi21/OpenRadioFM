@@ -24,6 +24,11 @@
     <string name="bg_pure_black">纯黑</string>
     <string name="bg_fixed_image">固定图像 (background.png)</string>
     <string name="bg_dynamic_logo">台标 (动态)</string>
+    <string name="dynamic_bg_aspect_title">动态背景显示方式</string>
+    <string name="dynamic_bg_aspect_letterbox">信箱模式（不裁切）</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9（铺满，裁切）</string>
+    <string name="toast_dynamic_bg_letterbox">动态背景：信箱模式（不裁切）</string>
+    <string name="toast_dynamic_bg_fill_16_9">动态背景：16:9（铺满，裁切）</string>
     <string name="font_default">默认 (系统)</string>
     <string name="font_bebas">机器人 (Bebas)</string>
     <string name="font_digital">数字 (LED)</string>
@@ -34,6 +39,10 @@
     <string name="night_mode_auto">自动夜间模式</string>
     <string name="relief_hd">高清浮雕</string>
     <string name="save_history">保存收听历史</string>
+    <string name="save_history_summary_on">会保存电台；可打开列表（例如点击 RDS 名称）。</string>
+    <string name="save_history_summary_off">已关闭：不保存历史，也不显示历史对话框。</string>
+    <string name="toast_history_save_disabled">请在选项中开启「保存收听历史」以查看列表。</string>
+    <string name="hardware_automation_section_header">（硬件自动化）（测试中）</string>
     <string name="enable_gestures_beta">启用手势 (Swipe) (测试版)</string>
     <string name="online_logos">在线台标</string>
 
@@ -68,7 +77,7 @@
     <string name="logos_online_disabled">❌ 在线台标已关闭</string>
     <string name="under_study">研究中</string>
     <string name="night_mode_manual_blocked">禁用自动夜间模式以手动选择皮肤</string>
-    <string name="auto_hide_controls">自动隐藏控制栏</string>
+    <string name="auto_hide_controls">自动隐藏控制栏（布局3 横向）</string>
     <string name="auto_hide_enabled">✅ 自动隐藏已开启</string>
     <string name="auto_hide_disabled">❌ 自动隐藏已关闭</string>
     <string name="preset_scroll_loop_title">预设无限滑动</string>
@@ -226,7 +235,7 @@
     <string name="about_info_header">信息</string>
     <string name="about_dev_by">开发者</string>
     <string name="about_tech_details">技术详情</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">此服务允许在兼容的安卓主机（例如 K706）按下物理 RADIO 按键时，OpenRadioFM 覆盖显示并绕过原厂应用。</string>
     <string name="a11y_hihack_title">HiHack（无障碍）</string>
     <string name="a11y_hihack_enabled">已启用</string>
@@ -255,7 +264,7 @@
     <string name="widget_next_preset">下一预设</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">覆盖预设</string>
-    <string name="autoscan_confirm_message">此 AutoScan 将清空并用扫描到的电台重新填充当前波段的 1–18 号预设。\n\n是否开始扫描？</string>
+    <string name="autoscan_confirm_message">此 AutoScan 始终从 FM1 开始：先清空并填充 FM1 上的 1–18 号预设（如需要会切换到 FM1）。存满 18 个电台后可继续 FM2/FM3。\n\n是否开始扫描？</string>
     <string name="autoscan_confirm_start">开始扫描</string>
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
@@ -337,6 +346,7 @@
     <string name="eng_dev_file_log_profile_basic">基础</string>
     <string name="eng_dev_file_log_profile_medium">中等</string>
     <string name="eng_dev_file_log_profile_full">完整</string>
+    <string name="eng_dev_logcat_dump_button">DEV：将 logcat 缓冲导出到 RadioLogos</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -357,20 +367,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">均衡器不可用（收音机引擎未启动）</string>
+    <string name="toast_radio_engine_not_started">收音机引擎未启动</string>
+    <string name="toast_no_gps_app">未找到地图/GPS 应用</string>
+    <string name="toast_basic_no_engineering">基础模式：工程菜单不可用</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_stopped">AutoScan 已停止</string>
+    <string name="toast_autoscan_slow">自 FM1 开始的慢速 AutoScan：正在搜索电台…（再次点击停止）</string>
+    <string name="toast_autoscan_start_failed">无法启动 AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan 完成（%1$d 个预设）</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · 预设 1–18</string>
+    <string name="toast_presets_overwritten">已覆盖预设（%1$d 个电台）。</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">正在返回标准模式…</string>
+    <string name="toast_recovering_fm_audio">正在恢复 FM 音频…</string>
+    <string name="toast_hw_eq_unsupported">此设备不支持硬件均衡器</string>
+    <string name="toast_saved_to_slot">已保存到预设 %1$d</string>
 </resources>

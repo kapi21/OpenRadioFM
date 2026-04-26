@@ -7,7 +7,12 @@ import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.util.Log;
 
+import com.example.openradiofm.data.source.MT8163Engine;
 import com.example.openradiofm.data.source.RadioEngine;
+
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
 
 /**
  * V5.5: Gestor de Reproducción y Audio.
@@ -27,7 +32,17 @@ public class PlaybackManager {
     private boolean mIsMutedBySystem = false; // V4.8: Track if mute was automatic
     private boolean mMediaReceiverRegistered = false;
     private PlaybackListener mListener;
-    private Integer mSavedMusicVolume = null; // Para mute global fiable (MT8163)
+    /** Volúmenes guardados por tipo de stream al mutear MT8163 (STREAM_MUSIC + STREAM_FM oculto si existe). */
+    private final HashMap<Integer, Integer> mMt8163SavedStreamVols = new HashMap<>();
+    private Integer mSavedMusicVolumeForReverse = null;
+    /** True si pedimos STREAM_MUSIC=0 y el volumen sigue siendo > 0 (política OEM / AudioService). */
+    private boolean mMt8163StreamVolumeMuteRejected = false;
+    /**
+     * Tras {@code injectKey(VOLUME_MUTE)} el sistema a veces deja de reflejar el mute en STREAM_MUSIC;
+     * {@link StatusRefreshCoordinator} no debe forzar {@code setMute(false)} en ese intervalo (un solo gesto usuario).
+     */
+    private static final long MT8163_POST_USER_INJECT_SYNC_GUARD_MS = 2800L;
+    private long mMt8163LastUserInjectElapsedRealtime = 0L;
 
     /**
      * Interfaz para notificar a la UI de cambios en el estado de reproducción.
@@ -81,8 +96,11 @@ public class PlaybackManager {
      * - Envía el comando al motor de radio.
      * - Fuerza la recuperación de audio si se está desmuteando.
      * - Controla el stream de audio de Android.
+     *
+     * @param userOemMcuMuteKeyStep si true (gesto de usuario / sesión media), MT8163 puede inyectar {@code VOLUME_MUTE}
+     *                              por McuManager (toggle hardware). No usar en recuperación automática ni al iniciar.
      */
-    public void setMute(boolean mute) {
+    public void setMute(boolean mute, boolean userOemMcuMuteKeyStep) {
         mMuteState = mute;
 
         // V11: Via RadioEngine
@@ -111,31 +129,66 @@ public class PlaybackManager {
             }
         }
 
-        // MT8163: Mute global opcional (compatibilidad).
-        // En muchas ROMs OEM, ADJUST_MUTE/UNMUTE se ignora; por eso usamos setStreamVolume(0) + restauración.
+        // MT8163: STREAM_MUSIC suele ser la única vía audible desde la app cuando el HAL ignora fm_mute
+        // y ExtAudioMuxer solo tiene JNI en system_server. Por defecto ON si la clave no existe;
+        // el usuario puede desactivarlo en modo ingeniería si no quiere acoplar el volumen del sistema.
         try {
             boolean isMT8163 = mEngine != null && "MT8163".equals(mEngine.getEngineName());
-            boolean allowGlobal = mContext
-                    .getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
-                    .getBoolean("pref_mt8163_global_stream_mute", false);
+            android.content.SharedPreferences prefs = mContext.getSharedPreferences(
+                    "RadioPresets", Context.MODE_PRIVATE);
+            boolean allowGlobal = prefs.getBoolean("pref_mt8163_global_stream_mute", true);
+            // Sin HCN (MCU direct), muchos firmwares ignoran fm_mute/hcn_fm_mute en el HAL;
+            // STREAM_MUSIC es a menudo el único mute audible desde la app.
+            boolean mcuDirect = prefs.getBoolean("pref_mt8163_mcu_direct", false);
+            boolean useStreamMute = allowGlobal || mcuDirect;
 
-            if (isMT8163 && allowGlobal && mAudioManager != null) {
+            if (isMT8163 && useStreamMute && mAudioManager != null) {
                 if (mute) {
-                    if (mSavedMusicVolume == null) {
-                        int current = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-                        mSavedMusicVolume = Math.max(current, 1);
+                    if (mcuDirect && !allowGlobal) {
+                        Log.d(TAG, "MT8163 MCU-direct: bajando streams candidatos (HAL fm_mute / MUSIC a veces no afecta FM)");
                     }
-                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 0, 0);
+                    int[] streams = collectMt8163MuteCandidateStreams();
+                    for (int stream : streams) {
+                        int smax = mAudioManager.getStreamMaxVolume(stream);
+                        if (smax <= 0) continue;
+                        if (!mMt8163SavedStreamVols.containsKey(stream)) {
+                            int current = mAudioManager.getStreamVolume(stream);
+                            mMt8163SavedStreamVols.put(stream, Math.max(current, 1));
+                        }
+                        mAudioManager.setStreamVolume(stream, 0, 0);
+                    }
+                    int volAfter = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    mMt8163StreamVolumeMuteRejected = (volAfter > 0);
+                    if (mMt8163StreamVolumeMuteRejected) {
+                        Log.w(TAG, "STREAM_MUSIC no bajó a 0 (política OEM). Evitando sync que forzaría unmute.");
+                    }
                 } else {
-                    int restore = (mSavedMusicVolume != null) ? mSavedMusicVolume : 1;
-                    int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
-                    restore = Math.min(Math.max(restore, 1), Math.max(max, 1));
-                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, restore, 0);
-                    mSavedMusicVolume = null;
+                    mMt8163StreamVolumeMuteRejected = false;
+                    for (Map.Entry<Integer, Integer> e : new HashMap<>(mMt8163SavedStreamVols).entrySet()) {
+                        int stream = e.getKey();
+                        int restore = e.getValue();
+                        int max = mAudioManager.getStreamMaxVolume(stream);
+                        restore = Math.min(Math.max(restore, 0), Math.max(max, 0));
+                        mAudioManager.setStreamVolume(stream, restore, 0);
+                    }
+                    mMt8163SavedStreamVols.clear();
                 }
+            } else if (isMT8163) {
+                mMt8163StreamVolumeMuteRejected = false;
             }
         } catch (Exception e) {
             Log.w(TAG, "Mute global STREAM_MUSIC falló", e);
+        }
+
+        if (userOemMcuMuteKeyStep && mEngine instanceof MT8163Engine) {
+            ((MT8163Engine) mEngine).applyUserOemMuteThroughMcuKey();
+            try {
+                if (mContext.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
+                        .getBoolean("pref_mt8163_mcu_inject_mute_key", true)) {
+                    mMt8163LastUserInjectElapsedRealtime = android.os.SystemClock.elapsedRealtime();
+                }
+            } catch (Exception ignored) {
+            }
         }
 
         // Notificar a la UI
@@ -185,6 +238,48 @@ public class PlaybackManager {
         Log.d(TAG, "Mute state: " + (mute ? "MUTED" : "UNMUTED") + " (System: " + mIsMutedBySystem + ")");
     }
 
+    /** Mute/unmute sin paso OEM McuManager (audio focus, arranque, sincronización). */
+    public void setMute(boolean mute) {
+        setMute(mute, false);
+    }
+
+    /**
+     * Baja temporalmente el volumen durante marcha atrás (BACKCAR/REVERSE) y lo restaura al salir.
+     *
+     * Nota: en algunos firmwares OEM el audio FM no está ligado a STREAM_MUSIC; en esos casos esto
+     * puede no tener efecto. Aun así es la opción menos invasiva frente a mutear el tuner.
+     */
+    public void setReverseDucking(boolean reverseOn) {
+        if (mAudioManager == null) return;
+        try {
+            if (reverseOn) {
+                if (mSavedMusicVolumeForReverse == null) {
+                    int current = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                    mSavedMusicVolumeForReverse = Math.max(current, 0);
+                }
+                int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                int target = Math.max(1, (int) Math.floor(max * 0.25));
+                // Si ya estaba más bajo (usuario), no subimos nada: solo limitamos hacia abajo.
+                int current = mAudioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
+                if (current > target) {
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, target, 0);
+                }
+                Log.d(TAG, "Reverse ducking ON: target=" + target + " saved=" + mSavedMusicVolumeForReverse);
+            } else {
+                if (mSavedMusicVolumeForReverse != null) {
+                    int max = mAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+                    int restore = Math.min(Math.max(mSavedMusicVolumeForReverse, 0), Math.max(max, 0));
+                    mAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, restore, 0);
+                    Log.d(TAG, "Reverse ducking OFF: restored=" + restore);
+                }
+                mSavedMusicVolumeForReverse = null;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Reverse ducking falló", e);
+            if (!reverseOn) mSavedMusicVolumeForReverse = null;
+        }
+    }
+
     /**
      * V4.8: Desmudea solo si el estado de mute fue provocado por el sistema.
      */
@@ -206,12 +301,66 @@ public class PlaybackManager {
         return mMuteState;
     }
 
+    /**
+     * Si el OEM bloquea {@code setStreamVolume(STREAM_MUSIC, 0)}, {@link StatusRefreshCoordinator}
+     * no debe interpretar “sistema desmuteado” y llamar {@link #setMute(boolean)}(false).
+     */
+    public boolean isMt8163StreamVolumeMuteRejectedByOem() {
+        return mMt8163StreamVolumeMuteRejected;
+    }
+
+    /**
+     * Evita que la sincronización por volumen Android anule el mute por tecla OEM justo después del inject.
+     */
+    public boolean shouldSuppressMt8163StreamMuteSync() {
+        if (mEngine == null || !"MT8163".equals(mEngine.getEngineName())) {
+            return false;
+        }
+        if (mMt8163LastUserInjectElapsedRealtime == 0L) {
+            return false;
+        }
+        return android.os.SystemClock.elapsedRealtime() - mMt8163LastUserInjectElapsedRealtime
+                < MT8163_POST_USER_INJECT_SYNC_GUARD_MS;
+    }
+
     public void setEngine(RadioEngine engine) {
         this.mEngine = engine;
     }
 
     public RadioEngine getEngine() {
         return mEngine;
+    }
+
+    /**
+     * Streams a intentar silenciar en MT8163 cuando el FM no va por STREAM_MUSIC (reflexión STREAM_FM / valor 10 típico MTK).
+     */
+    private static int[] collectMt8163MuteCandidateStreams() {
+        LinkedHashSet<Integer> set = new LinkedHashSet<>();
+        set.add(AudioManager.STREAM_MUSIC);
+        addPublicStreamConstant(set, AudioManager.class, "STREAM_FM");
+        addPublicStreamConstant(set, AudioManager.class, "STREAM_FM_RX");
+        try {
+            Class<?> audioSystem = Class.forName("android.media.AudioSystem");
+            addPublicStreamConstant(set, audioSystem, "STREAM_FM");
+        } catch (ClassNotFoundException ignored) {
+        }
+        if (!set.contains(10)) {
+            set.add(10);
+        }
+        int[] out = new int[set.size()];
+        int i = 0;
+        for (int s : set) {
+            out[i++] = s;
+        }
+        return out;
+    }
+
+    private static void addPublicStreamConstant(LinkedHashSet<Integer> set, Class<?> cls, String fieldName) {
+        try {
+            java.lang.reflect.Field f = cls.getField(fieldName);
+            set.add(f.getInt(null));
+        } catch (Throwable ignored) {
+        }
     }
 
     /**
@@ -226,10 +375,10 @@ public class PlaybackManager {
 
             switch (command) {
                 case "ACTION_PLAY":
-                    setMute(false); // Play es desmutear y recuperar canal
+                    setMute(false, true); // Play es desmutear y recuperar canal
                     break;
                 case "ACTION_PAUSE":
-                    setMute(true); // Pause es silenciar la radio
+                    setMute(true, true); // Pause es silenciar la radio
                     break;
                 case "ACTION_NEXT":
                 case "ACTION_PREV":

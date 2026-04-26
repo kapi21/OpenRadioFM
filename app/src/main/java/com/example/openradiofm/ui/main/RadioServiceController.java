@@ -14,7 +14,10 @@ import android.util.Log;
 import com.hcn.autoradio.IRadioServiceAPI;
 import com.example.openradiofm.data.source.RadioEngine;
 import com.example.openradiofm.data.source.MT8163Engine;
+import com.example.openradiofm.data.source.FYTOemEngine;
 import com.example.openradiofm.service.RadioMediaService;
+import com.ts.main.common.ITsCommon;
+import com.ts.tsspeechlib.radio.ITsSpeechRadio;
 
 import android.os.Build;
 
@@ -30,6 +33,26 @@ public class RadioServiceController {
     /** Evita ráfagas de bind a com.hcn.autoradio (varias instancias de este controller). */
     private static final Object sMt8163StartLock = new Object();
     private static long sLastMt8163StartWallMs;
+    /** MT8163/HCN: mientras un bind está en vuelo, no reintentar (evita doble bind en onCreate/onResume). */
+    private static boolean sMt8163BindInFlight;
+    private static long sMt8163BindInFlightSinceElapsedMs;
+    private static final long MT8163_BIND_IN_FLIGHT_SUPPRESS_MS = 8000L;
+
+    /** Visible para LifecycleCoordinator: evita confundir cold start con force-stop. */
+    public static boolean isMt8163HcnBindInFlight() {
+        synchronized (sMt8163StartLock) {
+            if (!sMt8163BindInFlight) return false;
+            long now = SystemClock.elapsedRealtime();
+            long since = sMt8163BindInFlightSinceElapsedMs > 0 ? (now - sMt8163BindInFlightSinceElapsedMs) : 0L;
+            if (since >= 0L && since < MT8163_BIND_IN_FLIGHT_SUPPRESS_MS) {
+                return true;
+            }
+            // Timeout: permitir reintento y no bloquear onResume.
+            sMt8163BindInFlight = false;
+            sMt8163BindInFlightSinceElapsedMs = 0L;
+            return false;
+        }
+    }
 
     /**
      * Motor instanciado localmente (QS6/K706) compartido entre MainActivity y RadioMediaService.
@@ -40,10 +63,64 @@ public class RadioServiceController {
     private static final Object SHARED_LOCAL_ENGINE_LOCK = new Object();
 
     /**
+     * Estado lógico compartido (QS6/K706): evita que MainActivity y RadioMediaService mantengan
+     * estados divergentes (RDS/RT/frecuencia/mute) cuando ambos reciben callbacks del mismo engine.
+     *
+     * Nota: este controlador debe usar {@code getApplicationContext()} y no depender de Activity.
+     */
+    private static volatile RadioSessionController sSharedSessionController;
+    private static final Object SHARED_SESSION_CONTROLLER_LOCK = new Object();
+
+    public static RadioSessionController getOrCreateSharedSessionController(
+            Context context,
+            RadioEngine engine,
+            SharedPreferences presetPrefs,
+            SharedPreferences stationNamePrefs
+    ) {
+        if (engine == null || context == null) return null;
+        synchronized (SHARED_SESSION_CONTROLLER_LOCK) {
+            if (sSharedSessionController != null) return sSharedSessionController;
+            try {
+                // PlaybackManager se mantiene fuera de este estado compartido para no atarlo
+                // a un Service o Activity específico. El control de audio se hace en cada capa.
+                sSharedSessionController = new RadioSessionController(
+                        context.getApplicationContext(),
+                        engine,
+                        null,
+                        presetPrefs,
+                        stationNamePrefs
+                );
+            } catch (Exception e) {
+                Log.w(TAG, "No se pudo crear RadioSessionController compartido", e);
+            }
+            return sSharedSessionController;
+        }
+    }
+
+    /**
      * Llamar desde {@link com.example.openradiofm.data.source.QS6Engine#release()},
      * {@link com.example.openradiofm.data.source.K706Engine#release()} o
      * {@link com.example.openradiofm.data.source.JancarIviEngine#release()} para no reutilizar un motor ya cerrado.
      */
+    /**
+     * MT8163/HCN: un solo {@code bindService} en MainActivity; el servicio reutiliza esta instancia
+     * para widget launcher / MediaSession sin volver a enlazar.
+     */
+    public static void registerSharedMt8163Engine(RadioEngine engine) {
+        if (!(engine instanceof MT8163Engine)) return;
+        synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+            sSharedLocalEngine = engine;
+            Log.d(TAG, "MT8163: motor HCN compartido registrado (RadioMediaService puede adjuntar)");
+        }
+    }
+
+    /** @return motor MT8163 ya enlazado desde MainActivity, o null. */
+    public static RadioEngine getSharedMt8163EngineForService() {
+        synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+            return sSharedLocalEngine instanceof MT8163Engine ? sSharedLocalEngine : null;
+        }
+    }
+
     public static void clearSharedLocalEngineIfSame(RadioEngine engine) {
         if (engine == null) return;
         synchronized (SHARED_LOCAL_ENGINE_LOCK) {
@@ -51,6 +128,24 @@ public class RadioServiceController {
                 sSharedLocalEngine = null;
                 Log.d(TAG, "Motor local compartido liberado (referencia única)");
             }
+        }
+        synchronized (SHARED_SESSION_CONTROLLER_LOCK) {
+            // Si el motor se libera, también invalidamos el estado compartido ligado a ese motor.
+            if (sSharedSessionController != null) {
+                sSharedSessionController = null;
+                Log.d(TAG, "RadioSessionController compartido liberado");
+            }
+        }
+    }
+
+    /**
+     * DEBUG/TOOLS: acceso de solo lectura al engine local compartido (K706/QS6/etc).
+     * Usado por utilidades internas (p.ej. receivers de depuración) para mandar comandos al HAL
+     * sin depender de la UI.
+     */
+    public static RadioEngine peekSharedLocalEngine() {
+        synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+            return sSharedLocalEngine;
         }
     }
 
@@ -70,12 +165,56 @@ public class RadioServiceController {
     private IRadioServiceAPI mRadioService;
     private boolean mBound = false;
 
+    // --- Lógica TS (Topway/MTK8259) ---
+    private ITsCommon mTsCommon;
+    private ITsSpeechRadio mTsSpeechRadio;
+    private boolean mTsCommonBound = false;
+    private boolean mTsSpeechBound = false;
+
+    private final ServiceConnection mTsCommonConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "TsCommon Connected");
+            mTsCommon = ITsCommon.Stub.asInterface(service);
+            checkAndStartTsEngine();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mTsCommon = null;
+            mTsCommonBound = false;
+        }
+    };
+
+    private final ServiceConnection mTsSpeechConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "TsSpeech Connected");
+            mTsSpeechRadio = ITsSpeechRadio.Stub.asInterface(service);
+            checkAndStartTsEngine();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            mTsSpeechRadio = null;
+            mTsSpeechBound = false;
+        }
+    };
+
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d(TAG, "Servicio conectado: " + name.flattenToShortString());
             mRadioService = IRadioServiceAPI.Stub.asInterface(service);
             mBound = true;
+            try {
+                if ("com.hcn.autoradio".equals(name.getPackageName())) {
+                    synchronized (sMt8163StartLock) {
+                        sMt8163BindInFlight = false;
+                        sMt8163BindInFlightSinceElapsedMs = 0L;
+                    }
+                }
+            } catch (Exception ignored) {}
 
             // Re-evaluar modo basado en el paquete conectado
             MainActivity.FmMode newMode = MainActivity.FmMode.FM_BASICO;
@@ -96,6 +235,14 @@ public class RadioServiceController {
             Log.w(TAG, "Servicio DESCONECTADO (Muerte o force-stop): " + name.flattenToShortString());
             mRadioService = null;
             mBound = false;
+            try {
+                if ("com.hcn.autoradio".equals(name.getPackageName())) {
+                    synchronized (sMt8163StartLock) {
+                        sMt8163BindInFlight = false;
+                        sMt8163BindInFlightSinceElapsedMs = 0L;
+                    }
+                }
+            } catch (Exception ignored) {}
             if (mListener != null) {
                 mListener.onServiceDisconnected();
             }
@@ -242,6 +389,52 @@ public class RadioServiceController {
             } catch (Exception e) {
                 Log.e(TAG, "Error iniciando JancarIviEngine", e);
             }
+        } else if (mode == MainActivity.FmMode.FM_FYT_OEM) {
+            try {
+                synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                    if (sSharedLocalEngine instanceof FYTOemEngine) {
+                        Log.i(TAG, "=> FYT/OEM: reutilizando instancia compartida");
+                        if (mListener != null) mListener.onEngineReady(sSharedLocalEngine);
+                        return;
+                    }
+                    FYTOemEngine engine = new FYTOemEngine();
+                    if (engine.init(mContext)) {
+                        sSharedLocalEngine = engine;
+                        if (mListener != null) mListener.onEngineReady(engine);
+                    } else {
+                        Log.w(TAG, "Error iniciando FYTOemEngine (init devolvió false)");
+                    }
+                }
+                return;
+            } catch (Exception e) {
+                Log.e(TAG, "Error iniciando FYTOemEngine", e);
+            }
+        }
+
+        if (mode == MainActivity.FmMode.FM_MT8163) {
+            synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                if (sSharedLocalEngine instanceof MT8163Engine) {
+                    Log.i(TAG, "=> MT8163: reutilizando motor ya enlazado (sin segundo bind HCN)");
+                    if (mListener != null) {
+                        mListener.onEngineReady(sSharedLocalEngine);
+                    }
+                    return;
+                }
+            }
+            synchronized (sMt8163StartLock) {
+                if (sMt8163BindInFlight) {
+                    long now = SystemClock.elapsedRealtime();
+                    long since = sMt8163BindInFlightSinceElapsedMs > 0 ? (now - sMt8163BindInFlightSinceElapsedMs) : 0L;
+                    if (since >= 0L && since < MT8163_BIND_IN_FLIGHT_SUPPRESS_MS) {
+                        Log.w(TAG, "MT8163: start() suprimido (bind HCN en vuelo hace " + since + "ms)");
+                        return;
+                    } else {
+                        // Timeout: permitimos reintento.
+                        sMt8163BindInFlight = false;
+                        sMt8163BindInFlightSinceElapsedMs = 0L;
+                    }
+                }
+            }
         }
 
         // Post-streaming en ROM OEM: bind a com.hcn.autoradio desde aquí dispara
@@ -337,6 +530,12 @@ public class RadioServiceController {
             if (mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE)) {
                 Log.d(TAG, "Vinculando a proveedor: " + provider[0]);
                 mBound = true;
+                if ("com.hcn.autoradio".equals(provider[0])) {
+                    synchronized (sMt8163StartLock) {
+                        sMt8163BindInFlight = true;
+                        sMt8163BindInFlightSinceElapsedMs = SystemClock.elapsedRealtime();
+                    }
+                }
                 return true;
             }
         } catch (Exception ignored) {
@@ -356,6 +555,7 @@ public class RadioServiceController {
         if (engineIdx == 8) return MainActivity.FmMode.FM_JANCAR_IVI;
 
         // Si es Automático (0), intentamos detectar el hardware
+        if (FYTOemEngine.isFytOemAvailable(mContext)) return MainActivity.FmMode.FM_FYT_OEM;
         if (isTS8259()) return MainActivity.FmMode.FM_8259_8667;
         if (isQS6()) return MainActivity.FmMode.FM_QS6;
         if (isK706()) return MainActivity.FmMode.FM_K706;
@@ -388,7 +588,13 @@ public class RadioServiceController {
             mContext.getPackageManager().getPackageInfo("com.nwd.radio.service", 0);
             return true;
         } catch (Exception e) {
-            return false;
+            // Algunas ROM NWD exponen la radio OEM como app (com.nwd.radio) en lugar del servicio.
+            try {
+                mContext.getPackageManager().getPackageInfo("com.nwd.radio", 0);
+                return true;
+            } catch (Exception ignored) {
+                return false;
+            }
         }
     }
 
@@ -428,60 +634,21 @@ public class RadioServiceController {
 
     private String[][] getAllProviders() {
         return new String[][] {
-                { "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE" }, // 0: MT8163/HCN
+                { "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE" }, // 0: MT8163/HCN (Obsoleto, ahora vía motor modular)
                 { "com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService" }, // 1: MediaTek
                 { "com.android.fmradio", "com.android.fmradio.IFmRadioService" }, // 2: Standard
                 { "com.android.fmradio", "com.android.fmradio.FmRadioService" }, // 3: Standard (Alt)
-                { "com.ts.MainUI", "com.ts.MainUI.radio.IRadioService" }, // 4: TopWay (TS) - Estandarizado MainUI
-                { "com.syu.radio", "com.syu.radio.IRadioService" }, // 5: SYU
-                { "com.nwd.radio.service", "com.nwd.radio.service.ACTION_RADIO_SERVICE" }, // 6: QS6 (NWD)
-                { "com.ts.MainUI", "com.ts.main.common.MainUI" }, // 7: Mediatek 8259/8667 (Speech/TS)
-                { "com.ts.MainUI", "com.ts.tsspeechlib.radio.TsRadioService" } // 8: Mediatek 8259/8667 Additional
+                { "com.syu.radio", "com.syu.radio.IRadioService" } // 5: SYU
         };
     }
 
-    // --- Lógica específica para Mediatek 8259/8667 (Doble vínculo AIDL) ---
-
-    private com.ts.main.common.ITsCommon mTsCommon;
-    private com.ts.tsspeechlib.radio.ITsSpeechRadio mTsSpeechRadio;
-    private boolean mTsCommonBound = false;
-    private boolean mTsSpeechBound = false;
-    private final ServiceConnection mTsCommonConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "TsCommon Connected");
-            mTsCommon = com.ts.main.common.ITsCommon.Stub.asInterface(service);
-            checkAndStartTsEngine();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mTsCommon = null;
-            mTsCommonBound = false;
-        }
-    };
-    private final ServiceConnection mTsSpeechConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            mTsSpeechRadio = com.ts.tsspeechlib.radio.ITsSpeechRadio.Stub.asInterface(service);
-            checkAndStartTsEngine();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mTsSpeechRadio = null;
-            mTsSpeechBound = false;
-        }
-    };
-
     private void tryStartTsEngine() {
-        Log.i(TAG, "tryStartTsEngine(): Iniciando vínculo doble TS...");
+        Log.i(TAG, "tryStartTsEngine(): Iniciando vínculo doble TS para motor MTK8259...");
         conectarTsCommon();
         conectarTsSpeechRadio();
     }
 
     private void conectarTsCommon() {
-        Log.d(TAG, "conectarTsCommon() ENTER");
         Intent intent = new Intent();
         intent.setClassName("com.ts.MainUI", "com.ts.main.common.MainUI");
         try {
@@ -493,7 +660,6 @@ public class RadioServiceController {
     }
 
     private void conectarTsSpeechRadio() {
-        Log.d(TAG, "conectarTsSpeechRadio() ENTER");
         Intent intent = new Intent();
         intent.setClassName("com.ts.MainUI", "com.ts.tsspeechlib.radio.TsRadioService");
         try {
@@ -507,10 +673,17 @@ public class RadioServiceController {
     private void checkAndStartTsEngine() {
         if (mTsCommon != null && mTsSpeechRadio != null) {
             try {
-                com.example.openradiofm.data.source.MTK8259_8667Engine engine = 
-                    new com.example.openradiofm.data.source.MTK8259_8667Engine(mTsCommon, mTsSpeechRadio);
-                if (engine.init(mContext)) {
-                    if (mListener != null) mListener.onEngineReady(engine);
+                synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                    if (sSharedLocalEngine instanceof com.example.openradiofm.data.source.MTK8259_8667Engine) {
+                        if (mListener != null) mListener.onEngineReady(sSharedLocalEngine);
+                        return;
+                    }
+                    com.example.openradiofm.data.source.MTK8259_8667Engine engine =
+                            new com.example.openradiofm.data.source.MTK8259_8667Engine(mTsCommon, mTsSpeechRadio);
+                    if (engine.init(mContext)) {
+                        sSharedLocalEngine = engine;
+                        if (mListener != null) mListener.onEngineReady(engine);
+                    }
                 }
             } catch (Exception e) {
                 Log.e(TAG, "Error iniciando MTK8259_8667Engine", e);

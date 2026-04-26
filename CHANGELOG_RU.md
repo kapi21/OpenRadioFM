@@ -7,7 +7,11 @@
 
 ## [Unreleased]
 
-*(новых записей нет; последние изменения описаны в 5.1.0)*
+- **K706 Root (`K706_Root`)**: Magisk v1.1 (overlay APK‑трамплин `QF_FMRadioExt`), установка на устройстве **в отладке**; см. [`CHANGELOG.md`](CHANGELOG.md) и [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md).
+- **QS6 / NWD (после перезагрузки)**: *warm‑up rebind* и автопереподключение AIDL с backoff в `NWDTunerAdapter` (в т.ч. `linkToDeath`), плюс ранний повторный `connect()`/poll в `QS6Engine`, чтобы подхватывать состояние без открытия OEM UI.
+- **Launchers / MediaSession**: публикация **первичных метаданных** на старте `RadioMediaService` (исправляет “session есть, но metadata=null” в лаунчерах типа Agama) + расширение allowlist для выдачи доступа на artwork.
+- **UI**: “плавный” тикер частоты во время `seek/scan` и диалог **редактирования имени станции** (с сохранением/восстановлением оригинала).
+- **K706 / Android Auto, голос навигации (Zlink)**: см. [`CHANGELOG.md`](CHANGELOG.md) — уступка аудиофокуса при `isMusicActive`, `requestAudioFocus(false)` в auto-recovery, `RadioMediaService` без PLAYING+FGS на `LOSS_TRANSIENT`. Плюс пункты **5.1.6**. Версия **5.1.7** (`versionCode` **39**).
 
 ---
 

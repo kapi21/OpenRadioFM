@@ -1,7 +1,6 @@
 package com.example.openradiofm.data.repository;
 
 import com.example.openradiofm.data.model.RadioStation;
-import com.example.openradiofm.data.source.PredefinedStationSource;
 import com.example.openradiofm.data.source.RootRDSSource;
 import com.example.openradiofm.data.source.CloudContributionGuard;
 import com.example.openradiofm.data.source.SupabaseLogoSource;
@@ -13,7 +12,6 @@ public class RadioRepository {
     private final RootRDSSource rootSource;
     private final WebRadioSource webSource;
     private final SupabaseLogoSource supabaseSource; // V16.0: Servidor centralizado
-    private final PredefinedStationSource predefinedSource;
     private final boolean useRoot;
 
     private final android.content.SharedPreferences mPrefs;
@@ -166,7 +164,6 @@ public class RadioRepository {
         this.rootSource = enableRoot ? new RootRDSSource() : null;
         this.webSource = new WebRadioSource();
         this.supabaseSource = new SupabaseLogoSource();
-        this.predefinedSource = new PredefinedStationSource(context);
         // Usamos un archivo de preferencias específico para los nombres de emisoras
         this.mPrefs = context.getSharedPreferences("RadioStationNames", android.content.Context.MODE_PRIVATE);
 
@@ -602,19 +599,22 @@ public class RadioRepository {
                             if (call != null) {
                                 retrofit2.Response<java.util.List<SupabaseLogoResponse>> res = call.execute();
                                 if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                                    supabaseData = res.body().get(0);
-                                    logoUrlToDownload = supabaseData.getLogoUrl();
-                                    android.util.Log.d("RadioRepository", "SUPABASE SUCCESS: Logo=" + logoUrlToDownload + ", Stream=" + supabaseData.getStreamUrl());
-                                    // Guardar streamUrl en SharedPreferences (incluso si es null para evitar reconsultas) y en el objeto station
-                                    String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
-                                    mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();
-                                    if (!streamUrlToSave.isEmpty()) {
-                                        station.setStreamUrl(streamUrlToSave);
-                                    }
+                                    supabaseData = pickBestSupabaseRow(res.body(), freqKHz, stationNameForLambda);
                                 } else {
                                     android.util.Log.d("RadioRepository", "SUPABASE EMPTY OR ERROR: " + (res != null ? res.code() : "null"));
-                                    mPrefs.edit().putString("STREAM_" + freqKHz, "").apply();
                                 }
+                            }
+                            // Fallback por frecuencia+país eliminado: puede devolver la emisora equivocada.
+                            if (supabaseData != null) {
+                                logoUrlToDownload = supabaseData.getLogoUrl();
+                                android.util.Log.d("RadioRepository", "SUPABASE SUCCESS: Logo=" + logoUrlToDownload + ", Stream=" + supabaseData.getStreamUrl());
+                                String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
+                                mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();
+                                if (!streamUrlToSave.isEmpty()) {
+                                    station.setStreamUrl(streamUrlToSave);
+                                }
+                            } else {
+                                mPrefs.edit().putString("STREAM_" + freqKHz, "").apply();
                             }
                         } catch (Exception e) {
                             android.util.Log.e("RadioRepository", "Error fetching Supabase data", e);
@@ -792,6 +792,57 @@ public class RadioRepository {
         }
     }
 
+    /** Misma convención que {@link com.example.openradiofm.data.source.SupabaseLogoSource} (MHz con 2 decimales). */
+    private static String formatSupabaseFreqMhz(int freqKHz) {
+        return String.format(java.util.Locale.US, "%.2f", freqKHz / 1000.0);
+    }
+
+    /**
+     * Interpreta {@link SupabaseLogoResponse#getFrequency()}: MHz típico (&lt; 200) o kHz si el valor es grande.
+     */
+    private static int parseSupabaseFrequencyToKhz(String freqField) {
+        if (freqField == null) return -1;
+        String t = freqField.trim().replace(',', '.');
+        if (t.isEmpty()) return -1;
+        try {
+            double v = Double.parseDouble(t);
+            if (v >= 200.0) return (int) Math.round(v);
+            return (int) Math.round(v * 1000.0);
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    /**
+     * Entre varias filas de una misma consulta (p. ej. {@code ps_name ilike}), elige la más coherente
+     * con la sintonía actual: coincidencia exacta de PS y cercanía de frecuencia. No sustituye la prioridad
+     * de búsqueda ({@code ps_name} antes que frecuencia+país en la API).
+     */
+    private SupabaseLogoResponse pickBestSupabaseRow(
+            java.util.List<SupabaseLogoResponse> rows, int freqKHz, String psHint) {
+        if (rows == null || rows.isEmpty()) return null;
+        if (rows.size() == 1) return rows.get(0);
+        String hint = psHint != null ? psHint.trim() : "";
+        String hintNorm = hint.isEmpty() ? "" : hint.toUpperCase(java.util.Locale.ROOT);
+        SupabaseLogoResponse best = null;
+        long bestScore = Long.MAX_VALUE;
+        for (SupabaseLogoResponse row : rows) {
+            int fk = parseSupabaseFrequencyToKhz(row.getFrequency());
+            long dist = fk < 0 ? 50_000_000L : (long) Math.abs(fk - freqKHz);
+            if (!hintNorm.isEmpty()) {
+                String ps = row.getPsName() != null ? row.getPsName().trim() : "";
+                if (ps.toUpperCase(java.util.Locale.ROOT).equals(hintNorm)) {
+                    dist -= 10_000_000L;
+                }
+            }
+            if (best == null || dist < bestScore) {
+                bestScore = dist;
+                best = row;
+            }
+        }
+        return best != null ? best : rows.get(0);
+    }
+
     /**
      * Resuelve la URL de streaming para FM (≥ 30 MHz): usa caché {@code STREAM_} y, si falta o está
      * vacía, consulta Supabase en el <b>hilo actual</b> (solo invocar desde hilo de fondo).
@@ -848,12 +899,15 @@ public class RadioRepository {
                 call = supabaseSource.getSupabaseApi().getLogosByName(supabaseSource.getApiKey(),
                         "Bearer " + supabaseSource.getApiKey(), "ilike." + finalName.trim(), "eq." + country, "*");
             }
-            if (call == null) {
-                return null;
+            SupabaseLogoResponse supabaseData = null;
+            if (call != null) {
+                retrofit2.Response<java.util.List<SupabaseLogoResponse>> res = call.execute();
+                if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
+                    supabaseData = pickBestSupabaseRow(res.body(), freqKHz, finalName);
+                }
             }
-            retrofit2.Response<java.util.List<SupabaseLogoResponse>> res = call.execute();
-            if (res.isSuccessful() && res.body() != null && !res.body().isEmpty()) {
-                SupabaseLogoResponse supabaseData = res.body().get(0);
+            // Fallback por frecuencia+país eliminado: puede devolver la emisora equivocada.
+            if (supabaseData != null) {
                 String streamUrlToSave = supabaseData.getStreamUrl() != null ? supabaseData.getStreamUrl() : "";
                 mPrefs.edit().putString("STREAM_" + freqKHz, streamUrlToSave).apply();
                 return streamUrlToSave.isEmpty() ? null : streamUrlToSave;

@@ -35,12 +35,18 @@ public class ScanManager {
     private static final int MAX_RESULTS = 18;
     /** Tiempo mínimo en una frecuencia antes de validar (QS6: scan AMS iba demasiado rápido). */
     private static final long RDS_WAIT_MS = 5200L;
+    /** AutoScan sobrescritura: validar antes (señal fuerte o RDS); equilibrio entre rapidez y estabilidad. */
+    private static final long RDS_WAIT_AUTOSCAN_MS = 4000L;
     /** Tras aceptar emisora, espera extra para PS/logo/cache antes de guardar preset. */
     private static final long AUTOSAVE_HOLD_MS = 6000L;
+    /** Sobrescritura: margen para PS antes de escribir preset en disco. */
+    private static final long AUTOSAVE_HOLD_AUTOSCAN_MS = 3500L;
     /** Barrido lento: no usar AMS(); ir de emisora en emisora con seekUp + pausa. */
     /** Primera búsqueda: dejar tiempo a RDS en la frecuencia actual antes del primer seekUp. */
-    private static final long SLOW_SEEK_FIRST_MS = 11000L;
-    private static final long SLOW_SEEK_INTERVAL_MS = 8500L;
+    private static final long SLOW_SEEK_FIRST_MS = 8000L;
+    private static final long SLOW_SEEK_INTERVAL_MS = 6000L;
+    /** Tras aceptar una emisora en autoscan lento, siguiente seek algo antes que el intervalo largo. */
+    private static final long SLOW_SEEK_AFTER_STATION_MS = 2800L;
     private static final int TOLERANCE_KHZ = 50;
     /** Inicio de banda FM (87,5 MHz): el AutoScan siempre arranca aquí para cubrir toda la banda. */
     private static final int FM_BAND_START_KHZ = 87500;
@@ -51,7 +57,6 @@ public class ScanManager {
     private StationAdapter mStationAdapter;
     private boolean mIsScanning = false;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
-    private android.animation.ObjectAnimator mAutoScanAnimator;
 
     private static class Pending {
         final int freqKhz;
@@ -96,6 +101,20 @@ public class ScanManager {
     private boolean mSlowFinishPosted = false;
     /** Marca de tiempo de {@link #finishSlowAutoScanInternal}; evita que MainActivity re-sincronice la UI a 108 MHz vía OEM. */
     private long mSlowAutoscanFinishEpochMs = 0L;
+    /**
+     * Tras AutoScan lento, el OEM puede seguir mandando {@code onScanStatusChanged(true)}; eso reactivaba
+     * el estado “escaneando” del botón (tinte). Se tratan como no-escaneo en UI hasta nuevo autoscan o tiempo máximo.
+     */
+    private boolean mSuppressOemScanTrueUntilFalse = false;
+    private static final long SUPPRESS_OEM_SCAN_TRUE_MAX_MS = 45000L;
+    private final Runnable mClearScanSuppressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (!mSlowSeekAutoScan) {
+                mSuppressOemScanTrueUntilFalse = false;
+            }
+        }
+    };
     /** Última frecuencia vista al tick anterior del barrido lento; si no cambia, fallback stepUp (QS6 search puede quedarse quieto). */
     private int mLastSlowSeekTickFreq = -1;
     private final Runnable mSlowSeekRunnable = new Runnable() {
@@ -137,6 +156,17 @@ public class ScanManager {
         this.mActivity = activity;
     }
 
+    /**
+     * QS6: AutoScan lento prioriza AIDL (tune/seek) para no competir con el barrido por software;
+     * fuera de AutoScan el motor usa MCU primero.
+     */
+    private void applyQs6AutoScanOemPath(boolean preferred) {
+        if (mActivity == null || mActivity.mEngine == null) return;
+        if (mActivity.mEngine instanceof QS6Engine) {
+            ((QS6Engine) mActivity.mEngine).setAutoScanOemPreferred(preferred);
+        }
+    }
+
     public List<StationAdapter.ScannedStation> getCapturedList() {
         return mCapturedList;
     }
@@ -150,21 +180,55 @@ public class ScanManager {
     }
 
     /**
+     * Convierte el flag OEM de escaneo en el estado que debe ver la UI (botón AutoScan / captura inteligente).
+     * Suprime {@code true} espurios justo después de un AutoScan lento completado.
+     */
+    public boolean adjustEngineScanningForAutoScanUi(boolean oemScanning) {
+        if (!oemScanning) {
+            return false;
+        }
+        if (mSuppressOemScanTrueUntilFalse) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Sincroniza el estado local y el aspecto del botón con el motor (NWD/K706).
      * Llamar desde el hilo UI cuando {@link com.example.openradiofm.data.source.RadioEngineCallback#onScanStatusChanged}
      * o tras {@link com.example.openradiofm.data.source.RadioEngine#isScanning()} en onResume.
      */
     public void applyEngineScanState(boolean scanning) {
-        mIsScanning = scanning;
-        applyScanButtonVisual(scanning, null);
+        boolean effective = scanning;
+        if (mSlowSeekAutoScan && mAutoOverwritePresets) {
+            // El barrido lento es nuestro; el OEM suele alternar true/false sin correlación.
+            effective = true;
+        } else if (mSuppressOemScanTrueUntilFalse && scanning) {
+            effective = false;
+        }
+
+        mIsScanning = effective;
+        if (mActivity != null) {
+            mActivity.mIsScanning = effective;
+        }
+        applyScanButtonVisual(effective, null);
+        // UI-only: mientras escaneamos, hacer “fluido” el contador como la nativa.
+        // Se corta automáticamente al llegar una frecuencia real (MainActivity.handleFrequencyChange()) o al finalizar scan.
+        try {
+            if (mActivity != null) {
+                if (effective) mActivity.startFrequencyTicker(true);
+                else mActivity.stopFrequencyTicker();
+            }
+        } catch (Exception ignored) {}
         try {
             com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(
                     mActivity,
                     "SCAN",
-                    "applyEngineScanState scanning=" + scanning + " slowSeek=" + mSlowSeekAutoScan + " overwrite=" + mAutoOverwritePresets
+                    "applyEngineScanState oem=" + scanning + " effective=" + effective
+                            + " slowSeek=" + mSlowSeekAutoScan + " overwrite=" + mAutoOverwritePresets
             );
         } catch (Exception ignored) {}
-        if (scanning) {
+        if (effective) {
             if (!mAutoOverwritePresets) {
                 startSmartCaptureUiIfNeeded();
             }
@@ -180,43 +244,24 @@ public class ScanManager {
             return;
         }
         if (scanning) {
+            try {
+                target.animate().cancel();
+                target.setRotation(0f);
+            } catch (Exception ignored) {}
             target.setColorFilter(SCAN_ACTIVE_COLOR, PorterDuff.Mode.SRC_IN);
-            startAutoScanAnimation(target);
         } else {
             // Al terminar (o si el motor reporta no-scanning), restaurar el tinte del skin actual.
             // clearColorFilter() dejaba el icono “sin modo” (p. ej. blanco) tras varios cambios de skin/layout.
-            stopAutoScanAnimation(target);
+            try {
+                target.animate().cancel();
+                target.clearAnimation();
+                target.setRotation(0f);
+            } catch (Exception ignored) {}
             target.clearColorFilter();
             try {
                 mActivity.retintControlButtonForCurrentSkin(target);
             } catch (Exception ignored) {}
         }
-    }
-
-    private void startAutoScanAnimation(ImageButton target) {
-        try {
-            if (target == null) return;
-            stopAutoScanAnimation(target);
-            // Rotación lenta para indicar actividad (ligera, sin bloquear UI).
-            mAutoScanAnimator = android.animation.ObjectAnimator.ofFloat(target, View.ROTATION, 0f, 360f);
-            mAutoScanAnimator.setDuration(1400L);
-            mAutoScanAnimator.setRepeatCount(android.animation.ValueAnimator.INFINITE);
-            mAutoScanAnimator.setRepeatMode(android.animation.ValueAnimator.RESTART);
-            mAutoScanAnimator.setInterpolator(new android.view.animation.LinearInterpolator());
-            mAutoScanAnimator.start();
-        } catch (Exception ignored) {}
-    }
-
-    private void stopAutoScanAnimation(ImageButton target) {
-        try {
-            if (mAutoScanAnimator != null) {
-                mAutoScanAnimator.cancel();
-                mAutoScanAnimator = null;
-            }
-        } catch (Exception ignored) {}
-        try {
-            if (target != null) target.setRotation(0f);
-        } catch (Exception ignored) {}
     }
 
     /**
@@ -231,15 +276,20 @@ public class ScanManager {
         } else {
             if (mSlowSeekAutoScan) {
                 mMainHandler.removeCallbacks(mSlowSeekRunnable);
+                mMainHandler.removeCallbacks(mClearScanSuppressRunnable);
                 mSlowSeekAutoScan = false;
+                applyQs6AutoScanOemPath(false);
                 mAutoOverwritePresets = false;
                 mIsScanning = false;
+                mSuppressOemScanTrueUntilFalse = false;
                 applyScanButtonVisual(false, btn);
                 mActivity.showToast(mActivity.getString(R.string.toast_autoscan_stopped));
                 try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "toggleAutoScan STOP (slow)"); } catch (Exception ignored) {}
             } else {
                 mActivity.mEngine.stopScan();
                 mIsScanning = false;
+                mSuppressOemScanTrueUntilFalse = false;
+                mMainHandler.removeCallbacks(mClearScanSuppressRunnable);
                 applyScanButtonVisual(false, btn);
                 mActivity.showToast(mActivity.getString(R.string.toast_autoscan_stopped));
                 try { com.example.openradiofm.utils.RadioActivityFileLogger.logBasic(mActivity, "SCAN", "toggleAutoScan STOP"); } catch (Exception ignored) {}
@@ -294,10 +344,13 @@ public class ScanManager {
 
     private void startAutoScanOverwrite(ImageButton btn) {
         if (mActivity.mEngine == null) return;
+        applyQs6AutoScanOemPath(true);
         mAutoScanSessionId++;
         mAutoOverwritePresets = true;
         mSlowFinishPosted = false;
         mSlowAutoscanFinishEpochMs = 0L;
+        mSuppressOemScanTrueUntilFalse = false;
+        mMainHandler.removeCallbacks(mClearScanSuppressRunnable);
         mNextAutoPresetSlot = 0;
         mTotalAutoScanPresetsSaved = 0;
         mLastScanFreq = 0;
@@ -306,7 +359,9 @@ public class ScanManager {
         mCapturedList.clear();
         mPendingByKey.clear();
 
-        // Limpiar presets 1-18 de la banda actual antes de empezar.
+        switchUiAndHardwareToFm1ForAutoscan();
+
+        // Limpiar presets 1-18 de FM1 antes de empezar (siempre banda 0).
         try {
             if (mActivity.mPresetManager != null) {
                 final int band = mActivity.mCurrentBand;
@@ -353,6 +408,7 @@ public class ScanManager {
         } catch (Exception e) {
             mIsScanning = false;
             mSlowSeekAutoScan = false;
+            applyQs6AutoScanOemPath(false);
             applyScanButtonVisual(false, btn);
             mActivity.showToast(mActivity.getString(R.string.toast_autoscan_start_failed));
         }
@@ -373,8 +429,12 @@ public class ScanManager {
         mSlowAutoscanFinishEpochMs = android.os.SystemClock.elapsedRealtime();
         mMainHandler.removeCallbacks(mSlowSeekRunnable);
         mSlowSeekAutoScan = false;
+        applyQs6AutoScanOemPath(false);
         mAutoOverwritePresets = false;
         mIsScanning = false;
+        mSuppressOemScanTrueUntilFalse = true;
+        mMainHandler.removeCallbacks(mClearScanSuppressRunnable);
+        mMainHandler.postDelayed(mClearScanSuppressRunnable, SUPPRESS_OEM_SCAN_TRUE_MAX_MS);
         mLastScanFreq = 0;
         ImageButton target = btn != null ? btn : mActivity.findViewById(R.id.btnAutoScan);
         applyScanButtonVisual(false, target);
@@ -482,7 +542,8 @@ public class ScanManager {
             p = new Pending(freqKhz, now, mLastRssi, mLastSnr, mAutoScanSessionId);
             mPendingByKey.put(key, p);
             final Pending pRef = p;
-            mMainHandler.postDelayed(() -> validatePending(pRef), RDS_WAIT_MS);
+            final long rdsWait = mAutoOverwritePresets ? RDS_WAIT_AUTOSCAN_MS : RDS_WAIT_MS;
+            mMainHandler.postDelayed(() -> validatePending(pRef), rdsWait);
         } else {
             // Re-visit: refrescar señal/timestamp pero mantener la espera original.
             p.rssi = mLastRssi;
@@ -630,6 +691,44 @@ public class ScanManager {
         return mActivity != null && mActivity.mCurrentBand >= 0 && mActivity.mCurrentBand <= 2;
     }
 
+    /**
+     * AutoScan por sobrescritura siempre usa FM1 primero: alinear hardware y {@link MainActivity#mCurrentBand}
+     * antes de borrar memorias y barrer.
+     */
+    private void switchUiAndHardwareToFm1ForAutoscan() {
+        if (mActivity == null || mActivity.mEngine == null) return;
+        if (!isFmBandUi()) return;
+        try {
+            if (mActivity.mEngine instanceof JancarIviEngine) {
+                mActivity.mCurrentBand = 0;
+                mActivity.refreshPresetButtons();
+                return;
+            }
+            if (mActivity.mEngine instanceof QS6Engine) {
+                ((QS6Engine) mActivity.mEngine).tuneWithBand(FM_BAND_START_KHZ, 0);
+                mActivity.mCurrentBand = 0;
+                mActivity.refreshPresetButtons();
+                return;
+            }
+            for (int i = 0; i < 6; i++) {
+                int b = mActivity.mEngine.getCurrentBand();
+                if (b >= 0 && b <= 2) {
+                    mActivity.mCurrentBand = b;
+                    if (b == 0) {
+                        mActivity.mEngine.tune(FM_BAND_START_KHZ);
+                        mActivity.refreshPresetButtons();
+                        return;
+                    }
+                }
+                mActivity.mEngine.bandCycle();
+            }
+            mActivity.mCurrentBand = 0;
+            mActivity.mEngine.tune(FM_BAND_START_KHZ);
+            mActivity.refreshPresetButtons();
+        } catch (Exception ignored) {
+        }
+    }
+
     private int normalizeKey(int freqKhz) {
         // Agrupar por tolerancia para evitar duplicados cercanos durante seek/scan.
         return (freqKhz / TOLERANCE_KHZ) * TOLERANCE_KHZ;
@@ -689,7 +788,8 @@ public class ScanManager {
                 final int slot = mNextAutoPresetSlot;
                 mNextAutoPresetSlot++;
                 final int saveSession = mAutoScanSessionId;
-                mMainHandler.postDelayed(() -> autoSaveToPreset(slot, freqKhz, saveSession), AUTOSAVE_HOLD_MS);
+                final long holdMs = mSlowSeekAutoScan ? AUTOSAVE_HOLD_AUTOSCAN_MS : AUTOSAVE_HOLD_MS;
+                mMainHandler.postDelayed(() -> autoSaveToPreset(slot, freqKhz, saveSession), holdMs);
             }
         }
 
@@ -702,6 +802,12 @@ public class ScanManager {
             } else {
                 try { if (mActivity.mEngine != null) mActivity.mEngine.stopScan(); } catch (Exception ignored) {}
             }
+            return;
+        }
+
+        if (mAutoOverwritePresets && mSlowSeekAutoScan) {
+            mMainHandler.removeCallbacks(mSlowSeekRunnable);
+            mMainHandler.postDelayed(mSlowSeekRunnable, SLOW_SEEK_AFTER_STATION_MS);
         }
     }
 
@@ -898,8 +1004,20 @@ public class ScanManager {
             tvStatus.setText(mActivity.getString(R.string.searching_next));
         });
 
-        // Al cerrar, restaurar el callback principal a MainActivity
-        dialog.setOnDismissListener(d -> mActivity.mEngine.setCallback(mActivity));
+        final RadioEngineCallback previousCallback =
+                (mActivity.mEngine instanceof K706Engine)
+                        ? ((K706Engine) mActivity.mEngine).getCallback()
+                        : null;
+
+        // Restaurar el callback previo (p. ej. Composite UI + RadioMediaService), no solo el coordinator.
+        dialog.setOnDismissListener(d -> {
+            if (mActivity.mEngine == null) return;
+            if (previousCallback != null) {
+                mActivity.mEngine.setCallback(previousCallback);
+            } else {
+                mActivity.mEngine.setCallback(mActivity.mEngineCallbackCoordinator);
+            }
+        });
 
         // Interceptar eventos de motor durante el escaneo selectivo
         mActivity.mEngine.setCallback(new RadioEngineCallback() {

@@ -2,6 +2,7 @@ package com.example.openradiofm.data.source;
 
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.ServiceConnection;
 import android.os.IBinder;
 import android.os.Bundle;
 import android.os.Parcel;
@@ -10,6 +11,8 @@ import android.os.RemoteException;
 import android.util.Log;
 import com.hcn.autoradio.IRadioCallBack;
 import com.hcn.autoradio.IRadioServiceAPI;
+import com.example.openradiofm.engine.QFTunerAdapter;
+import com.example.openradiofm.utils.RadioActivityFileLogger;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
@@ -17,6 +20,11 @@ import android.media.AudioManager;
 import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.media.AudioFocusRequest;
 import android.media.AudioAttributes;
+import android.media.AudioPlaybackConfiguration;
+import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Process;
 import android.Manifest;
 import androidx.core.content.ContextCompat;
 
@@ -41,6 +49,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     public static final String EVENT_LOSS = "LOSS";
     public static final String EVENT_LOSS_TRANSIENT = "LOSS_TRANSIENT";
     public static final String EVENT_GAIN = "GAIN";
+
+    /** Último {@code focusChange} del framework (p. ej. -2, -3, +1). Diagnóstico sin logcat → menú ingeniería K706. */
+    public static final String PREF_OEM_LAST_AUDIOFOCUS_RAW = "oem_last_audiofocus_raw";
+    /** Wall clock ms asociado a {@link #PREF_OEM_LAST_AUDIOFOCUS_RAW}. */
+    public static final String PREF_OEM_LAST_AUDIOFOCUS_WALL_MS = "oem_last_audiofocus_wall_ms";
     
     // === Sub-comandos MCU (V9.6: Oficiales extraídos de TunerCmdFactory.smali) ===
     private static final int CMD_TUNER = 0xA0; // Comando base tuner
@@ -85,20 +98,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     // --- Broadcom FmReceiverService Reflection (V9.9: RDS Silencioso) ---
     private Object mFmReceiverService;
     private Method mBroadcomSetRdsMode;
+    // Si esta ROM no trae Broadcom FmProxy/ReceiverService, no reintentar en cada recovery.
+    private boolean mBroadcomRdsUnsupported = false;
+    private boolean mBroadcomRdsUnsupportedLogged = false;
 
     // V9.6: QFTunerManager - Canal de alto nivel para seek/scan/RDS
-    // sendCmd (MCU directo) solo funciona fiable para tune/band/fine.
-    // Para seek, scan y RDS la app nativa usa QFTunerManager.
-    private Object mTunerManager; // QFTunerManager singleton
-    private Method mTunerOnSeek;   // onSeek(boolean up)
-    private Method mTunerAutoScan;  // autoScan()
-    private Method mTunerStopScan;  // stopScan()
-    private Method mTunerOnBand;    // onBand(int band)
-    private Method mTunerOnLoc;     // onLoc(int mode)
-    private Method mTunerSetRdsSwitch;   // setRdsSwitch(int state)
-    private Method mTunerSetRdsAF;       // setRdsAFSwitch()
-    private Method mTunerSetRdsTA;       // setRdsTASwitch()
-    private Method mTunerSetRdsPtyType;  // setRdsPtyType(int type)
+    private QFTunerAdapter mQfAdapter;
 
     private IRadioCallBack mCallback;
     /** Cache en unidades OpenRadioFM (×1000 kHz, ej. 87500 = 87.50 MHz). Debe coincidir con {@link #updateFrequency}. */
@@ -113,6 +118,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsTaEnabled = false; // V9.6: Estado TA habilitado
     private boolean mIsTpEnabled = false; // V9.6: Estado TP disponible
     private boolean mIsAfEnabled = false; // V9.6: Estado AF habilitado
+    private boolean mIsRdsEnabled = true; // V7.2e: Estado RDS Global
     private byte[] mLastSignalData = null; // V15.7: Último paquete 0x41 (Telemetría RSSI/SNR)
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAudioFocusChangeListener;
@@ -122,15 +128,619 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     private boolean mIsRadioActive = false;
     private boolean mIsInCall = false; // V11.5: Flag para estado de llamada telefónica
     private boolean mIsTransientFocusLoss = false; // V17.0: Spotify/Android Auto
+
+    // OEM parity: si perdimos foco de forma transitoria, la radio nativa “powerDown” y luego “powerUp” en GAIN.
+    // En OpenRadioFM lo modelamos como una suspensión temporal de FM (sin olvidar que el usuario quiere FM).
+    private boolean mPausedByTransientLossOfFocus = false;
+    // OEM parity: DUCK solo mutea, y al GAIN restaura sin re-rutear.
+    private boolean mMutedByDuck = false;
+    
+    // V24.3: RAW DATA LISTENERS (Engineering)
+    public interface RawMcuListener {
+        void onRawData(byte[] data);
+    }
+    private final java.util.List<RawMcuListener> mRawListeners = new java.util.ArrayList<>();
+    public void addRawMcuListener(RawMcuListener l) { synchronized(mRawListeners) { mRawListeners.add(l); } }
+    public void removeRawMcuListener(RawMcuListener l) { synchronized(mRawListeners) { mRawListeners.remove(l); } }
+
+    // === MCU LISTENER WATCHDOG (V24.9) ===
+    // Objetivo: si la app OEM vuelve a registrar su listener o el servicio deja de enviar callbacks,
+    // re-ejecutar handshake 1001 + registerMcuListener() automáticamente.
+    private static final long MCU_WATCHDOG_PERIOD_MS = 2500L;
+    private static final long MCU_CALLBACK_TIMEOUT_MS = 7000L;
+    private static final long MCU_MIN_REASSERT_INTERVAL_MS = 12000L;
+
+    private volatile long mLastMcuCallbackUptimeMs = 0L;
+    private volatile long mLastMcuReassertUptimeMs = 0L;
+    private volatile int mMcuReassertCount = 0;
+    private volatile boolean mMcuWatchdogArmed = false;
+
+    private final Runnable mMcuWatchdogRunnable = new Runnable() {
+        @Override
+        public void run() {
+            try {
+                if (!mMcuWatchdogArmed) return;
+                // Solo tiene sentido vigilar cuando la radio está en uso o el usuario quiere FM.
+                if (mMcuManager != null && (mIsRadioActive || mUserWantsFmAudio)) {
+                    long now = android.os.SystemClock.uptimeMillis();
+                    long last = mLastMcuCallbackUptimeMs;
+                    long silenceMs = (last > 0L) ? (now - last) : Long.MAX_VALUE;
+                    boolean timedOut = silenceMs >= MCU_CALLBACK_TIMEOUT_MS;
+                    boolean canReassert = (now - mLastMcuReassertUptimeMs) >= MCU_MIN_REASSERT_INTERVAL_MS;
+
+                    if (timedOut && canReassert) {
+                        mLastMcuReassertUptimeMs = now;
+                        mMcuReassertCount++;
+                        Log.w(TAG, "MCU watchdog: sin callbacks " + silenceMs + "ms -> reassertMcuInfoListener() (count=" + mMcuReassertCount + ")");
+                        reassertMcuInfoListener();
+                    }
+                }
+            } catch (Throwable t) {
+                Log.w(TAG, "MCU watchdog error", t);
+            } finally {
+                if (mMcuWatchdogArmed) {
+                    mAudioRecoveryHandler.postDelayed(this, MCU_WATCHDOG_PERIOD_MS);
+                }
+            }
+        }
+    };
+
+    private void armMcuWatchdog() {
+        if (mMcuWatchdogArmed) return;
+        mMcuWatchdogArmed = true;
+        mLastMcuCallbackUptimeMs = android.os.SystemClock.uptimeMillis(); // evitar reassert inmediato al arrancar
+        try { mAudioRecoveryHandler.removeCallbacks(mMcuWatchdogRunnable); } catch (Exception ignored) {}
+        mAudioRecoveryHandler.postDelayed(mMcuWatchdogRunnable, MCU_WATCHDOG_PERIOD_MS);
+        Log.d(TAG, "MCU watchdog armed");
+    }
+
+    private void disarmMcuWatchdog() {
+        mMcuWatchdogArmed = false;
+        try { mAudioRecoveryHandler.removeCallbacks(mMcuWatchdogRunnable); } catch (Exception ignored) {}
+        Log.d(TAG, "MCU watchdog disarmed");
+    }
+
+    /** Diagnóstico: útil en EngineeringDialog sin logcat. */
+    public String getMcuWatchdogDebug() {
+        long now = android.os.SystemClock.uptimeMillis();
+        long silence = (mLastMcuCallbackUptimeMs > 0L) ? (now - mLastMcuCallbackUptimeMs) : -1L;
+        return "armed=" + mMcuWatchdogArmed
+                + " active=" + (mIsRadioActive ? 1 : 0)
+                + " wants=" + (mUserWantsFmAudio ? 1 : 0)
+                + " silenceMs=" + silence
+                + " reasserts=" + mMcuReassertCount;
+    }
+    
+    /** V24.8: Enviar comando RAW a la MCU (canal 0x40). */
+    public void sendRawMcuCommand(byte[] data) {
+        if (data == null || data.length == 0 || mMcuManager == null) return;
+        try {
+            if (mSendMcuCmdData != null) {
+                mSendMcuCmdData.invoke(mMcuManager, (Object) data);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error sending raw MCU command", e);
+        }
+    }
+
+    /** V24.8: Ajustar sensibilidad del sintonizador (0-15). */
+    public void setTunerSensitivity(int level) {
+        // Por ahora lo dejamos como log, hasta confirmar sub-comando exacto.
+        Log.d(TAG, "setTunerSensitivity: " + level);
+    }
     
     // OEM fix: evitar "mute inicial" por pérdidas espurias de AudioFocus (Zlink/Auto al enganchar)
     private long mIgnoreFocusLossUntilUptimeMs = 0L;
     private boolean mWasRadioActiveBeforeFocusLoss = false;
+
+    /** {@link AudioPlaybackConfiguration#PLAYER_STATE_STARTED} (API 29+). */
+    private static final int APC_PLAYER_STATE_STARTED = 2;
+
+    private static int getApcPlayerState(AudioPlaybackConfiguration apc) {
+        if (apc == null) {
+            return -1;
+        }
+        try {
+            Object st = apc.getClass().getMethod("getPlayerState").invoke(apc);
+            if (st instanceof Integer) {
+                return (Integer) st;
+            }
+        } catch (Throwable ignored) {
+        }
+        return -1;
+    }
+
+    /**
+     * UID del cliente de la pista. En algunas ROM (p. ej. Spreadtrum con AA) {@code getClientUid()}
+     * falla por reflexión o devuelve valores no fiables; se intenta campo {@code mClientUid}.
+     */
+    private static int getApcClientUidResolved(AudioPlaybackConfiguration apc) {
+        if (apc == null) {
+            return -1;
+        }
+        try {
+            Object u = apc.getClass().getMethod("getClientUid").invoke(apc);
+            if (u instanceof Integer) {
+                int v = (Integer) u;
+                if (v >= 0) {
+                    return v;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            java.lang.reflect.Field f = apc.getClass().getDeclaredField("mClientUid");
+            f.setAccessible(true);
+            Object o = f.get(apc);
+            if (o instanceof Integer) {
+                int v = (Integer) o;
+                if (v >= 0) {
+                    return v;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return -1;
+    }
+
+    /**
+     * API 31+: paquete creador / {@link AudioAttributes#getPackageName()} (reflexión: stubs de compilación
+     * antiguos no exponen el método).
+     */
+    private String getPlaybackCreatorOrAttrPackage(AudioPlaybackConfiguration apc) {
+        if (apc == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.S) {
+            return null;
+        }
+        try {
+            Object c = apc.getClass().getMethod("getCreatorPackageName").invoke(apc);
+            if (c instanceof String && !((String) c).isEmpty()) {
+                return (String) c;
+            }
+        } catch (Throwable ignored) {
+        }
+        try {
+            AudioAttributes attr = apc.getAudioAttributes();
+            if (attr != null) {
+                Object p = attr.getClass().getMethod("getPackageName").invoke(attr);
+                if (p instanceof String && !((String) p).isEmpty()) {
+                    return (String) p;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return null;
+    }
+
+    /**
+     * Pista STARTED que no pertenece a esta app. Si el UID no se obtiene (p. ej. -1 en el log),
+     * no se asume “externa” salvo que {@link #getPlaybackCreatorOrAttrPackage} indique otro paquete;
+     * evita NAV/competes perpetuos fantasma.
+     */
+    private boolean isPlaybackForeignStarted(AudioPlaybackConfiguration apc) {
+        if (apc == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return false;
+        }
+        if (getApcPlayerState(apc) != APC_PLAYER_STATE_STARTED) {
+            return false;
+        }
+        final int myUid = Process.myUid();
+        int uid = getApcClientUidResolved(apc);
+        if (uid >= 0) {
+            return uid != myUid;
+        }
+        String pkg = getPlaybackCreatorOrAttrPackage(apc);
+        if (pkg != null && mContext != null && !pkg.isEmpty()) {
+            return !pkg.equals(mContext.getPackageName());
+        }
+        return false;
+    }
+
+    /** Throttle solo para ráfagas de {@code AudioPlaybackCallback} (perfil MEDIO/COMPLETO). */
+    private long mLastDevApSnapshotWallMs;
+
+    private String devPackageNamesForUid(int uid) {
+        if (mContext == null || uid < 0) {
+            return "?";
+        }
+        try {
+            String[] pkgs = mContext.getPackageManager().getPackagesForUid(uid);
+            if (pkgs != null && pkgs.length > 0) {
+                StringBuilder sb = new StringBuilder();
+                int n = Math.min(pkgs.length, 4);
+                for (int i = 0; i < n; i++) {
+                    if (i > 0) {
+                        sb.append('+');
+                    }
+                    sb.append(pkgs[i]);
+                }
+                if (pkgs.length > 4) {
+                    sb.append("+…");
+                }
+                return sb.toString();
+            }
+        } catch (Throwable ignored) {
+        }
+        return "uid:" + uid;
+    }
+
+    private static String devUsageShort(int usage) {
+        switch (usage) {
+            case AudioAttributes.USAGE_MEDIA:
+                return "MEDIA";
+            case AudioAttributes.USAGE_GAME:
+                return "GAME";
+            case AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE:
+                return "NAV_GUIDANCE";
+            case AudioAttributes.USAGE_ASSISTANCE_SONIFICATION:
+                return "SONIFICATION";
+            case AudioAttributes.USAGE_VOICE_COMMUNICATION:
+                return "VOICE_COMM";
+            case AudioAttributes.USAGE_ASSISTANT:
+                return "ASSISTANT";
+            case AudioAttributes.USAGE_UNKNOWN:
+                return "UNKNOWN";
+            default:
+                return "u" + usage;
+        }
+    }
+
+    /**
+     * Volcado para log a fichero (perfil MEDIO/COMPLETO): reproducciones externas, NAV, foco app.
+     * No sustituye logcat de Z-Link; sirve para ver si el framework sigue reportando NAV/SONIF u otros UIDs.
+     */
+    private void logDevAudioPlaybackSnapshot(String reason) {
+        if (mContext == null || mAudioManager == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return;
+        }
+        if (!RadioActivityFileLogger.isEnabled(mContext)) {
+            return;
+        }
+        int profile = RadioActivityFileLogger.getProfile(mContext);
+        if (profile < RadioActivityFileLogger.PROFILE_MEDIUM) {
+            return;
+        }
+        long wall = System.currentTimeMillis();
+        if ("PLAYBACK_EV".equals(reason) && wall - mLastDevApSnapshotWallMs < 350L) {
+            return;
+        }
+        mLastDevApSnapshotWallMs = wall;
+
+        try {
+            final int myUid = Process.myUid();
+            boolean navExt = hasExternalNavOrSonificationPlaybackFromOtherUid();
+            boolean competes = isOtherAudioCompetingForMux();
+            boolean music = mAudioManager.isMusicActive();
+            StringBuilder ext = new StringBuilder(256);
+            java.util.List<AudioPlaybackConfiguration> list = mAudioManager.getActivePlaybackConfigurations();
+            for (AudioPlaybackConfiguration apc : list) {
+                int st = getApcPlayerState(apc);
+                int uid = getApcClientUidResolved(apc);
+                if (st != APC_PLAYER_STATE_STARTED || !isPlaybackForeignStarted(apc)) {
+                    continue;
+                }
+                AudioAttributes attr = apc.getAudioAttributes();
+                int usage = attr != null ? attr.getUsage() : AudioAttributes.USAGE_UNKNOWN;
+                if (ext.length() > 0) {
+                    ext.append('|');
+                }
+                String who = uid >= 0 ? devPackageNamesForUid(uid) : "?";
+                String cp = getPlaybackCreatorOrAttrPackage(apc);
+                if (cp != null && !cp.isEmpty()) {
+                    who = who + "@" + cp;
+                }
+                ext.append(devUsageShort(usage)).append(':').append(who);
+            }
+            if (ext.length() == 0) {
+                ext.append("(ninguna_STARTED_otro_uid)");
+            }
+            RadioActivityFileLogger.logMedium(mContext, "APLAY_SUM",
+                    "reason=" + reason
+                            + " navExt=" + (navExt ? "1" : "0")
+                            + " competes=" + (competes ? "1" : "0")
+                            + " music=" + (music ? "1" : "0")
+                            + " muxAaNavOnly=" + (mMuxSuspendedForAaNavPlaybackOnly ? "1" : "0")
+                            + " latchNav=" + (mAaNavGuidanceActiveLatched ? "1" : "0")
+                            + " focusHeld=" + (mIsAudioFocusHeld ? "1" : "0")
+                            + " radioAct=" + (mIsRadioActive ? "1" : "0")
+                            + " ext=" + ext);
+
+            if (profile < RadioActivityFileLogger.PROFILE_FULL) {
+                return;
+            }
+            for (AudioPlaybackConfiguration apc : list) {
+                int st = getApcPlayerState(apc);
+                int uid = getApcClientUidResolved(apc);
+                if (!isPlaybackForeignStarted(apc)) {
+                    continue;
+                }
+                AudioAttributes attr = apc.getAudioAttributes();
+                int usage = attr != null ? attr.getUsage() : AudioAttributes.USAGE_UNKNOWN;
+                int ct = attr != null ? attr.getContentType() : 0;
+                String cp = getPlaybackCreatorOrAttrPackage(apc);
+                RadioActivityFileLogger.logFull(mContext, "APLAY_ROW",
+                        "state=" + st + " uid=" + uid + " pkg=" + devPackageNamesForUid(uid)
+                                + (cp != null ? " creator=" + cp : "")
+                                + " usage=" + devUsageShort(usage) + "(" + usage + ") contentType=" + ct);
+            }
+        } catch (Throwable e) {
+            RadioActivityFileLogger.logMedium(mContext, "APLAY_SUM", "reason=" + reason + " err=" + e.getMessage());
+        }
+    }
+
+    /**
+     * Spotify suele marcar {@link AudioManager#isMusicActive()}; la voz de Maps por Android Auto
+     * muchas veces usa {@link AudioAttributes#USAGE_ASSISTANCE_NAVIGATION_GUIDANCE} y no activa
+     * “music active” — hay que mirar también {@link AudioManager#getActivePlaybackConfigurations()}.
+     */
+    private boolean isOtherAudioCompetingForMux() {
+        try {
+            if (mAudioManager != null && mAudioManager.isMusicActive()) {
+                return true;
+            }
+            // API 29+: voz de Maps / proyección suele usar USAGE_ASSISTANCE_NAVIGATION_GUIDANCE sin isMusicActive().
+            // Reflexión: algunos entornos de compilación no exponen getPlayerState/getClientUid en stubs.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && mAudioManager != null) {
+                for (AudioPlaybackConfiguration apc : mAudioManager.getActivePlaybackConfigurations()) {
+                    if (!isPlaybackForeignStarted(apc)) {
+                        continue;
+                    }
+                    AudioAttributes attr = apc.getAudioAttributes();
+                    if (attr == null) {
+                        continue;
+                    }
+                    int usage = attr.getUsage();
+                    if (usage == AudioAttributes.USAGE_MEDIA
+                            || usage == AudioAttributes.USAGE_GAME
+                            || usage == AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE
+                            || usage == AudioAttributes.USAGE_ASSISTANCE_SONIFICATION
+                            || usage == AudioAttributes.USAGE_VOICE_COMMUNICATION
+                            || usage == AudioAttributes.USAGE_ASSISTANT) {
+                        return true;
+                    }
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    /**
+     * Guía / avisos por Android Auto sin pasar por {@link OnAudioFocusChangeListener}: el stack suele
+     * exponer {@code USAGE_ASSISTANCE_NAVIGATION_GUIDANCE} (o SONIFICATION) en {@link AudioPlaybackConfiguration}.
+     * No incluimos {@link AudioAttributes#USAGE_MEDIA} aquí: Spotify ya dispara LOSS (-1) vía foco.
+     */
+    private boolean hasExternalNavOrSonificationPlaybackFromOtherUid() {
+        if (mAudioManager == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+            return false;
+        }
+        try {
+            for (AudioPlaybackConfiguration apc : mAudioManager.getActivePlaybackConfigurations()) {
+                if (!isPlaybackForeignStarted(apc)) {
+                    continue;
+                }
+                AudioAttributes attr = apc.getAudioAttributes();
+                if (attr == null) {
+                    continue;
+                }
+                int u = attr.getUsage();
+                if (u == AudioAttributes.USAGE_ASSISTANCE_NAVIGATION_GUIDANCE
+                        || u == AudioAttributes.USAGE_ASSISTANCE_SONIFICATION) {
+                    return true;
+                }
+            }
+        } catch (Throwable ignored) {
+        }
+        return false;
+    }
+
+    private AudioManager.AudioPlaybackCallback mPlaybackConfigCallback;
+    private boolean mPlaybackCallbackRegistered;
+    private long mLastPlaybackCbMuxUptimeMs;
+    /** True si cedimos mux solo vía {@link #handlePlaybackConfigChangedForAaNavMux} (sin GAIN de AudioFocus). */
+    private boolean mMuxSuspendedForAaNavPlaybackOnly;
+    private long mAaNavMuxSuspendUptimeMs;
+    /**
+     * Tras un gap real de guía ({@code !navPlaying}) o tras recover, false → el próximo NAV cuenta como nuevo burst.
+     * Si el recover es forzado con “fantasma” NAV en el framework, queda true hasta {@code !navPlaying}.
+     */
+    private boolean mAaNavGuidanceActiveLatched;
+    /** Tras recover: no volver a suspendFm al instante (fantasma NAV / mismo callback). */
+    private long mAaNavPostRecoverIgnoreSuspendUntilUptimeMs;
+    private Runnable mRecoverAfterAaNavPlaybackRunnable;
+
+    private void ensurePlaybackConfigCallbackRegistered() {
+        // getActivePlaybackConfigurations() es API 28; sin P el callback no tendría datos útiles.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || mAudioManager == null) {
+            return;
+        }
+        if (mPlaybackCallbackRegistered) {
+            return;
+        }
+        try {
+            if (mPlaybackConfigCallback == null) {
+                mPlaybackConfigCallback = new AudioManager.AudioPlaybackCallback() {
+                    @Override
+                    public void onPlaybackConfigChanged(java.util.List<AudioPlaybackConfiguration> configs) {
+                        handlePlaybackConfigChangedForAaNavMux();
+                    }
+                };
+            }
+            mAudioManager.registerAudioPlaybackCallback(
+                    mPlaybackConfigCallback, new Handler(Looper.getMainLooper()));
+            mPlaybackCallbackRegistered = true;
+            Log.i(TAG, "registerAudioPlaybackCallback: detección NAV/AA sin onAudioFocusChange");
+        } catch (Throwable e) {
+            Log.w(TAG, "registerAudioPlaybackCallback falló", e);
+        }
+    }
+
+    private void unregisterPlaybackConfigCallback() {
+        if (!mPlaybackCallbackRegistered || mAudioManager == null || mPlaybackConfigCallback == null) {
+            return;
+        }
+        try {
+            mAudioManager.unregisterAudioPlaybackCallback(mPlaybackConfigCallback);
+        } catch (Throwable e) {
+            Log.w(TAG, "unregisterAudioPlaybackCallback falló", e);
+        } finally {
+            mPlaybackCallbackRegistered = false;
+        }
+        cancelRecoverAfterAaNavPlayback();
+    }
+
+    private void cancelRecoverAfterAaNavPlayback() {
+        try {
+            if (mRecoverAfterAaNavPlaybackRunnable != null) {
+                mAudioRecoveryHandler.removeCallbacks(mRecoverAfterAaNavPlaybackRunnable);
+            }
+        } catch (Throwable ignored) {}
+    }
+
+    /**
+     * Tras la guía a menudo no hay {@code onPlaybackConfigChanged} con lista limpia ni {@code AUDIOFOCUS_GAIN}.
+     * Sondeo en bucle mientras {@link #mMuxSuspendedForAaNavPlaybackOnly}: si sigue NAV/sonificación, reprogramar;
+     * si ya no, recuperar FM (sin usar {@link #isOtherAudioCompetingForMux()} — AA deja sesiones MEDIA fantasma).
+     */
+    private void scheduleAaNavMuxRecoverPoll() {
+        if (!mMuxSuspendedForAaNavPlaybackOnly) {
+            return;
+        }
+        if (mRecoverAfterAaNavPlaybackRunnable == null) {
+            mRecoverAfterAaNavPlaybackRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (!mMuxSuspendedForAaNavPlaybackOnly) {
+                        return;
+                    }
+                    if (mIsOnlineStreamingActive) {
+                        mAudioRecoveryHandler.postDelayed(this, 500L);
+                        return;
+                    }
+                    if (!mUserWantsFmAudio) {
+                        mMuxSuspendedForAaNavPlaybackOnly = false;
+                        mAaNavMuxSuspendUptimeMs = 0L;
+                        mAaNavGuidanceActiveLatched = false;
+                        return;
+                    }
+                    boolean forcedStaleRecover = false;
+                    if (hasExternalNavOrSonificationPlaybackFromOtherUid()) {
+                        long now = android.os.SystemClock.uptimeMillis();
+                        if (mAaNavMuxSuspendUptimeMs > 0L
+                                && now - mAaNavMuxSuspendUptimeMs > 20000L) {
+                            RadioActivityFileLogger.logBasic(mContext, "PLAYBACK_CB",
+                                    "NAV usage stale (>20s) → forcing FM recover");
+                            forcedStaleRecover = true;
+                        } else {
+                            mAudioRecoveryHandler.postDelayed(this, 500L);
+                            return;
+                        }
+                    }
+                    mMuxSuspendedForAaNavPlaybackOnly = false;
+                    mAaNavMuxSuspendUptimeMs = 0L;
+                    mPausedByTransientLossOfFocus = false;
+                    mIsTransientFocusLoss = false;
+                    logDevAudioPlaybackSnapshot("RECOVER_PRE");
+                    try {
+                        requestAudioFocus(false);
+                        startFmAudioSequence(/*fast*/ true);
+                        setMute(false);
+                        mIsRadioActive = true;
+                    } catch (Throwable e) {
+                        Log.w(TAG, "recover after AA NAV playback", e);
+                        try {
+                            enforceAudioChannelRecovery();
+                        } catch (Throwable ignored) {}
+                    }
+                    logDevAudioPlaybackSnapshot("RECOVER_POST");
+                    long nowRecover = android.os.SystemClock.uptimeMillis();
+                    boolean ghostNav = hasExternalNavOrSonificationPlaybackFromOtherUid();
+                    if (forcedStaleRecover) {
+                        // El UID sigue marcando NAV STARTED: no bloquear el siguiente aviso con el latch “fantasma”.
+                        mAaNavGuidanceActiveLatched = false;
+                        mAaNavPostRecoverIgnoreSuspendUntilUptimeMs = nowRecover + 1200L;
+                    } else {
+                        mAaNavGuidanceActiveLatched = ghostNav;
+                        mAaNavPostRecoverIgnoreSuspendUntilUptimeMs = nowRecover + (ghostNav ? 2500L : 600L);
+                    }
+                    RadioActivityFileLogger.logBasic(mContext, "PLAYBACK_CB", "NAV ended → recover FM");
+                }
+            };
+        }
+        mAudioRecoveryHandler.removeCallbacks(mRecoverAfterAaNavPlaybackRunnable);
+        mAudioRecoveryHandler.postDelayed(mRecoverAfterAaNavPlaybackRunnable, 500L);
+    }
+
+    /**
+     * Android Auto + Maps: a veces no hay {@code onAudioFocusChange}; cedemos mux al detectar reproducción
+     * de guía/sonificación en otro UID. Throttle para no martillar el MCU.
+     */
+    private void handlePlaybackConfigChangedForAaNavMux() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P || mAudioManager == null || mContext == null) {
+            return;
+        }
+        logDevAudioPlaybackSnapshot("PLAYBACK_EV");
+        if (mIsOnlineStreamingActive) {
+            return;
+        }
+
+        boolean navPlaying = hasExternalNavOrSonificationPlaybackFromOtherUid();
+        if (!navPlaying) {
+            mAaNavGuidanceActiveLatched = false;
+            scheduleAaNavMuxRecoverPoll();
+            return;
+        }
+
+        if (!mUserWantsFmAudio && !mIsRadioActive) {
+            return;
+        }
+        // Tras recover forzado el framework puede seguir reportando NAV: no re-suspend hasta gap !navPlaying.
+        if (mAaNavGuidanceActiveLatched && !mMuxSuspendedForAaNavPlaybackOnly) {
+            return;
+        }
+        long now = android.os.SystemClock.uptimeMillis();
+        if (now < mAaNavPostRecoverIgnoreSuspendUntilUptimeMs) {
+            if (mMuxSuspendedForAaNavPlaybackOnly) {
+                scheduleAaNavMuxRecoverPoll();
+            }
+            return;
+        }
+        boolean newGuidanceBurst = !mAaNavGuidanceActiveLatched;
+        if (!newGuidanceBurst) {
+            if (mMuxSuspendedForAaNavPlaybackOnly) {
+                scheduleAaNavMuxRecoverPoll();
+            }
+            return;
+        }
+        mLastPlaybackCbMuxUptimeMs = now;
+        mAaNavGuidanceActiveLatched = true;
+        try {
+            mMuxSuspendedForAaNavPlaybackOnly = true;
+            mAaNavMuxSuspendUptimeMs = now;
+            mIsTransientFocusLoss = true;
+            mIsInCall = false;
+            mWasRadioActiveBeforeFocusLoss = mIsRadioActive;
+            mPausedByTransientLossOfFocus = true;
+            RadioActivityFileLogger.logBasic(mContext, "PLAYBACK_CB",
+                    "NAV/GUIDANCE externo → suspendFm (sin onAudioFocusChange)");
+            suspendFmForTransientFocusLoss();
+            scheduleAaNavMuxRecoverPoll();
+        } catch (Throwable e) {
+            Log.w(TAG, "handlePlaybackConfigChangedForAaNavMux", e);
+        }
+    }
     
     // OEM fix: recuperar audio sin depender de recreación de layout.
     // En K706 el sistema puede forzar MUTE_EQ + SetChannel(4) tras un LOSS.
     // La app debe reintentar recuperar canal FM si el usuario "quiere FM".
     private boolean mUserWantsFmAudio = false;
+    /**
+     * Indicador legado / diagnóstico (TICK). La agresividad real la frenan {@code isMusicActive()},
+     * {@link #isOtherAudioCompetingForMux()} y canal 4 + media en {@link #checkAndRecoverAudio()}.
+     */
+    private boolean mAllowImplicitFmRecoverFromPoll = true;
+    /** Antispam para recuperación implícita vía {@link #getCurrentFreq()} / {@link #checkAndRecoverAudio()}. */
+    private long mLastImplicitFmRecoverUptimeMs = 0L;
+    private static final long IMPLICIT_FM_RECOVER_MIN_INTERVAL_MS = 1500L;
     private final android.os.Handler mAudioRecoveryHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private int mAutoRecoveryAttempts = 0;
     private final Runnable mAutoRecoveryRunnable = new Runnable() {
@@ -155,11 +765,20 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             }
             
             try {
-                // V18.5: CRÍTICO - Solo recuperar si REALMENTE tenemos el foco de audio.
-                // Si el sistema nos dio LOSS, no debemos intentar recuperar el canal de radio.
+                // En algunas ROMs (Android Auto / Zlink) el callback de GAIN puede no llegar.
+                // Recuperación proactiva: intentar pedir AudioFocus; si no se concede, reintentar con backoff.
                 if (!mIsAudioFocusHeld) {
-                    Log.d(TAG, "OEM AutoRecovery: abortado (no tenemos el foco de audio)");
-                    return;
+                    try {
+                        requestAudioFocus(false);
+                    } catch (Exception ignored) {}
+                    if (!mIsAudioFocusHeld) {
+                        Log.d(TAG, "OEM AutoRecovery: sin AudioFocus todavía (reintentando más tarde)");
+                        // Programar siguiente intento (sin tocar MCU mientras no tengamos el foco)
+                        if (mAutoRecoveryAttempts < 4) {
+                            mAudioRecoveryHandler.postDelayed(this, delayMs);
+                        }
+                        return;
+                    }
                 }
 
                 Log.d(TAG, "OEM AutoRecovery: intento " + mAutoRecoveryAttempts + " (recuperando canal FM)");
@@ -192,6 +811,14 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     /** Requiere {@link Manifest.permission#READ_PHONE_STATE} concedido en Android 6+. */
     private android.telephony.PhoneStateListener mPhoneStateListener;
     private volatile boolean mPhoneListenerRegistered;
+    private android.telephony.TelephonyManager mTelephonyManager;
+
+    // Broadcom fallback binding: evitar fugas si se llega a hacer bind.
+    private ServiceConnection mBroadcomFmReceiverConnection;
+    private boolean mBroadcomFmReceiverBound;
+
+    /** Para {@link com.example.openradiofm.utils.RadioActivityFileLogger} TICK sin depender de la Activity al frente. */
+    private static java.lang.ref.WeakReference<K706RadioManager> sWeakRadioManagerDiag;
 
     public K706RadioManager(Context context) {
         this.mContext = context;
@@ -200,6 +827,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             @Override
             public void onAudioFocusChange(int focusChange) {
                 Log.d(TAG, "onAudioFocusChange: " + focusChange);
+                persistLastFrameworkFocusChange(focusChange);
                 switch (focusChange) {
                     case AudioManager.AUDIOFOCUS_LOSS:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS----");
@@ -211,8 +839,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         // K706 OEM FIX (V18.5): Solo ignorar LOSS si es extremadamente reciente tras pedir foco (ventana de 2.5s)
                         // y el usuario quiere FM. Esto evita que la app "muera" al arrancar en algunos firmwares chinos,
                         // pero permite que Spotify/Música tomen el control después.
-                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs) {
+                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs
+                                && !isOtherAudioCompetingForMux()) {
                             Log.d(TAG, "AUDIOFOCUS_LOSS (Glitch Protect): mUserWantsFmAudio=true -> manteniendo FM, forzando recovery");
+                            mAllowImplicitFmRecoverFromPoll = true;
                             mIsRadioActive = true;
                             mWasRadioActiveBeforeFocusLoss = true;
                             mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
@@ -228,6 +858,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         try {
                             // Secuencia de salida segura
                             mWasRadioActiveBeforeFocusLoss = mIsRadioActive;
+                            // Antes del MCU: getCurrentFreq() corre en otro hilo Binder; si mIsAudioFocusHeld
+                            // sigue true unos ms, checkAndRecoverAudio() forzaba SetChannel(2) y tapaba AA/Spotify.
+                            mIsAudioFocusHeld = false;
+                            mAllowImplicitFmRecoverFromPoll = false;
                             mIsRadioActive = false; // Detener Heartbeat inmediatamente
                             // Solo silenciar si realmente estaba sonando/activo
                             if (mWasRadioActiveBeforeFocusLoss) {
@@ -245,70 +879,101 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS", e);
                         }
-                        // OEM: no dependas de recreación de layout para volver a sonar.
-                        // Programamos intentos de autorecuperación si el usuario quería FM.
-                        if (mUserWantsFmAudio) {
-                            mAutoRecoveryAttempts = 0;
-                            mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
-                            mAudioRecoveryHandler.postDelayed(mAutoRecoveryRunnable, 1500L);
-                        }
-                        abandonAudioFocus();
+                        // OEM parity: LOSS es “permanente” → no autorecuperar inmediata (a diferencia de TRANSIENT).
+                        mPausedByTransientLossOfFocus = false;
+                        mMutedByDuck = false;
+                        // No abandonamos AudioFocus aquí para permitir que el sistema nos notifique GAIN;
+                        // mIsAudioFocusHeld / mAllowImplicitFmRecoverFromPoll ya false al inicio del try.
+                        mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
+                        mAutoRecoveryAttempts = 0;
                         break;
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                     case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_LOSS_TRANSIENT (" + focusChange + ")----");
+                        // OEM parity: distinguir DUCK (-3) de TRANSIENT (-2).
+                        if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {
+                            // DUCK: mute OEM; además abandon si aún creíamos tener foco (Zlink/Maps a veces solo mandan -3).
+                            try {
+                                mMutedByDuck = true;
+                                setMute(true);
+                            } catch (Exception e) {
+                                Log.w(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: setMute(true) falló", e);
+                            }
+                            try {
+                                abandonAudioFocus();
+                            } catch (Exception e) {
+                                Log.w(TAG, "AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK: abandonAudioFocus falló", e);
+                            }
+                            mIsAudioFocusHeld = false;
+                            broadcastOemFocus(EVENT_LOSS_TRANSIENT);
+                            break;
+                        }
+
                         broadcastOemFocus(EVENT_LOSS_TRANSIENT);
                         if (mIsOnlineStreamingActive) {
                             Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorando mute porque el Streaming Online está activo");
                             break;
                         }
-                        // V18.5: En LOSS_TRANSIENT (llamadas/navegación), respetamos SIEMPRE la interrupción.
-                        // Solo usamos recovery si es un glitch de inicio.
-                        if (mUserWantsFmAudio && android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs) {
-                            Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT (Glitch Protect): forzando recovery");
-                            mIsRadioActive = true;
-                            mWasRadioActiveBeforeFocusLoss = true;
-                            mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
-                            mAutoRecoveryAttempts = 0;
-                            mAudioRecoveryHandler.postDelayed(mAutoRecoveryRunnable, 500L);
-                            break;
-                        }
+                        // Maps / TTS de navegación suele NO marcar isMusicActive(); el “Glitch Protect” aquí
+                        // devolvía la FM y tapaba la voz. Solo ignoramos transitorios de arranque si aún no hay radio activa.
                         if (android.os.SystemClock.uptimeMillis() < mIgnoreFocusLossUntilUptimeMs && !mIsRadioActive) {
                             Log.d(TAG, "onAudioFocusChange(LOSS_T): Ignorado (startup/espurio). mIsRadioActive=false");
                             break;
                         }
-                        mIsAudioFocusHeld = true;
-                        
-                        // V17.0: Diferenciar llamada real de interrupción de música
-                        if (mAudioManager.isMusicActive()) {
-                             mIsTransientFocusLoss = true;
-                             mIsInCall = false;
-                        } else {
-                             mIsInCall = true;
-                             mIsTransientFocusLoss = false;
+                        // Soltar registro de foco mientras el flag sigue true; si ya pusimos false, abandon no hace nada.
+                        try {
+                            abandonAudioFocus();
+                        } catch (Exception e) {
+                            Log.w(TAG, "LOSS_T: abandonAudioFocus falló", e);
                         }
-                        
+                        mIsAudioFocusHeld = false;
+
+                        // V17.0: Música/NAV por APLAY vs llamada GSM vs sesión de voz AA (sin IDLE telefónico).
+                        // AA a menudo imita llamada en LOSS_T; si marcamos mIsInCall sin GSM, el heartbeat y
+                        // AutoRecovery no recuperan FM al terminar la indicación (mIsInCall bloqueaba).
+                        final String lossTBranch;
+                        if (mAudioManager.isMusicActive() || isOtherAudioCompetingForMux()) {
+                            mIsTransientFocusLoss = true;
+                            mIsInCall = false;
+                            lossTBranch = "TRANSIENT_MEDIA";
+                        } else if (isRealTelephonyCallActive()) {
+                            mIsInCall = true;
+                            mIsTransientFocusLoss = false;
+                            lossTBranch = "TELEPHONY_GSM";
+                        } else {
+                            mIsTransientFocusLoss = true;
+                            mIsInCall = false;
+                            lossTBranch = "VOICE_SESSION_AA_OR_TTS";
+                        }
+                        RadioActivityFileLogger.logMedium(mContext, "LOSS_T", lossTBranch);
+
                         try {
                             mWasRadioActiveBeforeFocusLoss = mIsRadioActive;
-                            mIsRadioActive = false; // Detener Heartbeat temporalmente
-                            if (mWasRadioActiveBeforeFocusLoss) {
-                                setMute(true);
-                            } else {
-                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: Skip setMute(true) (radio no activa)");
-                            }
-                            // V11.5: Soltar canal MCU para que BT/teléfono suene limpio
-                            if (mSetChannel != null && mMcuManager != null) {
-                                mSetChannel.invoke(mMcuManager, (byte) 4);
-                                Log.d(TAG, "AUDIOFOCUS_LOSS_TRANSIENT: RPC_SetChannel(4) - canal FM liberado (mIsInCall=" + mIsInCall + ")");
-                            }
-                            // V18.4: Desmutear canal 4 para que Android/BT se oiga
-                            setMute(false);
+                            // OEM parity: powerDown temporal (cede canal a Android)
+                            mPausedByTransientLossOfFocus = (mWasRadioActiveBeforeFocusLoss || mUserWantsFmAudio);
+                            suspendFmForTransientFocusLoss();
                         } catch (Exception e) {
                             Log.e(TAG, "Error on AUDIOFOCUS_LOSS_TRANSIENT", e);
                         }
                         break;
+                    case AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK:
+                        // OEM parity (FmService$2): ante MAY_DUCK la radio OEM solo vuelve a pedir foco GAIN.
+                        // Sin este case el evento +3 quedaba sin manejar (Maps/Zlink en algunas ROMs).
+                        Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK----");
+                        try {
+                            requestAudioFocus(false);
+                        } catch (Exception e) {
+                            Log.w(TAG, "AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK: requestAudioFocus falló", e);
+                        }
+                        break;
                     case AudioManager.AUDIOFOCUS_GAIN:
                         Log.d(TAG, "--->>onAudioFocusChange()  ----AUDIOFOCUS_GAIN----");
+                        mAllowImplicitFmRecoverFromPoll = true;
+                        cancelRecoverAfterAaNavPlayback();
+                        mMuxSuspendedForAaNavPlaybackOnly = false;
+                        mAaNavMuxSuspendUptimeMs = 0L;
+                        mAaNavGuidanceActiveLatched = false;
+                        mAaNavPostRecoverIgnoreSuspendUntilUptimeMs = 0L;
                         broadcastOemFocus(EVENT_GAIN);
                         mIsAudioFocusHeld = true;
                         mIsInCall = false;
@@ -321,7 +986,33 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                         // Al recuperar foco, cancelamos backoff y forzamos recuperación inmediata.
                         mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
                         mAutoRecoveryAttempts = 0;
-                        // Forzar recuperación inmediata
+                        // OEM parity: si veníamos de DUCK, solo desmutear.
+                        if (mMutedByDuck) {
+                            mMutedByDuck = false;
+                            try { setMute(false); } catch (Exception ignored) {}
+                            try {
+                                requestAudioFocus(false);
+                            } catch (Exception e) {
+                                Log.w(TAG, "AUDIOFOCUS_GAIN tras DUCK: requestAudioFocus falló", e);
+                            }
+                            break;
+                        }
+
+                        // OEM parity: si veníamos de TRANSIENT, “powerUp” + unmute.
+                        if (mPausedByTransientLossOfFocus && mUserWantsFmAudio && !mIsOnlineStreamingActive) {
+                            mPausedByTransientLossOfFocus = false;
+                            try {
+                                // Recuperación rápida: evitar sleep dentro de la secuencia.
+                                startFmAudioSequence(/*fast*/ true);
+                            } catch (Exception e) {
+                                Log.w(TAG, "AUDIOFOCUS_GAIN: startFmAudioSequence(fast) falló, fallback enforceAudioChannelRecovery()", e);
+                                enforceAudioChannelRecovery();
+                            }
+                            try { setMute(false); } catch (Exception ignored) {}
+                            break;
+                        }
+
+                        // Fallback: recuperación inmediata de canal (BT/edge cases)
                         enforceAudioChannelRecovery();
                         break;
                 }
@@ -331,6 +1022,76 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
         // V11.5 + runtime: READ_PHONE_STATE — ver registerPhoneStateListenerIfPermitted()
         registerPhoneStateListenerIfPermitted();
+        ensurePlaybackConfigCallbackRegistered();
+        sWeakRadioManagerDiag = new java.lang.ref.WeakReference<>(this);
+    }
+
+    /** @see #sWeakRadioManagerDiag */
+    public static K706RadioManager peekWeakRadioManagerForDevLog() {
+        java.lang.ref.WeakReference<K706RadioManager> w = sWeakRadioManagerDiag;
+        return w != null ? w.get() : null;
+    }
+
+    /** Una línea compacta para el heartbeat de log a fichero (AA sin logcat). */
+    public String buildDevFileLogTickLine() {
+        StringBuilder sb = new StringBuilder(200);
+        try {
+            sb.append("focus=").append(mIsAudioFocusHeld);
+            sb.append(" inCall=").append(mIsInCall);
+            sb.append(" transFL=").append(mIsTransientFocusLoss);
+            sb.append(" duck=").append(mMutedByDuck);
+            sb.append(" pauseT=").append(mPausedByTransientLossOfFocus);
+            sb.append(" radio=").append(mIsRadioActive);
+            sb.append(" wantFm=").append(mUserWantsFmAudio);
+            sb.append(" muxAa=").append(mMuxSuspendedForAaNavPlaybackOnly);
+            sb.append(" implRec=").append(mAllowImplicitFmRecoverFromPoll);
+            sb.append(" stream=").append(mIsOnlineStreamingActive);
+            if (mAudioManager != null) {
+                sb.append(" music=").append(mAudioManager.isMusicActive());
+            }
+            if (mGetChannel != null && mMcuManager != null) {
+                try {
+                    Object ch = mGetChannel.invoke(mMcuManager);
+                    sb.append(" mcuCh=").append(ch);
+                } catch (Throwable ignored) {
+                    sb.append(" mcuCh=?");
+                }
+            }
+        } catch (Throwable t) {
+            sb.append(" tickErr=").append(t.getMessage());
+        }
+        return sb.toString();
+    }
+
+    /**
+     * Solo llamada telefónica real (GSM/VoLTE). Las indicaciones por Android Auto suelen generar
+     * {@link AudioManager#AUDIOFOCUS_LOSS_TRANSIENT} “tipo llamada” pero {@link TelephonyManager#getCallState()}
+     * sigue en IDLE: no deben bloquear recuperación vía {@link #mIsTransientFocusLoss} / heartbeat.
+     */
+    private boolean isRealTelephonyCallActive() {
+        if (mContext == null) {
+            return false;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE)
+                    != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                return false;
+            }
+        }
+        try {
+            if (mTelephonyManager == null) {
+                mTelephonyManager =
+                        (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            }
+            if (mTelephonyManager == null) {
+                return false;
+            }
+            int s = mTelephonyManager.getCallState();
+            return s == android.telephony.TelephonyManager.CALL_STATE_RINGING
+                    || s == android.telephony.TelephonyManager.CALL_STATE_OFFHOOK;
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     /**
@@ -348,9 +1109,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
         if (mPhoneListenerRegistered) return;
         try {
-            android.telephony.TelephonyManager tm =
-                    (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            if (tm == null) return;
+            if (mTelephonyManager == null) {
+                mTelephonyManager =
+                        (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            }
+            if (mTelephonyManager == null) return;
 
             if (mPhoneStateListener == null) {
                 mPhoneStateListener = new android.telephony.PhoneStateListener() {
@@ -405,11 +1168,28 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                     }
                 };
             }
-            tm.listen(mPhoneStateListener, android.telephony.PhoneStateListener.LISTEN_CALL_STATE);
+            mTelephonyManager.listen(mPhoneStateListener, android.telephony.PhoneStateListener.LISTEN_CALL_STATE);
             mPhoneListenerRegistered = true;
             Log.d(TAG, "PhoneStateListener registrado (silencio FM en llamadas)");
         } catch (Exception e) {
             Log.e(TAG, "registerPhoneStateListenerIfPermitted", e);
+        }
+    }
+
+    private void unregisterPhoneStateListener() {
+        if (!mPhoneListenerRegistered) return;
+        try {
+            if (mTelephonyManager == null && mContext != null) {
+                mTelephonyManager =
+                        (android.telephony.TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
+            }
+            if (mTelephonyManager != null && mPhoneStateListener != null) {
+                mTelephonyManager.listen(mPhoneStateListener, android.telephony.PhoneStateListener.LISTEN_NONE);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "unregisterPhoneStateListener falló", e);
+        } finally {
+            mPhoneListenerRegistered = false;
         }
     }
 
@@ -423,6 +1203,70 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.w(TAG, "broadcastOemFocus falló: " + event, e);
         }
+    }
+
+    /** Guarda el último código de {@link OnAudioFocusChangeListener} para verlo en ingeniería K706 sin logcat. */
+    private void persistLastFrameworkFocusChange(int focusChange) {
+        try {
+            if (mContext == null) return;
+            mContext.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE).edit()
+                    .putInt(PREF_OEM_LAST_AUDIOFOCUS_RAW, focusChange)
+                    .putLong(PREF_OEM_LAST_AUDIOFOCUS_WALL_MS, System.currentTimeMillis())
+                    .apply();
+            boolean music = mAudioManager != null && mAudioManager.isMusicActive();
+            boolean competes = isOtherAudioCompetingForMux();
+            RadioActivityFileLogger.logBasic(mContext, "AUDIO_FOCUS",
+                    "raw=" + focusChange + " held=" + mIsAudioFocusHeld + " radioActive=" + mIsRadioActive
+                            + " duck=" + mMutedByDuck + " pauseTransient=" + mPausedByTransientLossOfFocus
+                            + " inCall=" + mIsInCall + " transFL=" + mIsTransientFocusLoss
+                            + " music=" + music + " competes=" + competes);
+            logDevAudioPlaybackSnapshot("AFTER_FOCUS_" + focusChange);
+        } catch (Throwable ignored) {
+        }
+    }
+
+    /**
+     * Transact 1001: permiso de paquete para recibir {@code onMcuInfoChanged} (RDS, telemetría, etc.).
+     */
+    private void requestMcuPermissionHandshake(IBinder mcuServiceBinder) {
+        if (mcuServiceBinder == null || mContext == null) return;
+        Parcel data = Parcel.obtain();
+        Parcel reply = Parcel.obtain();
+        try {
+            data.writeInterfaceToken("android.qf.mcu.IMcuManager");
+            data.writeString(mContext.getPackageName());
+            mcuServiceBinder.transact(1001, data, reply, 0);
+            reply.readException();
+            Log.d(TAG, "Mcu permission handshake (1001) OK");
+        } catch (Exception e) {
+            Log.e(TAG, "Mcu permission handshake failed", e);
+        } finally {
+            data.recycle();
+            reply.recycle();
+        }
+    }
+
+    /**
+     * La radio OEM suele volver a registrar su {@code IMcuListener} y deja de entregar RDS a OpenRadioFM.
+     * Vuelve a ejecutar el handshake 1001 y {@link #registerMcuListener()} sin recrear todo el manager.
+     */
+    public void reassertMcuInfoListener() {
+        if (mMcuManager == null) {
+            Log.w(TAG, "reassertMcuInfoListener: mMcuManager null (motor no inicializado)");
+            return;
+        }
+        try {
+            Class<?> serviceManagerClass = Class.forName("android.os.ServiceManager");
+            Method getService = serviceManagerClass.getMethod("getService", String.class);
+            IBinder binder = (IBinder) getService.invoke(null, SERVICE_NAME);
+            if (binder != null) {
+                requestMcuPermissionHandshake(binder);
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "reassertMcuInfoListener: handshake opcional falló", e);
+        }
+        registerMcuListener();
+        Log.i(TAG, "reassertMcuInfoListener: listener re-registrado");
     }
 
     private void initMcuConnection() {
@@ -444,20 +1288,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Log.d(TAG, "Got IMcuManager instance: " + mMcuManager);
 
             // 3. Send "Request Permission" Transaction (1001) - Critical for receiving events
-            Parcel data = Parcel.obtain();
-            Parcel reply = Parcel.obtain();
-            try {
-                data.writeInterfaceToken("android.qf.mcu.IMcuManager");
-                data.writeString(mContext.getPackageName());
-                binder.transact(1001, data, reply, 0);
-                reply.readException();
-                Log.d(TAG, "Permissions requested successfully (Transact 1001)");
-            } catch (Exception e) {
-                Log.e(TAG, "Error requesting permissions", e);
-            } finally {
-                data.recycle();
-                reply.recycle();
-            }
+            requestMcuPermissionHandshake(binder);
 
             // 4. Register McuListener via Proxy to receive callbacks
             registerMcuListener();
@@ -531,10 +1362,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 }
             }
 
-            // === SECUENCIA DE INICIO DE AUDIO FM ===
-            startFmAudioSequence();
-
             Log.d(TAG, "K706RadioManager initialized and connected.");
+
+            // V24.9: activar watchdog tras una conexión MCU válida
+            armMcuWatchdog();
 
         } catch (Exception e) {
             Log.e(TAG, "Error initializing McuManager", e);
@@ -609,7 +1440,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             Object listenerObj = asInterface.invoke(null, listenerBinder);
             Log.d(TAG, "IMcuListener proxy created via Stub.asInterface: " + listenerObj.getClass().getName());
             
-            requestListener.invoke(mMcuManager, listenerObj, "com.example.openradiofm");
+            // Important: el servicio usa este packageName para permisos/ruteo interno (ver logs mcu_services).
+            // Debe coincidir con el package real de la app, no un literal.
+            String pkg = (mContext != null) ? mContext.getPackageName() : "com.example.openradiofm";
+            requestListener.invoke(mMcuManager, listenerObj, pkg);
             Log.d(TAG, "✓ Registered IMcuListener (AIDL Binder) successfully!");
             
         } catch (Exception e) {
@@ -654,7 +1488,8 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         Class<?> listenerInterface = Class.forName("android.qf.mcu.IMcuListener");
         Method requestListener = mMcuManager.getClass().getMethod(
             "RPC_RequestMcuInfoChangedListener", listenerInterface, String.class);
-        requestListener.invoke(mMcuManager, listenerObj, "com.example.openradiofm");
+        String pkg = (mContext != null) ? mContext.getPackageName() : "com.example.openradiofm";
+        requestListener.invoke(mMcuManager, listenerObj, pkg);
         Log.d(TAG, "✓ Registered IMcuListener (direct Binder) successfully!");
     }
 
@@ -664,6 +1499,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     private void handleMcuData(byte[] data) {
         if (data == null || data.length == 0) return;
+
+        // V24.9: si llegan callbacks, el listener está vivo.
+        mLastMcuCallbackUptimeMs = android.os.SystemClock.uptimeMillis();
         
         int packetType = data[0] & 0xFF;
         
@@ -685,7 +1523,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB1: // Preset List / Current Station
                     handlePresetList(data);
                     break;
-                case 0xB3: // RDS AF/TA Status Flags (Interruptores)
+                case 0xB3: // RDS RT Info (algunos firmwares) o flags AF/TA (otros firmwares)
+                    // PROTOCOLO_MCU_K706.md: 0xB3 = RDS RT (Radio Text).
+                    // Observación de campo: en ciertos K706/QF, 0xB3 se usa como flags AF/TA.
+                    // Estrategia: si el paquete parece texto, parsear RT; si no, tratarlo como flags.
+                    if (data.length > 2 && looksLikeAsciiTextPayload(data, 1)) {
+                        fireEvent(110, "B3 RT?: " + bytesToHex(data));
+                        handleRdsRt(data);
+                        break;
+                    }
                     if (data.length > 1) {
                         int rdsFlagsB3 = data[1] & 0xFF;
                         Log.d(TAG, "RDS B3 Flags: 0x" + String.format("%02X", rdsFlagsB3));
@@ -742,28 +1588,50 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 case 0xB8: // RDS PS Preset List (Research)
                     Log.d(TAG, "MCU[0xB8] PS Preset List RAW: " + bytesToHex(data));
                     break;
-                case 0x41: // 🔬 RESEARCH: Posible telemetría de señal (RSSI/SNR)
-                    mLastSignalData = data.clone(); // V15.7: Guardar para Menú Ingeniería
-                    StringBuilder sb41 = new StringBuilder();
-                    for (int i = 1; i < data.length; i++) {
-                        sb41.append(String.format("[%d]=%02X ", i, data[i]));
+                case 0x41: // 🔬 Telemetría de señal (RSSI/SNR)
+                    mLastSignalData = data.clone();
+                    handleSignalQuality(data);
+                    break;
+                case 0x22: // 🚗 V24.5: Lights status (01=ON, 00=OFF)
+                    if (data.length > 1) {
+                        int lights = data[1] & 0xFF;
+                        fireEvent(122, String.valueOf(lights));
+                        Log.d(TAG, "🚗 MCU[0x22] LIGHTS: " + (lights == 1 ? "ON" : "OFF"));
                     }
-                    Log.d(TAG, "🔬 [RESEARCH] MCU[0x41] SIGNAL DATA: " + sb41.toString());
+                    break;
+                case 0x23: // 🚗 V24.5: Reverse gear status (01=ON, 00=OFF)
+                    if (data.length > 1) {
+                        int reverse = data[1] & 0xFF;
+                        fireEvent(123, String.valueOf(reverse));
+                        Log.d(TAG, "🚗 MCU[0x23] REVERSE: " + (reverse == 1 ? "ACTIVE" : "INACTIVE"));
+                    }
+                    break;
+                case 0x24: // 🚗 V24.5: ACC status (01=ON, 00=OFF)
+                    if (data.length > 1) {
+                        int acc = data[1] & 0xFF;
+                        fireEvent(125, String.valueOf(acc));
+                        Log.d(TAG, "🚗 MCU[0x24] ACC: " + (acc == 1 ? "ON" : "OFF"));
+                    }
                     break;
                 case 0x29: // V13.1: Heartbeat silencioso del MCU (29 6D)
-                    // Ignoramos para evitar que se interprete como frecuencia (0x296D hex = 10605 decimal -> 106.10 MHz)
-                    return; 
+                    // Ignoramos para evitar que se interprete como frecuencia
+                    break; 
                 default:
                     // Log unknown packets for research
                     if (packetType >= 0xB0 && packetType <= 0xBF) {
                         Log.d(TAG, "🔬 [RESEARCH] NEW RDS/TUNER PACKET FOUND: 0x" + String.format("%02X", packetType) + " -> " + bytesToHex(data));
-                    } else {
-                        Log.d(TAG, "Unknown MCU packet type: 0x" + String.format("%02X", packetType));
                     }
                     break;
             }
         } catch (Exception e) {
             Log.e(TAG, "Error parsing MCU data", e);
+        }
+
+        // V24.3: Notify raw data listeners
+        synchronized(mRawListeners) {
+            for (RawMcuListener l : mRawListeners) {
+                l.onRawData(data);
+            }
         }
     }
 
@@ -897,7 +1765,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         try {
             // V9.1: Logging extendido para depurar Radio Text
             // A veces el RadioText viene precedido por un flag o offset extra.
-            String rtRaw = new String(data, 1, data.length - 1, "UTF-8");
+            String rtRaw = new String(data, 1, data.length - 1, "ISO-8859-1");
             Log.d(TAG, "RDS RT Try(1): '" + rtRaw + "'");
             
             // Usualmente RT empieza en el offset 1 o offset 2 en los sistemas chinos (0xB7 0x01 [Texto])
@@ -910,8 +1778,10 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             
             int len = data.length - startOffset;
             if (len > 0) {
-                String rtText = new String(data, startOffset, len, "UTF-8").trim();
-                rtText = rtText.replaceAll("[^\\x20-\\x7E]", "");
+                String rtText = new String(data, startOffset, len, "ISO-8859-1");
+                rtText = rtText.replace('\u0000', ' ').trim();
+                rtText = rtText.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", " ");
+                rtText = rtText.replaceAll("\\s{2,}", " ").trim();
                 
                 if (!rtText.isEmpty() && !rtText.equals("               ")) {
                     Log.d(TAG, "RDS RT Extracted: '" + rtText + "'");
@@ -921,6 +1791,43 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.e(TAG, "Error parsing RDS RT", e);
         }
+    }
+
+    /**
+     * Heurística: muchos paquetes de RT vienen como ASCII/Latin1 legible con pocos bytes de control.
+     */
+    private static boolean looksLikeAsciiTextPayload(byte[] data, int offset) {
+        if (data == null || data.length <= offset) return false;
+        int printable = 0;
+        int checked = 0;
+        for (int i = offset; i < data.length && checked < 18; i++, checked++) {
+            int b = data[i] & 0xFF;
+            if (b == 0x00) break;
+            if (b == 0x09 || b == 0x0A || b == 0x0D) { printable++; continue; }
+            if (b >= 0x20 && b <= 0x7E) { printable++; continue; }
+            // Latin1 printable range (áéíóúñ etc.)
+            if (b >= 0xA0 && b <= 0xFF) { printable++; continue; }
+        }
+        return checked >= 6 && printable >= (checked * 3) / 4;
+    }
+    
+    /**
+     * V7.2e: Procesa datos de calidad de señal (0x41)
+     * data[1] = RSSI (0-100 aprox)
+     * data[2] = SNR / Quality
+     */
+    private void handleSignalQuality(byte[] data) {
+        if (data.length < 3) return;
+        
+        int rssi = data[1] & 0xFF; // Fuerza de señal
+        int snr  = data[2] & 0xFF; // Calidad / Relación señal-ruido
+        
+        // Enviar a la UI para pintar barras de colores
+        // 120 -> RSSI, 121 -> SNR/Quality
+        fireEvent(120, String.valueOf(rssi));
+        fireEvent(121, String.valueOf(snr));
+        
+        Log.d(TAG, "Telemetry 0x41 -> RSSI: " + rssi + " | SNR: " + snr);
     }
 
     // V7.1: Helper para enviar eventos al callback de forma segura
@@ -1034,197 +1941,70 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
      * sendCmd() vía RPC_SendMcuMsgData solo funciona fiable para tune/band/fine.
      */
     private void initQFTunerManager() {
+        mQfAdapter = QFTunerAdapter.getInstance(mContext);
+        if (mQfAdapter == null) {
+            Log.w(TAG, "QFTunerManager SDK not available - hardware control will use raw MCU commands.");
+            return;
+        }
+
+        Log.d(TAG, "QFTunerAdapter initialized successfully.");
+
+        // V7.2c+: Registrar ITunerTool (QFTunerManager callbacks).
         try {
-            Class<?> clazz = Class.forName("com.qf.clientsdk.QFTunerManager");
-            Method getInstance = clazz.getMethod("getInstance");
-            mTunerManager = getInstance.invoke(null);
-            Log.d(TAG, "QFTunerManager: CONNECTED (" + mTunerManager + ")");
-
-            // Seek: onSeek(boolean up) — true=up, false=down
-            try {
-                mTunerOnSeek = clazz.getMethod("onSeek", boolean.class);
-                Log.d(TAG, "  → onSeek(boolean): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → onSeek not found, trying alternatives");
-                // Fallback: quizás use int (1=up, 0=down)
-                try {
-                    mTunerOnSeek = clazz.getMethod("onSeek", int.class);
-                    Log.d(TAG, "  → onSeek(int): OK (fallback)");
-                } catch (NoSuchMethodException e2) {
-                    Log.w(TAG, "  → onSeek NOT AVAILABLE");
-                }
-            }
-
-            // AutoScan & Stop
-            try {
-                mTunerAutoScan = clazz.getMethod("autoScan");
-                Log.d(TAG, "  → autoScan(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → autoScan NOT AVAILABLE");
-            }
-
-            try {
-                mTunerStopScan = clazz.getMethod("stopScan");
-                Log.d(TAG, "  → stopScan(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → stopScan NOT AVAILABLE");
-            }
-
-            // Band
-            try {
-                mTunerOnBand = clazz.getMethod("onBand", int.class);
-                Log.d(TAG, "  → onBand(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → onBand NOT AVAILABLE");
-            }
-
-            // LOC mode
-            try {
-                mTunerOnLoc = clazz.getMethod("onLoc", int.class);
-                Log.d(TAG, "  → onLoc(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → onLoc NOT AVAILABLE");
-            }
-
-            // RDS Switch
-            try {
-                mTunerSetRdsSwitch = clazz.getMethod("setRdsSwitch", int.class);
-                Log.d(TAG, "  → setRdsSwitch(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsSwitch NOT AVAILABLE");
-            }
-
-            // RDS AF Switch
-            try {
-                mTunerSetRdsAF = clazz.getMethod("setRdsAFSwitch");
-                Log.d(TAG, "  → setRdsAFSwitch(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsAFSwitch NOT AVAILABLE");
-            }
-
-            // RDS TA Switch
-            try {
-                mTunerSetRdsTA = clazz.getMethod("setRdsTASwitch");
-                Log.d(TAG, "  → setRdsTASwitch(): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsTASwitch NOT AVAILABLE");
-            }
-
-            // RDS PTY Type
-            try {
-                mTunerSetRdsPtyType = clazz.getMethod("setRdsPtyType", int.class);
-                Log.d(TAG, "  → setRdsPtyType(int): OK");
-            } catch (NoSuchMethodException e) {
-                Log.w(TAG, "  → setRdsPtyType NOT AVAILABLE");
-            }
-
-            // Log TODOS los métodos del TunerManager para exploración
-            Log.d(TAG, "=== Métodos QFTunerManager ===");
-            for (Method m : clazz.getMethods()) {
-                if (!m.getDeclaringClass().equals(Object.class)) {
-                    StringBuilder params = new StringBuilder();
-                    for (Class<?> p : m.getParameterTypes()) {
-                        if (params.length() > 0) params.append(", ");
-                        params.append(p.getSimpleName());
-                    }
-                    Log.d(TAG, "  " + m.getReturnType().getSimpleName() + " " + m.getName() + "(" + params + ")");
-                }
-            }
-
-            // V7.2c+: Registrar ITunerTool (QFTunerManager callbacks).
-            // Importante: RT (RadioText) suele llegar por este canal en K706,
-            // no necesariamente por paquetes MCU (0xB7) según firmware.
-            try {
-                Class<?> itunerToolClass = Class.forName("com.qf.clientsdk.ITunerTool");
-                Method setTunerTool = clazz.getMethod("setTunerTool", itunerToolClass);
-                
-                Object proxyTunerTool = Proxy.newProxyInstance(
-                    itunerToolClass.getClassLoader(),
-                    new Class<?>[] { itunerToolClass },
-                    new InvocationHandler() {
-                        @Override
-                        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                            StringBuilder argStr = new StringBuilder();
-                            if (args != null) {
-                                for (Object arg : args) {
-                                    argStr.append(arg != null ? arg.toString() : "null").append(" ");
-                                }
-                            }
-                            Log.d(TAG, "🔬 [RESEARCH] ITunerTool Call: " + method.getName() + "(" + argStr.toString().trim() + ")");
-
-                            final String name = method.getName();
-
-                            // PI Code
-                            if ("onCurrentFrequencyPICodeChange".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof Integer) {
-                                    int pi = (Integer) args[0];
-                                    Log.d(TAG, "PI Code Detected via ITunerTool: 0x" + Integer.toHexString(pi).toUpperCase());
-                                    fireEvent(107, String.valueOf(pi));
-                                }
-                                return null;
-                            }
-
-                            // PS (Program Service) byte[] path
-                            if ("onTuneRdsPSInfo".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
-                                    String ps = safeDecodeRdsBytes((byte[]) args[0], /*startOffset=*/1);
-                                    if (ps != null && !ps.trim().isEmpty()) {
-                                        Log.d(TAG, "RDS PS via ITunerTool: '" + ps + "'");
-                                        fireEvent(103, ps.trim());
-                                    }
-                                }
-                                return null;
-                            }
-
-                            // RT (RadioText) byte[] path
-                            if ("onTuneRdsRTInfo".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
-                                    String rt = safeDecodeRdsBytes((byte[]) args[0], /*startOffset=*/1);
-                                    if (rt != null && !rt.trim().isEmpty()) {
-                                        Log.d(TAG, "RDS RT via ITunerTool: '" + rt + "'");
-                                        fireEvent(104, rt.trim());
-                                    }
-                                }
-                                return null;
-                            }
-
-                            // RT string path (algunos firmwares también lo emiten así)
-                            if ("rds_stationRawTextChange".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof String) {
-                                    String rt = ((String) args[0]).trim();
-                                    if (!rt.isEmpty()) {
-                                        Log.d(TAG, "RDS RT via ITunerTool (string): '" + rt + "'");
-                                        fireEvent(104, rt);
-                                    }
-                                }
-                                return null;
-                            }
-
-                            // PTY
-                            if ("onTuneRdsPtyTypeInfo".equals(name)) {
-                                if (args != null && args.length > 0 && args[0] instanceof byte[]) {
-                                    byte[] b = (byte[]) args[0];
-                                    if (b.length > 2) {
-                                        int pty = b[2] & 0xFF;
-                                        fireEvent(105, String.valueOf(pty));
-                                    }
-                                }
-                                return null;
-                            }
-                            return null;
+            Class<?> itunerToolClass = Class.forName("com.qf.clientsdk.ITunerTool");
+            Object proxyTunerTool = Proxy.newProxyInstance(
+                itunerToolClass.getClassLoader(),
+                new Class<?>[] { itunerToolClass },
+                new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        final String name = method.getName();
+                        
+                        // Log call for research
+                        StringBuilder argStr = new StringBuilder();
+                        if (args != null) {
+                            for (Object arg : args) argStr.append(arg != null ? arg.toString() : "null").append(" ");
                         }
-                    });
-                
-                setTunerTool.invoke(mTunerManager, proxyTunerTool);
-                Log.d(TAG, "  → ITunerTool Listener (RDS/PI): REGISTERED");
-            } catch (Exception e) {
-                Log.w(TAG, "  → setTunerTool NOT AVAILABLE or Proxy error: " + e.getMessage());
-            }
+                        Log.v(TAG, "🔬 ITunerTool: " + name + "(" + argStr.toString().trim() + ")");
 
-        } catch (ClassNotFoundException e) {
-            Log.w(TAG, "QFTunerManager class not found - sendCmd MCU directo será el único canal");
+                        // PI Code
+                        if ("onCurrentFrequencyPICodeChange".equals(name)) {
+                            if (args != null && args.length > 0 && args[0] instanceof Integer) {
+                                int pi = (Integer) args[0];
+                                fireEvent(107, String.valueOf(pi));
+                            }
+                        }
+                        // PS
+                        else if ("onTuneRdsPSInfo".equals(name)) {
+                            if (args != null && args.length > 0 && args[0] instanceof byte[]) {
+                                String ps = safeDecodeRdsBytes((byte[]) args[0], 1);
+                                if (ps != null && !ps.isEmpty()) fireEvent(103, ps);
+                            }
+                        }
+                        // RT
+                        else if ("onTuneRdsRTInfo".equals(name) || "rds_stationRawTextChange".equals(name)) {
+                            if (args != null && args.length > 0) {
+                                String rt = null;
+                                if (args[0] instanceof byte[]) rt = safeDecodeRdsBytes((byte[]) args[0], 1);
+                                else if (args[0] instanceof String) rt = (String) args[0];
+                                if (rt != null && !rt.isEmpty()) fireEvent(104, rt);
+                            }
+                        }
+                        // PTY
+                        else if ("onTuneRdsPtyTypeInfo".equals(name)) {
+                            if (args != null && args.length > 0 && args[0] instanceof byte[]) {
+                                byte[] b = (byte[]) args[0];
+                                if (b.length > 2) fireEvent(105, String.valueOf(b[2] & 0xFF));
+                            }
+                        }
+                        return null;
+                    }
+                });
+            
+            // mQfAdapter.setTunerTool(proxyTunerTool);
+            Log.d(TAG, "V7.2e: ITunerTool Proxy DISABLED (Centralized RDS via handleMcuData)");
         } catch (Exception e) {
-            Log.e(TAG, "Error connecting to QFTunerManager", e);
+            Log.w(TAG, "Failed to register ITunerTool: " + e.getMessage());
         }
     }
 
@@ -1314,6 +2094,16 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
+    /**
+     * V7.2f: Envía comando de hardware para forzar modo Mono o permitir Stereo.
+     * @param enable true para Stereo (1), false para Mono (0).
+     */
+    public void setStereoMode(boolean enable) throws RemoteException {
+        // Comando 0x10: 1=Stereo, 0=Mono
+        sendCmd((byte) 0x10, (byte) (enable ? 1 : 0), (byte) 0);
+        Log.d(TAG, "Direct MCU -> StereoMode changed to: " + (enable ? "STEREO" : "MONO") + " (cmd 0xA0 10)");
+    }
+
     // ==========================================
     // AIDL INTERFACE IMPLEMENTATION
     // ==========================================
@@ -1340,21 +2130,29 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     public void onBandEvent() throws RemoteException {
         mCurrentBand++;
         if (mCurrentBand > BAND_AM2) mCurrentBand = BAND_FM1;
-        // V9.6 (Fix AM band): El comando real para cambiar la banda en MCU es 0x06 (SWITCH_BAND)
-        sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
-        Log.d(TAG, "Band -> " + mCurrentBand + " (sent [0xA0 06 " + String.format("%02X", mCurrentBand) + " 00])");
         
-        // V13.1: Notificar INMEDIATAMENTE el cambio de banda para que la UI responda rápido
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // El comando para cambiar la banda en MCU es 0x06 (SUB_SWITCH_BAND)
+        sendCmd(SUB_SWITCH_BAND, (byte) mCurrentBand, (byte) 0);
+        Log.d(TAG, "Direct MCU -> Change Band to: " + mCurrentBand + " (cmd 0xA0 06)");
+        
+        // Notificar inmediatamente el cambio a la UI
         fireEvent(101, String.valueOf(mCurrentBand));
     }
 
     public void closeDevice() throws RemoteException {
         Log.d(TAG, "Cerrando radio FM y restaurando contexto de audio");
+
+        // Evitar reasserts mientras cerramos todo.
+        disarmMcuWatchdog();
         
         // V9.5: Emula secuencia estricta de salida de la app nativa 
         stopFmAudioSequence();
         
         abandonAudioFocus();
+        unregisterPlaybackConfigCallback();
+        unregisterPhoneStateListener();
+        unbindBroadcomFmReceiverServiceIfNeeded();
         if (mAudioManager != null && mContext != null) {
             mAudioManager.unregisterMediaButtonEventReceiver(
                     new ComponentName(mContext.getPackageName(), "MediaButtonReceiver"));
@@ -1362,9 +2160,19 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     private void requestAudioFocus() {
+        requestAudioFocus(true);
+    }
+
+    /**
+     * @param extendAntiGlitchWindow si {@code false}, no alarga la ventana anti-LOSS (p. ej. reintentos del
+     *        {@link #mAutoRecoveryRunnable}): evita competir con la voz de Maps/Android Auto durante segundos.
+     */
+    private void requestAudioFocus(boolean extendAntiGlitchWindow) {
         if (mAudioManager != null && !mIsAudioFocusHeld) {
-            // Ventana anti-LOSS espurio tras pedir foco (Zlink/Auto)
-            mIgnoreFocusLossUntilUptimeMs = android.os.SystemClock.uptimeMillis() + 2500L;
+            if (extendAntiGlitchWindow) {
+                // Ventana anti-LOSS espurio tras pedir foco (Zlink/Auto)
+                mIgnoreFocusLossUntilUptimeMs = android.os.SystemClock.uptimeMillis() + 2500L;
+            }
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                 AudioAttributes attributes = new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -1410,6 +2218,27 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
     }
 
+    /**
+     * Vxx: Soltar AudioFocus sin cerrar el HAL ni parar secuencia FM.
+     * Útil cuando la UI se minimiza (modo "silencio en background") y queremos que el launcher
+     * no nos trate como fuente activa, pero sin perder estado del motor.
+     */
+    public void releaseAudioFocusOnlyForBackground() {
+        try {
+            // Evitar que el auto-recovery/heartbeat vuelva a reclamar AudioFocus inmediatamente.
+            mUserWantsFmAudio = false;
+            mAllowImplicitFmRecoverFromPoll = false;
+            mIsRadioActive = false;
+            try { mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable); } catch (Exception ignored) {}
+            mAutoRecoveryAttempts = 0;
+            abandonAudioFocus();
+            // En background no necesitamos vigilar el listener; evita reasserts inútiles.
+            disarmMcuWatchdog();
+        } catch (Exception e) {
+            Log.w(TAG, "releaseAudioFocusOnlyForBackground falló", e);
+        }
+    }
+
         /**
      * V7.2d: Secuencia de inicio de audio FM.
      * CORREGIDA basándose en el análisis del log de la app nativa (TunerManagerForExt/FmService).
@@ -1426,29 +2255,47 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
      * causando que PID 4140 lo sobreescriba con SetChannel(4).
      */
     private void startFmAudioSequence() {
+        startFmAudioSequence(/*fast*/ false);
+    }
+
+    /**
+     * Variante para recuperación por AudioFocus: evita sleeps/bloqueos largos.
+     * En K706 el framework suele aplicar SetChannel(2) rápidamente tras requestAudioFocus.
+     */
+    private void startFmAudioSequence(boolean fast) {
         Log.d(TAG, "=== INICIO SECUENCIA AUDIO FM V7.2d ===");
 
-        // 1. Silenciar primero
-        try {
-            setMute(true);
-            Log.d(TAG, "[1/7] setMute(true) OK");
-        } catch (Exception e) {
-            Log.w(TAG, "[1/7] setMute(true) failed", e);
+        // 1. Silenciar primero (omitir si fast + ya en FM: evita micro-corte audible cuando
+        //    PlaybackManager.setMute(false) encadena enforceAudioRecovery justo tras desmutear,
+        //    o el heartbeat ya devolvió el canal 2).
+        boolean skipLeadingMute = false;
+        if (fast && mMcuManager != null && mGetChannel != null) {
+            try {
+                byte ch = (byte) mGetChannel.invoke(mMcuManager);
+                if (ch == 2) {
+                    skipLeadingMute = true;
+                }
+            } catch (Exception ignored) {}
+        }
+        if (!skipLeadingMute) {
+            try {
+                setMute(true);
+                Log.d(TAG, "[1/7] setMute(true) OK");
+            } catch (Exception e) {
+                Log.w(TAG, "[1/7] setMute(true) failed", e);
+            }
+        } else {
+            Log.d(TAG, "[1/7] setMute(true) omitido (fast, canal ya FM)");
         }
 
         // 2. CLAVE: Enviar comando "Radio Area" al MCU
-        // V9.6: Usar QFTunerManager.onLoc() si disponible
-        if (mTunerOnLoc != null && mTunerManager != null) {
-            try {
-                mTunerOnLoc.invoke(mTunerManager, 1); // mode=1 (Local)
-                Log.d(TAG, "[2/9] LOC(1) via QFTunerManager.onLoc()");
-            } catch (Exception e) {
-                sendCmd(SUB_TUNE_AREA, (byte) 0x01, (byte) 0x00);
-                Log.d(TAG, "[2/9] LOC(1) fallback sendCmd");
-            }
+        // V9.6: Usar QFTunerAdapter si disponible
+        if (mQfAdapter != null) {
+            mQfAdapter.setLoc(1); // mode=1 (Local)
+            Log.d(TAG, "[2/9] LOC(1) via QFTunerAdapter");
         } else {
             sendCmd(SUB_TUNE_AREA, (byte) 0x01, (byte) 0x00);
-            Log.d(TAG, "[2/9] Radio Area/LOC notification sent (sendCmd)");
+            Log.d(TAG, "[2/9] Radio Area/LOC notification sent (sendCmd fallback)");
         }
 
         // 3. Pedir foco de audio ANTES de SetChannel
@@ -1457,12 +2304,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         requestAudioFocus();
         Log.d(TAG, "[3/7] requestAudioFocus - PID 4140 debería responder con SetChannel(2)");
 
-        // 4. Esperar un poco para que PID 4140 procese el AudioFocus
-        // y llame SetChannel(2) por nosotros
-        try {
-            Thread.sleep(100);
-        } catch (InterruptedException e) {
-            // ignore
+        // 4. Esperar un poco para que PID 4140 procese el AudioFocus y llame SetChannel(2) por nosotros.
+        // En recuperación por foco preferimos no bloquear (fast=true).
+        if (!fast) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException ignored) {}
         }
 
         // 5. Verificar si PID 4140 ya activó el canal FM
@@ -1504,27 +2351,15 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         
         // OEM: el usuario quiere FM (aunque el sistema intente tumbar canal/mute)
         mUserWantsFmAudio = true;
+        mAllowImplicitFmRecoverFromPoll = true;
 
-        // 8. RDS - V9.8: Re-habilitado de forma segura vía QFTunerManager
-        if (mTunerSetRdsSwitch != null && mTunerManager != null) {
-            try {
-                mTunerSetRdsSwitch.invoke(mTunerManager, 1);
-                Log.d(TAG, "[8/9] RDS ON via QFTunerManager.setRdsSwitch(1)");
-            } catch (Exception e) {
-                // Si falla el alto nivel, no enviamos el comando de bajo nivel (0x15) porque causa autoscan/cuelgue
-                Log.w(TAG, "[8/9] Falló setRdsSwitch de QFTunerManager", e);
-            }
-        }
+        // 8. RDS - V7.2e: Re-habilitado vía comando maestro directo
+        sendRdsCmd((byte) (mIsRdsEnabled ? 1 : 0));
+        Log.d(TAG, "[8/9] RDS Master set to " + mIsRdsEnabled + " via cmd 0xA2");
 
-        // 9. V9.8: RESET FILTRO PTY - Vía alto nivel
-        if (mTunerSetRdsPtyType != null && mTunerManager != null) {
-            try {
-                mTunerSetRdsPtyType.invoke(mTunerManager, 0); // 0 suele significar "sin filtro / todos"
-                Log.d(TAG, "[9/9] Resetting PTY filter via QFTunerManager.setRdsPtyType(0)");
-            } catch (Exception e) {
-                Log.w(TAG, "[9/9] Falló setRdsPtyType de QFTunerManager", e);
-            }
-        }
+        // 9. V7.2e: RESET FILTRO PTY (cmd 0x15)
+        sendCmd(SUB_RDS_PTY, (byte) 0, (byte) 0);
+        Log.d(TAG, "[9/9] Resetting PTY filter via direct cmd 0x15");
         
         // V11.6: setRdsTASwitch() ya NO se llama al inicio - lanzaba un TA SEEK scan
         // TA se maneja puramente en software con mIsTaEnabled
@@ -1544,6 +2379,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
      * todas las características del RDS (PTY, RT, etc.) usando reflection.
      */
     private void enableBroadcomRdsFeatures() {
+        if (mBroadcomRdsUnsupported) return;
         try {
             // Buscamos FmProxy de Broadcom 
             Class<?> fmProxyClass = Class.forName("com.broadcom.bt.app.fm.FmProxy");
@@ -1555,7 +2391,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             // Por lo que trataremos de hacer bindService directo al IFmReceiverService si está disponible
             Intent intent = new Intent();
             intent.setComponent(new ComponentName("com.broadcom.bt.app.fm", "com.broadcom.bt.app.fm.FmReceiverService"));
-            boolean bound = mContext.bindService(intent, new android.content.ServiceConnection() {
+            // Evitar múltiples binds (y fuga si se llama más de una vez).
+            if (mBroadcomFmReceiverBound) {
+                return;
+            }
+            if (mBroadcomFmReceiverConnection == null) {
+                mBroadcomFmReceiverConnection = new android.content.ServiceConnection() {
                 @Override
                 public void onServiceConnected(ComponentName name, IBinder service) {
                     try {
@@ -1580,14 +2421,40 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
                 public void onServiceDisconnected(ComponentName name) {
                     Log.d(TAG, "[Broadcom] Desconectado de FmReceiverService");
                 }
-            }, Context.BIND_AUTO_CREATE);
+                };
+            }
+            boolean bound = mContext.bindService(intent, mBroadcomFmReceiverConnection, Context.BIND_AUTO_CREATE);
+            mBroadcomFmReceiverBound = bound;
             
             if (!bound) {
                 Log.w(TAG, "[Broadcom] bindService falló. El servicio FmReceiverService no está accesible para la app.");
             }
             
+        } catch (ClassNotFoundException e) {
+            // Muy común en K706: el framework no incluye clases Broadcom. Evitar spam y reintentos.
+            mBroadcomRdsUnsupported = true;
+            if (!mBroadcomRdsUnsupportedLogged) {
+                mBroadcomRdsUnsupportedLogged = true;
+                Log.w(TAG, "[Broadcom] FmProxy no existe en esta ROM; deshabilitando override Broadcom para evitar spam.", e);
+            }
         } catch (Exception e) {
-            Log.w(TAG, "[Broadcom] Broadcom FmProxy / FmReceiverService no disponible o inaccesible vía Reflection.", e);
+            // Otros fallos (permisos/bind) no deberían spamear sin control.
+            if (!mBroadcomRdsUnsupportedLogged) {
+                Log.w(TAG, "[Broadcom] Broadcom FmProxy / FmReceiverService no disponible o inaccesible vía Reflection.", e);
+            }
+        }
+    }
+
+    private void unbindBroadcomFmReceiverServiceIfNeeded() {
+        if (!mBroadcomFmReceiverBound) return;
+        if (mContext == null) return;
+        if (mBroadcomFmReceiverConnection == null) return;
+        try {
+            mContext.unbindService(mBroadcomFmReceiverConnection);
+        } catch (Exception e) {
+            Log.w(TAG, "unbindBroadcomFmReceiverServiceIfNeeded falló", e);
+        } finally {
+            mBroadcomFmReceiverBound = false;
         }
     }
 
@@ -1595,6 +2462,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         Log.d(TAG, "=== FIN SECUENCIA AUDIO FM (Teardown V9.5) ===");
         mIsRadioActive = false; // V9.9: Limpiar flag activo inmediatamente
         mUserWantsFmAudio = false;
+        mAllowImplicitFmRecoverFromPoll = false;
+        mPausedByTransientLossOfFocus = false;
+        mMutedByDuck = false;
         mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable);
         mAutoRecoveryAttempts = 0;
         try {
@@ -1615,6 +2485,31 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         } catch (Exception e) {
             Log.w(TAG, "Teardown error", e);
             try { setMute(false); } catch (Exception ignored) {}
+        }
+    }
+
+    /**
+     * Suspende temporalmente la FM por pérdida transitoria de AudioFocus (Maps/AA/Spotify).
+     * Clava la OEM: baja el "power" del audio FM y cede el canal a Android.
+     *
+     * Importante: NO borra {@link #mUserWantsFmAudio}; esto permite recuperar en AUDIOFOCUS_GAIN.
+     */
+    private void suspendFmForTransientFocusLoss() {
+        try {
+            logDevAudioPlaybackSnapshot("FM_SUSPEND_TRANS");
+            RadioActivityFileLogger.logBasic(mContext, "FM_MUX", "suspendFmForTransientFocusLoss");
+            // “PowerDown” temporal: mute -> fm_radio_on=0 -> SetChannel(4) -> unmute (para que Android suene)
+            setMute(true);
+            setAudioParams(false);
+            if (mSetChannel != null && mMcuManager != null) {
+                mSetChannel.invoke(mMcuManager, (byte) 4);
+            }
+            setMute(false);
+        } catch (Exception e) {
+            Log.w(TAG, "suspendFmForTransientFocusLoss falló", e);
+            try { setMute(false); } catch (Exception ignored) {}
+        } finally {
+            mIsRadioActive = false;
         }
     }
 
@@ -1649,90 +2544,55 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public void onASEvent() throws RemoteException {
-        // V9.6: Auto Store via QFTunerManager
-        if (mTunerAutoScan != null && mTunerManager != null) {
-            try {
-                mTunerAutoScan.invoke(mTunerManager);
-                mIsScanning = true;
-                Log.d(TAG, "AutoStore via QFTunerManager.autoScan()");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.autoScan fallback", e);
-            }
-        }
-        sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
+        // V7.2e: BLOQUEADO Auto Store nativo (0x08). 
+        // No queremos que la MCU machaque sus presets internos.
+        Log.d(TAG, "Native AutoStore (0x08) BLOCKED. Triggering Software AutoScan...");
+        
         mIsScanning = true;
-        Log.d(TAG, "AutoStore fallback sendCmd (0x08)");
+        // Evento 108 (2) -> Escaneo por Software iniciado
+        fireEvent(108, "2"); 
+        // Evento 116 -> Comando para que el Engine empiece la secuencia de Seek & Save
+        fireEvent(116, "START_SOFT_AS");
     }
 
     @Override
     public void onPSEvent() throws RemoteException {
-        // V9.6: Stop scan via QFTunerManager
-        if (mTunerStopScan != null && mTunerManager != null) {
-            try {
-                mTunerStopScan.invoke(mTunerManager);
-                mIsScanning = false;
-                Log.d(TAG, "StopScan via QFTunerManager.stopScan()");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.stopScan fallback", e);
-            }
-        }
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Stop Scan es el comando 0x0C (SUB_AUTO_SCAN_STOP)
         sendCmd(SUB_AUTO_SCAN_STOP, (byte) 0, (byte) 0);
         mIsScanning = false;
-        Log.d(TAG, "StopScan fallback sendCmd (0x0C)");
+        Log.d(TAG, "Direct MCU -> Stop Scan requested (cmd 0xA0 0C)");
     }
 
     @Override
     public void onLocDxEvent() throws RemoteException {
-        // V9.6: Usar QFTunerManager.onLoc() para LOC/DX
         mIsDxLocal = !mIsDxLocal;
         int mode = mIsDxLocal ? 1 : 0;
         
-        // V9.6: LOC/DX es el comando 0x07 (SWITCH_LOC) según TunerCmdFactory
-        sendCmd(SUB_SWITCH_LOC, (byte) (mIsDxLocal ? 1 : 0), (byte) 0x00);
-        Log.d(TAG, "DX/Local toggle -> " + (mIsDxLocal ? "LOCAL" : "DX") + " (sent [0xA0 07 " + (mIsDxLocal ? "01" : "00") + " 00])");
-        fireEvent(106, String.valueOf(mIsDxLocal ? 1 : 0));
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Comando 0xA0 0x07 [mode] 0x00
+        sendCmd(SUB_SWITCH_LOC, (byte) mode, (byte) 0x00);
+        Log.d(TAG, "Direct MCU -> DX/Local set to: " + (mIsDxLocal ? "LOCAL" : "DX") + " (cmd 0xA0 07)");
+        
+        fireEvent(106, String.valueOf(mode));
     }
 
     @Override
     public void onSeekDownEvent() throws RemoteException {
-        // V9.6: Seek down real
-        // Prefer QFTunerManager if available for better stability and system integration
-        if (mTunerManager != null && mTunerOnSeek != null) {
-            try {
-                mTunerOnSeek.invoke(mTunerManager, false);
-                mIsSeeking = true;
-                Log.d(TAG, "Seek Down via QFTunerManager (onSeek false)");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.onSeek failed, falling back to raw MCU cmd", e);
-            }
-        }
-
-        sendCmd(SUB_SEEK_DOWN, (byte) 0x02, (byte) 0);
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Seek Down es el comando 0x02 (SUB_SEEK_DOWN)
+        sendCmd(SUB_SEEK_DOWN, (byte) 0x02, (byte) 0); // param1=0x02 suele indicar dirección down en este MCU
         mIsSeeking = true;
-        Log.d(TAG, "Seek Down (0x02) raw MCU command sent");
+        Log.d(TAG, "Direct MCU -> Seek Down initiated (cmd 0xA0 02)");
     }
 
     @Override
     public void onSeekUpEvent() throws RemoteException {
-        // V9.6: Seek up real (true=0x01/0x02 según param)
-        // Prefer QFTunerManager if available
-        if (mTunerManager != null && mTunerOnSeek != null) {
-            try {
-                mTunerOnSeek.invoke(mTunerManager, true);
-                mIsSeeking = true;
-                Log.d(TAG, "Seek Up via QFTunerManager (onSeek true)");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.onSeek failed, falling back to raw MCU cmd", e);
-            }
-        }
-
-        sendCmd(SUB_SEEK_UP, (byte) 0x01, (byte) 0);
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Seek Up es el comando 0x01 (SUB_SEEK_UP)
+        sendCmd(SUB_SEEK_UP, (byte) 0x01, (byte) 0); // param1=0x01 suele indicar dirección up
         mIsSeeking = true;
-        Log.d(TAG, "Seek Up (0x01) raw MCU command sent");
+        Log.d(TAG, "Direct MCU -> Seek Up initiated (cmd 0xA0 01)");
     }
 
     @Override
@@ -1749,20 +2609,12 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public void onScanEvent() throws RemoteException {
-        // V9.6: Usar QFTunerManager
-        if (mTunerAutoScan != null && mTunerManager != null) {
-            try {
-                mTunerAutoScan.invoke(mTunerManager);
-                mIsScanning = true;
-                Log.d(TAG, "AutoScan via QFTunerManager.autoScan()");
-                return;
-            } catch (Exception e) {
-                Log.w(TAG, "QFTunerManager.autoScan fallback to sendCmd", e);
-            }
-        }
-        sendCmd(SUB_TUNE_AS, (byte) 0, (byte) 0);
+        // V7.2e: BLOQUEADO Scan nativo. Redirigiendo a Software Scan.
+        Log.d(TAG, "Native Scan BLOCKED. Using OpenRadioFM SoftScan...");
+        
         mIsScanning = true;
-        Log.d(TAG, "AutoScan fallback sendCmd (0x08)");
+        fireEvent(108, "2"); 
+        fireEvent(116, "START_SOFT_SCAN");
     }
 
     @Override
@@ -1770,8 +2622,11 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // La freq de OpenRadioFM viene en formato x1000 (ej. 96900 = 96.9 MHz)
         int freqMcu = (freq >= 522 && freq <= 1710) ? freq : (freq / 10); 
         mCurrentFreq = freq;
+        
+        // V7.2e: Comunicación directa con MCU (Independencia total del SDK OEM)
+        // Comando 0xA0 0x00 [hi] [lo]
         sendCmd(SUB_TUNE_FREQUENCY, (byte) ((freqMcu >> 8) & 0xFF), (byte) (freqMcu & 0xFF));
-        Log.d(TAG, "Tune -> " + freq + " (MCU: " + freqMcu + ")");
+        Log.d(TAG, "Direct MCU -> Tune to " + freq + " Hz (MCU binary: " + freqMcu + ")");
         
         // V13.1: Feedback inmediato a la UI al deslizar el dial
         notifyFreqUpdate();
@@ -1790,12 +2645,13 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
 
     @Override
     public void gotoFreqIndex(int index) throws RemoteException {
-        // El index (0-5) corresponde al preset. Extraído: SUB_PRESET_SELECT = 0x0D
-        sendCmd(SUB_PRESET_SELECT, (byte) index, (byte) 0);
-        Log.d(TAG, "Select Preset Index -> " + index);
+        // V7.2e: DESACTIVADO el comando MCU 0x0D para independizarnos de su memoria interna.
+        // Ahora OpenRadioFM gestiona sus propios favoritos por base de datos.
+        // La UI sintonizará por frecuencia directa usando gotoFreq(int freq).
+        Log.d(TAG, "Software Preset Redirect: Index " + index + " requested (MCU 0x0D ignored)");
         
-        // V13.1: Forzamos refresco del estado para que la UI detecte la nueva frecuencia y banda
-        notifyFreqUpdate();
+        // Opcional: Notificar a la UI que use su propia memoria si el index viene de un mando al volante
+        fireEvent(115, String.valueOf(index)); // Código 115: 'Cargar favorito de la app por índice'
     }
 
     public void onNextFavoriteEvent() throws RemoteException {
@@ -1827,9 +2683,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // RPC_GetChannel retorna el CANAL DE AUDIO (2=FM, 4=Android), NO la frecuencia.
         // mCurrentFreq ya está en formato OpenRadioFM (×1000) gracias a updateFrequency().
         
-        // V9.9: Aprovechamos este polling (1 vez por seg) para vigilar que el coche no nos haya robado el canal.
-        // Durante streaming online el canal deseado es 4 (Android); no forzar recuperación a FM aquí.
-        if (mIsRadioActive && !mIsOnlineStreamingActive) {
+        // Polling mientras el usuario quiere FM: tras Spotify/AA debe poder volver al cesar la media externa.
+        // La agresividad la limita checkAndRecoverAudio (music/competes/canal 4), no este if.
+        if (!mIsOnlineStreamingActive && (mIsRadioActive || mUserWantsFmAudio)) {
             checkAndRecoverAudio();
         }
 
@@ -1861,18 +2717,42 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         // V17.0: Limpiar estados de interrupcion al forzar play
         mIsInCall = false;
         mIsTransientFocusLoss = false;
-        
-        requestAudioFocus();
+        mAllowImplicitFmRecoverFromPoll = true;
+
+        // “Play” = usuario quiere FM + secuencia completa (orden correcto en K706).
+        try {
+            startFmAudioSequence(/*fast*/ true);
+        } catch (Exception e) {
+            Log.w(TAG, "requestPlayAudio: startFmAudioSequence(fast) falló, fallback enforceAudioChannelRecovery()", e);
+            enforceAudioChannelRecovery();
+        }
         mIsRadioActive = true;
         Log.d(TAG, "requestPlayAudio: focus=" + mIsAudioFocusHeld + " radioActive=true");
-        // Forzar canal 2 por si acaso
-        enforceAudioChannelRecovery();
         return mIsAudioFocusHeld;
     }
 
+    /**
+     * K706: pedir AudioFocus solo para routing de MEDIA keys / "lastAudioSource" OEM,
+     * sin arrancar la secuencia de audio FM (no tocar canal/mute/params).
+     *
+     * Útil para mantener el enrutado de mandos cuando la app está en segundo plano,
+     * evitando carreras/LOSS espurio al “arranque en frío”.
+     */
+    public boolean requestAudioFocusOnlyForRouting() {
+        try {
+            requestAudioFocus();
+            return mIsAudioFocusHeld;
+        } catch (Exception e) {
+            Log.w(TAG, "requestAudioFocusOnlyForRouting falló", e);
+            return false;
+        }
+    }
+
     public void setMute(boolean mute) throws RemoteException {
+        // V7.2e: Independencia total: Usamos únicamente el método RPC_SetVolumeMute del mcu_service
+        // para asegurar el silencio a nivel de amplificador de hardware.
         if (mSetMute == null) {
-            Log.w(TAG, "setMute: mSetMute is null");
+            Log.w(TAG, "setMute: mSetMute is null (McuService NOT ready)");
             return;
         }
         try {
@@ -1881,9 +2761,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             } else {
                 mSetMute.invoke(mMcuManager, mute);
             }
-            Log.d(TAG, "Mute set to: " + mute);
+            Log.d(TAG, "Direct MCU -> Volume Mute set to: " + mute);
         } catch (Exception e) {
-            Log.e(TAG, "Error setting mute", e);
+            Log.e(TAG, "Error setting mute in McuService", e);
         }
     }
     
@@ -1928,72 +2808,89 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         try {
             switch (type) {
                 case 0: // RDS Switch (Global)
-                    // Intentamos Broadcom primero para el switch global silente
+                    mIsRdsEnabled = !mIsRdsEnabled;
+                    // V7.2e: Comando maestro 0xA2. 0x01 = ON, 0x00 = OFF
+                    sendRdsCmd((byte) (mIsRdsEnabled ? 1 : 0));
+                    Log.d(TAG, "Direct MCU -> RDS Global Switch set to: " + mIsRdsEnabled + " (cmd 0xA2)");
+                    
+                    // Sincronización Broadcom silente opcional
                     if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
-                        // Toggle logic: we need current state. Using a local flag or assuming swap.
-                        // Default to ON (1) if unknown for now, as RDS is almost always wanted.
-                        mBroadcomSetRdsMode.invoke(mFmReceiverService, 1, 0x0F, mIsAfEnabled ? 1 : 0, 10);
-                        Log.d(TAG, "Broadcom setRdsMode invoked for Global RDS Switch");
-                    }
-                    if (mTunerSetRdsSwitch != null && mTunerManager != null) {
-                        mTunerSetRdsSwitch.invoke(mTunerManager, 1); // 1 = On
-                        Log.d(TAG, "QFTunerManager.setRdsSwitch(1) invoked");
+                        mBroadcomSetRdsMode.invoke(mFmReceiverService, mIsRdsEnabled ? 1 : 0, 0x0F, mIsAfEnabled ? 1 : 0, 10);
                     }
                     break;
                 case 1: // AF Switch
                     boolean nextAfState = !mIsAfEnabled;
-                    mIsAfEnabled = nextAfState; // V4.6.1: Actualizar estado local ANTES
-                    if (mTunerSetRdsAF != null && mTunerManager != null) {
-                        try {
-                            mTunerSetRdsAF.invoke(mTunerManager);
-                            Log.d(TAG, "QFTunerManager.setRdsAFSwitch() invoked. AF now=" + nextAfState);
-                        } catch (Exception e) { Log.e(TAG, "toggleRdsFeature(AF)", e); }
-                    } else {
-                        // Fallback: Comando MCU directo 0x11
-                        byte newState = (byte) (nextAfState ? 1 : 0);
-                        sendCmd(SUB_RDS_AF, newState, (byte)0);
-                        Log.d(TAG, "MCU Fallback: SUB_RDS_AF (0x11) sent with state " + newState);
-                    }
+                    mIsAfEnabled = nextAfState; 
+                    
+                    // V7.2e: Comando directo 0xA0 0x11 [state] 0x00
+                    sendCmd(SUB_RDS_AF, (byte) (nextAfState ? 1 : 0), (byte) 0);
+                    Log.d(TAG, "Direct MCU -> RDS AF set to: " + nextAfState + " (cmd 0xA0 11)");
 
-                    // V11.6d: Notificar a la UI (vía K706Engine case 111) para sincronizar icono
-                    if (mCallback != null) {
-                        try {
-                            mCallback.onEvent(111, "AF:" + (nextAfState ? "1" : "0"));
-                        } catch (Exception ignored) {}
-                    }
+                    // Notificar a la UI
+                    fireEvent(111, "AF:" + (nextAfState ? "1" : "0"));
 
-                    // Sincronizar con Broadcom (Silencioso)
-                    enableSilentlyRdsFeatures(nextAfState, mIsTaEnabled);
+                    // Sincronizar con Broadcom silente
+                    if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
+                        enableSilentlyRdsFeatures(nextAfState, mIsTaEnabled);
+                    }
                     break;
-                case 2: // TA Switch — V11.6: Solo software, setRdsTASwitch() lanza un seek
+                case 2: // TA Switch
                     mIsTaEnabled = !mIsTaEnabled;
-                    Log.d(TAG, "TA toggled (software): mIsTaEnabled=" + mIsTaEnabled);
-                    // Notificar a la UI via código 112 (el que handleCallback espera para TA)
-                    if (mCallback != null) {
-                        try {
-                            mCallback.onEvent(112, "TA_SW:" + (mIsTaEnabled ? "1" : "0"));
-                        } catch (Exception ignored) {}
-                    }
-                    break;
-                case 3: // DX/Local Toggle (V9.9)
-                    byte nextLocMode = mIsDxLocal ? (byte) 0 : (byte) 1; // Si es Local (1), pasar a DX (0)
-                    if (mTunerOnLoc != null && mTunerManager != null) {
-                        try {
-                            mTunerOnLoc.invoke(mTunerManager, nextLocMode);
-                            Log.d(TAG, "QFTunerManager.onLoc(" + nextLocMode + ") invoked");
-                        } catch (Exception e) {
-                            Log.e(TAG, "toggleRdsFeature(DX/Local)", e);
-                        }
-                    } else {
-                        // Fallback MCU: 0xA0 0x07 [mode] 0x00
-                        sendCmd(SUB_SWITCH_LOC, nextLocMode, (byte) 0);
-                    }
-                    break;
+                    
+                    // V7.2e: Comando directo 0xA0 0x12 [state] 0x00
+                    sendCmd(SUB_RDS_TA, (byte) (mIsTaEnabled ? 1 : 0), (byte) 0);
+                    Log.d(TAG, "Direct MCU -> RDS TA set to: " + mIsTaEnabled + " (cmd 0xA0 12)");
 
+                    // Notificar a la UI
+                    fireEvent(112, "TA_SW:" + (mIsTaEnabled ? "1" : "0"));
+                    break;
+                case 3: // DX/Local Toggle
+                    mIsDxLocal = !mIsDxLocal;
+                    byte nextLocMode = mIsDxLocal ? (byte) 1 : (byte) 0;
+                    
+                    // V7.2e: Comando directo 0xA0 0x07
+                    sendCmd(SUB_SWITCH_LOC, nextLocMode, (byte) 0);
+                    Log.d(TAG, "Direct MCU -> DX/Local set to: " + (mIsDxLocal ? "LOCAL" : "DX") + " (cmd 0xA0 07)");
+                    break;
             }
         } catch (Exception e) {
             Log.e(TAG, "Error toggling RDS feature " + type, e);
         }
+    }
+
+    // === RDS setters (idempotentes) — útiles para debug via ADB ===
+    public void setRdsEnabled(boolean enabled) {
+        if (mIsRdsEnabled == enabled) return;
+        mIsRdsEnabled = enabled;
+        // Comando maestro 0xA2: 0x01 ON, 0x00 OFF (según reverse TunerCmdFactory/QF)
+        sendRdsCmd((byte) (enabled ? 1 : 0));
+        Log.d(TAG, "Direct MCU -> RDS Global Switch set to: " + mIsRdsEnabled + " (cmd 0xA2)");
+        try {
+            if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
+                mBroadcomSetRdsMode.invoke(mFmReceiverService, mIsRdsEnabled ? 1 : 0, 0x0F, mIsAfEnabled ? 1 : 0, 10);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void setAfEnabled(boolean enabled) {
+        if (mIsAfEnabled == enabled) return;
+        mIsAfEnabled = enabled;
+        sendCmd(SUB_RDS_AF, (byte) (enabled ? 1 : 0), (byte) 0);
+        Log.d(TAG, "Direct MCU -> RDS AF set to: " + enabled + " (cmd 0xA0 11)");
+        fireEvent(111, "AF:" + (enabled ? "1" : "0"));
+        try {
+            if (mBroadcomSetRdsMode != null && mFmReceiverService != null) {
+                enableSilentlyRdsFeatures(mIsAfEnabled, mIsTaEnabled);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    public void setTaEnabled(boolean enabled) {
+        if (mIsTaEnabled == enabled) return;
+        mIsTaEnabled = enabled;
+        sendCmd(SUB_RDS_TA, (byte) (enabled ? 1 : 0), (byte) 0);
+        Log.d(TAG, "Direct MCU -> RDS TA set to: " + enabled + " (cmd 0xA0 12)");
+        fireEvent(112, "TA_SW:" + (enabled ? "1" : "0"));
     }
 
     /**
@@ -2037,17 +2934,25 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
         }
         Log.d(TAG, "enforceAudioChannelRecovery: Forzando SetChannel(2) tras desconexión BT");
         try {
-            // Repetimos la secuencia vital para asegurar el audio FM
-            requestAudioFocus(); // Asegurarnos de tener el foco estándar Android
-            
-            if (mSetChannel != null && mMcuManager != null) {
-                mSetChannel.invoke(mMcuManager, (byte) 2);
-                Log.d(TAG, "enforceAudioChannelRecovery: mSetChannel(2) enviado");
+            // Si el MCU ya reporta FM (2), no repetir la secuencia completa: su primer paso es
+            // setMute(true) y produce un corte de décimas de segundo tras un desmute reciente.
+            byte current = -1;
+            if (mMcuManager != null && mGetChannel != null) {
+                try {
+                    current = (byte) mGetChannel.invoke(mMcuManager);
+                } catch (Exception ignored) {}
             }
-            
-            // Refrescar el Mute al estado actual (si estábamos desmuteados, que suene)
-            setMute(false);
-            setAudioParams(true); // V18.1: Restaurar flag de FM activo en el mixer de Android
+            if (current == 2) {
+                Log.d(TAG, "enforceAudioChannelRecovery: canal ya FM(2) — recuperación ligera (sin pre-mute ni ritual completo)");
+                requestAudioFocus();
+                setAudioParams(true);
+                setMute(false);
+                mUserWantsFmAudio = true;
+                mIsRadioActive = true;
+                return;
+            }
+            // Cambio real de ruta (p. ej. 4→2): ritual completo; el pre-mute puede ser necesario.
+            startFmAudioSequence(/*fast*/ true);
         } catch (Exception e) {
             Log.e(TAG, "enforceAudioChannelRecovery FAILED", e);
         }
@@ -2056,6 +2961,7 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     // V9.9: Helper to gracefully surrender the audio channel to the system (Media = 4)
     public void returnAudioChannel() {
         mIsAudioFocusHeld = false; // V17.2: Previene que checkAndRecoverAudio() robe el canal 4 de Android
+        mAllowImplicitFmRecoverFromPoll = false;
         abandonAudioFocus();       // V17.2: Soltamos el control de Android explícitamente para el MediaPlayer
         setAudioParams(false);     // V18.1: Avisar al OS de que FM ya no suena (libera el mixer)
         try {
@@ -2093,30 +2999,84 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             
             // 2 = FM Radio, 4 = Android Media, 6 = Bluetooth, etc.
             if (currentChannel != 2) {
-                // EXCEPCIÓN 1: Si acabamos de ceder el foco conscientemente, no peleamos
-                if (!mIsAudioFocusHeld) return;
-                
-                // EXCEPCIÓN 1.1: Si el streaming online está activo, el canal deseado es 4 (Android), no el 2 (Radio)
                 if (mIsOnlineStreamingActive) return;
-                
-                // EXCEPCIÓN 2: Si estamos en LLAMADA REAL, no peleamos
                 if (mIsInCall) return;
-                
-                // V17.0: Si es pérdida transitoria (Spotify), permitimos recuperación 
-                // si la música ya no suena o si el usuario ha interactuado
+
+                // AA/Maps: no recuperar mux mientras suene guía/sonificación externa.
+                if (hasExternalNavOrSonificationPlaybackFromOtherUid()) {
+                    return;
+                }
+
+                // Mux en Android (4) con reproducción media real: no forzar FM; foco lógico a veces sigue en true.
+                if (currentChannel == 4) {
+                    if (mAudioManager != null && mAudioManager.isMusicActive()) {
+                        if (mIsAudioFocusHeld) {
+                            mIsAudioFocusHeld = false;
+                        }
+                        return;
+                    }
+                    if (isOtherAudioCompetingForMux()) {
+                        if (mIsAudioFocusHeld) {
+                            mIsAudioFocusHeld = false;
+                        }
+                        return;
+                    }
+                }
+
+                if (!mIsAudioFocusHeld) {
+                    if (!mUserWantsFmAudio) {
+                        return;
+                    }
+                    if (mAudioManager != null && mAudioManager.isMusicActive()) {
+                        return;
+                    }
+                    if (isOtherAudioCompetingForMux()) {
+                        return;
+                    }
+                    long now = android.os.SystemClock.uptimeMillis();
+                    if (now - mLastImplicitFmRecoverUptimeMs < IMPLICIT_FM_RECOVER_MIN_INTERVAL_MS) {
+                        return;
+                    }
+                    mLastImplicitFmRecoverUptimeMs = now;
+                    Log.i(TAG, "HEARTBEAT: sin AudioFocus, usuario quiere FM, sin competencia media → requestFocus + recuperar canal");
+                    try {
+                        requestAudioFocus(false);
+                        if (mIsAudioFocusHeld) {
+                            enforceAudioChannelRecovery();
+                        }
+                    } catch (Exception e) {
+                        Log.w(TAG, "HEARTBEAT: recuperación sin foco falló", e);
+                    }
+                    return;
+                }
+
+                // V17.0: pérdida transitoria declarada: recuperar si la música externa ya no suena
                 if (mIsTransientFocusLoss) {
-                    // Si la música de Android sigue sonando fuera de nuestra app, no le robamos el audio aún
-                    if (mAudioManager.isMusicActive()) return;
-                    
+                    if (mAudioManager != null && mAudioManager.isMusicActive()) return;
+
                     Log.d(TAG, "HEARTBEAT: Recuperando audio FM tras pausa de música transitoria.");
                     mIsTransientFocusLoss = false;
                 }
 
-                Log.w(TAG, "HEARTBEAT WARNING: Canal de audio secuestrado (Canal actual: " + currentChannel + "). Forzando recuperación a 2 (Radio).");
-                mSetChannel.invoke(mMcuManager, (byte) 2);
+                if (mAudioManager != null && mAudioManager.isMusicActive()) {
+                    return;
+                }
+                if (isOtherAudioCompetingForMux()) {
+                    return;
+                }
+
+                long nowHeld = android.os.SystemClock.uptimeMillis();
+                if (nowHeld - mLastImplicitFmRecoverUptimeMs < IMPLICIT_FM_RECOVER_MIN_INTERVAL_MS) {
+                    return;
+                }
+                mLastImplicitFmRecoverUptimeMs = nowHeld;
+
+                Log.w(TAG, "HEARTBEAT WARNING: Canal de audio secuestrado (Canal actual: " + currentChannel + "). Recuperación completa (no solo SetChannel).");
                 try {
-                    setMute(false); // Asegurarnos de desmutear
-                } catch (Exception ignored) {}
+                    enforceAudioChannelRecovery();
+                } catch (Exception e) {
+                    Log.w(TAG, "HEARTBEAT: enforceAudioChannelRecovery falló", e);
+                }
             }
         } catch (Exception e) {
             Log.e(TAG, "checkAndRecoverAudio FAILED", e);

@@ -107,9 +107,7 @@ public class V3LayoutController extends BaseLayoutController {
 
     @Override
     public void updateStereo(boolean stereo) {
-        if (ivStereoIcon != null) {
-            ivStereoIcon.setVisibility(stereo ? View.VISIBLE : View.INVISIBLE);
-        }
+        mActivity.refreshStereoIndicatorUi(null);
     }
 
     @Override
@@ -126,11 +124,11 @@ public class V3LayoutController extends BaseLayoutController {
         MainActivity.setTextColorIfChanged(tvRdsInfo, color);
         MainActivity.setTextColorIfChanged(tvPty, color);
         MainActivity.setTextColorIfChanged(ivBandIndicator, color);
-        MainActivity.setTextColorIfChanged(ivStereoIcon, color);
         
         if (ivUnitLabel != null) {
             MainActivity.setTextColorIfChanged(ivUnitLabel, color);
         }
+        mActivity.refreshStereoIndicatorUi(null);
     }
 
     @Override

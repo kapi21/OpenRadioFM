@@ -12,7 +12,7 @@
         android:id="@+id/ivDynamicBackground"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
         android:alpha="0.0" />
 
     <!-- Fondo Dinámico 2 (Para Cross-fade) -->
@@ -20,7 +20,7 @@
         android:id="@+id/ivDynamicBackgroundExtra"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
         android:alpha="0.0" />
 
     <!-- Guideline al 40% según sugerencia del usuario -->

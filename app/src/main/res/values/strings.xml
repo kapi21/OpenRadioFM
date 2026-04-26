@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="root_version_suffix">Root Version</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway y QS6 (NWD) también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema suele mandar esas teclas al launcher o a la radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilidad)</string>
     <string name="a11y_hihack_enabled">Activado</string>
@@ -44,6 +45,11 @@
     <string name="bg_pure_black">Negro Puro</string>
     <string name="bg_fixed_image">Imagen background.png</string>
     <string name="bg_dynamic_logo">Logo Emisora (Dinámico)</string>
+    <string name="dynamic_bg_aspect_title">Encuadre de fondo dinámico</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (sin recorte)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (llenar, recorta)</string>
+    <string name="toast_dynamic_bg_letterbox">Fondo dinámico: letterbox (sin recorte)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Fondo dinámico: 16:9 (llenar, recorta)</string>
     
     <!-- Font Names -->
     <string name="font_default">Defecto (System)</string>
@@ -59,6 +65,10 @@
     <string name="night_mode_auto">Modo Noche Automático</string>
     <string name="relief_hd">Relieve HD</string>
     <string name="save_history">Guardar Historial de Emisoras</string>
+    <string name="save_history_summary_on">Se guardan emisoras; puedes abrir el listado (p. ej. tocando el nombre RDS).</string>
+    <string name="save_history_summary_off">Desactivado: no se guarda el historial ni se muestra su diálogo.</string>
+    <string name="toast_history_save_disabled">Activa «Guardar historial de emisoras» en opciones para ver el listado.</string>
+    <string name="hardware_automation_section_header">(Automatización por hardware) (en pruebas)</string>
     <string name="enable_gestures_beta" translatable="false">Gestos (Obsoleto)</string>
     <string name="online_logos">Logos Online</string>
     <string name="status_bar_v2">Mostrar Barra de Estado</string>
@@ -76,7 +86,7 @@
     <string name="logos_online_disabled">❌ Logos online desactivados</string>
     <string name="under_study">En estudio</string>
     <string name="night_mode_manual_blocked">Desactiva el Modo Noche Automático para elegir skin manualmente</string>
-    <string name="auto_hide_controls">Ocultar controles automáticamente</string>
+    <string name="auto_hide_controls">Ocultar controles automáticamente (layout 3 horizontal)</string>
     <string name="auto_hide_enabled">✅ Ocultar controles activado</string>
     <string name="auto_hide_disabled">❌ Ocultar controles desactivado</string>
     <string name="preset_scroll_loop_title">Desplazamiento de presets en bucle</string>
@@ -319,7 +329,7 @@
 
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">SOBRESCRITURA DE MEMORIAS</string>
-    <string name="autoscan_confirm_message">Este AutoScan borrará y rellenará las memorias 1–18 de la banda actual con las emisoras que vaya detectando.\n\n¿Quieres iniciar el escaneo?</string>
+    <string name="autoscan_confirm_message">Este AutoScan siempre empieza en FM1: borra y rellena las memorias 1–18 en FM1 primero (el sintonizador pasará a FM1 si hace falta). Puede continuar en FM2/FM3 al llenar las 18 memorias.\n\n¿Quieres iniciar el escaneo?</string>
     <string name="autoscan_confirm_start">Iniciar escaneo</string>
 
     <!-- Diálogo guardar/cargar: textos que faltaban -->
@@ -377,6 +387,7 @@
     <string name="eng_dev_file_log_profile_basic">BÁSICO</string>
     <string name="eng_dev_file_log_profile_medium">MEDIO</string>
     <string name="eng_dev_file_log_profile_full">COMPLETO</string>
+    <string name="eng_dev_logcat_dump_button">DEV: volcar buffer logcat → RadioLogos</string>
     <string name="toast_history_deleted_full">El historial ha sido borrado</string>
     <string name="toast_easter_egg">¡Easter egg activado!</string>
 
@@ -403,7 +414,7 @@
     <string name="toast_basic_no_engineering">Modo básico: menú de ingeniería no disponible</string>
 
     <string name="toast_autoscan_stopped">AutoScan detenido</string>
-    <string name="toast_autoscan_slow">AutoScan lento: buscando emisoras… (pulsa de nuevo para parar)</string>
+    <string name="toast_autoscan_slow">AutoScan lento desde FM1: buscando emisoras… (pulsa de nuevo para parar)</string>
     <string name="toast_autoscan_start_failed">No se pudo iniciar AutoScan</string>
     <string name="toast_autoscan_finished">AutoScan terminado (%1$d memorias)</string>
     <string name="toast_autoscan_band_presets">AutoScan → %1$s · memorias 1–18</string>

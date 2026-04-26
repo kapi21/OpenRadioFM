@@ -1,0 +1,217 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM Genera un ZIP instalable de Magisk (K706_Root) de forma determinista.
+REM IMPORTANTE: Normaliza a LF los scripts dentro del ZIP, porque Magisk App
+REM puede fallar con "Installation failed" si los .sh/update-binary van en CRLF.
+
+REM Moverse a la raíz del repo (magisk\ -> repo\)
+cd /d "%~dp0.."
+if errorlevel 1 (
+  echo [ERROR] No se pudo cambiar al directorio del repo.
+  exit /b 1
+)
+
+REM Ruta de salida (por defecto, dentro de magisk\)
+set "OUT_ZIP=%~dp0k706.zip"
+
+echo [INFO] Repo: %CD%
+echo [INFO] Output: %OUT_ZIP%
+echo.
+
+REM Asegurar rama K706_Root (sin forzar)
+for /f "delims=" %%b in ('git branch --show-current 2^>nul') do set "CUR_BRANCH=%%b"
+if not defined CUR_BRANCH (
+  echo [ERROR] No se pudo leer la rama actual. ^(git no disponible?^)
+  exit /b 1
+)
+
+if /i not "!CUR_BRANCH!"=="K706_Root" (
+  echo [WARN] Estas en la rama "!CUR_BRANCH!". Recomendado: K706_Root
+  echo [WARN] Continuo igualmente para crear el ZIP desde la rama actual.
+)
+
+echo [INFO] Compilando APK trampolin :stub-fmradio:assembleRelease ...
+REM El modulo :app exige SUPABASE_* al configurar Gradle.
+REM IMPORTANTE: Gradle prioriza variables de entorno sobre local.properties, así que NO debemos
+REM inyectar valores dummy aquí (rompería la build aunque local.properties esté bien).
+REM Si no están en entorno, intentamos leerlas desde local.properties; si siguen vacías, abortamos.
+if "!SUPABASE_URL!"=="" (
+  for /f "usebackq tokens=1,* delims==" %%A in ("local.properties") do (
+    if /i "%%A"=="SUPABASE_URL" set "SUPABASE_URL=%%B"
+  )
+)
+if "!SUPABASE_ANON_KEY!"=="" (
+  for /f "usebackq tokens=1,* delims==" %%A in ("local.properties") do (
+    if /i "%%A"=="SUPABASE_ANON_KEY" set "SUPABASE_ANON_KEY=%%B"
+  )
+)
+if "!SUPABASE_URL!"=="" (
+  echo [ERROR] Falta SUPABASE_URL. Rellena local.properties ^(raiz^) o exporta SUPABASE_URL.
+  exit /b 1
+)
+if "!SUPABASE_ANON_KEY!"=="" (
+  echo [ERROR] Falta SUPABASE_ANON_KEY. Rellena local.properties ^(raiz^) o exporta SUPABASE_ANON_KEY.
+  exit /b 1
+)
+call gradlew.bat :stub-fmradio:assembleRelease -q
+if errorlevel 1 (
+  echo [ERROR] Fallo Gradle stub-fmradio.
+  exit /b 1
+)
+set "STUB_APK=%CD%\stub-fmradio\build\outputs\apk\release\stub-fmradio-release.apk"
+if not exist "%STUB_APK%" (
+  echo [ERROR] No se encontro APK: %STUB_APK%
+  exit /b 1
+)
+
+echo [INFO] Compilando OpenRadioFM :app:assembleRelease (para priv-app) ...
+call gradlew.bat :app:assembleRelease -q
+if errorlevel 1 (
+  echo [ERROR] Fallo Gradle app.
+  exit /b 1
+)
+set "APP_APK=%CD%\app\build\outputs\apk\release\app-release.apk"
+if not exist "%APP_APK%" (
+  echo [ERROR] No se encontro APK: %APP_APK%
+  exit /b 1
+)
+
+REM Construir zip desde los archivos del módulo, normalizando LF en una carpeta temporal.
+if exist "%OUT_ZIP%" del /f /q "%OUT_ZIP%" >nul 2>&1
+
+set "TMP_DIR=%TEMP%\\orf_magisk_k706_root"
+if exist "%TMP_DIR%" rmdir /s /q "%TMP_DIR%" >nul 2>&1
+mkdir "%TMP_DIR%" >nul 2>&1
+if errorlevel 1 (
+  echo [ERROR] No se pudo crear carpeta temporal: %TMP_DIR%
+  exit /b 1
+)
+
+REM Copiar estructura del módulo
+xcopy /E /I /Y "magisk\\K706_Root\\META-INF" "%TMP_DIR%\\META-INF" >nul
+REM Copiar overlay systemless adicional (permisos, etc.)
+if exist "magisk\\K706_Root\\system" (
+  xcopy /E /I /Y "magisk\\K706_Root\\system" "%TMP_DIR%\\system" >nul
+)
+copy /Y "magisk\\K706_Root\\module.prop" "%TMP_DIR%\\module.prop" >nul
+copy /Y "magisk\\K706_Root\\customize.sh" "%TMP_DIR%\\customize.sh" >nul
+copy /Y "magisk\\K706_Root\\post-fs-data.sh" "%TMP_DIR%\\post-fs-data.sh" >nul
+copy /Y "magisk\\K706_Root\\service.sh" "%TMP_DIR%\\service.sh" >nul
+copy /Y "magisk\\K706_Root\\uninstall.sh" "%TMP_DIR%\\uninstall.sh" >nul
+
+REM APK OEM para reinstalar automáticamente al desinstalar el módulo.
+REM NOTA: no lo versionamos aquí (binario). El usuario debe copiarlo a:
+REM   magisk\oem\Radio_vnull.apk
+set "OEM_APK=%CD%\magisk\oem\Radio_vnull.apk"
+if not exist "%OEM_APK%" (
+  echo [ERROR] Falta el APK OEM para rollback automatico.
+  echo [ERROR] Copia tu "Radio (com.android.fmradio.ext) [v.null].apk" a:
+  echo [ERROR]   %OEM_APK%
+  exit /b 1
+)
+mkdir "%TMP_DIR%\\oem" >nul 2>&1
+copy /Y "%OEM_APK%" "%TMP_DIR%\\oem\\Radio_vnull.apk" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo copiar el APK OEM al arbol del modulo.
+  exit /b 1
+)
+
+mkdir "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt" >nul 2>&1
+copy /Y "%STUB_APK%" "%TMP_DIR%\\system\\priv-app\\QF_FMRadioExt\\QF_FMRadioExt.apk" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo copiar el stub al arbol system del modulo.
+  exit /b 1
+)
+
+mkdir "%TMP_DIR%\\system\\priv-app\\OpenRadioFM" >nul 2>&1
+copy /Y "%APP_APK%" "%TMP_DIR%\\system\\priv-app\\OpenRadioFM\\OpenRadioFM.apk" >nul
+if errorlevel 1 (
+  echo [ERROR] No se pudo copiar OpenRadioFM al arbol system del modulo.
+  exit /b 1
+)
+
+REM Normalizar LF (eliminar CR=0x0D) en scripts y update-binary.
+REM Nota: hacerlo a nivel de bytes para no depender de la codificación (UTF-8/UTF-16/BOM).
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "& { $files = @(" ^
+  "'%TMP_DIR%\\module.prop'," ^
+  "'%TMP_DIR%\\customize.sh'," ^
+  "'%TMP_DIR%\\post-fs-data.sh'," ^
+  "'%TMP_DIR%\\service.sh'," ^
+  "'%TMP_DIR%\\uninstall.sh'," ^
+  "'%TMP_DIR%\\META-INF\\com\\google\\android\\update-binary'," ^
+  "'%TMP_DIR%\\META-INF\\com\\google\\android\\updater-script'" ^
+  "); foreach($f in $files){ if(Test-Path $f){ $b=[IO.File]::ReadAllBytes($f); if($b -contains 13){ $out = New-Object byte[] ($b.Length); $j=0; foreach($x in $b){ if($x -ne 13){ $out[$j]=$x; $j++ } }; if($j -lt $out.Length){ $out2 = New-Object byte[] ($j); [Array]::Copy($out,$out2,$j); [IO.File]::WriteAllBytes($f,$out2) } else { [IO.File]::WriteAllBytes($f,$out) } } } } }"
+if errorlevel 1 (
+  echo [ERROR] Fallo normalizando LF.
+  exit /b 1
+)
+
+REM Verificar que no queden CR (0x0D) en scripts (causa ": not found" y "umask: illegal mode" en Magisk)
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "& { $files = @(" ^
+  "'%TMP_DIR%\\module.prop'," ^
+  "'%TMP_DIR%\\customize.sh'," ^
+  "'%TMP_DIR%\\post-fs-data.sh'," ^
+  "'%TMP_DIR%\\service.sh'," ^
+  "'%TMP_DIR%\\uninstall.sh'," ^
+  "'%TMP_DIR%\\META-INF\\com\\google\\android\\update-binary'," ^
+  "'%TMP_DIR%\\META-INF\\com\\google\\android\\updater-script'" ^
+  "); $bad=@(); foreach($f in $files){ if(Test-Path $f){ $b=[IO.File]::ReadAllBytes($f); if($b -contains 13){ $bad += $f } } }; if($bad.Count -gt 0){ Write-Host '[ERROR] Scripts con CR (\\r) detectados:'; $bad | ForEach-Object { Write-Host (' - ' + $_) }; exit 2 } }"
+if errorlevel 1 (
+  echo [ERROR] Quedaron CRLF/CR en scripts. Abortando para evitar fallo en Magisk.
+  exit /b 1
+)
+
+REM Crear ZIP "Magisk-friendly":
+REM - Magisk App puede ser sensible a permisos dentro del ZIP (update-binary / *.sh).
+REM - En Windows, Compress-Archive NO preserva permisos Unix. Usamos Python para escribir el ZIP
+REM   con modos 0755 para scripts y 0644 para el resto. Si no hay Python, fallback a Compress-Archive.
+set "PY_ZIPPER=%CD%\magisk\zip_magisk.py"
+if exist "%PY_ZIPPER%" goto :zip_with_python
+goto :zip_with_powershell
+
+:zip_with_python
+python "%PY_ZIPPER%" "%TMP_DIR%" "%OUT_ZIP%"
+if errorlevel 1 (
+  echo [ERROR] Fallo creando ZIP con Python.
+  exit /b 1
+)
+goto :zip_done
+
+:zip_with_powershell
+echo [WARN] No existe %PY_ZIPPER%. Usando Compress-Archive (puede fallar en Magisk por permisos).
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+  "& { if(Test-Path '%OUT_ZIP%'){ Remove-Item -Force '%OUT_ZIP%' }; Compress-Archive -Path '%TMP_DIR%\\*' -DestinationPath '%OUT_ZIP%' -Force }"
+if errorlevel 1 (
+  echo [ERROR] Fallo creando ZIP con Compress-Archive.
+  exit /b 1
+)
+
+:zip_done
+
+REM Limpiar temp (opcional: --keep-tmp para depurar)
+if /i not "%~1"=="--keep-tmp" (
+  rmdir /s /q "%TMP_DIR%" >nul 2>&1
+) else (
+  echo [INFO] Manteniendo carpeta temporal: %TMP_DIR%
+)
+
+for %%I in ("%OUT_ZIP%") do (
+  echo.
+  echo [OK] ZIP generado: %%~fI
+  echo [OK] Tamano: %%~zI bytes
+)
+
+echo.
+echo [NEXT] Copia el ZIP a la radio e instalalo en Magisk: Modules ^> Install from storage
+echo [NEXT] Si te falla la app, instala por ADB:
+echo        adb push "%OUT_ZIP%" /sdcard/Download/k706.zip
+echo        adb shell su -c "magisk --install-module /sdcard/Download/k706.zip"
+echo        adb shell su -c "reboot"
+echo.
+if /i "%~1"=="--pause" (
+  pause
+)
+

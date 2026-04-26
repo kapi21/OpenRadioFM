@@ -27,6 +27,11 @@
     <string name="bg_pure_black">Nero Puro</string>
     <string name="bg_fixed_image">Immagine (background.png)</string>
     <string name="bg_dynamic_logo">Logo Stazione (Dinamico)</string>
+    <string name="dynamic_bg_aspect_title">Inquadratura sfondo dinamico</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (senza ritaglio)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (riempi, ritaglia)</string>
+    <string name="toast_dynamic_bg_letterbox">Sfondo dinamico: letterbox (senza ritaglio)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Sfondo dinamico: 16:9 (riempi, ritaglia)</string>
 
     <!-- Font Names -->
     <string name="font_default">Predefinito (Sistema)</string>
@@ -42,6 +47,10 @@
     <string name="night_mode_auto">Modalità Notturna Automatica</string>
     <string name="relief_hd">Rilievo HD</string>
     <string name="save_history">Salva Cronologia Stazioni</string>
+    <string name="save_history_summary_on">Le stazioni vengono salvate; puoi aprire l\'elenco (es. tocca il nome RDS).</string>
+    <string name="save_history_summary_off">Disattivato: nessun salvataggio né dialogo cronologia.</string>
+    <string name="toast_history_save_disabled">Attiva «Salva cronologia stazioni» nelle opzioni per aprire l\'elenco.</string>
+    <string name="hardware_automation_section_header">(Automazione hardware) (in prova)</string>
     <string name="enable_gestures_beta">Abilita Gesti (Swipe) (beta)</string>
     <string name="online_logos">Loghi Online</string>
     <string name="status_bar_v2">Mostra la barra di stato</string>
@@ -81,7 +90,7 @@
     <string name="logos_online_disabled">❌ Loghi online disattivati</string>
     <string name="under_study">In studio</string>
     <string name="night_mode_manual_blocked">Per selezionare manualmente il tema, disattivare la modalità notte automatica</string>
-    <string name="auto_hide_controls">Nascondi controlli automaticamente</string>
+    <string name="auto_hide_controls">Nascondi controlli automaticamente (layout 3 orizzontale)</string>
     <string name="auto_hide_enabled">✅ Nascondi controlli attivato</string>
     <string name="auto_hide_disabled">❌ Nascondi controlli disattivato</string>
     <string name="preset_scroll_loop_title">Scorrimento preset a ciclo</string>
@@ -286,7 +295,7 @@
     <string name="my_favorites">I Miei Preferiti</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">Questo servizio permette a OpenRadioFM di sovrapporsi quando premi il pulsante fisico RADIO su unità Android compatibili (es. K706), bypassando l’app di serie.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilità)</string>
     <string name="a11y_hihack_enabled">Attivato</string>
@@ -315,7 +324,7 @@
     <string name="widget_next_preset">Memoria successiva</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">SOVRASCRITTURA MEMORIE</string>
-    <string name="autoscan_confirm_message">Questo AutoScan cancella e riempie le memorie 1–18 della banda attuale con le stazioni rilevate.\n\nAvviare la scansione?</string>
+    <string name="autoscan_confirm_message">Questo AutoScan parte sempre da FM1: cancella e riempie prima le memorie 1–18 su FM1 (il sintonizzatore passa a FM1 se serve). Può proseguire su FM2/FM3 dopo 18 stazioni.\n\nAvviare la scansione?</string>
     <string name="autoscan_confirm_start">Avvia scansione</string>
     <string name="save_load_section_actions">Available actions</string>
     <string name="save_load_save_desc_detail">Create .fav backup in /RadioLogos</string>
@@ -367,6 +376,7 @@
     <string name="eng_dev_file_log_profile_basic">BASE</string>
     <string name="eng_dev_file_log_profile_medium">MEDIO</string>
     <string name="eng_dev_file_log_profile_full">COMPLETO</string>
+    <string name="eng_dev_logcat_dump_button">DEV: esporta buffer logcat in RadioLogos</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -387,20 +397,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Equalizzatore non disponibile (motore radio non avviato)</string>
+    <string name="toast_radio_engine_not_started">Motore radio non avviato</string>
+    <string name="toast_no_gps_app">Nessuna app mappe/GPS trovata</string>
+    <string name="toast_basic_no_engineering">Modo base: menu ingegneria non disponibile</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_stopped">AutoScan interrotto</string>
+    <string name="toast_autoscan_slow">AutoScan lento da FM1: ricerca in corso… (tocca di nuovo per fermare)</string>
+    <string name="toast_autoscan_start_failed">Impossibile avviare l’AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan completato (%1$d preset)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · preset 1–18</string>
+    <string name="toast_presets_overwritten">Preset sovrascritti (%1$d stazioni).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Ritorno alla modalità standard…</string>
+    <string name="toast_recovering_fm_audio">Recupero audio FM…</string>
+    <string name="toast_hw_eq_unsupported">EQ hardware non supportato su questo dispositivo</string>
+    <string name="toast_saved_to_slot">Salvato nel preset %1$d</string>
 </resources>

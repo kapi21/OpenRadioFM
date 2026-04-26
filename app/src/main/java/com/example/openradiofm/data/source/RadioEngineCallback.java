@@ -44,4 +44,7 @@ public interface RadioEngineCallback {
 
     /** Actualización de señal RSSI/SNR de los motores de radio */
     void onSignalUpdate(int rssi, int snr);
+
+    /** Eventos de integración de hardware (V24.5) */
+    default void onHwAutomationEvent(int type, boolean active) {}
 }

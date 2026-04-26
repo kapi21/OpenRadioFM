@@ -47,6 +47,8 @@ public class EngineeringModeDialog extends Dialog {
 
     // Dev toggles (MT8163)
     private SwitchCompat swMt8163GlobalStreamMute;
+    private SwitchCompat swMt8163McuDirect;
+    private SwitchCompat swMt8163McuInjectMuteKey;
     // Dev toggle (MTK8259)
     private SwitchCompat swMtk8259V5StreamMixerCompat;
     private SwitchCompat swDevAutoScanEnabled;
@@ -119,6 +121,8 @@ public class EngineeringModeDialog extends Dialog {
 
         // Dev toggles
         swMt8163GlobalStreamMute = findViewById(R.id.swMt8163GlobalStreamMute);
+        swMt8163McuDirect = findViewById(R.id.swMt8163McuDirect);
+        swMt8163McuInjectMuteKey = findViewById(R.id.swMt8163McuInjectMuteKey);
         swMtk8259V5StreamMixerCompat = findViewById(R.id.swMtk8259V5StreamMixerCompat);
         swDevAutoScanEnabled = findViewById(R.id.swDevAutoScanEnabled);
         swDevDayModeEnabled = findViewById(R.id.swDevDayModeEnabled);
@@ -147,8 +151,8 @@ public class EngineeringModeDialog extends Dialog {
         });
 
         if (swMt8163GlobalStreamMute != null) {
-            boolean enabled = false;
-            try { enabled = mPrefs.getBoolean("pref_mt8163_global_stream_mute", false); }
+            boolean enabled = true;
+            try { enabled = mPrefs.getBoolean("pref_mt8163_global_stream_mute", true); }
             catch (Exception ignored) {}
             swMt8163GlobalStreamMute.setChecked(enabled);
             swMt8163GlobalStreamMute.setOnCheckedChangeListener((btn, checked) -> {
@@ -159,6 +163,30 @@ public class EngineeringModeDialog extends Dialog {
                 if (checked) {
                     logEvent("WARN", "STREAM_MUSIC mute ON: puede silenciar Spotify/BT/Android Auto");
                 }
+            });
+        }
+
+        if (swMt8163McuDirect != null) {
+            boolean enabled = false;
+            try { enabled = mPrefs.getBoolean("pref_mt8163_mcu_direct", false); }
+            catch (Exception ignored) {}
+            swMt8163McuDirect.setChecked(enabled);
+            swMt8163McuDirect.setOnCheckedChangeListener((btn, checked) -> {
+                try { mPrefs.edit().putBoolean("pref_mt8163_mcu_direct", checked).apply(); } catch (Exception ignored) {}
+                logEvent("DEV", "pref_mt8163_mcu_direct=" + checked);
+                logEvent("INFO", "Reinicia la app para aplicar (MT8163 sin com.hcn.autoradio)");
+            });
+        }
+
+        if (swMt8163McuInjectMuteKey != null) {
+            boolean inj = true;
+            try { inj = mPrefs.getBoolean("pref_mt8163_mcu_inject_mute_key", true); }
+            catch (Exception ignored) {}
+            swMt8163McuInjectMuteKey.setChecked(inj);
+            swMt8163McuInjectMuteKey.setOnCheckedChangeListener((btn, checked) -> {
+                try { mPrefs.edit().putBoolean("pref_mt8163_mcu_inject_mute_key", checked).apply(); }
+                catch (Exception ignored) {}
+                logEvent("DEV", "pref_mt8163_mcu_inject_mute_key=" + checked);
             });
         }
 
@@ -225,7 +253,6 @@ public class EngineeringModeDialog extends Dialog {
             try { on = mPrefs.getBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, false); } catch (Exception ignored) {}
             swDevFileLoggingEnabled.setChecked(on);
             swDevFileLoggingEnabled.setOnCheckedChangeListener((btn, checked) -> {
-                try { mPrefs.edit().putBoolean(com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED, checked).apply(); } catch (Exception ignored) {}
                 com.example.openradiofm.utils.RadioActivityFileLogger.onToggleChanged(mActivity, checked);
                 logEvent("DEV", com.example.openradiofm.utils.RadioActivityFileLogger.PREF_DEV_FILE_LOG_ENABLED + "=" + checked);
             });
@@ -289,12 +316,12 @@ public class EngineeringModeDialog extends Dialog {
             boolean isStereo = (mActivity.mEngine != null) && mActivity.mEngine.isStereo();
             boolean isDx = (mActivity.mEngine != null) && !mActivity.mEngine.isDxLocal();
             
-            tvSignalQualityIndex.setText(mActivity.mHasRdsLock ? "85% (RDS_LOCK)" : "40% (LOW)");
+            tvSignalQualityIndex.setText(mActivity.mRdsLockUiTick.hasLock ? "85% (RDS_LOCK)" : "40% (LOW)");
             tvStereoPilot.setText(isStereo ? "LOCKED (19kHz)" : "NO_PILOT");
             tvTunerMode.setText(isDx ? "DX (DISTANT)" : "LOC (LOCAL)");
             
             // RSSI Simulado
-            int rssi = mActivity.mHasRdsLock ? -60 : -95;
+            int rssi = mActivity.mRdsLockUiTick.hasLock ? -60 : -95;
             StringBuilder bar = new StringBuilder("[");
             int bars = (rssi + 110) / 10;
             for(int i=0; i<10; i++) bar.append(i < bars ? "█" : "░");
@@ -314,7 +341,7 @@ public class EngineeringModeDialog extends Dialog {
             tvRtText.setText(rt.length() > 30 ? rt.substring(0, 27) + "..." : rt);
             tvPiCode.setText("WAITING...");
             tvPtyRaw.setText(mActivity.mCurrentPty != null ? mActivity.mCurrentPty : "00");
-            tvRdsSync.setText(mActivity.mHasRdsLock ? "LOCKED" : "SEARCHING");
+            tvRdsSync.setText(mActivity.mRdsLockUiTick.hasLock ? "LOCKED" : "SEARCHING");
             tvAfList.setText("ENABLE: " + (mActivity.mEngine != null && mActivity.mEngine.isAfEnabled()));
 
             // 3. System

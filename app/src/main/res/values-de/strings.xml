@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
     <string name="a11y_hihack_title">HiHack (Barrierefreiheit)</string>
     <string name="a11y_hihack_enabled">Aktiviert</string>
@@ -42,6 +42,11 @@
     <string name="bg_pure_black">Reines Schwarz</string>
     <string name="bg_fixed_image">Bild (background.png)</string>
     <string name="bg_dynamic_logo">Senderlogo (Dynamisch)</string>
+    <string name="dynamic_bg_aspect_title">Ausschnitt dynamischer Hintergrund</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (ohne Zuschnitt)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (füllen, zuschneiden)</string>
+    <string name="toast_dynamic_bg_letterbox">Dynamischer Hintergrund: Letterbox (ohne Zuschnitt)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Dynamischer Hintergrund: 16:9 (füllen, zuschneiden)</string>
 
     <!-- Font Names -->
     <string name="font_default">Standard (System)</string>
@@ -57,6 +62,10 @@
     <string name="night_mode_auto">Automatischer Nachtmodus</string>
     <string name="relief_hd">HD-Relief</string>
     <string name="save_history">Senderverlauf speichern</string>
+    <string name="save_history_summary_on">Sender werden gespeichert; Liste öffnen (z. B. RDS-Namen antippen).</string>
+    <string name="save_history_summary_off">Aus: kein Verlauf, kein Verlaufsdialog.</string>
+    <string name="toast_history_save_disabled">Aktiviere „Senderverlauf speichern“ in den Optionen, um die Liste zu öffnen.</string>
+    <string name="hardware_automation_section_header">(Hardware-Automatisierung) (in Tests)</string>
     <string name="enable_gestures_beta">Gesten aktivieren (Swipe) (beta)</string>
     <string name="online_logos">Online-Logos</string>
     <string name="status_bar_v2">Statusleiste anzeigen</string>
@@ -96,7 +105,7 @@
     <string name="logos_online_disabled">❌ Online-Logos deaktiviert</string>
     <string name="under_study">In Arbeit</string>
     <string name="night_mode_manual_blocked">Nachtmodus deaktivieren, um Design manuell zu wählen</string>
-    <string name="auto_hide_controls">Steuerelemente automatisch ausblenden</string>
+    <string name="auto_hide_controls">Steuerelemente automatisch ausblenden (Layout 3 horizontal)</string>
     <string name="auto_hide_enabled">✅ Automatisches Ausblenden aktiviert</string>
     <string name="auto_hide_disabled">❌ Automatisches Ausblenden deaktiviert</string>
     <string name="preset_scroll_loop_title">Endlosscrollen der Presets</string>
@@ -313,7 +322,7 @@
     <string name="widget_next_preset">Nächster Speicher</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">SPEICHERPLÄTZE ÜBERSCHREIBEN</string>
-    <string name="autoscan_confirm_message">Dieser AutoScan löscht und füllt die Speicher 1–18 des aktuellen Bandes mit gefundenen Sendern neu.\n\nScan starten?</string>
+    <string name="autoscan_confirm_message">Dieser AutoScan startet immer auf FM1: Er löscht und füllt die Speicher 1–18 zuerst auf FM1 (das Radio wechselt bei Bedarf auf FM1). Danach kann er auf FM2/FM3 weitermachen.\n\nScan starten?</string>
     <string name="autoscan_confirm_start">Scan starten</string>
     <string name="save_load_section_actions">Available actions</string>
     <string name="save_load_save_desc_detail">Create .fav backup in /RadioLogos</string>
@@ -365,6 +374,7 @@
     <string name="eng_dev_file_log_profile_basic">BASIS</string>
     <string name="eng_dev_file_log_profile_medium">MITTEL</string>
     <string name="eng_dev_file_log_profile_full">VOLL</string>
+    <string name="eng_dev_logcat_dump_button">DEV: Logcat-Puffer nach RadioLogos schreiben</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -385,20 +395,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Equalizer nicht verfügbar (Radio-Engine nicht gestartet)</string>
+    <string name="toast_radio_engine_not_started">Radio-Engine nicht gestartet</string>
+    <string name="toast_no_gps_app">Keine Karten-/GPS-App gefunden</string>
+    <string name="toast_basic_no_engineering">Basismodus: Entwicklermenü nicht verfügbar</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_stopped">AutoScan gestoppt</string>
+    <string name="toast_autoscan_slow">Langsamer AutoScan ab FM1: Suche läuft… (erneut tippen zum Stoppen)</string>
+    <string name="toast_autoscan_start_failed">AutoScan konnte nicht gestartet werden</string>
+    <string name="toast_autoscan_finished">AutoScan beendet (%1$d Presets)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · Presets 1–18</string>
+    <string name="toast_presets_overwritten">Presets überschrieben (%1$d Sender).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Zurück zum Standardmodus…</string>
+    <string name="toast_recovering_fm_audio">FM-Audio wird wiederhergestellt…</string>
+    <string name="toast_hw_eq_unsupported">Hardware-EQ auf diesem Gerät nicht unterstützt</string>
+    <string name="toast_saved_to_slot">In Preset %1$d gespeichert</string>
 </resources>

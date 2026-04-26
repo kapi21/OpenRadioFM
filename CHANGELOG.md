@@ -1,6 +1,163 @@
-## [Unreleased]
+## [Unreleased] - MCU2
 
-*(vacío; último cierre documentado: **5.1.3** — ver abajo.)*
+## [5.2.1 Icons Fix] - 2026-04-25
+
+### UI / Personalización (todos los modelos)
+- **Icon packs**: el selector de “Pack de iconos” ahora funciona correctamente (assets PNG/SVG). Se corrige el caso en el que el pack estaba seleccionado pero la UI no cambiaba por no encontrarse los ficheros en `assets`.
+- **Preset numbers**: los iconos de números (1–18) se cargan desde assets y se limpian caches al cambiar estilo.
+
+### Cloud / Supabase
+- **Supabase**: eliminado el fallback de búsqueda por **frecuencia + país**, ya que podía devolver logos/streams incorrectos para emisoras distintas con la misma frecuencia.
+
+### K706 Root Edition (rama `K706_Root`, abril 2026)
+- **Magisk (`magisk/K706_Root/`)**: **overlay** `system/priv-app/QF_FMRadioExt/QF_FMRadioExt.apk` con APK trampolín (`:stub-fmradio`: `FmMainActivity` → OpenRadioFM, `FmService` stub para `IFmRadioService`); `service.sh` hace **`pm enable`** del paquete (necesario para el `ComponentName` explícito del launcher). Sigue el **parche** de XML en `shared_prefs`; `customize.sh` usa `SKIPMOUNT=false`; `build_k706_root_zip.bat` compila el stub y empaqueta el ZIP.
+- **Magisk — build Windows**: `magisk/build_k706_root_zip.bat` fuerza **LF** en scripts antes del ZIP; `.gitattributes` fuerza `eol=lf` bajo `magisk/`.
+- **K706 / widget OEM**: `com.qf.radio.update_action` también se envía al **paquete HOME** resuelto (p. ej. `com.android.launcher.gradient.black`), además de `movablecell` y `com.android.auto.autohome` (`K706Engine`, `WidgetBroadcastManager`). **Fix:** si un destino lanza `SecurityException`, ya no se cancela el resto del bucle (antes el widget podía quedarse en `radioStartup=false`).
+- **`LauncherIntentUtils`**: movido a `com.example.openradiofm.util` para uso desde el motor.
+- **UI logos**: evitar crash Glide en fallo de carga (p. ej. sintonía problemática): fallback de logo en `Handler.post` fuera del callback de `RequestListener`.
+- **Documentación**: `HANDOFF_K706_ROOT.md` (handoff, roadmap corto, ADB). Ver también `K706_ROOT_CHECKLIST.md` y `magisk/K706_Root/README_K706_ROOT_MAGISK.md`.
+- **Pendiente (abr. 2026):** error al **instalar** el módulo en unidad de prueba (Magisk App y/o flasher); seguir con ZIP de `build_k706_root_zip.bat`, vía ADB `magisk --install-module` y diagnóstico en `HANDOFF_K706_ROOT.md` (*Para mañana*). Completar **Nivel A** (asistente root en app) según checklist.
+
+### FYT / Teyes — motor OEM por intents (abril 2026)
+- **`FYTOemEngine`**: nuevo motor **FYT/OEM** (paquete `com.syu.radio`) sin root ni AIDL: `tune` por deep‑link `radio://tune?freq=…` y **Prev/Next** vía `startService` a `com.syu.broadcast.MyService` (`com.syu.radio.prevservice/nextservice`). Incluye autodetección en `RadioServiceController` (usa `sys.fyt.platform` cuando está disponible).
+
+### QS6 / NWD — arranque, rebind y estabilidad (abril 2026)
+- **`QS6Engine`**: *warm-up rebind* tras reboot: si en ~2,2 s no llega RX (callbacks/settings) se reintenta `connect()` y se fuerza un `pollNwdSettingsAndFire()` para enganchar estado sin abrir la radio OEM.
+- **`NWDTunerAdapter`**: reconexión AIDL con **backoff**, *warm-up* `startService()` (sin UI), y `linkToDeath` para re-bind automático si muere el binder o falla `registCallback`.
+
+### Launchers / MediaSession — metadata inicial (abril 2026)
+- **`RadioMediaService`**: publicación de **metadata inicial** diferida al arrancar (evita sesión visible pero sin datos en launchers tipo Agama) y ampliación de paquetes con permiso de lectura de artwork para launchers de coche comunes.
+
+### UI — seek/scan “fluido” y edición de nombre (abril 2026)
+- **`MainActivity` / `ScanManager`**: *ticker* de frecuencia “optimista” durante `seekUp/seekDown` y mientras el escaneo está activo; se corta automáticamente al llegar la frecuencia real o al finalizar el scan.
+- **`DialogManager`**: nuevo diálogo **Editar nombre de emisora** (guardar/restaurar original) con refresco inmediato de UI/presets y limpieza de caché de logos.
+
+### Rendimiento de arranque (abril 2026)
+- **`MainActivityBootstrap`**: diferir operaciones costosas (fuentes, icon pack, `MediaSessionManager.connect`, registro de media receiver y fase final de bootstrap) al siguiente tick de UI para reducir “Skipped frames” en head units.
+
+## [5.2.0] - 2026-04-19
+
+### Estabilización Crítica y Restauración de Motores Legados
+- **QS6 (Nowada)**: Implementación de **Modo Master** (sincronización directa con `Settings.System`), cierre limpio del canal de audio y **fix de muteo estabilizado** mediante conmutación de fuentes.
+- **MT8163 (HCN)**: Revertido a la implementación original estable (HCN native AIDL). Solucionados problemas de regresión en sintonía, RDS y mutes espurios.
+- **MTK8259/8667 (Topway)**: Restaurado sistema de doble vínculo (`ITsCommon` + `ITsSpeechRadio`) para total compatibilidad con MainUI.apk.
+- **Jancar (8227L)**: Revertido al motor original basado en el servicio nativo de Jancar.
+- **Mute Legado (MT8163)**: Restaurada lógica de audio v18.6 (mantenimiento de `fm_radio_on=1`) para evitar ruidos de conmutación.
+- **Paridad RadioEngine**: Implementado `setBand(int)` en todos los motores restaurados para compatibilidad con la interfaz unificada v5.x.
+- **Correcciones de Compilación**: Resueltos 5 fallos críticos de símbolos y métodos abstractos derivados de la restauración de código antiguo.
+
+### QS6 / NWD — RDS, espejo System y bucles OEM (abril 2026)
+- **Operativa**: si RDS o el estado del sintonizador queda desalineado respecto al firmware NWD, **workaround verificado en unidad**: usar los **ajustes de la radio del dispositivo** (OEM) para activar o corregir RDS u opciones equivalentes; la app y `KernelService` siguen siendo la vía preferida en desarrollo. Documentado en `README.md` (*Problemas conocidos*) y `QS6_MCU_KERNELSERVICE_INFORME.md`.
+- **`QS6Engine`**: en **AutoScan lento** se prioriza **AIDL** para `tune`/`seek` (`setAutoScanOemPreferred`, enganchado desde `ScanManager`); fuera de AutoScan se mantiene **MCU primero** donde aplica. Limpieza de **RT** al cambiar frecuencia o banda por callback AIDL. Espejo opcional a `Settings.System` con `canWrite` (M+) y **un solo log** si no hay permiso de escritura.
+- **`MainActivity`**: **coalescencia ~280 ms** del trabajo pesado de `handleFrequencyChange` para amortiguar ráfagas de callbacks/broadcasts (freq inestable, PS pegado).
+- **`WidgetBroadcastManager`**: **coalescencia ~320 ms** en `sendUpdate` ante reinyecciones rápidas del launcher/HAL.
+- **`StatusRefreshCoordinator`**: **reset RDS**, logo y **MHz en UI** antes de encolar `getStationInfo` en el executor (evita carrera que repintaba el PS previo al zapping).
+- **`RadioRepository`**: **`pickBestSupabaseRow`** cuando la API devuelve varias filas (`ps_name` ilike); **fallback** por frecuencia+país si no hubo datos tras custom/PI/ps_name; parseo de frecuencia en filas Supabase (MHz vs kHz).
+- **`MT8163Engine`**: reconexión HCN tras streaming vía **`ACTION_MT8163_FM_HANDOFF`** y bind retardado (**~550 ms**), con espera si la ventana OEM bloquea el bind; evita doble ruta con `MainActivity` y `forceStop` en algunas ROM.
+- **`MainActivity` / MT8163**: eliminado `mHcnPostStreamReconnectRunnable`; la ventana post-streaming la coordina el motor.
+- **`AndroidManifest`**: `WRITE_SETTINGS` (opcional, con `tools:ignore`) para el espejo QS6 en `Settings.System`.
+
+### AutoScan por sobrescritura (abril 2026)
+- **Siempre FM1**: antes de borrar memorias 1–18 se alinea hardware y `MainActivity.mCurrentBand` a FM1 (QS6 `tuneWithBand(87,5 MHz, 0)`; K706/MT8163/MTK8259 `bandCycle` hasta FM1 + `tune`). Textos `autoscan_confirm_message` y `toast_autoscan_slow` actualizados en todos los idiomas.
+- **Ritmo**: tiempos de validación RDS, intervalo entre seeks, hold de guardado en preset y paso tras emisora aceptada **más pausados** (sin volver al barrido extremadamente lento inicial de 11 s / 8,5 s).
+- **Botón AutoScan**: sin animación de rotación; solo **tinte verde** en activo. Sincronización de `MainActivity.mIsScanning` con el estado efectivo en `applyEngineScanState`; durante el barrido lento el flag OEM incoherente no corta el estado “escaneando”; tras el fin, **latch** que ignora `onScanStatusChanged(true)` espurio (hasta nuevo autoscan o **~45 s**).
+- **Guardado**: tras aceptar emisora se puede reprogramar el siguiente seek antes del intervalo largo.
+
+### MT8163 / HCN — mute e init (abril 2026)
+- **`mRadioMuteDesired`**: evita forzar ruta FM / `setMute(false)` en recuperación AIDL y en `deferredBinderRecovery` cuando el usuario mantiene la radio silenciada (p. ej. tras inyección OEM).
+- **`mInitCompleted`**: evita doble `init` cuando `MainActivity` reentra con freq 0 tras `onServiceConnected`.
+- **Motor / `HiddenRadioPlayer`**: ampliaciones de control y coherencia con preferencia modo directo RadioPlayer; documentación mute HAL vs mux OEM.
+- **Menú ingeniería**: ajustes asociados (layout/strings) al modo experimental MT8163.
+
+### MT8163 / HCN — Agama launcher y MediaSession (abril 2026)
+- **Motor compartido con `RadioMediaService`**: tras el bind HCN en `MainActivity`, el `MT8163Engine` se registra en `RadioServiceController`; el servicio llama a `start()` solo para reinyectar `onEngineReady` **sin** un segundo `bindService` a `com.hcn.autoradio` (evita force-stop en algunas ROM).
+- **Controles externos**: seek / preset desde launchers tipo **Agama** (y sesión de medios) reciben `mEngine` y dejan de quedar en silencio funcional.
+- **`MT8163Engine.getCallback()`**: composición de callback con la UI (mismo patrón que K706/QS6).
+- **`release(false)`**: `clearSharedLocalEngineIfSame` al soltar el motor.
+- **Limitación**: sin haber abierto la app al menos una vez en la sesión no hay motor compartido; el widget/sesión no opera hasta ese bind inicial (por diseño).
+
+### UI / ST, layouts y playback (abril 2026)
+- **`SignalMeterCoordinator`**: eliminado el color dinámico del icono **ST** por SNR (sombras/tinte); el ST sigue la lógica de skin / `MainActivity.refreshStereoIndicatorUi` y layouts estándar/simple/V3.
+- **`PlaybackManager`** y **`StatusRefreshCoordinator`**: refinamiento de mute/recuperación y refresco de estado acorde a MT8163 y uso en cabecera.
+- Coordinadores de tema/layout (**`DayModeManager`**, **`NightModeManager`**, **`StandardLayoutManager`**, etc.): alineación con el indicador ST y botones de control.
+
+### K706 / Android Auto + Spotify + diagnóstico (Z-Link; seguimiento pendiente)
+- **`RadioActivityFileLogger`**: log a fichero estable (`commit` del nombre y del flag; sin carrera `apply`); **heartbeat `TICK`** periódico con estado FM/foco/UI; opción **volcar buffer `logcat`** desde ingeniería K706 (`logcat_dump_*.txt` en `RadioLogos/`). `LifecycleCoordinator` informa `uiResumed` al logger.
+- **Menús de ingeniería** (K706 / genérico / QS6): el toggle de log no duplica `putBoolean`+`apply`; solo `onToggleChanged` persiste. **K706**: botón volcado logcat + string i18n `eng_dev_logcat_dump_button`.
+- **`K706RadioManager`**: rama **`LOSS_TRANSIENT`** sin tratar voz AA como llamada GSM (`VOICE_SESSION_AA_OR_TTS`); reflexión playback / logs `APLAY_*` / `AUDIO_FOCUS`; **weak ref** para línea `TICK` en fichero.
+- **Carreras foco vs `getCurrentFreq`**: en **`AUDIOFOCUS_LOSS`** real, **`mIsAudioFocusHeld`** y **`mAllowImplicitFmRecoverFromPoll`** se ponen a **false al inicio** del `try` (antes de MCU), para que hilos Binder no ejecuten “secuestro de canal” con foco aún “held”.
+- **Spotify / AA**: con canal **4** y **`isMusicActive()`** o competencia de mux, no forzar FM; sincronizar foco lógico si hace falta. **`getCurrentFreq`** vuelve a llamar **`checkAndRecoverAudio`** con **`mUserWantsFmAudio`** para poder retomar FM cuando cesa la media externa (sin depender solo de `AUDIOFOCUS_GAIN`). Heartbeat con **`enforceAudioChannelRecovery()`** en lugar de solo `SetChannel(2)`.
+- **`K706Engine.switchToFmAudio`**: delega en **`requestPlayAudio()`** para limpiar flags y secuencia completa al volver desde la UI.
+- **Pendiente (anotado para más adelante)**: acercar el comportamiento al **ducking tipo QS6** (notificaciones AA sin `LOSS` permanente brusco); validar en unidad K706+Z-Link con logs `RadioLogos` (`implRec`, `TICK`, `AUDIO_FOCUS`). **MT8163/QS6** siguen con arquitectura distinta (HAL/AIDL vs mux MCU); no unificar motores.
+
+### K706 / Android Auto y voz de navegación (Zlink)
+- **`K706RadioManager`**: el “Glitch Protect” que relanzaba FM tras `AUDIOFOCUS_LOSS` / `LOSS_TRANSIENT` **no** se aplica si `AudioManager.isMusicActive()` (voz de Maps u otra app); imita la radio OEM (ceder mux). Los reintentos de **`mAutoRecoveryRunnable`** llaman `requestAudioFocus(false)` para **no** alargar la ventana anti-LOSS de 2,5 s (dejaba la app peleando con la guía).
+- **`RadioMediaService`**: ante **`EVENT_LOSS_TRANSIENT`** del broadcast OEM ya **no** se llama `refreshSteeringMediaSessionAndForeground()` (evitaba volver a PLAYING+FGS y a pedir foco mientras suena la navegación).
+
+### K706 / motor compartido y escaneo (UI)
+- **`CompositeRadioEngineCallback`**: reenvío de **`onHwAutomationEvent`** a ambos receptores (eventos de hardware 122–125 ya no se pierden con motor compartido).
+- **Escaneo selectivo (K706)**: al cerrar el diálogo se restaura el **callback previo** (p. ej. `Composite` UI + `RadioMediaService`), no solo `EngineCallbackCoordinator`.
+- **AutoScan**: ver bloque *AutoScan por sobrescritura* arriba (FM1, latch OEM, botón sin rotación).
+
+### K706 / Media (independencia y auditoría)
+- **Recuperación FM sin micro-corte (K706)**: si `RPC_GetChannel` ya devuelve **FM (2)**, `enforceAudioChannelRecovery()` evita el ritual completo que empezaba con `setMute(true)` (colisión con `PlaybackManager.setMute(false)` → `enforceAudioRecovery`). En `startFmAudioSequence(fast)` se omite el pre-mute inicial cuando el canal ya es 2. El cambio real **4→2** sigue usando la secuencia completa cuando hace falta.
+- **Pendiente / futura revisión (audio OEM)**: si tras BT/stack QF aún se nota un clic al **mux 4→2** con el heartbeat, valorar **debounce** o **ventana de gracia** tras `abandonCustomAudioFocus` antes de forzar `SetChannel(2)` (riesgo: retrasar recuperación; medir en carretera).
+- **RDS RT end-to-end (K706)**: compatibilidad con RadioText desde **`0xB7`** (RT) y heurística para firmwares donde RT llega como **`0xB3`**; limpieza de texto más robusta para evitar RT vacío por filtrado.
+- **ACC (K706)**: `0x24` tratado como **ACC** y expuesto como evento `125` (pipeline Engine → UI/Servicio). Se incluye en el estado compartido (`RadioSessionState.accOn`).
+- **Estado único (UI + Service)**: `RadioMediaService` y `MainActivity` comparten el mismo `RadioSessionController` para evitar estados divergentes.
+- **MediaSession**: el servicio es la **fuente de verdad** de metadata/Now Playing; se ignoran updates externos vía `ACTION_UPDATE_METADATA`.
+- **Widget OEM QuickFish (K706)**:
+  - Recepción de acciones del widget del launcher (`/customize/radio/*`) mediante `OemRadioWidgetReceiver` (prev/next/seek/mute), reenrutadas a `RadioMediaService`.
+  - Endurecimiento frente a ROMs que bloquean `com.qf.radio.update_action`: si el broadcast falla por `SecurityException`, se **deshabilitan reintentos** para evitar spam/binder flood.
+ - **Widget genérico de música (K706 / Now Playing)**:
+   - **PowerOff / Atrás = minimizar** (sin `finish()`), evitando que el launcher ejecute `forceStopPackage()` sobre OpenRadioFM.
+   - Al minimizar: **mute + abandono de AudioFocus** (sin cerrar HAL) para “cerrar” el sonido de FM en background.
+   - Se mantiene **`MediaSession`/FGS** activo en `RadioMediaService` para que el widget de música siga controlando la app.
+
+### QS6 / NWD — KernelService y menú de ingeniería (sustituir radio OEM)
+- **`Qs6KernelMcuClient`**: cliente experimental hacia `com.nwd.kernel.service.KernelService` / `IKernelFeature.request([B)` (Binder `transact`), para enviar tramas FM al MCU sin abrir la app nativa.
+- **Menú QS6 (Technical Matrix)**: botonera ampliada — tune, paso fino vs salto de emisora (mapeo OEM `seek`/`search`), banda, AMS, intro, near DX/LOC, RDS/PTY de laboratorio, **SAVE_P1..P16** vía `dataType=0x0C`, y pruebas AIDL (`RadioFeature`: stereo, prefeb, intro, refresh de estado, `STOP_SEARCH` por broadcast).
+- **Sesión Kernel**: el bind al `KernelService` se mantiene entre cierres del diálogo de desarrollo; se libera al destruir `MainActivity` en modo QS6 (`QS6EngineeringDialog.releaseSharedKernelClient()`).
+- **Documentación**: `QS6_MCU_KERNELSERVICE_INFORME.md` (protocolo, validación en hardware,riesgos RX).
+- **`NWDTunerAdapter`**: métodos auxiliares para ingeniería (`setStereoOn`, `prefeb`, `saveCurrentFrequency`, `getDebugStatus`).
+- **QS6Engine “MCU-first” (híbrido)**: preferencia por órdenes vía `KernelService` (tune/seek/band/dx-local/stereo) con fallback a AIDL; RX complementario por `Settings.System` (freq/band/PS y claves opcionales RT/PTY si existen) para reducir dependencia de callbacks OEM.
+
+### MT8163 / HCN — MCU-first (sin com.hcn.autoradio)
+- **HiddenRadioPlayer**: ampliado con control directo (tune/seek/step/band/local/estado) vía reflexión sobre `android.radio.RadioPlayer`.
+- **Preferencia `pref_mt8163_mcu_direct`**: modo experimental para **omitir** el bind a `com.hcn.autoradio` y operar por RadioPlayer; toggle en menú de ingeniería (requiere reinicio de la app).
+- **Correcciones AIDL**: fix de inversión de `seekUp/seekDown` en `MT8163Engine` y ajuste para que `ScanManager` (software) sea la única fuente de AutoScan/presets.
+
+### Accesibilidad (volante / teclas de medios)
+- **FactoryRadioHijackerService**: solicitud reforzada de `FLAG_REQUEST_FILTER_KEY_EVENTS` al conectar y log a nivel INFO para diagnósticos en ROMs que filtran DEBUG.
+- **Config**: `accessibility_service_config.xml` pasa a `typeAllMask` + `canRequestFilterKeyEvents=true` para mejorar compatibilidad con unidades OEM.
+- **UI / fondo dinámico**: `ivDynamicBackground` pasa a **fitCenter** (layouts default y `sw720dp`); `LogoManager` decodifica el bitmap al tamaño de pantalla (tope **1600 px** en el lado largo) y usa **fitCenter** en Glide para contener el arte sin recorte tipo centerCrop.
+- **Versión app (MCU2)**: `versionCode` **40**, `versionName` **5.2.0**.
+
+## [5.1.8] - 2026-04-12
+### Solucionado
+- **QS6 (NWD)**: Sincronización total con Ingeniería Inversa G5 (Fase B).
+- **QS6 (NWD)**: Corregidos IDs de fuente: Radio=4 (0x04), Android=0 (0x00).
+- **QS6 (NWD)**: Implementado broadcast `ACTION_APP_IN_OUT` con **AppID 8**, obligatorio para activar el audio FM en hardware Nowada.
+- **QS6 (NWD)**: Limpieza de constantes conflictivas y mejora de compatibilidad con `InitFM()`.
+
+## [5.1.7] - 2026-04-12
+
+## [5.1.6] - 2026-04-12
+
+---
+
+## [5.1.5] - 2026-04-12
+### Added
+- **Arquitectura Modular Total**: Finalización de la migración de todos los motores de radio (`QS6`, `MT8163`, `MTK8259`, `K706`, `Jancar`) a una arquitectura totalmente desacoplada basada en **`TunerAdapter`**.
+- **Motores Refactorizados**:
+    - **QS6 (Nowada)**: Sincronización completa con el SDK de Nowada y soporte de redundancia por Shadow Intents.
+    - **MT8163 (HCN)**: Adaptador modular dedicado con corrección de sintonía fina.
+    - **MTK8259/8667 (TopWay)**: Soporte para doble vínculo (`ITsCommon` + `ITsSpeechRadio`) sincronizado con la API real de TS.
+- **Evolución de Interfaz**: Añadido `setBand(int)` a `RadioEngine` para control unificado de bandas en todos los chips.
+
+### Fixed
+- **Estabilidad de Compilación**: Resolución de 51 errores de símbolos y métodos abstractos derivados del desacoplamiento.
+- **RadioServiceController**: No-args initialization para todos los motores modulares.
 
 ---
 
@@ -124,6 +281,9 @@
 - **Diálogos alineados con menú premium / AutoScan**: selector en cuadrícula (`dialog_language_selector`), listado de archivos `.fav` al cargar favoritos (`dialog_favorites_file_picker`), historial de emisoras (`dialog_station_history`); marco oscuro, tarjeta con **skin** activo, tipografía del usuario, botón **Cancelar** rojo en listas; celdas `item_fav_file_row` / `item_language`.
 - **Layouts traducibles**: textos de `dialog_save_load`, `dialog_credits`, `dialog_selective_scan` y filas de escaneo enlazados a `@string/`.
 - **Build / Supabase**: credenciales vía `SUPABASE_URL` y `SUPABASE_ANON_KEY` en `local.properties` (raíz), variables de entorno o `-P` Gradle; sin valores por defecto en el repositorio. `BuildConfig` genera URL, clave y base pública de Storage. Plantilla `local.properties.example`; documentación [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
+
+### Fixed
+- **Build / Supabase**: normalización de `SUPABASE_URL` (corrige valores copiados/escapados tipo `https\://...` que rompían Retrofit/OkHttp).
 - **Comunidad Supabase (calidad de datos)**: puerta de calidad centralizada (`isAcceptableForCloudUpsert`, `sanitizePsForCloudUpsert`, reglas de PS); `CloudContributionGuard` — no contribuir en escaneo FM ni durante ~1,75 s tras cambiar de frecuencia; estabilidad del PS (~4 s) antes de contribuir. `CloudContributionGuard.java`, cambios en `RadioRepository`, `MainActivity`, `SupabaseLogoSource`.
 
 ### Changed

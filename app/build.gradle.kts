@@ -31,7 +31,15 @@ if (supabaseUrlRaw.isNullOrEmpty() || supabaseAnonKeyRaw.isNullOrEmpty()) {
             "  - Documentación: docs/CI_SUPABASE.md",
     )
 }
-val supabaseUrl: String = supabaseUrlRaw!!.trimEnd('/') + "/"
+// Algunos entornos (o copiado desde logs) pueden introducir escapes tipo "https\\://".
+// Normalizamos para asegurar un BASE_URL válido para Retrofit/OkHttp.
+val supabaseUrlSanitized: String = supabaseUrlRaw!!
+    .replace("\\:", ":")
+    .replace("\\/", "/")
+    .replace("\\\\", "\\")
+    .replace("\\", "")
+    .trim()
+val supabaseUrl: String = supabaseUrlSanitized.trimEnd('/') + "/"
 val supabaseAnonKey: String = supabaseAnonKeyRaw!!
 val supabaseStoragePublicLogosBase: String =
     supabaseUrl.trimEnd('/') + "/storage/v1/object/public/station-logos/"
@@ -53,8 +61,8 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 34
-        versionName = "5.1.2"
+        versionCode = 41
+        versionName = "5.2.1 Icons Fix"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -131,7 +139,7 @@ android {
         abortOnError = false
     }
 
-    // Icon packs: empaquetar PNGs de packs como assets (sin mover archivos).
+    // Icon packs: empaquetados dentro de src/main/assets (versionados).
     sourceSets {
         getByName("main") {
             // Evitar APIs deprecadas de Kotlin DSL: usar el set 'directories'
@@ -139,13 +147,6 @@ android {
             assets.directories.addAll(
                 listOf(
                     "src/main/assets",
-                    "../icons_numbers",
-                    "../icons_color",
-                    "../icons_google",
-                    "../Icons_lucide",
-                    "../icons_remix",
-                    "../icons_awesome",
-                    "../icons_tabler",
                 )
             )
         }

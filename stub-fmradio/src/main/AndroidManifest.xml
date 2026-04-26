@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <queries>
+        <package android:name="com.example.openradiofm" />
+    </queries>
+
+    <application
+        android:label="@string/stub_app_label"
+        android:hasCode="true">
+
+        <!-- Misma clase que la radio OEM: el launcher llama startActivity explícito aquí. -->
+        <activity
+            android:name="com.android.fmradio.FmMainActivity"
+            android:exported="true"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+
+        <!-- Evita fallos de bind si el framework espera el servicio AIDL (stub mínimo). -->
+        <service
+            android:name="com.android.fmradio.FmService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.fmradio.IFmRadioService" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

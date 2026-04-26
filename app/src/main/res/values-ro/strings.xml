@@ -24,6 +24,11 @@
     <string name="bg_pure_black">Negru Pur</string>
     <string name="bg_fixed_image">Imagine background.png</string>
     <string name="bg_dynamic_logo">Logo Stație (Dinamic)</string>
+    <string name="dynamic_bg_aspect_title">Încadrare fundal dinamic</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (fără decupare)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (umple, decupează)</string>
+    <string name="toast_dynamic_bg_letterbox">Fundal dinamic: letterbox (fără decupare)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Fundal dinamic: 16:9 (umple, decupează)</string>
     <string name="font_default">Implicit (Sistem)</string>
     <string name="font_bebas">Robotic (Bebas)</string>
     <string name="font_digital">Digital (LED)</string>
@@ -35,6 +40,10 @@
     <string name="night_mode_auto">Mod Noapte Automat</string>
     <string name="relief_hd">Relief HD</string>
     <string name="save_history">Salvează Istoricul Stațiilor</string>
+    <string name="save_history_summary_on">Stațiile sunt salvate; poți deschide lista (ex.: atinge numele RDS).</string>
+    <string name="save_history_summary_off">Dezactivat: nu se salvează istoricul și nu apare dialogul.</string>
+    <string name="toast_history_save_disabled">Activează «Salvează istoricul stațiilor» în opțiuni pentru a deschide lista.</string>
+    <string name="hardware_automation_section_header">(Automatizare hardware) (în teste)</string>
     <string name="enable_gestures_beta">Activează Geste (Swipe) (beta)</string>
     <string name="online_logos">Logo-uri Online</string>
 
@@ -69,7 +78,7 @@
     <string name="logos_online_disabled">❌ Logo-uri online dezactivate</string>
     <string name="under_study">În studiu</string>
     <string name="night_mode_manual_blocked">Dezactivați Modul Noapte Automat pentru a alege tema manual</string>
-    <string name="auto_hide_controls">Ascunde controalele automat</string>
+    <string name="auto_hide_controls">Ascunde controalele automat (layout 3 orizontal)</string>
     <string name="auto_hide_enabled">✅ Ascundere automată activată</string>
     <string name="auto_hide_disabled">❌ Ascundere automată dezactivată</string>
     <string name="preset_scroll_loop_title">Derulare infinită a preseturilor</string>
@@ -228,7 +237,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>
@@ -255,7 +264,7 @@
     <string name="widget_next_preset">Memorie următoare</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">SUPRASCRIERE MEMORII</string>
-    <string name="autoscan_confirm_message">Acest AutoScan șterge și umple memoriile 1–18 ale benzii curente cu posturile detectate.\n\nÎncepi scanarea?</string>
+    <string name="autoscan_confirm_message">Acest AutoScan începe mereu pe FM1: șterge și umple mai întâi memoriile 1–18 pe FM1 (tunerul comută pe FM1 dacă e nevoie). Poate continua pe FM2/FM3 după 18 posturi.\n\nÎncepi scanarea?</string>
     <string name="autoscan_confirm_start">Începe scanarea</string>
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
@@ -337,6 +346,7 @@
     <string name="eng_dev_file_log_profile_basic">DE BAZĂ</string>
     <string name="eng_dev_file_log_profile_medium">MEDIU</string>
     <string name="eng_dev_file_log_profile_full">COMPLET</string>
+    <string name="eng_dev_logcat_dump_button">DEV: exportă buffer logcat în RadioLogos</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -357,20 +367,20 @@
     <string name="toast_layout_simple">Layout: simple (minimal)</string>
     <string name="toast_layout_v2">Layout: V2 (vertical)</string>
 
-    <string name="toast_eq_unavailable">Equalizer unavailable (radio engine not started)</string>
-    <string name="toast_radio_engine_not_started">Radio engine not started</string>
-    <string name="toast_no_gps_app">No maps/GPS app found</string>
-    <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
+    <string name="toast_eq_unavailable">Egalizator indisponibil (motorul radio nu este pornit)</string>
+    <string name="toast_radio_engine_not_started">Motorul radio nu este pornit</string>
+    <string name="toast_no_gps_app">Nu s-a găsit aplicație hărți/GPS</string>
+    <string name="toast_basic_no_engineering">Mod de bază: meniul de inginerie indisponibil</string>
 
-    <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
-    <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
-    <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
-    <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>
-    <string name="toast_presets_overwritten">Presets overwritten (%1$d stations).</string>
+    <string name="toast_autoscan_stopped">AutoScan oprit</string>
+    <string name="toast_autoscan_slow">AutoScan lent de pe FM1: se caută posturi… (atinge din nou pentru oprire)</string>
+    <string name="toast_autoscan_start_failed">Nu s-a putut porni AutoScan</string>
+    <string name="toast_autoscan_finished">AutoScan finalizat (%1$d preseturi)</string>
+    <string name="toast_autoscan_band_presets">AutoScan → %1$s · preseturi 1–18</string>
+    <string name="toast_presets_overwritten">Preseturi suprascrise (%1$d posturi).</string>
 
-    <string name="toast_back_standard_layout">Returning to standard mode…</string>
-    <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
-    <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
-    <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="toast_back_standard_layout">Revenire la modul standard…</string>
+    <string name="toast_recovering_fm_audio">Se recuperează audio FM…</string>
+    <string name="toast_hw_eq_unsupported">EQ hardware neacceptat pe acest dispozitiv</string>
+    <string name="toast_saved_to_slot">Salvat în presetul %1$d</string>
 </resources>

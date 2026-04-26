@@ -42,25 +42,57 @@ public class DialogManager {
             return;
         int currentFreq = mActivity.mEngine.getCurrentFreq();
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
-        builder.setTitle(mActivity.getString(R.string.edit_station_name));
-        builder.setMessage(mActivity.getString(R.string.frequency_label, String.format(java.util.Locale.getDefault(), "%.1f", currentFreq / 1000.0)));
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_edit_station_name);
 
-        final EditText input = new EditText(mActivity);
-        input.setSingleLine(true);
-
-        // Pre-llenar con el nombre actual (si es custom o RDS)
-        com.example.openradiofm.data.model.RadioStation s = mActivity.mRepository.getStationInfo(currentFreq, null);
-        if (s.getName() != null) {
-            input.setText(s.getName());
-            input.setSelectAllOnFocus(true);
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+            window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
         }
 
-        builder.setView(input);
+        View rootCard = dialog.findViewById(R.id.edit_station_dialog_root);
+        if (rootCard != null) {
+            try {
+                rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+            } catch (Exception ignored) {
+            }
+        }
 
-        builder.setPositiveButton(mActivity.getString(R.string.dialog_btn_save), (dialog, which) -> {
-            String newName = input.getText().toString().trim();
-            if (!newName.isEmpty()) {
+        TextView tvFreq = dialog.findViewById(R.id.tvEditStationFreq);
+        if (tvFreq != null) {
+            String f = String.format(java.util.Locale.getDefault(), "%.1f", currentFreq / 1000.0);
+            tvFreq.setText(mActivity.getString(R.string.frequency_label, f));
+        }
+
+        final EditText input = dialog.findViewById(R.id.etStationName);
+        if (input != null) {
+            input.setSingleLine(true);
+            try {
+                input.setTypeface(mActivity.getSystemTypeface());
+            } catch (Exception ignored) {
+            }
+
+            // Pre-llenar con el nombre actual (si es custom o RDS)
+            try {
+                com.example.openradiofm.data.model.RadioStation s = mActivity.mRepository.getStationInfo(currentFreq, null);
+                if (s != null && s.getName() != null) {
+                    input.setText(s.getName());
+                    input.setSelectAllOnFocus(true);
+                }
+            } catch (Exception ignored) {
+            }
+        }
+
+        View btnSave = dialog.findViewById(R.id.btnSaveStationName);
+        if (btnSave != null) {
+            btnSave.setOnClickListener(v -> {
+                if (input == null) return;
+                String newName = input.getText().toString().trim();
+                if (newName.isEmpty()) return;
+
                 // V16.4: Usar setCustomName (CUSTOM_) en vez de saveRdsName (RDS_)
                 mActivity.mRepository.setCustomName(currentFreq, newName);
                 mActivity.showToast(mActivity.getString(R.string.toast_station_name_saved, newName));
@@ -74,48 +106,66 @@ public class DialogManager {
                 if (mActivity.mPresetManager != null) {
                     mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
                 }
-                // V16.4: Forzar refresco de la frecuencia en pantalla
+
                 mActivity.runOnUiThread(() -> {
                     // V18.6: Limpiar caché de logos de la Activity para que busque el nuevo nombre
                     int band = mActivity.getCurrentBand();
                     mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
                     mActivity.mLastLogoUrl = ""; // Forzar que LogoManager no ignore el cambio
-                    
+
                     mActivity.updateFrequencyDisplay(currentFreq, newName);
                     mActivity.refreshRadioStatus();
                 });
-            }
-        });
 
-        builder.setNegativeButton(mActivity.getString(R.string.cancel), (dialog, which) -> dialog.cancel());
-
-        builder.setNeutralButton(mActivity.getString(R.string.dialog_btn_restore_original), (dialog, which) -> {
-            // V16.4: Limpiar nombre custom
-            mActivity.mRepository.setCustomName(currentFreq, null);
-            mActivity.showToast(mActivity.getString(R.string.toast_station_name_restored));
-
-            // V16.4: Limpiar override en RDSManager
-            if (mActivity.mRdsManager != null) {
-                mActivity.mRdsManager.clearCustomNameOverride();
-            }
-
-            if (mActivity.mPresetManager != null) {
-                mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
-            }
-            // V16.4: Forzar refresco
-            mActivity.runOnUiThread(() -> {
-                // V18.6: Limpiar caché al restaurar
-                int band = mActivity.getCurrentBand();
-                mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
-                mActivity.mLastLogoUrl = "";
-                
-                mActivity.updateFrequencyDisplay(currentFreq, null);
-                mActivity.refreshRadioStatus();
+                dialog.dismiss();
             });
-        });
+        }
 
-        builder.show();
-        input.requestFocus();
+        View btnRestore = dialog.findViewById(R.id.btnRestoreOriginalStationName);
+        if (btnRestore != null) {
+            btnRestore.setOnClickListener(v -> {
+                // V16.4: Limpiar nombre custom
+                mActivity.mRepository.setCustomName(currentFreq, null);
+                mActivity.showToast(mActivity.getString(R.string.toast_station_name_restored));
+
+                // V16.4: Limpiar override en RDSManager
+                if (mActivity.mRdsManager != null) {
+                    mActivity.mRdsManager.clearCustomNameOverride();
+                }
+
+                if (mActivity.mPresetManager != null) {
+                    mActivity.mPresetManager.updateCardVisuals(-1, currentFreq, mActivity.getCurrentBand());
+                }
+
+                mActivity.runOnUiThread(() -> {
+                    // V18.6: Limpiar caché al restaurar
+                    int band = mActivity.getCurrentBand();
+                    mActivity.mLogoCachePerBand.remove(band + "_" + currentFreq);
+                    mActivity.mLastLogoUrl = "";
+
+                    mActivity.updateFrequencyDisplay(currentFreq, null);
+                    mActivity.refreshRadioStatus();
+                });
+
+                dialog.dismiss();
+            });
+        }
+
+        View btnCancel = dialog.findViewById(R.id.btnCancelEditStationName);
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {
+        }
+
+        dialog.show();
+        try {
+            if (input != null) input.requestFocus();
+        } catch (Exception ignored) {
+        }
     }
 
     public void showPremiumSettingsDialog() {
@@ -259,8 +309,9 @@ public class DialogManager {
             int bgIdx = mActivity.mPrefs.getInt("pref_bg_mode", 1);
             String[] modes = { mActivity.getString(R.string.bg_pure_black),
                     mActivity.getString(R.string.bg_fixed_image), mActivity.getString(R.string.bg_dynamic_logo) };
-            if (bgIdx >= 0 && bgIdx < modes.length)
-                tvBackgroundStatus.setText(modes[bgIdx]);
+            if (bgIdx >= 0 && bgIdx < modes.length) {
+                tvBackgroundStatus.setText(buildBackgroundStatusText(modes[bgIdx]));
+            }
         }
 
         // Switches
@@ -504,10 +555,10 @@ public class DialogManager {
 
         if (swHistory != null) {
             swHistory.setChecked(mActivity.mPrefs.getBoolean("pref_save_history", true));
-            bindSwitchSummary(tvSummarySaveHistory, swHistory.isChecked());
+            bindSaveHistorySummary(tvSummarySaveHistory, swHistory.isChecked());
             swHistory.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply();
-                bindSwitchSummary(tvSummarySaveHistory, checked);
+                bindSaveHistorySummary(tvSummarySaveHistory, checked);
             });
         }
 
@@ -657,6 +708,49 @@ public class DialogManager {
             btnAcknowledgements.setOnClickListener(v -> showAcknowledgementsDialog());
         }
         dialog.findViewById(R.id.btnCloseSettings).setOnClickListener(v -> dialog.dismiss());
+        
+        // V24.5: HARDWARE AUTOMATION MODULE BINDING (K706 EXCLUSIVE)
+        boolean devMode = mActivity.mPrefs.getBoolean("pref_dev_mode_enabled", false);
+        View layoutHwAutomation = dialog.findViewById(R.id.layoutHwAutomation);
+        if (layoutHwAutomation != null) {
+            layoutHwAutomation.setVisibility(devMode ? View.VISIBLE : View.GONE);
+            
+            // Auto Night Switch
+            androidx.appcompat.widget.SwitchCompat swHwAutoNight = dialog.findViewById(R.id.swHwAutoNight);
+            TextView tvSummaryHwAutoNight = dialog.findViewById(R.id.tvSummaryHwAutoNight);
+            if (swHwAutoNight != null) {
+                swHwAutoNight.setChecked(mActivity.mPrefs.getBoolean("pref_hw_auto_night", true));
+                bindSwitchSummary(tvSummaryHwAutoNight, swHwAutoNight.isChecked());
+                swHwAutoNight.setOnCheckedChangeListener((btn, checked) -> {
+                    mActivity.mPrefs.edit().putBoolean("pref_hw_auto_night", checked).apply();
+                    bindSwitchSummary(tvSummaryHwAutoNight, checked);
+                });
+            }
+
+            // Reverse Mute Switch
+            androidx.appcompat.widget.SwitchCompat swHwReverseMute = dialog.findViewById(R.id.swHwReverseMute);
+            TextView tvSummaryHwReverseMute = dialog.findViewById(R.id.tvSummaryHwReverseMute);
+            if (swHwReverseMute != null) {
+                swHwReverseMute.setChecked(mActivity.mPrefs.getBoolean("pref_hw_reverse_mute", true));
+                bindSwitchSummary(tvSummaryHwReverseMute, swHwReverseMute.isChecked());
+                swHwReverseMute.setOnCheckedChangeListener((btn, checked) -> {
+                    mActivity.mPrefs.edit().putBoolean("pref_hw_reverse_mute", checked).apply();
+                    bindSwitchSummary(tvSummaryHwReverseMute, checked);
+                });
+            }
+
+            // Handbrake Safety Switch
+            androidx.appcompat.widget.SwitchCompat swHwHandbrake = dialog.findViewById(R.id.swHwHandbrake);
+            TextView tvSummaryHwHandbrake = dialog.findViewById(R.id.tvSummaryHwHandbrake);
+            if (swHwHandbrake != null) {
+                swHwHandbrake.setChecked(mActivity.mPrefs.getBoolean("pref_hw_handbrake", true));
+                bindSwitchSummary(tvSummaryHwHandbrake, swHwHandbrake.isChecked());
+                swHwHandbrake.setOnCheckedChangeListener((btn, checked) -> {
+                    mActivity.mPrefs.edit().putBoolean("pref_hw_handbrake", checked).apply();
+                    bindSwitchSummary(tvSummaryHwHandbrake, checked);
+                });
+            }
+        }
 
         // V15.6: Aplicar fuente de forma recursiva al diálogo de ajustes usando el
         // gestor de MainActivity
@@ -809,8 +903,44 @@ public class DialogManager {
             mActivity.mLogoManager.loadCustomBackground();
             mActivity.mLogoManager.loadCarLogo();
             mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
-            if (tvStatus != null)
-                tvStatus.setText(modes[w]);
+            if (w == 2) {
+                // Al elegir fondo dinámico, ofrecer el ajuste de encuadre (letterbox vs fill).
+                showDynamicBackgroundAspectSelector(() -> {
+                    mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
+                    if (tvStatus != null) tvStatus.setText(buildBackgroundStatusText(modes[w]));
+                });
+            } else {
+                if (tvStatus != null) tvStatus.setText(modes[w]);
+            }
+        });
+    }
+
+    private String buildBackgroundStatusText(String modeLabel) {
+        if (mActivity.mPrefs == null) return modeLabel;
+        int bgMode = mActivity.mPrefs.getInt("pref_bg_mode", 1);
+        if (bgMode != 2) return modeLabel;
+        int aspect = mActivity.mPrefs.getInt("pref_dynamic_bg_aspect", 0);
+        String aspectLabel = (aspect == 1)
+                ? mActivity.getString(R.string.dynamic_bg_aspect_fill_16_9)
+                : mActivity.getString(R.string.dynamic_bg_aspect_letterbox);
+        return modeLabel + " · " + aspectLabel;
+    }
+
+    private void showDynamicBackgroundAspectSelector(Runnable onDone) {
+        if (mActivity.mPrefs == null) {
+            if (onDone != null) onDone.run();
+            return;
+        }
+        String[] options = {
+                mActivity.getString(R.string.dynamic_bg_aspect_letterbox),
+                mActivity.getString(R.string.dynamic_bg_aspect_fill_16_9),
+        };
+        int current = mActivity.mPrefs.getInt("pref_dynamic_bg_aspect", 0);
+        showGridSelector(mActivity.getString(R.string.dynamic_bg_aspect_title), options, current, which -> {
+            mActivity.mPrefs.edit().putInt("pref_dynamic_bg_aspect", which).apply();
+            mActivity.showToast(mActivity.getString(
+                    which == 1 ? R.string.toast_dynamic_bg_fill_16_9 : R.string.toast_dynamic_bg_letterbox));
+            if (onDone != null) onDone.run();
         });
     }
 
@@ -974,7 +1104,8 @@ public class DialogManager {
             if (tvVersion != null) {
                 String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(),
                         0).versionName;
-                tvVersion.setText(mActivity.getString(R.string.version, versionName));
+                String base = mActivity.getString(R.string.version, versionName);
+                tvVersion.setText(base + " — " + mActivity.getString(R.string.root_version_suffix));
             }
         } catch (Exception ignored) {
         }
@@ -1181,6 +1312,10 @@ public class DialogManager {
     }
 
     public void showHistoryDialog() {
+        if (!mActivity.mPrefs.getBoolean("pref_save_history", true)) {
+            mActivity.showStyledToast(mActivity.getString(R.string.toast_history_save_disabled));
+            return;
+        }
         String historyStr = mActivity.mPrefs.getString("pref_station_history", "");
         if (historyStr.isEmpty()) {
             mActivity.showStyledToast(mActivity.getString(R.string.history_empty));
@@ -1431,6 +1566,12 @@ public class DialogManager {
         if (tv == null) return;
         tv.setText(on ? mActivity.getString(R.string.settings_value_on)
                 : mActivity.getString(R.string.settings_value_off));
+    }
+
+    private void bindSaveHistorySummary(TextView tv, boolean on) {
+        if (tv == null) return;
+        tv.setText(on ? mActivity.getString(R.string.save_history_summary_on)
+                : mActivity.getString(R.string.save_history_summary_off));
     }
 
     private void fillThemeSummary(TextView tv) {

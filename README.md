@@ -1,21 +1,21 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.1.2-green.svg)]()
-[![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.2.1_Icons_Fix-green.svg)]()
+[![Branch](https://img.shields.io/badge/branch-K706_Root-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
-[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259-purple.svg)]()
+[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units**, con soporte activo para **K706**, **MT8163 (Junsun V1 Pro)** y las plataformas **MTK 8227L / 8259 / 8667**.  
+**Aplicación de radio FM premium para Android Head Units**, con soporte activo para **K706**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, y **FYT/Teyes (OEM)** (control por intents de `com.syu.radio`).  
 Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada de logos y temas.
 
 <div align="center">
   <img src="docs/img/app_icon.png" width="150" alt="OpenRadioFM Logo">
   <br>
   <p align="center"><b>【 GALERÍA DE CAPTURAS 】</b></p>
-  <img src="docs/img/screenshot1.png" width="45%" alt="Layout V2 (v4.7)">
-  <img src="docs/img/screenshot2.png" width="45%" alt="Layout V3 (v4.7)">
+  <img src="docs/img/v18_layout1.png" width="45%" alt="Layout V3 (ejemplo)">
+  <img src="docs/img/v18_layout2.png" width="45%" alt="Layout V3 (ejemplo)">
   <br><br>
   <p align="center"><b>【 NUEVO LAYOUT V3 - Stability Beta 5.0 】</b></p>
   <img src="docs/img/v18_layout1.png" width="45%" alt="Simple Layout Night Mode">
@@ -46,6 +46,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 |---|:---:|:---:|:---:|
 | Sintonización FM | ✅ | ✅ | ✅ |
 | Seek / AutoScan | ✅ | ✅ | ✅ |
+| Editar nombre de emisora (custom) | ✅ | ✅ | ✅ |
 | RDS PS (nombre) | ✅ | ✅ | ✅ |
 | RDS RT (información) | ✅ | ✅ | ✅ |
 | AF / TA / TP | ✅ | ✅ | ✅ |
@@ -56,6 +57,12 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalizaci�
 | Logos HD (Supabase) | ✅ | ✅ | ✅ |
 | Soporte Android Auto | ✅ | ✅ | ✅ |
 | Streaming Online | ✅ | ✅ | ✅ |
+
+**5.2.1 “Icons Fix”** (abril 2026, `versionCode` **41**): corrección del selector de **packs de iconos** (PNG/SVG) y números de preset (assets), y ajuste de Supabase para evitar falsos positivos por frecuencia. Ver `CHANGELOG.md`.
+
+**Rama `K706_Root`**: edición **root / Magisk** para QF K706 — trampolín `QF_FMRadioExt` (`:stub-fmradio`), `pm enable` del paquete OEM, parche de atajos en `shared_prefs`, broadcasts al launcher. Handoff: [`HANDOFF_K706_ROOT.md`](HANDOFF_K706_ROOT.md). Instalación: `magisk/build_k706_root_zip.bat` → `magisk/k706.zip`; guía [`magisk/K706_Root/README_K706_ROOT_MAGISK.md`](magisk/K706_Root/README_K706_ROOT_MAGISK.md). *Estado:* instalación del módulo en hardware en depuración (ver CHANGELOG *Unreleased* / handoff).
+
+**Pendiente (K706 + Z-Link + AA)**: seguir afinando interacción con Spotify/mux MCU vs **ducking** natural que ya da **QS6** en la misma app; trabajo documentado en `CHANGELOG.md` bajo *Unreleased*.
 
 **5.1.1** (abril 2026, `versionCode` **33**): incluye **Eslovenia (SI)**, **Backup Studio** / Storage, **widget** actualizado en seek con la app en segundo plano (**QS6** vía `RadioMediaService`) y **logo del widget** con Glide en hilo principal; **Modo Día** beige; fix **Supabase** en release; logs **`ORF_WidgetRx`**. En UI: **ajustes premium** con resúmenes en interruptores; **presets** siguiente/anterior por **orden de slots** con bucle; **opción** de **tira de presets en bucle** (V2/V3) y coherencia de skin/fondo dinámico con modo noche automático. *Pendiente:* logo del widget bajo ciertos casos; **`ivMainLogo` en layout 2** bajo estrés (zapping/layout). Ver `CHANGELOG.md`.
 
@@ -145,6 +152,8 @@ graph TB
 ### Supabase (obligatorio para compilar)
 Desde **v5.0.15**, la URL y la clave **anon** de Supabase no van en el código: añádelas a `local.properties` en la raíz (junto a `sdk.dir`) o exporta `SUPABASE_URL` y `SUPABASE_ANON_KEY`. Plantilla: `local.properties.example`. Guía CI: [`docs/CI_SUPABASE.md`](docs/CI_SUPABASE.md).
 
+Nota K706/Magisk: si compilas el ZIP con `magisk/build_k706_root_zip.bat`, el script **lee** las credenciales desde `local.properties` (o variables de entorno) y **abortará** si faltan (para evitar builds “offline” con placeholders).
+
 ### Build
 ```bash
 # Clonar
@@ -178,25 +187,35 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ## ⚠️ Problemas Conocidos (Abril 2026)
 - **Verificación v5.0.16**: los cambios de la **5.0.16** aún deben probarse en **K706** y **MT8163** en condiciones reales (streaming, volante, logos, notificaciones).
 - **Audio Focus (K706)**: ✅ Resuelto. Centralización de foco en RadioManager para evitar cortes por conmutación de canal MCU (Channel 2/4).
+- **K706 / RDS RadioText (RT)**: en algunos firmwares el RT puede llegar como `0xB7` o como `0xB3`. En `MCU2` se soportan ambos casos para que **Now Playing** muestre RT de forma consistente.
+- **K706 / ACC (0x24)**: en `MCU2` se expone el estado de contacto (ACC) y se integra en el estado compartido para facilitar auditoría y futuras políticas de auto-recovery.
 - **Volante en segundo plano (K706)**: En muchas ROM, con el **launcher u otra app al frente**, las teclas del volante llegan como `KeyEvent` al foco y la **radio OEM** sigue recibiendo mandos por **MCU/QuickFish**. OpenRadioFM no puede usar ese canal sin integración OEM; a partir de **v5.0.10** el servicio de accesibilidad **Factory Radio Hijacker** puede **capturar y reenviar** esas teclas a la app (activar el servicio en Ajustes → Accesibilidad). Opcional (avanzado): en SharedPreferences **RadioPresets**, `pref_a11y_forward_media_keys=false` desactiva el reenvío (por defecto está activo).
 - **Seek por Hardware (K706)**: Interactúa con el volumen en algunos firmwares (pendiente investigación MCU).
 - **Layout V2**: Algunos iconos pueden tener áreas de pulsación solapadas.
 - **AutoScan (Smart v2)**: ⏸️ **En estudio** por defecto. Desde **v5.0.11**, en los **menús de ingeniería** (pulsación larga en GPS) puedes activar *Modo AutoScan* para usar el botón de escaneo en la UI principal de forma experimental (`pref_dev_autoscan_enabled` en **RadioPresets**).
 - **Audio QS6 (Qualcomm / NWD)**: ⚠️ Comportamiento dependiente del firmware; se sigue probando **cambio de fuente** (`ACTION_CHANGE_SOURCE`), foco y rutas de recuperación. Reporta modelo + build si falla el audio tras sintonizar.
+- **QS6 / RDS y tuner OEM**: en campo, un **workaround estable** es alinear RDS (y opciones afines que exponga el firmware) desde el **menú o ajustes de la radio del propio dispositivo** (app/servicio OEM), además de OpenRadioFM y el menú de ingeniería. Así se evitan estados donde el MCU o el bus del sistema no reflejan lo que la app intenta forzar por software. Protocolo y riesgos en `QS6_MCU_KERNELSERVICE_INFORME.md`.
+- **QS6 / rama MCU2 — KernelService (experimental)**: el menú de ingeniería QS6 incluye pruebas hacia el servicio OEM **KernelService** (tramas FM al MCU) y atajos **AIDL** / broadcast para avanzar hacia **no depender de la app de radio nativa**. Resumen en `QS6_MCU_KERNELSERVICE_INFORME.md`.
+- **K706 / widget OEM (QuickFish)**: en algunas ROMs el broadcast `com.qf.radio.update_action` está protegido por permisos de sistema; en `MCU2` se evita reintentar tras `SecurityException` (menos spam de logs). Además, se interceptan acciones del widget OEM (`/customize/radio/*`) para reenviar a OpenRadioFM.
 
 ---
 
 ## 📖 Documentación
 
+- [Handoff — K706 Root (`K706_Root`)](HANDOFF_K706_ROOT.md)
 - [Manual de Usuario (Español)](_DOCS/manual_usuario.md)
+- [Checklist — K706 Root Edition](K706_ROOT_CHECKLIST.md)
+- [Módulo Magisk K706 Root](magisk/K706_Root/README_K706_ROOT_MAGISK.md)
 - [User Manual (English)](_DOCS/manual_user_en.md)
 - [Руководство пользователя (Русский)](_DOCS/manual_user_ru.md)
 - **OpenRadioFM Backup Studio (web/PWA)**: `https://kapi21.github.io/OpenRadioFM/editor/` (incluye manual ES/EN dentro de la web)
 - [Compatibilidad de Hardware](docs/HW_COMPATIBILITY.md)
 - [Compilación / CI — credenciales Supabase](docs/CI_SUPABASE.md)
 - [Ingeniería inversa — radio OEM K706 (`com.android.fmradio.ext`)](docs/ESTUDIO_INGENIERIA_INVERSA_K706_RADIO_OEM.md)
+- [Reverse widget radio launcher `com.android.launcher.star.blue` (guía ADB + jadx)](_DOCS/REVERSE_LAUNCHER_STAR_BLUE_WIDGET.md)
 - [Comparativa motor K706 OpenRadioFM vs radio OEM](docs/COMPARATIVA_K706_OPENRADIO_VS_OEM.md)
 - [Inteligencia QS NWD (Qualcomm)](docs/INTELIGENCIA_QS_NWD.md) — incluye **§15 Roadmap motor QS6**
+- [QS6 — MCU vía KernelService (informe)](QS6_MCU_KERNELSERVICE_INFORME.md) — protocolo NWD, botonera de desarrollo, riesgos RX
 - [Changelog](CHANGELOG.md) · [Changelog (English)](CHANGELOG_EN.md) · [Changelog (Русский)](CHANGELOG_RU.md)
 - [Depurado en tres fases](depurado%20en%20tres%20fases.md)
 - [Roadmap](_DOCS/roadmap.md)
@@ -217,6 +236,14 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ---
 
 ## 📜 Historial de Versiones
+
+### v5.2.0 (Abril 2026) — `main` — Estabilización QS6 + Motores Legados (`versionCode` 40)
+- **ES:** **OpenRadioFM v5.2.0** — Estabilización crítica para motores **QS6 (Nowada)** y restauración de los motores **MT8163, MTK y Jancar** a sus versiones legadas estables. Incluye **Modo Master** en QS6, paridad de bandas en toda la gama y fix de audio v18.6 para MT8163. Ver `CHANGELOG.md`.
+- **EN:** **OpenRadioFM v5.2.0** — Critical stabilization for **QS6 (Nowada)** and restoration of **MT8163, MTK and Jancar** engines to their stable legacy versions. Includes **Master Mode** for QS6, band parity across the lineup, and v18.6 audio fix for MT8163. See `CHANGELOG_EN.md`.
+ - **K706 (widget música / Now Playing)**:
+   - **PowerOff / Atrás = minimizar**: salir a HOME sin `finish()` para evitar `forceStopPackage()` del launcher.
+   - **Silencio en background**: al minimizar, **mute** + **abandonar AudioFocus** sin cerrar el HAL; al volver, el audio se recupera con PLAY/unmute.
+   - **Widget de música sigue operativo**: `RadioMediaService` mantiene `MediaSession`/FGS activos para que el widget genérico de música siga controlando.
 
 ### v5.1.3 (Abril 2026) — `main` — medidor de señal en barras, QS6 0–5 (`versionCode` 35)
 - **ES:** **OpenRadioFM v5.1.3** — opción **barras de señal** (V2/V3) en Ajustes premium; `SignalBarsView` + colores por skin; corrección de lógica (polling, skin, dBm, escala **0–5** QS/NWD). Concepto en `docs/img/concept_signal_bars_main_ui.png`. Ver `CHANGELOG.md`.
@@ -600,3 +627,9 @@ See LICENSE file for details.
 ---
 
 **Desarrollado con ❤️ por Jimmy80 para la comunidad Android Head Unit.**
+
+
+## Nueva Arquitectura (Refactorización 2026)
+La aplicación ha sido migrada a una arquitectura modular basada en **Coordinadores** y **Mediadores** para mejorar la mantenibilidad y estabilidad.
+
+Consulte el archivo [CHANGELOG_REFACTOR.md](./CHANGELOG_REFACTOR.md) para más detalles técnicos sobre los cambios realizados.

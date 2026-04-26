@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.1.3</string>
+    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
     <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway and QS6 (NWD) units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system often sends those keys to the launcher or the OEM radio app.</string>
     <string name="a11y_hihack_title">HiHack (Accessibility)</string>
     <string name="a11y_hihack_enabled">Enabled</string>
@@ -42,6 +42,11 @@
     <string name="bg_pure_black">Pure Black</string>
     <string name="bg_fixed_image">Fixed Image (background.png)</string>
     <string name="bg_dynamic_logo">Station Logo (Dynamic)</string>
+    <string name="dynamic_bg_aspect_title">Dynamic background framing</string>
+    <string name="dynamic_bg_aspect_letterbox">Letterbox (no crop)</string>
+    <string name="dynamic_bg_aspect_fill_16_9">16:9 (fill, crops)</string>
+    <string name="toast_dynamic_bg_letterbox">Dynamic background: letterbox (no crop)</string>
+    <string name="toast_dynamic_bg_fill_16_9">Dynamic background: 16:9 (fill, crops)</string>
 
     <!-- Font Names -->
     <string name="font_default">Default (System)</string>
@@ -57,6 +62,10 @@
     <string name="night_mode_auto">Automatic Night Mode</string>
     <string name="relief_hd">HD Relief</string>
     <string name="save_history">Save Station History</string>
+    <string name="save_history_summary_on">Stations are saved; you can open the list (e.g. tap the RDS name).</string>
+    <string name="save_history_summary_off">Off: history is not saved and its dialog is not shown.</string>
+    <string name="toast_history_save_disabled">Turn on «Save station history» in options to open the list.</string>
+    <string name="hardware_automation_section_header">(Hardware automation) (in testing)</string>
     <string name="enable_gestures_beta">Enable Gestures (Swipe) (beta)</string>
     <string name="online_logos">Online Logos</string>
     
@@ -71,7 +80,7 @@
     <string name="logos_online_disabled">❌ Online logos disabled</string>
     <string name="under_study">Under study</string>
     <string name="night_mode_manual_blocked">Disable Automatic Night Mode to choose skin manually</string>
-    <string name="auto_hide_controls">Auto-hide controls</string>
+    <string name="auto_hide_controls">Auto-hide controls (layout 3 horizontal)</string>
     <string name="auto_hide_enabled">✅ Auto-hide controls enabled</string>
     <string name="auto_hide_disabled">❌ Auto-hide controls disabled</string>
     <string name="preset_scroll_loop_title">Infinite preset scrolling</string>
@@ -316,7 +325,7 @@
     <string name="widget_next_preset">Next preset</string>
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">PRESET OVERWRITE</string>
-    <string name="autoscan_confirm_message">This AutoScan will clear and refill presets 1–18 on the current band with stations it finds.\n\nStart scanning?</string>
+    <string name="autoscan_confirm_message">This AutoScan always starts on FM1: it clears and fills presets 1–18 on FM1 first (the tuner switches to FM1 if needed). It can continue on FM2/FM3 after 18 stations.\n\nStart scanning?</string>
     <string name="autoscan_confirm_start">Start scan</string>
 
     <string name="save_load_section_actions">Available actions</string>
@@ -368,6 +377,7 @@
     <string name="eng_dev_file_log_profile_basic">BASIC</string>
     <string name="eng_dev_file_log_profile_medium">MEDIUM</string>
     <string name="eng_dev_file_log_profile_full">FULL</string>
+    <string name="eng_dev_logcat_dump_button">DEV: dump logcat buffer to RadioLogos</string>
     <string name="toast_history_deleted_full">History has been cleared</string>
     <string name="toast_easter_egg">Easter egg activated!</string>
 
@@ -394,7 +404,7 @@
     <string name="toast_basic_no_engineering">Basic mode: engineering menu unavailable</string>
 
     <string name="toast_autoscan_stopped">AutoScan stopped</string>
-    <string name="toast_autoscan_slow">Slow AutoScan: searching stations… (tap again to stop)</string>
+    <string name="toast_autoscan_slow">Slow AutoScan from FM1: searching stations… (tap again to stop)</string>
     <string name="toast_autoscan_start_failed">Could not start AutoScan</string>
     <string name="toast_autoscan_finished">AutoScan finished (%1$d presets)</string>
     <string name="toast_autoscan_band_presets">AutoScan → %1$s · presets 1–18</string>

@@ -1,0 +1,7 @@
+id=openradiofm_k706_root_fake
+name=OpenRadioFM — K706 Root Hijack (FAKE TEST)
+version=0.1
+versionCode=1
+author=OpenRadioFM
+description=Modulo de prueba (no toca system). Solo logs para validar instalacion desde Magisk App.
+
