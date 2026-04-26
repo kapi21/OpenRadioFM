@@ -62,7 +62,7 @@ android {
         minSdk = 21
         targetSdk = 35
         versionCode = 41
-        versionName = "5.2.1 Icons Fix"
+        versionName = "5.2.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

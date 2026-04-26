@@ -1,6 +1,6 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.2.1_Icons_Fix-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.2.2-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-K706_Root-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
