@@ -1,5 +1,13 @@
 ## [Unreleased] - MCU2
 
+### SPD / Junsun V9 Plus (abril 2026)
+- **Nuevo motor `FM_SPD`**: autodetección del paquete `com.spd.radio` y control por AIDL (`com.spd.radio.service`) con “modo directo a MCU” para `tune/seek/step/band/mute/RDS/DX-LOC`.
+- **AutoScan**: el botón de escaneo usa el **ScanManager propio** (no el autoscan OEM) para mantener un flujo consistente con el resto de motores.
+- **Diagnóstico**: log a fichero `spd_engine.log` y eventos `snap_freq/cb_freq` para depurar frecuencias y RDS en ROMs SPD.
+
+### Widgets
+- **Widgets nuevos**: añadidos tamaños **3x1** y **3x2** (además del actual), expuestos como entradas separadas en el selector del launcher.
+
 ## [5.2.1 Icons Fix] - 2026-04-25
 
 ### UI / Personalización (todos los modelos)
