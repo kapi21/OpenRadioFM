@@ -37,6 +37,7 @@ public class FactoryRadioHijackerService extends AccessibilityService {
     private static final String TARGET_PACKAGE_MTK_GENERIC = "com.android.fmradio";
     private static final String TARGET_PACKAGE_MTK_MTK = "com.mediatek.fmradio";
     private static final String TARGET_PACKAGE_FYT = "com.syu.radio";
+    private static final String TARGET_PACKAGE_SPD = "com.spd.radio";
     
     // Evitar lanzar múltiples Intents seguidos
     private long lastLaunchTime = 0;
@@ -89,7 +90,8 @@ public class FactoryRadioHijackerService extends AccessibilityService {
                 TARGET_PACKAGE_TS.equals(packageName) ||
                 TARGET_PACKAGE_MTK_GENERIC.equals(packageName) ||
                 TARGET_PACKAGE_MTK_MTK.equals(packageName) ||
-                TARGET_PACKAGE_FYT.equals(packageName)) {
+                TARGET_PACKAGE_FYT.equals(packageName) ||
+                TARGET_PACKAGE_SPD.equals(packageName)) {
                 long currentTime = System.currentTimeMillis();
 
                 // Evitamos rebotes o múltiples llamadas rápidas

@@ -182,7 +182,7 @@ final class MainActivityBootstrap {
     private static void initLogoServiceAndPlaybackStack(MainActivity a) {
         // V13: Inicializar Managers agnósticos
         a.mLogoManager = new LogoManager(a);
-        if (a.mRepository != null) {
+        if (a.mRepository != null && a.mRepository.getSupabaseSource() != null) {
             a.mSupabaseSyncManager = new com.example.openradiofm.data.source.SupabaseSyncManager(a, a.mRepository.getSupabaseSource());
         }
         a.mServiceController = new RadioServiceController(a, a.mPrefs, a.mServiceListener);

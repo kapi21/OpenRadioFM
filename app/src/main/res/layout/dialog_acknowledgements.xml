@@ -28,14 +28,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/ack_radio_android_espana"
-        android:textColor="#4DA3FF"
-        android:textSize="18sp"
+        android:textColor="#DDDDDD"
+        android:textSize="17sp"
         android:textStyle="bold"
-        android:clickable="true"
-        android:focusable="true"
         android:paddingTop="2dp"
-        android:paddingBottom="2dp"
-        android:background="?android:attr/selectableItemBackground" />
+        android:paddingBottom="2dp" />
 
     <TextView
         android:layout_width="match_parent"

@@ -269,6 +269,7 @@
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
     <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_contrib_alessandro">Alessandro @AccountsTM (SPD Engine Support)</string>
     <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
     <string name="about_icons_by">Icons by Icons8</string>
     <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>

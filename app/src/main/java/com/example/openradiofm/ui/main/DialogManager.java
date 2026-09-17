@@ -121,6 +121,15 @@ public class DialogManager {
             });
         }
 
+        View btnPickLogo = dialog.findViewById(R.id.btnPickStationLogo);
+        if (btnPickLogo != null) {
+            btnPickLogo.setOnClickListener(v -> {
+                String currentName = (input != null) ? input.getText().toString().trim() : "";
+                dialog.dismiss();
+                mActivity.promptLogoPickerForPreset(-1, currentFreq, currentName);
+            });
+        }
+
         View btnRestore = dialog.findViewById(R.id.btnRestoreOriginalStationName);
         if (btnRestore != null) {
             btnRestore.setOnClickListener(v -> {
@@ -194,8 +203,6 @@ public class DialogManager {
         TextView tvSummaryNightLogos = dialog.findViewById(R.id.tvSummaryNightLogos);
         TextView tvSummaryStatusBar = dialog.findViewById(R.id.tvSummaryStatusBar);
         TextView tvSummaryAutoHide = dialog.findViewById(R.id.tvSummaryAutoHide);
-        TextView tvSummaryLogosOnline = dialog.findViewById(R.id.tvSummaryLogosOnline);
-        TextView tvSummaryCloudContrib = dialog.findViewById(R.id.tvSummaryCloudContrib);
         TextView tvSummarySaveHistory = dialog.findViewById(R.id.tvSummarySaveHistory);
 
         // Night schedule views
@@ -204,13 +211,11 @@ public class DialogManager {
         TextView tvNightEnd = dialog.findViewById(R.id.tvNightEnd);
         TextView tvNightScheduleSummary = dialog.findViewById(R.id.tvNightScheduleSummary);
 
-        androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swReliefHd = dialog.findViewById(R.id.switchReliefHd);
         View rowReliefHd = dialog.findViewById(R.id.rowReliefHd);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swNightLogos = dialog.findViewById(R.id.switchNightLogos);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
-        androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
         androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
         androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
         androidx.appcompat.widget.SwitchCompat swPresetScrollLoop = dialog.findViewById(R.id.swPresetScrollLoop);
@@ -285,26 +290,6 @@ public class DialogManager {
             updateNightScheduleSummary(tvNightScheduleSummary, tvNightStart, tvNightEnd);
         }
 
-        // V19.7: Indicador de Conexión a Supabase (Automático)
-        TextView tvSupabaseStatus = dialog.findViewById(R.id.tvSupabaseStatus);
-        if (tvSupabaseStatus != null) {
-            tvSupabaseStatus.setVisibility(View.VISIBLE);
-            tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_connecting));
-            tvSupabaseStatus.setTextColor(Color.parseColor("#888888"));
-
-            mActivity.mRepository.getSupabaseSource().checkConnection(connected -> {
-                mActivity.runOnUiThread(() -> {
-                    if (mActivity.isFinishing() || mActivity.isDestroyed() || !dialog.isShowing()) return;
-                    if (connected) {
-                        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_online));
-                        tvSupabaseStatus.setTextColor(Color.parseColor("#44FF44")); // Verde
-                    } else {
-                        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_offline));
-                        tvSupabaseStatus.setTextColor(Color.parseColor("#FF4444")); // Rojo
-                    }
-                });
-            });
-        }
         if (tvBackgroundStatus != null) {
             int bgIdx = mActivity.mPrefs.getInt("pref_bg_mode", 1);
             String[] modes = { mActivity.getString(R.string.bg_pure_black),
@@ -312,43 +297,6 @@ public class DialogManager {
             if (bgIdx >= 0 && bgIdx < modes.length) {
                 tvBackgroundStatus.setText(buildBackgroundStatusText(modes[bgIdx]));
             }
-        }
-
-        // Switches
-        if (swLogosOnline != null) {
-            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", true));
-            bindSwitchSummary(tvSummaryLogosOnline, swLogosOnline.isChecked());
-            swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
-                mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
-                bindSwitchSummary(tvSummaryLogosOnline, checked);
-                if (checked) {
-                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_1));
-                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_2));
-                } else {
-                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_off));
-                }
-            });
-        }
-
-        // Logo Provider Row
-        View rowLogoProvider = dialog.findViewById(R.id.rowLogoProvider);
-        TextView tvCurrentLogoProvider = dialog.findViewById(R.id.tvCurrentLogoProvider);
-        if (tvCurrentLogoProvider != null) {
-            int providerIdx = mActivity.mPrefs.getInt("pref_logo_provider", 0); // 0=Supabase, 1=Web, 2=Both
-            String[] providers = {
-                    mActivity.getString(R.string.provider_supabase),
-                    mActivity.getString(R.string.provider_radiobrowser),
-                    mActivity.getString(R.string.provider_both)
-            };
-            if (providerIdx >= 0 && providerIdx < providers.length) {
-                tvCurrentLogoProvider.setText(providers[providerIdx]);
-            }
-        }
-        if (rowLogoProvider != null) {
-            rowLogoProvider.setOnClickListener(v -> {
-                showLogoProviderSelector();
-                dialog.dismiss();
-            });
         }
 
         if (swStatusBar != null) {
@@ -562,16 +510,6 @@ public class DialogManager {
             });
         }
 
-        if (swCloudContrib != null) {
-            swCloudContrib.setChecked(mActivity.mPrefs.getBoolean("pref_cloud_contrib", true));
-            bindSwitchSummary(tvSummaryCloudContrib, swCloudContrib.isChecked());
-            swCloudContrib.setOnCheckedChangeListener((v, isChecked) -> {
-                mActivity.mPrefs.edit().putBoolean("pref_cloud_contrib", isChecked).apply();
-                bindSwitchSummary(tvSummaryCloudContrib, isChecked);
-                mActivity.showStyledToast(isChecked ? mActivity.getString(R.string.toast_contrib_on)
-                        : mActivity.getString(R.string.toast_contrib_off));
-            });
-        }
 
         // Logo Mode Row (V18.5)
         View rowLogoMode = dialog.findViewById(R.id.rowLogoMode);
@@ -1105,23 +1043,21 @@ public class DialogManager {
                 String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(),
                         0).versionName;
                 String base = mActivity.getString(R.string.version, versionName);
-                tvVersion.setText(base + " — " + mActivity.getString(R.string.root_version_suffix));
+                tvVersion.setText(base + " — OFFLINE VERSION");
             }
         } catch (Exception ignored) {
         }
 
-        // Créditos con Links
+        // Créditos (Texto plano sin hipervínculos para modo offline)
         TextView tvIcons8 = dialog.findViewById(R.id.tvIcons8Credit);
         TextView tvTdtchannels = dialog.findViewById(R.id.tvTdtchannelsCredit);
 
         if (tvIcons8 != null) {
-            String text = "Icons by <a href='https://icons8.com/'>Icons8</a>";
-            applyHtmlLink(tvIcons8, text);
+            tvIcons8.setText("Icons by Icons8");
         }
 
         if (tvTdtchannels != null) {
-            String text = "Streaming & Logos by <a href='https://www.tdtchannels.com'>TDTchannels</a>";
-            applyHtmlLink(tvTdtchannels, text);
+            tvTdtchannels.setText("Logos by TDTchannels");
         }
 
         View ivAboutLogo = dialog.findViewById(R.id.ivAboutAppLogo);

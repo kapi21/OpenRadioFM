@@ -245,6 +245,9 @@ public class ControlPanelManager {
             new EngineeringModeDialog(mActivity).show();
         } else if (mActivity.mMode == MainActivity.FmMode.FM_8259_8667) {
             new EngineeringModeDialog(mActivity).show();
+        } else if (mActivity.mMode == MainActivity.FmMode.FM_SPD) {
+            // SPD: reutilizar el Engineering dialog genérico (estado motor, logs, toggles dev).
+            new EngineeringModeDialog(mActivity).show();
         } else if (mActivity.mMode == MainActivity.FmMode.FM_QS6) {
             mActivity.mQs6EngineeringDialog = new QS6EngineeringDialog(mActivity);
             mActivity.mQs6EngineeringDialog.setOnDismissListener(

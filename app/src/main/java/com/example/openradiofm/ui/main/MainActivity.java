@@ -179,6 +179,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         FM_BASICO,
         FM_K706,
         FM_QS6,
+        /** SPD (Junsun V9 Plus / RadioService.apk: com.spd.radio). */
+        FM_SPD,
         /** FYT/Teyes OEM: control por intents de {@code com.syu.radio}. */
         FM_FYT_OEM,
         /** Jancar IVI ({@code com.jancar.services} / IRadio AIDL), p. ej. MTK8227L. */
@@ -595,6 +597,89 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         }
     }
 
+    private static final int REQUEST_CODE_PICK_PRESET_LOGO = 706;
+    private int mPendingPresetSlot = -1;
+    private int mPendingPresetFreq = -1;
+    private String mPendingPresetName = "";
+
+    public void promptLogoPickerForPreset(int slot, int freq, String name) {
+        mPendingPresetSlot = slot;
+        mPendingPresetFreq = freq;
+        mPendingPresetName = (name != null) ? name : "";
+
+        java.io.File logoDir = (mRepository != null) ? mRepository.getPreferredLogoDir() : new java.io.File("/sdcard/RadioLogos/");
+        if (!logoDir.exists()) {
+            logoDir.mkdirs();
+        }
+
+        android.net.Uri folderUri = android.net.Uri.fromFile(logoDir);
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "image/png", "image/jpeg", "image/jpg" });
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setDataAndType(folderUri, "image/*");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            intent.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, folderUri);
+        }
+
+        try {
+            startActivityForResult(Intent.createChooser(intent, "RadioLogos (PNG/JPG máx 300x300)"), REQUEST_CODE_PICK_PRESET_LOGO);
+        } catch (Exception e) {
+            try {
+                Intent fallback = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                fallback.setDataAndType(folderUri, "image/*");
+                startActivityForResult(fallback, REQUEST_CODE_PICK_PRESET_LOGO);
+            } catch (Exception e2) {
+                Log.w(TAG, "No se encontró explorador de archivos para imágenes", e2);
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PICK_PRESET_LOGO && resultCode == RESULT_OK && data != null) {
+            android.net.Uri selectedUri = data.getData();
+            if (selectedUri != null && mRepository != null) {
+                final int slot = mPendingPresetSlot;
+                final int freq = mPendingPresetFreq;
+                final String name = mPendingPresetName;
+
+                com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+                    try (java.io.InputStream is = getContentResolver().openInputStream(selectedUri)) {
+                        if (is != null) {
+                            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
+                            if (bitmap != null) {
+                                String savedPath = mRepository.saveCustomStationLogo(freq, name, bitmap);
+                                if (savedPath != null) {
+                                    runOnUiThread(() -> {
+                                        int band = mCurrentBand;
+                                        mLogoCachePerBand.remove(band + "_" + freq);
+                                        mLastLogoUrl = "";
+
+                                        if (mLogoManager != null) {
+                                            mLogoManager.clearLogo();
+                                            mLogoManager.updateStationLogo(freq, band, savedPath);
+                                        }
+                                        if (mPresetManager != null) {
+                                            mPresetManager.updateCardVisuals(slot, freq, band);
+                                            mPresetManager.refreshButtons(band, true);
+                                        }
+                                        updateFrequencyDisplay(freq, (name != null && !name.isEmpty()) ? name : null);
+                                        refreshRadioStatus();
+                                        showToast("Logo asignado");
+                                    });
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error procesando logo de preset", e);
+                    }
+                });
+            }
+        }
+    }
+
     public void savePreset(int index) {
         if (mEngine != null && mPresetManager != null) {
             int current = mEngine.getCurrentFreq();
@@ -610,6 +695,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             }
 
             mPresetManager.savePreset(mCurrentBand, index, current, currentRds);
+            showToast("P" + (index + 1) + " guardado");
         }
     }
 
@@ -1935,10 +2021,14 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     void setupCreditsEasterEgg() {
-        if (tvFrequency != null) {
-            tvFrequency.setOnClickListener(v -> handleCreditsClick());
+        View.OnClickListener openEditDialogClickListener = v -> {
+            if (mDialogManager != null) {
+                mDialogManager.showEditNameDialog();
+            }
+        };
 
-            // V16.2: Pulsación larga para editar nombre (RDS PS)
+        if (tvFrequency != null) {
+            tvFrequency.setOnClickListener(openEditDialogClickListener);
             tvFrequency.setOnLongClickListener(v -> {
                 if (mDialogManager != null) {
                     mDialogManager.showEditNameDialog();
@@ -1948,26 +2038,29 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             });
         }
 
-        // V16.2: También en el contenedor para facilitar la interacción
+        // También en el contenedor para facilitar la interacción táctil
         android.view.View boxFrequency = findViewById(R.id.boxFrequency);
         android.view.View boxIconsTop = findViewById(R.id.boxIconsTopLayout2);
-        
-        View.OnClickListener clickListener = v -> handleCreditsClick();
-        View.OnLongClickListener longClickListener = v -> {
-            if (mDialogManager != null) {
-                mDialogManager.showEditNameDialog();
-                return true;
-            }
-            return false;
-        };
 
         if (boxFrequency != null) {
-            boxFrequency.setOnClickListener(clickListener);
-            boxFrequency.setOnLongClickListener(longClickListener);
+            boxFrequency.setOnClickListener(openEditDialogClickListener);
+            boxFrequency.setOnLongClickListener(v -> {
+                if (mDialogManager != null) {
+                    mDialogManager.showEditNameDialog();
+                    return true;
+                }
+                return false;
+            });
         }
         if (boxIconsTop != null) {
-            boxIconsTop.setOnClickListener(clickListener);
-            boxIconsTop.setOnLongClickListener(longClickListener);
+            boxIconsTop.setOnClickListener(v -> handleCreditsClick());
+            boxIconsTop.setOnLongClickListener(v -> {
+                if (mDialogManager != null) {
+                    mDialogManager.showEditNameDialog();
+                    return true;
+                }
+                return false;
+            });
         }
     }
 

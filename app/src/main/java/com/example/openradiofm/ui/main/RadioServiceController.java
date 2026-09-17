@@ -15,6 +15,7 @@ import com.hcn.autoradio.IRadioServiceAPI;
 import com.example.openradiofm.data.source.RadioEngine;
 import com.example.openradiofm.data.source.MT8163Engine;
 import com.example.openradiofm.data.source.FYTOemEngine;
+import com.example.openradiofm.data.source.SpdEngine;
 import com.example.openradiofm.service.RadioMediaService;
 import com.ts.main.common.ITsCommon;
 import com.ts.tsspeechlib.radio.ITsSpeechRadio;
@@ -29,6 +30,11 @@ import java.util.List;
  */
 public class RadioServiceController {
     private static final String TAG = "RadioServiceController";
+    private static final String HCN_PKG = "com.hcn.autoradio";
+    private static final String HCN_SERVICE_CLASS = "com.hcn.autoradio.service.FMPlugService";
+    private static final String HCN_ACTION_CLASSIC = "com.hcn.autoradio.FM_PLUG_SERVICE";
+    // Variante observada en la APK nativa “8581a”.
+    private static final String HCN_ACTION_8581A = "com.hcn.radio.FM_PLUG_SERVICE";
 
     /** Evita ráfagas de bind a com.hcn.autoradio (varias instancias de este controller). */
     private static final Object sMt8163StartLock = new Object();
@@ -352,6 +358,27 @@ public class RadioServiceController {
             } catch (Exception e) {
                 Log.e(TAG, "Error iniciando QS6Engine", e);
             }
+        } else if (mode == MainActivity.FmMode.FM_SPD) {
+            try {
+                synchronized (SHARED_LOCAL_ENGINE_LOCK) {
+                    if (sSharedLocalEngine instanceof SpdEngine) {
+                        Log.i(TAG, "=> SpdEngine ya activo — reutilizando instancia compartida");
+                        if (mListener != null) mListener.onEngineReady(sSharedLocalEngine);
+                        return;
+                    }
+                    Log.i(TAG, "=> RAMA SPD ALCANZADA. INSTANCIANDO MOTOR SpdEngine...");
+                    SpdEngine engine = new SpdEngine();
+                    if (engine.init(mContext)) {
+                        sSharedLocalEngine = engine;
+                        if (mListener != null) mListener.onEngineReady(engine);
+                    } else {
+                        Log.w(TAG, "Error iniciando SpdEngine (init devolvió false)");
+                    }
+                }
+                return;
+            } catch (Exception e) {
+                Log.e(TAG, "Error iniciando SpdEngine", e);
+            }
         } else if (mode == MainActivity.FmMode.FM_JANCAR_IVI) {
             try {
                 synchronized (SHARED_LOCAL_ENGINE_LOCK) {
@@ -522,24 +549,67 @@ public class RadioServiceController {
     }
 
     private boolean bindToProvider(String[] provider) {
+        // MT8163/HCN: algunas ROM anuncian el servicio con action alternativa (8581a).
+        // Para que el modo automático sea robusto, probamos ambas actions en un solo “provider”.
+        if (HCN_PKG.equals(provider[0]) && HCN_ACTION_CLASSIC.equals(provider[1])) {
+            if (bindToHcnBestEffort()) {
+                return true;
+            }
+            // Si falla, devolvemos false y dejamos que la detección siga con otros engines.
+            return false;
+        }
+
         Intent intent = new Intent(provider[1]);
         intent.setPackage(provider[0]);
+        // provider puede ser { pkg, action } o { pkg, action, serviceClass }.
+        if (provider.length >= 3 && provider[2] != null && !provider[2].isEmpty()) {
+            intent.setComponent(new ComponentName(provider[0], provider[2]));
+        }
         // V21.4: Asegurar que se incluya el flag por si el paquete está force-stopped
         intent.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
         try {
             if (mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE)) {
                 Log.d(TAG, "Vinculando a proveedor: " + provider[0]);
                 mBound = true;
-                if ("com.hcn.autoradio".equals(provider[0])) {
-                    synchronized (sMt8163StartLock) {
-                        sMt8163BindInFlight = true;
-                        sMt8163BindInFlightSinceElapsedMs = SystemClock.elapsedRealtime();
-                    }
+                return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private boolean bindToHcnBestEffort() {
+        // 1) Action clásica por package
+        try {
+            Intent i = new Intent(HCN_ACTION_CLASSIC);
+            i.setPackage(HCN_PKG);
+            i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            if (mContext.bindService(i, mConnection, Context.BIND_AUTO_CREATE)) {
+                Log.d(TAG, "Vinculando a proveedor HCN (classic)");
+                mBound = true;
+                synchronized (sMt8163StartLock) {
+                    sMt8163BindInFlight = true;
+                    sMt8163BindInFlightSinceElapsedMs = SystemClock.elapsedRealtime();
                 }
                 return true;
             }
-        } catch (Exception ignored) {
-        }
+        } catch (Exception ignored) {}
+
+        // 2) Variante 8581a: action distinta + ComponentName explícito
+        try {
+            Intent i2 = new Intent(HCN_ACTION_8581A);
+            i2.setComponent(new ComponentName(HCN_PKG, HCN_SERVICE_CLASS));
+            i2.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            if (mContext.bindService(i2, mConnection, Context.BIND_AUTO_CREATE)) {
+                Log.d(TAG, "Vinculando a proveedor HCN (8581a action+component)");
+                mBound = true;
+                synchronized (sMt8163StartLock) {
+                    sMt8163BindInFlight = true;
+                    sMt8163BindInFlightSinceElapsedMs = SystemClock.elapsedRealtime();
+                }
+                return true;
+            }
+        } catch (Exception ignored) {}
+
         return false;
     }
 
@@ -559,6 +629,7 @@ public class RadioServiceController {
         if (isTS8259()) return MainActivity.FmMode.FM_8259_8667;
         if (isQS6()) return MainActivity.FmMode.FM_QS6;
         if (isK706()) return MainActivity.FmMode.FM_K706;
+        if (isSpd()) return MainActivity.FmMode.FM_SPD;
         if (isJancarIvi()) return MainActivity.FmMode.FM_JANCAR_IVI;
         if (hasCarRadioService()) return MainActivity.FmMode.FM_MT8163;
         return MainActivity.FmMode.FM_BASICO;
@@ -598,6 +669,15 @@ public class RadioServiceController {
         }
     }
 
+    private boolean isSpd() {
+        try {
+            mContext.getPackageManager().getPackageInfo("com.spd.radio", 0);
+            return true;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
     private boolean isJancarIvi() {
         return com.example.openradiofm.data.source.JancarIviEngine.isJancarIviAvailable(mContext);
     }
@@ -623,8 +703,24 @@ public class RadioServiceController {
 
     private boolean checkProvider(PackageManager pm, String[] provider) {
         try {
+            // MT8163/HCN: en automático, considera “disponible” si responde a cualquiera de las actions.
+            if (HCN_PKG.equals(provider[0]) && HCN_ACTION_CLASSIC.equals(provider[1])) {
+                Intent i = new Intent(HCN_ACTION_CLASSIC);
+                i.setPackage(HCN_PKG);
+                List<ResolveInfo> list = pm.queryIntentServices(i, 0);
+                if (list != null && !list.isEmpty()) return true;
+
+                Intent i2 = new Intent(HCN_ACTION_8581A);
+                i2.setComponent(new ComponentName(HCN_PKG, HCN_SERVICE_CLASS));
+                List<ResolveInfo> list2 = pm.queryIntentServices(i2, 0);
+                return list2 != null && !list2.isEmpty();
+            }
+
             Intent intent = new Intent(provider[1]);
             intent.setPackage(provider[0]);
+            if (provider.length >= 3 && provider[2] != null && !provider[2].isEmpty()) {
+                intent.setComponent(new ComponentName(provider[0], provider[2]));
+            }
             List<ResolveInfo> list = pm.queryIntentServices(intent, 0);
             return list != null && !list.isEmpty();
         } catch (Exception e) {
@@ -634,11 +730,11 @@ public class RadioServiceController {
 
     private String[][] getAllProviders() {
         return new String[][] {
-                { "com.hcn.autoradio", "com.hcn.autoradio.FM_PLUG_SERVICE" }, // 0: MT8163/HCN (Obsoleto, ahora vía motor modular)
-                { "com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService" }, // 1: MediaTek
-                { "com.android.fmradio", "com.android.fmradio.IFmRadioService" }, // 2: Standard
-                { "com.android.fmradio", "com.android.fmradio.FmRadioService" }, // 3: Standard (Alt)
-                { "com.syu.radio", "com.syu.radio.IRadioService" } // 5: SYU
+                { HCN_PKG, HCN_ACTION_CLASSIC }, // MT8163/HCN (incluye fallback 8581a en bind/check)
+                { "com.mediatek.fmradio", "com.mediatek.fmradio.IFmRadioService" }, // MediaTek
+                { "com.android.fmradio", "com.android.fmradio.IFmRadioService" }, // Standard
+                { "com.android.fmradio", "com.android.fmradio.FmRadioService" }, // Standard (Alt)
+                { "com.syu.radio", "com.syu.radio.IRadioService" } // SYU
         };
     }
 
