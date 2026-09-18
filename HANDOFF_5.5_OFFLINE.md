@@ -13,10 +13,14 @@ Documento para retomar el trabajo sin perder contexto.
 - **Guardado directo:** La pulsación larga sobre un preset lo almacena inmediatamente sin abrir el explorador ni interrumpir al usuario.
 - **Edición desde el Dial:** Al pulsar sobre el dial de frecuencia (`boxFrequency` o `tvFrequency`), se abre el diálogo de edición con 4 botones del mismo tamaño (`layout_weight="1"`, `minHeight="48dp"`):
   - `GUARDAR`: Confirma cambios de nombre RDS / texto manual.
-  - `LOGO`: Lanza el selector de archivos nativo de Android apuntando directamente a `/sdcard/RadioLogos/`.
+  - `LOGO`: Abre el diálogo integrado `dialog_logo_picker.xml` directamente en `/sdcard/RadioLogos/`.
   - `ORIGINAL`: Restaura el nombre original (RDS de fábrica).
   - `CANCELAR`: Cierra el diálogo sin aplicar cambios.
-- **Normalización de imagen:** Procesa formatos `.png`, `.jpg`, `.jpeg`. Escala la imagen automáticamente a un máximo de **300x300 px** antes de guardarla.
+- **Explorador Visual Integrado de Logos (`dialog_logo_picker.xml`):**
+  - Muestra miniaturas decodificadas y nombres de archivos para `.png`, `.jpg`, `.jpeg`, `.webp`, `.bmp` en una cuadrícula con scroll y caché LRU de imágenes para evitar demoras o bloqueos de memoria.
+  - Atajos rápidos superiores en barra horizontal: `📁 RadioLogos`, `📥 Descargas` (`/sdcard/Download`), `💾 Memoria` (`/sdcard/`), `🔌 USB` (detección automática de pendrives en `/storage/` o `/mnt/media_rw/`) y `⬆ Subir` (carpeta superior).
+  - Botón inferior `🌐 Explorador Android`: abre de forma segura el selector del sistema (SAF / `ACTION_GET_CONTENT`) con política permisiva de StrictMode para eliminar el error `FileUriExposedException`.
+- **Normalización de imagen:** Procesa formatos `.png`, `.jpg`, `.jpeg`, `.webp`. Escala la imagen automáticamente a un máximo de **300x300 px** antes de guardarla.
 - **Refresco en caliente:** Limpia la caché interna de Glide y `LogoManager`, forzando el refresco inmediato del logo en la interfaz principal, lista de presets y widgets asociados.
 
 ### 1.2 Limpieza Total de Conectividad (Modo Offline)

@@ -607,32 +607,110 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         mPendingPresetFreq = freq;
         mPendingPresetName = (name != null) ? name : "";
 
-        java.io.File logoDir = (mRepository != null) ? mRepository.getPreferredLogoDir() : new java.io.File("/sdcard/RadioLogos/");
-        if (!logoDir.exists()) {
-            logoDir.mkdirs();
+        if (mDialogManager != null) {
+            mDialogManager.showLogoPickerDialog(slot, freq, mPendingPresetName);
+        } else {
+            openSystemImagePicker();
         }
+    }
 
-        android.net.Uri folderUri = android.net.Uri.fromFile(logoDir);
+    public void openSystemImagePicker() {
+        try {
+            android.os.StrictMode.VmPolicy.Builder builder = new android.os.StrictMode.VmPolicy.Builder();
+            android.os.StrictMode.setVmPolicy(builder.build());
+        } catch (Exception ignored) {}
+
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "image/png", "image/jpeg", "image/jpg" });
         intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setDataAndType(folderUri, "image/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "image/png", "image/jpeg", "image/jpg", "image/webp" });
+
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            intent.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, folderUri);
+            try {
+                android.net.Uri initialUri = android.provider.DocumentsContract.buildDocumentUri(
+                        "com.android.externalstorage.documents", "primary:RadioLogos");
+                intent.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, initialUri);
+            } catch (Exception ignored) {}
         }
 
         try {
-            startActivityForResult(Intent.createChooser(intent, "RadioLogos (PNG/JPG máx 300x300)"), REQUEST_CODE_PICK_PRESET_LOGO);
+            startActivityForResult(Intent.createChooser(intent, "Seleccionar Logo"), REQUEST_CODE_PICK_PRESET_LOGO);
         } catch (Exception e) {
             try {
                 Intent fallback = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
-                fallback.setDataAndType(folderUri, "image/*");
                 startActivityForResult(fallback, REQUEST_CODE_PICK_PRESET_LOGO);
             } catch (Exception e2) {
-                Log.w(TAG, "No se encontró explorador de archivos para imágenes", e2);
+                try {
+                    Intent openDoc = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    openDoc.setType("image/*");
+                    openDoc.addCategory(Intent.CATEGORY_OPENABLE);
+                    startActivityForResult(openDoc, REQUEST_CODE_PICK_PRESET_LOGO);
+                } catch (Exception e3) {
+                    showToast("No se encontró explorador de archivos");
+                }
             }
         }
+    }
+
+    public void applySelectedStationLogo(int slot, int freq, String name, String savedPath) {
+        runOnUiThread(() -> {
+            int band = mCurrentBand;
+            mLogoCachePerBand.remove(band + "_" + freq);
+            mLastLogoUrl = "";
+
+            if (mLogoManager != null) {
+                mLogoManager.clearLogo();
+                mLogoManager.updateStationLogo(freq, band, savedPath);
+            }
+            if (mPresetManager != null) {
+                mPresetManager.updateCardVisuals(slot, freq, band);
+                mPresetManager.refreshButtons(band, true);
+            }
+            updateFrequencyDisplay(freq, (name != null && !name.isEmpty()) ? name : null);
+            refreshRadioStatus();
+            showToast("Logo asignado");
+        });
+    }
+
+    public void assignStationLogoFromBitmap(int slot, int freq, String name, android.graphics.Bitmap bitmap) {
+        if (bitmap == null || mRepository == null) return;
+        com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+            try {
+                String savedPath = mRepository.saveCustomStationLogo(freq, name, bitmap);
+                if (savedPath != null) {
+                    applySelectedStationLogo(slot, freq, name, savedPath);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error guardando logo de preset", e);
+            }
+        });
+    }
+
+    public void assignStationLogoFromFile(int slot, int freq, String name, java.io.File imageFile) {
+        if (imageFile == null || !imageFile.exists() || mRepository == null) return;
+        com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+            try {
+                android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+                opts.inJustDecodeBounds = true;
+                android.graphics.BitmapFactory.decodeFile(imageFile.getAbsolutePath(), opts);
+
+                opts.inSampleSize = 1;
+                while (opts.outWidth / opts.inSampleSize > 600 || opts.outHeight / opts.inSampleSize > 600) {
+                    opts.inSampleSize *= 2;
+                }
+                opts.inJustDecodeBounds = false;
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(imageFile.getAbsolutePath(), opts);
+
+                if (bitmap != null) {
+                    String savedPath = mRepository.saveCustomStationLogo(freq, name, bitmap);
+                    if (savedPath != null) {
+                        applySelectedStationLogo(slot, freq, name, savedPath);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error asignando logo desde archivo: " + imageFile.getAbsolutePath(), e);
+            }
+        });
     }
 
     @Override
@@ -650,30 +728,11 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
                         if (is != null) {
                             android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
                             if (bitmap != null) {
-                                String savedPath = mRepository.saveCustomStationLogo(freq, name, bitmap);
-                                if (savedPath != null) {
-                                    runOnUiThread(() -> {
-                                        int band = mCurrentBand;
-                                        mLogoCachePerBand.remove(band + "_" + freq);
-                                        mLastLogoUrl = "";
-
-                                        if (mLogoManager != null) {
-                                            mLogoManager.clearLogo();
-                                            mLogoManager.updateStationLogo(freq, band, savedPath);
-                                        }
-                                        if (mPresetManager != null) {
-                                            mPresetManager.updateCardVisuals(slot, freq, band);
-                                            mPresetManager.refreshButtons(band, true);
-                                        }
-                                        updateFrequencyDisplay(freq, (name != null && !name.isEmpty()) ? name : null);
-                                        refreshRadioStatus();
-                                        showToast("Logo asignado");
-                                    });
-                                }
+                                assignStationLogoFromBitmap(slot, freq, name, bitmap);
                             }
                         }
                     } catch (Exception e) {
-                        Log.e(TAG, "Error procesando logo de preset", e);
+                        Log.e(TAG, "Error procesando logo de preset desde URI", e);
                     }
                 });
             }

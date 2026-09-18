@@ -17,9 +17,15 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.util.LruCache;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import java.io.File;
 
 import androidx.core.text.HtmlCompat;
 
@@ -175,6 +181,298 @@ public class DialogManager {
             if (input != null) input.requestFocus();
         } catch (Exception ignored) {
         }
+    }
+
+    private final LruCache<String, Bitmap> mThumbCache = new LruCache<>(80);
+
+    public void showLogoPickerDialog(final int slot, final int freq, final String stationName) {
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_logo_picker);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+        }
+
+        View rootCard = dialog.findViewById(R.id.logo_picker_dialog_root);
+        if (rootCard != null) {
+            try {
+                rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+            } catch (Exception ignored) {}
+        }
+
+        TextView tvFreq = dialog.findViewById(R.id.tvLogoPickerFreq);
+        if (tvFreq != null) {
+            String f = String.format(java.util.Locale.getDefault(), "%.1f MHz", freq / 1000.0);
+            tvFreq.setText(f);
+        }
+
+        final TextView tvCurrentPath = dialog.findViewById(R.id.tvLogoPickerCurrentPath);
+        final GridView gvItems = dialog.findViewById(R.id.gvLogoItems);
+        final TextView tvEmpty = dialog.findViewById(R.id.tvLogoEmpty);
+
+        File initialDir = (mActivity.mRepository != null) ? mActivity.mRepository.getPreferredLogoDir() : new File("/sdcard/RadioLogos/");
+        if (!initialDir.exists()) {
+            initialDir.mkdirs();
+        }
+        if (!initialDir.exists() || !initialDir.canRead()) {
+            initialDir = android.os.Environment.getExternalStorageDirectory();
+        }
+
+        final File[] currentDirHolder = new File[] { initialDir };
+
+        class FileItem {
+            final File file;
+            final boolean isDirectory;
+            final String name;
+
+            FileItem(File file, boolean isDirectory, String name) {
+                this.file = file;
+                this.isDirectory = isDirectory;
+                this.name = name;
+            }
+        }
+
+        final java.util.List<FileItem> itemList = new java.util.ArrayList<>();
+
+        class LogoAdapter extends android.widget.BaseAdapter {
+            @Override
+            public int getCount() {
+                return itemList.size();
+            }
+
+            @Override
+            public Object getItem(int position) {
+                return itemList.get(position);
+            }
+
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = LayoutInflater.from(mActivity).inflate(R.layout.item_logo_picker_grid, parent, false);
+                }
+                ImageView ivThumb = convertView.findViewById(R.id.ivItemThumb);
+                TextView tvName = convertView.findViewById(R.id.tvItemName);
+
+                FileItem item = itemList.get(position);
+                tvName.setText(item.name);
+
+                if (item.isDirectory) {
+                    ivThumb.setImageResource(android.R.drawable.ic_menu_agenda);
+                    ivThumb.setColorFilter(Color.parseColor("#00E676"));
+                    ivThumb.setTag(null);
+                } else {
+                    ivThumb.setColorFilter(null);
+                    final String path = item.file.getAbsolutePath();
+                    ivThumb.setTag(path);
+
+                    Bitmap cached = mThumbCache.get(path);
+                    if (cached != null) {
+                        ivThumb.setImageBitmap(cached);
+                    } else {
+                        ivThumb.setImageResource(R.drawable.ic_station_placeholder);
+                        com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+                            try {
+                                BitmapFactory.Options opts = new BitmapFactory.Options();
+                                opts.inJustDecodeBounds = true;
+                                BitmapFactory.decodeFile(path, opts);
+                                opts.inSampleSize = 1;
+                                while (opts.outWidth / opts.inSampleSize > 160 || opts.outHeight / opts.inSampleSize > 160) {
+                                    opts.inSampleSize *= 2;
+                                }
+                                opts.inJustDecodeBounds = false;
+                                Bitmap thumb = BitmapFactory.decodeFile(path, opts);
+                                if (thumb != null) {
+                                    mThumbCache.put(path, thumb);
+                                    mActivity.runOnUiThread(() -> {
+                                        if (path.equals(ivThumb.getTag())) {
+                                            ivThumb.setImageBitmap(thumb);
+                                        }
+                                    });
+                                }
+                            } catch (Exception ignored) {}
+                        });
+                    }
+                }
+                return convertView;
+            }
+        }
+
+        final LogoAdapter adapter = new LogoAdapter();
+        if (gvItems != null) {
+            gvItems.setAdapter(adapter);
+        }
+
+        Runnable refreshFolder = () -> {
+            File dir = currentDirHolder[0];
+            if (dir == null) return;
+            if (tvCurrentPath != null) {
+                tvCurrentPath.setText(dir.getAbsolutePath());
+            }
+            itemList.clear();
+
+            File[] files = dir.listFiles();
+            if (files != null) {
+                java.util.List<FileItem> dirs = new java.util.ArrayList<>();
+                java.util.List<FileItem> imgs = new java.util.ArrayList<>();
+
+                for (File f : files) {
+                    if (f.isHidden()) continue;
+                    if (f.isDirectory()) {
+                        dirs.add(new FileItem(f, true, f.getName()));
+                    } else {
+                        String n = f.getName().toLowerCase(java.util.Locale.ROOT);
+                        if (n.endsWith(".png") || n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".webp") || n.endsWith(".bmp")) {
+                            imgs.add(new FileItem(f, false, f.getName()));
+                        }
+                    }
+                }
+
+                java.util.Collections.sort(dirs, (a, b) -> a.name.compareToIgnoreCase(b.name));
+                java.util.Collections.sort(imgs, (a, b) -> a.name.compareToIgnoreCase(b.name));
+
+                itemList.addAll(dirs);
+                itemList.addAll(imgs);
+            }
+
+            adapter.notifyDataSetChanged();
+            if (tvEmpty != null) {
+                tvEmpty.setVisibility(itemList.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        };
+
+        refreshFolder.run();
+
+        if (gvItems != null) {
+            gvItems.setOnItemClickListener((parent, view, position, id) -> {
+                if (position >= 0 && position < itemList.size()) {
+                    FileItem item = itemList.get(position);
+                    if (item.isDirectory) {
+                        currentDirHolder[0] = item.file;
+                        refreshFolder.run();
+                    } else {
+                        dialog.dismiss();
+                        mActivity.assignStationLogoFromFile(slot, freq, stationName, item.file);
+                    }
+                }
+            });
+        }
+
+        View btnRadioLogos = dialog.findViewById(R.id.btnQuickRadioLogos);
+        if (btnRadioLogos != null) {
+            btnRadioLogos.setOnClickListener(v -> {
+                File dir = (mActivity.mRepository != null) ? mActivity.mRepository.getPreferredLogoDir() : new File("/sdcard/RadioLogos/");
+                if (!dir.exists()) dir.mkdirs();
+                currentDirHolder[0] = dir;
+                refreshFolder.run();
+            });
+        }
+
+        View btnDownloads = dialog.findViewById(R.id.btnQuickDownloads);
+        if (btnDownloads != null) {
+            btnDownloads.setOnClickListener(v -> {
+                File d = new File(android.os.Environment.getExternalStorageDirectory(), "Download");
+                if (!d.exists()) d.mkdirs();
+                currentDirHolder[0] = d;
+                refreshFolder.run();
+            });
+        }
+
+        View btnInternal = dialog.findViewById(R.id.btnQuickInternal);
+        if (btnInternal != null) {
+            btnInternal.setOnClickListener(v -> {
+                currentDirHolder[0] = android.os.Environment.getExternalStorageDirectory();
+                refreshFolder.run();
+            });
+        }
+
+        View btnUsb = dialog.findViewById(R.id.btnQuickUsb);
+        if (btnUsb != null) {
+            btnUsb.setOnClickListener(v -> {
+                File usb = findUsbDirectory();
+                currentDirHolder[0] = (usb != null) ? usb : new File("/storage/");
+                refreshFolder.run();
+            });
+        }
+
+        View btnUp = dialog.findViewById(R.id.btnQuickUp);
+        if (btnUp != null) {
+            btnUp.setOnClickListener(v -> {
+                File cur = currentDirHolder[0];
+                if (cur != null && cur.getParentFile() != null && cur.getParentFile().canRead()) {
+                    currentDirHolder[0] = cur.getParentFile();
+                    refreshFolder.run();
+                }
+            });
+        }
+
+        View btnSystem = dialog.findViewById(R.id.btnOpenAndroidSystemPicker);
+        if (btnSystem != null) {
+            btnSystem.setOnClickListener(v -> {
+                dialog.dismiss();
+                mActivity.openSystemImagePicker();
+            });
+        }
+
+        View btnCancel = dialog.findViewById(R.id.btnCancelLogoPicker);
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {}
+
+        dialog.show();
+    }
+
+    private File findUsbDirectory() {
+        try {
+            File[] extFiles = androidx.core.content.ContextCompat.getExternalFilesDirs(mActivity, null);
+            if (extFiles != null && extFiles.length > 1) {
+                for (int i = 1; i < extFiles.length; i++) {
+                    File f = extFiles[i];
+                    if (f != null) {
+                        String path = f.getAbsolutePath();
+                        int idx = path.indexOf("/Android/data");
+                        if (idx > 0) {
+                            File root = new File(path.substring(0, idx));
+                            if (root.exists() && root.canRead()) return root;
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        File storage = new File("/storage");
+        if (storage.exists() && storage.isDirectory()) {
+            File[] list = storage.listFiles();
+            if (list != null) {
+                for (File f : list) {
+                    if (f.isDirectory() && !f.getName().equalsIgnoreCase("emulated") && !f.getName().equalsIgnoreCase("self")) {
+                        return f;
+                    }
+                }
+            }
+        }
+
+        File mnt = new File("/mnt/media_rw");
+        if (mnt.exists() && mnt.isDirectory()) {
+            File[] list = mnt.listFiles();
+            if (list != null && list.length > 0) {
+                for (File f : list) {
+                    if (f.isDirectory()) return f;
+                }
+            }
+        }
+        return null;
     }
 
     public void showPremiumSettingsDialog() {
