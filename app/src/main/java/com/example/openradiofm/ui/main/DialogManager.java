@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import com.bumptech.glide.Glide;
 import android.graphics.Typeface;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -265,41 +266,18 @@ public class DialogManager {
                 tvName.setText(item.name);
 
                 if (item.isDirectory) {
+                    try { Glide.with(ivThumb.getContext()).clear(ivThumb); } catch (Exception ignored) {}
                     ivThumb.setImageResource(android.R.drawable.ic_menu_agenda);
                     ivThumb.setColorFilter(Color.parseColor("#00E676"));
-                    ivThumb.setTag(null);
                 } else {
                     ivThumb.setColorFilter(null);
-                    final String path = item.file.getAbsolutePath();
-                    ivThumb.setTag(path);
-
-                    Bitmap cached = mThumbCache.get(path);
-                    if (cached != null) {
-                        ivThumb.setImageBitmap(cached);
-                    } else {
-                        ivThumb.setImageResource(R.drawable.ic_station_placeholder);
-                        com.example.openradiofm.util.AppIoExecutor.execute(() -> {
-                            try {
-                                BitmapFactory.Options opts = new BitmapFactory.Options();
-                                opts.inJustDecodeBounds = true;
-                                BitmapFactory.decodeFile(path, opts);
-                                opts.inSampleSize = 1;
-                                while (opts.outWidth / opts.inSampleSize > 160 || opts.outHeight / opts.inSampleSize > 160) {
-                                    opts.inSampleSize *= 2;
-                                }
-                                opts.inJustDecodeBounds = false;
-                                Bitmap thumb = BitmapFactory.decodeFile(path, opts);
-                                if (thumb != null) {
-                                    mThumbCache.put(path, thumb);
-                                    mActivity.runOnUiThread(() -> {
-                                        if (path.equals(ivThumb.getTag())) {
-                                            ivThumb.setImageBitmap(thumb);
-                                        }
-                                    });
-                                }
-                            } catch (Exception ignored) {}
-                        });
-                    }
+                    Glide.with(ivThumb.getContext())
+                            .load(item.file)
+                            .apply(new com.bumptech.glide.request.RequestOptions()
+                                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                                    .override(120, 120))
+                            .placeholder(R.drawable.ic_station_placeholder)
+                            .into(ivThumb);
                 }
                 return convertView;
             }
@@ -418,6 +396,17 @@ public class DialogManager {
             btnSystem.setOnClickListener(v -> {
                 dialog.dismiss();
                 mActivity.openSystemImagePicker();
+            });
+        }
+
+        View btnRemove = dialog.findViewById(R.id.btnRemoveLogo);
+        if (btnRemove != null) {
+            btnRemove.setOnClickListener(v -> {
+                dialog.dismiss();
+                if (mActivity.mRepository != null) {
+                    mActivity.mRepository.removeCustomStationLogo(freq);
+                }
+                mActivity.applySelectedStationLogo(slot, freq, stationName, null);
             });
         }
 
@@ -1137,7 +1126,7 @@ public class DialogManager {
         showGridSelector(mActivity.getString(R.string.select_bg_mode), modes, currentBgIdx, w -> {
             mActivity.mPrefs.edit().putInt("pref_bg_mode", w).apply();
             mActivity.mLogoManager.loadCustomBackground();
-            mActivity.mLogoManager.loadCarLogo();
+            mActivity.applyLogoModePreference();
             mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
             if (w == 2) {
                 // Al elegir fondo dinámico, ofrecer el ajuste de encuadre (letterbox vs fill).

@@ -27,6 +27,7 @@ import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 import androidx.annotation.Nullable;
+import com.bumptech.glide.signature.ObjectKey;
 import java.io.File;
 
 /**
@@ -327,6 +328,16 @@ public class LogoManager {
         }
     }
 
+    private long getFileSignature(String pathOrUrl) {
+        if (pathOrUrl != null && !pathOrUrl.startsWith("http")) {
+            try {
+                File f = new File(pathOrUrl);
+                if (f.exists()) return f.lastModified();
+            } catch (Exception ignored) {}
+        }
+        return System.currentTimeMillis();
+    }
+
     /**
      * Carga {@code car_logo.png} en {@link R.id#ivCarLogo} (Layout V3 / reloj vs coche).
      * El slot {@link R.id#ivMainLogo} en V2/Simple lo rellena {@link #applyFallbackLogo(ImageView)} (ic_toast).
@@ -335,6 +346,18 @@ public class LogoManager {
         if (!isActivityUsable()) return;
         ImageView ivCarLogo = mActivity.findViewById(R.id.ivCarLogo);
         ImageView ivMainLogo = mActivity.findViewById(R.id.ivMainLogo);
+
+        int logoMode = (mActivity.mPrefs != null) ? mActivity.mPrefs.getInt("pref_logo_mode", 0) : 0;
+        if (logoMode == 1) {
+            // Modo reloj activo: no mostrar el logo del coche para evitar solapamiento
+            if (ivCarLogo != null) {
+                ivCarLogo.setVisibility(View.GONE);
+            }
+            if (ivMainLogo != null) {
+                applyFallbackLogo(ivMainLogo);
+            }
+            return;
+        }
 
         File logoFile = resolveExistingFile("car_logo.png");
         boolean logoExists = logoFile != null && logoFile.exists();
@@ -345,6 +368,7 @@ public class LogoManager {
                 ivCarLogo.setImageDrawable(null); // Clear overlap
                 Glide.with(ivCarLogo)
                         .load(logoFile)
+                        .signature(new ObjectKey(logoFile.lastModified()))
                         .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                         .transform(new RoundedCorners(24))
                         .transition(DrawableTransitionOptions.withCrossFade())
@@ -432,6 +456,7 @@ public class LogoManager {
                     };
                     Glide.with(ivDynamicBackground)
                             .load(logoUrl)
+                            .signature(new ObjectKey(getFileSignature(logoUrl)))
                             .apply(new RequestOptions()
                                     .format(DecodeFormat.PREFER_ARGB_8888)
                                     .override(decode[0], decode[1])
@@ -530,6 +555,7 @@ public class LogoManager {
                 Glide.with(ivMainLogo)
                         .asBitmap()
                         .load(cachedUrl)
+                        .signature(new ObjectKey(getFileSignature(cachedUrl)))
                         .apply(new RequestOptions()
                                 .format(DecodeFormat.PREFER_ARGB_8888)
                                 .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
@@ -614,6 +640,7 @@ public class LogoManager {
                             Glide.with(ivMainLogo)
                                     .asBitmap()
                                     .load(url)
+                                    .signature(new ObjectKey(getFileSignature(url)))
                                     .apply(new RequestOptions()
                                             .format(DecodeFormat.PREFER_ARGB_8888)
                                             .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))

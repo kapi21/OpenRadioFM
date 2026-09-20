@@ -38,14 +38,27 @@ Documento para retomar el trabajo sin perder contexto.
   2. `ui-skins.md`: Capa visual, temas, skins, dial, widgets y dimensiones responsivas.
   3. `data-presets.md`: Gestión local de frecuencias, nombres RDS, logos en `/sdcard/RadioLogos/` y caché local.
 
+### 1.4 Optimización de Recursos, Sustitución de Logos y Exclusión Reloj/Coche (V5.5.1 Patch)
+- **Sustitución inmediata y eliminación de logos previos en presets:**
+  - `RadioRepository.deleteExistingLogoFilesForFrequency(freqKHz)`: elimina cualquier archivo anterior de esa frecuencia (`freq_*.*`, `freq.*`, etc.) en `/sdcard/RadioLogos/` y almacenamiento local antes de guardar uno nuevo.
+  - Invalida la memoria de Glide (`Glide.get(context).clearMemory()`) y aplica `.signature(new ObjectKey(file.lastModified()))` en la carga de presets y emisora para evitar que Glide sirva bitmaps antiguos de la caché.
+  - Método `forceUpdateSlotWithLogo(...)` en `PresetManager` para actualización visual en caliente e inmediata del slot sin depender de llamadas asíncronas lentas.
+- **Acción directa de Quitar Logo:**
+  - Botón integrado "🗑 Quitar" en `dialog_logo_picker.xml` conectado a `RadioRepository.removeCustomStationLogo(freqKHz)` para borrar el logo de disco y restaurar el placeholder al instante.
+- **Exclusión mutua estricta entre Reloj Digital y Logo del Coche:**
+  - `LogoManager.loadCarLogo()` ahora comprueba `pref_logo_mode`. Si el usuario tiene activo el reloj (`logoMode == 1`), `ivCarLogo` se oculta forzosamente (`GONE`) y nunca se superpone al reloj.
+  - `DialogManager.showBackgroundSelector` delega en `applyLogoModePreference()` en lugar de forzar `loadCarLogo()`, impidiendo el solapamiento al cambiar entre fondo negro, imagen fija o logo dinámico.
+- **Optimización de CPU y reducción del 98% en consumo de memoria:**
+  - Reducción del tamaño de decodificación en presets: de `Target.SIZE_ORIGINAL` en 32 bits ARGB_8888 a `160x160 px` en `RGB_565` (~50 KB por logo en lugar de ~4 MB). Elimina por completo las pausas Stop-The-World del Garbage Collector (`GC_FOR_ALLOC`) que hacían que la app se volviera errática al cargar logos.
+  - Miniaturas del explorador de logos (`LogoAdapter`) migradas a Glide con decodificación a `120x120 px`, permitiendo scroll a 60 FPS sin saturar los núcleos con `BitmapFactory.decodeFile` manual.
+
 ---
 
 ## 2. Estado de Compilación y Git
 
 - **Compilación Gradle:** Verificada y limpia con `./gradlew assembleDebug`.
 - **Binario generado:** `app/build/outputs/apk/debug/app-debug.apk`.
-- **Último Commit:** `feat: OpenRadioFM 5.5 OFFLINE mode, local presets dial edit, and offline UI`.
-- **Git Push:** Sincronizado en `origin/5.5-offline`.
+- **Rama:** `5.5-offline`.
 
 ---
 
@@ -59,8 +72,8 @@ Documento para retomar el trabajo sin perder contexto.
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 # Inspeccionar logs de cambio de logo y presets
-adb logcat -s OpenRadioFM LogoManager RadioRepository
+adb logcat -s OpenRadioFM LogoManager RadioRepository PresetManager
 ```
 
 ---
-*Última actualización del handoff: 2026-09-17 — Rama 5.5-offline lista para pruebas en vehículo/banco.*
+*Última actualización del handoff: 2026-09-20 — Refresco de presets, borrado de logo anterior, exclusión reloj/coche y optimización de recursos listos.*

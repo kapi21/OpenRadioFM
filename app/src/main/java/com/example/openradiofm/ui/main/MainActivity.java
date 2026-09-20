@@ -658,17 +658,23 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             mLogoCachePerBand.remove(band + "_" + freq);
             mLastLogoUrl = "";
 
+            try {
+                com.bumptech.glide.Glide.get(MainActivity.this).clearMemory();
+            } catch (Exception ignored) {}
+
             if (mLogoManager != null) {
                 mLogoManager.clearLogo();
-                mLogoManager.updateStationLogo(freq, band, savedPath);
+                if (savedPath != null) {
+                    mLogoManager.updateStationLogo(freq, band, savedPath);
+                }
             }
             if (mPresetManager != null) {
-                mPresetManager.updateCardVisuals(slot, freq, band);
+                mPresetManager.forceUpdateSlotWithLogo(slot, freq, band, savedPath);
                 mPresetManager.refreshButtons(band, true);
             }
             updateFrequencyDisplay(freq, (name != null && !name.isEmpty()) ? name : null);
             refreshRadioStatus();
-            showToast("Logo asignado");
+            showToast(savedPath != null ? "Logo asignado" : "Logo eliminado");
         });
     }
 
@@ -2807,19 +2813,22 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         if (mPrefs == null) return;
         int logoMode = mPrefs.getInt("pref_logo_mode", 0); // 0=Car, 1=Clock
         runOnUiThread(() -> {
-            if (mUiMediator.tvDigitalClock != null) {
-                if (logoMode == 1) {
+            if (logoMode == 1) {
+                if (mUiMediator != null && mUiMediator.tvDigitalClock != null) {
                     mUiMediator.tvDigitalClock.setVisibility(View.VISIBLE);
-                    if (mUiMediator.ivCarLogo != null) mUiMediator.ivCarLogo.setVisibility(View.GONE);
-                    mClockHandler.removeCallbacks(mClockRunnable);
-                    mClockHandler.post(mClockRunnable);
-                } else {
+                }
+                if (mUiMediator != null && mUiMediator.ivCarLogo != null) {
+                    mUiMediator.ivCarLogo.setVisibility(View.GONE);
+                }
+                mClockHandler.removeCallbacks(mClockRunnable);
+                mClockHandler.post(mClockRunnable);
+            } else {
+                if (mUiMediator != null && mUiMediator.tvDigitalClock != null) {
                     mUiMediator.tvDigitalClock.setVisibility(View.GONE);
-                    if (mUiMediator.ivCarLogo != null) {
-                        mUiMediator.ivCarLogo.setVisibility(View.VISIBLE);
-                        mLogoManager.loadCarLogo();
-                    }
-                    mClockHandler.removeCallbacks(mClockRunnable);
+                }
+                mClockHandler.removeCallbacks(mClockRunnable);
+                if (mLogoManager != null) {
+                    mLogoManager.loadCarLogo();
                 }
             }
         });
