@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
     <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway and QS6 (NWD) units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system often sends those keys to the launcher or the OEM radio app.</string>
     <string name="a11y_hihack_title">HiHack (Accessibility)</string>
     <string name="a11y_hihack_enabled">Enabled</string>
@@ -415,4 +415,16 @@
     <string name="toast_recovering_fm_audio">Recovering FM audio…</string>
     <string name="toast_hw_eq_unsupported">Hardware EQ not supported on this device</string>
     <string name="toast_saved_to_slot">Saved to preset %1$d</string>
+    <string name="logo_picker_title">LOGO EXPLORER</string>
+    <string name="logo_picker_btn_downloads">📥 Downloads</string>
+    <string name="logo_picker_btn_internal">💾 Storage</string>
+    <string name="logo_picker_btn_up">⬆ Up</string>
+    <string name="logo_picker_empty">No images (.png, .jpg) found in this folder.
+You can use the top shortcuts to navigate to RadioLogos or Downloads.</string>
+    <string name="logo_picker_btn_remove">🗑 Remove</string>
+    <string name="toast_logo_assigned">Logo assigned</string>
+    <string name="toast_logo_removed">Logo removed</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
+    <string name="root_version_suffix">OFFLINE VERSION</string>
 </resources>

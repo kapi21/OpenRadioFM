@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
     <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilité)</string>
     <string name="a11y_hihack_enabled">Activé</string>
@@ -382,4 +382,16 @@
     <string name="toast_recovering_fm_audio">Récupération de l’audio FM…</string>
     <string name="toast_hw_eq_unsupported">Égaliseur matériel non pris en charge sur cet appareil</string>
     <string name="toast_saved_to_slot">Enregistré dans le préréglage %1$d</string>
+    <string name="logo_picker_title">EXPLORATEUR DE LOGOS</string>
+    <string name="logo_picker_btn_downloads">📥 Téléchargements</string>
+    <string name="logo_picker_btn_internal">💾 Mémoire</string>
+    <string name="logo_picker_btn_up">⬆ Monter</string>
+    <string name="logo_picker_empty">Aucune image (.png, .jpg) trouvée dans ce dossier.
+Utilisez les raccourcis en haut pour accéder à RadioLogos ou Téléchargements.</string>
+    <string name="logo_picker_btn_remove">🗑 Supprimer</string>
+    <string name="toast_logo_assigned">Logo attribué</string>
+    <string name="toast_logo_removed">Logo supprimé</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
+    <string name="root_version_suffix">OFFLINE VERSION</string>
 </resources>

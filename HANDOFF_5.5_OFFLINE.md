@@ -2,7 +2,7 @@
 
 Documento para retomar el trabajo sin perder contexto.
 - **Rama activa:** `5.5-offline` (remoto `origin/5.5-offline`).
-- **Versión de la app:** `v5.5-OFFLINE` (Code `42`).
+- **Versión de la app:** `5.5 OFFLINE VERSION` (Code `42`).
 - **Filosofía del producto:** 100% Offline, sin dependencias de red, sin servicios en la nube, gestión de logos puramente local (`/sdcard/RadioLogos/`).
 
 ---
@@ -17,6 +17,7 @@ Documento para retomar el trabajo sin perder contexto.
   - `ORIGINAL`: Restaura el nombre original (RDS de fábrica).
   - `CANCELAR`: Cierra el diálogo sin aplicar cambios.
 - **Explorador Visual Integrado de Logos (`dialog_logo_picker.xml`):**
+  - Internacionalizado al 100% en los 13 idiomas de la app (títulos, botones y mensajes vacíos).
   - Muestra miniaturas decodificadas y nombres de archivos para `.png`, `.jpg`, `.jpeg`, `.webp`, `.bmp` en una cuadrícula con scroll y caché LRU de imágenes para evitar demoras o bloqueos de memoria.
   - Atajos rápidos superiores en barra horizontal: `📁 RadioLogos`, `📥 Descargas` (`/sdcard/Download`), `💾 Memoria` (`/sdcard/`), `🔌 USB` (detección automática de pendrives en `/storage/` o `/mnt/media_rw/`) y `⬆ Subir` (carpeta superior).
   - Botón inferior `🌐 Explorador Android`: abre de forma segura el selector del sistema (SAF / `ACTION_GET_CONTENT`) con política permisiva de StrictMode para eliminar el error `FileUriExposedException`.
@@ -28,9 +29,9 @@ Documento para retomar el trabajo sin perder contexto.
   - Desconectados `RadioRepository`, `Supabase`, `RadioBrowser` y descargadores HTTP en segundo plano.
   - Retirada la sección completa de nube en el diálogo de ajustes premium (`dialog_premium_settings.xml`): eliminados los switches de aportación comunitaria y base de logos online.
   - Diálogos "Acerca de" (`dialog_about.xml`) y "Agradecimientos" (`dialog_acknowledgements.xml`): eliminados hipervínculos HTML externos, manteniendo el reconocimiento como texto plano.
+  - Indicador de Nube/Cloud desactivado: `pref_logos_online` fijado a `false` por defecto e `ivDataActivity` ocultado completamente (`View.GONE`) en ausencia de red o modo online desactivado.
 - **Identificación de Versión:**
-  - Sustituido el sufijo histórico `ROOT VERSION` por `OFFLINE VERSION`.
-  - En la ventana de información se visualiza como: `v5.5-OFFLINE — OFFLINE VERSION`.
+  - Nombre de versión unificado como `5.5 OFFLINE VERSION` en `build.gradle.kts`, recursos `strings.xml` y ventana Acerca de (sin duplicaciones de sufijos).
 
 ### 1.3 Arquitectura Multi-Agente
 - Integrado el modelo de 3 sub-agentes adaptado del proyecto RASTRO (`AGENTS.md` y `.cursor/agents/`):
@@ -38,19 +39,17 @@ Documento para retomar el trabajo sin perder contexto.
   2. `ui-skins.md`: Capa visual, temas, skins, dial, widgets y dimensiones responsivas.
   3. `data-presets.md`: Gestión local de frecuencias, nombres RDS, logos en `/sdcard/RadioLogos/` y caché local.
 
-### 1.4 Optimización de Recursos, Sustitución de Logos y Exclusión Reloj/Coche (V5.5.1 Patch)
-- **Sustitución inmediata y eliminación de logos previos en presets:**
-  - `RadioRepository.deleteExistingLogoFilesForFrequency(freqKHz)`: elimina cualquier archivo anterior de esa frecuencia (`freq_*.*`, `freq.*`, etc.) en `/sdcard/RadioLogos/` y almacenamiento local antes de guardar uno nuevo.
-  - Invalida la memoria de Glide (`Glide.get(context).clearMemory()`) y aplica `.signature(new ObjectKey(file.lastModified()))` en la carga de presets y emisora para evitar que Glide sirva bitmaps antiguos de la caché.
-  - Método `forceUpdateSlotWithLogo(...)` en `PresetManager` para actualización visual en caliente e inmediata del slot sin depender de llamadas asíncronas lentas.
-- **Acción directa de Quitar Logo:**
-  - Botón integrado "🗑 Quitar" en `dialog_logo_picker.xml` conectado a `RadioRepository.removeCustomStationLogo(freqKHz)` para borrar el logo de disco y restaurar el placeholder al instante.
+### 1.4 Preservación de Archivos, Quitar Logo sin Borrado y Rendimiento
+- **Acción de Quitar Logo (Preservación de almacenamiento):**
+  - El botón "🗑 Quitar" ahora **desvincula** el logo del preset o de la emisora marcando la frecuencia con `NO_LOGO` y limpiando la vista del slot de preset, **sin borrar ningún archivo de la memoria/carpeta**.
+  - Los archivos originales del usuario en `/sdcard/RadioLogos/`, Descargas o USB permanecen 100% intactos.
+  - Al quitar el logo de un preset, el slot vuelve a mostrar el texto de frecuencia / nombre RDS sin parpadear en `"---"`.
 - **Exclusión mutua estricta entre Reloj Digital y Logo del Coche:**
   - `LogoManager.loadCarLogo()` ahora comprueba `pref_logo_mode`. Si el usuario tiene activo el reloj (`logoMode == 1`), `ivCarLogo` se oculta forzosamente (`GONE`) y nunca se superpone al reloj.
   - `DialogManager.showBackgroundSelector` delega en `applyLogoModePreference()` en lugar de forzar `loadCarLogo()`, impidiendo el solapamiento al cambiar entre fondo negro, imagen fija o logo dinámico.
 - **Optimización de CPU y reducción del 98% en consumo de memoria:**
-  - Reducción del tamaño de decodificación en presets: de `Target.SIZE_ORIGINAL` en 32 bits ARGB_8888 a `160x160 px` en `RGB_565` (~50 KB por logo en lugar de ~4 MB). Elimina por completo las pausas Stop-The-World del Garbage Collector (`GC_FOR_ALLOC`) que hacían que la app se volviera errática al cargar logos.
-  - Miniaturas del explorador de logos (`LogoAdapter`) migradas a Glide con decodificación a `120x120 px`, permitiendo scroll a 60 FPS sin saturar los núcleos con `BitmapFactory.decodeFile` manual.
+  - Reducción del tamaño de decodificación en presets: de `Target.SIZE_ORIGINAL` en 32 bits ARGB_8888 a `160x160 px` en `RGB_565` (~50 KB por logo en lugar de ~4 MB).
+  - Miniaturas del explorador de logos (`LogoAdapter`) migradas a Glide con decodificación a `120x120 px`, permitiendo scroll fluido sin saturar núcleos.
 
 ---
 

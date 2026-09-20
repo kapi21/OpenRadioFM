@@ -1,3 +1,15 @@
+## [5.5 OFFLINE VERSION] - 2026-09-20
+
+### Arquitectura 100% Offline y Persistencia Determinista
+- **Desconexión Total Cloud/Nube**: Eliminadas llamadas asíncronas y dependencias de red (`Supabase`, `RadioBrowser`, endpoints web).
+- **Indicador Nube Desactivado**: `pref_logos_online` forzado a `false` y contenedor `ivDataActivity` oculto (`View.GONE`) para una barra de estado FM limpia.
+- **Explorador Visual de Logos Integrado**: Nuevo diálogo `dialog_logo_picker.xml` con cuadrícula de miniaturas y atajos rápidos a `RadioLogos`, `Descargas`, `Memoria interna` y `USB`.
+- **Preservación No Destructiva de Archivos**: El botón "🗑 Quitar" desvincula el logo del preset o emisora (`NO_LOGO` en SharedPreferences) sin borrar ningún archivo de imagen de disco/almacenamiento.
+- **Presets Fluidos sin '---'**: Al limpiar el logo de una memoria, el texto muestra de inmediato la frecuencia o nombre RDS sin parpadear en guiones.
+- **Internacionalización Completa (13 Idiomas)**: Paridad total de claves en el diálogo de selección de logos, botones y avisos (`ES`, `EN`, `DE`, `FR`, `IT`, `PT`, `RO`, `RU`, `UK`, `SR`, `HU`, `JA`, `ZH`).
+- **Optimización de Rendimiento**: Decodificación reducida en presets (160x160 px RGB_565) reduciendo en un 98% el uso de memoria y eliminando pausas del Garbage Collector.
+- **Corrección Visual Reloj vs Logo de Vehículo**: Exclusión mutua estricta entre el reloj digital y el emblema del fabricante para evitar solapamientos.
+
 ## [Unreleased] - MCU2
 
 ### SPD / Junsun V9 Plus (abril 2026)

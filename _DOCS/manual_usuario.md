@@ -33,23 +33,25 @@ Elige entre 10 esquemas de color. En **Modo Noche**, se aplicará el color **"Ni
 
 ---
 
-## 3. Logos y Streaming Online [Novedad v4.7 Beta]
+## 3. Logos Locales y Modo Offline [OpenRadioFM 5.5 OFFLINE]
 
-### 3.1 Sistema de Logos (Prioridad Local)
-La app busca los logos en este orden de prioridad:
-1. **Carpeta Local**: Busca en `/sdcard/RadioLogos/` archivos con nombre `Frecuencia_Nombre.png`.
-2. **Servidor Online**: Si no existe localmente, descarga desde **Supabase** (Comunidad) o servidores web.
-- **Reset de Caché:** Mantén pulsado el icono de la **Nubecita Cloud** para borrar el logo actual y forzar una nueva descarga.
-- **Manuales**: Puedes añadir tus propios logos simplemente copiándolos a la carpeta `RadioLogos` con el nombre de la frecuencia (ej: `96900.png`).
+### 3.1 Explorador Visual de Logos
+- **Acceso Directo:** Toca la frecuencia central (dial) y pulsa en el botón **LOGO** para abrir el explorador integrado.
+- **Atajos de Navegación:**
+  - `📁 RadioLogos`: Acceso directo a tu carpeta de logos (`/sdcard/RadioLogos/`).
+  - `📥 Descargas`: Navega directamente a la carpeta de descargas (`/sdcard/Download/`).
+  - `💾 Memoria`: Almacenamiento interno del sistema.
+  - `🔌 USB`: Detección instantánea de unidades y pendrives USB conectados.
+  - `⬆ Subir`: Vuelve a la carpeta superior.
+- **Formatos Compatibles:** `.png`, `.jpg`, `.jpeg`, `.webp` y `.bmp` con ajuste automático a un máximo de 300x300 px para máxima nitidez y bajo consumo.
+- **Explorador del Sistema (Android):** Botón alternativo para abrir el selector de archivos nativo de Android.
 
-### 3.2 Streaming Online (Beta)
-- **Funcionalidad:** Permite escuchar la emisora vía internet si la señal FM es débil.
-- **Estado:** Esta función está en fase de **pruebas**. El catálogo de streaming está centrado actualmente en emisoras de **España**.
-- **Hardware:** Se ha optimizado el motor MT8163 para evitar bloqueos al conmutar entre FM y Streaming.
+### 3.2 Quitar Logo sin Borrar Archivos
+- Al pulsar el botón **🗑 Quitar** dentro del explorador, el logo se **desvincula** del preset y de la emisora activa, pero **nunca se borra de tu almacenamiento ni de tu USB**.
+- El preset restaurará de inmediato su frecuencia o nombre de emisora sin mostrar guiones `---`.
 
-### 3.3 Contribución a la Comunidad (Crowdsourcing)
-- **Cómo ayudar:** Activa la opción *"Contribuir a la Comunidad"* en Ajustes Premium. 
-- **Funcionamiento:** Al sintonizar una emisora con RDS estable, la app enviará de forma anónima la frecuencia y el código PI al servidor para que otros usuarios se beneficien de los logos HD en tu zona.
+### 3.3 Modo 100% Offline (Cero dependencias)
+- En esta versión se han suprimido las conexiones a servidores en la nube, optimizando el arranque, ahorrando batería y garantizando máxima fluidez sin pausas del sistema ni iconos residuales de red en pantalla.
 
 ---
 

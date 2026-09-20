@@ -164,6 +164,32 @@ public class PresetManager {
         }
     }
 
+    public void clearPresetSlotLogo(int slot) {
+        if (slot < 0 || slot >= mPresetsCount) return;
+        if (ivPresets[slot] != null) {
+            try {
+                com.bumptech.glide.Glide.with(ivPresets[slot].getContext()).clear(ivPresets[slot]);
+            } catch (Exception ignored) {}
+            ivPresets[slot].setImageDrawable(null);
+            ivPresets[slot].setBackground(null);
+        }
+        if (tvPresets[slot] != null) {
+            tvPresets[slot].setVisibility(View.VISIBLE);
+        }
+        for (LoopMirror mir : mLoopMirrors[slot]) {
+            if (mir.iv != null) {
+                try {
+                    com.bumptech.glide.Glide.with(mir.iv.getContext()).clear(mir.iv);
+                } catch (Exception ignored) {}
+                mir.iv.setImageDrawable(null);
+                mir.iv.setBackground(null);
+            }
+            if (mir.tv != null) {
+                mir.tv.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
     public void forceUpdateSlotWithLogo(int slot, int freq, int band, String path) {
         if (slot == -1) {
             for (int i = 0; i < mPresetsCount; i++) {
@@ -180,7 +206,7 @@ public class PresetManager {
             if (ivPresets[fSlot] != null) ivPresets[fSlot].setBackground(null);
             glideLogoIntoPresetSlot(fSlot, path);
         } else {
-            clearPresetSlotVisuals(fSlot);
+            clearPresetSlotLogo(fSlot);
         }
     }
 

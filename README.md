@@ -1,14 +1,14 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.2.2-green.svg)]()
-[![Branch](https://img.shields.io/badge/branch-K706_Root-informational.svg)]()
+[![Version](https://img.shields.io/badge/version-5.5_OFFLINE_VERSION-green.svg)]()
+[![Branch](https://img.shields.io/badge/branch-5.5--offline-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Android_4.4+-orange.svg)]()
 [![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM_|_SPD-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units**, con soporte activo para **K706**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, y **FYT/Teyes (OEM)** (control por intents de `com.syu.radio`).  
-Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada de logos y temas.
+**Aplicación de radio FM premium para Android Head Units (Edición 100% Offline)**, con soporte activo para **K706/QuickFish**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, **QS6/NWD**, **SPD** y **FYT/Teyes (OEM)**.  
+Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visual local de logos con atajos directos, preservación de archivos y cero dependencias de red.
 
 <div align="center">
   <img src="docs/img/app_icon.png" width="150" alt="OpenRadioFM Logo">

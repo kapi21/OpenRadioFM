@@ -296,7 +296,7 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
     <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
     <string name="a11y_hihack_title">HiHack (Kisegítő lehetőségek)</string>
     <string name="a11y_hihack_enabled">Bekapcsolva</string>
@@ -414,4 +414,16 @@
     <string name="toast_recovering_fm_audio">FM hang visszaállítása…</string>
     <string name="toast_hw_eq_unsupported">Hardveres EQ nem támogatott ezen az eszközön</string>
     <string name="toast_saved_to_slot">Mentve a(z) %1$d. presetbe</string>
+    <string name="logo_picker_title">LOGÓBÖNGÉSZŐ</string>
+    <string name="logo_picker_btn_downloads">📥 Letöltések</string>
+    <string name="logo_picker_btn_internal">💾 Tárhely</string>
+    <string name="logo_picker_btn_up">⬆ Fel</string>
+    <string name="logo_picker_empty">Nem találhatók képek (.png, .jpg) ebben a mappában.
+Használja a fenti gyorsgombokat a RadioLogos vagy Letöltések megnyitásához.</string>
+    <string name="logo_picker_btn_remove">🗑 Eltávolítás</string>
+    <string name="toast_logo_assigned">Logó hozzárendelve</string>
+    <string name="toast_logo_removed">Logó eltávolítva</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
+    <string name="root_version_suffix">OFFLINE VERSION</string>
 </resources>

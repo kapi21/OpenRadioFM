@@ -1330,7 +1330,7 @@ public class DialogManager {
                 String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(),
                         0).versionName;
                 String base = mActivity.getString(R.string.version, versionName);
-                tvVersion.setText(base + " — OFFLINE VERSION");
+                tvVersion.setText(base);
             }
         } catch (Exception ignored) {
         }

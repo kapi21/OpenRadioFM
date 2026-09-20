@@ -71,7 +71,7 @@ android {
         minSdk = 21
         targetSdk = 35
         versionCode = 42
-        versionName = "5.5-OFFLINE"
+        versionName = "5.5 OFFLINE VERSION"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

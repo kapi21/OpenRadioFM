@@ -237,7 +237,7 @@
     <string name="logo_mode_clock">Цифровые Часы</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
     <string name="accessibility_service_description">Этот сервис позволяет OpenRadioFM открываться поверх при нажатии физической кнопки RADIO на совместимых Android-устройствах (например, K706), обходя штатное радио.</string>
     <string name="a11y_hihack_title">HiHack (Спец. возможности)</string>
     <string name="a11y_hihack_enabled">Включено</string>
@@ -384,4 +384,16 @@
     <string name="toast_recovering_fm_audio">Восстановление FM-аудио…</string>
     <string name="toast_hw_eq_unsupported">Аппаратный EQ не поддерживается на этом устройстве</string>
     <string name="toast_saved_to_slot">Сохранено в пресет %1$d</string>
+    <string name="logo_picker_title">ПРОВОДНИК ЛОГОТИПОВ</string>
+    <string name="logo_picker_btn_downloads">📥 Загрузки</string>
+    <string name="logo_picker_btn_internal">💾 Память</string>
+    <string name="logo_picker_btn_up">⬆ Вверх</string>
+    <string name="logo_picker_empty">В этой папке не найдены изображения (.png, .jpg).
+Используйте ярлыки вверху для перехода в RadioLogos или Загрузки.</string>
+    <string name="logo_picker_btn_remove">🗑 Удалить</string>
+    <string name="toast_logo_assigned">Логотип назначен</string>
+    <string name="toast_logo_removed">Логотип удален</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
+    <string name="root_version_suffix">OFFLINE VERSION</string>
 </resources>

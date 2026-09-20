@@ -42,8 +42,9 @@ public class DataActivityIndicatorManager {
             float offlineAlpha,
             @ColorInt int nightBlueColor
     ) {
-        if (!onlineEnabled) {
-            setVisibilityIfChanged(wrapper, View.INVISIBLE);
+        if (!onlineEnabled || !isConnected) {
+            setVisibilityIfChanged(wrapper, View.GONE);
+            setVisibilityIfChanged(icon, View.GONE);
             stopBlink();
             return;
         }

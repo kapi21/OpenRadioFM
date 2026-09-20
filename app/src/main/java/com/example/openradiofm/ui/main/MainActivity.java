@@ -85,10 +85,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             android.content.SharedPreferences prefs = newBase.getSharedPreferences("RadioPresets",
                     Context.MODE_PRIVATE);
             lang = prefs.getString("app_language", "es");
-            // V13.9: Default to FALSE for online logos as requested for testing
-            if (!prefs.contains("pref_logos_online")) {
-                prefs.edit().putBoolean("pref_logos_online", true).apply();
-            }
+            // V5.5 OFFLINE: Cloud y logos online desactivados
+            prefs.edit().putBoolean("pref_logos_online", false).apply();
         } catch (Exception e) {
         }
         super.attachBaseContext(MyContextWrapper.wrap(newBase, lang));
@@ -674,7 +672,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             }
             updateFrequencyDisplay(freq, (name != null && !name.isEmpty()) ? name : null);
             refreshRadioStatus();
-            showToast(savedPath != null ? "Logo asignado" : "Logo eliminado");
+            showToast(getString(savedPath != null ? R.string.toast_logo_assigned : R.string.toast_logo_removed));
         });
     }
 

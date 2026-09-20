@@ -73,21 +73,13 @@ public final class StreamingUiCoordinator {
             a.mLastInternetCheckTime = now;
         }
 
-        if (!onlineEnabled) {
-            ensureDataActivityIndicatorManager(a);
+        if (!onlineEnabled || !isConnected) {
+            MainActivity.setVisibilityIfChanged(a.ivDataActivity, View.GONE);
+            if (a.mUiMediator != null && a.mUiMediator.ivDataActivityIcon != null) {
+                MainActivity.setVisibilityIfChanged(a.mUiMediator.ivDataActivityIcon, View.GONE);
+            }
             if (a.mDataActivityIndicatorManager != null) {
-                a.mDataActivityIndicatorManager.render(
-                        false,
-                        isConnected,
-                        a.mActiveDataOps,
-                        false,
-                        false,
-                        a.mThemeManager != null ? a.mThemeManager.getActiveSkin() : null,
-                        CLOUD_DATA_OFFLINE_ALPHA,
-                        a.getResources().getColor(R.color.night_blue_primary, null)
-                );
-            } else {
-                MainActivity.setVisibilityIfChanged(a.ivDataActivity, View.INVISIBLE);
+                a.mDataActivityIndicatorManager.stop();
             }
             return;
         }
@@ -242,5 +234,7 @@ public final class StreamingUiCoordinator {
                 return true;
             });
         }
+
+        updateDataActivityUi(a);
     }
 }

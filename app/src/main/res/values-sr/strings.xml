@@ -236,7 +236,7 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
     <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
     <string name="a11y_hihack_title">HiHack (Pristupačnost)</string>
     <string name="a11y_hihack_enabled">Omogućeno</string>
@@ -384,4 +384,16 @@
     <string name="toast_recovering_fm_audio">Oporavak FM audioa…</string>
     <string name="toast_hw_eq_unsupported">Hardverski EQ nije podržan na ovom uređaju</string>
     <string name="toast_saved_to_slot">Sačuvano u preset %1$d</string>
+    <string name="logo_picker_title">ПРЕГЛЕДАЧ ЛОГОТИПА</string>
+    <string name="logo_picker_btn_downloads">📥 Преузимања</string>
+    <string name="logo_picker_btn_internal">💾 Меморија</string>
+    <string name="logo_picker_btn_up">⬆ Горе</string>
+    <string name="logo_picker_empty">Нису пронађене слике (.png, .jpg) у овој фасцикли.
+Користите пречице на врху за прелазак у RadioLogos или Преузимања.</string>
+    <string name="logo_picker_btn_remove">🗑 Уклони</string>
+    <string name="toast_logo_assigned">Логотип додељен</string>
+    <string name="toast_logo_removed">Логотип уклоњен</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
+    <string name="root_version_suffix">OFFLINE VERSION</string>
 </resources>

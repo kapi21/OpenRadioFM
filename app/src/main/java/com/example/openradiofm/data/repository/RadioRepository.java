@@ -242,6 +242,13 @@ public class RadioRepository {
             station.setPty(ptyStored);
         }
 
+        // Revisar si el usuario quitó explícitamente el logo para esta frecuencia
+        if (mPrefs.getBoolean("NO_LOGO_" + freqKHz, false)) {
+            String cacheKey = freqKHz + "_" + (piCode != null ? piCode : "") + "_" + (finalName != null ? finalName.trim().toUpperCase() : "");
+            logoCache.put(cacheKey, "NO_LOGO");
+            return station;
+        }
+
         // Revisar Caché en Memoria (Por Frecuencia + Metadata)
         String cacheKey = freqKHz + "_" + (piCode != null ? piCode : "") + "_" + (finalName != null ? finalName.trim().toUpperCase() : "");
         if (logoCache.containsKey(cacheKey)) {
@@ -292,6 +299,10 @@ public class RadioRepository {
      * 3. {freq/10}.{ext}
      */
     public String getLogoPath(int freqKHz, String rdsName) {
+        if (mPrefs.getBoolean("NO_LOGO_" + freqKHz, false)) {
+            return null;
+        }
+
         String sanitizedName = (rdsName != null && !rdsName.isEmpty())
                 ? rdsName.replaceAll("[^a-zA-Z0-9]", "").toUpperCase()
                 : null;
@@ -327,43 +338,18 @@ public class RadioRepository {
     }
 
     public void deleteExistingLogoFilesForFrequency(int freqKHz) {
-        try {
-            String prefix = freqKHz + "_";
-            String dotPrefix = freqKHz + ".";
-            File[] dirs = new File[] { getPreferredLogoDir(), getLegacyLogoDir() };
-            for (File dir : dirs) {
-                if (dir != null && dir.exists() && dir.isDirectory()) {
-                    File[] files = dir.listFiles((d, name) -> {
-                        String lower = name.toLowerCase(java.util.Locale.ROOT);
-                        return lower.startsWith(prefix.toLowerCase(java.util.Locale.ROOT))
-                                || lower.startsWith(dotPrefix.toLowerCase(java.util.Locale.ROOT))
-                                || lower.equals(freqKHz + ".png")
-                                || lower.equals(freqKHz + ".jpg")
-                                || lower.equals(freqKHz + ".jpeg")
-                                || lower.equals(freqKHz + ".webp");
-                    });
-                    if (files != null) {
-                        for (File file : files) {
-                            if (file.delete()) {
-                                Log.d(TAG, "Logo anterior borrado: " + file.getName());
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Error borrando logos anteriores de disco", e);
-        }
+        // En 5.5 OFFLINE preservamos todos los archivos del usuario en almacenamiento.
+        // No se borran ficheros de la carpeta al quitar o cambiar logos.
     }
 
     public void removeCustomStationLogo(int freqKHz) {
-        deleteExistingLogoFilesForFrequency(freqKHz);
+        mPrefs.edit().putBoolean("NO_LOGO_" + freqKHz, true).apply();
         clearMemoryCacheForFrequency(freqKHz);
     }
 
     /**
      * Guarda un logo seleccionado por el usuario:
-     * - Elimina previamente cualquier logo existente para esta frecuencia.
+     * - Quita la marca NO_LOGO para esta frecuencia.
      * - Lo redimensiona a un máximo de 300x300 px manteniendo relación de aspecto.
      * - Lo guarda en formato PNG en el directorio preferido.
      * - Notifica a MediaScanner y actualiza la caché local.
@@ -372,7 +358,7 @@ public class RadioRepository {
         if (sourceBitmap == null) return null;
         try {
             ensureRadioLogosFolderExists();
-            deleteExistingLogoFilesForFrequency(freqKHz);
+            mPrefs.edit().remove("NO_LOGO_" + freqKHz).apply();
 
             int srcW = sourceBitmap.getWidth();
             int srcH = sourceBitmap.getHeight();
