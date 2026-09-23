@@ -61,7 +61,8 @@ public final class StreamingUiCoordinator {
     static void updateDataActivityUi(MainActivity a) {
         if (a.ivDataActivity == null) return;
 
-        boolean onlineEnabled = a.mPrefs.getBoolean("pref_logos_online", false);
+        boolean offlineMode = a.mPrefs.getBoolean("pref_offline_mode", true);
+        boolean onlineEnabled = !offlineMode && a.mPrefs.getBoolean("pref_logos_online", true);
 
         long now = System.currentTimeMillis();
         boolean isConnected;

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
+    <string name="root_version_suffix">Universal</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway y QS6 (NWD) también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema suele mandar esas teclas al launcher o a la radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilidad)</string>
     <string name="a11y_hihack_enabled">Activado</string>
@@ -436,4 +436,12 @@ Puedes usar los atajos superiores para navegar a RadioLogos o Descargas.</string
     <string name="logo_picker_btn_remove">🗑 Quitar</string>
     <string name="toast_logo_assigned">Logo asignado</string>
     <string name="toast_logo_removed">Logo quitado</string>
+
+    <!-- Modo Fuera de Línea / Conectividad -->
+    <string name="offline_mode_title">Modo Fuera de Línea (100% Local)</string>
+    <string name="offline_mode_desc">Desactiva internet y servicios en la nube para ahorrar datos y memoria.</string>
+    <string name="offline_mode_active">Activado (Sin red ni datos)</string>
+    <string name="offline_mode_inactive">Desactivado (Conectividad Nube Habilitada)</string>
+    <string name="toast_offline_mode_on">Modo Fuera de Línea: Activado (100% Local)</string>
+    <string name="toast_offline_mode_off">Modo Fuera de Línea: Desactivado (Conectividad Nube Habilitada)</string>
 </resources>

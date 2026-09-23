@@ -513,6 +513,18 @@ public class DialogManager {
         androidx.appcompat.widget.SwitchCompat swHihackBootReminder = dialog.findViewById(R.id.switchHihackBootReminder);
         // androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm); // Removed v21.3
 
+        // V5.5 Universal: Conectividad y Modo Fuera de Línea (100% Local)
+        androidx.appcompat.widget.SwitchCompat swOfflineMode = dialog.findViewById(R.id.switchOfflineMode);
+        TextView tvSummaryOfflineMode = dialog.findViewById(R.id.tvSummaryOfflineMode);
+        View layoutOnlineOptions = dialog.findViewById(R.id.layoutOnlineOptions);
+        androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
+        TextView tvSummaryLogosOnline = dialog.findViewById(R.id.tvSummaryLogosOnline);
+        View rowLogoProvider = dialog.findViewById(R.id.rowLogoProvider);
+        TextView tvCurrentLogoProvider = dialog.findViewById(R.id.tvCurrentLogoProvider);
+        TextView tvSupabaseStatus = dialog.findViewById(R.id.tvSupabaseStatus);
+        androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
+        TextView tvSummaryCloudContrib = dialog.findViewById(R.id.tvSummaryCloudContrib);
+
         // Language Row
         View rowLanguage = dialog.findViewById(R.id.rowLanguage);
         TextView tvCurrentLanguage = dialog.findViewById(R.id.tvCurrentLanguage);
@@ -794,6 +806,85 @@ public class DialogManager {
             swHistory.setOnCheckedChangeListener((bv, checked) -> {
                 mActivity.mPrefs.edit().putBoolean("pref_save_history", checked).apply();
                 bindSaveHistorySummary(tvSummarySaveHistory, checked);
+            });
+        }
+
+        // V5.5 Universal: Configuración de Modo Fuera de Línea (Offline) y Nube
+        if (swOfflineMode != null) {
+            boolean offlineMode = mActivity.mPrefs.getBoolean("pref_offline_mode", true);
+            swOfflineMode.setChecked(offlineMode);
+            if (tvSummaryOfflineMode != null) {
+                tvSummaryOfflineMode.setText(offlineMode ? R.string.offline_mode_active : R.string.offline_mode_inactive);
+            }
+            if (layoutOnlineOptions != null) {
+                layoutOnlineOptions.setVisibility(offlineMode ? View.GONE : View.VISIBLE);
+            }
+            swOfflineMode.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_offline_mode", checked).apply();
+                if (tvSummaryOfflineMode != null) {
+                    tvSummaryOfflineMode.setText(checked ? R.string.offline_mode_active : R.string.offline_mode_inactive);
+                }
+                if (layoutOnlineOptions != null) {
+                    layoutOnlineOptions.setVisibility(checked ? View.GONE : View.VISIBLE);
+                }
+                mActivity.updateDataActivityUI();
+                mActivity.showToast(checked ? mActivity.getString(R.string.toast_offline_mode_on)
+                        : mActivity.getString(R.string.toast_offline_mode_off));
+
+                if (!checked && tvSupabaseStatus != null) {
+                    checkSupabaseStatus(dialog, tvSupabaseStatus);
+                }
+            });
+        }
+
+        if (swLogosOnline != null) {
+            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", true));
+            bindSwitchSummary(tvSummaryLogosOnline, swLogosOnline.isChecked());
+            swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
+                bindSwitchSummary(tvSummaryLogosOnline, checked);
+                mActivity.updateDataActivityUI();
+                if (checked) {
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_1));
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_2));
+                } else {
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_off));
+                }
+            });
+        }
+
+        if (tvCurrentLogoProvider != null) {
+            int provider = mActivity.mPrefs.getInt("pref_logo_provider", 0);
+            if (provider == 1) {
+                tvCurrentLogoProvider.setText(R.string.provider_radiobrowser);
+            } else if (provider == 2) {
+                tvCurrentLogoProvider.setText(R.string.provider_both);
+            } else {
+                tvCurrentLogoProvider.setText(R.string.provider_supabase);
+            }
+        }
+        if (rowLogoProvider != null) {
+            rowLogoProvider.setOnClickListener(v -> {
+                showLogoProviderSelector();
+                dialog.dismiss();
+            });
+        }
+
+        if (tvSupabaseStatus != null) {
+            boolean offlineMode = mActivity.mPrefs.getBoolean("pref_offline_mode", true);
+            if (!offlineMode) {
+                checkSupabaseStatus(dialog, tvSupabaseStatus);
+            }
+        }
+
+        if (swCloudContrib != null) {
+            swCloudContrib.setChecked(mActivity.mPrefs.getBoolean("pref_cloud_contrib", true));
+            bindSwitchSummary(tvSummaryCloudContrib, swCloudContrib.isChecked());
+            swCloudContrib.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_cloud_contrib", checked).apply();
+                bindSwitchSummary(tvSummaryCloudContrib, checked);
+                mActivity.showToast(checked ? mActivity.getString(R.string.toast_contrib_on)
+                        : mActivity.getString(R.string.toast_contrib_off));
             });
         }
 
@@ -1433,6 +1524,27 @@ public class DialogManager {
             mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
             mActivity.showToast(mActivity.getString(R.string.engine_changed, options[which]));
             mActivity.mServiceController.start();
+        });
+    }
+
+    private void checkSupabaseStatus(android.app.Dialog dialog, TextView tvSupabaseStatus) {
+        if (tvSupabaseStatus == null || mActivity.mRepository == null || mActivity.mRepository.getSupabaseSource() == null) return;
+        tvSupabaseStatus.setVisibility(View.VISIBLE);
+        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_connecting));
+        tvSupabaseStatus.setTextColor(Color.parseColor("#888888"));
+
+        mActivity.mRepository.getSupabaseSource().checkConnection(connected -> {
+            mActivity.runOnUiThread(() -> {
+                if (dialog.isShowing()) {
+                    if (Boolean.TRUE.equals(connected)) {
+                        tvSupabaseStatus.setText("• " + mActivity.getString(R.string.supabase_status_online));
+                        tvSupabaseStatus.setTextColor(Color.parseColor("#44FF44"));
+                    } else {
+                        tvSupabaseStatus.setText("• " + mActivity.getString(R.string.supabase_status_offline));
+                        tvSupabaseStatus.setTextColor(Color.parseColor("#FF4444"));
+                    }
+                }
+            });
         });
     }
 
