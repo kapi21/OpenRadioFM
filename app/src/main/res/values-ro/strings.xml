@@ -237,7 +237,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>
@@ -269,6 +269,7 @@
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
     <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_contrib_alessandro">Alessandro @AccountsTM (SPD Engine Support)</string>
     <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
     <string name="about_icons_by">Icons by Icons8</string>
     <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>
@@ -383,4 +384,16 @@
     <string name="toast_recovering_fm_audio">Se recuperează audio FM…</string>
     <string name="toast_hw_eq_unsupported">EQ hardware neacceptat pe acest dispozitiv</string>
     <string name="toast_saved_to_slot">Salvat în presetul %1$d</string>
+    <string name="logo_picker_title">EXPLORATOR LOGO-URI</string>
+    <string name="logo_picker_btn_downloads">📥 Descărcări</string>
+    <string name="logo_picker_btn_internal">💾 Memorie</string>
+    <string name="logo_picker_btn_up">⬆ Sus</string>
+    <string name="logo_picker_empty">Nu au fost găsite imagini (.png, .jpg) în acest folder.
+Folosiți comenzile rapide de sus pentru a naviga la RadioLogos sau Descărcări.</string>
+    <string name="logo_picker_btn_remove">🗑 Eliminare</string>
+    <string name="toast_logo_assigned">Logo atribuit</string>
+    <string name="toast_logo_removed">Logo eliminat</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
+    <string name="root_version_suffix">OFFLINE VERSION</string>
 </resources>

@@ -20,6 +20,7 @@ import com.example.openradiofm.data.source.MT8163Engine;
 import com.example.openradiofm.data.source.MTK8259_8667Engine;
 import com.example.openradiofm.data.source.QS6Engine;
 import com.example.openradiofm.data.source.RadioEngineCallback;
+import com.example.openradiofm.data.source.SpdEngine;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +36,8 @@ public class ScanManager {
     private static final int MAX_RESULTS = 18;
     /** Tiempo mínimo en una frecuencia antes de validar (QS6: scan AMS iba demasiado rápido). */
     private static final long RDS_WAIT_MS = 5200L;
+    /** SPD: al usar seek hardware, el “settle” de RDS suele ser más rápido. */
+    private static final long SPD_RDS_WAIT_MS = 1300L;
     /** AutoScan sobrescritura: validar antes (señal fuerte o RDS); equilibrio entre rapidez y estabilidad. */
     private static final long RDS_WAIT_AUTOSCAN_MS = 4000L;
     /** Tras aceptar emisora, espera extra para PS/logo/cache antes de guardar preset. */
@@ -45,6 +48,10 @@ public class ScanManager {
     /** Primera búsqueda: dejar tiempo a RDS en la frecuencia actual antes del primer seekUp. */
     private static final long SLOW_SEEK_FIRST_MS = 8000L;
     private static final long SLOW_SEEK_INTERVAL_MS = 6000L;
+    /** SPD autoscan (seek) — tiempos más cortos para sensación “stock”. */
+    private static final long SPD_AUTOSCAN_FIRST_MS = 1400L;
+    private static final long SPD_AUTOSCAN_INTERVAL_MS = 3800L;
+    private static final int SPD_AUTOSCAN_MIN_SIGNAL = 28;
     /** Tras aceptar una emisora en autoscan lento, siguiente seek algo antes que el intervalo largo. */
     private static final long SLOW_SEEK_AFTER_STATION_MS = 2800L;
     private static final int TOLERANCE_KHZ = 50;
@@ -81,6 +88,10 @@ public class ScanManager {
     private final Map<Integer, Boolean> mAutoSavedByKey = new HashMap<>();
     private int mLastRssi = 0;
     private int mLastSnr = 0;
+    private boolean mLastStereo = false;
+    private boolean mLastTp = false;
+    private boolean mLastHasRdsIdentity = false;
+    private long mLastScanFreqSetAtMs = 0L;
 
     // VXX: AutoScan inteligente (captura + guardado manual a presets)
     private AlertDialog mAutoScanDialog;
@@ -124,10 +135,15 @@ public class ScanManager {
             if (mActivity == null || mActivity.mEngine == null) return;
             if (mNextAutoPresetSlot >= MAX_RESULTS) {
                 if (tryContinueAutoScanOnNextFmBand()) {
-                    mMainHandler.postDelayed(this, SLOW_SEEK_FIRST_MS);
+                    mMainHandler.postDelayed(this, isSpdSeekAutoScan() ? SPD_AUTOSCAN_FIRST_MS : SLOW_SEEK_FIRST_MS);
                     return;
                 }
                 finishSlowAutoScanInternal(null);
+                return;
+            }
+            if (isSpdSeekAutoScan()) {
+                runSpdSeekAutoScanStep();
+                mMainHandler.postDelayed(this, SPD_AUTOSCAN_INTERVAL_MS);
                 return;
             }
             try {
@@ -489,6 +505,27 @@ public class ScanManager {
     public void onSignalUpdate(int rssi, int snr) {
         mLastRssi = rssi;
         mLastSnr = snr;
+        tryAcceptCurrentSpdCandidate("signal");
+    }
+
+    /** SPD autoscan: pista de validez (stereo/lock). */
+    public void onStereoChanged(boolean stereo) {
+        mLastStereo = stereo;
+        tryAcceptCurrentSpdCandidate("stereo");
+    }
+
+    /** SPD autoscan: TP suele ser señal fuerte de identidad durante scan. */
+    public void onRdsStatus(boolean tpEnabled) {
+        mLastTp = tpEnabled;
+        tryAcceptCurrentSpdCandidate("rds_status");
+    }
+
+    /** SPD autoscan: PI/PTY/PS confirmado cuentan como identidad RDS. */
+    public void onRdsIdentity(String value) {
+        if (value != null && !value.trim().isEmpty() && !"0".equals(value.trim())) {
+            mLastHasRdsIdentity = true;
+            tryAcceptCurrentSpdCandidate("rds_identity");
+        }
     }
 
     /**
@@ -511,6 +548,13 @@ public class ScanManager {
             }
         }
 
+        if (mLastScanFreq != freqKhz) {
+            mLastScanFreqSetAtMs = android.os.SystemClock.elapsedRealtime();
+            if (isSpdAutoScanSession()) {
+                mLastTp = false;
+                mLastHasRdsIdentity = false;
+            }
+        }
         mLastScanFreq = freqKhz;
 
         // Actualizar UI del diálogo si existe
@@ -542,7 +586,12 @@ public class ScanManager {
             p = new Pending(freqKhz, now, mLastRssi, mLastSnr, mAutoScanSessionId);
             mPendingByKey.put(key, p);
             final Pending pRef = p;
-            final long rdsWait = mAutoOverwritePresets ? RDS_WAIT_AUTOSCAN_MS : RDS_WAIT_MS;
+            final long rdsWait;
+            if (isSpdSeekAutoScan()) {
+                rdsWait = SPD_RDS_WAIT_MS;
+            } else {
+                rdsWait = mAutoOverwritePresets ? RDS_WAIT_AUTOSCAN_MS : RDS_WAIT_MS;
+            }
             mMainHandler.postDelayed(() -> validatePending(pRef), rdsWait);
         } else {
             // Re-visit: refrescar señal/timestamp pero mantener la espera original.
@@ -763,6 +812,17 @@ public class ScanManager {
             return;
         }
 
+        if (isSpdEngine() && mAutoOverwritePresets && mSlowSeekAutoScan) {
+            // En SPD en modo overwrite, RSSI solo puede aceptar demasiadas falsas: pedir identidad RDS/TP.
+            if (p.freqKhz == mLastScanFreq && isValidSpdAutoScanStation(p)) {
+                acceptStation(p.freqKhz, rdsWaitingLabel());
+                p.accepted = true;
+            } else {
+                mPendingByKey.remove(normalizeKey(p.freqKhz));
+            }
+            return;
+        }
+
         if (isStrongEnough(p.rssi, p.snr)) {
             acceptStation(p.freqKhz, rdsWaitingLabel());
             p.accepted = true;
@@ -770,6 +830,59 @@ public class ScanManager {
             // Débil y sin RDS → ruido: descartar.
             mPendingByKey.remove(normalizeKey(p.freqKhz));
         }
+    }
+
+    private void runSpdSeekAutoScanStep() {
+        try {
+            int cur = mActivity.mEngine.getCurrentFreq();
+            if (isFmBandUi() && cur >= FM_BAND_END_KHZ) {
+                finishSlowAutoScanInternal(null);
+                return;
+            }
+            mLastSlowSeekTickFreq = cur;
+            mLastTp = false;
+            mLastHasRdsIdentity = false;
+            mActivity.mEngine.seekUp();
+        } catch (Exception ignored) {}
+    }
+
+    private boolean isValidSpdAutoScanStation(Pending p) {
+        if (p == null) return false;
+        int quality = Math.max(p.rssi, p.snr);
+        long ageMs = android.os.SystemClock.elapsedRealtime() - mLastScanFreqSetAtMs;
+        if (mLastTp && mLastHasRdsIdentity && ageMs >= 250L) return true;
+        return mLastHasRdsIdentity && quality >= SPD_AUTOSCAN_MIN_SIGNAL && ageMs >= 250L;
+    }
+
+    private void tryAcceptCurrentSpdCandidate(String reason) {
+        if (!isSpdAutoScanSession()) return;
+        if (mLastScanFreq <= 0 || mLastScanFreq >= FM_BAND_END_KHZ) return;
+        if (mCapturedList.size() >= MAX_RESULTS || isAlreadyAccepted(mLastScanFreq)) return;
+        int key = normalizeKey(mLastScanFreq);
+        Pending p = mPendingByKey.get(key);
+        if (p == null) {
+            p = new Pending(mLastScanFreq, android.os.SystemClock.elapsedRealtime(), mLastRssi, mLastSnr, mAutoScanSessionId);
+            mPendingByKey.put(key, p);
+        } else {
+            p.rssi = Math.max(p.rssi, mLastRssi);
+            p.snr = Math.max(p.snr, mLastSnr);
+        }
+        if (isValidSpdAutoScanStation(p) && !p.accepted) {
+            acceptStation(mLastScanFreq, rdsWaitingLabel());
+            p.accepted = true;
+        }
+    }
+
+    private boolean isSpdSeekAutoScan() {
+        return mSlowSeekAutoScan && mAutoOverwritePresets && isFmBandUi() && isSpdEngine();
+    }
+
+    private boolean isSpdAutoScanSession() {
+        return mIsScanning && mSlowSeekAutoScan && mAutoOverwritePresets && isSpdEngine();
+    }
+
+    private boolean isSpdEngine() {
+        return mActivity != null && mActivity.mEngine instanceof SpdEngine;
     }
 
     private void acceptStation(int freqKhz, String name) {

@@ -33,23 +33,25 @@ Choose from 10 color schemes. In **Night Mode**, "Night Blue" will be applied to
 
 ---
 
-## 3. Online Logos & Streaming [New in v4.7 Beta]
+## 3. Local Logos & Offline Mode [OpenRadioFM 5.5 OFFLINE]
 
-### 3.1 Logo System (Local Priority)
-The app searches for logos in this priority order:
-1. **Local Folder**: Looks in `/sdcard/RadioLogos/` for files named `Frequency_Name.png`.
-2. **Online Server**: IF not found locally, downloads from **Supabase** (Community) or web servers.
-- **Cache Reset:** Long press the **Cloud icon** to clear the current logo and force a new download.
-- **Manuals**: You can add your own logos by simply copying them to the `RadioLogos` folder with the frequency name (e.g., `96900.png`).
+### 3.1 Built-in Visual Logo Explorer
+- **Direct Access:** Tap the central frequency dial and press the **LOGO** button to open the built-in explorer.
+- **Navigation Shortcuts:**
+  - `📁 RadioLogos`: Direct access to your local logos folder (`/sdcard/RadioLogos/`).
+  - `📥 Downloads`: Navigate straight to `/sdcard/Download/`.
+  - `💾 Storage`: Internal system storage.
+  - `🔌 USB`: Instant detection of connected USB flash drives.
+  - `⬆ Up`: Navigate up to parent directory.
+- **Supported Formats:** `.png`, `.jpg`, `.jpeg`, `.webp`, and `.bmp` with automatic scaling up to 300x300 px for optimal sharpness and low memory overhead.
+- **System Explorer (Android):** Alternative button to launch the native Android file picker safely.
 
-### 3.2 Online Streaming (Beta)
-- **Functionality:** Listen to stations via internet if the FM signal is weak.
-- **Status:** This feature is in the **testing** phase. The streaming catalog is currently focused on stations from **Spain**.
-- **Hardware:** The MT8163 engine has been optimized to prevent freezes when switching between FM and Streaming.
+### 3.2 Non-Destructive Logo Removal
+- Tapping **🗑 Remove** inside the logo explorer **unassigns** the logo from the active preset or station, but **never deletes any file from your storage or USB drive**.
+- The preset slot immediately restores the station frequency number and RDS name without flickering to `---`.
 
-### 3.3 Community Contribution (Crowdsourcing)
-- **How to help:** Enable **"Contribute to Community"** in Premium Settings.
-- **How it works:** When tuning a station with stable RDS, the app will anonymously send frequency and PI code to the server so other users can benefit from HD logos in your area.
+### 3.3 100% Offline Mode (Zero Dependencies)
+- All cloud server connections, background sync workers, and telemetry have been removed, ensuring fast cold starts, zero battery drain, and no residual network icons in the top bar.
 
 ---
 

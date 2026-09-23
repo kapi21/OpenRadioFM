@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.2.2 Root Version</string>
-    <string name="root_version_suffix">Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
+    <string name="root_version_suffix">Universal</string>
     <string name="accessibility_service_description">Abre OpenRadioFM al pulsar el botón físico de RADIO (sustituye la app de fábrica). En unidades K706/Topway y QS6 (NWD) también reenvía al volante (siguiente/anterior/play) cuando la app está en segundo plano; sin esto el sistema suele mandar esas teclas al launcher o a la radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilidad)</string>
     <string name="a11y_hihack_enabled">Activado</string>
@@ -140,6 +140,7 @@
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
     <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_contrib_alessandro">Alessandro @AccountsTM (SPD Engine Support)</string>
     <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
     <string name="about_icons_by">Icons by Icons8</string>
     <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>
@@ -326,6 +327,8 @@
     <string name="widget_cd_open_app">Abrir OpenRadioFM</string>
     <string name="widget_prev_preset">Memoria anterior</string>
     <string name="widget_next_preset">Memoria siguiente</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
 
     <string name="autoscan_confirm_title">AutoScan</string>
     <string name="autoscan_confirm_subheader">SOBRESCRITURA DE MEMORIAS</string>
@@ -424,4 +427,21 @@
     <string name="toast_recovering_fm_audio">Recuperando audio FM…</string>
     <string name="toast_hw_eq_unsupported">Hardware EQ no soportado en este dispositivo</string>
     <string name="toast_saved_to_slot">Guardado en memoria %1$d</string>
+    <string name="logo_picker_title">EXPLORADOR DE LOGOS</string>
+    <string name="logo_picker_btn_downloads">📥 Descargas</string>
+    <string name="logo_picker_btn_internal">💾 Memoria</string>
+    <string name="logo_picker_btn_up">⬆ Subir</string>
+    <string name="logo_picker_empty">No se encontraron imágenes (.png, .jpg) en esta carpeta.
+Puedes usar los atajos superiores para navegar a RadioLogos o Descargas.</string>
+    <string name="logo_picker_btn_remove">🗑 Quitar</string>
+    <string name="toast_logo_assigned">Logo asignado</string>
+    <string name="toast_logo_removed">Logo quitado</string>
+
+    <!-- Modo Fuera de Línea / Conectividad -->
+    <string name="offline_mode_title">Modo Fuera de Línea (100% Local)</string>
+    <string name="offline_mode_desc">Desactiva internet y servicios en la nube para ahorrar datos y memoria.</string>
+    <string name="offline_mode_active">Activado (Sin red ni datos)</string>
+    <string name="offline_mode_inactive">Desactivado (Conectividad Nube Habilitada)</string>
+    <string name="toast_offline_mode_on">Modo Fuera de Línea: Activado (100% Local)</string>
+    <string name="toast_offline_mode_off">Modo Fuera de Línea: Desactivado (Conectividad Nube Habilitada)</string>
 </resources>

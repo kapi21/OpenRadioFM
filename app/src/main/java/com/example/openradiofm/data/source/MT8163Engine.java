@@ -33,6 +33,11 @@ import android.os.HandlerThread;
 public class MT8163Engine implements RadioEngine {
 
     private static final String TAG = "MT8163Engine";
+    private static final String HCN_PKG = "com.hcn.autoradio";
+    private static final String HCN_ACTION_CLASSIC = "com.hcn.autoradio.FM_PLUG_SERVICE";
+    // Variante detectada en APK “8581a”
+    private static final String HCN_ACTION_8581A = "com.hcn.radio.FM_PLUG_SERVICE";
+    private static final String HCN_SERVICE_CLASS = "com.hcn.autoradio.service.FMPlugService";
 
     private Context mContext;
     private IRadioServiceAPI mService;
@@ -173,16 +178,40 @@ public class MT8163Engine implements RadioEngine {
             Log.w(TAG, "Reconectando servicio HCN (bind tras handoff MediaSession)...");
             try {
                 Intent wake = new Intent("com.hcn.autoradio.FMRADIO_START");
-                wake.setPackage("com.hcn.autoradio");
+                wake.setPackage(HCN_PKG);
                 mContext.sendBroadcast(wake);
-                Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
-                intent.setPackage("com.hcn.autoradio");
-                mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+                if (!bindHcnServiceBestEffort()) {
+                    Log.w(TAG, "Reconexión HCN: bindService devolvió false (classic+8581a fallaron)");
+                }
             } catch (Exception e) {
                 Log.e(TAG, "Error intentando reconectar", e);
             }
         }
     };
+
+    /**
+     * ROMs HCN/MT8163 varían la action del servicio. Probamos:
+     * - action clásica por package
+     * - variante “8581a” con ComponentName explícito (según APK nativa)
+     */
+    private boolean bindHcnServiceBestEffort() {
+        if (mContext == null) return false;
+        try {
+            Intent i = new Intent(HCN_ACTION_CLASSIC);
+            i.setPackage(HCN_PKG);
+            i.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            if (mContext.bindService(i, mConnection, Context.BIND_AUTO_CREATE)) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        try {
+            Intent i2 = new Intent(HCN_ACTION_8581A);
+            i2.setComponent(new ComponentName(HCN_PKG, HCN_SERVICE_CLASS));
+            i2.addFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
+            return mContext.bindService(i2, mConnection, Context.BIND_AUTO_CREATE);
+        } catch (Throwable ignored) {}
+        return false;
+    }
 
     private final Runnable mReconnectRunnable = new Runnable() {
         @Override
@@ -259,6 +288,10 @@ public class MT8163Engine implements RadioEngine {
                         handleAidlCallback(code, data);
                     }
                 });
+
+                // Sincronía inicial de banda (8581a/HCN): algunos firmwares “viven” en FM2/FM3 pero el AIDL
+                // devuelve banda poco fiable. Tomamos la banda real desde RadioPlayer oculto y la persistimos.
+                syncUiBandFromHiddenPlayer("onServiceConnected");
                 
                 // V18.6: Si el servicio fue matado por el sistema (ej. abriendo Youtube)
                 // y teníamos una emisora sintonizada, la restauramos automáticamente
@@ -365,10 +398,8 @@ public class MT8163Engine implements RadioEngine {
         // 1. Conectar con servicio HCN del sistema (tune, seek, band)
         if (!mExternalService && !mPreferDirectRadioPlayer) {
             try {
-                Intent intent = new Intent("com.hcn.autoradio.FM_PLUG_SERVICE");
-                intent.setPackage("com.hcn.autoradio");
-                context.bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-                Log.d(TAG, "Binding al servicio HCN via Action...");
+                boolean ok = bindHcnServiceBestEffort();
+                Log.d(TAG, "Binding al servicio HCN (classic/8581a): " + ok);
             } catch (Exception e) {
                 Log.e(TAG, "No se pudo conectar al servicio HCN", e);
             }
@@ -546,9 +577,39 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void setBand(int band) {
-        // No hay setBand AIDL útil en todos los firmwares; la app y los presets usan esta caché.
-        mLastUiBand = (band >= 0 && band <= 4) ? band : 0;
-        Log.d(TAG, "setBand (legado): cache UI band=" + mLastUiBand);
+        // No hay setBand AIDL fiable en todos los firmwares. En ROMs HCN/8581a la UI band real
+        // suele depender de RadioPlayer (oculto). Para que FM1 funcione igual que FM2/FM3,
+        // intentamos fijar la banda real con HiddenRadioPlayer si está disponible.
+        int target = (band >= 0 && band <= 4) ? band : 0;
+        mLastUiBand = target;
+        try {
+            if (mContext != null) {
+                mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                        .edit().putInt("pref_last_band", mLastUiBand).apply();
+            }
+        } catch (Exception ignored) {}
+
+        if (mHiddenPlayer != null) {
+            String bandName;
+            if (target == 1) bandName = "FM2";
+            else if (target == 2) bandName = "FM3";
+            else if (target == 3 || target == 4) bandName = "AM1"; // AM2 no siempre existe en HCN
+            else bandName = "FM1";
+            Integer freq = mHiddenPlayer.getCurrentFreqKhz();
+            if (freq == null || freq <= 0) freq = getCurrentFreq();
+            boolean ok = mHiddenPlayer.setUiBandKeepFreq(bandName, freq);
+            if (ok) {
+                if (mCallback != null) mCallback.onBandChanged(mLastUiBand);
+                ensurePollingThread();
+                if (mPollingHandler != null) {
+                    mPollingHandler.postDelayed(() -> syncUiBandFromHiddenPlayer("setBand"), 120);
+                }
+                Log.i(TAG, "setBand: RadioPlayer UI band -> " + bandName + " (target=" + target + ")");
+                return;
+            }
+        }
+        if (mCallback != null) mCallback.onBandChanged(mLastUiBand);
+        Log.d(TAG, "setBand: cache UI band=" + mLastUiBand + " (sin RadioPlayer)");
     }
 
     @Override
@@ -806,22 +867,25 @@ public class MT8163Engine implements RadioEngine {
 
     @Override
     public void bandCycle() {
-        if (mPreferDirectRadioPlayer && mHiddenPlayer != null) {
-            // MCU-direct (HiddenRadioPlayer): algunos firmwares MT8163 no tienen FM3.
+        // Para 8581a/HCN: incluso cuando NO estamos en modo "mcu_direct", la banda del sistema puede quedarse en FM2
+        // y el AIDL no siempre notifica band changes. Si RadioPlayer está disponible, forzamos el ciclo aquí.
+        if (mHiddenPlayer != null) {
             // Ciclo tolerante: FM1 -> FM2 -> (FM3 si existe) -> FM1. Si falla, caer a FM1 o AM1 si existe.
             String cur = mHiddenPlayer.getUiBandName();
+            String curNorm = cur != null ? cur.trim().toUpperCase(java.util.Locale.US) : null;
             String[] candidates;
-            if ("FM2".equals(cur)) {
+            if ("FM2".equals(curNorm) || "FM-2".equals(curNorm)) {
                 candidates = new String[] { "FM3", "FM1", "AM1", "FM2" };
-            } else if ("FM3".equals(cur)) {
+            } else if ("FM3".equals(curNorm) || "FM-3".equals(curNorm)) {
                 candidates = new String[] { "FM1", "FM2", "AM1", "FM3" };
-            } else if ("AM1".equals(cur) || "AM".equals(cur)) {
+            } else if ("AM1".equals(curNorm) || "AM-1".equals(curNorm) || "AM".equals(curNorm)) {
                 candidates = new String[] { "FM1", "FM2", "FM3", "AM1" };
             } else {
                 // FM1 o null -> FM2 (comportamiento histórico)
                 candidates = new String[] { "FM2", "FM3", "FM1", "AM1" };
             }
             Integer freq = mHiddenPlayer.getCurrentFreqKhz();
+            if (freq == null || freq <= 0) freq = getCurrentFreq();
             for (String next : candidates) {
                 if (mHiddenPlayer.setUiBandKeepFreq(next, freq)) {
                     if ("FM1".equals(next)) mLastUiBand = 0;
@@ -829,7 +893,23 @@ public class MT8163Engine implements RadioEngine {
                     else if ("FM3".equals(next)) mLastUiBand = 2;
                     else if ("AM1".equals(next) || "AM".equals(next)) mLastUiBand = 3;
                     if (mCallback != null) mCallback.onBandChanged(mLastUiBand);
-                    startDirectFreqPolling();
+                    // Alinear persistencia para que el próximo arranque no caiga a FM1 vacío/FMx inconsistente.
+                    try {
+                        if (mContext != null) {
+                            mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                                    .edit().putInt("pref_last_band", mLastUiBand).apply();
+                        }
+                    } catch (Exception ignored) {}
+                    // Si estamos en modo directo, también hacemos polling directo de freq.
+                    if (mPreferDirectRadioPlayer) {
+                        startDirectFreqPolling();
+                    } else {
+                        // En modo AIDL, solo re-sincronizar banda tras un tick.
+                        ensurePollingThread();
+                        if (mPollingHandler != null) {
+                            mPollingHandler.postDelayed(() -> syncUiBandFromHiddenPlayer("bandCycle"), 120);
+                        }
+                    }
                     return;
                 }
             }
@@ -841,6 +921,11 @@ public class MT8163Engine implements RadioEngine {
             handleDeadService("bandCycle", e);
         } catch (RemoteException e) {
             Log.e(TAG, "RemoteException en bandCycle");
+        }
+        // Fallback: aunque el AIDL no notifique, intentamos leer banda real tras el ciclo.
+        ensurePollingThread();
+        if (mPollingHandler != null) {
+            mPollingHandler.postDelayed(() -> syncUiBandFromHiddenPlayer("bandCycleAidl"), 160);
         }
     }
 
@@ -1353,6 +1438,41 @@ public class MT8163Engine implements RadioEngine {
                 mCallback.onRawEvent(code, data);
                 break;
         }
+    }
+
+    private void syncUiBandFromHiddenPlayer(String reason) {
+        try {
+            if (mContext == null || mHiddenPlayer == null) return;
+            String ui = mHiddenPlayer.getUiBandName();
+            int idx = parseUiBandToIndex(ui);
+            if (idx < 0 || idx > 4) return;
+            if (idx != mLastUiBand) {
+                mLastUiBand = idx;
+                try {
+                    mContext.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE)
+                            .edit()
+                            .putInt("pref_last_band", idx)
+                            .apply();
+                } catch (Exception ignored) {}
+                if (mCallback != null) {
+                    mCallback.onBandChanged(idx);
+                }
+                Log.i(TAG, "Sync UI band desde HiddenRadioPlayer (" + reason + "): " + ui + " -> " + idx);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    private static int parseUiBandToIndex(String uiBandName) {
+        if (uiBandName == null) return -1;
+        String s = uiBandName.trim().toUpperCase(java.util.Locale.US);
+        // Variantes observadas: "FM1", "FM2", "FM3", "AM1" o con guión "FM-1"
+        if (s.startsWith("FM")) {
+            if (s.contains("3")) return 2;
+            if (s.contains("2")) return 1;
+            return 0;
+        }
+        if (s.startsWith("AM")) return 3;
+        return -1;
     }
 
     /**

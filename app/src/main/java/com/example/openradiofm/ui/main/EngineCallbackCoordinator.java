@@ -77,6 +77,9 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
         if (mHost.getRadioSessionController() != null) {
             mHost.getRadioSessionController().onStereoChanged(stereo);
         }
+        if (mHost.getScanManager() != null && mHost.getScanManager().isScanning()) {
+            try { mHost.getScanManager().onStereoChanged(stereo); } catch (Exception ignored) {}
+        }
         mHost.runOnHostUiThread(() -> {
             if (mHost.getUiController() != null) {
                 mHost.getUiController().updateStereo(stereo);
@@ -162,6 +165,9 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
         if (mHost.getRadioSessionController() != null) {
             mHost.getRadioSessionController().onRdsPty(pty);
         }
+        if (mHost.getScanManager() != null && mHost.getScanManager().isScanning()) {
+            try { mHost.getScanManager().onRdsIdentity(pty); } catch (Exception ignored) {}
+        }
         if (mHost.getRadioRepository() != null && mHost.getRadioEngine() != null && pty != null && !pty.trim().isEmpty()) {
             try {
                 mHost.getRadioRepository().saveRdsPty(mHost.getRadioEngine().getCurrentFreq(), pty);
@@ -182,6 +188,9 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
     public void onRdsStatus(boolean afEnabled, boolean taEnabled, boolean tpEnabled) {
         if (mHost.getRadioSessionController() != null) {
             mHost.getRadioSessionController().onRdsStatus(afEnabled, taEnabled, tpEnabled);
+        }
+        if (mHost.getScanManager() != null && mHost.getScanManager().isScanning()) {
+            try { mHost.getScanManager().onRdsStatus(tpEnabled); } catch (Exception ignored) {}
         }
         mHost.runOnHostUiThread(() -> {
             if (mHost.getUiController() != null) {
@@ -204,6 +213,9 @@ public class EngineCallbackCoordinator implements RadioEngineCallback, RDSManage
             mHost.getRadioSessionController().onRdsPi(piCode);
         }
         mHost.setCurrentPi(piCode);
+        if (mHost.getScanManager() != null && mHost.getScanManager().isScanning()) {
+            try { mHost.getScanManager().onRdsIdentity(piCode); } catch (Exception ignored) {}
+        }
         if (mHost.getRadioRepository() != null && mHost.getRadioEngine() != null) {
             int freq = mHost.getRadioEngine().getCurrentFreq();
             mHost.getRadioRepository().saveRdsPi(freq, piCode);

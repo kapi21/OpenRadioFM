@@ -1,0 +1,12 @@
+## Copia este archivo como `supabase.properties` en la raíz del repo.
+## IMPORTANTE: `supabase.properties` está en .gitignore (no se sube).
+##
+## También puedes definir estas variables por entorno:
+## - SUPABASE_URL
+## - SUPABASE_ANON_KEY
+##
+## URL del proyecto (termina sin /; Gradle añadirá / automáticamente)
+SUPABASE_URL=https://TU-PROYECTO.supabase.co
+## ANON KEY (JWT largo)
+SUPABASE_ANON_KEY=TU_ANON_KEY
+

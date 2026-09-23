@@ -235,7 +235,7 @@
     <string name="about_info_header">情報</string>
     <string name="about_dev_by">開発者</string>
     <string name="about_tech_details">技術詳細</string>
-    <string name="app_name_internal">OpenRadioFM - v5.2.1 Icons Fix Root Version</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
     <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
     <string name="a11y_hihack_title">HiHack（ユーザー補助）</string>
     <string name="a11y_hihack_enabled">有効</string>
@@ -269,6 +269,7 @@
     <!-- About / Credits -->
     <string name="about_contrib_jimmy80">Jimmy80 (Multi-Language Support)</string>
     <string name="about_contrib_csaba">Csaba (MTK8259 Engine Support and more)</string>
+    <string name="about_contrib_alessandro">Alessandro @AccountsTM (SPD Engine Support)</string>
     <string name="about_tech_details_value">Target SDK: 35 (Android 14)\nArchitecture: MVP Pattern\nStorage: External /RadioLogos</string>
     <string name="about_icons_by">Icons by Icons8</string>
     <string name="about_streaming_logos_by">Streaming &amp; Logos by TDTchannels</string>
@@ -383,4 +384,16 @@
     <string name="toast_recovering_fm_audio">FM オーディオを復旧中…</string>
     <string name="toast_hw_eq_unsupported">この端末ではハードウェア EQ に対応していません</string>
     <string name="toast_saved_to_slot">プリセット %1$d に保存しました</string>
+    <string name="logo_picker_title">ロゴエクスプローラー</string>
+    <string name="logo_picker_btn_downloads">📥 ダウンロード</string>
+    <string name="logo_picker_btn_internal">💾 内部ストレージ</string>
+    <string name="logo_picker_btn_up">⬆ 上へ</string>
+    <string name="logo_picker_empty">このフォルダに画像（.png、.jpg）が見つかりません。
+上部のショートカットで RadioLogos またはダウンロードへ移動できます。</string>
+    <string name="logo_picker_btn_remove">🗑 削除</string>
+    <string name="toast_logo_assigned">ロゴを設定しました</string>
+    <string name="toast_logo_removed">ロゴを削除しました</string>
+    <string name="widget_label_3x1">OpenRadioFM 3x1</string>
+    <string name="widget_label_3x2">OpenRadioFM 3x2</string>
+    <string name="root_version_suffix">OFFLINE VERSION</string>
 </resources>

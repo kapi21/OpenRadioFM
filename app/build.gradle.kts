@@ -11,10 +11,17 @@ val localProperties = Properties().apply {
     val f = rootProject.file("local.properties")
     if (f.exists()) f.inputStream().use { load(it) }
 }
+// Opcional: credenciales Supabase fuera de local.properties (útil en máquinas donde local.properties lo gestiona AGP).
+// Archivo NO versionado: supabase.properties (en la raíz del repo).
+val supabaseProperties = Properties().apply {
+    val f = rootProject.file("supabase.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
 
 fun supabaseProp(name: String): String? {
     return System.getenv(name)
         ?: localProperties.getProperty(name)
+        ?: supabaseProperties.getProperty(name)
         ?: (project.findProperty(name) as String?)
 }
 
@@ -23,24 +30,26 @@ fun escapeBuildConfigString(s: String): String =
 
 val supabaseUrlRaw = supabaseProp("SUPABASE_URL")?.trim()?.takeIf { it.isNotEmpty() }
 val supabaseAnonKeyRaw = supabaseProp("SUPABASE_ANON_KEY")?.trim()?.takeIf { it.isNotEmpty() }
-if (supabaseUrlRaw.isNullOrEmpty() || supabaseAnonKeyRaw.isNullOrEmpty()) {
-    throw GradleException(
-        "OpenRadioFM: defina SUPABASE_URL y SUPABASE_ANON_KEY.\n" +
-            "  - En desarrollo: añádalas a local.properties en la raíz del repo (véase local.properties.example).\n" +
-            "  - En CI: exporte las variables o pase -PSUPABASE_URL / -PSUPABASE_ANON_KEY.\n" +
-            "  - Documentación: docs/CI_SUPABASE.md",
+// Para builds locales de prueba (especialmente en headunits offline), permitir compilar sin Supabase.
+// Si faltan valores, inyectamos placeholders y seguimos. Las features remotas se degradarán.
+val hasSupabase = !supabaseUrlRaw.isNullOrEmpty() && !supabaseAnonKeyRaw.isNullOrEmpty()
+if (!hasSupabase) {
+    logger.lifecycle(
+        "OpenRadioFM: SUPABASE_URL / SUPABASE_ANON_KEY no definidos. " +
+            "Se compila con placeholders (features remotas deshabilitadas). " +
+            "Docs: docs/CI_SUPABASE.md",
     )
 }
 // Algunos entornos (o copiado desde logs) pueden introducir escapes tipo "https\\://".
 // Normalizamos para asegurar un BASE_URL válido para Retrofit/OkHttp.
-val supabaseUrlSanitized: String = supabaseUrlRaw!!
+val supabaseUrlSanitized: String = (supabaseUrlRaw ?: "https://example.invalid")
     .replace("\\:", ":")
     .replace("\\/", "/")
     .replace("\\\\", "\\")
     .replace("\\", "")
     .trim()
 val supabaseUrl: String = supabaseUrlSanitized.trimEnd('/') + "/"
-val supabaseAnonKey: String = supabaseAnonKeyRaw!!
+val supabaseAnonKey: String = supabaseAnonKeyRaw ?: ""
 val supabaseStoragePublicLogosBase: String =
     supabaseUrl.trimEnd('/') + "/storage/v1/object/public/station-logos/"
 
@@ -61,8 +70,8 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 41
-        versionName = "5.2.2"
+        versionCode = 43
+        versionName = "5.5.0 Universal"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

@@ -23,6 +23,7 @@
 .cxx/
 local.properties
 local.properties.bak
+supabase.properties
 
 # === Depuración, Logs y Herramientas (LOCAL - NO SUBIR) ===
 # APK/dumps de ingeniería inversa vía ADB (no versionar)

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import com.bumptech.glide.Glide;
 import android.graphics.Typeface;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,9 +18,15 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
+import android.widget.GridView;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.util.LruCache;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import java.io.File;
 
 import androidx.core.text.HtmlCompat;
 
@@ -121,6 +128,15 @@ public class DialogManager {
             });
         }
 
+        View btnPickLogo = dialog.findViewById(R.id.btnPickStationLogo);
+        if (btnPickLogo != null) {
+            btnPickLogo.setOnClickListener(v -> {
+                String currentName = (input != null) ? input.getText().toString().trim() : "";
+                dialog.dismiss();
+                mActivity.promptLogoPickerForPreset(-1, currentFreq, currentName);
+            });
+        }
+
         View btnRestore = dialog.findViewById(R.id.btnRestoreOriginalStationName);
         if (btnRestore != null) {
             btnRestore.setOnClickListener(v -> {
@@ -168,6 +184,286 @@ public class DialogManager {
         }
     }
 
+    private final LruCache<String, Bitmap> mThumbCache = new LruCache<>(80);
+
+    public void showLogoPickerDialog(final int slot, final int freq, final String stationName) {
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_logo_picker);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+        }
+
+        View rootCard = dialog.findViewById(R.id.logo_picker_dialog_root);
+        if (rootCard != null) {
+            try {
+                rootCard.setBackgroundResource(mActivity.getSkinDrawableId());
+            } catch (Exception ignored) {}
+        }
+
+        TextView tvFreq = dialog.findViewById(R.id.tvLogoPickerFreq);
+        if (tvFreq != null) {
+            String f = String.format(java.util.Locale.getDefault(), "%.1f MHz", freq / 1000.0);
+            tvFreq.setText(f);
+        }
+
+        final TextView tvCurrentPath = dialog.findViewById(R.id.tvLogoPickerCurrentPath);
+        final GridView gvItems = dialog.findViewById(R.id.gvLogoItems);
+        final TextView tvEmpty = dialog.findViewById(R.id.tvLogoEmpty);
+
+        File initialDir = (mActivity.mRepository != null) ? mActivity.mRepository.getPreferredLogoDir() : new File("/sdcard/RadioLogos/");
+        if (!initialDir.exists()) {
+            initialDir.mkdirs();
+        }
+        if (!initialDir.exists() || !initialDir.canRead()) {
+            initialDir = android.os.Environment.getExternalStorageDirectory();
+        }
+
+        final File[] currentDirHolder = new File[] { initialDir };
+
+        class FileItem {
+            final File file;
+            final boolean isDirectory;
+            final String name;
+
+            FileItem(File file, boolean isDirectory, String name) {
+                this.file = file;
+                this.isDirectory = isDirectory;
+                this.name = name;
+            }
+        }
+
+        final java.util.List<FileItem> itemList = new java.util.ArrayList<>();
+
+        class LogoAdapter extends android.widget.BaseAdapter {
+            @Override
+            public int getCount() {
+                return itemList.size();
+            }
+
+            @Override
+            public Object getItem(int position) {
+                return itemList.get(position);
+            }
+
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                if (convertView == null) {
+                    convertView = LayoutInflater.from(mActivity).inflate(R.layout.item_logo_picker_grid, parent, false);
+                }
+                ImageView ivThumb = convertView.findViewById(R.id.ivItemThumb);
+                TextView tvName = convertView.findViewById(R.id.tvItemName);
+
+                FileItem item = itemList.get(position);
+                tvName.setText(item.name);
+
+                if (item.isDirectory) {
+                    try { Glide.with(ivThumb.getContext()).clear(ivThumb); } catch (Exception ignored) {}
+                    ivThumb.setImageResource(android.R.drawable.ic_menu_agenda);
+                    ivThumb.setColorFilter(Color.parseColor("#00E676"));
+                } else {
+                    ivThumb.setColorFilter(null);
+                    Glide.with(ivThumb.getContext())
+                            .load(item.file)
+                            .apply(new com.bumptech.glide.request.RequestOptions()
+                                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
+                                    .override(120, 120))
+                            .placeholder(R.drawable.ic_station_placeholder)
+                            .into(ivThumb);
+                }
+                return convertView;
+            }
+        }
+
+        final LogoAdapter adapter = new LogoAdapter();
+        if (gvItems != null) {
+            gvItems.setAdapter(adapter);
+        }
+
+        Runnable refreshFolder = () -> {
+            File dir = currentDirHolder[0];
+            if (dir == null) return;
+            if (tvCurrentPath != null) {
+                tvCurrentPath.setText(dir.getAbsolutePath());
+            }
+            itemList.clear();
+
+            File[] files = dir.listFiles();
+            if (files != null) {
+                java.util.List<FileItem> dirs = new java.util.ArrayList<>();
+                java.util.List<FileItem> imgs = new java.util.ArrayList<>();
+
+                for (File f : files) {
+                    if (f.isHidden()) continue;
+                    if (f.isDirectory()) {
+                        dirs.add(new FileItem(f, true, f.getName()));
+                    } else {
+                        String n = f.getName().toLowerCase(java.util.Locale.ROOT);
+                        if (n.endsWith(".png") || n.endsWith(".jpg") || n.endsWith(".jpeg") || n.endsWith(".webp") || n.endsWith(".bmp")) {
+                            imgs.add(new FileItem(f, false, f.getName()));
+                        }
+                    }
+                }
+
+                java.util.Collections.sort(dirs, (a, b) -> a.name.compareToIgnoreCase(b.name));
+                java.util.Collections.sort(imgs, (a, b) -> a.name.compareToIgnoreCase(b.name));
+
+                itemList.addAll(dirs);
+                itemList.addAll(imgs);
+            }
+
+            adapter.notifyDataSetChanged();
+            if (tvEmpty != null) {
+                tvEmpty.setVisibility(itemList.isEmpty() ? View.VISIBLE : View.GONE);
+            }
+        };
+
+        refreshFolder.run();
+
+        if (gvItems != null) {
+            gvItems.setOnItemClickListener((parent, view, position, id) -> {
+                if (position >= 0 && position < itemList.size()) {
+                    FileItem item = itemList.get(position);
+                    if (item.isDirectory) {
+                        currentDirHolder[0] = item.file;
+                        refreshFolder.run();
+                    } else {
+                        dialog.dismiss();
+                        mActivity.assignStationLogoFromFile(slot, freq, stationName, item.file);
+                    }
+                }
+            });
+        }
+
+        View btnRadioLogos = dialog.findViewById(R.id.btnQuickRadioLogos);
+        if (btnRadioLogos != null) {
+            btnRadioLogos.setOnClickListener(v -> {
+                File dir = (mActivity.mRepository != null) ? mActivity.mRepository.getPreferredLogoDir() : new File("/sdcard/RadioLogos/");
+                if (!dir.exists()) dir.mkdirs();
+                currentDirHolder[0] = dir;
+                refreshFolder.run();
+            });
+        }
+
+        View btnDownloads = dialog.findViewById(R.id.btnQuickDownloads);
+        if (btnDownloads != null) {
+            btnDownloads.setOnClickListener(v -> {
+                File d = new File(android.os.Environment.getExternalStorageDirectory(), "Download");
+                if (!d.exists()) d.mkdirs();
+                currentDirHolder[0] = d;
+                refreshFolder.run();
+            });
+        }
+
+        View btnInternal = dialog.findViewById(R.id.btnQuickInternal);
+        if (btnInternal != null) {
+            btnInternal.setOnClickListener(v -> {
+                currentDirHolder[0] = android.os.Environment.getExternalStorageDirectory();
+                refreshFolder.run();
+            });
+        }
+
+        View btnUsb = dialog.findViewById(R.id.btnQuickUsb);
+        if (btnUsb != null) {
+            btnUsb.setOnClickListener(v -> {
+                File usb = findUsbDirectory();
+                currentDirHolder[0] = (usb != null) ? usb : new File("/storage/");
+                refreshFolder.run();
+            });
+        }
+
+        View btnUp = dialog.findViewById(R.id.btnQuickUp);
+        if (btnUp != null) {
+            btnUp.setOnClickListener(v -> {
+                File cur = currentDirHolder[0];
+                if (cur != null && cur.getParentFile() != null && cur.getParentFile().canRead()) {
+                    currentDirHolder[0] = cur.getParentFile();
+                    refreshFolder.run();
+                }
+            });
+        }
+
+        View btnSystem = dialog.findViewById(R.id.btnOpenAndroidSystemPicker);
+        if (btnSystem != null) {
+            btnSystem.setOnClickListener(v -> {
+                dialog.dismiss();
+                mActivity.openSystemImagePicker();
+            });
+        }
+
+        View btnRemove = dialog.findViewById(R.id.btnRemoveLogo);
+        if (btnRemove != null) {
+            btnRemove.setOnClickListener(v -> {
+                dialog.dismiss();
+                if (mActivity.mRepository != null) {
+                    mActivity.mRepository.removeCustomStationLogo(freq);
+                }
+                mActivity.applySelectedStationLogo(slot, freq, stationName, null);
+            });
+        }
+
+        View btnCancel = dialog.findViewById(R.id.btnCancelLogoPicker);
+        if (btnCancel != null) {
+            btnCancel.setOnClickListener(v -> dialog.dismiss());
+        }
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {}
+
+        dialog.show();
+    }
+
+    private File findUsbDirectory() {
+        try {
+            File[] extFiles = androidx.core.content.ContextCompat.getExternalFilesDirs(mActivity, null);
+            if (extFiles != null && extFiles.length > 1) {
+                for (int i = 1; i < extFiles.length; i++) {
+                    File f = extFiles[i];
+                    if (f != null) {
+                        String path = f.getAbsolutePath();
+                        int idx = path.indexOf("/Android/data");
+                        if (idx > 0) {
+                            File root = new File(path.substring(0, idx));
+                            if (root.exists() && root.canRead()) return root;
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        File storage = new File("/storage");
+        if (storage.exists() && storage.isDirectory()) {
+            File[] list = storage.listFiles();
+            if (list != null) {
+                for (File f : list) {
+                    if (f.isDirectory() && !f.getName().equalsIgnoreCase("emulated") && !f.getName().equalsIgnoreCase("self")) {
+                        return f;
+                    }
+                }
+            }
+        }
+
+        File mnt = new File("/mnt/media_rw");
+        if (mnt.exists() && mnt.isDirectory()) {
+            File[] list = mnt.listFiles();
+            if (list != null && list.length > 0) {
+                for (File f : list) {
+                    if (f.isDirectory()) return f;
+                }
+            }
+        }
+        return null;
+    }
+
     public void showPremiumSettingsDialog() {
         android.app.Dialog dialog = new android.app.Dialog(mActivity);
         dialog.setContentView(R.layout.dialog_premium_settings);
@@ -194,8 +490,6 @@ public class DialogManager {
         TextView tvSummaryNightLogos = dialog.findViewById(R.id.tvSummaryNightLogos);
         TextView tvSummaryStatusBar = dialog.findViewById(R.id.tvSummaryStatusBar);
         TextView tvSummaryAutoHide = dialog.findViewById(R.id.tvSummaryAutoHide);
-        TextView tvSummaryLogosOnline = dialog.findViewById(R.id.tvSummaryLogosOnline);
-        TextView tvSummaryCloudContrib = dialog.findViewById(R.id.tvSummaryCloudContrib);
         TextView tvSummarySaveHistory = dialog.findViewById(R.id.tvSummarySaveHistory);
 
         // Night schedule views
@@ -204,13 +498,11 @@ public class DialogManager {
         TextView tvNightEnd = dialog.findViewById(R.id.tvNightEnd);
         TextView tvNightScheduleSummary = dialog.findViewById(R.id.tvNightScheduleSummary);
 
-        androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
         androidx.appcompat.widget.SwitchCompat swReliefHd = dialog.findViewById(R.id.switchReliefHd);
         View rowReliefHd = dialog.findViewById(R.id.rowReliefHd);
         androidx.appcompat.widget.SwitchCompat swNight = dialog.findViewById(R.id.switchNightMode);
         androidx.appcompat.widget.SwitchCompat swNightLogos = dialog.findViewById(R.id.switchNightLogos);
         androidx.appcompat.widget.SwitchCompat swHistory = dialog.findViewById(R.id.switchSaveHistory);
-        androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
         androidx.appcompat.widget.SwitchCompat swStatusBar = dialog.findViewById(R.id.swStatusBar);
         androidx.appcompat.widget.SwitchCompat swAutoHide = dialog.findViewById(R.id.swAutoHideControls);
         androidx.appcompat.widget.SwitchCompat swPresetScrollLoop = dialog.findViewById(R.id.swPresetScrollLoop);
@@ -220,6 +512,18 @@ public class DialogManager {
         TextView tvSummarySignalMeterBars = dialog.findViewById(R.id.tvSummarySignalMeterBars);
         androidx.appcompat.widget.SwitchCompat swHihackBootReminder = dialog.findViewById(R.id.switchHihackBootReminder);
         // androidx.appcompat.widget.SwitchCompat swAm = dialog.findViewById(R.id.switchEnableAm); // Removed v21.3
+
+        // V5.5 Universal: Conectividad y Modo Fuera de Línea (100% Local)
+        androidx.appcompat.widget.SwitchCompat swOfflineMode = dialog.findViewById(R.id.switchOfflineMode);
+        TextView tvSummaryOfflineMode = dialog.findViewById(R.id.tvSummaryOfflineMode);
+        View layoutOnlineOptions = dialog.findViewById(R.id.layoutOnlineOptions);
+        androidx.appcompat.widget.SwitchCompat swLogosOnline = dialog.findViewById(R.id.switchLogosOnline);
+        TextView tvSummaryLogosOnline = dialog.findViewById(R.id.tvSummaryLogosOnline);
+        View rowLogoProvider = dialog.findViewById(R.id.rowLogoProvider);
+        TextView tvCurrentLogoProvider = dialog.findViewById(R.id.tvCurrentLogoProvider);
+        TextView tvSupabaseStatus = dialog.findViewById(R.id.tvSupabaseStatus);
+        androidx.appcompat.widget.SwitchCompat swCloudContrib = dialog.findViewById(R.id.switchCloudContrib);
+        TextView tvSummaryCloudContrib = dialog.findViewById(R.id.tvSummaryCloudContrib);
 
         // Language Row
         View rowLanguage = dialog.findViewById(R.id.rowLanguage);
@@ -285,26 +589,6 @@ public class DialogManager {
             updateNightScheduleSummary(tvNightScheduleSummary, tvNightStart, tvNightEnd);
         }
 
-        // V19.7: Indicador de Conexión a Supabase (Automático)
-        TextView tvSupabaseStatus = dialog.findViewById(R.id.tvSupabaseStatus);
-        if (tvSupabaseStatus != null) {
-            tvSupabaseStatus.setVisibility(View.VISIBLE);
-            tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_connecting));
-            tvSupabaseStatus.setTextColor(Color.parseColor("#888888"));
-
-            mActivity.mRepository.getSupabaseSource().checkConnection(connected -> {
-                mActivity.runOnUiThread(() -> {
-                    if (mActivity.isFinishing() || mActivity.isDestroyed() || !dialog.isShowing()) return;
-                    if (connected) {
-                        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_online));
-                        tvSupabaseStatus.setTextColor(Color.parseColor("#44FF44")); // Verde
-                    } else {
-                        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_offline));
-                        tvSupabaseStatus.setTextColor(Color.parseColor("#FF4444")); // Rojo
-                    }
-                });
-            });
-        }
         if (tvBackgroundStatus != null) {
             int bgIdx = mActivity.mPrefs.getInt("pref_bg_mode", 1);
             String[] modes = { mActivity.getString(R.string.bg_pure_black),
@@ -312,43 +596,6 @@ public class DialogManager {
             if (bgIdx >= 0 && bgIdx < modes.length) {
                 tvBackgroundStatus.setText(buildBackgroundStatusText(modes[bgIdx]));
             }
-        }
-
-        // Switches
-        if (swLogosOnline != null) {
-            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", true));
-            bindSwitchSummary(tvSummaryLogosOnline, swLogosOnline.isChecked());
-            swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
-                mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
-                bindSwitchSummary(tvSummaryLogosOnline, checked);
-                if (checked) {
-                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_1));
-                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_2));
-                } else {
-                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_off));
-                }
-            });
-        }
-
-        // Logo Provider Row
-        View rowLogoProvider = dialog.findViewById(R.id.rowLogoProvider);
-        TextView tvCurrentLogoProvider = dialog.findViewById(R.id.tvCurrentLogoProvider);
-        if (tvCurrentLogoProvider != null) {
-            int providerIdx = mActivity.mPrefs.getInt("pref_logo_provider", 0); // 0=Supabase, 1=Web, 2=Both
-            String[] providers = {
-                    mActivity.getString(R.string.provider_supabase),
-                    mActivity.getString(R.string.provider_radiobrowser),
-                    mActivity.getString(R.string.provider_both)
-            };
-            if (providerIdx >= 0 && providerIdx < providers.length) {
-                tvCurrentLogoProvider.setText(providers[providerIdx]);
-            }
-        }
-        if (rowLogoProvider != null) {
-            rowLogoProvider.setOnClickListener(v -> {
-                showLogoProviderSelector();
-                dialog.dismiss();
-            });
         }
 
         if (swStatusBar != null) {
@@ -562,16 +809,85 @@ public class DialogManager {
             });
         }
 
+        // V5.5 Universal: Configuración de Modo Fuera de Línea (Offline) y Nube
+        if (swOfflineMode != null) {
+            boolean offlineMode = mActivity.mPrefs.getBoolean("pref_offline_mode", true);
+            swOfflineMode.setChecked(offlineMode);
+            if (tvSummaryOfflineMode != null) {
+                tvSummaryOfflineMode.setText(offlineMode ? R.string.offline_mode_active : R.string.offline_mode_inactive);
+            }
+            if (layoutOnlineOptions != null) {
+                layoutOnlineOptions.setVisibility(offlineMode ? View.GONE : View.VISIBLE);
+            }
+            swOfflineMode.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_offline_mode", checked).apply();
+                if (tvSummaryOfflineMode != null) {
+                    tvSummaryOfflineMode.setText(checked ? R.string.offline_mode_active : R.string.offline_mode_inactive);
+                }
+                if (layoutOnlineOptions != null) {
+                    layoutOnlineOptions.setVisibility(checked ? View.GONE : View.VISIBLE);
+                }
+                mActivity.updateDataActivityUI();
+                mActivity.showToast(checked ? mActivity.getString(R.string.toast_offline_mode_on)
+                        : mActivity.getString(R.string.toast_offline_mode_off));
+
+                if (!checked && tvSupabaseStatus != null) {
+                    checkSupabaseStatus(dialog, tvSupabaseStatus);
+                }
+            });
+        }
+
+        if (swLogosOnline != null) {
+            swLogosOnline.setChecked(mActivity.mPrefs.getBoolean("pref_logos_online", true));
+            bindSwitchSummary(tvSummaryLogosOnline, swLogosOnline.isChecked());
+            swLogosOnline.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_logos_online", checked).apply();
+                bindSwitchSummary(tvSummaryLogosOnline, checked);
+                mActivity.updateDataActivityUI();
+                if (checked) {
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_1));
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_on_2));
+                } else {
+                    mActivity.showToast(mActivity.getString(R.string.toast_logos_online_off));
+                }
+            });
+        }
+
+        if (tvCurrentLogoProvider != null) {
+            int provider = mActivity.mPrefs.getInt("pref_logo_provider", 0);
+            if (provider == 1) {
+                tvCurrentLogoProvider.setText(R.string.provider_radiobrowser);
+            } else if (provider == 2) {
+                tvCurrentLogoProvider.setText(R.string.provider_both);
+            } else {
+                tvCurrentLogoProvider.setText(R.string.provider_supabase);
+            }
+        }
+        if (rowLogoProvider != null) {
+            rowLogoProvider.setOnClickListener(v -> {
+                showLogoProviderSelector();
+                dialog.dismiss();
+            });
+        }
+
+        if (tvSupabaseStatus != null) {
+            boolean offlineMode = mActivity.mPrefs.getBoolean("pref_offline_mode", true);
+            if (!offlineMode) {
+                checkSupabaseStatus(dialog, tvSupabaseStatus);
+            }
+        }
+
         if (swCloudContrib != null) {
             swCloudContrib.setChecked(mActivity.mPrefs.getBoolean("pref_cloud_contrib", true));
             bindSwitchSummary(tvSummaryCloudContrib, swCloudContrib.isChecked());
-            swCloudContrib.setOnCheckedChangeListener((v, isChecked) -> {
-                mActivity.mPrefs.edit().putBoolean("pref_cloud_contrib", isChecked).apply();
-                bindSwitchSummary(tvSummaryCloudContrib, isChecked);
-                mActivity.showStyledToast(isChecked ? mActivity.getString(R.string.toast_contrib_on)
+            swCloudContrib.setOnCheckedChangeListener((bv, checked) -> {
+                mActivity.mPrefs.edit().putBoolean("pref_cloud_contrib", checked).apply();
+                bindSwitchSummary(tvSummaryCloudContrib, checked);
+                mActivity.showToast(checked ? mActivity.getString(R.string.toast_contrib_on)
                         : mActivity.getString(R.string.toast_contrib_off));
             });
         }
+
 
         // Logo Mode Row (V18.5)
         View rowLogoMode = dialog.findViewById(R.id.rowLogoMode);
@@ -901,7 +1217,7 @@ public class DialogManager {
         showGridSelector(mActivity.getString(R.string.select_bg_mode), modes, currentBgIdx, w -> {
             mActivity.mPrefs.edit().putInt("pref_bg_mode", w).apply();
             mActivity.mLogoManager.loadCustomBackground();
-            mActivity.mLogoManager.loadCarLogo();
+            mActivity.applyLogoModePreference();
             mActivity.mLogoManager.updateDynamicBackground(mActivity.mLastLogoUrl);
             if (w == 2) {
                 // Al elegir fondo dinámico, ofrecer el ajuste de encuadre (letterbox vs fill).
@@ -1105,23 +1421,21 @@ public class DialogManager {
                 String versionName = mActivity.getPackageManager().getPackageInfo(mActivity.getPackageName(),
                         0).versionName;
                 String base = mActivity.getString(R.string.version, versionName);
-                tvVersion.setText(base + " — " + mActivity.getString(R.string.root_version_suffix));
+                tvVersion.setText(base);
             }
         } catch (Exception ignored) {
         }
 
-        // Créditos con Links
+        // Créditos (Texto plano sin hipervínculos para modo offline)
         TextView tvIcons8 = dialog.findViewById(R.id.tvIcons8Credit);
         TextView tvTdtchannels = dialog.findViewById(R.id.tvTdtchannelsCredit);
 
         if (tvIcons8 != null) {
-            String text = "Icons by <a href='https://icons8.com/'>Icons8</a>";
-            applyHtmlLink(tvIcons8, text);
+            tvIcons8.setText("Icons by Icons8");
         }
 
         if (tvTdtchannels != null) {
-            String text = "Streaming & Logos by <a href='https://www.tdtchannels.com'>TDTchannels</a>";
-            applyHtmlLink(tvTdtchannels, text);
+            tvTdtchannels.setText("Logos by TDTchannels");
         }
 
         View ivAboutLogo = dialog.findViewById(R.id.ivAboutAppLogo);
@@ -1210,6 +1524,27 @@ public class DialogManager {
             mActivity.mPrefs.edit().putInt("pref_radio_engine", which).apply();
             mActivity.showToast(mActivity.getString(R.string.engine_changed, options[which]));
             mActivity.mServiceController.start();
+        });
+    }
+
+    private void checkSupabaseStatus(android.app.Dialog dialog, TextView tvSupabaseStatus) {
+        if (tvSupabaseStatus == null || mActivity.mRepository == null || mActivity.mRepository.getSupabaseSource() == null) return;
+        tvSupabaseStatus.setVisibility(View.VISIBLE);
+        tvSupabaseStatus.setText(mActivity.getString(R.string.supabase_status_connecting));
+        tvSupabaseStatus.setTextColor(Color.parseColor("#888888"));
+
+        mActivity.mRepository.getSupabaseSource().checkConnection(connected -> {
+            mActivity.runOnUiThread(() -> {
+                if (dialog.isShowing()) {
+                    if (Boolean.TRUE.equals(connected)) {
+                        tvSupabaseStatus.setText("• " + mActivity.getString(R.string.supabase_status_online));
+                        tvSupabaseStatus.setTextColor(Color.parseColor("#44FF44"));
+                    } else {
+                        tvSupabaseStatus.setText("• " + mActivity.getString(R.string.supabase_status_offline));
+                        tvSupabaseStatus.setTextColor(Color.parseColor("#FF4444"));
+                    }
+                }
+            });
         });
     }
 

@@ -13,6 +13,9 @@ import com.bumptech.glide.request.target.Target;
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.load.resource.bitmap.RoundedCorners;
 import com.bumptech.glide.request.RequestOptions;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.bumptech.glide.signature.ObjectKey;
+import java.io.File;
 import com.example.openradiofm.R;
 import com.example.openradiofm.data.repository.RadioRepository;
 import com.example.openradiofm.data.model.RadioStation;
@@ -161,6 +164,52 @@ public class PresetManager {
         }
     }
 
+    public void clearPresetSlotLogo(int slot) {
+        if (slot < 0 || slot >= mPresetsCount) return;
+        if (ivPresets[slot] != null) {
+            try {
+                com.bumptech.glide.Glide.with(ivPresets[slot].getContext()).clear(ivPresets[slot]);
+            } catch (Exception ignored) {}
+            ivPresets[slot].setImageDrawable(null);
+            ivPresets[slot].setBackground(null);
+        }
+        if (tvPresets[slot] != null) {
+            tvPresets[slot].setVisibility(View.VISIBLE);
+        }
+        for (LoopMirror mir : mLoopMirrors[slot]) {
+            if (mir.iv != null) {
+                try {
+                    com.bumptech.glide.Glide.with(mir.iv.getContext()).clear(mir.iv);
+                } catch (Exception ignored) {}
+                mir.iv.setImageDrawable(null);
+                mir.iv.setBackground(null);
+            }
+            if (mir.tv != null) {
+                mir.tv.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    public void forceUpdateSlotWithLogo(int slot, int freq, int band, String path) {
+        if (slot == -1) {
+            for (int i = 0; i < mPresetsCount; i++) {
+                if (mPresets[i] == freq) {
+                    slot = i;
+                    break;
+                }
+            }
+        }
+        if (slot < 0 || slot >= mPresetsCount) return;
+        final int fSlot = slot;
+        mLogoRequestSeqPerSlot[fSlot] = mLogoRequestSeq.incrementAndGet();
+        if (path != null && !path.trim().isEmpty()) {
+            if (ivPresets[fSlot] != null) ivPresets[fSlot].setBackground(null);
+            glideLogoIntoPresetSlot(fSlot, path);
+        } else {
+            clearPresetSlotLogo(fSlot);
+        }
+    }
+
     private void glideLogoIntoPresetSlot(int slot, Object model) {
         if (slot < 0 || slot >= mPresetsCount || model == null) return;
         java.util.ArrayList<ImageView> targets = new java.util.ArrayList<>(4);
@@ -168,12 +217,29 @@ public class PresetManager {
         for (LoopMirror m : mLoopMirrors[slot]) {
             if (m.iv != null) targets.add(m.iv);
         }
+
+        long signatureKey = System.currentTimeMillis();
+        if (model instanceof File) {
+            signatureKey = ((File) model).lastModified();
+        } else if (model instanceof String) {
+            File f = new File((String) model);
+            if (f.exists()) {
+                signatureKey = f.lastModified();
+            }
+        }
+
         for (ImageView target : targets) {
+            try {
+                Glide.with(target.getContext()).clear(target);
+            } catch (Exception ignored) {}
+
             Glide.with(target)
                     .load(model)
+                    .signature(new ObjectKey(signatureKey))
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
                     .apply(new RequestOptions()
-                            .format(DecodeFormat.PREFER_ARGB_8888)
-                            .override(Target.SIZE_ORIGINAL, Target.SIZE_ORIGINAL))
+                            .format(DecodeFormat.PREFER_RGB_565)
+                            .override(160, 160))
                     .transform(new RoundedCorners(20))
                     .listener(new RequestListener<android.graphics.drawable.Drawable>() {
                         @Override

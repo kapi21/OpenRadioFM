@@ -58,8 +58,9 @@ public class OpenRadioFmWidgetProvider extends AppWidgetProvider {
 
     private static void updateOne(Context context, AppWidgetManager awm, int appWidgetId,
             int freqKhz, int band, String ps, String logoUrl) {
-        boolean expanded = isExpanded(awm, appWidgetId);
-        int layout = expanded ? R.layout.widget_openradio_expanded : R.layout.widget_openradio_compact;
+        LayoutChoice lc = chooseLayout(awm, appWidgetId);
+        boolean expanded = lc.expanded;
+        int layout = lc.layoutRes;
         RemoteViews rv = new RemoteViews(context.getPackageName(), layout);
 
         String freqText;
@@ -220,11 +221,17 @@ public class OpenRadioFmWidgetProvider extends AppWidgetProvider {
         ed.apply();
 
         AppWidgetManager awm = AppWidgetManager.getInstance(context);
-        ComponentName cn = new ComponentName(context, OpenRadioFmWidgetProvider.class);
-        int[] ids = awm.getAppWidgetIds(cn);
-        if (ids.length == 0) return;
-        for (int id : ids) {
-            updateOne(context, awm, id, freqKhz, band, ps, effectiveLogoUrl);
+        ComponentName[] providers = new ComponentName[] {
+                new ComponentName(context, OpenRadioFmWidgetProvider.class),
+                new ComponentName(context, OpenRadioFmWidgetProvider3x1.class),
+                new ComponentName(context, OpenRadioFmWidgetProvider3x2.class),
+        };
+        for (ComponentName cn : providers) {
+            int[] ids = awm.getAppWidgetIds(cn);
+            if (ids == null || ids.length == 0) continue;
+            for (int id : ids) {
+                updateOne(context, awm, id, freqKhz, band, ps, effectiveLogoUrl);
+            }
         }
     }
 
@@ -241,15 +248,36 @@ public class OpenRadioFmWidgetProvider extends AppWidgetProvider {
         return s;
     }
 
-    private static boolean isExpanded(AppWidgetManager awm, int appWidgetId) {
+    private static LayoutChoice chooseLayout(AppWidgetManager awm, int appWidgetId) {
         try {
             Bundle o = awm.getAppWidgetOptions(appWidgetId);
-            if (o == null) return false;
+            if (o == null) return new LayoutChoice(R.layout.widget_openradio_compact, false);
             int minH = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 0);
-            // Umbral simple: > ~90dp muestra controles extra.
-            return minH >= 96;
+            int minW = o.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH, 0);
+
+            // Widgets dedicados 3x1 / 3x2 (y también si el usuario redimensiona a algo similar).
+            if (minW > 0 && minW <= 220) {
+                if (minH > 0 && minH <= 70) {
+                    return new LayoutChoice(R.layout.widget_openradio_3x1, false);
+                }
+                return new LayoutChoice(R.layout.widget_openradio_3x2, false);
+            }
+
+            // Expanded sólo para tamaños claramente grandes (evita que 3x2 active layout 4x2 expandido).
+            boolean expanded = (minW >= 250 && minH >= 120);
+            return new LayoutChoice(expanded ? R.layout.widget_openradio_expanded : R.layout.widget_openradio_compact, expanded);
         } catch (Exception e) {
-            return false;
+            return new LayoutChoice(R.layout.widget_openradio_compact, false);
+        }
+    }
+
+    private static final class LayoutChoice {
+        final int layoutRes;
+        final boolean expanded;
+
+        LayoutChoice(int layoutRes, boolean expanded) {
+            this.layoutRes = layoutRes;
+            this.expanded = expanded;
         }
     }
 

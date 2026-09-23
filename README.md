@@ -1,14 +1,14 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.5-green.svg)]()
-[![Branch](https://img.shields.io/badge/branch-K706_Root-informational.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.5.0_Universal-green.svg)]()
+[![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Android_7.1+-orange.svg)]()
-[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM-purple.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Android_4.4+-orange.svg)]()
+[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM_|_SPD-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units**, con soporte activo para **K706**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, y **FYT/Teyes (OEM)** (control por intents de `com.syu.radio`).  
-Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), y personalización avanzada de logos y temas.
+**Aplicación de radio FM premium para Android Head Units (Edición 100% Offline)**, con soporte activo para **K706/QuickFish**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, **QS6/NWD**, **SPD** y **FYT/Teyes (OEM)**.  
+Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visual local de logos con atajos directos, preservación de archivos y cero dependencias de red.
 
 <div align="center">
   <img src="docs/img/app_icon.png" width="150" alt="OpenRadioFM Logo">
@@ -137,6 +137,7 @@ graph TB
 | JUNSUN V1 Pro / Topway | MediaTek MT8163 | `FM_MT8163` | ✅ |
 | Radio K706 / HCN / Vento | K706 + MCU | `FM_K706` | ✅ |
 | MTK 8227L / 8259 / 8667 | MediaTek | `FM_MT8259` | 🤝 Csaba Edition |
+| Junsun V9 Plus (SPD) | SPD + MCU | `FM_SPD` | 🤝 Tester |
 | Radio NWD G5 | Qualcomm | `FM_QS6` | 🛠️ Beta (rama **QS_NWD**) |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 

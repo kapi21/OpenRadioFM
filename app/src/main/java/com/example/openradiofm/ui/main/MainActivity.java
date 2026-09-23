@@ -85,10 +85,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             android.content.SharedPreferences prefs = newBase.getSharedPreferences("RadioPresets",
                     Context.MODE_PRIVATE);
             lang = prefs.getString("app_language", "es");
-            // V13.9: Default to FALSE for online logos as requested for testing
-            if (!prefs.contains("pref_logos_online")) {
-                prefs.edit().putBoolean("pref_logos_online", true).apply();
-            }
+            // V5.5 OFFLINE: Cloud y logos online desactivados
+            prefs.edit().putBoolean("pref_logos_online", false).apply();
         } catch (Exception e) {
         }
         super.attachBaseContext(MyContextWrapper.wrap(newBase, lang));
@@ -179,6 +177,8 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         FM_BASICO,
         FM_K706,
         FM_QS6,
+        /** SPD (Junsun V9 Plus / RadioService.apk: com.spd.radio). */
+        FM_SPD,
         /** FYT/Teyes OEM: control por intents de {@code com.syu.radio}. */
         FM_FYT_OEM,
         /** Jancar IVI ({@code com.jancar.services} / IRadio AIDL), p. ej. MTK8227L. */
@@ -595,6 +595,154 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         }
     }
 
+    private static final int REQUEST_CODE_PICK_PRESET_LOGO = 706;
+    private int mPendingPresetSlot = -1;
+    private int mPendingPresetFreq = -1;
+    private String mPendingPresetName = "";
+
+    public void promptLogoPickerForPreset(int slot, int freq, String name) {
+        mPendingPresetSlot = slot;
+        mPendingPresetFreq = freq;
+        mPendingPresetName = (name != null) ? name : "";
+
+        if (mDialogManager != null) {
+            mDialogManager.showLogoPickerDialog(slot, freq, mPendingPresetName);
+        } else {
+            openSystemImagePicker();
+        }
+    }
+
+    public void openSystemImagePicker() {
+        try {
+            android.os.StrictMode.VmPolicy.Builder builder = new android.os.StrictMode.VmPolicy.Builder();
+            android.os.StrictMode.setVmPolicy(builder.build());
+        } catch (Exception ignored) {}
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("image/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[] { "image/png", "image/jpeg", "image/jpg", "image/webp" });
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            try {
+                android.net.Uri initialUri = android.provider.DocumentsContract.buildDocumentUri(
+                        "com.android.externalstorage.documents", "primary:RadioLogos");
+                intent.putExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, initialUri);
+            } catch (Exception ignored) {}
+        }
+
+        try {
+            startActivityForResult(Intent.createChooser(intent, "Seleccionar Logo"), REQUEST_CODE_PICK_PRESET_LOGO);
+        } catch (Exception e) {
+            try {
+                Intent fallback = new Intent(Intent.ACTION_PICK, android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                startActivityForResult(fallback, REQUEST_CODE_PICK_PRESET_LOGO);
+            } catch (Exception e2) {
+                try {
+                    Intent openDoc = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                    openDoc.setType("image/*");
+                    openDoc.addCategory(Intent.CATEGORY_OPENABLE);
+                    startActivityForResult(openDoc, REQUEST_CODE_PICK_PRESET_LOGO);
+                } catch (Exception e3) {
+                    showToast("No se encontró explorador de archivos");
+                }
+            }
+        }
+    }
+
+    public void applySelectedStationLogo(int slot, int freq, String name, String savedPath) {
+        runOnUiThread(() -> {
+            int band = mCurrentBand;
+            mLogoCachePerBand.remove(band + "_" + freq);
+            mLastLogoUrl = "";
+
+            try {
+                com.bumptech.glide.Glide.get(MainActivity.this).clearMemory();
+            } catch (Exception ignored) {}
+
+            if (mLogoManager != null) {
+                mLogoManager.clearLogo();
+                if (savedPath != null) {
+                    mLogoManager.updateStationLogo(freq, band, savedPath);
+                }
+            }
+            if (mPresetManager != null) {
+                mPresetManager.forceUpdateSlotWithLogo(slot, freq, band, savedPath);
+                mPresetManager.refreshButtons(band, true);
+            }
+            updateFrequencyDisplay(freq, (name != null && !name.isEmpty()) ? name : null);
+            refreshRadioStatus();
+            showToast(getString(savedPath != null ? R.string.toast_logo_assigned : R.string.toast_logo_removed));
+        });
+    }
+
+    public void assignStationLogoFromBitmap(int slot, int freq, String name, android.graphics.Bitmap bitmap) {
+        if (bitmap == null || mRepository == null) return;
+        com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+            try {
+                String savedPath = mRepository.saveCustomStationLogo(freq, name, bitmap);
+                if (savedPath != null) {
+                    applySelectedStationLogo(slot, freq, name, savedPath);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error guardando logo de preset", e);
+            }
+        });
+    }
+
+    public void assignStationLogoFromFile(int slot, int freq, String name, java.io.File imageFile) {
+        if (imageFile == null || !imageFile.exists() || mRepository == null) return;
+        com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+            try {
+                android.graphics.BitmapFactory.Options opts = new android.graphics.BitmapFactory.Options();
+                opts.inJustDecodeBounds = true;
+                android.graphics.BitmapFactory.decodeFile(imageFile.getAbsolutePath(), opts);
+
+                opts.inSampleSize = 1;
+                while (opts.outWidth / opts.inSampleSize > 600 || opts.outHeight / opts.inSampleSize > 600) {
+                    opts.inSampleSize *= 2;
+                }
+                opts.inJustDecodeBounds = false;
+                android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeFile(imageFile.getAbsolutePath(), opts);
+
+                if (bitmap != null) {
+                    String savedPath = mRepository.saveCustomStationLogo(freq, name, bitmap);
+                    if (savedPath != null) {
+                        applySelectedStationLogo(slot, freq, name, savedPath);
+                    }
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error asignando logo desde archivo: " + imageFile.getAbsolutePath(), e);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_CODE_PICK_PRESET_LOGO && resultCode == RESULT_OK && data != null) {
+            android.net.Uri selectedUri = data.getData();
+            if (selectedUri != null && mRepository != null) {
+                final int slot = mPendingPresetSlot;
+                final int freq = mPendingPresetFreq;
+                final String name = mPendingPresetName;
+
+                com.example.openradiofm.util.AppIoExecutor.execute(() -> {
+                    try (java.io.InputStream is = getContentResolver().openInputStream(selectedUri)) {
+                        if (is != null) {
+                            android.graphics.Bitmap bitmap = android.graphics.BitmapFactory.decodeStream(is);
+                            if (bitmap != null) {
+                                assignStationLogoFromBitmap(slot, freq, name, bitmap);
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error procesando logo de preset desde URI", e);
+                    }
+                });
+            }
+        }
+    }
+
     public void savePreset(int index) {
         if (mEngine != null && mPresetManager != null) {
             int current = mEngine.getCurrentFreq();
@@ -610,6 +758,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             }
 
             mPresetManager.savePreset(mCurrentBand, index, current, currentRds);
+            showToast("P" + (index + 1) + " guardado");
         }
     }
 
@@ -1935,10 +2084,14 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     void setupCreditsEasterEgg() {
-        if (tvFrequency != null) {
-            tvFrequency.setOnClickListener(v -> handleCreditsClick());
+        View.OnClickListener openEditDialogClickListener = v -> {
+            if (mDialogManager != null) {
+                mDialogManager.showEditNameDialog();
+            }
+        };
 
-            // V16.2: Pulsación larga para editar nombre (RDS PS)
+        if (tvFrequency != null) {
+            tvFrequency.setOnClickListener(openEditDialogClickListener);
             tvFrequency.setOnLongClickListener(v -> {
                 if (mDialogManager != null) {
                     mDialogManager.showEditNameDialog();
@@ -1948,26 +2101,29 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             });
         }
 
-        // V16.2: También en el contenedor para facilitar la interacción
+        // También en el contenedor para facilitar la interacción táctil
         android.view.View boxFrequency = findViewById(R.id.boxFrequency);
         android.view.View boxIconsTop = findViewById(R.id.boxIconsTopLayout2);
-        
-        View.OnClickListener clickListener = v -> handleCreditsClick();
-        View.OnLongClickListener longClickListener = v -> {
-            if (mDialogManager != null) {
-                mDialogManager.showEditNameDialog();
-                return true;
-            }
-            return false;
-        };
 
         if (boxFrequency != null) {
-            boxFrequency.setOnClickListener(clickListener);
-            boxFrequency.setOnLongClickListener(longClickListener);
+            boxFrequency.setOnClickListener(openEditDialogClickListener);
+            boxFrequency.setOnLongClickListener(v -> {
+                if (mDialogManager != null) {
+                    mDialogManager.showEditNameDialog();
+                    return true;
+                }
+                return false;
+            });
         }
         if (boxIconsTop != null) {
-            boxIconsTop.setOnClickListener(clickListener);
-            boxIconsTop.setOnLongClickListener(longClickListener);
+            boxIconsTop.setOnClickListener(v -> handleCreditsClick());
+            boxIconsTop.setOnLongClickListener(v -> {
+                if (mDialogManager != null) {
+                    mDialogManager.showEditNameDialog();
+                    return true;
+                }
+                return false;
+            });
         }
     }
 
@@ -2655,19 +2811,22 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         if (mPrefs == null) return;
         int logoMode = mPrefs.getInt("pref_logo_mode", 0); // 0=Car, 1=Clock
         runOnUiThread(() -> {
-            if (mUiMediator.tvDigitalClock != null) {
-                if (logoMode == 1) {
+            if (logoMode == 1) {
+                if (mUiMediator != null && mUiMediator.tvDigitalClock != null) {
                     mUiMediator.tvDigitalClock.setVisibility(View.VISIBLE);
-                    if (mUiMediator.ivCarLogo != null) mUiMediator.ivCarLogo.setVisibility(View.GONE);
-                    mClockHandler.removeCallbacks(mClockRunnable);
-                    mClockHandler.post(mClockRunnable);
-                } else {
+                }
+                if (mUiMediator != null && mUiMediator.ivCarLogo != null) {
+                    mUiMediator.ivCarLogo.setVisibility(View.GONE);
+                }
+                mClockHandler.removeCallbacks(mClockRunnable);
+                mClockHandler.post(mClockRunnable);
+            } else {
+                if (mUiMediator != null && mUiMediator.tvDigitalClock != null) {
                     mUiMediator.tvDigitalClock.setVisibility(View.GONE);
-                    if (mUiMediator.ivCarLogo != null) {
-                        mUiMediator.ivCarLogo.setVisibility(View.VISIBLE);
-                        mLogoManager.loadCarLogo();
-                    }
-                    mClockHandler.removeCallbacks(mClockRunnable);
+                }
+                mClockHandler.removeCallbacks(mClockRunnable);
+                if (mLogoManager != null) {
+                    mLogoManager.loadCarLogo();
                 }
             }
         });
@@ -3422,13 +3581,29 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         if (mPrefs == null || !mPrefs.getBoolean("pref_hw_auto_night", true)) return;
         
         if (mThemeManager != null) {
-            com.example.openradiofm.ui.theme.ThemeManager.Skin targetSkin = lightsOn ? 
-                com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE : null;
-            
-            if (targetSkin == null) {
-                // Restaurar el anterior según pref
-                int savedIdx = mPrefs.getInt("pref_skin_v2", 0);
-                targetSkin = com.example.openradiofm.ui.theme.ThemeManager.Skin.values()[savedIdx];
+            android.content.SharedPreferences tp = getSharedPreferences("ThemePrefs", android.content.Context.MODE_PRIVATE);
+            final String KEY_PREV = "prev_skin_before_night";
+            com.example.openradiofm.ui.theme.ThemeManager.Skin targetSkin;
+
+            if (lightsOn) {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin current = mThemeManager.getActiveSkin();
+                if (current != null && current != com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    tp.edit().putString(KEY_PREV, current.name()).apply();
+                }
+                targetSkin = com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE;
+            } else {
+                String prevName = tp.getString(KEY_PREV, null);
+                com.example.openradiofm.ui.theme.ThemeManager.Skin prev = null;
+                if (prevName != null) {
+                    try { prev = com.example.openradiofm.ui.theme.ThemeManager.Skin.valueOf(prevName); } catch (Exception ignored) {}
+                }
+                if (prev == null || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    prev = mThemeManager.getCurrentSkin();
+                }
+                if (prev == null || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    prev = com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC;
+                }
+                targetSkin = prev;
             }
             
             if (mThemeManager.getActiveSkin() != targetSkin) {
