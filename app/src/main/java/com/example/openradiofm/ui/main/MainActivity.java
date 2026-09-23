@@ -3581,13 +3581,29 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         if (mPrefs == null || !mPrefs.getBoolean("pref_hw_auto_night", true)) return;
         
         if (mThemeManager != null) {
-            com.example.openradiofm.ui.theme.ThemeManager.Skin targetSkin = lightsOn ? 
-                com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE : null;
-            
-            if (targetSkin == null) {
-                // Restaurar el anterior según pref
-                int savedIdx = mPrefs.getInt("pref_skin_v2", 0);
-                targetSkin = com.example.openradiofm.ui.theme.ThemeManager.Skin.values()[savedIdx];
+            android.content.SharedPreferences tp = getSharedPreferences("ThemePrefs", android.content.Context.MODE_PRIVATE);
+            final String KEY_PREV = "prev_skin_before_night";
+            com.example.openradiofm.ui.theme.ThemeManager.Skin targetSkin;
+
+            if (lightsOn) {
+                com.example.openradiofm.ui.theme.ThemeManager.Skin current = mThemeManager.getActiveSkin();
+                if (current != null && current != com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    tp.edit().putString(KEY_PREV, current.name()).apply();
+                }
+                targetSkin = com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE;
+            } else {
+                String prevName = tp.getString(KEY_PREV, null);
+                com.example.openradiofm.ui.theme.ThemeManager.Skin prev = null;
+                if (prevName != null) {
+                    try { prev = com.example.openradiofm.ui.theme.ThemeManager.Skin.valueOf(prevName); } catch (Exception ignored) {}
+                }
+                if (prev == null || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    prev = mThemeManager.getCurrentSkin();
+                }
+                if (prev == null || prev == com.example.openradiofm.ui.theme.ThemeManager.Skin.NIGHT_MODE) {
+                    prev = com.example.openradiofm.ui.theme.ThemeManager.Skin.CLASSIC;
+                }
+                targetSkin = prev;
             }
             
             if (mThemeManager.getActiveSkin() != targetSkin) {
