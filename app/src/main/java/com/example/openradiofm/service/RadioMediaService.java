@@ -1,10 +1,12 @@
 package com.example.openradiofm.service;
 
+import android.content.Context;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.BroadcastReceiver;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.support.v4.media.MediaBrowserCompat;
 import android.support.v4.media.MediaDescriptionCompat;
 import android.support.v4.media.MediaMetadataCompat;
@@ -183,6 +185,100 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     private AudioFocusRequest mQs6ServiceFocusRequest;
 
     // ------------------------------------------------------------
+    // QS6 / NWD OEM: ACTION_KEY_VALUE y ACTION_TEST_KEY bridge
+    // Captura eventos de volante emitidos por MCU/KernelService NWD
+    // cuando la app está en segundo plano.
+    // ------------------------------------------------------------
+    private boolean mQs6NwdKeyReceiverRegistered = false;
+    private long mQs6LastKeyUptimeMs = 0L;
+    private byte mQs6LastKeyValue = (byte) -1;
+
+    private final BroadcastReceiver mQs6NwdKeyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) return;
+            final String action = intent.getAction();
+            if (!"com.nwd.action.ACTION_KEY_VALUE".equals(action)
+                    && !"com.nwd.action.ACTION_TEST_KEY".equals(action)) {
+                return;
+            }
+            if (!shouldApplyQs6KeyBridge()) return;
+
+            byte keyValue = 0;
+            if (intent.hasExtra("extra_key_value")) {
+                Object extra = intent.getExtras().get("extra_key_value");
+                if (extra instanceof Byte) {
+                    keyValue = (Byte) extra;
+                } else if (extra instanceof Integer) {
+                    keyValue = ((Integer) extra).byteValue();
+                } else {
+                    keyValue = intent.getByteExtra("extra_key_value", (byte) 0);
+                }
+            } else {
+                return;
+            }
+
+            // Anti-rebote / ráfagas repetidas idénticas
+            final long now = SystemClock.uptimeMillis();
+            if (keyValue == mQs6LastKeyValue && (now - mQs6LastKeyUptimeMs) < 200L) {
+                return;
+            }
+            mQs6LastKeyValue = keyValue;
+            mQs6LastKeyUptimeMs = now;
+
+            Log.i(TAG, "QS6 NWD Key Broadcast recibido: 0x" + Integer.toHexString(keyValue & 0xFF) + " (" + keyValue + ")");
+
+            // Mapeo verificado con SprdRadioManager.handlePanelKey / BaseInterface:
+            // 0x10 (16), 0x05 (5), 0x3c (60): Seek/Next up
+            // 0x11 (17), 0x06 (6), 0x3b (59): Seek/Prev down
+            // 0x3e (62): Preset Up
+            // 0x3f (63): Preset Down
+            // 0x04 (4): Change Band
+            // 0x2e (46): AMS
+            switch (keyValue) {
+                case 0x10:
+                case 0x05:
+                case 0x3c:
+                    handleSteeringSkip(+1);
+                    break;
+                case 0x11:
+                case 0x06:
+                case 0x3b:
+                    handleSteeringSkip(-1);
+                    break;
+                case 0x3e:
+                    handleWidgetPresetSkip(+1);
+                    break;
+                case 0x3f:
+                    handleWidgetPresetSkip(-1);
+                    break;
+                case 0x04:
+                    if (mEngine != null) {
+                        try {
+                            mEngine.bandCycle();
+                        } catch (Exception e) {
+                            Log.w(TAG, "Error alternando banda en QS6 NWD key", e);
+                        }
+                    }
+                    break;
+                case 0x2e:
+                    if (mEngine != null) {
+                        try {
+                            if (mEngine.isScanning()) {
+                                mEngine.stopScan();
+                            } else {
+                                mEngine.scan();
+                            }
+                        } catch (Exception e) {
+                            Log.w(TAG, "Error ejecutando scan en QS6 NWD key", e);
+                        }
+                    }
+                    break;
+            }
+        }
+    };
+
+    // ------------------------------------------------------------
     // K706 / QuickFish OEM: util_service (UtilEventManager) key bridge
     // (canal OEM de KeyEvents en algunas ROMs)
     // ------------------------------------------------------------
@@ -273,6 +369,13 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         ensureK706UtilEventKeyBridgeRegistered();
                     } catch (Exception e) {
                         Log.w(TAG, "No se pudo registrar util_service key bridge", e);
+                    }
+
+                    // QS6 / NWD: registrar bridge de broadcasts para teclas de volante OEM en segundo plano
+                    try {
+                        ensureQs6NwdKeyBridgeRegistered();
+                    } catch (Exception e) {
+                        Log.w(TAG, "No se pudo registrar QS6 NWD key bridge", e);
                     }
 
                     // Aplicar comandos pendientes (si llegaron antes de inicializar el engine)
@@ -588,6 +691,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
             // K706 OEM: asegurar que el sistema nos marca como "audio source" actual.
             ensureK706OemSteeringAudioFocus();
+            if (isQs6EngineActive()) {
+                ensureQs6ServiceAudioFocus();
+            }
         } catch (Exception e) {
             Log.w(TAG, "forceSessionActiveForSteering falló", e);
         }
@@ -1173,6 +1279,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
             setPlaybackState(true);
             startForeground(NOTIFICATION_ID, buildNotification(getSafeTitle(), getSafeArtist(), getSafeLogo()));
             ensureK706OemSteeringAudioFocus();
+            if (isQs6EngineActive()) {
+                ensureQs6ServiceAudioFocus();
+            }
             Log.d(TAG, "Steering: sesión PLAYING+FGS mantenida para mandos en segundo plano (K706/QS6)");
         } catch (Exception e) {
             Log.w(TAG, "refreshSteeringMediaSessionAndForeground", e);
@@ -2491,6 +2600,52 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
         }
     }
 
+    private boolean isQs6EngineActive() {
+        try {
+            if (mEngine != null) {
+                String n = mEngine.getEngineName();
+                if (n != null && n.toUpperCase(Locale.US).contains("QS6")) return true;
+            }
+        } catch (Exception ignored) {}
+        return false;
+    }
+
+    private boolean shouldApplyQs6KeyBridge() {
+        try {
+            if (mRadioServiceController != null && mRadioServiceController.isQs6Mode()) {
+                return true;
+            }
+        } catch (Throwable ignored) {}
+        return isQs6EngineActive();
+    }
+
+    private void ensureQs6NwdKeyBridgeRegistered() {
+        if (mQs6NwdKeyReceiverRegistered) return;
+        if (!shouldApplyQs6KeyBridge()) return;
+        try {
+            IntentFilter filter = new IntentFilter();
+            filter.addAction("com.nwd.action.ACTION_KEY_VALUE");
+            filter.addAction("com.nwd.action.ACTION_TEST_KEY");
+            registerReceiver(mQs6NwdKeyReceiver, filter);
+            mQs6NwdKeyReceiverRegistered = true;
+            Log.i(TAG, "QS6 NWD Key Bridge registrado en RadioMediaService");
+        } catch (Exception e) {
+            Log.w(TAG, "No se pudo registrar QS6 NWD Key Bridge", e);
+        }
+    }
+
+    private void unregisterQs6NwdKeyBridgeIfNeeded() {
+        if (!mQs6NwdKeyReceiverRegistered) return;
+        try {
+            unregisterReceiver(mQs6NwdKeyReceiver);
+            Log.i(TAG, "QS6 NWD Key Bridge desregistrado");
+        } catch (Exception e) {
+            Log.w(TAG, "Error desregistrando QS6 NWD Key Bridge", e);
+        } finally {
+            mQs6NwdKeyReceiverRegistered = false;
+        }
+    }
+
     /** util_service: aceptar callbacks aunque el motor aún no esté cacheado en el servicio. */
     private boolean shouldApplyK706UtilServiceKeyBridge() {
         try {
@@ -2681,6 +2836,7 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
     @Override
     public void onDestroy() {
         unregisterK706UtilEventKeyBridgeIfNeeded();
+        unregisterQs6NwdKeyBridgeIfNeeded();
         abandonK706OemSteeringAudioFocus();
         abandonQs6ServiceAudioFocus();
         try {

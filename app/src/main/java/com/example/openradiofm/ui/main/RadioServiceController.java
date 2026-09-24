@@ -274,6 +274,11 @@ public class RadioServiceController {
         return detectMode() == MainActivity.FmMode.FM_K706;
     }
 
+    /** QS6 (NWD G5): mandos del volante e IPC NWD. */
+    public boolean isQs6Mode() {
+        return detectMode() == MainActivity.FmMode.FM_QS6;
+    }
+
     /**
      * K706 y QS6 (NWD): el sistema suele enrutar teclas MEDIA / volante al reproductor “activo” o al
      * launcher si nuestra {@code MediaSession} no está en foreground; misma mitigación que K706.
