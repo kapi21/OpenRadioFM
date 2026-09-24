@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">Opens OpenRadioFM when you press the physical RADIO button (replaces the factory app). On K706/Topway and QS6 (NWD) units it also forwards steering-wheel media keys (next/prev/play) while the app is in the background; otherwise the system often sends those keys to the launcher or the OEM radio app.</string>
     <string name="a11y_hihack_title">HiHack (Accessibility)</string>
     <string name="a11y_hihack_enabled">Enabled</string>
@@ -426,5 +426,22 @@ You can use the top shortcuts to navigate to RadioLogos or Downloads.</string>
     <string name="toast_logo_removed">Logo removed</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- Offline Mode / Connectivity -->
+    <string name="offline_mode_title">Offline Mode (100% Local)</string>
+    <string name="offline_mode_desc">Disables internet and cloud services to save mobile data and memory.</string>
+    <string name="offline_mode_active">Enabled (No network or data)</string>
+    <string name="offline_mode_inactive">Disabled (Cloud Connectivity Enabled)</string>
+    <string name="toast_offline_mode_on">Offline Mode: Enabled (100% Local)</string>
+    <string name="toast_offline_mode_off">Offline Mode: Disabled (Cloud Connectivity Enabled)</string>
+
+    <!-- Connectivity Notice First Run / Update -->
+    <string name="connectivity_notice_title">Connectivity Mode</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal can operate in two modes according to your preferences:</string>
+    <string name="connectivity_notice_offline_desc">No internet or mobile data. Operates autonomously using local logos in storage.</string>
+    <string name="connectivity_notice_online_btn">Online Mode (Cloud)</string>
+    <string name="connectivity_notice_online_desc">Automatic download of updated logos and live internet radio streaming.</string>
+    <string name="connectivity_notice_footer">You can change this mode at any time in Advanced Settings.</string>
+    <string name="connectivity_notice_confirm">Understood and Continue</string>
 </resources>

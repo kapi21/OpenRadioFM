@@ -237,7 +237,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>
@@ -395,5 +395,22 @@ Folosiți comenzile rapide de sus pentru a naviga la RadioLogos sau Descărcări
     <string name="toast_logo_removed">Logo eliminat</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- Mod offline / Conectivitate -->
+    <string name="offline_mode_title">Mod offline (100% local)</string>
+    <string name="offline_mode_desc">Dezactivează internetul și serviciile cloud pentru a economisi date și memorie.</string>
+    <string name="offline_mode_active">Activat (Fără rețea sau date)</string>
+    <string name="offline_mode_inactive">Dezactivat (Conectivitate Cloud activată)</string>
+    <string name="toast_offline_mode_on">Mod offline: Activat (100% local)</string>
+    <string name="toast_offline_mode_off">Mod offline: Dezactivat (Conectivitate Cloud activată)</string>
+
+    <!-- Notificare de conectivitate Prima pornire / Actualizare -->
+    <string name="connectivity_notice_title">Mod de conectivitate</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal poate funcționa în două moduri, în funcție de preferințe:</string>
+    <string name="connectivity_notice_offline_desc">Fără internet sau date mobile. Funcționează autonom cu sigle locale din memorie.</string>
+    <string name="connectivity_notice_online_btn">Mod online (Cloud)</string>
+    <string name="connectivity_notice_online_desc">Descărcare automată a siglelor actualizate și streaming radio online în direct.</string>
+    <string name="connectivity_notice_footer">Puteți schimba acest mod în orice moment din Setări avansate.</string>
+    <string name="connectivity_notice_confirm">Am înțeles și continuă</string>
 </resources>

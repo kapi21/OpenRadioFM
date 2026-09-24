@@ -98,6 +98,19 @@ final class MainActivityBootstrap {
             Log.i(MainActivity.TAG, "AM Band forced to enabled for stability.");
         }
 
+        // V5.5.0 Universal: Migración / Inicialización de Modo Conectividad
+        if (!a.mPrefs.contains("pref_offline_mode")) {
+            if (a.mPrefs.contains("pref_logos_online")) {
+                boolean logosOnline = a.mPrefs.getBoolean("pref_logos_online", true);
+                // Si el usuario tenía logos online habilitados (v5.4/v5.2/v5.0), se mantiene en ONLINE (offline = false).
+                // Si venía de v5.5 OFFLINE (donde pref_logos_online era false), se queda en OFFLINE (offline = true).
+                a.mPrefs.edit().putBoolean("pref_offline_mode", !logosOnline).apply();
+            } else {
+                // Instalación limpia: por defecto empieza en OFFLINE
+                a.mPrefs.edit().putBoolean("pref_offline_mode", true).apply();
+            }
+        }
+
         a.mIsV3 = a.mPrefs.getBoolean("pref_layout_v3", false);
         a.mIsSimpleLayout = a.mPrefs.getBoolean("pref_layout_simple", false);
         // Un solo layout activo: Simple gana. Si ambas prefs quedaron true (migración, backup, bug),
@@ -157,11 +170,13 @@ final class MainActivityBootstrap {
             root.post(() -> {
                 try { a.applyFonts(); } catch (Exception ignored) {}
                 try { a.applyIconPack(); } catch (Exception ignored) {}
+                try { a.ensureConnectivityModeNotice(); } catch (Exception ignored) {}
             });
         } else {
             // Fallback (no debería ocurrir)
             a.applyFonts();
             a.applyIconPack();
+            a.ensureConnectivityModeNotice();
         }
 
         // VXX: Aplicar relieve opcional de logos

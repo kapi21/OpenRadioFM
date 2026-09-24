@@ -236,7 +236,7 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
     <string name="a11y_hihack_title">HiHack (Pristupačnost)</string>
     <string name="a11y_hihack_enabled">Omogućeno</string>
@@ -395,5 +395,22 @@
     <string name="toast_logo_removed">Логотип уклоњен</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- Офлајн режим / Повезивање -->
+    <string name="offline_mode_title">Офлајн режим (100% локално)</string>
+    <string name="offline_mode_desc">Онемогућава интернет и услуге у облаку ради уштеде података и меморије.</string>
+    <string name="offline_mode_active">Омогућено (Без мреже или података)</string>
+    <string name="offline_mode_inactive">Онемогућено (Повезивање са облаком омогућено)</string>
+    <string name="toast_offline_mode_on">Офлајн режим: Омогућено (100% локално)</string>
+    <string name="toast_offline_mode_off">Офлајн режим: Онемогућено (Повезивање са облаком омогућено)</string>
+
+    <!-- Обавештење о повезивању при првом покретању / ажурирању -->
+    <string name="connectivity_notice_title">Режим повезивања</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal може да ради у два режима у зависности од ваших подешавања:</string>
+    <string name="connectivity_notice_offline_desc">Без интернета или мобилних података. Ради аутономно са локалним логотипима из меморије.</string>
+    <string name="connectivity_notice_online_btn">Онлајн режим (Облак)</string>
+    <string name="connectivity_notice_online_desc">Аутоматско преузимање ажурираних логотипа и стримовање интернет радија уживо.</string>
+    <string name="connectivity_notice_footer">Овај режим можете променити у било ком тренутку у Напредним подешавањима.</string>
+    <string name="connectivity_notice_confirm">Разумем и настави</string>
 </resources>

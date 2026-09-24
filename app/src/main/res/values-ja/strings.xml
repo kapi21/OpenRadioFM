@@ -235,7 +235,7 @@
     <string name="about_info_header">情報</string>
     <string name="about_dev_by">開発者</string>
     <string name="about_tech_details">技術詳細</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">このサービスにより、対応するAndroidユニット（例: K706）で物理RADIOボタンを押したときにOpenRadioFMが前面に表示され、純正アプリを回避できます。</string>
     <string name="a11y_hihack_title">HiHack（ユーザー補助）</string>
     <string name="a11y_hihack_enabled">有効</string>
@@ -395,5 +395,22 @@
     <string name="toast_logo_removed">ロゴを削除しました</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- オフラインモード / 接続設定 -->
+    <string name="offline_mode_title">オフラインモード（100% ローカル）</string>
+    <string name="offline_mode_desc">データ通信量とメモリを節約するため、インターネットとクラウドサービスを無効化します。</string>
+    <string name="offline_mode_active">有効（ネットワーク・通信なし）</string>
+    <string name="offline_mode_inactive">無効（クラウド接続有効）</string>
+    <string name="toast_offline_mode_on">オフラインモード：有効（100% ローカル）</string>
+    <string name="toast_offline_mode_off">オフラインモード：無効（クラウド接続有効）</string>
+
+    <!-- 初回起動 / アップデート時 接続モード通知 -->
+    <string name="connectivity_notice_title">接続モード</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal は、お好みに応じて2つのモードで動作できます：</string>
+    <string name="connectivity_notice_offline_desc">インターネットやデータ通信は使用しません。本体メモリ内のローカルロゴのみで自律動作します。</string>
+    <string name="connectivity_notice_online_btn">オンラインモード（クラウド）</string>
+    <string name="connectivity_notice_online_desc">最新の放送局ロゴの自動ダウンロードとライブインターネットラジオのストリーミングに対応。</string>
+    <string name="connectivity_notice_footer">この設定は「詳細設定」からいつでも変更できます。</string>
+    <string name="connectivity_notice_confirm">理解して続行</string>
 </resources>

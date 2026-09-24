@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">Ce service permet à OpenRadioFM de s’afficher par-dessus lorsque tu appuies sur le bouton RADIO physique sur des unités Android compatibles (ex. K706), en contournant l’application d’origine.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilité)</string>
     <string name="a11y_hihack_enabled">Activé</string>
@@ -393,5 +393,22 @@ Utilisez les raccourcis en haut pour accéder à RadioLogos ou Téléchargements
     <string name="toast_logo_removed">Logo supprimé</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- Mode Hors Ligne / Connectivité -->
+    <string name="offline_mode_title">Mode Hors Ligne (100% Local)</string>
+    <string name="offline_mode_desc">Désactive Internet et les services cloud pour économiser les données et la mémoire.</string>
+    <string name="offline_mode_active">Activé (Sans réseau ni données)</string>
+    <string name="offline_mode_inactive">Désactivé (Connectivité Cloud activée)</string>
+    <string name="toast_offline_mode_on">Mode Hors Ligne : Activé (100% Local)</string>
+    <string name="toast_offline_mode_off">Mode Hors Ligne : Désactivé (Connectivité Cloud activée)</string>
+
+    <!-- Avis de connectivité Premier Démarrage / Mise à jour -->
+    <string name="connectivity_notice_title">Mode de Connectivité</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal peut fonctionner selon deux modes selon vos préférences :</string>
+    <string name="connectivity_notice_offline_desc">Pas d\'Internet ni de données mobiles. Fonctionne de manière autonome avec les logos locaux en mémoire.</string>
+    <string name="connectivity_notice_online_btn">Mode En Ligne (Cloud)</string>
+    <string name="connectivity_notice_online_desc">Téléchargement automatique des logos et streaming de radio en direct par Internet.</string>
+    <string name="connectivity_notice_footer">Vous pouvez changer ce mode à tout moment dans les Paramètres avancés.</string>
+    <string name="connectivity_notice_confirm">Compris et Continuer</string>
 </resources>

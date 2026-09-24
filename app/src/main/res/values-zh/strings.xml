@@ -235,7 +235,7 @@
     <string name="about_info_header">信息</string>
     <string name="about_dev_by">开发者</string>
     <string name="about_tech_details">技术详情</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">此服务允许在兼容的安卓主机（例如 K706）按下物理 RADIO 按键时，OpenRadioFM 覆盖显示并绕过原厂应用。</string>
     <string name="a11y_hihack_title">HiHack（无障碍）</string>
     <string name="a11y_hihack_enabled">已启用</string>
@@ -395,5 +395,22 @@
     <string name="toast_logo_removed">已移除台标</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- 离线模式 / 连接 -->
+    <string name="offline_mode_title">离线模式（100% 本地）</string>
+    <string name="offline_mode_desc">禁用互联网和云服务以节省流量和内存。</string>
+    <string name="offline_mode_active">已启用（无网络和数据传输）</string>
+    <string name="offline_mode_inactive">已禁用（已启用云连接）</string>
+    <string name="toast_offline_mode_on">离线模式：已启用（100% 本地）</string>
+    <string name="toast_offline_mode_off">离线模式：已禁用（已启用云连接）</string>
+
+    <!-- 首次运行 / 更新连接模式提示 -->
+    <string name="connectivity_notice_title">连接模式</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal 可以根据您的喜好以两种模式运行：</string>
+    <string name="connectivity_notice_offline_desc">无网络和移动数据。完全使用存储中的本地电台图标自主运行。</string>
+    <string name="connectivity_notice_online_btn">在线模式（云端）</string>
+    <string name="connectivity_notice_online_desc">自动下载最新电台图标并支持在线网络电台流媒体播放。</string>
+    <string name="connectivity_notice_footer">您可以随时在“高级设置”中更改此模式。</string>
+    <string name="connectivity_notice_confirm">明白并继续</string>
 </resources>

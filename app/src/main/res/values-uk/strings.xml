@@ -237,7 +237,7 @@
     <string name="about_info_header">ІНФОРМАЦІЯ</string>
     <string name="about_dev_by">Розроблено</string>
     <string name="about_tech_details">Технічні деталі</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">Цей сервіс дозволяє OpenRadioFM відкриватися поверх при натисканні фізичної кнопки RADIO на сумісних Android-пристроях (наприклад, K706), обходячи штатну програму.</string>
     <string name="a11y_hihack_title">HiHack (Доступність)</string>
     <string name="a11y_hihack_enabled">Увімкнено</string>
@@ -395,5 +395,22 @@
     <string name="toast_logo_removed">Логотип видалено</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- Автономний режим / Підключення -->
+    <string name="offline_mode_title">Автономний режим (100% локальний)</string>
+    <string name="offline_mode_desc">Вимикає інтернет та хмарні сервіси для економії трафіку та пам\'яті.</string>
+    <string name="offline_mode_active">Увімкнено (Без мережі та даних)</string>
+    <string name="offline_mode_inactive">Вимкнено (Хмарні функції ввімкнено)</string>
+    <string name="toast_offline_mode_on">Автономний режим: Увімкнено (100% локальний)</string>
+    <string name="toast_offline_mode_off">Автономний режим: Вимкнено (Хмарні функції ввімкнено)</string>
+
+    <!-- Сповіщення про підключення при першому запуску / оновленні -->
+    <string name="connectivity_notice_title">Режим підключення</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal може працювати у двох режимах відповідно до ваших уподобань:</string>
+    <string name="connectivity_notice_offline_desc">Без інтернету та мобільних даних. Працює автономно з локальними логотипами з пам\'яті.</string>
+    <string name="connectivity_notice_online_btn">Онлайн-режим (Хмара)</string>
+    <string name="connectivity_notice_online_desc">Автоматичне завантаження оновлених логотипів та онлайн-радіо в прямому ефірі.</string>
+    <string name="connectivity_notice_footer">Ви можете змінити цей режим у будь-який час у Розширених налаштуваннях.</string>
+    <string name="connectivity_notice_confirm">Зрозуміло, продовжити</string>
 </resources>

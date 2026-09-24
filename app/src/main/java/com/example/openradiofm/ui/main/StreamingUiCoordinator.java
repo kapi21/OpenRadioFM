@@ -62,7 +62,7 @@ public final class StreamingUiCoordinator {
         if (a.ivDataActivity == null) return;
 
         boolean offlineMode = a.mPrefs.getBoolean("pref_offline_mode", true);
-        boolean onlineEnabled = !offlineMode && a.mPrefs.getBoolean("pref_logos_online", true);
+        boolean onlineEnabled = !offlineMode;
 
         long now = System.currentTimeMillis();
         boolean isConnected;

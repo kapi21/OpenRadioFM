@@ -21,6 +21,7 @@ import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.util.LruCache;
@@ -827,6 +828,20 @@ public class DialogManager {
                 if (layoutOnlineOptions != null) {
                     layoutOnlineOptions.setVisibility(checked ? View.GONE : View.VISIBLE);
                 }
+                if (!checked) {
+                    // Al activar modo ONLINE con el switch, activar logos online
+                    mActivity.mPrefs.edit().putBoolean("pref_logos_online", true).apply();
+                    if (swLogosOnline != null) {
+                        swLogosOnline.setChecked(true);
+                    }
+                    if (tvSummaryLogosOnline != null) {
+                        bindSwitchSummary(tvSummaryLogosOnline, true);
+                    }
+                } else {
+                    if (mActivity.mOnlineStreamManager != null && (mActivity.mOnlineStreamManager.isPlaying() || mActivity.mOnlineStreamManager.isLoading())) {
+                        mActivity.mOnlineStreamManager.stopStream();
+                    }
+                }
                 mActivity.updateDataActivityUI();
                 mActivity.showToast(checked ? mActivity.getString(R.string.toast_offline_mode_on)
                         : mActivity.getString(R.string.toast_offline_mode_off));
@@ -1452,6 +1467,93 @@ public class DialogManager {
 
         // V15.6: Aplicar fuente recursiva al diálogo About usando MainActivity
         mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+
+        dialog.show();
+    }
+
+    public void showConnectivityModeNoticeDialog(Runnable onDismiss) {
+        Dialog dialog = new Dialog(mActivity);
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.dialog_connectivity_mode_notice);
+
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(Color.TRANSPARENT));
+            window.setDimAmount(0.7f);
+        }
+
+        View cardOffline = dialog.findViewById(R.id.cardOfflineMode);
+        RadioButton rbOffline = dialog.findViewById(R.id.rbOfflineMode);
+        View cardOnline = dialog.findViewById(R.id.cardOnlineMode);
+        RadioButton rbOnline = dialog.findViewById(R.id.rbOnlineMode);
+        View btnConfirm = dialog.findViewById(R.id.btnConfirmMode);
+
+        boolean currentOffline = mActivity.mPrefs.getBoolean("pref_offline_mode", true);
+        final boolean[] selectedOffline = new boolean[] { currentOffline };
+
+        Runnable updateSelectionVisuals = () -> {
+            boolean isOffline = selectedOffline[0];
+            if (rbOffline != null) rbOffline.setChecked(isOffline);
+            if (rbOnline != null) rbOnline.setChecked(!isOffline);
+            if (cardOffline != null) {
+                cardOffline.setBackgroundResource(isOffline
+                        ? R.drawable.bg_connectivity_card_selected
+                        : R.drawable.bg_connectivity_card_unselected);
+            }
+            if (cardOnline != null) {
+                cardOnline.setBackgroundResource(!isOffline
+                        ? R.drawable.bg_connectivity_card_selected
+                        : R.drawable.bg_connectivity_card_unselected);
+            }
+        };
+
+        updateSelectionVisuals.run();
+
+        if (cardOffline != null) {
+            cardOffline.setOnClickListener(v -> {
+                selectedOffline[0] = true;
+                updateSelectionVisuals.run();
+            });
+        }
+        if (cardOnline != null) {
+            cardOnline.setOnClickListener(v -> {
+                selectedOffline[0] = false;
+                updateSelectionVisuals.run();
+            });
+        }
+
+        if (btnConfirm != null) {
+            btnConfirm.setOnClickListener(v -> {
+                boolean chosenOffline = selectedOffline[0];
+                mActivity.mPrefs.edit()
+                        .putBoolean("pref_offline_mode", chosenOffline)
+                        .putBoolean("pref_connectivity_mode_notice_shown", true)
+                        .apply();
+
+                if (!chosenOffline) {
+                    mActivity.mPrefs.edit().putBoolean("pref_logos_online", true).apply();
+                } else {
+                    if (mActivity.mOnlineStreamManager != null && (mActivity.mOnlineStreamManager.isPlaying() || mActivity.mOnlineStreamManager.isLoading())) {
+                        mActivity.mOnlineStreamManager.stopStream();
+                    }
+                }
+
+                mActivity.updateDataActivityUI();
+                mActivity.showToast(chosenOffline
+                        ? mActivity.getString(R.string.toast_offline_mode_on)
+                        : mActivity.getString(R.string.toast_offline_mode_off));
+
+                dialog.dismiss();
+                if (onDismiss != null) onDismiss.run();
+            });
+        }
+
+        dialog.setCancelable(false);
+        dialog.setCanceledOnTouchOutside(false);
+
+        try {
+            mActivity.applyRecursiveFont(dialog.getWindow().getDecorView(), mActivity.getSystemTypeface());
+        } catch (Exception ignored) {}
 
         dialog.show();
     }

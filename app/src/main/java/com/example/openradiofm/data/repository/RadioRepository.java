@@ -282,8 +282,7 @@ public class RadioRepository {
             }
 
             if (!isOfflineMode() && !"NO_LOGO".equals(cachedPath)) {
-                boolean onlineLogosEnabled = mGlobalPrefs.getBoolean("pref_logos_online", true);
-                if (onlineLogosEnabled && streamUrlStored == null) {
+                if (streamUrlStored == null) {
                     fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
                 }
             } else if (!isOfflineMode() && "NO_LOGO".equals(cachedPath)) {
@@ -303,8 +302,7 @@ public class RadioRepository {
                 callback.onLogoFound(cachedPath);
 
             if (!isOfflineMode()) {
-                boolean onlineLogosEnabled = mGlobalPrefs.getBoolean("pref_logos_online", true);
-                if (onlineLogosEnabled && streamUrlStored == null) {
+                if (streamUrlStored == null) {
                     fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
                 }
             }
@@ -322,8 +320,7 @@ public class RadioRepository {
                 callback.onLogoFound(logoPath);
 
             if (!isOfflineMode()) {
-                boolean onlineLogosEnabled = mGlobalPrefs.getBoolean("pref_logos_online", true);
-                if (onlineLogosEnabled && streamUrlStored == null) {
+                if (streamUrlStored == null) {
                     fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
                 }
                 boolean contribCloud = mGlobalPrefs.getBoolean("pref_cloud_contrib", true);
@@ -352,6 +349,9 @@ public class RadioRepository {
                                            String finalName, String piCode, RadioStation station, LogoCallback callback) {
         if (freqKHz < 30000) {
             return;
+        }
+        if (!isOfflineMode() && station.getStreamUrl() == null) {
+            fetchStreamUrlAsync(cacheKey, freqKHz, finalName, piCode, station);
         }
         boolean onlineLogosEnabled = mGlobalPrefs.getBoolean("pref_logos_online", true);
         if (!onlineLogosEnabled) {

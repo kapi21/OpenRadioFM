@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5 OFFLINE VERSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
     <string name="accessibility_service_description">Dieser Dienst ermöglicht es OpenRadioFM, sich zu überlagern, wenn du die physische RADIO-Taste auf kompatiblen Android-Geräten (z. B. K706) drückst, und die Werks-App zu umgehen.</string>
     <string name="a11y_hihack_title">HiHack (Barrierefreiheit)</string>
     <string name="a11y_hihack_enabled">Aktiviert</string>
@@ -423,5 +423,22 @@ Nutze die Schnellzugriffe oben, um zu RadioLogos oder Downloads zu navigieren.</
     <string name="toast_logo_removed">Logo entfernt</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">OFFLINE VERSION</string>
+    <string name="root_version_suffix">Universal</string>
+
+    <!-- Offline-Modus / Konnektivität -->
+    <string name="offline_mode_title">Offline-Modus (100% Lokal)</string>
+    <string name="offline_mode_desc">Deaktiviert Internet- und Cloud-Dienste, um Datenvolumen und Speicher zu sparen.</string>
+    <string name="offline_mode_active">Aktiviert (Kein Netzwerk oder Daten)</string>
+    <string name="offline_mode_inactive">Deaktiviert (Cloud-Konnektivität aktiviert)</string>
+    <string name="toast_offline_mode_on">Offline-Modus: Aktiviert (100% Lokal)</string>
+    <string name="toast_offline_mode_off">Offline-Modus: Deaktiviert (Cloud-Konnektivität aktiviert)</string>
+
+    <!-- Konnektivitätshinweis Erster Start / Aktualisierung -->
+    <string name="connectivity_notice_title">Verbindungsmodus</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal kann nach Ihren Wünschen in zwei Modi betrieben werden:</string>
+    <string name="connectivity_notice_offline_desc">Kein Internet oder Mobilfunkdaten. Funktioniert autonom mit lokalen Senderlogos im Speicher.</string>
+    <string name="connectivity_notice_online_btn">Online-Modus (Cloud)</string>
+    <string name="connectivity_notice_online_desc">Automatischer Download aktueller Senderlogos und Live-Internetradio-Streaming.</string>
+    <string name="connectivity_notice_footer">Sie können diesen Modus jederzeit in den erweiterten Einstellungen ändern.</string>
+    <string name="connectivity_notice_confirm">Verstanden und Fortfahren</string>
 </resources>

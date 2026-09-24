@@ -85,8 +85,6 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             android.content.SharedPreferences prefs = newBase.getSharedPreferences("RadioPresets",
                     Context.MODE_PRIVATE);
             lang = prefs.getString("app_language", "es");
-            // V5.5 OFFLINE: Cloud y logos online desactivados
-            prefs.edit().putBoolean("pref_logos_online", false).apply();
         } catch (Exception e) {
         }
         super.attachBaseContext(MyContextWrapper.wrap(newBase, lang));
@@ -1371,6 +1369,19 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             }
 
             mPrefs.edit().putBoolean(PREF_ONBOARDING_COUNTRY_DONE, true).putBoolean(PREF_ONBOARDING_DONE, true).apply();
+            ensureConnectivityModeNotice();
+        } catch (Exception ignored) {}
+    }
+
+    public void ensureConnectivityModeNotice() {
+        try {
+            if (mPrefs == null) return;
+            if (mPrefs.getBoolean("pref_connectivity_mode_notice_shown", false)) return;
+            // Si el onboarding de idioma o país aún no se ha completado, esperar a que finalice
+            if (!mPrefs.getBoolean(PREF_ONBOARDING_DONE, false)) return;
+
+            DialogManager dm = (mDialogManager != null) ? mDialogManager : new DialogManager(this);
+            dm.showConnectivityModeNoticeDialog(null);
         } catch (Exception ignored) {}
     }
 
@@ -1410,6 +1421,9 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
                                 .putBoolean(PREF_ONBOARDING_COUNTRY_DONE, true)
                                 .putBoolean(PREF_ONBOARDING_DONE, langDone)
                                 .apply();
+                        if (langDone) {
+                            ensureConnectivityModeNotice();
+                        }
                     }
                 } catch (Exception ignored) {}
             });

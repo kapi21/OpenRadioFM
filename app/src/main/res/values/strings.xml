@@ -444,4 +444,13 @@ Puedes usar los atajos superiores para navegar a RadioLogos o Descargas.</string
     <string name="offline_mode_inactive">Desactivado (Conectividad Nube Habilitada)</string>
     <string name="toast_offline_mode_on">Modo Fuera de Línea: Activado (100% Local)</string>
     <string name="toast_offline_mode_off">Modo Fuera de Línea: Desactivado (Conectividad Nube Habilitada)</string>
+
+    <!-- Aviso de Conectividad Primer Arranque / Actualización -->
+    <string name="connectivity_notice_title">Modo de Conectividad</string>
+    <string name="connectivity_notice_message">OpenRadioFM Universal puede funcionar de dos modos según tus preferencias:</string>
+    <string name="connectivity_notice_offline_desc">Sin red ni datos móviles. Funciona de forma autónoma con logos locales en memoria.</string>
+    <string name="connectivity_notice_online_btn">Modo Online (Nube)</string>
+    <string name="connectivity_notice_online_desc">Descarga automática de logotipos actualizados y radio por internet (streaming en vivo).</string>
+    <string name="connectivity_notice_footer">Puedes cambiar este modo en cualquier momento desde Ajustes Avanzados.</string>
+    <string name="connectivity_notice_confirm">Entendido y Continuar</string>
 </resources>
