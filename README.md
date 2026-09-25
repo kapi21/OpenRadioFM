@@ -1,14 +1,14 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.5.0_Universal-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.6_FUSION-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_4.4+-orange.svg)]()
 [![Hardware](https://img.shields.io/badge/hardware-MT8163_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM_|_SPD-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units (Edición 100% Offline)**, con soporte activo para **K706/QuickFish**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, **QS6/NWD**, **SPD** y **FYT/Teyes (OEM)**.  
-Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visual local de logos con atajos directos, preservación de archivos y cero dependencias de red.
+**Aplicación de radio FM premium para Android Head Units (Edición FUSION - Online/Offline)**, con soporte activo para **K706/QuickFish**, **MT8163 (Junsun V1 Pro)**, plataformas **MTK 8227L / 8259 / 8667**, **QS6/NWD**, **SPD** y **FYT/Teyes (OEM)**.  
+Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visual local de logos con atajos directos, preservación de archivos y conectividad flexible.
 
 <div align="center">
   <img src="docs/img/app_icon.png" width="150" alt="OpenRadioFM Logo">
@@ -539,6 +539,13 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Secuencia de Apagado QS6 (Beta)**: Implementación de la secuencia V18.4 con `ACTION_REQUEST_CHANGE_SOURCE` y desvinculación AIDL proactiva.
 - **Limpieza de Recursos**: Mejora en el cierre de hilos de red en `RadioRepository` durante el apagado de la app.
 - **Audio Focus**: Refinamiento en la gestión del foco para asegurar el silencio tras el cierre.
+
+### v5.6.0 "FUSION" (Septiembre 2026)
+- **Modo Dual Conectividad**: Selector inicial y configuración para operar en modo 100% Offline (logos locales en memoria, cero datos) o modo Online (logos dinámicos en la nube y streaming en vivo).
+- **Mandos al Volante en Segundo Plano**: Soporte extendido para cambio de emisoras y navegación de presets con la app minimizada (compatible con launchers OEM y de terceros como Agama).
+- **Audio Focus Robusto**: Retención de foco multimedia optimizada para evitar derivaciones indebidas al launcher o a la radio de fábrica.
+- **Streaming Independiente**: Reproducción de radio online desacoplada de la descarga de logotipos.
+- **Internacionalización Completa**: Sincronización y actualización al 100% de textos y menús en 13 idiomas (ES, EN, DE, FR, HU, IT, JA, PT, RO, RU, SR, UK, ZH).
 
 ### v16.3.0 "Online Logos & Stability" (Marzo 2026)
 - **Sistema de Logos Online (Supabase)**: Búsqueda centralizada de logos por PI Code, RDS Name y Frecuencia, con contribución comunitaria automática.
