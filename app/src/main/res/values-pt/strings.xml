@@ -296,8 +296,8 @@
     <string name="my_favorites">Meus Favoritos</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
-    <string name="accessibility_service_description">Este serviço permite que o OpenRadioFM se sobreponha quando você pressiona o botão físico RADIO em unidades Android compatíveis (ex.: K706), ignorando o app de fábrica.</string>
+    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="accessibility_service_description">Abre o OpenRadioFM ao pressionar o botão físico RADIO (substitui o aplicativo de fábrica). Em unidades K706/Topway e QS6 (NWD), também reencaminha as teclas multimídia do volante (avançar/retroceder/play) em segundo plano; caso contrário, o sistema costuma enviar essas teclas para o launcher ou para o rádio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Acessibilidade)</string>
     <string name="a11y_hihack_enabled">Ativado</string>
     <string name="a11y_hihack_disabled">Desativado</string>
@@ -425,7 +425,7 @@ Pode usar os atalhos acima para navegar para RadioLogos ou Transferências.</str
     <string name="toast_logo_removed">Logotipo removido</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">Universal</string>
+    <string name="root_version_suffix">FUSION</string>
 
     <!-- Modo Offline / Conectividade -->
     <string name="offline_mode_title">Modo Offline (100% Local)</string>
@@ -437,7 +437,7 @@ Pode usar os atalhos acima para navegar para RadioLogos ou Transferências.</str
 
     <!-- Aviso de Conectividade Primeiro Arranque / Atualização -->
     <string name="connectivity_notice_title">Modo de Conectividade</string>
-    <string name="connectivity_notice_message">O OpenRadioFM Universal pode operar em dois modos de acordo com suas preferências:</string>
+    <string name="connectivity_notice_message">O OpenRadioFM FUSION pode operar em dois modos de acordo com suas preferências:</string>
     <string name="connectivity_notice_offline_desc">Sem Internet nem dados móveis. Funciona de forma autónoma com logótipos locais em memória.</string>
     <string name="connectivity_notice_online_btn">Modo Online (Nuvem)</string>
     <string name="connectivity_notice_online_desc">Transferência automática de logótipos atualizados e transmissão de rádio online em direto.</string>

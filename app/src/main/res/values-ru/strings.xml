@@ -237,8 +237,8 @@
     <string name="logo_mode_clock">Цифровые Часы</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
-    <string name="accessibility_service_description">Этот сервис позволяет OpenRadioFM открываться поверх при нажатии физической кнопки RADIO на совместимых Android-устройствах (например, K706), обходя штатное радио.</string>
+    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="accessibility_service_description">Открывает OpenRadioFM при нажатии физической кнопки RADIO (заменяет штатное приложение). На устройствах K706/Topway и QS6 (NWD) также перенаправляет кнопки руля (вперед/назад/плей) в фоновом режиме; иначе система часто отправляет эти нажатия в лаунчер или штатное радио.</string>
     <string name="a11y_hihack_title">HiHack (Спец. возможности)</string>
     <string name="a11y_hihack_enabled">Включено</string>
     <string name="a11y_hihack_disabled">Выключено</string>
@@ -395,7 +395,7 @@
     <string name="toast_logo_removed">Логотип удален</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">Universal</string>
+    <string name="root_version_suffix">FUSION</string>
 
     <!-- Автономный режим / Подключение -->
     <string name="offline_mode_title">Автономный режим (100% локальный)</string>
@@ -407,7 +407,7 @@
 
     <!-- Уведомление о подключении при первом запуске / обновлении -->
     <string name="connectivity_notice_title">Режим подключения</string>
-    <string name="connectivity_notice_message">OpenRadioFM Universal может работать в двух режимах в зависимости от ваших предпочтений:</string>
+    <string name="connectivity_notice_message">OpenRadioFM FUSION может работать в двух режимах в зависимости от ваших предпочтений:</string>
     <string name="connectivity_notice_offline_desc">Без интернета и мобильных данных. Работает автономно с локальными логотипами из памяти.</string>
     <string name="connectivity_notice_online_btn">Онлайн-режим (Облако)</string>
     <string name="connectivity_notice_online_desc">Автоматическая загрузка логотипов и потоковое интернет-радио в прямом эфире.</string>

@@ -296,8 +296,8 @@
     <string name="my_favorites">Kedvenceim</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
-    <string name="accessibility_service_description">Ez a szolgáltatás lehetővé teszi, hogy az OpenRadioFM felülírja a gyári rádiót, amikor megnyomod a fizikai RADIO gombot kompatibilis Android fejegységeken (pl. K706).</string>
+    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="accessibility_service_description">Megnyitja az OpenRadioFM-et a fizikai RADIO gomb megnyomásakor (helyettesíti a gyári alkalmazást). K706/Topway és QS6 (NWD) készülékeken a kormányvezérlő gombokat (következő/előző/lejátszás) is továbbítja a háttérben; enélkül a rendszer gyakran az indítónak vagy a gyári rádiónak küldi ezeket.</string>
     <string name="a11y_hihack_title">HiHack (Kisegítő lehetőségek)</string>
     <string name="a11y_hihack_enabled">Bekapcsolva</string>
     <string name="a11y_hihack_disabled">Kikapcsolva</string>
@@ -425,7 +425,7 @@ Használja a fenti gyorsgombokat a RadioLogos vagy Letöltések megnyitásához.
     <string name="toast_logo_removed">Logó eltávolítva</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">Universal</string>
+    <string name="root_version_suffix">FUSION</string>
 
     <!-- Offline mód / Kapcsolat -->
     <string name="offline_mode_title">Offline mód (100% helyi)</string>
@@ -437,7 +437,7 @@ Használja a fenti gyorsgombokat a RadioLogos vagy Letöltések megnyitásához.
 
     <!-- Kapcsolati értesítés Első indítás / Frissítés -->
     <string name="connectivity_notice_title">Kapcsolati mód</string>
-    <string name="connectivity_notice_message">Az OpenRadioFM Universal két módban működhet az Ön igényei szerint:</string>
+    <string name="connectivity_notice_message">Az OpenRadioFM FUSION két módban működhet az Ön igényei szerint:</string>
     <string name="connectivity_notice_offline_desc">Nincs internet vagy mobiladat. Teljesen önállóan működik a helyi logókkal a memóriából.</string>
     <string name="connectivity_notice_online_btn">Online mód (Felhő)</string>
     <string name="connectivity_notice_online_desc">Frissített logók automatikus letöltése és élő internetes rádióadás.</string>

@@ -236,8 +236,8 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
-    <string name="accessibility_service_description">Ovaj servis omogućava da OpenRadioFM iskoči preko fabričke aplikacije kada pritisneš fizičko RADIO dugme na kompatibilnim Android jedinicama (npr. K706).</string>
+    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="accessibility_service_description">Отвара OpenRadioFM притиском на физичко дугме RADIO (замењује фабричку апликацију). На K706/Topway и QS6 (NWD) уређајима такође прослеђује тастере на волану (следећа/претходна/плеј) у позадини; иначе систем често шаље ове тастере покретачу или фабричком радију.</string>
     <string name="a11y_hihack_title">HiHack (Pristupačnost)</string>
     <string name="a11y_hihack_enabled">Omogućeno</string>
     <string name="a11y_hihack_disabled">Onemogućeno</string>
@@ -395,7 +395,7 @@
     <string name="toast_logo_removed">Логотип уклоњен</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">Universal</string>
+    <string name="root_version_suffix">FUSION</string>
 
     <!-- Офлајн режим / Повезивање -->
     <string name="offline_mode_title">Офлајн режим (100% локално)</string>
@@ -407,7 +407,7 @@
 
     <!-- Обавештење о повезивању при првом покретању / ажурирању -->
     <string name="connectivity_notice_title">Режим повезивања</string>
-    <string name="connectivity_notice_message">OpenRadioFM Universal може да ради у два режима у зависности од ваших подешавања:</string>
+    <string name="connectivity_notice_message">OpenRadioFM FUSION може да ради у два режима у зависности од ваших подешавања:</string>
     <string name="connectivity_notice_offline_desc">Без интернета или мобилних података. Ради аутономно са локалним логотипима из меморије.</string>
     <string name="connectivity_notice_online_btn">Онлајн режим (Облак)</string>
     <string name="connectivity_notice_online_desc">Аутоматско преузимање ажурираних логотипа и стримовање интернет радија уживо.</string>

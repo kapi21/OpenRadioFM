@@ -296,8 +296,8 @@
     <string name="my_favorites">I Miei Preferiti</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
-    <string name="accessibility_service_description">Questo servizio permette a OpenRadioFM di sovrapporsi quando premi il pulsante fisico RADIO su unità Android compatibili (es. K706), bypassando l’app di serie.</string>
+    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="accessibility_service_description">Apre OpenRadioFM quando premi il pulsante fisico RADIO (sostituisce l’app di serie). Sulle unità K706/Topway e QS6 (NWD) inoltra anche i tasti multimediali al volante (successivo/precedente/play) in background; altrimenti il sistema invia spesso questi tasti al launcher o alla radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilità)</string>
     <string name="a11y_hihack_enabled">Attivato</string>
     <string name="a11y_hihack_disabled">Disattivato</string>
@@ -425,7 +425,7 @@ Usa i pulsanti in alto per accedere a RadioLogos o Download.</string>
     <string name="toast_logo_removed">Logo rimosso</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">Universal</string>
+    <string name="root_version_suffix">FUSION</string>
 
     <!-- Modalità Offline / Connettività -->
     <string name="offline_mode_title">Modalità Offline (100% Locale)</string>
@@ -437,7 +437,7 @@ Usa i pulsanti in alto per accedere a RadioLogos o Download.</string>
 
     <!-- Avviso di connettività Primo Avvio / Aggiornamento -->
     <string name="connectivity_notice_title">Modalità di Connettività</string>
-    <string name="connectivity_notice_message">OpenRadioFM Universal può funzionare in due modalità in base alle tue preferenze:</string>
+    <string name="connectivity_notice_message">OpenRadioFM FUSION può funzionare in due modalità in base alle tue preferenze:</string>
     <string name="connectivity_notice_offline_desc">Senza Internet né dati mobili. Funziona autonomamente con i loghi locali in memoria.</string>
     <string name="connectivity_notice_online_btn">Modalità Online (Cloud)</string>
     <string name="connectivity_notice_online_desc">Download automatico dei loghi aggiornati e streaming radio in diretta via Internet.</string>

@@ -237,8 +237,8 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.5.0 Universal</string>
-    <string name="accessibility_service_description">Acest serviciu permite ca OpenRadioFM să se suprapună când apeși butonul fizic RADIO pe unități Android compatibile (ex: K706), ignorând aplicația de fabrică.</string>
+    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="accessibility_service_description">Deschide OpenRadioFM la apăsarea butonului fizic RADIO (înlocuiește aplicația din fabrică). Pe unitățile K706/Topway și QS6 (NWD) redirecționează și tastele media de pe volan (următor/anterior/redare) în fundal; altfel, sistemul trimite adesea aceste taste către launcher sau radioul OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>
     <string name="a11y_hihack_disabled">Dezactivat</string>
@@ -395,7 +395,7 @@ Folosiți comenzile rapide de sus pentru a naviga la RadioLogos sau Descărcări
     <string name="toast_logo_removed">Logo eliminat</string>
     <string name="widget_label_3x1">OpenRadioFM 3x1</string>
     <string name="widget_label_3x2">OpenRadioFM 3x2</string>
-    <string name="root_version_suffix">Universal</string>
+    <string name="root_version_suffix">FUSION</string>
 
     <!-- Mod offline / Conectivitate -->
     <string name="offline_mode_title">Mod offline (100% local)</string>
@@ -407,7 +407,7 @@ Folosiți comenzile rapide de sus pentru a naviga la RadioLogos sau Descărcări
 
     <!-- Notificare de conectivitate Prima pornire / Actualizare -->
     <string name="connectivity_notice_title">Mod de conectivitate</string>
-    <string name="connectivity_notice_message">OpenRadioFM Universal poate funcționa în două moduri, în funcție de preferințe:</string>
+    <string name="connectivity_notice_message">OpenRadioFM FUSION poate funcționa în două moduri, în funcție de preferințe:</string>
     <string name="connectivity_notice_offline_desc">Fără internet sau date mobile. Funcționează autonom cu sigle locale din memorie.</string>
     <string name="connectivity_notice_online_btn">Mod online (Cloud)</string>
     <string name="connectivity_notice_online_desc">Descărcare automată a siglelor actualizate și streaming radio online în direct.</string>
