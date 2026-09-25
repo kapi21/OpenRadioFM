@@ -547,33 +547,32 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Streaming Independiente**: Reproducción de radio online desacoplada de la descarga de logotipos.
 - **Internacionalización Completa**: Sincronización y actualización al 100% de textos y menús en 13 idiomas (ES, EN, DE, FR, HU, IT, JA, PT, RO, RU, SR, UK, ZH).
 
-### v16.3.0 "Online Logos & Stability" (Marzo 2026)
-- **Sistema de Logos Online (Supabase)**: Búsqueda centralizada de logos por PI Code, RDS Name y Frecuencia, con contribución comunitaria automática.
-- **Caché Negativa**: Evita reintentos infinitos de búsqueda cuando un logo no existe en el servidor.
-- **Menú DEV**: Toggle para activar/desactivar el sistema de logos online en ambos motores (MT8163 y K706).
-- **Radio-Browser Estabilizado**: Endpoint migrado a `at1.api.radio-browser.info` para mayor fiabilidad.
-- **Sincronización de Hilos**: Contador de actividad de red movido al UI Thread para evitar parpadeos permanentes del icono de datos.
-- **Bug Fix**: Corregida lectura de preferencias en `downloadAndSaveLogo` (leía del archivo incorrecto).
+### v5.5.0 "Universal / Offline Edition" (Septiembre 2026)
+- **Arquitectura 100% Offline**: Desconexión total de llamadas a la nube para máxima privacidad, ahorro de datos y bajo consumo de memoria.
+- **Explorador Visual de Logos Local**: Nuevo explorador con miniaturas y atajos rápidos a `RadioLogos`, `Descargas`, memoria interna y USB.
+- **Preservación No Destructiva**: Desvinculación de logotipos sin borrar archivos del almacenamiento.
+- **Presets de Alto Rendimiento**: Decodificación reducida en presets (160x160 px RGB_565) reduciendo en un 98% el uso de memoria en pantallas Android.
+- **Paridad Multilingüe**: Interfaz y diálogos traducidos de forma completa a 13 idiomas.
 
-### v5.7.0 "Dynamic PS Scaling" (Marzo 2026)
-- **Auto-dimensionado de Texto**: La frecuencia/nombre de emisora ahora se escala dinámicamente en ambos layouts para evitar recortes.
-- **Optimización de Espacio**: Reducción de márgenes laterales y ajuste de fuente mínima a 20sp para nombres extra largos.
+### v5.2.2 "Widgets & Hotfix" (Mayo 2026)
+- **Nuevos Widgets de Escritorio**: Soporte para formatos 3x1 y 3x2 optimizados para launchers automotrices.
+- **Estabilidad de Arranque**: Corrección en la persistencia de fuentes y perfiles al iniciar la unidad.
 
-### v5.6.0 "NighMode Polish" (Marzo 2026)
-- **UI NightBlue**: El botón PowerOff ahora hereda el color azul noche en el modo nocturno.
-- **PTY Agrandado**: Icono y texto de Tipo de Programa un 30% más grandes en Layout 2.
-- **Clean UI**: Eliminación total de placeholders "Sin datos RDS RT" para una interfaz vacía más elegante.
+### v5.2.1 "Icons Fix & Multi-Engine" (Abril 2026)
+- **Icon Packs & Números de Presets**: Restauración de paquetes de iconos personalizados y numeración 1–18 desde assets.
+- **Soporte SPD (Junsun V9 Plus)**: Detección y control por AIDL directo a MCU (`com.spd.radio.service`).
+- **Motor FYT / Teyes OEM**: Control nativo por intents profundos (`radio://tune`) sin requerir acceso root.
+- **Reconexión Resiliente en QS6**: Warm-up rebind y auto-reconversión AIDL tras reinicio de la unidad.
 
-### v5.5.0 "Manager & RDS Architecture" (Marzo 2026)
-- **Refactorización V5.5**: Creación de `PlaybackManager` (Audio/Mute) y `DeviceManager` (Hardware/Power) para desacoplar `MainActivity`.
-- **RDS PS Dinámico**: Sustitución inteligente de la frecuencia por el nombre de la emisora (RDS PS) o nombre personalizado.
-- **Optimización Layout 2**: Reestructuración de PTY y alineación de iconos con mayores tamaños para mejorar la visibilidad.
-- **Limpieza Estructural**: Eliminación de placeholders redundantes y directorios vacíos.
+### v5.2.0 "MCU & Audio Modernization" (Abril 2026)
+- **Unificación Multiplataforma**: Integración de motores K706, MT8163, QS6/NWD y MTK8259 en una sola compilación.
+- **Gestión Avanzada de AudioFocus**: Recuperación automática tras navegación, llamadas y reproducción en Spotify.
+- **Botón de Apagado Universal**: Cierre seguro del hardware y liberación inmediata del canal de audio.
 
-### v5.2.0 "Power & Focus Integration" (Marzo 2026)
-- **Botón de Apagado**: Implementado en todos los layouts para un cierre seguro y liberación inmediata del canal de audio.
-- **Recuperación de Audio Focus**: Sistema de autocuración mejorado para Spotify y llamadas.
-- **Unificación de Interfaz**: Añadido `closeDevice()` a la capa de abstracción `RadioEngine`.
+### v5.1.0 "Backup Studio & Web Tools" (Abril 2026)
+- **Backup Studio Web / PWA**: Plataforma en navegador para exportar, importar y editar favoritos, opciones y logos (`.fav`, `.ors`, `.orzip`).
+- **Modo Día**: Nueva paleta de alto contraste para visibilidad óptima bajo luz solar directa.
+- **Refinamiento RDS**: Decodificación optimizada de PS, RT y PTY en tiempo real.
 
 ### v4.7.0 "Car & Audio Integration" (Marzo 2026)
 - **Soporte Android Auto**: Integración completa mediante `MediaSession` y `MediaBrowserService`. Los favoritos ahora aparecen como una lista navegable en el coche.
