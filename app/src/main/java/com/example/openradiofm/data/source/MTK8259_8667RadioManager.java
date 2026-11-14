@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.ts.tsspeechlib.radio.ITsSpeechRadio;
 import com.ts.main.common.ITsCommon;
+import com.ts.main.common.ITsRadioCommon;
 
 /**
  * Manager para unidades Topway/TS (MTK8259/8667).
@@ -24,6 +25,7 @@ public class MTK8259_8667RadioManager {
     private final android.content.SharedPreferences mPrefs;
     private final ITsCommon mTsCommon;
     private final ITsSpeechRadio mTsSpeechRadio;
+    private ITsRadioCommon mTsRadioCommon;
     
     private AudioManager mAudioManager;
     private AudioManager.OnAudioFocusChangeListener mAudioFocusChangeListener;
@@ -337,24 +339,52 @@ public class MTK8259_8667RadioManager {
         }
     }
 
+    private ITsRadioCommon getRadioCommon() {
+        if (mTsRadioCommon != null) {
+            return mTsRadioCommon;
+        }
+        if (mTsCommon == null) {
+            return null;
+        }
+        try {
+            android.os.IBinder binder = mTsCommon.getSpecialBinder("Radio");
+            if (binder == null) {
+                Log.w(TAG, "getRadioCommon: getSpecialBinder(\"Radio\") returned null");
+                return null;
+            }
+            mTsRadioCommon = ITsRadioCommon.Stub.asInterface(binder);
+        } catch (Exception e) {
+            Log.w(TAG, "getRadioCommon failed: " + e);
+            return null;
+        }
+        return mTsRadioCommon;
+    }
+
     // --- Métodos RDS seguros (Protegidos contra NoSuchMethodError) ---
 
     public String getPsNameSafe() {
-        if (mTsCommon == null) return null;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return null;
         try {
-            return mTsCommon.GetPsName();
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
-            // NoSuchMethodError ocurre si el MainUI.apk no tiene el MOD de GDUCK
+            String raw = rc.Radio_GetPsName();
+            if (raw != null && raw.length() >= 9) {
+                char marker = raw.charAt(0);
+                if (marker == 1 || marker == 2) {
+                    return raw.substring(1, 9);
+                }
+            }
+            return null;
+        } catch (Exception e) {
             return null;
         }
     }
 
     public String getRtSafe() {
-        if (mTsCommon == null) return null;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return null;
         try {
-            // V18.9: El análisis de ingeniería inversa confirma que GetPtyStr() en Topway devuelve el Radio Text (RT).
-            return mTsCommon.GetPtyStr();
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return rc.Radio_GetPtyStr(100);
+        } catch (Exception e) {
             return null;
         }
     }
@@ -401,13 +431,15 @@ public class MTK8259_8667RadioManager {
     }
 
     public String getPtySafe() {
-        if (mTsCommon == null) return null;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return null;
         try {
-            // V18.9: El análisis de ingeniería inversa confirma que GetCategory() devuelve el PTY.
-            String category = mTsCommon.GetCategory();
+            int flag = (rc.Radio_GetDispFlag() & 0xFF00) >> 8;
+            if (flag <= 0 || flag >= 30) return null;
+            String category = rc.Radio_GetPtyStr(flag);
             if (category == null) return null;
             return mapPtyToId(category.trim());
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }
@@ -457,46 +489,51 @@ public class MTK8259_8667RadioManager {
     // --- Nuevos métodos RDS Status (V18.9) ---
 
     public boolean isAfActiveSafe() {
-        if (mTsCommon == null) return false;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return false;
         try {
-            return mTsCommon.RdsAf();
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return (rc.Radio_GetDispFlag() & 0x20) != 0;
+        } catch (Exception e) {
             return false;
         }
     }
 
     public boolean isTaActiveSafe() {
-        if (mTsCommon == null) return false;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return false;
         try {
-            return mTsCommon.RdsTa();
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return (rc.Radio_GetDispFlag() & 0x40) != 0;
+        } catch (Exception e) {
             return false;
         }
     }
 
     public boolean isTpActiveSafe() {
-        if (mTsCommon == null) return false;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return false;
         try {
-            return mTsCommon.RdsTp();
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            return (rc.Radio_GetDispFlag() & 0x80) != 0;
+        } catch (Exception e) {
             return false;
         }
     }
 
     public void toggleAfSafe() {
-        if (mTsCommon == null) return;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return;
         try {
-            mTsCommon.RdsAfSwitch();
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            rc.Radio_RdsAf();
+        } catch (Exception e) {
             Log.e(TAG, "toggleAfSafe not supported", e);
         }
     }
 
     public void toggleTaSafe() {
-        if (mTsCommon == null) return;
+        ITsRadioCommon rc = getRadioCommon();
+        if (rc == null) return;
         try {
-            mTsCommon.RdsTaSwitch();
-        } catch (AbstractMethodError | NoSuchMethodError | Exception e) {
+            rc.Radio_RdsTa();
+        } catch (Exception e) {
             Log.e(TAG, "toggleTaSafe not supported", e);
         }
     }

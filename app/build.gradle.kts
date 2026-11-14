@@ -70,8 +70,8 @@ android {
         applicationId = "com.example.openradiofm"
         minSdk = 21
         targetSdk = 35
-        versionCode = 45
-        versionName = "5.7"
+        versionCode = 46
+        versionName = "5.7.1-8667fc"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

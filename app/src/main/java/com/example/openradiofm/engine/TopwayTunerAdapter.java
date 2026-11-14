@@ -226,44 +226,44 @@ public class TopwayTunerAdapter {
     }
 
     public String getPsName() {
-        if (mCommonService != null) {
-            try { return mCommonService.GetPsName(); } catch (Exception e) { return null; }
-        }
+//        if (mCommonService != null) {
+//            try { return mCommonService.GetPsName(); } catch (Exception e) { return null; }
+//        }
         return null;
     }
 
     public String getPtyStr() {
-        if (mCommonService != null) {
-            try { return mCommonService.GetPtyStr(); } catch (Exception e) { return null; }
-        }
+//        if (mCommonService != null) {
+//            try { return mCommonService.GetPtyStr(); } catch (Exception e) { return null; }
+//        }
         return null;
     }
 
     public String getCategory() {
-        if (mCommonService != null) {
-            try { return mCommonService.GetCategory(); } catch (Exception e) { return null; }
-        }
+//        if (mCommonService != null) {
+//            try { return mCommonService.GetCategory(); } catch (Exception e) { return null; }
+//        }
         return null;
     }
 
     public boolean rdsAf() {
-        if (mCommonService != null) {
-            try { return mCommonService.RdsAf(); } catch (Exception e) { return false; }
-        }
+//        if (mCommonService != null) {
+//            try { return mCommonService.RdsAf(); } catch (Exception e) { return false; }
+//        }
         return false;
     }
 
     public boolean rdsTa() {
-        if (mCommonService != null) {
-            try { return mCommonService.RdsTa(); } catch (Exception e) { return false; }
-        }
+//        if (mCommonService != null) {
+//            try { return mCommonService.RdsTa(); } catch (Exception e) { return false; }
+//        }
         return false;
     }
 
     public boolean rdsTp() {
-        if (mCommonService != null) {
-            try { return mCommonService.RdsTp(); } catch (Exception e) { return false; }
-        }
+//        if (mCommonService != null) {
+//            try { return mCommonService.RdsTp(); } catch (Exception e) { return false; }
+//        }
         return false;
     }
 
@@ -286,15 +286,15 @@ public class TopwayTunerAdapter {
     }
 
     public void rdsAfSwitch() {
-        if (mCommonService != null) {
-            try { mCommonService.RdsAfSwitch(); } catch (Exception e) { Log.e(TAG, "Remote error", e); }
-        }
+//        if (mCommonService != null) {
+//            try { mCommonService.RdsAfSwitch(); } catch (Exception e) { Log.e(TAG, "Remote error", e); }
+//        }
     }
 
     public void rdsTaSwitch() {
-        if (mCommonService != null) {
-            try { mCommonService.RdsTaSwitch(); } catch (Exception e) { Log.e(TAG, "Remote error", e); }
-        }
+//        if (mCommonService != null) {
+//            try { mCommonService.RdsTaSwitch(); } catch (Exception e) { Log.e(TAG, "Remote error", e); }
+//        }
     }
 
     public void gotoEq() {

@@ -75,15 +75,4 @@ interface ITsCommon {
     boolean bCarplayConnected();
     boolean bAutoConnected();
     void EnterAutoLink();
-
-    String GetPsName();
-    String GetPtyStr();
-    String GetCategory();
-	int GetAudioSessionId();
-	int GetRadioSessionId();
-    boolean RdsAf();
-    boolean RdsTa();
-    boolean RdsTp();
-    void RdsAfSwitch();
-    void RdsTaSwitch();
 }
