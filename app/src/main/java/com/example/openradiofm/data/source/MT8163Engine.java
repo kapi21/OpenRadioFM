@@ -276,7 +276,7 @@ public class MT8163Engine implements RadioEngine {
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
-            mService = IRadioServiceAPI.Stub.asInterface(binder);
+            mService = HcnApiFactory.wrap(mContext, binder);
             mBound = true;
             Log.d(TAG, "Servicio HCN conectado: " + name);
 

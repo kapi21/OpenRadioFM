@@ -1,3 +1,12 @@
+## [5.7] - 2026-11-07
+
+### Junsun V7 / MT8768 (HCN V31) — gracias Csaba
+- **`HcnApiFactory`**: detección dinámica del contrato AIDL HCN v25 (MT8163) vs v31 (MT8768 / Junsun V7), con override por SharedPreferences (`pref_hcn_contract`: 0=auto, 25, 31).
+- **`HcnV31Api`**: proxy Binder que adapta transacciones e IDs del contrato de 31 comandos.
+- **MT8163 path**: `MT8163Engine` / `MT8163TunerAdapter` / `RadioServiceController` pasan por `HcnApiFactory.wrap()`; regresión verificada en hardware MT8163.
+- **i18n**: motor descrito como `Topway / Eonon / Junsun V7 (MT8163/8768)` en los 13 `strings.xml`.
+- **Validación**: OK en Junsun V7 (MT8768) real y en MT8163 (vía verde de release).
+
 ## [5.5 OFFLINE VERSION] - 2026-09-20
 
 ### Arquitectura 100% Offline y Persistencia Determinista

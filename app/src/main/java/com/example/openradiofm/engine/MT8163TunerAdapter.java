@@ -90,7 +90,7 @@ public class MT8163TunerAdapter {
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
-            mService = IRadioServiceAPI.Stub.asInterface(binder);
+            mService = com.example.openradiofm.data.source.HcnApiFactory.wrap(mContext, binder);
             mIsConnecting = false;
             Log.i(TAG, "MT8163: Servicio conectado exitosamente.");
             

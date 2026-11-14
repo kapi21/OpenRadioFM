@@ -153,7 +153,7 @@
     <string name="engine_auto">自动 (推荐)</string>
     <string name="engine_k706">Vento / HCN (K706)</string>
     <string name="engine_qs6">NWD / Nanis (QS6)</string>
-    <string name="engine_mt8163">Topway / Eonon (MT8163)</string>
+    <string name="engine_mt8163">Topway / Eonon / Junsun V7 (MT8163/8768)</string>
     <string name="engine_mtk">MediaTek 通用</string>
     <string name="engine_ts">TopWay (MainUI)</string>
     <string name="engine_mtk8259">MTK8259 / 8667</string>

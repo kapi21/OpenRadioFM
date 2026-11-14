@@ -211,7 +211,9 @@ public class RadioServiceController {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             Log.d(TAG, "Servicio conectado: " + name.flattenToShortString());
-            mRadioService = IRadioServiceAPI.Stub.asInterface(service);
+            mRadioService = "com.hcn.autoradio".equals(name.getPackageName())
+                    ? com.example.openradiofm.data.source.HcnApiFactory.wrap(mContext, service)
+                    : IRadioServiceAPI.Stub.asInterface(service);
             mBound = true;
             try {
                 if ("com.hcn.autoradio".equals(name.getPackageName())) {
