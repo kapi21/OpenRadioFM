@@ -2219,9 +2219,9 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
     }
 
     /**
-     * Vxx: Soltar AudioFocus sin cerrar el HAL ni parar secuencia FM.
-     * Útil cuando la UI se minimiza (modo "silencio en background") y queremos que el launcher
-     * no nos trate como fuente activa, pero sin perder estado del motor.
+     * Soltar AudioFocus / ruta FM sin cerrar el HAL.
+     * Usado al minimizar (PowerOff modo B): libera el canal FM y deja el amp
+     * desmuteado para que otras apps puedan sonar (reporte Luis: mute global pegado).
      */
     public void releaseAudioFocusOnlyForBackground() {
         try {
@@ -2231,9 +2231,29 @@ public class K706RadioManager extends IRadioServiceAPI.Stub {
             mIsRadioActive = false;
             try { mAudioRecoveryHandler.removeCallbacks(mAutoRecoveryRunnable); } catch (Exception ignored) {}
             mAutoRecoveryAttempts = 0;
-            abandonAudioFocus();
             // En background no necesitamos vigilar el listener; evita reasserts inútiles.
             disarmMcuWatchdog();
+
+            // Liberar ruta FM en MCU (misma idea que AUDIOFOCUS_LOSS / llamadas).
+            try {
+                if (mSetChannel != null && mMcuManager != null) {
+                    mSetChannel.invoke(mMcuManager, (byte) 4);
+                    Log.d(TAG, "releaseAudioFocusOnlyForBackground: RPC_SetChannel(4)");
+                }
+            } catch (Exception e) {
+                Log.w(TAG, "releaseAudioFocusOnlyForBackground: SetChannel(4) falló", e);
+            }
+
+            abandonAudioFocus();
+
+            // Crítico: RPC_SetVolumeMute(true) deja el amp mudo para TODAS las apps.
+            // Tras cortar FM, abrir de nuevo el volumen MCU.
+            try {
+                setMute(false);
+                Log.d(TAG, "releaseAudioFocusOnlyForBackground: setMute(false) amp libre");
+            } catch (Exception e) {
+                Log.w(TAG, "releaseAudioFocusOnlyForBackground: setMute(false) falló", e);
+            }
         } catch (Exception e) {
             Log.w(TAG, "releaseAudioFocusOnlyForBackground falló", e);
         }

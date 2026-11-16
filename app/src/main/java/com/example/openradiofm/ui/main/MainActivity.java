@@ -2907,19 +2907,20 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     /**
-     * K706: "PowerOff" UI en modo B = minimizar a HOME sin silenciar ni disparar cierre total.
-     * Evita el flujo prepareForPowerOff() porque puede mutear y además algunos launchers
-     * interpretan el cierre como cambio de fuente y ejecutan forceStopPackage().
+     * K706: "PowerOff" UI en modo B = minimizar a HOME sin disparar cierre total.
+     * Evita finish()/forceStopPackage en algunos launchers. En K706 no se deja
+     * {@code RPC_SetVolumeMute(true)} pegado (bloqueaba audio de otras apps — Luis).
      */
     public void minimizeToHomeKeepingMediaControl() {
-        // Silencio en background (modo B): apagar sonido de FM y soltar AudioFocus,
-        // pero mantener MediaSession/FGS para el widget de música.
+        // Silencio FM en background: soltar canal/AudioFocus; mantener MediaSession/FGS.
         try {
-            if (mEngine != null) {
+            if (mEngine != null && "K706".equals(mEngine.getEngineName())) {
+                // SetChannel(4) + abandon focus + unmute amp (ver K706RadioManager).
+                mEngine.releaseAudioFocusOnlyForBackground();
+            } else if (mEngine != null) {
                 mEngine.setMute(true);
                 mEngine.releaseAudioFocusOnlyForBackground();
             } else if (mPlaybackManager != null) {
-                // fallback legacy
                 mPlaybackManager.setMute(true);
             }
         } catch (Exception ignored) {}
