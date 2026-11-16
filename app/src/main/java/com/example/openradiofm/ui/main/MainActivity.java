@@ -2855,6 +2855,58 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     }
 
     /**
+     * Botón PowerOff de la UI: ramifica por motor.
+     * <ul>
+     *   <li>MTK8259/8667: quit real ({@code CloseRadioCh} + {@code EnterMode(0)}), confirmado por Csaba.</li>
+     *   <li>Resto (p. ej. K706): modo B — minimizar manteniendo control multimedia.</li>
+     * </ul>
+     */
+    public void handlePowerOffButton() {
+        try {
+            if (mEngine != null && "MTK8259_8667".equals(mEngine.getEngineName())) {
+                powerOffTopway8667();
+                return;
+            }
+        } catch (Exception e) {
+            Log.w("MainActivity", "handlePowerOffButton: engine check failed, fallback minimize", e);
+        }
+        minimizeToHomeKeepingMediaControl();
+    }
+
+    /**
+     * Topway MTK8259/8667: apagado hardware según Csaba — {@code CloseRadioCh()} + {@code EnterMode(0)}
+     * vía {@link com.example.openradiofm.data.source.RadioEngine#closeDevice()}, luego cerrar Activity.
+     */
+    public void powerOffTopway8667() {
+        Log.i("MainActivity", "PowerOff 8667: CloseRadioCh + EnterMode(0), then finish");
+        try {
+            prepareForPowerOff();
+        } catch (Exception ignored) {}
+
+        try {
+            if (mEngine != null) {
+                mEngine.closeDevice();
+            }
+        } catch (Exception e) {
+            Log.e("MainActivity", "PowerOff 8667: closeDevice failed", e);
+        }
+
+        try {
+            Intent media = new Intent(getApplicationContext(), com.example.openradiofm.service.RadioMediaService.class);
+            stopService(media);
+        } catch (Exception ignored) {}
+
+        try {
+            finish();
+        } catch (Exception e) {
+            Log.e("MainActivity", "PowerOff 8667: finish failed", e);
+            try {
+                moveTaskToBack(true);
+            } catch (Exception ignored) {}
+        }
+    }
+
+    /**
      * K706: "PowerOff" UI en modo B = minimizar a HOME sin silenciar ni disparar cierre total.
      * Evita el flujo prepareForPowerOff() porque puede mutear y además algunos launchers
      * interpretan el cierre como cambio de fuente y ejecutan forceStopPackage().

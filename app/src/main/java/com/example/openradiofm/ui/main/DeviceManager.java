@@ -57,15 +57,27 @@ public class DeviceManager {
     }
 
     /**
-     * Apaga la radio y cierra la aplicación.
-     * Secuencia:
-     * 1. Cerrar el dispositivo hardware (closeDevice)
-     * 2. Finalizar la actividad (finish)
+     * Apaga la radio y cierra la aplicación (o minimiza, según motor).
+     * <ul>
+     *   <li>MTK8259/8667: {@code closeDevice()} (= CloseRadioCh + EnterMode(0)) y {@code finish()}.</li>
+     *   <li>K706 u otros: minimizar (modo B; finish puede provocar forceStopPackage en algunos launchers).</li>
+     * </ul>
      */
     public void powerOff() {
-        // K706: "PowerOff" en UI se usa como "salir/minimizar".
-        // Hacer finish() aquí provoca que el launcher trate el cierre como cambio de fuente y puede
-        // ejecutar forceStopPackage(com.example.openradiofm), rompiendo el widget genérico de música.
+        try {
+            if (mEngine != null && "MTK8259_8667".equals(mEngine.getEngineName())) {
+                Log.d(TAG, "Power Off(UI): 8667 CloseRadioCh + EnterMode(0) + finish");
+                try {
+                    mEngine.closeDevice();
+                } catch (Exception e) {
+                    Log.e(TAG, "Power Off(UI): closeDevice 8667 falló", e);
+                }
+                mActivity.finish();
+                return;
+            }
+        } catch (Exception e) {
+            Log.w(TAG, "Power Off(UI): branch 8667 falló, fallback minimize", e);
+        }
         try {
             Log.d(TAG, "Power Off(UI): minimizando app (sin cerrar Activity ni apagar HW)");
             mActivity.moveTaskToBack(true);

@@ -127,14 +127,12 @@ public class ControlPanelManager {
         // Si hay un pack de iconos seleccionado, aplicarlo tras setear los defaults.
         try { mActivity.applyIconPack(); } catch (Exception ignored) {}
 
-        // Power Off delegada a DeviceManager
+        // Power Off: por motor (8667 = HW quit; K706 = minimizar / modo B).
         ImageButton btnPowerOff = mActivity.findViewById(R.id.btnPowerOff);
         if (btnPowerOff != null) {
             btnPowerOff.setOnClickListener(v -> {
                 mActivity.animateButton(btnPowerOff);
-                // K706: PowerOff UI = minimizar (mantener widget de música operativo).
-                // No ejecutar prepareForPowerOff() (mute + cierre total).
-                mActivity.minimizeToHomeKeepingMediaControl();
+                mActivity.handlePowerOffButton();
             });
         }
 
