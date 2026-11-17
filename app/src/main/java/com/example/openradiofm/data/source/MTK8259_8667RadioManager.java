@@ -341,7 +341,12 @@ public class MTK8259_8667RadioManager {
 
     private ITsRadioCommon getRadioCommon() {
         if (mTsRadioCommon != null) {
-            return mTsRadioCommon;
+            android.os.IBinder cached = mTsRadioCommon.asBinder();
+            if (cached != null && cached.isBinderAlive()) {
+                return mTsRadioCommon;
+            }
+            Log.w(TAG, "getRadioCommon: binder Radio muerto, se vuelve a pedir");
+            mTsRadioCommon = null;
         }
         if (mTsCommon == null) {
             return null;
@@ -360,6 +365,14 @@ public class MTK8259_8667RadioManager {
         return mTsRadioCommon;
     }
 
+    /** Si MainUI se reinicia, el proxy cacheado lanza RemoteException para siempre. */
+    private void onRadioCommonError(Exception e) {
+        if (e instanceof RemoteException) {
+            Log.w(TAG, "ITsRadioCommon RemoteException, invalidando cache: " + e);
+            mTsRadioCommon = null;
+        }
+    }
+
     // --- Métodos RDS seguros (Protegidos contra NoSuchMethodError) ---
 
     public String getPsNameSafe() {
@@ -375,6 +388,7 @@ public class MTK8259_8667RadioManager {
             }
             return null;
         } catch (Exception e) {
+            onRadioCommonError(e);
             return null;
         }
     }
@@ -385,6 +399,7 @@ public class MTK8259_8667RadioManager {
         try {
             return rc.Radio_GetPtyStr(100);
         } catch (Exception e) {
+            onRadioCommonError(e);
             return null;
         }
     }
@@ -440,6 +455,7 @@ public class MTK8259_8667RadioManager {
             if (category == null) return null;
             return mapPtyToId(category.trim());
         } catch (Exception e) {
+            onRadioCommonError(e);
             return null;
         }
     }
@@ -472,6 +488,8 @@ public class MTK8259_8667RadioManager {
         } catch (Exception e) {
             Log.e(TAG, "forceUnmute failed", e);
         }
+        // Mute() de MainUI es un toggle global que sobrevive a nuestro proceso.
+        setMute(false);
     }
 
     public void openEq() {
@@ -494,6 +512,7 @@ public class MTK8259_8667RadioManager {
         try {
             return (rc.Radio_GetDispFlag() & 0x20) != 0;
         } catch (Exception e) {
+            onRadioCommonError(e);
             return false;
         }
     }
@@ -504,6 +523,7 @@ public class MTK8259_8667RadioManager {
         try {
             return (rc.Radio_GetDispFlag() & 0x40) != 0;
         } catch (Exception e) {
+            onRadioCommonError(e);
             return false;
         }
     }
@@ -514,6 +534,7 @@ public class MTK8259_8667RadioManager {
         try {
             return (rc.Radio_GetDispFlag() & 0x80) != 0;
         } catch (Exception e) {
+            onRadioCommonError(e);
             return false;
         }
     }
@@ -524,6 +545,7 @@ public class MTK8259_8667RadioManager {
         try {
             rc.Radio_RdsAf();
         } catch (Exception e) {
+            onRadioCommonError(e);
             Log.e(TAG, "toggleAfSafe not supported", e);
         }
     }
@@ -534,6 +556,7 @@ public class MTK8259_8667RadioManager {
         try {
             rc.Radio_RdsTa();
         } catch (Exception e) {
+            onRadioCommonError(e);
             Log.e(TAG, "toggleTaSafe not supported", e);
         }
     }

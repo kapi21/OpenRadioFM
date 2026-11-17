@@ -27,6 +27,8 @@ public class MTK8259_8667Engine implements RadioEngine {
     private String mLastRt = null;
     /** Evita que {@link #enforceAudioRecovery()} vuelva a abrir la FM vía {@code OpenRadioCh()} durante streaming. */
     private boolean mOnlineStreamingActive = false;
+    /** True tras {@link #closeDevice()}: el canal está cerrado y el motor no debe reutilizarse. */
+    private volatile boolean mDeviceClosed = false;
     
     // V21.1: Polling fuera del hilo UI para evitar jank
     private HandlerThread mPollThread;
@@ -49,6 +51,7 @@ public class MTK8259_8667Engine implements RadioEngine {
         try {
             mManager = new MTK8259_8667RadioManager(context, mTsCommon, mTsSpeechRadio);
             mManager.openDevice();
+            mDeviceClosed = false;
             
             // Iniciar el bucle de RDS si el manager está conectado
             if (mManager.isConnected()) {
@@ -102,18 +105,37 @@ public class MTK8259_8667Engine implements RadioEngine {
             mPollThread = null;
             mHandler = null;
         }
-        if (mManager != null) {
+        if (mManager != null && !mDeviceClosed) {
             try {
                 mManager.closeDevice();
             } catch (Exception ignored) {}
         }
+        mDeviceClosed = true;
         mManager = null;
         mCallback = null;
+        com.example.openradiofm.ui.main.RadioServiceController.clearSharedLocalEngineIfSame(this);
     }
 
+    /**
+     * Solo cierra el canal de radio ({@code CloseRadioCh} + {@code EnterMode(0)}).
+     * El desmontaje completo queda para {@link #release(boolean)} desde onDestroy.
+     */
     @Override
     public void closeDevice() {
-        release();
+        stopRdsPolling();
+        if (mManager != null && !mDeviceClosed) {
+            try {
+                mManager.closeDevice();
+            } catch (Exception e) {
+                Log.e(TAG, "closeDevice failed", e);
+            }
+        }
+        mDeviceClosed = true;
+    }
+
+    /** Motor reutilizable: manager vivo y canal de radio abierto. */
+    public boolean isAlive() {
+        return mManager != null && mManager.isConnected() && !mDeviceClosed;
     }
 
     @Override
@@ -248,6 +270,10 @@ public class MTK8259_8667Engine implements RadioEngine {
             Log.d(TAG, "enforceAudioRecovery: omitido (Radio Online activo; evitar OpenRadioCh + stream a la vez)");
             return;
         }
+        if (mDeviceClosed) {
+            Log.d(TAG, "enforceAudioRecovery: omitido (canal cerrado por PowerOff)");
+            return;
+        }
         if (mManager != null) {
             mManager.switchMixerToFmAudio();
         }
@@ -341,7 +367,7 @@ public class MTK8259_8667Engine implements RadioEngine {
     public void setCallback(RadioEngineCallback cb) {
         this.mCallback = cb;
         // V18.6.4: Al reconectar el callback (ej. tras recreación de layout), reanudamos el polling
-        if (cb != null && mManager != null && mManager.isConnected()) {
+        if (cb != null && mManager != null && mManager.isConnected() && !mDeviceClosed) {
             startRdsPolling();
         }
     }

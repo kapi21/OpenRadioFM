@@ -2875,10 +2875,12 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
 
     /**
      * Topway MTK8259/8667: apagado hardware según Csaba — {@code CloseRadioCh()} + {@code EnterMode(0)}
-     * vía {@link com.example.openradiofm.data.source.RadioEngine#closeDevice()}, luego cerrar Activity.
+     * vía {@link com.example.openradiofm.data.source.RadioEngine#closeDevice()}, luego cerrar la tarea.
+     * El mute de MainUI ({@code ITsCommon.Mute()}) es global y persiste fuera del proceso:
+     * se deja desmuteado tras cerrar el canal.
      */
     public void powerOffTopway8667() {
-        Log.i("MainActivity", "PowerOff 8667: CloseRadioCh + EnterMode(0), then finish");
+        Log.i("MainActivity", "PowerOff 8667: CloseRadioCh + EnterMode(0), unmute, finishAndRemoveTask");
         try {
             prepareForPowerOff();
         } catch (Exception ignored) {}
@@ -2886,6 +2888,7 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         try {
             if (mEngine != null) {
                 mEngine.closeDevice();
+                mEngine.setMute(false);
             }
         } catch (Exception e) {
             Log.e("MainActivity", "PowerOff 8667: closeDevice failed", e);
@@ -2897,11 +2900,11 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         } catch (Exception ignored) {}
 
         try {
-            finish();
+            finishAndRemoveTask();
         } catch (Exception e) {
-            Log.e("MainActivity", "PowerOff 8667: finish failed", e);
+            Log.e("MainActivity", "PowerOff 8667: finishAndRemoveTask failed", e);
             try {
-                moveTaskToBack(true);
+                finish();
             } catch (Exception ignored) {}
         }
     }

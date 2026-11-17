@@ -65,14 +65,9 @@ public class DeviceManager {
      */
     public void powerOff() {
         try {
-            if (mEngine != null && "MTK8259_8667".equals(mEngine.getEngineName())) {
-                Log.d(TAG, "Power Off(UI): 8667 CloseRadioCh + EnterMode(0) + finish");
-                try {
-                    mEngine.closeDevice();
-                } catch (Exception e) {
-                    Log.e(TAG, "Power Off(UI): closeDevice 8667 falló", e);
-                }
-                mActivity.finish();
+            if (mEngine != null && "MTK8259_8667".equals(mEngine.getEngineName())
+                    && mActivity instanceof MainActivity) {
+                ((MainActivity) mActivity).powerOffTopway8667();
                 return;
             }
         } catch (Exception e) {

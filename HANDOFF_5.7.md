@@ -11,7 +11,7 @@ Documento de continuidad al cierre de sesión.
 | Commit release | `79c0f5f1` — v5.7 HCN V31 / Junsun V7 |
 | Commit WIP | `7a2b1e6c` — 8667 factory-compatible RDS |
 | Working tree | limpio |
-| App en WIP | `5.7.3-k706bg` / versionCode `48` (8667 quit + fix K706 PowerOff amp) |
+| App en WIP | `5.7.4-8667quit2` / versionCode `49` (8667 quit sin motor zombie + fix K706 PowerOff amp) |
 | Release cerrada | `5.7` / versionCode `45` |
 
 ## Binarios
@@ -21,6 +21,7 @@ Documento de continuidad al cierre de sesión.
 | Release v5.7 | `OpenRadioFM\_RELEASES\OpenRadioFM — v5.7.apk` |
 | Test 8667 RDS | `K706_RE\8667\OpenRadioFM-5.7.1-8667fc-TEST.apk` |
 | Test 8667 RDS+QUIT | `K706_RE\8667\OpenRadioFM-5.7.2-8667quit-TEST.apk` |
+| Test 8667 QUIT v2 (Csaba) | `K706_RE\8667\OpenRadioFM-5.7.4-8667quit2-TEST.apk` |
 | Test K706 PowerOff amp (Luis) | `K706_RE\K706_test\OpenRadioFM-5.7.3-k706bg-TEST.apk` |
 | Mismo test (copia) | `OpenRadioFM\_RELEASES\OpenRadioFM — v5.7.3-k706bg TEST.apk` |
 
@@ -47,7 +48,19 @@ Fuente parche 8667: `K706_RE\8667\Factory_compatible.zip` (+ extract en `8667\_f
 ### 1.3 WIP 8667 — PowerOff real (16/11)
 - Causa: el botón Power llamaba `minimizeToHomeKeepingMediaControl()` (solo mute) en **todos** los motores.
 - Fix: `handlePowerOffButton()` → en `MTK8259_8667` llama `closeDevice()` (`CloseRadioCh` + `EnterMode(0)`) y `finish()`; K706 sigue en modo B.
-- APK test: `5.7.2-8667quit` — **pendiente validación Csaba**.
+- APK test: `5.7.2-8667quit` — **Csaba (17/11): FALLA** — RDS roto y sin sonido al reabrir; proceso sigue vivo.
+- Causa (revisión Opus): `closeDevice()` hacía `release()` completo sin limpiar `sSharedLocalEngine`; `finish()` no mata el proceso; al reabrir se reutilizaba el motor muerto (`getCurrentFreq()` devolvía 87500 y no reinicializaba). Además `Mute()` de MainUI quedaba activado (toggle global).
+
+### 1.3b Fix QUIT v2 — `5.7.4-8667quit2` (17/11)
+- `closeDevice()` solo cierra canal (`CloseRadioCh` + `EnterMode(0)`); `release(false)` limpia `sSharedLocalEngine`.
+- `isAlive()` + `checkAndStartTsEngine()` crea motor nuevo si el compartido está cerrado.
+- Tras cerrar: `setMute(false)`; `forceUnmute()` en init también desmutea.
+- `finishAndRemoveTask()`; guardas para no reabrir canal tras QUIT.
+- `ITsRadioCommon` cacheado se invalida si el binder muere / RemoteException.
+- **Pendiente validación Csaba.**
+
+### MT8768 (17/11)
+- Csaba: uso diario OK (recepción, seek/autoscan, RDS, logos) con `app-release test 5.7.apk`.
 
 ### 1.4 WIP K706 — PowerOff no deja amp muteado (Luis, 16/11)
 - Causa: PowerOff modo B hacía `RPC_SetVolumeMute(true)` y no lo revertía.
@@ -59,7 +72,7 @@ Fuente parche 8667: `K706_RE\8667\Factory_compatible.zip` (+ extract en `8667\_f
 
 ## 2. Pendiente inmediato (prioridad)
 
-1. **Csaba — test APK `5.7.2-8667quit`**: RDS + botón Power (¿apaga de verdad?).
+1. **Csaba — test APK `5.7.4-8667quit2`**: RDS en frío, QUIT, reabrir con sonido y RDS.
 2. **Luis — test APK `5.7.3-k706bg`**: tras PowerOff, ¿otras apps suenan?
 3. Si ambos OK: consolidar WIP → release menor.
 4. **Cuando se pida:** push + release pública v5.7 (y Pages).

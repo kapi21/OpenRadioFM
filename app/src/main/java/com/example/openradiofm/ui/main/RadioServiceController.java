@@ -778,8 +778,15 @@ public class RadioServiceController {
             try {
                 synchronized (SHARED_LOCAL_ENGINE_LOCK) {
                     if (sSharedLocalEngine instanceof com.example.openradiofm.data.source.MTK8259_8667Engine) {
-                        if (mListener != null) mListener.onEngineReady(sSharedLocalEngine);
-                        return;
+                        com.example.openradiofm.data.source.MTK8259_8667Engine shared =
+                                (com.example.openradiofm.data.source.MTK8259_8667Engine) sSharedLocalEngine;
+                        if (shared.isAlive()) {
+                            if (mListener != null) mListener.onEngineReady(shared);
+                            return;
+                        }
+                        Log.w(TAG, "MTK8259_8667: motor compartido cerrado/muerto, se crea uno nuevo");
+                        sSharedLocalEngine = null;
+                        try { shared.release(false); } catch (Exception ignored) {}
                     }
                     com.example.openradiofm.data.source.MTK8259_8667Engine engine =
                             new com.example.openradiofm.data.source.MTK8259_8667Engine(mTsCommon, mTsSpeechRadio);
