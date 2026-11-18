@@ -1,17 +1,17 @@
 # Handoff — OpenRadioFM v5.7 + WIP 8667/K706
 
-_Última actualización: 2026-11-17 (pausa hasta contestación)_
+_Última actualización: 2026-11-18_
 
 ## Estado git / versiones
 
 | Ítem | Valor |
 |------|--------|
-| Rama | `main` (**ahead ~6** vs `origin/main`, **sin push**) |
+| Rama | `main` (**ahead ~9** vs `origin/main`, **sin push**) |
 | Tag release | `v5.7` (local; no publicado) |
 | Commit release | `79c0f5f1` — v5.7 HCN V31 / Junsun V7 |
-| Último WIP | `45776fcf` — 8667 QUIT v2 |
+| Último WIP | `b6243557` (+ limpieza código muerto MT8163 y auditoría QS6) |
 | Working tree | limpio (al cierre) |
-| App en WIP | `5.7.4-8667quit2` / versionCode `49` |
+| App en WIP | `5.7.7-mt8163fix` / versionCode `52` |
 | Release cerrada | `5.7` / versionCode `45` |
 
 ## Binarios
@@ -23,6 +23,8 @@ _Última actualización: 2026-11-17 (pausa hasta contestación)_
 | Test 8667 RDS (histórico OK) | `K706_RE\8667\OpenRadioFM-5.7.1-8667fc-TEST.apk` |
 | Test 8667 QUIT v1 (FALLA) | `K706_RE\8667\OpenRadioFM-5.7.2-8667quit-TEST.apk` |
 | Test K706 amp (**Luis**) | `K706_RE\K706_test\OpenRadioFM-5.7.3-k706bg-TEST.apk` |
+| Test K706 stream PowerOff (**Luis**) | `K706_RE\K706_test\OpenRadioFM-5.7.6-k706stream-TEST.apk` |
+| Test MT8163 fixes (**Usuario**) | `K706_RE\MT8163_test\OpenRadioFM-5.7.7-mt8163fix-TEST.apk` |
 
 Parche V7: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip`  
 Parche 8667: `K706_RE\8667\Factory_compatible.zip`
@@ -59,17 +61,29 @@ Parche 8667: `K706_RE\8667\Factory_compatible.zip`
 - Reintento de `setMute` (120 ms) con valor obsoleto → mute pegado.
 - `DeadObjectException` en `isStereo/isDxLocal/toggleDxLocal` → ahora `handleDeadService` (reconecta).
 - Guarda `binder == null` en `onServiceConnected`.
-- `MT8163TunerAdapter` = código muerto (candidato a borrar).
+- `MT8163TunerAdapter` + `mAudioFocusListener`: código muerto eliminado.
 - **APK test:** `K706_RE\MT8163_test\OpenRadioFM-5.7.7-mt8163fix-TEST.apk` (versionCode `52`, incluye fix K706 stream).
 - **Pendiente:** test usuario en MT8163.
+
+### QS6 — auditoría de bugs (18/11, pendiente de aplicar)
+- **🔴 Falta `release(boolean persist)` en `QS6Engine` (corta la radio al recrear UI o en background):** `LifecycleCoordinator.onDestroy()` pasa `recreating = isChangingConfigurations() || !isFinishing()` a `mEngine.release(recreating)`. Todos los motores (`K706`, `MT8163`, `8667`, `Jancar`, `Spd`) implementan `release(boolean)` salvo `QS6Engine`, que cae al `default` de `RadioEngine` y ejecuta `release()` → `closeDevice()` (`ACTION_EXIT_ARM_FM_RAIDO` + `SOURCE_ANDROID` + desconexión AIDL/MCU).
+- **🔴 Anidamiento infinito y leak de `MainActivity` en `CompositeRadioEngineCallback` (QS6 y K706):** al reutilizar `sSharedLocalEngine`, `MainActivity.onEngineReady()` compara `existingCb != MainActivity.this` (siempre `true`, el callback es `mEngineCallbackCoordinator`) y envuelve `existingCb` en otro `CompositeRadioEngineCallback` sin desempaquetar el anterior; cada recreación/reapertura acumula referencias a `MainActivity` muertas y multiplica eventos de frecuencia/RDS.
+- **🟠 Reconexión zombi y leak en `QS6Engine.release()`:** no cancela `postDelayed` de `mMainHandler` (`scheduleWarmupRebind` 2,2 s / `maybeRequestPlayAudioOnStartup` 450 ms) ni llama a `mAdapter.setCallback(null)` sobre el singleton `NWDTunerAdapter` (retiene `QS6Engine`/`mContext` y re-pide `SOURCE_RADIO` tras `closeDevice()`).
+- **🟠 Carrera y reconexión en `NWDTunerAdapter`:** `disconnect()` no cancela `mMainHandler` ni llama `unlinkToDeath`; `bind()` solo mira `mIsBound` y no un bind en vuelo (una segunda llamada ejecuta `unbindService`); `onServiceConnected` marca `mIsBound=true` aunque `service==null`; `mDeathRecipient` muta estado sin sincronización desde hilo Binder.
+- **🟠 Rebote de frecuencia en `Settings.System`:** `tune()` actualiza `mCurrentFreq` antes de que el MCU escriba `nwd_radio_current_freq`; si el `ContentObserver` dispara antes (`pollNwdSettingsAndFire()`), revierte `mCurrentFreq` y la UI a la emisora anterior.
+- **🟡 NPE en `QS6Engine.toggleRdsFeature()`:** usa `mAdapter.setRDSState(...)` sin comprobar `mAdapter != null`.
+- **🟡 Hilo Binder y visibilidad:** `notifyRtMessage()` invoca `mCallback.onRdsText()` directo en hilo Binder (el resto usa `mMainHandler.post`); `mCurrentFreq`, `mCurrentBand` y `mLastRt` carecen de `volatile`.
+- **⚪ Código muerto:** `TopwayTunerAdapter.java` (305 líneas) sin referencias en el proyecto.
 
 ---
 
 ## Pendiente (al retomar)
 
 1. Contestación **Csaba** → `5.7.4-8667quit2` (RDS frío, QUIT, reabrir con audio+RDS).
-2. Contestación **Luis** → `5.7.3-k706bg` (otras apps suenan tras PowerOff).
-3. Si OK: consolidar WIP → release menor; push v5.7 cuando se autorice.
+2. Contestación **Luis** → `5.7.3-k706bg` (otras apps suenan tras PowerOff) y `5.7.6-k706stream` (PowerOff corta stream online).
+3. Test usuario → `5.7.7-mt8163fix` en MT8163.
+4. Decidir si aplicar fixes de QS6 (`QS6Engine` + `NWDTunerAdapter` + `CompositeRadioEngineCallback`) y borrar `TopwayTunerAdapter.java`.
+5. Si OK: consolidar WIP → release menor; push v5.7 cuando se autorice.
 
 Fuera de alcance: Magisk K706 root, Z-Link/AA.
 

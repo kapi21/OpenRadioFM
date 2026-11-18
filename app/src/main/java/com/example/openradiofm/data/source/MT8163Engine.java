@@ -263,7 +263,6 @@ public class MT8163Engine implements RadioEngine {
     // V18.4: AudioFocus y Streaming Guard para MT8163
     private boolean mIsOnlineStreamingActive = false;
     private android.media.AudioManager mAudioManager;
-    private android.media.AudioManager.OnAudioFocusChangeListener mAudioFocusListener;
     
     public MT8163Engine() {}
 
@@ -467,23 +466,6 @@ public class MT8163Engine implements RadioEngine {
 
         // V18.4: Setup AudioFocus Listener (igual que en K706)
         mAudioManager = (android.media.AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
-        mAudioFocusListener = focusChange -> {
-            switch (focusChange) {
-                case android.media.AudioManager.AUDIOFOCUS_LOSS:
-                    if (mIsOnlineStreamingActive) break;
-                    switchToAndroidAudio();
-                    break;
-                case android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                case android.media.AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                    if (mIsOnlineStreamingActive) break;
-                    setMute(true);
-                    break;
-                case android.media.AudioManager.AUDIOFOCUS_GAIN:
-                    if (mIsOnlineStreamingActive) break;
-                    switchToFmAudio();
-                    break;
-            }
-        };
 
         ensurePollingThread();
         mInitCompleted = true;
