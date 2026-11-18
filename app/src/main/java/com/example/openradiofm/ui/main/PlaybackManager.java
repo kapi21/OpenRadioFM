@@ -43,6 +43,13 @@ public class PlaybackManager {
      */
     private static final long MT8163_POST_USER_INJECT_SYNC_GUARD_MS = 2800L;
     private long mMt8163LastUserInjectElapsedRealtime = 0L;
+    /**
+     * MT8163: estado del mute hardware aplicado con la tecla MCU {@code VOLUME_MUTE} (toggle).
+     * Estático: el HU es único y hay un PlaybackManager en la Activity y otro en RadioMediaService.
+     * Solo se inyecta la tecla cuando el estado pedido difiere de este → nunca toggles a ciegas,
+     * y la UI no se invierte respecto al audio real (bug icono mute desincronizado, 18/11).
+     */
+    private static volatile boolean sMt8163HwKeyMuted = false;
 
     /**
      * Interfaz para notificar a la UI de cambios en el estado de reproducción.
@@ -180,16 +187,7 @@ public class PlaybackManager {
             Log.w(TAG, "Mute global STREAM_MUSIC falló", e);
         }
 
-        if (userOemMcuMuteKeyStep && mEngine instanceof MT8163Engine) {
-            ((MT8163Engine) mEngine).applyUserOemMuteThroughMcuKey();
-            try {
-                if (mContext.getSharedPreferences("RadioPresets", Context.MODE_PRIVATE)
-                        .getBoolean("pref_mt8163_mcu_inject_mute_key", true)) {
-                    mMt8163LastUserInjectElapsedRealtime = android.os.SystemClock.elapsedRealtime();
-                }
-            } catch (Exception ignored) {
-            }
-        }
+        syncMt8163HwKeyMute(mute, userOemMcuMuteKeyStep);
 
         // Notificar a la UI
         if (mListener != null) {
@@ -241,6 +239,46 @@ public class PlaybackManager {
     /** Mute/unmute sin paso OEM McuManager (audio focus, arranque, sincronización). */
     public void setMute(boolean mute) {
         setMute(mute, false);
+    }
+
+    /**
+     * MT8163: aplica la tecla MCU {@code VOLUME_MUTE} (toggle) solo si el estado hardware rastreado
+     * difiere del pedido.
+     * <ul>
+     *   <li>Gesto de usuario: mute o unmute según haga falta.</li>
+     *   <li>Rutas automáticas (arranque, foco, sync, servicio): solo desmutean si la tecla dejó el HU
+     *       muteado; nunca mutean por tecla (evita cortes “va y viene”).</li>
+     * </ul>
+     */
+    private void syncMt8163HwKeyMute(boolean mute, boolean userStep) {
+        if (!(mEngine instanceof MT8163Engine)) return;
+        boolean needInject = userStep ? (mute != sMt8163HwKeyMuted) : (!mute && sMt8163HwKeyMuted);
+        if (!needInject) return;
+        if (((MT8163Engine) mEngine).applyUserOemMuteThroughMcuKey()) {
+            sMt8163HwKeyMuted = mute;
+            mMt8163LastUserInjectElapsedRealtime = android.os.SystemClock.elapsedRealtime();
+            Log.d(TAG, "MT8163 tecla MCU mute → hwKeyMuted=" + mute + " (user=" + userStep + ")");
+        }
+    }
+
+    /**
+     * MT8163 PowerOff (minimizar): silenciar la FM como el botón mute (tecla MCU + HAL) pero
+     * <b>sin</b> bajar STREAM_MUSIC a 0, para no dejar mudas otras apps (caso Luis en K706).
+     * Se marca como mute "de sistema" para que {@link #resumeIfMutedBySystem()} recupere la FM
+     * al volver a la app.
+     */
+    public void muteForPowerOff() {
+        // Si el usuario ya tenía mute puesto, al volver debe seguir muteado.
+        if (!mMuteState) mIsMutedBySystem = true;
+        mMuteState = true;
+        if (mEngine != null) {
+            try { mEngine.setMute(true); } catch (Exception ignored) {}
+        }
+        syncMt8163HwKeyMute(true, true);
+        if (mListener != null) {
+            mListener.onMuteStateChanged(true);
+        }
+        Log.d(TAG, "muteForPowerOff: FM silenciada (hwKeyMuted=" + sMt8163HwKeyMuted + ")");
     }
 
     /**
@@ -315,6 +353,12 @@ public class PlaybackManager {
     public boolean shouldSuppressMt8163StreamMuteSync() {
         if (mEngine == null || !"MT8163".equals(mEngine.getEngineName())) {
             return false;
+        }
+        // Mute aplicado por tecla MCU: STREAM_MUSIC no refleja el estado real del HU; si el sync
+        // desmuteara aquí, el icono pasaría a "sonando" con la FM muda y cada pulsación posterior
+        // quedaría invertida (bug 18/11).
+        if (sMt8163HwKeyMuted) {
+            return true;
         }
         if (mMt8163LastUserInjectElapsedRealtime == 0L) {
             return false;

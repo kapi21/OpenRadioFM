@@ -42,7 +42,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visua
 
 ## 🎯 Funciones Principales
 
-**5.7 “Junsun V7 / MT8768”** (`versionCode` **45**): soporte **Junsun V7 (MT8768)** con proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`), detección auto v25/v31 y regresión **MT8163** verificada. Crédito: **Csaba**. APK: `_RELEASES/OpenRadioFM — v5.7.apk`. Handoff: [`HANDOFF_5.7.md`](HANDOFF_5.7.md).
+**5.7 “Junsun V7 / MT8768”** (`versionCode` **45**): soporte **Junsun V7 (MT8768)** con proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`), detección auto v25/v31 y regresión **MT8163** verificada. Crédito: **Csaba**. APK: `_RELEASES/OpenRadioFM — v5.7.apk`. Handoff: [`HANDOFF.md`](HANDOFF.md).
 
 | Función | MT8163 / MT8768 (Junsun) | K706 | MTK8259/8667 |
 |---|:---:|:---:|:---:|

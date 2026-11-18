@@ -2929,6 +2929,12 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             if (mEngine != null && "K706".equals(mEngine.getEngineName())) {
                 // SetChannel(4) + abandon focus + unmute amp (ver K706RadioManager).
                 mEngine.releaseAudioFocusOnlyForBackground();
+            } else if (mEngine != null && "MT8163".equals(mEngine.getEngineName()) && mPlaybackManager != null) {
+                // MT8163: mEngine.setMute(true) solo (HAL fm_mute) NO silencia en HCN → la FM seguía
+                // sonando tras PowerOff. Mismo mute audible que el botón (tecla MCU), sin STREAM_MUSIC=0;
+                // la FM se recupera sola al volver (resumeIfMutedBySystem).
+                mPlaybackManager.muteForPowerOff();
+                mEngine.releaseAudioFocusOnlyForBackground();
             } else if (mEngine != null) {
                 mEngine.setMute(true);
                 mEngine.releaseAudioFocusOnlyForBackground();

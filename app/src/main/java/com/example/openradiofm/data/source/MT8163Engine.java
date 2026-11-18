@@ -1080,10 +1080,15 @@ public class MT8163Engine implements RadioEngine {
      * Imita la tecla física de mute del HU (toggle). Llamar solo desde {@link com.example.openradiofm.ui.main.PlaybackManager}
      * cuando el usuario (o sesión media explícita) cambia mute, no desde audio focus ni al iniciar.
      */
-    public void applyUserOemMuteThroughMcuKey() {
-        if (!shouldTryMcuInjectMuteKey()) return;
+    /**
+     * @return true si se envió la tecla (toggle). El llamante rastrea el estado hardware resultante
+     *         ({@code PlaybackManager.sMt8163HwKeyMuted}) para no invertirlo nunca a ciegas.
+     */
+    public boolean applyUserOemMuteThroughMcuKey() {
+        if (!shouldTryMcuInjectMuteKey()) return false;
         tryHcnMcuInjectHardwareMuteKey();
         tryMicrontekIrMuteBroadcast();
+        return true;
     }
 
     private boolean shouldTryMcuInjectMuteKey() {
