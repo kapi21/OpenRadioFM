@@ -6,11 +6,11 @@ _Última actualización: 2026-11-18_
 
 | Ítem | Valor |
 |------|--------|
-| Rama | `main` (**ahead ~9** vs `origin/main`, **sin push**) |
+| Rama | `main` (**ahead ~10** vs `origin/main`, **sin push**) |
 | Tag release | `v5.7` (local; no publicado) |
 | Commit release | `79c0f5f1` — v5.7 HCN V31 / Junsun V7 |
-| Último WIP | `b6243557` (+ limpieza código muerto MT8163 y auditoría QS6) |
-| Working tree | WIP QS6 (bloques 1–5) **sin commit** (compila, APK generada) |
+| Último WIP | `22d75841` — QS6 audit fixes (5.7.8-qs6fix) |
+| Working tree | limpio — último WIP `22d75841` (QS6 fixes, 5.7.8-qs6fix) |
 | App en WIP | `5.7.8-qs6fix` / versionCode `53` |
 | Release cerrada | `5.7` / versionCode `45` |
 

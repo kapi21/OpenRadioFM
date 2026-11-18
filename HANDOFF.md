@@ -37,11 +37,11 @@ Radio FM multiplataforma (K706, MT8163/8768, QS6, Topway 8259/8667, SPD, FYT). C
 2. Luis: si el switch arregla → valorar invertir por defecto/auto-detección; si no → pedir logcat `MCU[0x22]` (luces ON/OFF).
 3. Csaba OK en 8667 → consolidar WIP, release menor (5.7.x) + push/tag v5.7 cuando se autorice.
 4. Si Csaba NO OK → logcat tags `MTK8259_8667Engine` / `MTK8259_8667RM` / `RadioServiceController`
-5. Git: `main` ahead local (sin push); último commit `4ad37c78`
+5. Git: `main` ahead local (sin push); último commit `22d75841`
 
 ## Historial
 - 2026-11-18 (noche): usuario prueba `5.7.8-qs6fix` → OK en QS6 y MT8163; 2 bugs nuevos MT8163 sin corregir (PowerOff no corta FM; icono mute desincronizado). Ver `HANDOFF_5.7.md`.
-- 2026-11-18 (tarde): fixes K706 stream PowerOff (5.7.6) y MT8163 (5.7.7); auditoría QS6 revisada y corregida → APK `..\QS6_test\OpenRadioFM-5.7.8-qs6fix-TEST.apk` (vc 53, sin commit). **Estado vigente en `HANDOFF_5.7.md`.**
+- 2026-11-18 (tarde): fixes K706 stream PowerOff (5.7.6) y MT8163 (5.7.7); auditoría QS6 revisada y corregida → APK `..\QS6_test\OpenRadioFM-5.7.8-qs6fix-TEST.apk` (vc 53, commit `22d75841`). **Estado vigente en `HANDOFF_5.7.md`.**
 - 2026-11-18: Csaba OK QUIT v2; Luis OK PowerOff; luces K706 invertidas → ajuste invertir señal + APK 5.7.5; pausa hasta feedback
 - 2026-11-17: QUIT v2 8667; MT8768 confirmado uso diario; pausa hasta contestación Csaba/Luis
 - 2026-11-16: PowerOff 8667 v1 falló; fix K706 amp Luis; RDS factory OK en 5.7.1
