@@ -53,6 +53,16 @@ Parche 8667: `K706_RE\8667\Factory_compatible.zip`
 - **APK test:** `K706_RE\K706_test\OpenRadioFM-5.7.6-k706stream-TEST.apk` (versionCode `51`).
 - **Pendiente:** validación Luis.
 
+### MT8163 — revisión de bugs (18/11)
+- Crash al cerrar: `switchToAndroidAudio()` hacía `mPollingHandler.postDelayed` en hilo IO tras `release()` (NPE).
+- `mRadioMuteDesired` quedaba `true` tras `release()` → FM muda en re-init.
+- Reintento de `setMute` (120 ms) con valor obsoleto → mute pegado.
+- `DeadObjectException` en `isStereo/isDxLocal/toggleDxLocal` → ahora `handleDeadService` (reconecta).
+- Guarda `binder == null` en `onServiceConnected`.
+- `MT8163TunerAdapter` = código muerto (candidato a borrar).
+- **APK test:** `K706_RE\MT8163_test\OpenRadioFM-5.7.7-mt8163fix-TEST.apk` (versionCode `52`, incluye fix K706 stream).
+- **Pendiente:** test usuario en MT8163.
+
 ---
 
 ## Pendiente (al retomar)

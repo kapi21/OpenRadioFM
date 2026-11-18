@@ -277,6 +277,10 @@ public class MT8163Engine implements RadioEngine {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             mService = HcnApiFactory.wrap(mContext, binder);
+            if (mService == null) {
+                Log.w(TAG, "onServiceConnected: binder nulo (" + name + ")");
+                return;
+            }
             mBound = true;
             Log.d(TAG, "Servicio HCN conectado: " + name);
 
@@ -511,8 +515,10 @@ public class MT8163Engine implements RadioEngine {
         Log.d(TAG, "release(persist=false): Soltando recursos MT8163 y silenciando");
         com.example.openradiofm.ui.main.RadioServiceController.clearSharedLocalEngineIfSame(this);
         mInitCompleted = false;
-        mRadioMuteDesired = false;
         switchToAndroidAudio(); // Asegurar liberación de audio al salir
+        // FIX: resetear DESPUÉS de switchToAndroidAudio() (que llama setMute(true)); si no, el flag
+        // quedaba en true y en un re-init de la misma instancia switchToFmAudio() se saltaba → FM muda.
+        mRadioMuteDesired = false;
         
         if (mPollingRunnable != null && mPollingHandler != null) {
             mPollingHandler.removeCallbacks(mPollingRunnable);
@@ -941,7 +947,7 @@ public class MT8163Engine implements RadioEngine {
         try {
             return mService.IsStereo();
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("binder", e);
             return false;
         } catch (RemoteException e) {
             return false;
@@ -977,9 +983,12 @@ public class MT8163Engine implements RadioEngine {
                 mAudioManager.setParameters(paramsB);
                 mAudioManager.setParameters(paramsC);
                 
-                // Reintento corto para asegurar que el DSP procesa el cambio
+                // Reintento corto para asegurar que el DSP procesa el cambio.
+                // FIX: solo si el estado deseado no ha cambiado; mute(true)+mute(false) en <120 ms
+                // dejaba el reintento de "mute=1" aplicándose después del desmuteo (radio muda).
                 if (mPollingHandler != null) {
                     mPollingHandler.postDelayed(() -> {
+                        if (mRadioMuteDesired != mute || mAudioManager == null) return;
                         try {
                             mAudioManager.setParameters(paramsA);
                             mAudioManager.setParameters(paramsB);
@@ -1264,7 +1273,9 @@ public class MT8163Engine implements RadioEngine {
         Log.d(TAG, "switchToAndroidAudio (MT8163) - Liberando canal para sistema");
         setMute(true);
         
-        // V18.5: Ejecutar parámetros de audio en un hilo ligero para no congelar la UI si el hardware tarda
+        // V18.5: Ejecutar parámetros de audio en un hilo ligero para no congelar la UI si el hardware tarda.
+        // FIX: antes se hacía mPollingHandler.postDelayed(<vacío>) aquí; release(false) anula
+        // mPollingHandler justo después de llamar a este método → NPE en hilo IO → crash del proceso al cerrar.
         AppIoExecutor.execute(() -> {
             if (mAudioManager != null) {
                 try {
@@ -1273,13 +1284,6 @@ public class MT8163Engine implements RadioEngine {
                     Log.e(TAG, "Error setting audio parameters", e);
                 }
             }
-            
-            // Retorno al hilo principal para el resto de la secuencia
-            mPollingHandler.postDelayed(() -> {
-                // V18.5: NO desmutear aquí si estamos en streaming, el master debe controlarlo la app de origen
-                // setMute(false); 
-                // Ya no abandonamos el audio focus para no interferir con SourceService
-            }, 300);
         });
     }
 
@@ -1345,7 +1349,7 @@ public class MT8163Engine implements RadioEngine {
         try {
             mService.onLocDxEvent();
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("binder", e);
         } catch (RemoteException e) {
             Log.e(TAG, "RemoteException en toggleDxLocal");
         }
@@ -1362,7 +1366,7 @@ public class MT8163Engine implements RadioEngine {
         try {
             return mService.IsDxLocal();
         } catch (android.os.DeadObjectException e) {
-            mService = null;
+            handleDeadService("binder", e);
             return false;
         } catch (RemoteException e) {
             return false;
