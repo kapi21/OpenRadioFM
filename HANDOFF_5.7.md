@@ -1,17 +1,17 @@
-# Handoff — OpenRadioFM v5.7 + WIP 8667 (sesión 2026-11-14)
+# Handoff — OpenRadioFM v5.7 + WIP 8667/K706
 
-Documento de continuidad al cierre de sesión.
+_Última actualización: 2026-11-17 (pausa hasta contestación)_
 
 ## Estado git / versiones
 
 | Ítem | Valor |
 |------|--------|
-| Rama | `main` (**ahead 2** vs `origin/main`, sin push) |
-| Tag release | `v5.7` (local; no publicado en remoto) |
+| Rama | `main` (**ahead ~6** vs `origin/main`, **sin push**) |
+| Tag release | `v5.7` (local; no publicado) |
 | Commit release | `79c0f5f1` — v5.7 HCN V31 / Junsun V7 |
-| Commit WIP | `7a2b1e6c` — 8667 factory-compatible RDS |
-| Working tree | limpio |
-| App en WIP | `5.7.4-8667quit2` / versionCode `49` (8667 quit sin motor zombie + fix K706 PowerOff amp) |
+| Último WIP | `45776fcf` — 8667 QUIT v2 |
+| Working tree | limpio (al cierre) |
+| App en WIP | `5.7.4-8667quit2` / versionCode `49` |
 | Release cerrada | `5.7` / versionCode `45` |
 
 ## Binarios
@@ -19,82 +19,60 @@ Documento de continuidad al cierre de sesión.
 | APK | Ruta |
 |-----|------|
 | Release v5.7 | `OpenRadioFM\_RELEASES\OpenRadioFM — v5.7.apk` |
-| Test 8667 RDS | `K706_RE\8667\OpenRadioFM-5.7.1-8667fc-TEST.apk` |
-| Test 8667 RDS+QUIT | `K706_RE\8667\OpenRadioFM-5.7.2-8667quit-TEST.apk` |
-| Test 8667 QUIT v2 (Csaba) | `K706_RE\8667\OpenRadioFM-5.7.4-8667quit2-TEST.apk` |
-| Test K706 PowerOff amp (Luis) | `K706_RE\K706_test\OpenRadioFM-5.7.3-k706bg-TEST.apk` |
-| Mismo test (copia) | `OpenRadioFM\_RELEASES\OpenRadioFM — v5.7.3-k706bg TEST.apk` |
+| Test 8667 QUIT v2 (**Csaba**) | `K706_RE\8667\OpenRadioFM-5.7.4-8667quit2-TEST.apk` |
+| Test 8667 RDS (histórico OK) | `K706_RE\8667\OpenRadioFM-5.7.1-8667fc-TEST.apk` |
+| Test 8667 QUIT v1 (FALLA) | `K706_RE\8667\OpenRadioFM-5.7.2-8667quit-TEST.apk` |
+| Test K706 amp (**Luis**) | `K706_RE\K706_test\OpenRadioFM-5.7.3-k706bg-TEST.apk` |
 
-Archivo de parche V7 archivado en: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip`
-
-Fuente parche 8667: `K706_RE\8667\Factory_compatible.zip` (+ extract en `8667\_factory_compatible_extract\`)
+Parche V7: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip`  
+Parche 8667: `K706_RE\8667\Factory_compatible.zip`
 
 ---
 
-## 1. Hecho en esta línea de trabajo
+## Hecho
 
-### 1.1 v5.7 — Junsun V7 / MT8768 (cerrado, vía verde)
-- `HcnApiFactory` / `HcnV31Api`: contrato AIDL v25 vs v31.
-- Regresión MT8163 OK; V7 OK (Csaba).
-- Docs/web/README/CHANGELOG actualizados a v5.7.
-- **Pendiente publicar:** push `main` + tag `v5.7` + GitHub Release.
+### v5.7 — Junsun V7 / MT8768
+- HCN V31 + regresión MT8163; docs/web OK.
+- **Csaba 17/11:** uso diario OK (recepción, seek/autoscan, RDS, logos).
+- Pendiente publicar: push + tag + GitHub Release (cuando se pida).
 
-### 1.2 WIP 8667 — RDS factory-compatible (gracias Csaba)
-- Quitados métodos RDS custom de `ITsCommon.aidl`.
-- `MTK8259_8667RadioManager`: RDS vía `getSpecialBinder("Radio")` → `ITsRadioCommon`.
-- `TopwayTunerAdapter`: llamadas RDS a ITsCommon comentadas (ruta no usada en producción).
-- **Csaba (16/11):** RDS OK con MainUI original.
+### 8667 — RDS factory + QUIT
+- RDS vía `ITsRadioCommon` / MainUI stock — OK en `5.7.1`.
+- QUIT v1 (`5.7.2`) FALLA: motor zombie + mute MainUI.
+- QUIT v2 (`5.7.4`): `closeDevice`≠`release`, clear shared, unmute, `finishAndRemoveTask`, binder RDS invalidable.
+- **Pendiente:** validación Csaba de `5.7.4-8667quit2`.
 
-### 1.3 WIP 8667 — PowerOff real (16/11)
-- Causa: el botón Power llamaba `minimizeToHomeKeepingMediaControl()` (solo mute) en **todos** los motores.
-- Fix: `handlePowerOffButton()` → en `MTK8259_8667` llama `closeDevice()` (`CloseRadioCh` + `EnterMode(0)`) y `finish()`; K706 sigue en modo B.
-- APK test: `5.7.2-8667quit` — **Csaba (17/11): FALLA** — RDS roto y sin sonido al reabrir; proceso sigue vivo.
-- Causa (revisión Opus): `closeDevice()` hacía `release()` completo sin limpiar `sSharedLocalEngine`; `finish()` no mata el proceso; al reabrir se reutilizaba el motor muerto (`getCurrentFreq()` devolvía 87500 y no reinicializaba). Además `Mute()` de MainUI quedaba activado (toggle global).
+### K706 — PowerOff amp (Luis)
+- `SetChannel(4)` + abandon focus + `setMute(false)`.
+- **Pendiente:** validación Luis de `5.7.3-k706bg`.
+- Llamadas BT/HFP (Luis M-M): ticket aparte.
 
-### 1.3b Fix QUIT v2 — `5.7.4-8667quit2` (17/11)
-- `closeDevice()` solo cierra canal (`CloseRadioCh` + `EnterMode(0)`); `release(false)` limpia `sSharedLocalEngine`.
-- `isAlive()` + `checkAndStartTsEngine()` crea motor nuevo si el compartido está cerrado.
-- Tras cerrar: `setMute(false)`; `forceUnmute()` en init también desmutea.
-- `finishAndRemoveTask()`; guardas para no reabrir canal tras QUIT.
-- `ITsRadioCommon` cacheado se invalida si el binder muere / RemoteException.
-- **Pendiente validación Csaba.**
-
-### MT8768 (17/11)
-- Csaba: uso diario OK (recepción, seek/autoscan, RDS, logos) con `app-release test 5.7.apk`.
-
-### 1.4 WIP K706 — PowerOff no deja amp muteado (Luis, 16/11)
-- Causa: PowerOff modo B hacía `RPC_SetVolumeMute(true)` y no lo revertía.
-- Fix: en background K706 → `RPC_SetChannel(4)` + abandon AudioFocus + `setMute(false)`.
-- APK test: `5.7.3-k706bg` — **pendiente validación Luis**.
-- Luis M-M (FM en llamadas): sigue aparte (BT/HFP).
+### K706 — PowerOff con streaming online (Luis, 18/11)
+- **Bug:** PowerOff en K706 = minimizar (`moveTaskToBack`); ExoPlayer vive en la Activity y seguía sonando.
+- **Fix:** `OnlineStreamManager.stopForPowerOff()` (libera ExoPlayer, `setOnlineStreamingActive(false)`, sin `switchToFmAudio`/handoff). Llamado en `minimizeToHomeKeepingMediaControl()` y `powerOffTopway8667()`.
+- **APK test:** `K706_RE\K706_test\OpenRadioFM-5.7.6-k706stream-TEST.apk` (versionCode `51`).
+- **Pendiente:** validación Luis.
 
 ---
 
-## 2. Pendiente inmediato (prioridad)
+## Pendiente (al retomar)
 
-1. **Csaba — test APK `5.7.4-8667quit2`**: RDS en frío, QUIT, reabrir con sonido y RDS.
-2. **Luis — test APK `5.7.3-k706bg`**: tras PowerOff, ¿otras apps suenan?
-3. Si ambos OK: consolidar WIP → release menor.
-4. **Cuando se pida:** push + release pública v5.7 (y Pages).
+1. Contestación **Csaba** → `5.7.4-8667quit2` (RDS frío, QUIT, reabrir con audio+RDS).
+2. Contestación **Luis** → `5.7.3-k706bg` (otras apps suenan tras PowerOff).
+3. Si OK: consolidar WIP → release menor; push v5.7 cuando se autorice.
 
-Fuera de alcance / no seguir en esta línea: Magisk K706 root, Z-Link/AA.
+Fuera de alcance: Magisk K706 root, Z-Link/AA.
 
 ---
 
-## 3. Comandos útiles
+## Cómo verificar
 
 ```powershell
-# Test 8667
-adb install -r "C:\@MIS PROYECTOS\K706_RE\8667\OpenRadioFM-5.7.1-8667fc-TEST.apk"
-
-# Release v5.7
-adb install -r "_RELEASES\OpenRadioFM — v5.7.apk"
-
-# Rebuild
-.\gradlew.bat assembleRelease
+adb install -r "C:\@MIS PROYECTOS\K706_RE\8667\OpenRadioFM-5.7.4-8667quit2-TEST.apk"
+adb logcat -v time -s MainActivity RadioServiceController MTK8259_8667Engine MTK8259_8667RM RadioMediaService
 ```
 
 ---
 
-## 4. Créditos
-- Junsun V7 (MT8768) y parche 8667 factory RDS: **Csaba**.
+## Créditos
+Csaba — V7/MT8768 y 8667 factory RDS.

@@ -416,6 +416,43 @@ public class OnlineStreamManager {
         return mIsLoading;
     }
 
+    /**
+     * PowerOff (modo B / minimizar): cortar el stream online sin recuperar FM.
+     * A diferencia de {@link #stopStream()}, no hace switchToFmAudio()/setMute(false) ni handoff
+     * MT8163: el motor ya va a soltar el canal. Reporte Luis (K706): al pulsar PowerOff con
+     * streaming activo la app se ocultaba pero ExoPlayer seguía sonando.
+     */
+    public void stopForPowerOff() {
+        Runnable r = () -> {
+            boolean wasActive = mIsPlaying || mIsLoading || mExoPlayer != null;
+            mIsLoading = false;
+            mIsPlaying = false;
+            try {
+                if (mPlaybackManager != null && mPlaybackManager.getEngine() != null) {
+                    mPlaybackManager.getEngine().setOnlineStreamingActive(false);
+                }
+            } catch (Exception ignored) {}
+            if (mExoPlayer != null) {
+                try {
+                    mExoPlayer.stop();
+                    mExoPlayer.release();
+                } catch (Exception e) {
+                    Log.w(TAG, "stopForPowerOff: error liberando ExoPlayer", e);
+                }
+                mExoPlayer = null;
+            }
+            if (wasActive) {
+                Log.i(TAG, "stopForPowerOff: streaming detenido (PowerOff)");
+                updateUI();
+            }
+        };
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            r.run();
+        } else {
+            mMainHandler.post(r);
+        }
+    }
+
     public void release() {
         Runnable r = () -> {
             mIsLoading = false;

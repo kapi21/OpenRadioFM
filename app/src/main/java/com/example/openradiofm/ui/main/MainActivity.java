@@ -2886,6 +2886,10 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
         } catch (Exception ignored) {}
 
         try {
+            if (mOnlineStreamManager != null) mOnlineStreamManager.stopForPowerOff();
+        } catch (Exception ignored) {}
+
+        try {
             if (mEngine != null) {
                 mEngine.closeDevice();
                 mEngine.setMute(false);
@@ -2915,6 +2919,14 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
      * {@code RPC_SetVolumeMute(true)} pegado (bloqueaba audio de otras apps — Luis).
      */
     public void minimizeToHomeKeepingMediaControl() {
+        // Cortar streaming online: ExoPlayer vive en la Activity y seguía sonando tras
+        // moveTaskToBack (reporte Luis K706). Sin recuperar FM: el motor suelta el canal abajo.
+        try {
+            if (mOnlineStreamManager != null) mOnlineStreamManager.stopForPowerOff();
+        } catch (Exception e) {
+            Log.w("MainActivity", "PowerOff: stopForPowerOff falló", e);
+        }
+
         // Silencio FM en background: soltar canal/AudioFocus; mantener MediaSession/FGS.
         try {
             if (mEngine != null && "K706".equals(mEngine.getEngineName())) {
