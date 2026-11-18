@@ -1067,12 +1067,9 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
             } else if (mEngine instanceof com.example.openradiofm.data.source.K706Engine) {
                 existingCb = ((com.example.openradiofm.data.source.K706Engine) mEngine).getCallback();
             }
-            if (existingCb != null && existingCb != MainActivity.this) {
-                mEngine.setCallback(new com.example.openradiofm.data.source.CompositeRadioEngineCallback(
-                        mEngineCallbackCoordinator, existingCb));
-            } else {
-                mEngine.setCallback(mEngineCallbackCoordinator);
-            }
+            // combine(): sustituye el coordinator de una Activity anterior (recreación) en vez de anidarlo.
+            mEngine.setCallback(com.example.openradiofm.data.source.CompositeRadioEngineCallback.combine(
+                    existingCb, mEngineCallbackCoordinator, true));
 
             if (mEngine instanceof com.example.openradiofm.data.source.MT8163Engine) {
                 RadioServiceController.registerSharedMt8163Engine(mEngine);

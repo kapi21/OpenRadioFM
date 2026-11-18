@@ -23,19 +23,39 @@ public class NWDTunerAdapter {
 
     private final Context mContext;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
-    private RadioFeature mService;
-    private boolean mIsBound = false;
-    private RadioCallback mCallback;
+    // volatile: escritos desde main (ServiceConnection) y leídos desde hilos de comando/Binder.
+    private volatile RadioFeature mService;
+    private volatile boolean mIsBound = false;
+    private volatile RadioCallback mCallback;
+    /**
+     * Intención de estar vinculado. false tras disconnect(): cualquier onServiceConnected tardío,
+     * reconexión pendiente o muerte del binder se ignora (evita reconexión zombi tras liberar).
+     */
+    private volatile boolean mWantBound = false;
 
     // QS6/NWD: tras reboot el servicio OEM puede estar "frío" (driver /dev/NwdRadio no listo).
     // Implementamos reintentos con backoff para reenganchar callbacks sin depender de abrir la app nativa.
     private int mReconnectAttempts = 0;
     private boolean mReconnectScheduled = false;
     private IBinder.DeathRecipient mDeathRecipient;
+    /** Binder al que está enlazado mDeathRecipient (para unlinkToDeath en disconnect). */
+    private IBinder mLinkedBinder;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            if (!mWantBound) {
+                // Bind en vuelo que llega tras disconnect(): soltarlo, no revivir la conexión.
+                Log.d(TAG, "onServiceConnected tras disconnect(): ignorado");
+                try { mContext.unbindService(mConnection); } catch (Exception ignored) {}
+                return;
+            }
+            if (service == null) {
+                Log.w(TAG, "onServiceConnected con binder null");
+                scheduleReconnect("nullBinder");
+                return;
+            }
+            unlinkDeathRecipient();
             mService = RadioFeature.Stub.asInterface(service);
             mIsBound = true;
             mReconnectAttempts = 0;
@@ -43,23 +63,26 @@ public class NWDTunerAdapter {
             Log.d(TAG, "NWD RadioService conectado.");
 
             try {
-                if (service != null) {
-                    if (mDeathRecipient != null) {
-                        try { service.unlinkToDeath(mDeathRecipient, 0); } catch (Exception ignored) {}
-                    }
-                    mDeathRecipient = () -> {
-                        Log.w(TAG, "NWD binder murió; reintentando bind");
+                final IBinder linked = service;
+                mDeathRecipient = () -> {
+                    // binderDied llega en hilo Binder: mutar estado en main.
+                    mMainHandler.post(() -> {
+                        if (mLinkedBinder != linked) return; // muerte de un binder ya sustituido
+                        Log.w(TAG, "NWD binder murió");
+                        mLinkedBinder = null;
                         mService = null;
                         mIsBound = false;
-                        scheduleReconnect("binderDied");
-                    };
-                    service.linkToDeath(mDeathRecipient, 0);
-                }
+                        if (mWantBound) scheduleReconnect("binderDied");
+                    });
+                };
+                service.linkToDeath(mDeathRecipient, 0);
+                mLinkedBinder = service;
             } catch (Throwable ignored) {}
 
-            if (mCallback != null && mService != null) {
+            final RadioCallback cb = mCallback;
+            if (cb != null) {
                 try {
-                    mService.registCallback(mCallback);
+                    mService.registCallback(cb);
                 } catch (RemoteException e) {
                     Log.e(TAG, "Error al registrar callback en el bind", e);
                     scheduleReconnect("registCallbackRemoteException");
@@ -72,9 +95,17 @@ public class NWDTunerAdapter {
             mService = null;
             mIsBound = false;
             Log.w(TAG, "NWD RadioService desconectado.");
-            scheduleReconnect("onServiceDisconnected");
+            if (mWantBound) scheduleReconnect("onServiceDisconnected");
         }
     };
+
+    private void unlinkDeathRecipient() {
+        if (mLinkedBinder != null && mDeathRecipient != null) {
+            try { mLinkedBinder.unlinkToDeath(mDeathRecipient, 0); } catch (Exception ignored) {}
+        }
+        mLinkedBinder = null;
+        mDeathRecipient = null;
+    }
 
     private NWDTunerAdapter(Context ctx) {
         this.mContext = ctx.getApplicationContext();
@@ -93,21 +124,37 @@ public class NWDTunerAdapter {
     }
 
     public void disconnect() {
+        mWantBound = false;
+        // Cancelar reconexiones pendientes (scheduleReconnect): si no, re-vinculaban tras liberar.
+        mMainHandler.removeCallbacksAndMessages(null);
         mReconnectScheduled = false;
         mReconnectAttempts = 0;
-        if (mService != null) {
-            if (mCallback != null) {
-                try { mService.unRegistCallback(mCallback); } catch (Exception ignored) {}
-            }
-            try {
-                mContext.unbindService(mConnection);
-            } catch (Exception ignored) {}
-            mService = null;
+        unlinkDeathRecipient();
+        final RadioFeature svc = mService;
+        final RadioCallback cb = mCallback;
+        if (svc != null && cb != null) {
+            try { svc.unRegistCallback(cb); } catch (Exception ignored) {}
         }
+        // Siempre: también cubre un bind en vuelo (mService aún null).
+        try {
+            mContext.unbindService(mConnection);
+        } catch (Exception ignored) {}
+        mService = null;
         mIsBound = false;
     }
 
+    /** Suelta el callback si sigue siendo {@code cb} (evita que el singleton retenga un motor liberado). */
+    public void clearCallback(RadioCallback cb) {
+        if (cb == null || mCallback != cb) return;
+        final RadioFeature svc = mService;
+        if (svc != null) {
+            try { svc.unRegistCallback(cb); } catch (Exception ignored) {}
+        }
+        mCallback = null;
+    }
+
     public void bind() {
+        mWantBound = true;
         if (mIsBound) return;
         try {
             Intent svc = new Intent("com.nwd.radio.service.ACTION_RADIO_SERVICE");
@@ -130,10 +177,16 @@ public class NWDTunerAdapter {
     }
 
     public void setCallback(RadioCallback callback) {
+        final RadioCallback old = mCallback;
         this.mCallback = callback;
-        if (mIsBound && mService != null) {
+        final RadioFeature svc = mService;
+        if (mIsBound && svc != null) {
+            if (old != null && old != callback) {
+                try { svc.unRegistCallback(old); } catch (Exception ignored) {}
+            }
+            if (callback == null) return;
             try {
-                mService.registCallback(callback);
+                svc.registCallback(callback);
             } catch (RemoteException e) {
                 Log.e(TAG, "Error al registrar callback", e);
                 scheduleReconnect("setCallbackRemoteException");
@@ -155,7 +208,7 @@ public class NWDTunerAdapter {
         Log.w(TAG, "scheduleReconnect(" + reason + ") in " + delayMs + "ms (attempt " + mReconnectAttempts + ")");
         mMainHandler.postDelayed(() -> {
             mReconnectScheduled = false;
-            if (mIsBound) return;
+            if (!mWantBound || mIsBound) return;
             bind();
         }, delayMs);
     }

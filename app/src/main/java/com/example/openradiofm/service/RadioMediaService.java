@@ -352,12 +352,9 @@ public class RadioMediaService extends MediaBrowserServiceCompat {
                         } else if (mEngine instanceof com.example.openradiofm.data.source.MT8163Engine) {
                             uiCb = ((com.example.openradiofm.data.source.MT8163Engine) mEngine).getCallback();
                         }
-                        if (uiCb != null) {
-                            mEngine.setCallback(new com.example.openradiofm.data.source.CompositeRadioEngineCallback(
-                                    uiCb, mEngineCallback));
-                        } else {
-                            mEngine.setCallback(mEngineCallback);
-                        }
+                        // combine(): no duplica el callback del servicio si el motor se re-entrega.
+                        mEngine.setCallback(com.example.openradiofm.data.source.CompositeRadioEngineCallback.combine(
+                                uiCb, mEngineCallback, false));
                     } catch (Exception e) {
                         Log.w(TAG, "No se pudo setear callback al engine desde el servicio", e);
                     }

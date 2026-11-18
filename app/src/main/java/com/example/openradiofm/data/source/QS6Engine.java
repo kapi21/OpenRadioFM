@@ -25,21 +25,37 @@ public class QS6Engine implements RadioEngine {
     private static final String TAG = "QS6Engine";
     
     private Context mContext;
-    private RadioEngineCallback mCallback;
+    // volatile: se lee desde hilo Binder (callbacks NWD) y se anula en release() (main).
+    private volatile RadioEngineCallback mCallback;
     private NWDTunerAdapter mAdapter;
     private Qs6KernelMcuClient mKernel;
     private final Handler mMainHandler = new Handler(Looper.getMainLooper());
 
-    private int mCurrentFreq = 87500;
-    private int mCurrentBand = 0;
-    private boolean mIsMute = false;
-    private boolean mIsAfEnabled = false;
-    private boolean mIsTaEnabled = false;
+    private volatile int mCurrentFreq = 87500;
+    private volatile int mCurrentBand = 0;
+    private volatile boolean mIsMute = false;
+    private volatile boolean mIsAfEnabled = false;
+    private volatile boolean mIsTaEnabled = false;
     private boolean mIsTpEnabled = false;
-    private boolean mIsScanning = false;
-    private boolean mIsDxLocal = false;
-    private boolean mOnlineStreamingActive = false;
+    private volatile boolean mIsScanning = false;
+    private volatile boolean mIsDxLocal = false;
+    private volatile boolean mOnlineStreamingActive = false;
+    /** RDS global (bit 0x80): el SDK no expone lectura fiable; se lleva el estado localmente. */
+    private boolean mIsRdsGlobalEnabled = true;
+    /** true tras release() completo: descarta callbacks NWD tardíos del motor muerto. */
+    private volatile boolean mReleased = false;
+    /** true tras closeDevice()/switchToAndroidAudio(): la radio no es la fuente de audio. */
+    private volatile boolean mAudioReleased = false;
+    /**
+     * Anti-rebote: tras un tune() propio, el ContentObserver puede leer la frecuencia ANTERIOR
+     * de Settings.System (p. ej. disparado por PS_DATA de la emisora previa) antes de que el MCU
+     * escriba la nueva. Durante esta ventana se ignoran lecturas de Settings ≠ frecuencia pedida.
+     */
+    private static final long TUNE_SETTINGS_GUARD_MS = 1500L;
+    private volatile long mLastTuneCmdMs = 0L;
+    private volatile int mPendingTuneFreq = -1;
     // QS6/NWD: el firmware puede no limpiar RT al cambiar de banda/frecuencia.
+    // Solo se toca en hilo principal.
     private String mLastRt = "";
     /** Anti-spam: evita ráfagas de broadcasts de audio routing en arranque. */
     private long mLastRequestPlayAudioWallMs = 0L;
@@ -74,6 +90,7 @@ public class QS6Engine implements RadioEngine {
     @Override
     public boolean init(Context context) {
         mContext = context;
+        mReleased = false;
         mKernel = new Qs6KernelMcuClient(context);
         try { mKernel.connect(); } catch (Throwable ignored) {}
 
@@ -100,6 +117,7 @@ public class QS6Engine implements RadioEngine {
         final int initFreq = mCurrentFreq;
         final int initBand = mCurrentBand;
         mMainHandler.postDelayed(() -> {
+            if (mReleased) return;
             // Si seguimos en los defaults y no hemos recibido callbacks/settings, reintentamos conexión AIDL.
             if (mAdapter != null && mCurrentFreq == initFreq && mCurrentBand == initBand) {
                 try { mAdapter.connect(); } catch (Throwable ignored) {}
@@ -113,7 +131,9 @@ public class QS6Engine implements RadioEngine {
         @Override public void notifyState(byte state) throws RemoteException {}
 
         @Override public void notifyCurrentFrequency(byte bandType, int frequency, String psName, int prefabIndex) throws RemoteException {
+            if (mReleased) return;
             mMainHandler.post(() -> {
+                if (mReleased) return;
                 final int prevFreq = mCurrentFreq;
                 final int prevBand = mCurrentBand;
                 // V22.4: Mapeo robusto. Algunos firmwares NWD reportan 1-based o 0-based.
@@ -142,21 +162,30 @@ public class QS6Engine implements RadioEngine {
                 if (mCurrentFreq != prevFreq || mCurrentBand != prevBand) {
                     clearRtIfNeeded(false);
                 }
+                // AIDL es autoritativo: fin de la ventana anti-rebote.
+                mPendingTuneFreq = -1;
 
                 // V22.5: Independencia Total -> Escribir en Settings.System para que el MCU/OS vean nuestro estado
-                syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, psName);
+                syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, psName, isRadioAudioActive());
 
-                if (mCallback != null) {
-                    mCallback.onFrequencyChanged(mCurrentFreq);
-                    mCallback.onBandChanged(mCurrentBand);
-                    if (psName != null && !psName.isEmpty()) mCallback.onRdsName(psName);
+                final RadioEngineCallback cb = mCallback;
+                if (cb != null) {
+                    cb.onFrequencyChanged(mCurrentFreq);
+                    cb.onBandChanged(mCurrentBand);
+                    if (psName != null && !psName.isEmpty()) cb.onRdsName(psName);
                 }
             });
         }
 
+        // Callbacks AIDL llegan en hilo Binder: todo acceso a mCallback se hace dentro del post
+        // (main), para no desreferenciar un mCallback anulado por release() entre medias (NPE).
         @Override public void notifyNearOn(boolean isOn) throws RemoteException {
-            mIsDxLocal = isOn;
-            if (mCallback != null) mMainHandler.post(() -> mCallback.onDxLocalChanged(mIsDxLocal));
+            if (mReleased) return;
+            mMainHandler.post(() -> {
+                mIsDxLocal = isOn;
+                final RadioEngineCallback cb = mCallback;
+                if (cb != null) cb.onDxLocalChanged(isOn);
+            });
         }
 
         @Override public void notifyStereo(boolean isStereo) throws RemoteException {}
@@ -164,15 +193,27 @@ public class QS6Engine implements RadioEngine {
 
         @Override public void notifyRDSStateChange() throws RemoteException {
             // Notificación genérica de cambio en RDS (AF/TA/TP)
-            if (mAdapter != null) {
-                mIsAfEnabled = mAdapter.getRDSState(1); // SDK: 1=AF? a verificar
-                mIsTaEnabled = mAdapter.getRDSState(2);
-                if (mCallback != null) mMainHandler.post(() -> mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled));
+            if (mReleased) return;
+            final NWDTunerAdapter adapter = mAdapter;
+            if (adapter != null) {
+                // Consulta AIDL síncrona: se hace aquí (hilo Binder), no en main.
+                final boolean af = adapter.getRDSState(1); // SDK: 1=AF? a verificar
+                final boolean ta = adapter.getRDSState(2);
+                mMainHandler.post(() -> {
+                    mIsAfEnabled = af;
+                    mIsTaEnabled = ta;
+                    final RadioEngineCallback cb = mCallback;
+                    if (cb != null) cb.onRdsStatus(af, ta, mIsTpEnabled);
+                });
             }
         }
 
         @Override public void notifyCurrentPTYType(byte ptyType) throws RemoteException {
-            if (mCallback != null) mMainHandler.post(() -> mCallback.onRdsPty(String.valueOf(ptyType)));
+            if (mReleased) return;
+            mMainHandler.post(() -> {
+                final RadioEngineCallback cb = mCallback;
+                if (cb != null) cb.onRdsPty(String.valueOf(ptyType));
+            });
         }
 
         @Override public void notifyPrefabFrequency(com.nwd.radio.service.data.Frequency[] frequencys) throws RemoteException {}
@@ -180,20 +221,28 @@ public class QS6Engine implements RadioEngine {
         @Override public void notifyRadioPoint(com.nwd.radio.service.data.RadioPoint[] radioPoints) throws RemoteException {}
 
         @Override public void notifyCurrentIsTA(boolean isTA) throws RemoteException {
-            mIsTaEnabled = isTA;
-            if (mCallback != null) mMainHandler.post(() -> mCallback.onRdsStatus(mIsAfEnabled, mIsTaEnabled, mIsTpEnabled));
+            if (mReleased) return;
+            mMainHandler.post(() -> {
+                mIsTaEnabled = isTA;
+                final RadioEngineCallback cb = mCallback;
+                if (cb != null) cb.onRdsStatus(mIsAfEnabled, isTA, mIsTpEnabled);
+            });
         }
 
         @Override public void notifyRdsShowState(boolean isShow) throws RemoteException {}
 
         @Override public void notifyRtMessage(String rtMessage) throws RemoteException {
-            // Evitar RT "pegado" fuera de FM / durante transiciones.
-            if (mCurrentBand >= 3) return; // AM
-            if (rtMessage == null) rtMessage = "";
-            final String trimmed = rtMessage.trim();
-            if (trimmed.equals(mLastRt)) return;
-            mLastRt = trimmed;
-            if (mCallback != null) mCallback.onRdsText(trimmed);
+            if (mReleased) return;
+            final String trimmed = (rtMessage == null) ? "" : rtMessage.trim();
+            // Antes se llamaba onRdsText() directamente en hilo Binder; ahora en main como el resto.
+            mMainHandler.post(() -> {
+                // Evitar RT "pegado" fuera de FM / durante transiciones.
+                if (mCurrentBand >= 3) return; // AM
+                if (trimmed.equals(mLastRt)) return;
+                mLastRt = trimmed;
+                final RadioEngineCallback cb = mCallback;
+                if (cb != null) cb.onRdsText(trimmed);
+            });
         }
 
         @Override public void notifyRadioScanState(int state) throws RemoteException {
@@ -201,21 +250,49 @@ public class QS6Engine implements RadioEngine {
         }
     };
 
+    /**
+     * Recreación de la UI (rotación / Activity destruida sin finish): mantener el motor vivo,
+     * igual que K706/MT8163. Antes caía al default de RadioEngine → release() → closeDevice()
+     * (EXIT_ARM_FM + SOURCE_ANDROID) y cortaba la radio.
+     */
+    @Override
+    public void release(boolean persist) {
+        if (persist) {
+            Log.d(TAG, "release(persist=true): recreación detectada. Manteniendo QS6 vivo.");
+            return;
+        }
+        release();
+    }
+
     @Override
     public void release() {
         closeDevice(); // Asegurar cierre de audio antes de desconectar AIDL
+        mReleased = true;
+        // Cancelar warmup rebind (2,2 s) y requestPlayAudio diferido (450 ms): si no, podían
+        // reconectar AIDL o re-pedir SOURCE_RADIO tras el cierre.
+        mMainHandler.removeCallbacksAndMessages(null);
         try { unregisterNwdSettingsObservers(); } catch (Throwable ignored) {}
         try { if (mKernel != null) mKernel.disconnect(); } catch (Throwable ignored) {}
         mAutoScanOemPreferred = false;
         if (mAdapter != null) {
+            // El adapter es singleton: desconectar y soltar NUESTRO stub para que no retenga
+            // este motor ni lo re-registre en una reconexión posterior.
             mAdapter.disconnect();
+            mAdapter.clearCallback(mNwdCallback);
         }
         mCallback = null;
         RadioServiceController.clearSharedLocalEngineIfSame(this);
     }
 
-    @Override public void tune(int freqKhz) { 
+    /** Marca el inicio de la ventana anti-rebote de Settings.System tras una orden de sintonía propia. */
+    private void markTuneCommand(int freqKhz) {
+        mPendingTuneFreq = freqKhz;
+        mLastTuneCmdMs = android.os.SystemClock.elapsedRealtime();
+    }
+
+    @Override public void tune(int freqKhz) {
         mCurrentFreq = freqKhz;
+        markTuneCommand(freqKhz);
         if (mAutoScanOemPreferred) {
             try { if (mAdapter != null) mAdapter.tuneWithBand(freqKhz, mCurrentBand); } catch (Throwable ignored) {}
             return;
@@ -301,6 +378,8 @@ public class QS6Engine implements RadioEngine {
     @Override
     public boolean requestPlayAudio() {
         Log.d(TAG, "QS6: requestPlayAudio -> SOURCE_RADIO (" + SOURCE_RADIO + ")");
+        // Antes del anti-spam: aunque se suprima el broadcast, la intención es que la radio suene.
+        mAudioReleased = false;
         try {
             // Anti-spam (arranque/recreate/resume)
             long now = android.os.SystemClock.elapsedRealtime();
@@ -328,7 +407,7 @@ public class QS6Engine implements RadioEngine {
             mContext.sendBroadcast(intentApp);
             
             // V22.6: Asegurar que el sistema vea el cambio de fuente y el servicio activo
-            syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, "");
+            syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, "", true);
             
             return true;
         } catch (Throwable e) {
@@ -340,6 +419,7 @@ public class QS6Engine implements RadioEngine {
     @Override
     public void switchToAndroidAudio() {
         Log.d(TAG, "QS6: switchToAndroidAudio -> SOURCE_ANDROID");
+        mAudioReleased = true;
         try {
             // V22.6: Añadir broadcast de petición para mayor redundancia (simétrico a requestPlayAudio)
             Intent intentReq = new Intent(ACTION_REQUEST_CHANGE_SOURCE);
@@ -356,8 +436,10 @@ public class QS6Engine implements RadioEngine {
             intentApp.putExtra("extra_app_operation", 0); // 0 = Out
             mContext.sendBroadcast(intentApp);
             
-            // Forzar sincronización de claves de sistema para que el MCU vea el cambio de fuente
-            syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, "");
+            // Forzar sincronización de claves de sistema para que el MCU vea el cambio de fuente.
+            // Antes escribía source = mIsMute ? ANDROID : RADIO, y en closeDevice()/streaming
+            // (mIsMute=false) dejaba mcu_current_source=RADIO → el siguiente arranque no pedía audio.
+            syncToNwdSystemSettings(mCurrentFreq, mCurrentBand, "", false);
         } catch (Exception ignored) {}
     }
 
@@ -369,10 +451,19 @@ public class QS6Engine implements RadioEngine {
         if (active) switchToAndroidAudio();
     }
 
-    @Override public void toggleRdsFeature(int type) { 
-        int bit = (type == 1) ? 0x01 : (type == 2 ? 0x02 : 0x80);
-        boolean cur = (type == 1) ? mIsAfEnabled : (type == 2 ? mIsTaEnabled : true);
-        mAdapter.setRDSState(bit, !cur);
+    @Override public void toggleRdsFeature(int type) {
+        if (mAdapter == null) return;
+        if (type == 1) {
+            mAdapter.setRDSState(0x01, !mIsAfEnabled);
+        } else if (type == 2) {
+            mAdapter.setRDSState(0x02, !mIsTaEnabled);
+        } else if (type == 0) {
+            // RDS global: antes cur=true fijo → solo podía apagarse. Ahora alterna estado local.
+            mIsRdsGlobalEnabled = !mIsRdsGlobalEnabled;
+            mAdapter.setRDSState(0x80, mIsRdsGlobalEnabled);
+        } else {
+            Log.d(TAG, "toggleRdsFeature(" + type + "): no soportado en QS6");
+        }
     }
     
     @Override public boolean isAfEnabled() { return mIsAfEnabled; }
@@ -416,6 +507,7 @@ public class QS6Engine implements RadioEngine {
     public void tuneWithBand(int freqKhz, int band) {
         mCurrentFreq = freqKhz;
         mCurrentBand = band;
+        markTuneCommand(freqKhz);
         if (mAutoScanOemPreferred) {
             try { if (mAdapter != null) mAdapter.tuneWithBand(freqKhz, band); } catch (Throwable ignored) {}
             return;
@@ -670,6 +762,17 @@ public class QS6Engine implements RadioEngine {
             if (mCallback != null) mCallback.onBandChanged(band);
         }
         boolean freqChanged = (freqKhz > 0 && freqKhz != mCurrentFreq);
+        if (freqChanged && mPendingTuneFreq > 0) {
+            long sinceTune = android.os.SystemClock.elapsedRealtime() - mLastTuneCmdMs;
+            if (sinceTune < TUNE_SETTINGS_GUARD_MS && freqKhz != mPendingTuneFreq) {
+                // Valor obsoleto de Settings (el MCU aún no escribió la nueva): no revertir.
+                Log.d(TAG, "poll settings: ignorando freq " + freqKhz + " (tune pendiente a "
+                        + mPendingTuneFreq + ", " + sinceTune + " ms)");
+                freqChanged = false;
+            } else {
+                mPendingTuneFreq = -1;
+            }
+        }
         if (freqChanged) {
             mCurrentFreq = freqKhz;
             if (mCallback != null) mCallback.onFrequencyChanged(freqKhz);
@@ -745,7 +848,12 @@ public class QS6Engine implements RadioEngine {
      * Esto permite que el MCUDeviceManager del sistema lea nuestra frecuencia y la envíe al MCU/LCD,
      * logrando independencia total de la app de radio nativa.
      */
-    private void syncToNwdSystemSettings(int freqKhz, int band, String psName) {
+    /** La radio es la fuente de audio actual (no muteada, sin streaming online, no liberada). */
+    private boolean isRadioAudioActive() {
+        return !mIsMute && !mOnlineStreamingActive && !mAudioReleased;
+    }
+
+    private void syncToNwdSystemSettings(int freqKhz, int band, String psName, boolean radioActive) {
         if (mContext == null) return;
         ContentResolver cr = mContext.getContentResolver();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.System.canWrite(mContext)) {
@@ -753,12 +861,12 @@ public class QS6Engine implements RadioEngine {
             return;
         }
         int nwdFreq = (band < 3) ? freqKhz / 10 : freqKhz;
-        int source = mIsMute ? SOURCE_ANDROID : SOURCE_RADIO;
+        int source = radioActive ? SOURCE_RADIO : SOURCE_ANDROID;
         boolean any = false;
         any |= safePutSystemInt(cr, KEY_NWD_RADIO_CURRENT_FREQ, nwdFreq);
         any |= safePutSystemInt(cr, KEY_NWD_RADIO_CURRENT_BAND, band);
         any |= safePutSystemInt(cr, KEY_MCU_CURRENT_SOURCE, source);
-        any |= safePutSystemInt(cr, KEY_NWD_RADIO_BACK_SERVICE_ON, mIsMute ? 0 : 1);
+        any |= safePutSystemInt(cr, KEY_NWD_RADIO_BACK_SERVICE_ON, radioActive ? 1 : 0);
         if (psName != null && !psName.isEmpty()) {
             try {
                 String hexPs = bytesToHex(psName.getBytes("UTF-8"));
@@ -838,7 +946,7 @@ public class QS6Engine implements RadioEngine {
         // Diferido: deja que el sistema asiente callbacks iniciales y evita choque con tune de arranque.
         mMainHandler.postDelayed(() -> {
             try {
-                if (mIsMute || mOnlineStreamingActive) return;
+                if (mReleased || mIsMute || mOnlineStreamingActive) return;
                 requestPlayAudio();
             } catch (Throwable ignored) {}
         }, 450L);
