@@ -155,6 +155,17 @@
                     app:trackTint="#3300FF00" />
 
                 <androidx.appcompat.widget.SwitchCompat
+                    android:id="@+id/swInvertLightsHw"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="INVERT_LIGHTS_SIGNAL (0x22)"
+                    android:textColor="#FFFFFF"
+                    android:fontFamily="monospace"
+                    app:thumbTint="#00FF00"
+                    app:trackTint="#3300FF00" />
+
+                <androidx.appcompat.widget.SwitchCompat
                     android:id="@+id/swReverseMuteHw"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

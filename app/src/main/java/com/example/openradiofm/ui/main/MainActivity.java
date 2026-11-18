@@ -3649,6 +3649,10 @@ public class MainActivity extends AppCompatActivity implements RadioUiHost {
     @Override
     public void handleHwLightsAutomation(boolean lightsOn) {
         if (mPrefs == null || !mPrefs.getBoolean("pref_hw_auto_night", true)) return;
+        // Ajuste de ingeniería K706: algunas unidades reportan la señal 0x22 invertida.
+        if (mPrefs.getBoolean("pref_hw_lights_invert", false)) {
+            lightsOn = !lightsOn;
+        }
         
         if (mThemeManager != null) {
             android.content.SharedPreferences tp = getSharedPreferences("ThemePrefs", android.content.Context.MODE_PRIVATE);

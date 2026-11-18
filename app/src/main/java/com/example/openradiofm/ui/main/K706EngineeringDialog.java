@@ -298,6 +298,17 @@ public class K706EngineeringDialog extends Dialog implements K706RadioManager.Ra
             });
         }
 
+        SwitchCompat swInvertLights = findViewById(R.id.swInvertLightsHw);
+        if (swInvertLights != null) {
+            android.content.SharedPreferences prefs =
+                    mActivity.getSharedPreferences("RadioPresets", android.content.Context.MODE_PRIVATE);
+            swInvertLights.setChecked(prefs.getBoolean("pref_hw_lights_invert", false)); // Default false
+            swInvertLights.setOnCheckedChangeListener((btn, checked) -> {
+                prefs.edit().putBoolean("pref_hw_lights_invert", checked).apply();
+                logEvent("HW_AUTO", "LIGHTS_INVERT=" + checked);
+            });
+        }
+
         SwitchCompat swReverse = findViewById(R.id.swReverseMuteHw);
         if (swReverse != null) {
             android.content.SharedPreferences prefs =
