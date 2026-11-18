@@ -14,11 +14,11 @@ Cerrar v5.7 (V7) y estabilizar: 8667 (RDS factory + QUIT), K706 (PowerOff amp, l
 
 | Ítem | Valor |
 |------|--------|
-| Rama | `main` (**ahead ~10** vs `origin/main`, **sin push**) |
-| Tag release | `v5.7` (local; no publicado) |
+| Rama | `main` **sincronizada con `origin/main`** (push 18/11; incluye WIP sin probar en HW) |
+| Tag release | `v5.7` (**solo local; no publicado**, sin GitHub Release) |
 | Commit release | `79c0f5f1` — v5.7 HCN V31 / Junsun V7 |
-| Último WIP commiteado | `22d75841` — QS6 audit fixes (5.7.8-qs6fix) |
-| Working tree | **cambios sin commit**: fixes MT8163 PowerOff + icono mute (`5.7.9-mt8163mute`) + unificación handoff |
+| Último WIP | `44f412d3` — MT8163 PowerOff + icono mute (5.7.9-mt8163mute) + handoff unificado |
+| Working tree | limpio |
 | App en WIP | `5.7.9-mt8163mute` / versionCode `54` |
 | Release cerrada | `5.7` / versionCode `45` |
 
@@ -48,9 +48,9 @@ Parche V7: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip` · Parche 8667: `K706_RE\86
 2. **Csaba** → test completo `5.7.4-8667quit2` (RDS frío, QUIT, reabrir con audio+RDS).
 3. **Luis (K706)** → activar switch luces invertidas (mantener 6 s botón GPS → HARDWARE_AUTOMATION_MODULE) y confirmar modo noche; validar `5.7.3-k706bg` (otras apps suenan tras PowerOff) y `5.7.6-k706stream` (PowerOff corta stream); regresión QS6 fixes en K706.
 4. **QS6** → seguir probando `5.7.8`; vigilar log `poll settings: ignorando freq` (si nunca aparece, valorar quitar la ventana anti-rebote).
-5. Si todo OK → commit WIP, consolidar release menor 5.7.x; push + tag v5.7 + GitHub Release **solo cuando se autorice**.
+5. Si todo OK → consolidar release menor 5.7.x; push tag v5.7 + GitHub Release **solo cuando se autorice**.
 
-Bloqueos: sin push/release hasta feedback.
+Bloqueos: sin tag/release publicados hasta feedback (el código WIP ya está en `origin/main`).
 Fuera de alcance: Magisk K706 root, Z-Link/AA, llamadas BT/HFP de Luis (ticket aparte), hilo Micra K12 (descartado 18/11).
 
 ### Árbol de decisión al recibir feedback
@@ -135,6 +135,7 @@ Otros tags: 8667 `MTK8259_8667Engine MTK8259_8667RM RadioServiceController`; QS6
 - `CompositeRadioEngineCallback` cambia el cableado de callbacks en todos los motores → regresión K706 pendiente.
 
 ## Historial
+- 2026-11-18 (noche, 3): commit `44f412d3` + push de `main` a GitHub (14 commits desde v5.7). Tag `v5.7` sin publicar por decisión del usuario.
 - 2026-11-18 (noche, 2): fixes MT8163 PowerOff + icono mute → `5.7.9-mt8163mute`; handoffs unificados en este archivo (eliminados `K706_RE\HANDOFF.md` y `HANDOFF_5.7.md`); hilo Micra K12 descartado.
 - 2026-11-18 (noche): usuario prueba `5.7.8-qs6fix` → OK en QS6 y MT8163; 2 bugs MT8163 detectados.
 - 2026-11-18 (tarde): fixes K706 stream PowerOff (5.7.6), MT8163 (5.7.7), auditoría QS6 (5.7.8, `22d75841`).
