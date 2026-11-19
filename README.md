@@ -42,7 +42,9 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visua
 
 ## 🎯 Funciones Principales
 
-**5.8** (`versionCode` **55**): consolida **Junsun V7 / MT8768** (HCN V31, crédito **Csaba**), RDS/QUIT **MTK8259_8667**, PowerOff K706 (amp/luces/stream), estabilización MT8163 (PowerOff + mute) y auditoría **NWD (QS, G5)**. APK: `_RELEASES/OpenRadioFM — v5.8.apk`. Handoff: [`HANDOFF.md`](HANDOFF.md).
+**5.8** (`versionCode` **55**): consolida **Junsun V7 / MT8768** (HCN V31), RDS/QUIT **MTK8259_8667**, PowerOff K706 (amp/luces/stream), estabilización MT8163 (PowerOff + mute) y auditoría **NWD (QS, G5)**. APK: `_RELEASES/OpenRadioFM — v5.8.apk`. Handoff: [`HANDOFF.md`](HANDOFF.md).
+
+**Agradecimientos v5.8:** **Csaba** (V7 / MTK8259_8667), **Luis [@luisfandi](https://github.com/luisfandi)** (K706), **Al @a87lv** (pruebas HW).
 
 | Función | MT8163 / MT8768 (Junsun) | K706 | MTK8259_8667 |
 |---|:---:|:---:|:---:|
@@ -543,11 +545,12 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Audio Focus**: Refinamiento en la gestión del foco para asegurar el silencio tras el cierre.
 
 ### v5.8.0 (Noviembre 2026)
-- **Junsun V7 / MT8768**: proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`); regresión MT8163 intacta. Crédito: **Csaba**.
+- **Junsun V7 / MT8768**: proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`); regresión MT8163 intacta.
 - **MTK8259_8667**: RDS factory (`ITsRadioCommon`) + PowerOff/QUIT sin motor zombie.
 - **K706**: PowerOff libera amp/canal; corte de stream online; inversión manual de luces MCU.
 - **MT8163**: fixes de cierre/mute; PowerOff por tecla MCU; icono mute sincronizado.
 - **NWD (QS, G5)**: auditoría de release/persist, callbacks NWD y sync de fuente de audio.
+- **Agradecimientos**: Csaba; Luis [@luisfandi](https://github.com/luisfandi); Al @a87lv.
 
 ### v5.7.0 "Junsun V7 / MT8768" (Noviembre 2026, tag local)
 - Base V7/MT8768 absorbida en **5.8** (no hubo GitHub Release de 5.7).

@@ -78,4 +78,6 @@ adb install -r "C:\@MIS PROYECTOS\K706_RE\OpenRadioFM\_RELEASES\OpenRadioFM — 
 - 2026-11-14: cierre local v5.7 V7/MT8768.
 
 ## Créditos
-Csaba — V7/MT8768 y MTK8259_8667 factory RDS. Luis — validación K706 PowerOff/luces.
+- **Csaba** — V7/MT8768 y MTK8259_8667 (RDS factory + PowerOff).
+- **Luis [@luisfandi](https://github.com/luisfandi)** — validación K706 (PowerOff, amp, luces, stream).
+- **Al @a87lv** — pruebas y feedback en hardware.

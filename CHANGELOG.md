@@ -2,6 +2,11 @@
 
 *Release pública consolidada desde `v5.6-fusion`: incluye V7/MT8768 (antes tag local `v5.7`) y estabilización multiplataforma. `versionCode` **55**, `versionName` **5.8**.*
 
+### Agradecimientos
+- **Csaba** — Junsun V7 / MT8768 (HCN V31) y MTK8259_8667 (RDS factory + PowerOff/QUIT).
+- **Luis [@luisfandi](https://github.com/luisfandi)** — pruebas y feedback K706 (PowerOff, amp, luces, stream).
+- **Al @a87lv** — pruebas y feedback en hardware.
+
 ### Junsun V7 / MT8768 (HCN V31) — gracias Csaba
 - **`HcnApiFactory`**: detección dinámica del contrato AIDL HCN v25 (MT8163) vs v31 (MT8768 / Junsun V7), con override por SharedPreferences (`pref_hcn_contract`: 0=auto, 25, 31).
 - **`HcnV31Api`**: proxy Binder que adapta transacciones e IDs del contrato de 31 comandos.
