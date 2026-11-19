@@ -5,9 +5,9 @@
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_4.4+-orange.svg)]()
-[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_MT8768_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM_|_SPD-purple.svg)]()
+[![Hardware](https://img.shields.io/badge/hardware-MT8163_|_MT8768_|_K706_|_NWD_(QS,_G5)_|_MTK8259_8667_|_FYT%2FOEM_|_SPD-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units (v5.8)**, con soporte activo para **K706/QuickFish**, **MT8163 / MT8768 (Junsun V1 Pro / V7)**, plataformas **MTK 8227L / 8259 / 8667**, **QS6/NWD**, **SPD** y **FYT/Teyes (OEM)**.  
+**Aplicación de radio FM premium para Android Head Units (v5.8)**, con soporte activo para **K706/QuickFish**, **MT8163 / MT8768 (Junsun V1 Pro / V7)**, plataformas **MTK8259_8667**, **NWD (QS, G5)**, **SPD** y **FYT/Teyes (OEM)**.  
 Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visual local de logos con atajos directos, preservación de archivos y conectividad flexible (Online/Offline FUSION).
 
 <div align="center">
@@ -42,9 +42,9 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visua
 
 ## 🎯 Funciones Principales
 
-**5.8** (`versionCode` **55**): consolida **Junsun V7 / MT8768** (HCN V31, crédito **Csaba**), RDS/QUIT 8667, PowerOff K706 (amp/luces/stream), estabilización MT8163 (PowerOff + mute) y auditoría QS6. APK: `_RELEASES/OpenRadioFM — v5.8.apk`. Handoff: [`HANDOFF.md`](HANDOFF.md).
+**5.8** (`versionCode` **55**): consolida **Junsun V7 / MT8768** (HCN V31, crédito **Csaba**), RDS/QUIT **MTK8259_8667**, PowerOff K706 (amp/luces/stream), estabilización MT8163 (PowerOff + mute) y auditoría **NWD (QS, G5)**. APK: `_RELEASES/OpenRadioFM — v5.8.apk`. Handoff: [`HANDOFF.md`](HANDOFF.md).
 
-| Función | MT8163 / MT8768 (Junsun) | K706 | MTK8259/8667 |
+| Función | MT8163 / MT8768 (Junsun) | K706 | MTK8259_8667 |
 |---|:---:|:---:|:---:|
 | Sintonización FM | ✅ | ✅ | ✅ |
 | Seek / AutoScan | ✅ | ✅ | ✅ |
@@ -138,9 +138,9 @@ graph TB
 |---|---|---|---|
 | JUNSUN V1 Pro / Topway | MediaTek MT8163 | `FM_MT8163` | ✅ |
 | Radio K706 / HCN / Vento | K706 + MCU | `FM_K706` | ✅ |
-| MTK 8227L / 8259 / 8667 | MediaTek | `FM_MT8259` | 🤝 Csaba Edition |
+| MTK8259_8667 | MediaTek | `FM_MT8259` | 🤝 Csaba Edition |
 | Junsun V9 Plus (SPD) | SPD + MCU | `FM_SPD` | 🤝 Tester |
-| Radio NWD G5 | Qualcomm | `FM_QS6` | 🛠️ Beta (rama **QS_NWD**) |
+| NWD (QS, G5) | Qualcomm | `FM_QS6` | 🛠️ Beta (rama **QS_NWD**) |
 | Otros Android Head Units | Varía | `FM_BASICO` | ⚠️ Solo UI |
 
 ---
@@ -544,10 +544,10 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ### v5.8.0 (Noviembre 2026)
 - **Junsun V7 / MT8768**: proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`); regresión MT8163 intacta. Crédito: **Csaba**.
-- **8667**: RDS factory (`ITsRadioCommon`) + PowerOff/QUIT sin motor zombie.
+- **MTK8259_8667**: RDS factory (`ITsRadioCommon`) + PowerOff/QUIT sin motor zombie.
 - **K706**: PowerOff libera amp/canal; corte de stream online; inversión manual de luces MCU.
 - **MT8163**: fixes de cierre/mute; PowerOff por tecla MCU; icono mute sincronizado.
-- **QS6**: auditoría de release/persist, callbacks NWD y sync de fuente de audio.
+- **NWD (QS, G5)**: auditoría de release/persist, callbacks NWD y sync de fuente de audio.
 
 ### v5.7.0 "Junsun V7 / MT8768" (Noviembre 2026, tag local)
 - Base V7/MT8768 absorbida en **5.8** (no hubo GitHub Release de 5.7).

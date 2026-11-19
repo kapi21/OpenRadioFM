@@ -2,7 +2,7 @@
 
 _Última actualización: 2026-11-19_
 
-Workspace `K706_RE`: RE/firmware de autoradios Android. El trabajo activo es **OpenRadioFM**, una radio FM multiplataforma (K706, MT8163/8768, QS6, Topway 8259/8667, SPD, FYT).
+Workspace `K706_RE`: RE/firmware de autoradios Android. El trabajo activo es **OpenRadioFM**, una radio FM multiplataforma (K706, MT8163/8768, NWD (QS, G5), MTK8259_8667, SPD, FYT).
 Otros handoffs del workspace (no activos / proyecto aparte): `Junsun V9 Plus/README_SPD_HANDOFF.md` (SPD), `HANDOFF_K706_ROOT.md` (Magisk, fuera de alcance), `HANDOFF_5.5_*`/`5.6`, `_DOCS/` (histórico).
 
 ## Objetivo actual
@@ -29,15 +29,15 @@ Release **v5.8** publicada en GitHub (consolida V7 + WIP post-5.7). Seguimiento 
 | Release v5.7 (histórico local) | `OpenRadioFM\_RELEASES\OpenRadioFM — v5.7.apk` |
 | Test MT8163 mute (pre-5.8) | `K706_RE\MT8163_test\OpenRadioFM-5.7.9-mt8163mute-TEST.apk` |
 
-Parche V7: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip` · Parche 8667: `K706_RE\8667\Factory_compatible.zip`
+Parche V7: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip` · Parche MTK8259_8667: `K706_RE\8667\Factory_compatible.zip`
 
 ---
 
 ## Pendiente (al retomar)
 
-1. Feedback post-release en MT8163 / 8667 / K706 / QS6 con APK **5.8**.
+1. Feedback post-release en MT8163 / MTK8259_8667 / K706 / NWD (QS, G5) con APK **5.8**.
 2. Si el switch de luces K706 se confirma → valorar inversión por defecto/auto-detección.
-3. Vigilar anti-rebote QS6 (`poll settings: ignorando freq`).
+3. Vigilar anti-rebote NWD (QS, G5) (`poll settings: ignorando freq`).
 4. Fuera de alcance: Magisk K706 root, Z-Link/AA, llamadas BT/HFP.
 
 ### Árbol de decisión al recibir feedback
@@ -49,7 +49,7 @@ Parche V7: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip` · Parche 8667: `K706_RE\86
 
 ## Decisiones tomadas
 - **5.8** es el primer GitHub Release tras `v5.6-fusion`; el tag local `v5.7` no se publicó.
-- PowerOff por motor: 8667 = CloseRadioCh+EnterMode(0); K706 = minimizar + SetChannel(4); MT8163 = mute MCU vía `muteForPowerOff`.
+- PowerOff por motor: MTK8259_8667 = CloseRadioCh+EnterMode(0); K706 = minimizar + SetChannel(4); MT8163 = mute MCU vía `muteForPowerOff`.
 - Luces K706: inversión manual `pref_hw_lights_invert` OFF por defecto.
 - MT8163 mute: tecla MCU toggle rastreada (`sMt8163HwKeyMuted`).
 
@@ -58,9 +58,9 @@ Parche V7: `K706_RE\MT8768\OpenRadioFM-V7-patch.zip` · Parche 8667: `K706_RE\86
 ## Archivos clave
 - PowerOff: `MainActivity.handlePowerOffButton()` / `powerOffTopway8667()` / `minimizeToHomeKeepingMediaControl()`
 - Mute: `PlaybackManager`, `StatusRefreshCoordinator`, `MT8163Engine`
-- 8667: `MTK8259_8667Engine.java` / `MTK8259_8667RadioManager.java`
+- MTK8259_8667: `MTK8259_8667Engine.java` / `MTK8259_8667RadioManager.java`
 - K706: `K706RadioManager`, `K706EngineeringDialog`
-- QS6: `QS6Engine`, `NWDTunerAdapter`, `CompositeRadioEngineCallback`
+- NWD (QS, G5): `QS6Engine`, `NWDTunerAdapter`, `CompositeRadioEngineCallback`
 
 ## Cómo verificar
 ```powershell
@@ -74,8 +74,8 @@ adb install -r "C:\@MIS PROYECTOS\K706_RE\OpenRadioFM\_RELEASES\OpenRadioFM — 
 
 ## Historial
 - 2026-11-19: release **v5.8** (versionCode 55) — CHANGELOG/README/docs + GitHub Release desde cambios post-`v5.6-fusion`.
-- 2026-11-18: WIP 5.7.1–5.7.9 (8667/K706/MT8163/QS6); tag `v5.7` local sin publicar; push `main`.
+- 2026-11-18: WIP 5.7.1–5.7.9 (MTK8259_8667/K706/MT8163/NWD); tag `v5.7` local sin publicar; push `main`.
 - 2026-11-14: cierre local v5.7 V7/MT8768.
 
 ## Créditos
-Csaba — V7/MT8768 y 8667 factory RDS. Luis — validación K706 PowerOff/luces.
+Csaba — V7/MT8768 y MTK8259_8667 factory RDS. Luis — validación K706 PowerOff/luces.

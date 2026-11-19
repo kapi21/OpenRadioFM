@@ -8,7 +8,7 @@
 - **MT8163 path**: `MT8163Engine` / `MT8163TunerAdapter` / `RadioServiceController` pasan por `HcnApiFactory.wrap()`; regresión verificada en hardware MT8163.
 - **i18n**: motor descrito como `Topway / Eonon / Junsun V7 (MT8163/8768)` en los 13 `strings.xml`.
 
-### MTK8259 / 8667 — RDS factory + PowerOff (QUIT)
+### MTK8259_8667 — RDS factory + PowerOff (QUIT)
 - RDS vía `ITsRadioCommon` compatible con MainUI stock.
 - PowerOff: `CloseRadioCh` + `EnterMode(0)`; `closeDevice()` ≠ `release()`; limpieza de motor compartido; unmute y `finishAndRemoveTask` (QUIT v2).
 
@@ -22,7 +22,7 @@
 - PowerOff silencia FM con tecla MCU `VOLUME_MUTE` (`PlaybackManager.muteForPowerOff`) sin bajar `STREAM_MUSIC`.
 - Icono mute sincronizado con estado real de la tecla MCU (`sMt8163HwKeyMuted`).
 
-### QS6 / NWD — auditoría
+### NWD (QS, G5) — auditoría
 - `release(persist)` mantiene motor al recrear Activity; `CompositeRadioEngineCallback.combine()` aplana callbacks.
 - NWD: `unlinkToDeath`, cancelar reconexiones, callbacks Binder en main; `mcu_current_source` ANDROID al soltar audio.
 - Anti-rebote de frecuencia Settings tras `tune`; `toggleRdsFeature` bidireccional.
