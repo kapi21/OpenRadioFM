@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">OpenRadioFM</string>
-    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.8</string>
     <string name="accessibility_service_description">Ouvre OpenRadioFM en appuyant sur le bouton physique RADIO (remplace l\'application d\'origine). Sur les unités K706/Topway et QS6 (NWD), il relaie également les touches média du volant (suivant/précédent/lecture) en arrière-plan ; sinon, le système envoie souvent ces touches au lanceur ou à la radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilité)</string>
     <string name="a11y_hihack_enabled">Activé</string>

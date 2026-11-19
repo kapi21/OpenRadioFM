@@ -235,7 +235,7 @@
     <string name="about_info_header">信息</string>
     <string name="about_dev_by">开发者</string>
     <string name="about_tech_details">技术详情</string>
-    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.8</string>
     <string name="accessibility_service_description">按下物理 RADIO 按键时打开 OpenRadioFM（替代原厂应用）。在 K706/Topway 和 QS6 (NWD) 车机上，它还会在后台转发方向盘多媒体按键（下一曲/上一曲/播放）；否则系统通常会将这些按键发送到桌面启动器或原厂收音机。</string>
     <string name="a11y_hihack_title">HiHack（无障碍）</string>
     <string name="a11y_hihack_enabled">已启用</string>

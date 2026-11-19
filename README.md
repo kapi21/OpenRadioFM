@@ -1,13 +1,13 @@
 # OpenRadioFM 📻
 
-[![Version](https://img.shields.io/badge/version-v5.7-green.svg)]()
+[![Version](https://img.shields.io/badge/version-v5.8-green.svg)]()
 [![Branch](https://img.shields.io/badge/branch-main-informational.svg)]()
 
 [![License](https://img.shields.io/badge/license-Apache_2.0-green.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Android_4.4+-orange.svg)]()
 [![Hardware](https://img.shields.io/badge/hardware-MT8163_|_MT8768_|_K706_|_QS6_|_MTK8259_|_FYT%2FOEM_|_SPD-purple.svg)]()
 
-**Aplicación de radio FM premium para Android Head Units (v5.7)**, con soporte activo para **K706/QuickFish**, **MT8163 / MT8768 (Junsun V1 Pro / V7)**, plataformas **MTK 8227L / 8259 / 8667**, **QS6/NWD**, **SPD** y **FYT/Teyes (OEM)**.  
+**Aplicación de radio FM premium para Android Head Units (v5.8)**, con soporte activo para **K706/QuickFish**, **MT8163 / MT8768 (Junsun V1 Pro / V7)**, plataformas **MTK 8227L / 8259 / 8667**, **QS6/NWD**, **SPD** y **FYT/Teyes (OEM)**.  
 Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visual local de logos con atajos directos, preservación de archivos y conectividad flexible (Online/Offline FUSION).
 
 <div align="center">
@@ -42,7 +42,7 @@ Interfaz Glassmorphism, RDS completo (PS, RT, PTY, AF, TA, TP), explorador visua
 
 ## 🎯 Funciones Principales
 
-**5.7 “Junsun V7 / MT8768”** (`versionCode` **45**): soporte **Junsun V7 (MT8768)** con proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`), detección auto v25/v31 y regresión **MT8163** verificada. Crédito: **Csaba**. APK: `_RELEASES/OpenRadioFM — v5.7.apk`. Handoff: [`HANDOFF.md`](HANDOFF.md).
+**5.8** (`versionCode` **55**): consolida **Junsun V7 / MT8768** (HCN V31, crédito **Csaba**), RDS/QUIT 8667, PowerOff K706 (amp/luces/stream), estabilización MT8163 (PowerOff + mute) y auditoría QS6. APK: `_RELEASES/OpenRadioFM — v5.8.apk`. Handoff: [`HANDOFF.md`](HANDOFF.md).
 
 | Función | MT8163 / MT8768 (Junsun) | K706 | MTK8259/8667 |
 |---|:---:|:---:|:---:|
@@ -542,11 +542,15 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 - **Limpieza de Recursos**: Mejora en el cierre de hilos de red en `RadioRepository` durante el apagado de la app.
 - **Audio Focus**: Refinamiento en la gestión del foco para asegurar el silencio tras el cierre.
 
-### v5.7.0 "Junsun V7 / MT8768" (Noviembre 2026)
-- **Soporte Junsun V7 (MT8768)**: proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`) con detección automática del contrato AIDL v25 (MT8163) o v31 (MT8768), y override opcional por preferencia.
-- **Regresión MT8163**: se mantiene operativa la ruta nativa v25 en hardware real (sin romper Junsun V1 Pro / Topway / Eonon MT8163).
-- **Branding del motor**: nombre unificado *Topway / Eonon / Junsun V7 (MT8163/8768)* en los 13 idiomas.
-- **Agradecimiento**: parche y validación en V7 real aportados por **Csaba**.
+### v5.8.0 (Noviembre 2026)
+- **Junsun V7 / MT8768**: proxy HCN V31 (`HcnApiFactory` / `HcnV31Api`); regresión MT8163 intacta. Crédito: **Csaba**.
+- **8667**: RDS factory (`ITsRadioCommon`) + PowerOff/QUIT sin motor zombie.
+- **K706**: PowerOff libera amp/canal; corte de stream online; inversión manual de luces MCU.
+- **MT8163**: fixes de cierre/mute; PowerOff por tecla MCU; icono mute sincronizado.
+- **QS6**: auditoría de release/persist, callbacks NWD y sync de fuente de audio.
+
+### v5.7.0 "Junsun V7 / MT8768" (Noviembre 2026, tag local)
+- Base V7/MT8768 absorbida en **5.8** (no hubo GitHub Release de 5.7).
 
 ### v5.6.0 "FUSION" (Septiembre 2026)
 - **Modo Dual Conectividad**: Selector inicial y configuración para operar en modo 100% Offline (logos locales en memoria, cero datos) o modo Online (logos dinámicos en la nube y streaming en vivo).

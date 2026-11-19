@@ -235,7 +235,7 @@
     <string name="about_info_header">情報</string>
     <string name="about_dev_by">開発者</string>
     <string name="about_tech_details">技術詳細</string>
-    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.8</string>
     <string name="accessibility_service_description">物理RADIOボタンを押したときにOpenRadioFMを起動します（純正アプリを置換）。K706/TopwayおよびQS6 (NWD)ユニットでは、バックグラウンド時にステアリングスイッチ（次へ/前へ/再生）も転送します。そうしないとシステムがそれらのキーをランチャーや純正ラジオに送信してしまいます。</string>
     <string name="a11y_hihack_title">HiHack（ユーザー補助）</string>
     <string name="a11y_hihack_enabled">有効</string>

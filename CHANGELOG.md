@@ -1,11 +1,36 @@
-## [5.7] - 2026-11-07
+## [5.8] - 2026-11-19
+
+*Release pública consolidada desde `v5.6-fusion`: incluye V7/MT8768 (antes tag local `v5.7`) y estabilización multiplataforma. `versionCode` **55**, `versionName` **5.8**.*
 
 ### Junsun V7 / MT8768 (HCN V31) — gracias Csaba
 - **`HcnApiFactory`**: detección dinámica del contrato AIDL HCN v25 (MT8163) vs v31 (MT8768 / Junsun V7), con override por SharedPreferences (`pref_hcn_contract`: 0=auto, 25, 31).
 - **`HcnV31Api`**: proxy Binder que adapta transacciones e IDs del contrato de 31 comandos.
 - **MT8163 path**: `MT8163Engine` / `MT8163TunerAdapter` / `RadioServiceController` pasan por `HcnApiFactory.wrap()`; regresión verificada en hardware MT8163.
 - **i18n**: motor descrito como `Topway / Eonon / Junsun V7 (MT8163/8768)` en los 13 `strings.xml`.
-- **Validación**: OK en Junsun V7 (MT8768) real y en MT8163 (vía verde de release).
+
+### MTK8259 / 8667 — RDS factory + PowerOff (QUIT)
+- RDS vía `ITsRadioCommon` compatible con MainUI stock.
+- PowerOff: `CloseRadioCh` + `EnterMode(0)`; `closeDevice()` ≠ `release()`; limpieza de motor compartido; unmute y `finishAndRemoveTask` (QUIT v2).
+
+### K706 — PowerOff amp / luces / stream
+- PowerOff libera canal FM (`SetChannel(4)`), abandona foco y desmutea amp para que otras apps suenen.
+- Ajuste manual de inversión de señal de luces MCU `0x22` (`pref_hw_lights_invert`).
+- PowerOff corta streaming online (`OnlineStreamManager.stopForPowerOff()`) antes de minimizar.
+
+### MT8163 — estabilidad + PowerOff + mute
+- Fixes: NPE al cerrar (poll tras `release`), mute pegado (`mRadioMuteDesired` / reintento obsoleto), `DeadObjectException` → `handleDeadService`.
+- PowerOff silencia FM con tecla MCU `VOLUME_MUTE` (`PlaybackManager.muteForPowerOff`) sin bajar `STREAM_MUSIC`.
+- Icono mute sincronizado con estado real de la tecla MCU (`sMt8163HwKeyMuted`).
+
+### QS6 / NWD — auditoría
+- `release(persist)` mantiene motor al recrear Activity; `CompositeRadioEngineCallback.combine()` aplana callbacks.
+- NWD: `unlinkToDeath`, cancelar reconexiones, callbacks Binder en main; `mcu_current_source` ANDROID al soltar audio.
+- Anti-rebote de frecuencia Settings tras `tune`; `toggleRdsFeature` bidireccional.
+
+## [5.7] - 2026-11-07 (tag local; no publicado en GitHub)
+
+### Junsun V7 / MT8768 (HCN V31) — gracias Csaba
+- Base de soporte V7/MT8768 publicada ahora dentro de **5.8**. Ver sección anterior.
 
 ## [5.5 OFFLINE VERSION] - 2026-09-20
 

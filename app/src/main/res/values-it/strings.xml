@@ -296,7 +296,7 @@
     <string name="my_favorites">I Miei Preferiti</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.8</string>
     <string name="accessibility_service_description">Apre OpenRadioFM quando premi il pulsante fisico RADIO (sostituisce l’app di serie). Sulle unità K706/Topway e QS6 (NWD) inoltra anche i tasti multimediali al volante (successivo/precedente/play) in background; altrimenti il sistema invia spesso questi tasti al launcher o alla radio OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accessibilità)</string>
     <string name="a11y_hihack_enabled">Attivato</string>

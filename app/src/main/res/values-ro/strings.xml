@@ -237,7 +237,7 @@
     <string name="logo_mode_clock">Ceas Digital</string>
 
     <!-- Missing keys (fallback/translations) -->
-    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.8</string>
     <string name="accessibility_service_description">Deschide OpenRadioFM la apăsarea butonului fizic RADIO (înlocuiește aplicația din fabrică). Pe unitățile K706/Topway și QS6 (NWD) redirecționează și tastele media de pe volan (următor/anterior/redare) în fundal; altfel, sistemul trimite adesea aceste taste către launcher sau radioul OEM.</string>
     <string name="a11y_hihack_title">HiHack (Accesibilitate)</string>
     <string name="a11y_hihack_enabled">Activat</string>

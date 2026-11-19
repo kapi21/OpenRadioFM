@@ -236,7 +236,7 @@
     <string name="about_info_header">INFORMACIJE</string>
     <string name="about_dev_by">Razvio</string>
     <string name="about_tech_details">Tehnički detalji</string>
-    <string name="app_name_internal">OpenRadioFM - v5.6 FUSION</string>
+    <string name="app_name_internal">OpenRadioFM - v5.8</string>
     <string name="accessibility_service_description">Отвара OpenRadioFM притиском на физичко дугме RADIO (замењује фабричку апликацију). На K706/Topway и QS6 (NWD) уређајима такође прослеђује тастере на волану (следећа/претходна/плеј) у позадини; иначе систем често шаље ове тастере покретачу или фабричком радију.</string>
     <string name="a11y_hihack_title">HiHack (Pristupačnost)</string>
     <string name="a11y_hihack_enabled">Omogućeno</string>
